@@ -72,26 +72,26 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>.\includes;$(IncludePath)</IncludePath>
-    <LibraryPath>.\libs\x32;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)\-common\includes;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\-common\libs\x32;$(LibraryPath)</LibraryPath>
     <OutDir>_Build\$(Platform)-$(Configuration)\</OutDir>
     <IntDir>_Build\intermediate\$(Platform)-$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>.\includes;$(IncludePath)</IncludePath>
-    <LibraryPath>.\libs\x32;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)\-common\includes;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\-common\libs\x32;$(LibraryPath)</LibraryPath>
     <OutDir>_Build\$(Platform)-$(Configuration)\</OutDir>
     <IntDir>_Build\intermediate\$(Platform)-$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>.\includes;$(IncludePath)</IncludePath>
-    <LibraryPath>.\libs\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)\-common\includes;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\-common\libs\x64;$(LibraryPath)</LibraryPath>
     <OutDir>_Build\$(Platform)-$(Configuration)\</OutDir>
     <IntDir>_Build\intermediate\$(Platform)-$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>.\includes;$(IncludePath)</IncludePath>
-    <LibraryPath>.\libs\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)\-common\includes;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\-common\libs\x64;$(LibraryPath)</LibraryPath>
     <OutDir>_Build\$(Platform)-$(Configuration)\</OutDir>
     <IntDir>_Build\intermediate\$(Platform)-$(Configuration)\</IntDir>
   </PropertyGroup>
@@ -103,6 +103,8 @@
       <ConformanceMode>true</ConformanceMode>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <SupportJustMyCode>false</SupportJustMyCode>
     </ClCompile>
     <Link>
       <AdditionalDependencies>Rainmeter.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -116,6 +118,8 @@
       <ConformanceMode>true</ConformanceMode>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <SupportJustMyCode>false</SupportJustMyCode>
     </ClCompile>
     <Link>
       <AdditionalDependencies>Rainmeter.lib;%(AdditionalDependencies)</AdditionalDependencies>

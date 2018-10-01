@@ -5,6 +5,8 @@
  * version. If a copy of the GPL was not distributed with this file, You can
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>. */
 
+#include <windows.h>
+
 #ifndef __RAINMETERAPI_H__
 #define __RAINMETERAPI_H__
 

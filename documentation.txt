@@ -1,4 +1,4 @@
-﻿PerfMonRxtd Reference for Plugin Version 1.1.0
+﻿PerfMonRxtd Reference for Plugin Version 1.2.0
 ===============================================
 PerfMonRxtd is a Rainmeter plugin that provides access to Windows performance data using the Performance Data Helper interface.  The plugin is organized using the parent/child model.
 
@@ -6,8 +6,7 @@ There is one Parent measure Type:
  • Parent
 
 There are five Child measure Types:
- • GetInstanceCount
- • GetInstanceName
+ • GetCount
  • GetRawCounter
  • GetFormattedCounter
  • GetExpression
@@ -37,18 +36,20 @@ Parent measure options are:
   RollupExpressionList : list of strings separated by '|' : default ""
     one or more RollupExpressions (see below), separated by "|", maximum number is not limited.
 
-  SortBy : { None, InstanceName, RawCounter, FormattedCounter, Expression, RollupExpression } : default None
+  SortBy : { None, InstanceName, RawCounter, FormattedCounter, Expression, RollupExpression, Count } : default None
     Specifies if and how to sort.
 
-  SyncRawFormatted : boolean : default 1
-    Affects child measures.
-    If 1: on first update names are "" and all values are 0.
-    If 0: on first update names and raw values are present, formatted values are 0.
+  Rollup : boolean : default 0
+    If 1: instances with matching DisplayNames will be combined.
 
   SortIndex : integer : default 0
     When SortBy is one of { RawCounter, FormattedCounter, Expression, RollupExpression }, specifies the member of the related list to sort by.
     When SortBy is one of { None, InstanceName } this option is ignored.
     CounterList indexes start at 0
+
+  SortRollupFunction : { Sum, Average, Minimum, Maximum } : default Sum
+    Specifies how the number value of the sort counter should be calculated when rollup is enabled.
+    When SortBy is one of { None, InstanceName, RollupExpression } this option is ignored.
 
   SortOrder : { Ascending, Descending } : default Descending
     Specifies the sort order.
@@ -56,6 +57,7 @@ Parent measure options are:
   Whitelist : list of strings separated by '|' : default ""
     One or more display names to include, number is not limited.
     Case insensitive, matches substring if name begins and ends with "*"
+    For example, Rainmeter matches to "Rainmeter" only, while *Rain* matches to anything containing "Rain"
 
   WhitelistOrig : list of strings separated by '|' : default ""
     One or more original names to include, number is not limited.
@@ -64,11 +66,13 @@ Parent measure options are:
   Blacklist : list of strings separated by '|' : default ""
     One or more display names to exclude, number is not limited.
     Case insensitive, matches substring if name begins and ends with "*".
-    For example, Rainmeter matches to "Rainmeter" only, while *Rain* matches to anything containing "Rain"
 
   BlacklistOrig : list of strings separated by '|' : default ""
     One or more original names to exclude, number is not limited.
     Case *sensitive*, matches substring if name begins and ends with "*".
+
+  KeepDiscarded : boolean : default 0
+    If 1 then when instance does not match white list or match black list then it is not removed permanently but instead only removed from sort list, and can be accesed using it's name.
 
   InstanceIndexOffset : integer : default 0
     Base offset added to child measure's InstanceIndex.
@@ -77,22 +81,20 @@ Parent measure options are:
   LimitIndexOffset : boolean : default 0
     If 1 then InstanceIndexOffset is always >= 0.
 
+  SyncRawFormatted : boolean : default 1
+    Affects child measures.
+    If 1: on first update names are "" and all values are 0.
+    If 0: on first update names and raw values are present, formatted values are 0.
+
   DisplayName : context related : default Original
     Specifies if and how instance names are modified before presentation to the skin.
     For ObjectNames: "GPU Engine", "GPU Process Memory" valid values are { Original, ProcessName, EngType }
     For ObjectName: "LogicalDisk" valid values are { Original, DriveLetter, MountFolder }
 
-  Rollup : boolean : default 0
-    If 1: instances with matching DisplayNames will be combined.
-
-  SortRollupFunction : { Sum, Average, Minimum, Maximum, Count } : default Sum
-    Specifies how the number value of the sort counter should be calculated when rollup is enabled.
-    When SortBy is one of { None, InstanceName, RollupExpression } this option is ignored.
-
 
 
 Child measure options are:
-  Type : { GetInstanceCount, GetInstanceName, GetRawCounter, GetFormattedCounter, GetExpression, GetRollupExpression } : default ""
+  Type : { GetCount, GetRawCounter, GetFormattedCounter, GetExpression, GetRollupExpression } : default ""
     Specifies the child measure type.
     Value can be changed vie !SetOption bang.
 
@@ -114,9 +116,13 @@ Child measure options are:
     If 0: InstanceName is searched using DisplayNames and is case insensitive.
     If 1: InstanceName is searched using OriginalNames and is case *sensitive*.
 
-  NameSource : { Passed, Discarded, PassedDiscarded, DiscardedPassed } : default Passed
-    Specifies where to look for InstanceName. Two places are lists of instances passed Black/white lists checks and those that was discarded.
-    PassedDiscarded and DiscardedPassed values specify order of search (left to right).
+  Discarded : boolean : default 0
+    If 0: whitelisted and not blacklisted instances are searched.
+    If 1: not whitelisted and blacklisted instances are searched.
+
+  Total : boolean : default 0
+    If 0: data from one instance is returned.
+    If 1: data from rollup over all instances (regardless of names) is returned.
 
   InstanceIndex : integer : default 0
     Specifies the instance index of the counter to return.
@@ -127,7 +133,7 @@ Child measure options are:
     Specifies what the string value of the measure should be.
     When an instance name is required, DisplayName should normally be used.
 
-  RollupFunction : { Sum, Average, Minimum, Maximum, Count } : default Sum
+  RollupFunction : { Sum, Average, Minimum, Maximum } : default Sum
     Specifies how the number value of the measure should be calculated when rollup is enabled.
     When Type is one of { None, InstanceName, RollupExpression } this option is ignored.
 
@@ -155,6 +161,7 @@ Measure Type=Parent
   WhitelistOrig={ <name0> | <name1> | ... }
   Blacklist={ <name0> | <name1> | ... }
   BlacklistOrig={ <name0> | <name1> | ... }
+  KeepDiscarded={ 0, 1 }
   InstanceIndexOffset=<integer>
   LimitIndexOffset={ 0, 1 }
   DisplayName={ Original, ProcessName, EngType, DriveLetter, MountFolder }
@@ -162,7 +169,7 @@ Measure Type=Parent
   SortRollupFunction={ Sum, Average, Minimum, Maximum, Count }
 
   returns (instanceCount, statusString)
-  instanceCount is count before black/white lists applying
+  instanceCount is count of instances provided by PerfMon, before black/white lists applying. Don't use it if you need to obtain number of instances, it is for analysis only.
 
 
 //
@@ -170,133 +177,59 @@ Measure Type=Parent
 //
 
 
-Measure Type=GetInstanceCount
+Measure Type=GetCount
   [measureChild]
   Measure=Plugin
   Plugin=PerfMonRxtd
-  Type=GetInstanceCount
-  Parent=<parent measure name>
-    
-  if data not yet available:
-    returns (0, null)
-  if successful:
-    returns (instanceCount, null)
-  instanceCount is count after black/white lists applying
-
-
-Measure Type=GetInstanceName
-  [measureChild]
-  Measure=Plugin
-  Plugin=PerfMonRxtd
-  Type=GetInstanceName
+  Type=GetCount
   Parent=<parent measure name>
   InstanceName=<string>
   SearchOriginalName={ 0, 1 }
-  NameSource={ Passed, Discarded, PassedDiscarded, DiscardedPassed }
+  Total={ 0, 1 }
+  Discarded={ 0, 1 }
   InstanceIndex=[0..GetInstanceCount-1]
   ResultString={ Number, OriginalName, UniqueName, DisplayName }
 
   if data not yet available:
-    returns (0, null) | (0, "")
+    returns (0, 0) | (0, "")
   if InstanceName not found or InstanceIndex out of range:
-    returns (0, null) | (0, "")
+    returns (0, 0) | (0, "")
   if successful:
-    returns (1, null) | (1, instanceName)
+    returns (instanceCount, instanceCount) | (instanceCount, instanceName)
 
+  instanceCount is count of found instances.
+  If Rollup=0 on parent measure instanceCount is 0 if instance doesn't exist and 1 if instance found.
+  If Rollup=1 on parent measure instanceCount is count of instances in this group, i.e. 0 if not found and some integer if found.
+  If Total=1 and Rollup=0 on parent measure instanceCount is total count of instances.
+  If Total=1 and Rollup=1 on parent measure instanceCount is total count of instances after rollup.
 
-Measure Type=GetRawCounter
+Measures GetRawCounter, GetFormattedCounter, GetExpression, GetRollupExpression
   [measureChild]
   Measure=Plugin
   Plugin=PerfMonRxtd
   Type=GetRawCounter
   Parent=<parent measure name>
-  CounterIndex=[0..CounterListLength-1]
+  CounterIndex=[0..ListLength-1]
   InstanceName=<string>
   SearchOriginalName={ 0, 1 }
-  NameSource={ Passed, Discarded, PassedDiscarded, DiscardedPassed }
+  Total={ 0, 1 }
+  Discarded={ 0, 1 }
   InstanceIndex=[0..GetInstanceCount-1]
   ResultString={ Number, OriginalName, UniqueName, DisplayName }
-  RollupFunction={Sum, Average, Minimum, Maximum, Count }
+  RollupFunction={Sum, Average, Minimum, Maximum }
 
   if data not yet available:
-    returns (0, null) | (0, "")
+    returns (0, 0) | (0, "")
   if InstanceName not found or InstanceIndex out of range:
-    returns (0, null) | (0, "")
+    returns (0, 0) | (0, "")
   if successful:
-    returns (counterValue, null) | (counterValue, instanceName)
-
-
-Measure Type=GetFormattedCounter
-  [measureChild]
-  Measure=Plugin
-  Plugin=PerfMonRxtd
-  Type=GetFormattedCounter
-  Parent=<parent measure name>
-  CounterIndex=[0..CounterListLength-1]
-  InstanceName=<string>
-  SearchOriginalName={ 0, 1 }
-  NameSource={ Passed, Discarded, PassedDiscarded, DiscardedPassed }
-  InstanceIndex=[0..GetInstanceCount-1]
-  ResultString={ Number, OriginalName, UniqueName, DisplayName }
-  RollupFunction={ Sum, Average, Minimum, Maximum, Count }
-
-  if data not yet available:
-    returns (0, null) | (0, "")
-  if InstanceName not found or InstanceIndex out of range:
-    returns (0, null) | (0, "")
-  if successful:
-    returns (counterValue, null) | (counterValue, instanceName)
-
-
-Measure Type=GetExpression
-  [measureChild]
-  Measure=Plugin
-  Plugin=PerfMonRxtd
-  Type=GetExpression
-  Parent=<parent measure name>
-  CounterIndex=[0..ExpressionListLength-1]
-  InstanceName=<string>
-  SearchOriginalName={ 0, 1 }
-  NameSource={ Passed, Discarded, PassedDiscarded, DiscardedPassed }
-  InstanceIndex=[0..GetInstanceCount-1]
-  ResultString={ Number, OriginalName, UniqueName, DisplayName }
-  RollupFunction={ Sum, Average, Minimum, Maximum, Count }
-
-  if data not yet available:
-    returns (0, null) | (0, "")
-  if InstanceName not found or InstanceIndex out of range:
-    returns (0, null) | (0, "")
-  if successful:
-    returns (expressionValue, null) | (expressionValue, instanceName)
-
-
-Measure Type=GetRollupExpression
-  [measureChild]
-  Measure=Plugin
-  Plugin=PerfMonRxtd
-  Type=GetRollupExpression
-  Parent=<parent measure name>
-  CounterIndex=[0..RollupExpressionListLength-1]
-  InstanceName=<string>
-  SearchOriginalName={ 0, 1 }
-  NameSource={ Passed, Discarded, PassedDiscarded, DiscardedPassed }
-  InstanceIndex=[0..GetInstanceCount-1]
-  ResultString={ Number, OriginalName, UniqueName, DisplayName }
-
-  if data not yet available:
-    returns (0, null) | (0, "")
-  if InstanceName not found or InstanceIndex out of range:
-    returns (0, null) | (0, "")
-  if successful:
-    returns (expressionValue, null) | (expressionValue, instanceName)
+    returns (value, value) | (value, instanceName)
 
 
 
 "Data not yet available" usually can happen only if SyncRawFormatted is set to 1 or not set.
 It means that the plugin has not yet completed two collections of performance data. Performance data is collected at each update of a parent measure.  Raw counters are available after a single collection, but formatted counters need two collections to calculate their values.
 If SyncRawFormatted=0 then instance names and raw values are not delayed but formatted value can't be computed until two data collections are finished, and are 0 if used.
-
-Return "null" means that the plugin will return a null pointer when GetString is called.  This causes Rainmeter to provide the measure's number value as a string.
 
 All measure options that was not marked as "Can't be changed at runtime" can be changed via !SetOption or DynamicVariables=1
 
@@ -313,6 +246,36 @@ Some counters are useful in both raw and formatted forms.  For example, the "Pro
 
 
 
+Total values
+============
+If you set Total=1 then value of a measure is rollup value of all not discarded instances.
+Total values are not affected by "Rollup" option of Parent measure. Rollup for total is always performed.
+If you specify total of a RollupExpressions then usual rollup if performed and then rollup of these rolled up values.
+
+One exception is GetCount with Total=1 and RollupFunction=Sum when rollup on Parent measure is set. In this case result is count of rollup instance groups but not a count of all instance as it should be. If you need to get count of not rolled up instances then use Expression "count[\t]" (but not RollupExpression).
+
+
+
+PerfMon objects with a single, unnamed instance
+===============================================
+Some PerfMon ObjectNames have only a single, unnamed instance.  For example, the "System" object declares several counters, but these counters have only one instance, and that instance is unnamed.  When retrieving information for this type of counter, set the child's InstanceName to "*" or InstanceIndex to 0.
+
+
+
+DynamicVariables
+================
+PerfMonRxtd measures supports DynamicVariables. You can use it on both Parent and Child measures.
+But you are discouraged to use it with Parent measures because options reparsing is quite slow. It probably won't cause you any trouble but it's slow enough to consider using !SetOption bang.
+
+
+
+PerfMonRxtd measure string values
+================================
+By default all child measures return a number as both number and string values. This means that Rainmeter's AutoScale and NumOfDecimals options can be used with string meters.
+If you want to get an instance name you can specify ResultString other than Number, but you will need take special care when using this measure if you want to obtain number value from it.
+
+
+
 Expressions and RollupExpressions
 =================================
 Not all of the desired performance counters are presented in the PerfMon. For example, Category "Process" has "Working Set" and "Working Set - Private" counters but does not have a "Working Set - Shareable" counter. It can be easily computed from the former two counters but since it is not a counter it couldn't be used neither for sorting nor for rollup.
@@ -326,16 +289,21 @@ RollupExpressions are evaluated after a rollup. All counters and Expressions tha
 
 Syntax:
 Both Expressions and RollupExpressions are generic math expressions except for references.
-References have the following form:
+Common references have the following form:
 <referenceType> <number> [ '[' [ '\' <nameModifiers> ] <instanceName> ']' ] <rollupFunction>
 [ XsomethingX ] means that 'XsomethingX' is optional.
 Valid referenceTypes are { CounterRaw, CounterFormatted, Expression, RollupExpression }. There are also short forms { CR, CF, E, R} respectively.
 Number is a number of counter, expression or rollupExpression.
 instanceName is optional. It is a string that can contain any symbols except '|', '#', ']'.
-Valid rollupFunctions are { Sum, Avg, Min, Max, Count } and short forms { S, A, m, M, C } respectively. Short forms for Min and Max are case sensitive.
-Valid nameModifiers are { P, D, O }. Their respective meanings are { Passed, Discarded, OriginalName }.
-Passed and Discarded options specify where name is searched. It is analogues of "NameSource" option in Child measures. Order of 'P' and 'D' matters, if they are specified together.
-'O' is an analogue of "SearchOriginalName" option in Child measures — if it present, original names are searched, and if not — display names.
+Valid rollupFunctions are { Sum, Avg, Min, Max } and short forms { S, A, m, M } respectively. Short forms for Min and Max are case sensitive.
+Valid nameModifiers are { D, O, T }. Their respective meanings are { Discarded, SearchOriginalName, Total } (only short forms can be used in expressions). Several modifiers can be specified. These modifiers behaves as child options with the same names.
+
+There is also Count expressions, which has the following form:
+{ 'Count', 'C' } [ '[' [ '\' <nameModifiers> ] <instanceName> ']' <rollupFunction> ]
+This expression is redundant and provided for convenience only. Note, that unlike common references, "count" needs '[]' if rollup function is specified. "CountAvg" is not a valid reference.
+When used in Expression without name it is always 1, and with name — 1 if instance found and 0 if not.
+When used in RollupExpression it shows count of elements in rollup group — either current (when used without name) or named group.
+One exception is "Count[\t]Sum" — when used in RollupExpression returns total count of rolled up instances instead of total count of all instances. If you want to get count of not rolled up instances create Expression "Count[\t]Sum" and reference it in your RollupExpression.
 
 Any expression can reference any counter.
 An Expression can reference another Expression if the latter is preceding it.
@@ -343,7 +311,7 @@ An Expression can not reference RollupExpressions.
 A RollupExpression can reference any Expression.
 A RollupExpression can reference another RollupExpression if the latter is preceding it.
 
-Rollup functions in Expressions are silently ignored.
+Rollup functions in Expressions are silently ignored except for Total values.
 Rollup functions in RollupExpression are set to Sum if not specified.
 
 If instanceName is *not* specified then reference is evaluated for current instance.
@@ -351,12 +319,16 @@ For example, if expression is used for sorting, it is evaluated once for every i
 If instanceName *is* specified then instance with that name if found and reference is evaluated for this instance.
 For example, if a Category have a _Total instance, you can divide value for every instance by value of a _Total to get relative value.
 
+If "Total" modifier is specified then name is ignored and rollup of all instances is performed.
+
 Examples of valid expressions:
 • CounterRaw00 - CounterRaw01[_Total] — difference between current raw value of counter 0 and raw value of counter 1 of instance with name "_Total"
 • CounterRaw01Sum + Expression00max — sum of raw value of counter 1 (with Sum as a rollup function) and value of Expression 0 (with Max as a rollup function)
 • 1 + (2 + 3) * 7 + 4 ^ 5 — just a constant math expression
 • cf00005M^8 / cf3m + r0 — divide (maximum of formatted value of counter 5 in power of 8) by minimum of formatted value of counter 3 and add value of ROllupExpression number 0.
 • cr00[\do _Total] + cr01 — find instance with name "_Total" in list if discarded (blacklisted/not whitelisted) instances, get its counter 0 raw value and add current value of counter 1
+• count[\t] — get number of instances
+• count[*Rain*] — check if instance with name containing "Rain" exists.
 
 
 
@@ -364,7 +336,15 @@ Expressions and performance
 ===========================
 Both Expressions and RollupExpressions are slower than raw and formatted values, so don't use Expression "CounterRaw0" for sorting — use raw counter value itself in such cases.
 However, performance impact is not that big, so use it with no doubt when needed. It actually is negligible compared to the overhead of fetching PerfMon data.
-Expression are probably more efficient than Rainmeter formulas build from several measures (because they don't require several measures), so if you need some values derived from Child measures consider using expressions instead. You probably won't notice the dIfference though. But it's still more convenient.
+
+Expression are probably more efficient than Rainmeter formulas build from several measures (because they don't require several measures), so if you need some values derived from Child measures consider using expressions instead. You probably won't notice the difference though. But it's still more convenient.
+
+Expressions are evaluated once every time they are needed. This have two consequences:
+• You can define as many expressions as you want, and they won't slow your skin.
+• It's useless performance-wise to define some part of an expression that used in several places as separate expression. It is a good practice, however.
+
+Search for some name performed once in an Parent measure update cycle, so you can use named instances as often as you like.
+Same goes for Total-ed references.
 
 
 
@@ -385,7 +365,7 @@ If white and black lists are specified then instance is discarded if instance na
 Discarded instances
 ===================
 Black/white lists can filter instances. But what if you want to filter some instance while needing its value? You can use list of discarded instances then.
-Discarded instances are neither rolled up nor sorted. They are not counted by "GetInstanceCount" Child measures.
+Discarded instances are neither rolled up nor sorted. They are not counted anywhere except parent return value.
 They can only be accessed by name (either exact name of with name substring).
 They can be accessed by Child measures and used in expressions but in both cases require special options/syntax.
 If several instances with the same names are discarded then only one of them is accessible because rollup can't be performed for discarded instances.
@@ -400,26 +380,6 @@ InstanceIndexOffet can only be changed via these bangs. N can be any integer.
 • [!CommandMeasure Stop], [!CommandMeasure Resume], [!CommandMeasure StopResume]
 Switches "stopped" state of a measure. If measure is stopped then it doesn't retrieve new performance values.
 Difference between "stopped" state and setting UpdateDivider to -1 is that you can change options of stopped measure. For example, you can use different sorting for one performance dataset.
-
-
-
-PerfMon objects with a single, unnamed instance
-===============================================
-Some PerfMon ObjectNames have only a single, unnamed instance.  For example, the "System" object declares several counters, but these counters have only one instance, and that instance is unnamed.  When retrieving information for this type of counter, set the child's InstanceName to "*" or InstanceIndex to 0.
-
-
-
-DynamicVariables
-================
-PerfMonRxtd measures should not use DynamicVariables=1.  Although it will work, using DynamicVariables=1 to change option settings is discouraged because of the overhead of reparsing the options on every update. This is especially importand for parent measures with complex expression.
-Instead, it is recommend to leave DynamicVariables=0 and use !SetOption to change measure options instead.
-
-
-
-PerfMonRxtd measure string values
-================================
-Since the PerfMonRxtd child measure Type=GetInstanceName returns the instance name for a given instance index, PerfMonRxtd is free to return number-value strings. This means that Rainmeter's AutoScale and NumOfDecimals options can be used with string meters.
-If any ResultString option other than Number is set string value is a name of an instance and therefore can't be used this way.
 
 
 
@@ -551,6 +511,7 @@ Plugin=PerfMonRxtd
 Type=Parent
 ObjectName=Process
 CounterList=ID Process | % Processor Time | Working Set | IO Data Bytes/sec
+Rollup=1
 SortBy=FormattedCounter
 SortIndex=1
 SortOrder=Descending
@@ -560,7 +521,7 @@ Blacklist=_Total | Idle | *svc*
 [measureInstanceName]
 Measure=Plugin
 Plugin=PerfMonRxtd
-Type=GetInstanceName
+Type=GetCount
 Parent=measureProcess
 InstanceIndex=0
 ResultString=DisplayName
@@ -572,7 +533,6 @@ Type=GetRawCounter
 Parent=measureProcess
 CounterIndex=0
 InstanceIndex=0
-ResultString=Number
 
 [measureProcessorTime]
 Measure=Plugin
@@ -581,7 +541,6 @@ Type=GetFormattedCounter
 Parent=measureProcess
 CounterIndex=1
 InstanceIndex=0
-ResultString=Number
 
 [measureWorkingSet]
 Measure=Plugin
@@ -590,7 +549,6 @@ Type=GetRawCounter
 Parent=measureProcess
 CounterIndex=2
 InstanceIndex=0
-ResultString=Number
 
 [measureIOBytes]
 Measure=Plugin
@@ -599,7 +557,6 @@ Type=GetRawCounter
 Parent=measureProcess
 CounterIndex=3
 InstanceIndex=0
-ResultString=Number
 
 [measureIOBytesPerSecond]
 Measure=Plugin
@@ -608,37 +565,38 @@ Type=GetFormattedCounter
 Parent=measureProcess
 CounterIndex=3
 InstanceIndex=0
-ResultString=Number
 
 
 Notes for the Parent Measure:
   SortBy=FormattedCounter and SortIndex=1
-    we want to sort by the formatted counter "% Processor Time"
+    We want to sort by the formatted counter "% Processor Time"
+
+  Rollup=1
+    We don't want to see 10 processes with name "chrome".
 
   SortOrder=Descending
-    we want to sort from high processor utilization to low
+    We want to sort from high processor utilization to low
 
   InstanceIndexOffset=0
-    we want child measures' InstanceIndexes to start at 0
+    We want child measures' InstanceIndexes to start at 0
     
   Blacklist=_Total | Idle | *svc*
-    we want to filter out the instances "_Total", "Idle", and any instances containing "svc"
+    We want to filter out the instances "_Total", "Idle", and any instances containing "svc"
 
 
 Notes for the Child Measures:
-  Type=GetInstanceName, GetRawCounter or GetFormattedCounter
-    we want either the instance name, the raw value, or the formatted value for this instance index
+  Type=GetRawCounter or GetFormattedCounter
+    We want either the instance name, the raw value, or the formatted value for this instance index
+    We don't specify ResultString option so these measures will have counter value as a measure's string value.
+
+  Type=GetCount, ResultString=DisplayName
+    We don't need count but we use this to get instance name.
 
   CounterIndex=[0,1,2,3]
-    for Type=GetRawCounter or GetFormattedCounter, selects which counter in the CounterList we want
+    For Type=GetRawCounter or GetFormattedCounter, selects which counter in the CounterList we want
 
   InstanceIndex=0
-    we want info for the top process as sorted by the Parent measure
-
-  ResultString=Number or DisplayName
-    for Type=GetRawCounter or GetFormattedCounter, we want the string value to be the same as the number value
-    for Type=GetInstanceName, we want the string value to be the instance name for this instance index
-
+    We want info for the top process as sorted by the Parent measure
 
 
 The child measures declared above all return process information for the top process (InstanceIndex=0) as sorted by

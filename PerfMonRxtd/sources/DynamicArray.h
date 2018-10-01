@@ -45,7 +45,7 @@ namespace pmrda {
 		bool ensureSize(size_t size) noexcept {
 			if (arraySize < size) {
 				free(array);
-				if (size > 4096) {
+				if (size > 2000) {
 					const size_t pages = (size - 1) >> 12;
 					size = (pages + 1) << 12;
 				}
@@ -55,7 +55,6 @@ namespace pmrda {
 					return false;
 				}
 				arraySize = size;
-				// memset(array, 0, arraySize);
 				return true;
 			}
 			return true;

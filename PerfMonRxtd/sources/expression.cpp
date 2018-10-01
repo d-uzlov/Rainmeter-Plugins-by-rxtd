@@ -6,119 +6,121 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include "expressions.h"
-#include <windows.h>
 #include <cwctype>
 #include <algorithm>
-#include "PerfMonRXTD.h"
+
+#include "utils.h"
+#include "expressions.h"
+
+#undef max
 
 void pmrexp::ExpressionTreeNode::simplify() {
-	if (type == EXP_TYPE_NUMBER ||
-		type == EXP_TYPE_REF) {
+	if (type == ExpressionType::NUMBER ||
+		type == ExpressionType::REF) {
 		return;
 	}
 
 	bool isConst = true;
 	for (ExpressionTreeNode& node : nodes) {
 		node.simplify();
-		if (node.type != EXP_TYPE_NUMBER) {
+		if (node.type != ExpressionType::NUMBER) {
 			isConst = false;
-			break;
 		}
 	}
-	if (isConst) {
-		switch (type) {
-		case EXP_TYPE_SUM:
-		{
-			double value = 0;
-			for (ExpressionTreeNode& node : nodes) {
-				value += node.number;
-			}
-			nodes.clear();
-			number = value;
-			type = EXP_TYPE_NUMBER;
-			return;
+	if (!isConst) {
+		return;
+	}
+
+	switch (type) {
+	case ExpressionType::SUM:
+	{
+		double value = 0;
+		for (ExpressionTreeNode& node : nodes) {
+			value += node.number;
 		}
-		case EXP_TYPE_DIFF:
-		{
-			double value = nodes[0].number;
-			for (unsigned int i = 1; i < nodes.size(); i++) {
-				value -= nodes[i].number;
-			}
-			nodes.clear();
-			number = value;
-			type = EXP_TYPE_NUMBER;
-			return;
+		nodes.clear();
+		number = value;
+		type = ExpressionType::NUMBER;
+		return;
+	}
+	case ExpressionType::DIFF:
+	{
+		double value = nodes[0].number;
+		for (unsigned int i = 1; i < nodes.size(); i++) {
+			value -= nodes[i].number;
 		}
-		case EXP_TYPE_INVERSE:
-		{
-			number = -nodes[0].number;
-			nodes.clear();
-			type = EXP_TYPE_NUMBER;
-			return;
+		nodes.clear();
+		number = value;
+		type = ExpressionType::NUMBER;
+		return;
+	}
+	case ExpressionType::INVERSE:
+	{
+		number = -nodes[0].number;
+		nodes.clear();
+		type = ExpressionType::NUMBER;
+		return;
+	}
+	case ExpressionType::MULT:
+	{
+		double value = 1;
+		for (ExpressionTreeNode& node : nodes) {
+			value *= node.number;
 		}
-		case EXP_TYPE_MULT:
-		{
-			double value = 1;
-			for (ExpressionTreeNode& node : nodes) {
-				value *= node.number;
-			}
-			nodes.clear();
-			number = value;
-			type = EXP_TYPE_NUMBER;
-			return;
+		nodes.clear();
+		number = value;
+		type = ExpressionType::NUMBER;
+		return;
+	}
+	case ExpressionType::DIV:
+	{
+		double value = nodes[0].number;
+		for (unsigned int i = 1; i < nodes.size(); i++) {
+			value /= nodes[i].number;
 		}
-		case EXP_TYPE_DIV:
-		{
-			double value = nodes[0].number;
-			for (unsigned int i = 1; i < nodes.size(); i++) {
-				value /= nodes[i].number;
-			}
-			nodes.clear();
-			number = value;
-			type = EXP_TYPE_NUMBER;
-			return;
-		}
-		case EXP_TYPE_POWER:
-		{
-			double value = nodes[0].number;
-			value = std::pow(value, nodes[1].number);
-			nodes.clear();
-			number = value;
-			type = EXP_TYPE_NUMBER;
-			return;
-		}
-		default:;
-		}
+		nodes.clear();
+		number = value;
+		type = ExpressionType::NUMBER;
+		return;
+	}
+	case ExpressionType::POWER:
+	{
+		double value = nodes[0].number;
+		value = std::pow(value, nodes[1].number);
+		nodes.clear();
+		number = value;
+		type = ExpressionType::NUMBER;
+		return;
+	}
+	default:;
 	}
 }
-#undef max
-int pmrexp::ExpressionTreeNode::maxExpRef() {
+int pmrexp::ExpressionTreeNode::maxExpRef() const {
 	int max = -1;
-	if (type == EXP_TYPE_REF && ref.type == REF_TYPE_EXPRESSION) {
+	if (type == ExpressionType::REF && ref.type == ReferenceType::EXPRESSION) {
 		max = ref.counter;
 	} else {
-		for (ExpressionTreeNode& node : nodes) {
+		for (const ExpressionTreeNode& node : nodes) {
 			max = std::max(max, node.maxExpRef());
 		}
 	}
 	return max;
 }
 
-int pmrexp::ExpressionTreeNode::maxRUERef() {
+int pmrexp::ExpressionTreeNode::maxRUERef() const {
 	int max = -1;
-	if (type == EXP_TYPE_REF && ref.type == REF_TYPE_ROLLUP_EXPRESSION) {
+	if (type == ExpressionType::REF && ref.type == ReferenceType::ROLLUP_EXPRESSION) {
 		max = ref.counter;
 	} else {
-		for (ExpressionTreeNode& node : nodes) {
+		for (const ExpressionTreeNode& node : nodes) {
 			max = std::max(max, node.maxRUERef());
 		}
 	}
 	return max;
 }
 
-void pmrexp::ExpressionTreeNode::processRefs(void(* handler)(reference&)) {
-	if (type == EXP_TYPE_REF) {
+void pmrexp::ExpressionTreeNode::processRefs(void(*handler)(reference&)) {
+	if (type == ExpressionType::REF) {
 		handler(ref);
 	} else {
 		for (auto& node : nodes) {
@@ -134,74 +136,69 @@ pmrexp::Lexer::Lexer(std::wstring source)
 
 pmrexp::Lexeme pmrexp::Lexer::next() {
 	skipSpaces();
-	Lexeme result;
 	if (isSymbol(source[position])) {
-		result.value = source[position];
-		switch (source[position]) {
+		const wchar_t value = source[position];
+		LexemeType type = LexemeType::UNKNOWN;
+		position++;
+		switch (value) {
 		case L'(':
-			result.type = LEXEME_TYPE_PAR_OPEN;
+			type = LexemeType::PAR_OPEN;
 			break;
 		case L')':
-			result.type = LEXEME_TYPE_PAR_CLOSE;
+			type = LexemeType::PAR_CLOSE;
 			break;
 		case L'[':
-			result.type = LEXEME_TYPE_BR_OPEN;
+			type = LexemeType::BR_OPEN;
 			break;
 		case L']':
-			result.type = LEXEME_TYPE_BR_CLOSE;
+			type = LexemeType::BR_CLOSE;
 			break;
 		case L'+':
-			result.type = LEXEME_TYPE_PLUS;
+			type = LexemeType::PLUS;
 			break;
 		case L'-':
-			result.type = LEXEME_TYPE_MINUS;
+			type = LexemeType::MINUS;
 			break;
 		case L'*':
-			result.type = LEXEME_TYPE_MULT;
+			type = LexemeType::MULT;
 			break;
 		case L'/':
-			result.type = LEXEME_TYPE_DIV;
+			type = LexemeType::DIV;
 			break;
 		case L'^':
-			result.type = LEXEME_TYPE_POWER;
-			return result;
+			type = LexemeType::POWER;
+			break;
 		case L'\0':
-			result.type = LEXEME_TYPE_END;
+			type = LexemeType::END;
 			break;
 		case L'.':
-			result.type = LEXEME_TYPE_DOT;
+			type = LexemeType::DOT;
 			break;
 		case L'#':
-			result.type = LEXEME_TYPE_HASH;
+			type = LexemeType::HASH;
 			break;
 		default:
-			result.type = LEXEME_TYPE_UNKNOWN;
+			type = LexemeType::UNKNOWN;
 			break;
 		}
-		position++;
-		return result;
+		return Lexeme(type, std::to_wstring(value));
 	}
 	if (std::iswdigit(source[position])) {
-		result.type = LEXEME_TYPE_NUMBER;
-		result.value = readNumber();
-		return result;
+		return Lexeme(LexemeType::NUMBER, readNumber());
 	}
 	if (std::iswalpha(source[position])) {
-		result.type = LEXEME_TYPE_WORD;
-		result.value = readWord();
-		return result;
+		return Lexeme(LexemeType::WORD, readWord());
 	}
-	result.type = LEXEME_TYPE_UNKNOWN;
-	result.value = source[position];
+	Lexeme result(LexemeType::UNKNOWN, std::to_wstring(source[position]));
 	position++;
 	return result;
 }
 
-std::wstring pmrexp::Lexer::getUntil(wchar_t stop1, wchar_t stop2) {
+std::wstring pmrexp::Lexer::getUntil(const wchar_t stop1, const wchar_t stop2) {
 	const int startPos = position;
 	int i = 0;
 	while (true) {
-		const WCHAR c1 = source[static_cast<long long>(position) + i];
+		const wchar_t c1 = source[static_cast<long long>(position) + i];
 		if (c1 != stop1 && c1 != stop2 && c1 != L'\0') {
 			i++;
 		} else {
@@ -218,7 +215,7 @@ void pmrexp::Lexer::skipSpaces() {
 	}
 }
 
-bool pmrexp::Lexer::isSymbol(wchar_t c) {
+bool pmrexp::Lexer::isSymbol(const wchar_t c) {
 	return
 		c == L'\0' ||
 		c == L'(' ||
@@ -238,7 +235,7 @@ std::wstring pmrexp::Lexer::readWord() {
 	const int startPos = position;
 	int i = 0;
 	while (true) {
-		const WCHAR c1 = source[static_cast<long long>(position) + i];
+		const wchar_t c1 = source[static_cast<long long>(position) + i];
 		if (std::iswalpha(c1)) {
 			i++;
 		} else {
@@ -252,7 +249,7 @@ std::wstring pmrexp::Lexer::readNumber() {
 	const int startPos = position;
 	int i = 0;
 	while (true) {
-		const WCHAR c1 = source[static_cast<long long>(position) + i];
+		const wchar_t c1 = source[static_cast<long long>(position) + i];
 		if (std::iswdigit(c1)) {
 			i++;
 		} else {
@@ -263,12 +260,12 @@ std::wstring pmrexp::Lexer::readNumber() {
 	return source.substr(startPos, i);
 }
 
-pmrexp::Parser::Parser(const std::wstring& source) : source(source), lexer(source) {
+pmrexp::Parser::Parser(std::wstring source) : lexer(std::move(source)) {
 	readNext();
 }
 void pmrexp::Parser::parse() {
 	result = parseExpression();
-	if (next.type != LEXEME_TYPE_END) {
+	if (next.type != LexemeType::END) {
 		error = true;
 	}
 }
@@ -280,7 +277,7 @@ pmrexp::ExpressionTreeNode pmrexp::Parser::getExpression() const {
 }
 void pmrexp::Parser::readNext() {
 	next = lexer.next();
-	if (next.type == LEXEME_TYPE_UNKNOWN) {
+	if (next.type == LexemeType::UNKNOWN) {
 		error = true;
 	}
 }
@@ -295,12 +292,12 @@ pmrexp::ExpressionTreeNode pmrexp::Parser::parseExpression() {
 	if (error) {
 		return ExpressionTreeNode();
 	}
-	while(next.type == LEXEME_TYPE_PLUS || next.type == LEXEME_TYPE_MINUS) {
-		if (next.type == LEXEME_TYPE_PLUS) {
+	while (next.type == LexemeType::PLUS || next.type == LexemeType::MINUS) {
+		if (next.type == LexemeType::PLUS) {
 			ExpressionTreeNode sumResult;
-			sumResult.type = EXP_TYPE_SUM;
+			sumResult.type = ExpressionType::SUM;
 			sumResult.nodes.push_back(result);
-			while (next.type == LEXEME_TYPE_PLUS) {
+			while (next.type == LexemeType::PLUS) {
 				readNext();
 				if (error) {
 					return ExpressionTreeNode();
@@ -313,11 +310,11 @@ pmrexp::ExpressionTreeNode pmrexp::Parser::parseExpression() {
 			}
 			result = std::move(sumResult);
 		}
-		if (next.type == LEXEME_TYPE_MINUS) {
+		if (next.type == LexemeType::MINUS) {
 			ExpressionTreeNode diffResult;
-			diffResult.type = EXP_TYPE_DIFF;
+			diffResult.type = ExpressionType::DIFF;
 			diffResult.nodes.push_back(result);
-			while (next.type == LEXEME_TYPE_MINUS) {
+			while (next.type == LexemeType::MINUS) {
 				readNext();
 				if (error) {
 					return ExpressionTreeNode();
@@ -339,12 +336,12 @@ pmrexp::ExpressionTreeNode pmrexp::Parser::parseTerm() {
 	if (error) {
 		return ExpressionTreeNode();
 	}
-	while(next.type == LEXEME_TYPE_MULT || next.type == LEXEME_TYPE_DIV) {
-		if (next.type == LEXEME_TYPE_MULT) {
+	while (next.type == LexemeType::MULT || next.type == LexemeType::DIV) {
+		if (next.type == LexemeType::MULT) {
 			ExpressionTreeNode multResult;
-			multResult.type = EXP_TYPE_MULT;
+			multResult.type = ExpressionType::MULT;
 			multResult.nodes.push_back(result);
-			while (next.type == LEXEME_TYPE_MULT) {
+			while (next.type == LexemeType::MULT) {
 				readNext();
 				if (error) {
 					return ExpressionTreeNode();
@@ -357,11 +354,11 @@ pmrexp::ExpressionTreeNode pmrexp::Parser::parseTerm() {
 			}
 			result = std::move(multResult);
 		}
-		if (next.type == LEXEME_TYPE_DIV) {
+		if (next.type == LexemeType::DIV) {
 			ExpressionTreeNode divResult;
-			divResult.type = EXP_TYPE_DIV;
+			divResult.type = ExpressionType::DIV;
 			divResult.nodes.push_back(result);
-			while (next.type == LEXEME_TYPE_DIV) {
+			while (next.type == LexemeType::DIV) {
 				readNext();
 				if (error) {
 					return ExpressionTreeNode();
@@ -383,11 +380,11 @@ pmrexp::ExpressionTreeNode pmrexp::Parser::parseFactor() {
 	if (error) {
 		return ExpressionTreeNode();
 	}
-	if (next.type == LEXEME_TYPE_POWER) {
+	if (next.type == LexemeType::POWER) {
 		ExpressionTreeNode res;
-		res.type = EXP_TYPE_POWER;
+		res.type = ExpressionType::POWER;
 		res.nodes.push_back(power);
-		// while (next.type == LEXEME_TYPE_POWER) {
+		// while (next.type == POWER) {
 		readNext();
 		if (error) {
 			return ExpressionTreeNode();
@@ -404,9 +401,9 @@ pmrexp::ExpressionTreeNode pmrexp::Parser::parseFactor() {
 }
 
 pmrexp::ExpressionTreeNode pmrexp::Parser::parsePower() {
-	if (next.type == LEXEME_TYPE_MINUS) {
+	if (next.type == LexemeType::MINUS) {
 		ExpressionTreeNode res;
-		res.type = EXP_TYPE_INVERSE;
+		res.type = ExpressionType::INVERSE;
 		readNext();
 		if (error) {
 			return ExpressionTreeNode();
@@ -422,13 +419,13 @@ pmrexp::ExpressionTreeNode pmrexp::Parser::parsePower() {
 }
 
 pmrexp::ExpressionTreeNode pmrexp::Parser::parseAtom() {
-	if (next.type == LEXEME_TYPE_PAR_OPEN) {
+	if (next.type == LexemeType::PAR_OPEN) {
 		readNext();
 		if (error) {
 			return ExpressionTreeNode();
 		}
 		ExpressionTreeNode res = parseExpression();
-		if (next.type != LEXEME_TYPE_PAR_CLOSE) {
+		if (next.type != LexemeType::PAR_CLOSE) {
 			error = true;
 			return ExpressionTreeNode();
 		}
@@ -438,21 +435,21 @@ pmrexp::ExpressionTreeNode pmrexp::Parser::parseAtom() {
 		}
 		return res;
 	}
-	if (next.type == LEXEME_TYPE_NUMBER) {
+	if (next.type == LexemeType::NUMBER) {
 		ExpressionTreeNode res;
-		res.type = EXP_TYPE_NUMBER;
+		res.type = ExpressionType::NUMBER;
 		const double i = std::stoi(next.value);
 		double m = 0;
 		readNext();
 		if (error) {
 			return ExpressionTreeNode();
 		}
-		if (next.type == LEXEME_TYPE_DOT) {
+		if (next.type == LexemeType::DOT) {
 			readNext();
 			if (error) {
 				return ExpressionTreeNode();
 			}
-			if (next.type != LEXEME_TYPE_NUMBER) {
+			if (next.type != LexemeType::NUMBER) {
 				error = true;
 				return ExpressionTreeNode();
 			}
@@ -465,9 +462,9 @@ pmrexp::ExpressionTreeNode pmrexp::Parser::parseAtom() {
 		res.number = i + m;
 		return res;
 	}
-	if (next.type == LEXEME_TYPE_WORD) {
+	if (next.type == LexemeType::WORD) {
 		ExpressionTreeNode res;
-		res.type = EXP_TYPE_REF;
+		res.type = ExpressionType::REF;
 		res.ref = parseReference();
 		if (error) {
 			return ExpressionTreeNode();
@@ -479,26 +476,23 @@ pmrexp::ExpressionTreeNode pmrexp::Parser::parseAtom() {
 }
 
 pmrexp::reference pmrexp::Parser::parseReference() {
-	if (next.type != LEXEME_TYPE_WORD) {
+	if (next.type != LexemeType::WORD) {
 		error = true;
 		return reference();
 	}
 	reference ref;
 	std::wstring name = next.value;
-	std::wstring shortName;
 	toUpper(name);
 	if (name == L"COUNTERRAW" || name == L"CR") {
-		ref.type = REF_TYPE_COUNTER_RAW;
-		shortName = L"r";
+		ref.type = ReferenceType::COUNTER_RAW;
 	} else if (name == L"COUNTERFORMATED" || name == L"CF") {
-		ref.type = REF_TYPE_COUNTER_FORMATTED;
-		shortName = L"f";
+		ref.type = ReferenceType::COUNTER_FORMATTED;
 	} else if (name == L"EXPRESSION" || name == L"E") {
-		ref.type = REF_TYPE_EXPRESSION;
-		shortName = L"e";
+		ref.type = ReferenceType::EXPRESSION;
 	} else if (name == L"ROLLUPEXPRESSION" || name == L"R") {
-		ref.type = REF_TYPE_ROLLUP_EXPRESSION;
-		shortName = L"R";
+		ref.type = ReferenceType::ROLLUP_EXPRESSION;
+	} else if (name == L"COUNT" || name == L"C") {
+		ref.type = ReferenceType::COUNT;
 	} else {
 		error = true;
 		return reference();
@@ -507,44 +501,41 @@ pmrexp::reference pmrexp::Parser::parseReference() {
 	if (error) {
 		return reference();
 	}
-	if (next.type != LEXEME_TYPE_NUMBER) {
-		error = true;
-		return reference();
+	if (ref.type != ReferenceType::COUNT) {
+		if (next.type != LexemeType::NUMBER) {
+			error = true;
+			return reference();
+		}
+		ref.counter = std::stoi(next.value);
+		readNext();
+		if (error) {
+			return reference();
+		}
 	}
-	ref.counter = std::stoi(next.value);
-	readNext();
-	if (error) {
-		return reference();
-	}
-	if (next.type == LEXEME_TYPE_BR_OPEN) {
+	if (next.type == LexemeType::BR_OPEN) {
 		ref.name = lexer.getUntil(L'#', L']');
 		ref.named = !ref.name.empty();
 		if (ref.named) {
 			if (ref.name[0] == L'\\') {
-				std::wstring::size_type b = ref.name.find_first_of(L' ');
-				if (b != static_cast<decltype(b)>(-1)) {
-					std::wstring flags = ref.name.substr(1, b - 1);
-					CharUpperW(&flags[0]);
-
-					if (flags.find(L'P') != std::string::npos && flags.find(L'D') != std::string::npos) {
-						if (flags.find(L'P') < flags.find(L'D')) {
-							ref.searchPlace = pmre::NSP_PASSED_DISCARDED;
-						} else {
-							ref.searchPlace = pmre::NSP_DISCARDED_PASSED;
-						}
-					} else if (flags.find(L'P') != std::string::npos) {
-						ref.searchPlace = pmre::NSP_PASSED;
-					} else if (flags.find(L'D') != std::string::npos) {
-						ref.searchPlace = pmre::NSP_DISCARDED;
-					}
-					if (flags.find(L'O') != std::string::npos) {
-						ref.useOrigName = true;
-					}
-
-					ref.name = ref.name.substr(b);
+				std::wstring::size_type indexOfFirstNonFlag = ref.name.find_first_of(L' ');
+				if (indexOfFirstNonFlag == std::string::npos) {
+					indexOfFirstNonFlag = ref.name.length();
 				}
+				std::wstring flags = ref.name.substr(1, indexOfFirstNonFlag - 1);
+				toUpper(flags);
+
+				if (flags.find(L'D') != std::string::npos) {
+					ref.discarded = true;
+				}
+				if (flags.find(L'O') != std::string::npos) {
+					ref.useOrigName = true;
+				}
+				if (flags.find(L'T') != std::string::npos) {
+					ref.total = true;
+				}
+				ref.name = ref.name.substr(indexOfFirstNonFlag);
 			}
-			ref.name = pmr::trimSpaces(ref.name);
+			ref.name = trimSpaces(ref.name);
 			const auto len = ref.name.size();
 			if (len >= 2 && ref.name[0] == L'*' && ref.name[len - 1] == L'*') {
 				ref.name = ref.name.substr(1, len - 2);
@@ -555,24 +546,7 @@ pmrexp::reference pmrexp::Parser::parseReference() {
 		if (error) {
 			return reference();
 		}
-		if (next.type == LEXEME_TYPE_HASH) {
-			readNext();
-			if (error) {
-				return reference();
-			}
-			ExpressionTreeNode n = parseExpression();
-			if (error) {
-				return reference();
-			}
-			n.simplify();
-			if (n.type == EXP_TYPE_NUMBER) {
-				ref.number = std::lround(n.number);
-			} else {
-				error = true;
-				return reference();
-			}
-		}
-		if (next.type != LEXEME_TYPE_BR_CLOSE) {
+		if (next.type != LexemeType::BR_CLOSE) {
 			error = true;
 			return reference();
 		}
@@ -581,39 +555,28 @@ pmrexp::reference pmrexp::Parser::parseReference() {
 			return reference();
 		}
 	}
-	std::wstring shortSuffix;
-	if (next.type == LEXEME_TYPE_WORD) {
+	if (next.type == LexemeType::WORD) {
 		std::wstring suffix = next.value;
 		toUpper(suffix);
 		if (suffix == L"SUM" || suffix == L"S") {
-			ref.rollupFunction = pmre::ROLLUP_SUM;
-			shortSuffix = L"s";
+			ref.rollupFunction = pmre::RollupFunction::SUM;
 		} else if (suffix == L"AVG" || suffix == L"A") {
-			ref.rollupFunction = pmre::ROLLUP_AVERAGE;
-			shortSuffix = L"a";
+			ref.rollupFunction = pmre::RollupFunction::AVERAGE;
 		} else if (suffix == L"MIN" || next.value == L"m") {
-			ref.rollupFunction = pmre::ROLLUP_MINIMUM;
-			shortSuffix = L"m";
+			ref.rollupFunction = pmre::RollupFunction::MINIMUM;
 		} else if (suffix == L"MAX" || next.value == L"M") {
-			ref.rollupFunction = pmre::ROLLUP_MAXIMUM;
-			shortSuffix = L"M";
+			ref.rollupFunction = pmre::RollupFunction::MAXIMUM;
 		} else if (suffix == L"COUNT" || suffix == L"C") {
-			ref.rollupFunction = pmre::ROLLUP_COUNT;
-			shortSuffix = L"c";
+			// handling deprecated rollup function
+			ref.type = ReferenceType::COUNT;
+		} else if (suffix == L"FIRST" || suffix == L"F") {
+			ref.rollupFunction = pmre::RollupFunction::FIRST;
 		}
 		readNext();
 		if (error) {
 			return reference();
 		}
 	}
-	ref.uniqueName = shortName
-		+ std::to_wstring(ref.searchPlace)
-		+ (ref.named
-			? (std::wstring(L"[") + (ref.useOrigName ? L"\\" : L"") + std::to_wstring(ref.counter) + ref.name 
-				// + L"#" + std::to_wstring(ref.number)
-				)
-			: L"")
-		+ shortSuffix;
 	return ref;
 }
 
