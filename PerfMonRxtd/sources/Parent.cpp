@@ -26,11 +26,8 @@
 #include "Parent.h"
 #include "utils.h"
 
-#undef max
-#undef min
-
 namespace pmr {
-	std::vector<pmr::ParentData*> parentMeasuresVector;
+	std::vector<ParentData*> parentMeasuresVector;
 }
 
 pmr::ParentData::~ParentData() {
@@ -639,7 +636,8 @@ void pmr::ParentData::sortInstanceKeys(const bool rollup) {
 	{
 		if (rollup) {
 			for (auto& instance : instances) {
-				instance.sortValue = static_cast<double>(calculateRawRollup(sortIndex, instance, sortRollupFunction));
+				// instance.sortValue = static_cast<double>(calculateRawRollup(sortIndex, instance, sortRollupFunction));
+				instance.sortValue = calculateRollup<&ParentData::calculateRaw>(sortRollupFunction, sortIndex, instance);
 			}
 		} else {
 			PDH_RAW_COUNTER_ITEM_W* lpRawBufferCurrent = rawBuffersCurrent.getBuffer(sortIndex);
@@ -659,11 +657,11 @@ void pmr::ParentData::sortInstanceKeys(const bool rollup) {
 		}
 		if (rollup) {
 			for (auto& instance : instances) {
-				instance.sortValue = calculateFormattedRollup(sortIndex, instance, sortRollupFunction);
+				instance.sortValue = calculateRollup<&ParentData::calculateFormatted>(sortRollupFunction, sortIndex, instance);
 			}
 		} else {
 			for (auto& instance : instances) {
-				instance.sortValue = calculateFormatted(sortIndex, instance);
+				instance.sortValue = calculateFormatted(sortIndex, instance.originalIndexes);
 			}
 		}
 		break;
@@ -680,7 +678,7 @@ void pmr::ParentData::sortInstanceKeys(const bool rollup) {
 			const pmrexp::ExpressionTreeNode& expression = expressions[sortIndex];
 			for (auto& instance : instances) {
 				expCurrentItem = &instance;
-				instance.sortValue = resolveExpression(expression);
+				instance.sortValue = calculateExpression<&ParentData::resolveReference>(expression);
 			}
 		}
 		break;
@@ -694,7 +692,7 @@ void pmr::ParentData::sortInstanceKeys(const bool rollup) {
 		const pmrexp::ExpressionTreeNode& expression = rollupExpressions[sortIndex];
 		for (auto& instance : instances) {
 			expCurrentItem = &instance;
-			instance.sortValue = resolveRollupExpression(expression);
+			instance.sortValue = calculateExpression<&ParentData::resolveRollupReference>(expression);
 		}
 		break;
 	}
@@ -789,10 +787,12 @@ void pmr::ParentData::buildRollupKeys() {
 		const indexesItem& indexes = instance.originalIndexes;
 
 		instanceKeyItem& item = mapRollupKeys[instance.sortName];
-		if (item.vectorIndexes.empty()) { // this item has just been created, we need to initialize name
+		if (item.sortName == nullptr) { // this item has just been created
 			item.sortName = instance.sortName;
-		} // else this item already exists in the map
-		item.vectorIndexes.emplace_back(indexes);
+			item.originalIndexes = indexes;
+		} else { // else this item already exists in the map
+			item.vectorIndexes.push_back(indexes);
+		}
 	}
 
 	// copy rollupKeys to the measure's rollup vector because vectors can be sorted, but maps cannot
@@ -817,9 +817,9 @@ double pmr::ParentData::getValue(const pmrexp::reference& ref, const instanceKey
 			return 0.0;
 		}
 		if (rollup) {
-			return static_cast<double>(calculateRawRollup(ref.counter, *instance, ref.rollupFunction));
+			return calculateRollup<&ParentData::calculateRaw>(ref.rollupFunction, ref.counter, *instance);
 		}
-		return static_cast<double>(calculateRaw(ref.counter, *instance));
+		return static_cast<double>(calculateRaw(ref.counter, instance->originalIndexes));
 
 	case pmrexp::ReferenceType::COUNTER_FORMATTED:
 		if (!indexIsInBounds(ref.counter, 0, static_cast<int>(hCounter.size() - 1))) {
@@ -833,9 +833,9 @@ double pmr::ParentData::getValue(const pmrexp::reference& ref, const instanceKey
 			return 0.0;
 		}
 		if (rollup) {
-			return calculateFormattedRollup(ref.counter, *instance, ref.rollupFunction);
+			return calculateRollup<&ParentData::calculateFormatted>(ref.rollupFunction, ref.counter, *instance);
 		}
-		return calculateFormatted(ref.counter, *instance);
+		return calculateFormatted(ref.counter, instance->originalIndexes);
 
 	case pmrexp::ReferenceType::EXPRESSION:
 		if (!indexIsInBounds(ref.counter, 0, static_cast<int>(expressions.size() - 1))) {
@@ -852,7 +852,7 @@ double pmr::ParentData::getValue(const pmrexp::reference& ref, const instanceKey
 		if (rollup) {
 			return calculateExpressionRollup(expressions[ref.counter], ref.rollupFunction);
 		}
-		return resolveExpression(expressions[ref.counter]);
+		return calculateExpression<&ParentData::resolveReference>(expressions[ref.counter]);
 
 	case pmrexp::ReferenceType::ROLLUP_EXPRESSION:
 		if (!indexIsInBounds(ref.counter, 0, static_cast<int>(rollupExpressions.size() - 1))) {
@@ -867,7 +867,7 @@ double pmr::ParentData::getValue(const pmrexp::reference& ref, const instanceKey
 				return 0.0;
 			}
 			expCurrentItem = instance;
-			return resolveRollupExpression(rollupExpressions[ref.counter]);
+			return calculateExpression<&ParentData::resolveRollupReference>(rollupExpressions[ref.counter]);
 		}
 		RmLogF(rm, LOG_ERROR, L"RollupExpression can't be evaluated without rollup");
 		return 0.0;
@@ -1287,224 +1287,19 @@ long pmr::ParentData::findPreviousName(const unsigned long currentIndex) const {
 	return -1;
 }
 
-inline long long pmr::ParentData::calculateRaw(const unsigned counterIndex, const instanceKeyItem& instance) const {
-	return rawBuffersCurrent.getBuffer(counterIndex)[instance.originalIndexes.originalCurrentInx].RawValue.FirstValue;
+inline long long pmr::ParentData::calculateRaw(const unsigned counterIndex, const indexesItem& originalIndexes) const {
+	return rawBuffersCurrent.getBuffer(counterIndex)[originalIndexes.originalCurrentInx].RawValue.FirstValue;
 }
-double pmr::ParentData::calculateRawRollup(const unsigned counterIndex, const instanceKeyItem& instance, const pmre::RollupFunction rollupType)const {
-	const PDH_RAW_COUNTER_ITEM_W * lpRawBufferCurrent = rawBuffersCurrent.getBuffer(counterIndex);
-	const auto& indexes = instance.vectorIndexes;
-
-	switch (rollupType) {
-	case pmre::RollupFunction::SUM:
-	{
-		long long sum = 0;
-		for (const auto& item : indexes) {
-			sum += lpRawBufferCurrent[item.originalCurrentInx].RawValue.FirstValue;
-		}
-		return static_cast<double>(sum);
-	}
-	case pmre::RollupFunction::AVERAGE:
-	{
-		long long sum = 0;
-		for (const auto& item : indexes) {
-			sum += lpRawBufferCurrent[item.originalCurrentInx].RawValue.FirstValue;
-		}
-		const double avg = static_cast<double>(sum) / static_cast<double>(indexes.size());
-		return avg;
-	}
-	case pmre::RollupFunction::MINIMUM:
-	{
-		long long min = std::numeric_limits<long long>::max();
-		for (const auto& item : indexes) {
-			const long long val = lpRawBufferCurrent[item.originalCurrentInx].RawValue.FirstValue;
-			min = val < min ? val : min;
-		}
-		return static_cast<double>(min);
-	}
-	case pmre::RollupFunction::MAXIMUM:
-	{
-		long long max = std::numeric_limits<long long>::min();
-		for (const auto& item : indexes) {
-			const long long val = lpRawBufferCurrent[item.originalCurrentInx].RawValue.FirstValue;
-			max = val > max ? val : max;
-		}
-		return static_cast<double>(max);
-	}
-	case pmre::RollupFunction::FIRST:
-	{
-		return itemCountCurrent == 0 ? 0.0 : static_cast<double>(lpRawBufferCurrent[indexes[0].originalCurrentInx].RawValue.FirstValue);
-	}
-	default:
-		RmLogF(typeHolder->rm, LOG_ERROR, L"unexpected rollupType %d", rollupType);
-		return 0;
-	}
-}
-double pmr::ParentData::calculateRawTotal(const unsigned counterIndex, const pmre::RollupFunction rollupType) const {
-	const PDH_RAW_COUNTER_ITEM_W * lpRawBufferCurrent = rawBuffersCurrent.getBuffer(counterIndex);
-
-	switch (rollupType) {
-	case pmre::RollupFunction::SUM:
-	{
-		long long sum = 0;
-		for (const auto& item : vectorInstanceKeys) {
-			const int currentInx = item.originalIndexes.originalCurrentInx;
-			sum += lpRawBufferCurrent[currentInx].RawValue.FirstValue;
-		}
-		return static_cast<double>(sum);
-	}
-	case pmre::RollupFunction::AVERAGE:
-	{
-		long long sum = 0;
-		for (const auto& item : vectorInstanceKeys) {
-			const int currentInx = item.originalIndexes.originalCurrentInx;
-			sum += lpRawBufferCurrent[currentInx].RawValue.FirstValue;
-		}
-		const double avg = static_cast<double>(sum) / static_cast<double>(vectorInstanceKeys.size());
-		return avg;
-	}
-	case pmre::RollupFunction::MINIMUM:
-	{
-		long long min = std::numeric_limits<long long>::max();
-		for (const auto& item : vectorInstanceKeys) {
-			const int currentInx = item.originalIndexes.originalCurrentInx;
-			const long long val = lpRawBufferCurrent[currentInx].RawValue.FirstValue;
-			min = val < min ? val : min;
-		}
-		return static_cast<double>(min);
-	}
-	case pmre::RollupFunction::MAXIMUM:
-	{
-		double max = -std::numeric_limits<double>::max();
-		for (const auto& item : vectorInstanceKeys) {
-			const int currentInx = item.originalIndexes.originalCurrentInx;
-			const long long val = lpRawBufferCurrent[currentInx].RawValue.FirstValue;
-			max = val > max ? val : max;
-		}
-		return static_cast<double>(max);
-	}
-	case pmre::RollupFunction::FIRST:
-		return vectorInstanceKeys.empty() ? 0.0 : static_cast<double>(lpRawBufferCurrent[vectorInstanceKeys[0].originalIndexes.originalCurrentInx].RawValue.FirstValue);
-	default:
-		RmLogF(typeHolder->rm, LOG_ERROR, L"unexpected rollupType %d", rollupType);
-		return 0;
-	}
-}
-
-double pmr::ParentData::calculateFormatted(const unsigned counterIndex, const instanceKeyItem& instance) const {
+double pmr::ParentData::calculateFormatted(unsigned counterIndex, const indexesItem& originalIndexes) const {
 	PDH_FMT_COUNTERVALUE formattedValue;
-	return extractFormattedValue(hCounter[counterIndex], rawBuffersCurrent.getBuffer(counterIndex), rawBuffersPrevious.getBuffer(counterIndex), instance.originalIndexes, formattedValue);
+	return extractFormattedValue(hCounter[counterIndex], rawBuffersCurrent.getBuffer(counterIndex), rawBuffersPrevious.getBuffer(counterIndex), originalIndexes, formattedValue);
 }
-double pmr::ParentData::calculateFormattedRollup(const unsigned counterIndex, const instanceKeyItem& instance, const pmre::RollupFunction rollupType) const {
-	PDH_FMT_COUNTERVALUE formattedValue;
-	const PDH_HCOUNTER hCounter = this->hCounter[counterIndex];
-	const PDH_RAW_COUNTER_ITEM_W * lpRawBufferCurrent = rawBuffersCurrent.getBuffer(counterIndex);
-	const PDH_RAW_COUNTER_ITEM_W * lpRawBufferPrevious = rawBuffersPrevious.getBuffer(counterIndex);
-
-	const auto& indexes = instance.vectorIndexes;
-
-	switch (rollupType) {
-	case pmre::RollupFunction::SUM:
-	{
-		double sum = 0;
-		for (const auto& item : indexes) {
-			const double val = extractFormattedValue(hCounter, lpRawBufferCurrent, lpRawBufferPrevious, item, formattedValue);
-			sum = sum + val;
-		}
-		return sum;
-	}
-	case pmre::RollupFunction::AVERAGE:
-	{
-		double sum = 0;
-		for (const auto& item : indexes) {
-			const double val = extractFormattedValue(hCounter, lpRawBufferCurrent, lpRawBufferPrevious, item, formattedValue);
-			sum = sum + val;
-		}
-		const double avg = sum / indexes.size();
-		return avg;
-	}
-	case pmre::RollupFunction::MINIMUM:
-	{
-		double min = std::numeric_limits<double>::max();
-		for (const auto& item : indexes) {
-			const double val = extractFormattedValue(hCounter, lpRawBufferCurrent, lpRawBufferPrevious, item, formattedValue);
-			min = val < min ? val : min;
-		}
-		return min;
-	}
-	case pmre::RollupFunction::MAXIMUM:
-	{
-		double max = -std::numeric_limits<double>::max();
-		for (const auto& item : indexes) {
-			const double val = extractFormattedValue(hCounter, lpRawBufferCurrent, lpRawBufferPrevious, item, formattedValue);
-			max = val > max ? val : max;
-		}
-		return max;
-	}
-	case pmre::RollupFunction::FIRST:
-		return indexes.empty() ? 0.0 : extractFormattedValue(hCounter, lpRawBufferCurrent, lpRawBufferPrevious, indexes[0], formattedValue);
-	default:
-		RmLogF(typeHolder->rm, LOG_ERROR, L"unexpected rollupType %d", rollupType);
-		return 0;
-	}
-}
-double pmr::ParentData::calculateFormattedTotal(const unsigned counterIndex, const pmre::RollupFunction rollupType) const {
-	PDH_FMT_COUNTERVALUE formattedValue;
-	const PDH_HCOUNTER hCounter = this->hCounter[counterIndex];
-	const PDH_RAW_COUNTER_ITEM_W * lpRawBufferCurrent = rawBuffersCurrent.getBuffer(counterIndex);
-	const PDH_RAW_COUNTER_ITEM_W * lpRawBufferPrevious = rawBuffersPrevious.getBuffer(counterIndex);
-
-	switch (rollupType) {
-	case pmre::RollupFunction::SUM:
-	{
-		double sum = 0;
-		for (const auto& item : vectorInstanceKeys) {
-			const double val = extractFormattedValue(hCounter, lpRawBufferCurrent, lpRawBufferPrevious, item.originalIndexes, formattedValue);
-			sum = sum + val;
-		}
-		return sum;
-	}
-	case pmre::RollupFunction::AVERAGE:
-	{
-		double sum = 0;
-		for (const auto& item : vectorInstanceKeys) {
-			const double val = extractFormattedValue(hCounter, lpRawBufferCurrent, lpRawBufferPrevious, item.originalIndexes, formattedValue);
-			sum = sum + val;
-		}
-		const double avg = sum / vectorInstanceKeys.size();
-		return avg;
-	}
-	case pmre::RollupFunction::MINIMUM:
-	{
-		double min = std::numeric_limits<double>::max();
-		for (const auto& item : vectorInstanceKeys) {
-			const double val = extractFormattedValue(hCounter, lpRawBufferCurrent, lpRawBufferPrevious, item.originalIndexes, formattedValue);
-			min = val < min ? val : min;
-		}
-		return min;
-	}
-	case pmre::RollupFunction::MAXIMUM:
-	{
-		double max = -std::numeric_limits<double>::max();
-		for (const auto& item : vectorInstanceKeys) {
-			const double val = extractFormattedValue(hCounter, lpRawBufferCurrent, lpRawBufferPrevious, item.originalIndexes, formattedValue);
-			max = val > max ? val : max;
-		}
-		return max;
-	}
-	case pmre::RollupFunction::FIRST:
-		return vectorInstanceKeys.empty() ? 0.0 : extractFormattedValue(hCounter, lpRawBufferCurrent, lpRawBufferPrevious, vectorInstanceKeys[0].originalIndexes, formattedValue);
-	default:
-		RmLogF(typeHolder->rm, LOG_ERROR, L"unexpected rollupType %d", rollupType);
-		return 0;
-	}
-}
-
 double pmr::ParentData::calculateTotal(const TotalSource source, const unsigned counterIndex, const pmre::RollupFunction rollupFunction) const {
 	switch (source) {
-	case TotalSource::RAW_COUNTER: return calculateRawTotal(counterIndex, rollupFunction);
-	case TotalSource::FORMATTED_COUNTER: return calculateFormattedTotal(counterIndex, rollupFunction);
-	case TotalSource::EXPRESSION: return calculateExpressionTotal(expressions[counterIndex], rollupFunction);
-	case TotalSource::ROLLUP_EXPRESSION: return calculateRollupExpressionTotal(rollupExpressions[counterIndex], rollupFunction);
+	case TotalSource::RAW_COUNTER: return calculateTotal<&ParentData::calculateRaw>(rollupFunction, counterIndex);
+	case TotalSource::FORMATTED_COUNTER: return calculateTotal<&ParentData::calculateFormatted>(rollupFunction, counterIndex);
+	case TotalSource::EXPRESSION: return calculateExpressionTotal<&ParentData::calculateExpression<&ParentData::resolveReference>>(rollupFunction, expressions[counterIndex]);
+	case TotalSource::ROLLUP_EXPRESSION: return calculateExpressionTotal<&ParentData::calculateExpression<&ParentData::resolveRollupReference>>(rollupFunction, expressions[counterIndex]);
 	default:
 		RmLogF(typeHolder->rm, LOG_ERROR, L"unexpected TotalSource %d", source);
 		return 0;
@@ -1537,57 +1332,6 @@ double pmr::ParentData::calculateAndCacheTotal(const TotalSource source, const u
 	return value;
 }
 
-double pmr::ParentData::resolveExpression(const pmrexp::ExpressionTreeNode& expression) const {
-	switch (expression.type) {
-	case pmrexp::ExpressionType::UNKNOWN:
-		RmLogF(typeHolder->rm, LOG_ERROR, L"unknown expression being solved", sortBy);
-		return 0.0;
-	case pmrexp::ExpressionType::NUMBER: return expression.number;
-	case pmrexp::ExpressionType::SUM:
-	{
-		double value = 0;
-		for (const pmrexp::ExpressionTreeNode& node : expression.nodes) {
-			value += resolveExpression(node);
-		}
-		return value;
-	}
-	case pmrexp::ExpressionType::DIFF:
-	{
-		double value = resolveExpression(expression.nodes[0]);
-		for (unsigned int i = 1; i < expression.nodes.size(); i++) {
-			value -= resolveExpression(expression.nodes[i]);
-		}
-		return value;
-	}
-	case pmrexp::ExpressionType::INVERSE: return -resolveExpression(expression.nodes[0]);
-	case pmrexp::ExpressionType::MULT:
-	{
-		double value = 1;
-		for (const pmrexp::ExpressionTreeNode& node : expression.nodes) {
-			value *= resolveExpression(node);
-		}
-		return value;
-	}
-	case pmrexp::ExpressionType::DIV:
-	{
-		double value = resolveExpression(expression.nodes[0]);
-		for (unsigned int i = 1; i < expression.nodes.size(); i++) {
-			const double denominator = resolveExpression(expression.nodes[i]);
-			if (denominator == 0) {
-				value = 0;
-				break;
-			}
-			value /= denominator;
-		}
-		return value;
-	}
-	case pmrexp::ExpressionType::POWER: return std::pow(resolveExpression(expression.nodes[0]), resolveExpression(expression.nodes[1]));
-	case pmrexp::ExpressionType::REF: return resolveReference(expression.ref);
-	default:
-		RmLogF(typeHolder->rm, LOG_ERROR, L"unknown expression type: %d", expression.type);
-		return 0.0;
-	}
-}
 double pmr::ParentData::resolveReference(const pmrexp::reference& ref) const {
 	if (ref.type == pmrexp::ReferenceType::UNKNOWN) {
 		RmLogF(typeHolder->rm, LOG_ERROR, L"unknown reference being solved", sortBy);
@@ -1615,9 +1359,9 @@ double pmr::ParentData::resolveReference(const pmrexp::reference& ref) const {
 		}
 		if (!ref.named) {
 			if (ref.type == pmrexp::ReferenceType::COUNTER_RAW) {
-				return static_cast<double>(calculateRaw(ref.counter, *expCurrentItem));
+				return static_cast<double>(calculateRaw(ref.counter, expCurrentItem->originalIndexes));
 			} else {
-				return calculateFormatted(ref.counter, *expCurrentItem);
+				return calculateFormatted(ref.counter, expCurrentItem->originalIndexes);
 			}
 		}
 		const auto instance = findAndCacheName(ref, false);
@@ -1625,9 +1369,9 @@ double pmr::ParentData::resolveReference(const pmrexp::reference& ref) const {
 			return 0.0;
 		}
 		if (ref.type == pmrexp::ReferenceType::COUNTER_RAW) {
-			return static_cast<double>(calculateRaw(ref.counter, *instance));
+			return static_cast<double>(calculateRaw(ref.counter, instance->originalIndexes));
 		} else {
-			return calculateFormatted(ref.counter, *instance);
+			return calculateFormatted(ref.counter, instance->originalIndexes);
 		}
 	}
 	if (ref.type == pmrexp::ReferenceType::EXPRESSION) {
@@ -1635,7 +1379,7 @@ double pmr::ParentData::resolveReference(const pmrexp::reference& ref) const {
 			return calculateAndCacheTotal(TotalSource::EXPRESSION, ref.counter, ref.rollupFunction);
 		}
 		if (!ref.named) {
-			return resolveExpression(expressions[ref.counter]);
+			return calculateExpression<&ParentData::resolveReference>(expressions[ref.counter]);
 		}
 		const auto instance = findAndCacheName(ref, false);
 		if (instance == nullptr) {
@@ -1643,7 +1387,7 @@ double pmr::ParentData::resolveReference(const pmrexp::reference& ref) const {
 		}
 		const instanceKeyItem* const savedInstance = expCurrentItem;
 		expCurrentItem = instance;
-		const double res = resolveExpression(expressions[ref.counter]);
+		const double res = calculateExpression<&ParentData::resolveReference>(expressions[ref.counter]);
 		expCurrentItem = savedInstance;
 		return res;
 	}
@@ -1652,58 +1396,47 @@ double pmr::ParentData::resolveReference(const pmrexp::reference& ref) const {
 }
 double pmr::ParentData::calculateExpressionRollup(const pmrexp::ExpressionTreeNode& expression, const pmre::RollupFunction rollupFunction) const {
 	const instanceKeyItem& instance = *expCurrentItem;
-	instanceKeyItem tmp;		// we only need instanceKeyItem::originalIndexes member to solve usual expressions
+	instanceKeyItem tmp;		// we only need instanceKeyItem::originalIndexes member to solve usual expressions 
+								// but let's use whole InstanceKeyItem
 	expCurrentItem = &tmp;
-	double value = 0.0;
+	tmp.originalIndexes = instance.originalIndexes;
+	double value = calculateExpression<&ParentData::resolveReference>(expression);
 
 	switch (rollupFunction) {
 	case pmre::RollupFunction::SUM:
 	{
-		double sum = 0.0;
 		for (const auto& item : instance.vectorIndexes) {
 			tmp.originalIndexes = item;
-			sum += resolveExpression(expression);
+			value += calculateExpression<&ParentData::resolveReference>(expression);
 		}
-		value = sum;
 		break;
 	}
 	case pmre::RollupFunction::AVERAGE:
 	{
-		double sum = 0.0;
 		for (const auto& item : instance.vectorIndexes) {
 			tmp.originalIndexes = item;
-			sum += resolveExpression(expression);
+			value += calculateExpression<&ParentData::resolveReference>(expression);
 		}
-		value = sum / instance.vectorIndexes.size();
+		value /= (instance.vectorIndexes.size() + 1);
 		break;
 	}
 	case pmre::RollupFunction::MINIMUM:
 	{
-		double min = std::numeric_limits<double>::max();
 		for (const auto& indexes : instance.vectorIndexes) {
 			tmp.originalIndexes = indexes;
-			double val = resolveExpression(expression);
-			min = min < val ? min : val;
+			value = std::min(value, calculateExpression<&ParentData::resolveReference>(expression));
 		}
-		value = min;
 		break;
 	}
 	case pmre::RollupFunction::MAXIMUM:
 	{
-		double max = -std::numeric_limits<double>::max();
 		for (const auto& indexes : instance.vectorIndexes) {
 			tmp.originalIndexes = indexes;
-			double val = resolveExpression(expression);
-			max = max > val ? max : val;
+			value = std::max(value, calculateExpression<&ParentData::resolveReference>(expression));
 		}
-		value = max;
 		break;
 	}
 	case pmre::RollupFunction::FIRST:
-		if (!instance.vectorIndexes.empty()) {
-			tmp.originalIndexes = instance.vectorIndexes[0];
-			value = resolveExpression(expression);
-		}
 		break;
 	default:
 		RmLogF(typeHolder->rm, LOG_ERROR, L"unknown expression type: %d", expression.type);
@@ -1711,67 +1444,6 @@ double pmr::ParentData::calculateExpressionRollup(const pmrexp::ExpressionTreeNo
 		break;
 	}
 	expCurrentItem = &instance;
-	return value;
-}
-double pmr::ParentData::calculateExpressionTotal(const pmrexp::ExpressionTreeNode& expression, const pmre::RollupFunction rollupFunction) const {
-	const instanceKeyItem* const savedItem = expCurrentItem;
-	double value = 0.0;
-
-	switch (rollupFunction) {
-	case pmre::RollupFunction::SUM:
-	{
-		double sum = 0.0;
-		for (const auto& item : vectorInstanceKeys) {
-			expCurrentItem = &item;
-			sum += resolveExpression(expression);
-		}
-		value = sum;
-		break;
-	}
-	case pmre::RollupFunction::AVERAGE:
-	{
-		double sum = 0.0;
-		for (const auto& item : vectorInstanceKeys) {
-			expCurrentItem = &item;
-			sum += resolveExpression(expression);
-		}
-		value = sum / vectorInstanceKeys.size();
-		break;
-	}
-	case pmre::RollupFunction::MINIMUM:
-	{
-		double min = std::numeric_limits<double>::max();
-		for (const auto& item : vectorInstanceKeys) {
-			expCurrentItem = &item;
-			double val = resolveExpression(expression);
-			min = min < val ? min : val;
-		}
-		value = min;
-		break;
-	}
-	case pmre::RollupFunction::MAXIMUM:
-	{
-		double max = -std::numeric_limits<double>::max();
-		for (const auto& item : vectorInstanceKeys) {
-			expCurrentItem = &item;
-			double val = resolveExpression(expression);
-			max = max > val ? max : val;
-		}
-		value = max;
-		break;
-	}
-	case pmre::RollupFunction::FIRST:
-		if (!vectorInstanceKeys.empty()) {
-			expCurrentItem = &vectorInstanceKeys[0];
-			value = resolveExpression(expression);
-		}
-		break;
-	default:
-		RmLogF(typeHolder->rm, LOG_ERROR, L"unknown rollup function: %d", rollupFunction);
-		value = 0.0;
-		break;
-	}
-	expCurrentItem = savedItem;
 	return value;
 }
 double pmr::ParentData::calculateCountTotal(const pmre::RollupFunction rollupFunction) const {
@@ -1787,118 +1459,6 @@ double pmr::ParentData::calculateCountTotal(const pmre::RollupFunction rollupFun
 	}
 }
 
-double pmr::ParentData::resolveRollupExpression(const pmrexp::ExpressionTreeNode& expression) const {
-	switch (expression.type) {
-	case pmrexp::ExpressionType::UNKNOWN:
-		RmLogF(typeHolder->rm, LOG_ERROR, L"unknown expression being solved", sortBy);
-		return 0.0;
-	case pmrexp::ExpressionType::NUMBER: return expression.number;
-	case pmrexp::ExpressionType::SUM:
-	{
-		double value = 0;
-		for (const pmrexp::ExpressionTreeNode& node : expression.nodes) {
-			value += resolveRollupExpression(node);
-		}
-		return value;
-	}
-	case pmrexp::ExpressionType::DIFF:
-	{
-		double value = resolveRollupExpression(expression.nodes[0]);
-		for (unsigned int i = 1; i < expression.nodes.size(); i++) {
-			value -= resolveRollupExpression(expression.nodes[i]);
-		}
-		return value;
-	}
-	case pmrexp::ExpressionType::INVERSE: return -resolveRollupExpression(expression.nodes[0]);
-	case pmrexp::ExpressionType::MULT:
-	{
-		double value = 1;
-		for (const pmrexp::ExpressionTreeNode& node : expression.nodes) {
-			value *= resolveRollupExpression(node);
-		}
-		return value;
-	}
-	case pmrexp::ExpressionType::DIV:
-	{
-		double value = resolveRollupExpression(expression.nodes[0]);
-		for (unsigned int i = 1; i < expression.nodes.size(); i++) {
-			const double denominator = resolveRollupExpression(expression.nodes[i]);
-			if (denominator == 0) {
-				value = 0;
-				break;
-			}
-			value /= denominator;
-		}
-		return value;
-	}
-	case pmrexp::ExpressionType::POWER: return std::pow(resolveRollupExpression(expression.nodes[0]), resolveRollupExpression(expression.nodes[1]));
-	case pmrexp::ExpressionType::REF: return resolveRollupReference(expression.ref);
-	default:
-		RmLogF(typeHolder->rm, LOG_ERROR, L"unknown expression type: %d", expression.type);
-		return 0.0;
-	}
-}
-double pmr::ParentData::calculateRollupExpressionTotal(const pmrexp::ExpressionTreeNode& expression, const pmre::RollupFunction rollupFunction) const {
-	const instanceKeyItem* const savedItem = expCurrentItem;
-	double value = 0.0;
-
-	switch (rollupFunction) {
-	case pmre::RollupFunction::SUM:
-	{
-		double sum = 0.0;
-		for (const auto& item : vectorRollupKeys) {
-			expCurrentItem = &item;
-			sum += resolveRollupExpression(expression);
-		}
-		value = sum;
-		break;
-	}
-	case pmre::RollupFunction::AVERAGE:
-	{
-		double sum = 0.0;
-		for (const auto& item : vectorRollupKeys) {
-			expCurrentItem = &item;
-			sum += resolveRollupExpression(expression);
-		}
-		value = sum / vectorInstanceKeys.size();
-		break;
-	}
-	case pmre::RollupFunction::MINIMUM:
-	{
-		double min = std::numeric_limits<double>::max();
-		for (const auto& item : vectorRollupKeys) {
-			expCurrentItem = &item;
-			double val = resolveRollupExpression(expression);
-			min = min < val ? min : val;
-		}
-		value = min;
-		break;
-	}
-	case pmre::RollupFunction::MAXIMUM:
-	{
-		double max = -std::numeric_limits<double>::max();
-		for (const auto& item : vectorRollupKeys) {
-			expCurrentItem = &item;
-			double val = resolveRollupExpression(expression);
-			max = max > val ? max : val;
-		}
-		value = max;
-		break;
-	}
-	case pmre::RollupFunction::FIRST:
-		if (!vectorRollupKeys.empty()) {
-			expCurrentItem = &vectorRollupKeys[0];
-			value = resolveRollupExpression(expression);
-		}
-		break;
-	default:
-		RmLogF(typeHolder->rm, LOG_ERROR, L"unknown rollup function: %d", rollupFunction);
-		value = 0.0;
-		break;
-	}
-	expCurrentItem = savedItem;
-	return value;
-}
 double pmr::ParentData::calculateRollupCountTotal(const pmre::RollupFunction rollupFunction) const {
 	switch (rollupFunction) {
 	case pmre::RollupFunction::SUM: return static_cast<double>(vectorRollupKeys.size());
@@ -1959,9 +1519,9 @@ double pmr::ParentData::resolveRollupReference(const pmrexp::reference& ref) con
 		}
 		if (!ref.named) {
 			if (ref.type == pmrexp::ReferenceType::COUNTER_RAW) {
-				return calculateRawRollup(ref.counter, *expCurrentItem, ref.rollupFunction);
+				return calculateRollup<&ParentData::calculateRaw>(ref.rollupFunction, ref.counter, *expCurrentItem);
 			} else {
-				return calculateFormattedRollup(ref.counter, *expCurrentItem, ref.rollupFunction);
+				return calculateRollup<&ParentData::calculateFormatted>(ref.rollupFunction, ref.counter, *expCurrentItem);
 			}
 		}
 		const auto instance = findAndCacheName(ref, true);
@@ -1969,9 +1529,9 @@ double pmr::ParentData::resolveRollupReference(const pmrexp::reference& ref) con
 			return 0.0;
 		}
 		if (ref.type == pmrexp::ReferenceType::COUNTER_RAW) {
-			return calculateRawRollup(ref.counter, *instance, ref.rollupFunction);
+			return calculateRollup<&ParentData::calculateRaw>(ref.rollupFunction, ref.counter, *instance);
 		} else {
-			return calculateFormattedRollup(ref.counter, *instance, ref.rollupFunction);
+			return calculateRollup<&ParentData::calculateFormatted>(ref.rollupFunction, ref.counter, *instance);
 		}
 	}
 	if (ref.type == pmrexp::ReferenceType::EXPRESSION || ref.type == pmrexp::ReferenceType::ROLLUP_EXPRESSION) {
@@ -1986,7 +1546,7 @@ double pmr::ParentData::resolveRollupReference(const pmrexp::reference& ref) con
 			if (ref.type == pmrexp::ReferenceType::EXPRESSION) {
 				return calculateExpressionRollup(expressions[ref.counter], ref.rollupFunction);
 			} else {
-				return resolveRollupExpression(rollupExpressions[ref.counter]);
+				return calculateExpression<&ParentData::resolveRollupReference>(rollupExpressions[ref.counter]);
 			}
 		}
 		const auto instance = findAndCacheName(ref, true);
@@ -1999,7 +1559,7 @@ double pmr::ParentData::resolveRollupReference(const pmrexp::reference& ref) con
 		if (ref.type == pmrexp::ReferenceType::EXPRESSION) {
 			res = calculateExpressionRollup(expressions[ref.counter], ref.rollupFunction);
 		} else {
-			res = resolveRollupExpression(rollupExpressions[ref.counter]);
+			res = calculateExpression<&ParentData::resolveRollupReference>(rollupExpressions[ref.counter]);
 		}
 		expCurrentItem = savedInstance;
 		return res;

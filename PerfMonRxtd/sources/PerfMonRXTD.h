@@ -77,7 +77,7 @@
  //         Code: sane references cache management
  //         Code: added more comments
  //         
- //         
+ // v1.2.1: Code: generified some methods in parent
  //         
  //         
  //         
@@ -147,7 +147,7 @@ namespace pmr {
 	};
 
 	struct instanceKeyItem {
-		const wchar_t* sortName;
+		const wchar_t* sortName = nullptr;
 		double sortValue;
 		indexesItem originalIndexes;
 		std::vector<indexesItem> vectorIndexes;

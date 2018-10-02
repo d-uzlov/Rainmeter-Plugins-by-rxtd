@@ -70,6 +70,9 @@
 #include "ContinuousBuffersHolder.h"
 #include "expressions.h"
 
+#undef max
+#undef min
+
 namespace pmr {
 	enum class SortBy : unsigned char {
 		NONE,
@@ -222,7 +225,7 @@ namespace pmr {
 		void buildInstanceKeys();
 		/** Same as ParentData::buildInstanceKeys() but don't search items in previous buffer as this function is called when no previous data exists */
 		void buildInstanceKeysZero();
-		/** Search thru ParentData::vectorInstanceKeys and combine instances whose display names match */
+		/** Search thru ParentData::vectorInstanceKeys and combine instances whose sort names match */
 		void buildRollupKeys();
 		/** Sorts given vector according to current settings */
 		void sortInstanceKeys(bool rollup);
@@ -244,23 +247,26 @@ namespace pmr {
 		const instanceKeyItem* findAndCacheName(const pmrexp::reference& ref, bool useRollup) const;
 		double calculateAndCacheTotal(TotalSource source, unsigned int counterIndex, pmre::RollupFunction rollupFunction) const;
 
-		inline long long calculateRaw(unsigned counterIndex, const instanceKeyItem& instance) const;
-		double calculateRawRollup(unsigned counterIndex, const instanceKeyItem& instance, pmre::RollupFunction rollupType) const;
-		double calculateRawTotal(unsigned counterIndex, pmre::RollupFunction rollupType) const;
+		template<auto (ParentData::*calculateValueFunction)(unsigned counterIndex, const indexesItem& originalIndexes) const>
+		double calculateRollup(pmre::RollupFunction rollupType, unsigned counterIndex, const instanceKeyItem& instance) const;
 
-		double calculateFormatted(unsigned counterIndex, const instanceKeyItem& instance) const;
-		double calculateFormattedRollup(unsigned counterIndex, const instanceKeyItem& instance, pmre::RollupFunction rollupType) const;
-		double calculateFormattedTotal(unsigned counterIndex, pmre::RollupFunction rollupType) const;
+		template<auto (ParentData::*calculateValueFunction)(unsigned counterIndex, const indexesItem& originalIndexes) const>
+		double calculateTotal(pmre::RollupFunction rollupType, unsigned counterIndex) const;
 
-		double resolveExpression(const pmrexp::ExpressionTreeNode& expression) const;
+		template<double (ParentData::*calculateExpressionFunction)(const pmrexp::ExpressionTreeNode& expression) const>
+		double calculateExpressionTotal(pmre::RollupFunction rollupType, const pmrexp::ExpressionTreeNode& expression) const;
+
+		template<double (ParentData::*resolveReferenceFunction)(const pmrexp::reference& ref) const>
+		double calculateExpression(const pmrexp::ExpressionTreeNode& expression) const;
+
+		inline long long calculateRaw(unsigned counterIndex, const indexesItem& originalIndexes) const;
+		inline double calculateFormatted(unsigned counterIndex, const indexesItem& originalIndexes) const;
+
 		double resolveReference(const pmrexp::reference& ref) const;
 		double calculateExpressionRollup(const pmrexp::ExpressionTreeNode& expression, pmre::RollupFunction rollupFunction) const;
-		double calculateExpressionTotal(const pmrexp::ExpressionTreeNode& expression, pmre::RollupFunction rollupFunction) const;
 		double calculateCountTotal(pmre::RollupFunction rollupFunction) const;
 
-		double resolveRollupExpression(const pmrexp::ExpressionTreeNode& expression) const;
 		double resolveRollupReference(const pmrexp::reference& ref) const;
-		double calculateRollupExpressionTotal(const pmrexp::ExpressionTreeNode& expression, pmre::RollupFunction rollupFunction) const;
 		double calculateRollupCountTotal(pmre::RollupFunction rollupFunction) const;
 
 		inline double extractFormattedValue(
@@ -270,4 +276,190 @@ namespace pmr {
 			const indexesItem& item,
 			PDH_FMT_COUNTERVALUE& formattedValue) const;
 	};
+
+	template <auto (ParentData::* calculateValueFunction)(unsigned counterIndex, const indexesItem& originalIndexes) const>
+	double ParentData::calculateRollup(const pmre::RollupFunction rollupType, const unsigned counterIndex, const instanceKeyItem& instance) const {
+		using T = decltype((this->*calculateValueFunction)(std::declval<unsigned>(), std::declval<const indexesItem&>()));
+		const T firstValue = (this->*calculateValueFunction)(counterIndex, instance.originalIndexes);
+		const auto& indexes = instance.vectorIndexes;
+
+		switch (rollupType) {
+		case pmre::RollupFunction::SUM:
+		case pmre::RollupFunction::AVERAGE:
+		{
+			auto sum = firstValue;
+			for (const auto& item : indexes) {
+				sum += (this->*calculateValueFunction)(counterIndex, item);
+			}
+			if (rollupType == pmre::RollupFunction::SUM) {
+				return static_cast<double>(sum);
+			}
+			if (indexes.empty()) {
+				return 0.0;
+			}
+			return static_cast<double>(sum) / (indexes.size() + 1);
+		}
+		case pmre::RollupFunction::MINIMUM:
+		{
+			auto min = firstValue;
+			for (const auto& item : indexes) {
+				min = std::min(min, (this->*calculateValueFunction)(counterIndex, item));
+			}
+			return static_cast<double>(min);
+		}
+		case pmre::RollupFunction::MAXIMUM:
+		{
+			auto max = firstValue;
+			for (const auto& item : indexes) {
+				max = std::max(max, (this->*calculateValueFunction)(counterIndex, item));
+			}
+			return static_cast<double>(max);
+		}
+		case pmre::RollupFunction::FIRST:
+			return static_cast<double>(firstValue);
+		default:
+			RmLogF(typeHolder->rm, LOG_ERROR, L"unexpected rollupType %d", rollupType);
+			return 0;
+		}
+	}
+
+	template <auto (ParentData::* calculateValueFunction)(unsigned counterIndex, const indexesItem& originalIndexes) const>
+	double ParentData::calculateTotal(const pmre::RollupFunction rollupType, const unsigned counterIndex) const {
+		using T = decltype((this->*calculateValueFunction)(std::declval<unsigned>(), std::declval<const indexesItem&>()));
+		switch (rollupType) {
+		case pmre::RollupFunction::SUM:
+		case pmre::RollupFunction::AVERAGE: {
+			if (vectorInstanceKeys.empty()) {
+				return 0.0;
+			}
+			T sum{ };
+			for (const auto& item : vectorInstanceKeys) {
+				sum += (this->*calculateValueFunction)(counterIndex, item.originalIndexes);
+			}
+			if (rollupType == pmre::RollupFunction::SUM) {
+				return static_cast<double>(sum);
+			}
+			return static_cast<double>(sum) / vectorInstanceKeys.size();
+		}
+		case pmre::RollupFunction::MINIMUM: {
+			T min = std::numeric_limits<T>::max();
+			for (const auto& item : vectorInstanceKeys) {
+				min = std::min(min, (this->*calculateValueFunction)(counterIndex, item.originalIndexes));
+			}
+			return static_cast<double>(min);
+		}
+		case pmre::RollupFunction::MAXIMUM: {
+			T max = -std::numeric_limits<T>::max();
+			for (const auto& item : vectorInstanceKeys) {
+				max = std::max(max, (this->*calculateValueFunction)(counterIndex, item.originalIndexes));
+			}
+			return static_cast<double>(max);
+		}
+		case pmre::RollupFunction::FIRST:
+			return vectorInstanceKeys.empty()
+				       ? 0.0
+				       : (this->*calculateValueFunction)(counterIndex, vectorInstanceKeys[0].originalIndexes);
+		default:
+			RmLogF(typeHolder->rm, LOG_ERROR, L"unexpected rollupType %d", rollupType);
+			return 0;
+		}
+	}
+
+	template <double( ParentData::* calculateExpressionFunction)(const pmrexp::ExpressionTreeNode& expression) const>
+	double ParentData::calculateExpressionTotal(const pmre::RollupFunction rollupType, const pmrexp::ExpressionTreeNode& expression) const {
+		switch (rollupType) {
+		case pmre::RollupFunction::SUM:
+		case pmre::RollupFunction::AVERAGE: {
+			double sum = 0.0;
+			for (const auto& item : vectorInstanceKeys) {
+				expCurrentItem = &item;
+				sum += (this->*calculateExpressionFunction)(expression);
+			}
+			if (rollupType == pmre::RollupFunction::AVERAGE) {
+				if (vectorInstanceKeys.empty()) {
+					return 0.0;
+				}
+				return sum / vectorInstanceKeys.size();
+			}
+			return sum;
+		}
+		case pmre::RollupFunction::MINIMUM: {
+			double min = std::numeric_limits<double>::max();
+			for (const auto& item : vectorInstanceKeys) {
+				expCurrentItem = &item;
+				min = std::min(min, (this->*calculateExpressionFunction)(expression));
+			}
+			return min;
+		}
+		case pmre::RollupFunction::MAXIMUM: {
+			double max = -std::numeric_limits<double>::max();
+			for (const auto& item : vectorInstanceKeys) {
+				expCurrentItem = &item;
+				max = std::max(max, (this->*calculateExpressionFunction)(expression));
+			}
+			return max;
+		}
+		case pmre::RollupFunction::FIRST:
+			if (vectorInstanceKeys.empty()) {
+				return 0.0;
+			}
+			expCurrentItem = &vectorInstanceKeys[0];
+			return (this->*calculateExpressionFunction)(expression);
+		default:
+			RmLogF(typeHolder->rm, LOG_ERROR, L"unexpected rollupType %d", rollupType);
+			return 0;
+		}
+	}
+
+	template <double( ParentData::* resolveReferenceFunction)(const pmrexp::reference& ref) const>
+	double ParentData::calculateExpression(const pmrexp::ExpressionTreeNode& expression) const {
+		switch (expression.type) {
+		case pmrexp::ExpressionType::UNKNOWN:
+			RmLogF(typeHolder->rm, LOG_ERROR, L"unknown expression being solved", sortBy);
+			return 0.0;
+		case pmrexp::ExpressionType::NUMBER: return expression.number;
+		case pmrexp::ExpressionType::SUM: {
+			double value = 0;
+			for (const pmrexp::ExpressionTreeNode& node : expression.nodes) {
+				value += calculateExpression<resolveReferenceFunction>(node);
+			}
+			return value;
+		}
+		case pmrexp::ExpressionType::DIFF: {
+			double value = calculateExpression<resolveReferenceFunction>(expression.nodes[0]);
+			for (unsigned int i = 1; i < expression.nodes.size(); i++) {
+				value -= calculateExpression<resolveReferenceFunction>(expression.nodes[i]);
+			}
+			return value;
+		}
+		case pmrexp::ExpressionType::INVERSE: return -calculateExpression<resolveReferenceFunction
+			>(expression.nodes[0]);
+		case pmrexp::ExpressionType::MULT: {
+			double value = 1;
+			for (const pmrexp::ExpressionTreeNode& node : expression.nodes) {
+				value *= calculateExpression<resolveReferenceFunction>(node);
+			}
+			return value;
+		}
+		case pmrexp::ExpressionType::DIV: {
+			double value = calculateExpression<resolveReferenceFunction>(expression.nodes[0]);
+			for (unsigned int i = 1; i < expression.nodes.size(); i++) {
+				const double denominator = calculateExpression<resolveReferenceFunction>(expression.nodes[i]);
+				if (denominator == 0) {
+					value = 0;
+					break;
+				}
+				value /= denominator;
+			}
+			return value;
+		}
+		case pmrexp::ExpressionType::POWER: return std::pow(
+				calculateExpression<resolveReferenceFunction>(expression.nodes[0]),
+				calculateExpression<resolveReferenceFunction>(expression.nodes[1]));
+		case pmrexp::ExpressionType::REF: return (this->*resolveReferenceFunction)(expression.ref);
+		default:
+			RmLogF(typeHolder->rm, LOG_ERROR, L"unknown expression type: %d", expression.type);
+			return 0.0;
+		}
+	}
 }
