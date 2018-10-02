@@ -9,15 +9,7 @@
 
 #pragma once
 
-#undef UNIQUE_NAME
-
 namespace pmre {
-	enum class ResultString : unsigned char {
-		NUMBER,
-		ORIGINAL_NAME,
-		UNIQUE_NAME,
-		DISPLAY_NAME,
-	};
 	enum class RollupFunction : unsigned char {
 		SUM,
 		AVERAGE,

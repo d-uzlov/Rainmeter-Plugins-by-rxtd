@@ -58,13 +58,8 @@ inline std::vector<std::wstring> Tokenize(const std::wstring& str, const std::ws
 inline bool stringsMatch(const wchar_t* str1, const wchar_t* str2, bool matchPartial) {
 	if (matchPartial) {
 		// check if substring str2 occurs in str1
-		if (wcsstr(str1, str2) != nullptr)
-			return true;
-	} else {
-		// check if str1 and str2 match exactly
-		if (wcscmp(str1, str2) == 0)
-			return true;
+		return wcsstr(str1, str2) != nullptr;
 	}
-
-	return false;
+	// check if str1 and str2 match exactly
+	return wcscmp(str1, str2) == 0;
 }

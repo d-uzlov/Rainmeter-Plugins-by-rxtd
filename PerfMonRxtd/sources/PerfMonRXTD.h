@@ -140,6 +140,8 @@
 #include <string>
 #include <vector>
 
+#undef UNIQUE_NAME
+
 namespace pmr {
 	struct indexesItem {
 		unsigned long originalCurrentInx;
@@ -151,6 +153,13 @@ namespace pmr {
 		double sortValue;
 		indexesItem originalIndexes;
 		std::vector<indexesItem> vectorIndexes;
+	};
+
+	enum class ResultString : unsigned char {
+		NUMBER,
+		ORIGINAL_NAME,
+		UNIQUE_NAME,
+		DISPLAY_NAME,
 	};
 
 	class ParentData;

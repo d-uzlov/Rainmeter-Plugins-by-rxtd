@@ -386,34 +386,24 @@ const pmr::instanceKeyItem* pmr::ParentData::findInstanceByName(const pmrexp::re
 	}
 }
 
-const wchar_t* pmr::ParentData::getName(const instanceKeyItem& instance, pmre::ResultString stringType) const {
-	if (stringType == pmre::ResultString::NUMBER) {
+const wchar_t* pmr::ParentData::getName(const instanceKeyItem& instance, ResultString stringType) const {
+	if (stringType == ResultString::NUMBER) {
 		return L"";
 	}
-	if (instance.vectorIndexes.empty()) { // rollup instances have vector indexes filled and usual instances don't have
-		const modifiedNameItem& name = namesCurrent[instance.originalIndexes.originalCurrentInx];
-		switch (stringType) {
-		case pmre::ResultString::ORIGINAL_NAME:
-			return  name.originalName;
-		case pmre::ResultString::UNIQUE_NAME:
-			return  name.uniqueName;
-		case pmre::ResultString::DISPLAY_NAME:
-			return  name.displayName;
-		default:
-			RmLogF(typeHolder->rm, LOG_ERROR, L"unexpected result string type %d", stringType);
-			return L"";
-		}
-	} else {
-		const modifiedNameItem& name = namesCurrent[instance.vectorIndexes[0].originalCurrentInx];
-		switch (stringType) {
-		case pmre::ResultString::ORIGINAL_NAME:
-		case pmre::ResultString::UNIQUE_NAME:
-		case pmre::ResultString::DISPLAY_NAME:
-			return  name.displayName;
-		default:
-			RmLogF(typeHolder->rm, LOG_ERROR, L"unexpected result string type %d", stringType);
-			return L"";
-		}
+	const modifiedNameItem& name = namesCurrent[instance.originalIndexes.originalCurrentInx];
+	if (rollup) {
+		return name.displayName;
+	}
+	switch (stringType) {
+	case ResultString::ORIGINAL_NAME:
+		return name.originalName;
+	case ResultString::UNIQUE_NAME:
+		return name.uniqueName;
+	case ResultString::DISPLAY_NAME:
+		return name.displayName;
+	default:
+		RmLogF(typeHolder->rm, LOG_ERROR, L"unexpected result string type %d", stringType);
+		return L"";
 	}
 }
 void pmr::ParentData::freeBuffers() {
@@ -427,7 +417,7 @@ void pmr::ParentData::freeBuffers() {
 	namesBufferPrevious.erase();
 }
 
-bool pmr::ParentData::nameIsInList(const std::vector<std::pair<std::wstring, bool>>& list, const wchar_t* name) {
+bool pmr::ParentData::isNameInList(const std::vector<std::pair<std::wstring, bool>>& list, const wchar_t* name) {
 	for (auto& pair : list) {
 		if (stringsMatch(name, pair.first.c_str(), pair.second)) {
 			return true;
@@ -452,14 +442,14 @@ void pmr::ParentData::parseList(std::vector<std::pair<std::wstring, bool>>& list
 }
 bool pmr::ParentData::isInstanceAllowed(const wchar_t* searchName, const wchar_t* originalName) const {
 	// if names are not in any whitelist which is not empty — instance is not allowed
-	if (!whitelist.empty() && !whitelistOrig.empty() && !(nameIsInList(whitelist, searchName) || nameIsInList(whitelistOrig, originalName)))
+	if (!whitelist.empty() && !whitelistOrig.empty() && !(isNameInList(whitelist, searchName) || isNameInList(whitelistOrig, originalName)))
 		return false;
-	if (!whitelist.empty() && whitelistOrig.empty() && !nameIsInList(whitelist, searchName))
+	if (!whitelist.empty() && whitelistOrig.empty() && !isNameInList(whitelist, searchName))
 		return false;
-	if (whitelist.empty() && !whitelistOrig.empty() && !nameIsInList(whitelistOrig, originalName))
+	if (whitelist.empty() && !whitelistOrig.empty() && !isNameInList(whitelistOrig, originalName))
 		return false;
 	// but if names are in any blacklist — instance is not allowed despite being whitelisted
-	if (nameIsInList(blacklist, searchName) || nameIsInList(blacklistOrig, originalName))
+	if (isNameInList(blacklist, searchName) || isNameInList(blacklistOrig, originalName))
 		return false;
 
 	return true;
@@ -1573,12 +1563,12 @@ double pmr::ParentData::extractFormattedValue(
 	const PDH_RAW_COUNTER_ITEM_W* lpRawBufferCurrent, const PDH_RAW_COUNTER_ITEM_W* lpRawBufferPrevious,
 	const indexesItem& item, PDH_FMT_COUNTERVALUE& formattedValue
 ) const {
-	const PDH_STATUS pdhStatus = 
+	const PDH_STATUS pdhStatus =
 		PdhCalculateCounterFromRawValue(
-			hCounter, 
+			hCounter,
 			PDH_FMT_DOUBLE | PDH_FMT_NOCAP100,
 			&(const_cast<PDH_RAW_COUNTER_ITEM_W*>(lpRawBufferCurrent)[item.originalCurrentInx].RawValue),
-			&(const_cast<PDH_RAW_COUNTER_ITEM_W*>(lpRawBufferPrevious)[item.originalPreviousInx].RawValue), 
+			&(const_cast<PDH_RAW_COUNTER_ITEM_W*>(lpRawBufferPrevious)[item.originalPreviousInx].RawValue),
 			&formattedValue);
 	if (pdhStatus == ERROR_SUCCESS) {
 		return formattedValue.doubleValue;

@@ -130,22 +130,22 @@ void pmr::ChildData::reload() {
 
 	const wchar_t* const resultStringStr = RmReadString(typeHolder->rm, L"ResultString", L"");
 	if (_wcsicmp(resultStringStr, L"") == 0 || _wcsicmp(resultStringStr, L"Number") == 0) {
-		resultStringType = pmre::ResultString::NUMBER;
+		resultStringType = ResultString::NUMBER;
 		typeHolder->resultString = nullptr;
 	} else {
 		typeHolder->resultString = resultString;
 		if (_wcsicmp(resultStringStr, L"OriginalName") == 0 || _wcsicmp(resultStringStr, L"OriginalInstanceName") == 0)
-			resultStringType = pmre::ResultString::ORIGINAL_NAME;
+			resultStringType = ResultString::ORIGINAL_NAME;
 		else if (_wcsicmp(resultStringStr, L"UniqueName") == 0 || _wcsicmp(resultStringStr, L"UniqueInstanceName") == 0)
-			resultStringType = pmre::ResultString::UNIQUE_NAME;
+			resultStringType = ResultString::UNIQUE_NAME;
 		else if (_wcsicmp(resultStringStr, L"DisplayName") == 0 || _wcsicmp(resultStringStr, L"DisplayInstanceName") == 0)
-			resultStringType = pmre::ResultString::DISPLAY_NAME;
+			resultStringType = ResultString::DISPLAY_NAME;
 		else if (_wcsicmp(resultStringStr, L"RollupInstanceName") == 0) {
 			RmLogF(typeHolder->rm, LOG_WARNING, L"ResultString 'RollupInstanceName' is deprecated, set to 'DisplayName'");
-			resultStringType = pmre::ResultString::DISPLAY_NAME;
+			resultStringType = ResultString::DISPLAY_NAME;
 		} else {
 			RmLogF(typeHolder->rm, LOG_ERROR, L"ResultString '%s' is invalid, set to 'Number'", resultStringStr);
-			resultStringType = pmre::ResultString::NUMBER;
+			resultStringType = ResultString::NUMBER;
 			typeHolder->resultString = nullptr;
 		}
 	}

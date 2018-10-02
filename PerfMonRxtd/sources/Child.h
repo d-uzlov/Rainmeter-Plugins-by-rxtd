@@ -21,7 +21,7 @@ namespace pmr {
 		// options
 		pmrexp::reference ref;
 		int instanceIndex = 0;
-		pmre::ResultString resultStringType = pmre::ResultString::NUMBER;
+		ResultString resultStringType = ResultString::NUMBER;
 
 		// data
 		const ParentData* parent = nullptr;

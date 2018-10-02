@@ -202,7 +202,7 @@ namespace pmr {
 		/** Searches for instance with given name or index */
 		const instanceKeyItem* findInstance(const pmrexp::reference& ref, unsigned long sortedIndex) const;
 		/** Retrieves name from internal buffer */
-		const wchar_t* getName(const instanceKeyItem& instance, pmre::ResultString stringType) const;
+		const wchar_t* getName(const instanceKeyItem& instance, ResultString stringType) const;
 	private:
 		void freeBuffers();
 		const instanceKeyItem* findInstanceByNameInList(const pmrexp::reference& ref, const std::vector<instanceKeyItem>& instances) const;
@@ -211,7 +211,7 @@ namespace pmr {
 		/** Parsing any "match" list */
 		static void parseList(std::vector<std::pair<std::wstring, bool>>& list, const std::wstring& listString, bool upperCase);
 		/** Checks if name matches list (with *fuzzy* match) */
-		static bool nameIsInList(const std::vector<std::pair<std::wstring, bool>>& list, const wchar_t* name);
+		static bool isNameInList(const std::vector<std::pair<std::wstring, bool>>& list, const wchar_t* name);
 		/** Checks white/black lists */
 		inline bool isInstanceAllowed(const wchar_t* searchName, const wchar_t* originalName) const;
 		/** previous buffer <- current buffer <- new PerfMon snapshot
