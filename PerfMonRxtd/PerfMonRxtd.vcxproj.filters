@@ -5,29 +5,43 @@
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
       <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\pdh">
+      <UniqueIdentifier>{fba27903-4a29-4a16-a3e7-4918b581df75}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="sources\Child.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\expression.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\Parent.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="sources\PerfMonRXTD.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="sources\enums.h">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\pdh\NamesManager.cpp">
+      <Filter>Source Files\pdh</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\BlacklistManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\pdh\PdhWrapper.cpp">
+      <Filter>Source Files\pdh</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\ExpressionResolver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\expressions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\InstanceManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\PerfmonParent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\PerfmonChild.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -38,21 +52,33 @@
     <ClInclude Include="sources\PerfMonRXTD.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="sources\DynamicArray.h">
+    <ClInclude Include="sources\pdh\NamesManager.h">
+      <Filter>Source Files\pdh</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\BlacklistManager.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="sources\ContinuousBuffersHolder.h">
+    <ClInclude Include="sources\pdh\PdhWrapper.h">
+      <Filter>Source Files\pdh</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\ExpressionResolver.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="sources\Parent.h">
+    <ClInclude Include="sources\InstanceManager.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="sources\Child.h">
+    <ClInclude Include="sources\PerfmonParent.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\PerfmonChild.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="local-version.h">
+      <Filter>Resource Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="PerfMonRxtd.rc">
+    <ResourceCompile Include="..\Common\resources\version.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>

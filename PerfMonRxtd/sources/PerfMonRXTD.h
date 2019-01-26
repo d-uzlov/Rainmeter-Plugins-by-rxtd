@@ -1,5 +1,6 @@
-﻿/* Copyright (C) 2018 buckb
- * Copyright (C) 2018 rxtd
+﻿/* 
+ * Copyright (C) 2018-2019 rxtd
+ * Copyright (C) 2018 buckb
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -7,6 +8,8 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
+ //
+ // This plugin was originally written by buckb, then was forked by rxtd from version 2.0.1.0.
  //
  // Version history:
  //
@@ -23,7 +26,7 @@
  //
  // v2.0.1.0: mod by rxtd: added rollup for LogicalDisk category
  //
- // Fork by rxtd
+ // Fork by rxtd, name changed to PerfMonRxtd
  //
  // v1.0.0: Rewrote whole plugin from C to C++ to simplify maintenance.
  //         Added Expressions and RollupExpression and related options.
@@ -78,9 +81,18 @@
  //         Code: added more comments
  //         
  // v1.2.1: Code: generified some methods in parent
+ //         Fixed: when rollup is enabled count was from 0 to (_COUNT-1)
  //         
+ // v1.2.2: Fixed: remove check for NameSource option
+ //         Fixed: caches didn't work properly
  //         
- //         
+ // v1.3.0: Fixed: totals for rollupExpressions was calculated as for usual expressions
+ //         Fixed: rollup min/max for raw values was calculated incorrectly
+ //         Code: rewrite everything for readability
+ //         Code: use string_view where possible → lower memory usage, better performance
+ //         Changed: remove instances count from parent string value
+ //         Added: section variable "fetch size" and "is stopped" to parent
+ //         Fixed: ObjectName=Process was broken
  //         
  //
 
@@ -101,101 +113,25 @@
  // counter results, this plugin does its own matching of current and previous instances, and calls PdhCalculateCounterFromRawValue
  // "manually" to get formatted results.
  //
- // The arrays of counters returned by PdhGetRawCounterArray for a given Perfmon Object will have the same
- // number of instances, and that the instances are ordered identically, provided they come from the same PdhCollectQueryData call.
- // That is, counterA[n] and counterB[n] refer to the same unique instance for a given n.  Using LogicalDisk as an example, it is
- // assumed that if "Disk Read Bytes/sec" returns an array of 3 instances ordered {index 0 is C:, index 1 is D:, index 2 is E:}, then
- // the array for "Disk Write Bytes/sec" will also have 3 instances that are ordered {index 0 is C:, index 1 is D:, index 2 is E:}.
- //
- // PdhCalculateCounterFromRawValue sometimes fails with the status PDH_CALC_NEGATIVE_VALUE, PDH_CALC_NEGATIVE_DENOMINATOR, or
- // PDH_CALC_NEGATIVE_TIMEBASE.  This has mainly been observed for "_Total" instances, and occurs when an instance has dropped out
- // between two query calls.  When a process ends, or when a removable drive is ejected, its counters disappear.  "_Total" thus
- // decreases between the two query calls.
- //
  // Access to ObjectName="Processor Performance" requires that Rainmeter run with Administrator privileges.  If not, PdhAddCounter
  // fails with an error code that says the object doesn't exist.  Are there other objects and/or counters that require Administrator
  // privileges?
- //
- // The current and previous raw buffers are foundational data sources.  Other data structures maintain pointers and indexes into
- // these buffers.  Be careful to invalidate or delete these pointers when the underlying raw buffers are changed or deleted.
  //
  //
  // Object       Original                     Unique                       Display                      DisplayName
  // -----------  -------------------------    -------------------------    -------------------------    -------------------
  // Process      Rainmeter                    Rainmeter#1234               Rainmeter
  // Thread       Rainmeter/12                 Rainmeter#5678               Rainmeter
- // GPU          pid_1234..engtype_3D         pid_1234..engtype_3D         pid_1234..engtype_3D         (Original)
- // GPU          pid_1234..engtype_3D         pid_1234..engtype_3D         Rainmeter                    (GpuProcesName)
- // GPU          pid_1234..engtype_3D         pid_1234..engtype_3D         engtype_3D                   (GpuEngType)
- // LogicalDisk  D:\mount\disk1               D:\mount\disk1               D:\mount\disk1               (Original)
- // LogicalDisk  D:\mount\disk1               D:\mount\disk1               D:                           (DriveLetter)
- // LogicalDisk  D:\mount\disk1               D:\mount\disk1               D:\mount\                    (MountFolder)
+ // GPU          pid_1234..engtype_3D         pid_1234..engtype_3D         pid_1234..engtype_3D         Original
+ // GPU          pid_1234..engtype_3D         pid_1234..engtype_3D         Rainmeter                    GpuProcessName
+ // GPU          pid_1234..engtype_3D         pid_1234..engtype_3D         engtype_3D                   GpuEngType
+ // LogicalDisk  D:\mount\disk1               D:\mount\disk1               D:\mount\disk1               Original
+ // LogicalDisk  D:\mount\disk1               D:\mount\disk1               D:                           DriveLetter
+ // LogicalDisk  D:\mount\disk1               D:\mount\disk1               D:\mount\                    MountFolder
  // 
- // PhysicalDisk 0 C:                         0 C:                         0 C:                         0 C:
- // Net          Realtek PCIe GBE             Realtek PCIe GBE             Realtek PCIe GBE             Realtek PCIe GBE
+ // PhysicalDisk 0 C:                         0 C:                         0 C:                         
+ // Net          Realtek PCIe GBE             Realtek PCIe GBE             Realtek PCIe GBE             
  //
  //
 
 #pragma once
-#include <string>
-#include <vector>
-
-#undef UNIQUE_NAME
-
-namespace pmr {
-	struct indexesItem {
-		unsigned long originalCurrentInx;
-		unsigned long originalPreviousInx;
-	};
-
-	struct instanceKeyItem {
-		const wchar_t* sortName = nullptr;
-		double sortValue;
-		indexesItem originalIndexes;
-		std::vector<indexesItem> vectorIndexes;
-	};
-
-	enum class ResultString : unsigned char {
-		NUMBER,
-		ORIGINAL_NAME,
-		UNIQUE_NAME,
-		DISPLAY_NAME,
-	};
-
-	class ParentData;
-	class ChildData;
-
-	struct TypeHolder {
-		bool isParent = false;
-		
-		ParentData* parentData = nullptr;
-		ChildData* childData = nullptr;
-
-		// common data
-
-		void* const rm = nullptr;
-		void* const skin = nullptr;
-		const std::wstring measureName;
-
-		bool broken = false;
-		bool temporaryBroken = false;
-
-		double resultDouble = 0.0;
-		const wchar_t* resultString = nullptr;
-
-		TypeHolder(void* rm)
-			: rm(rm),
-			  skin(RmGetSkin(rm)),
-			  measureName(RmGetMeasureName(rm)) {
-		}
-		~TypeHolder();
-		TypeHolder(const TypeHolder& other) = delete;
-		TypeHolder(TypeHolder&& other) = delete;
-		TypeHolder& operator=(const TypeHolder& other) = delete;
-		TypeHolder& operator=(TypeHolder&& other) = delete;
-
-		bool isBroken() const {
-			return broken || temporaryBroken;
-		}
-	};
-}

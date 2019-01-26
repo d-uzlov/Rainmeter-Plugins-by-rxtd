@@ -12,9 +12,8 @@
 #include <string>
 #include <vector>
 #include <cstdint>
-#include "enums.h"
 
-namespace rxpm {
+namespace rxu {
 	enum class ExpressionType {
 		UNKNOWN,
 		NUMBER,
@@ -24,44 +23,18 @@ namespace rxpm {
 		MULT,
 		DIV,
 		POWER,
-		REF,
 		TERNARY,
 	};
 
-	enum class  ReferenceType : uint8_t {
-		UNKNOWN,
-		COUNTER_RAW,
-		COUNTER_FORMATTED,
-		EXPRESSION,
-		ROLLUP_EXPRESSION,
-		COUNT,
-	};
-
-	struct Reference {
-		std::wstring name;
-		int counter = 0;
-		RollupFunction rollupFunction = RollupFunction::SUM;
-		ReferenceType type = ReferenceType::UNKNOWN;
-		bool discarded = false;
-		bool named = false;
-		bool namePartialMatch = false;
-		bool useOrigName = false;
-		bool total = false;
-	};
-
 	struct ExpressionTreeNode {
-		Reference ref;
 		std::vector<ExpressionTreeNode> nodes;
 		double number = 0.0;
 		ExpressionType type = ExpressionType::UNKNOWN;
 
-		void simplify();
-		int maxExpRef() const;
-		int maxRUERef() const;
-		void processRefs(void(*handler)(Reference&));
+		void solve();
 	};
 
-	class ExpressionParser {
+	class MathExpressionParser {
 		class Lexer {
 		public:
 			enum class LexemeType {
@@ -106,7 +79,6 @@ namespace rxpm {
 		private:
 			void skipSpaces();
 			static bool isSymbol(wchar_t c);
-			std::wstring_view readWord();
 			std::wstring_view readNumber();
 		};
 
@@ -117,8 +89,8 @@ namespace rxpm {
 		bool error = false;
 
 	public:
-		explicit ExpressionParser(std::wstring source);
-		explicit ExpressionParser(std::wstring_view source);
+		explicit MathExpressionParser(std::wstring source);
+		explicit MathExpressionParser(std::wstring_view source);
 
 		void parse();
 		bool isError() const;
@@ -132,7 +104,6 @@ namespace rxpm {
 		ExpressionTreeNode parseFactor();
 		ExpressionTreeNode parsePower();
 		ExpressionTreeNode parseAtom();
-		Reference parseReference();
 
 		static int64_t parseInt(std::wstring_view string);
 		static double parseFractional(std::wstring_view string);

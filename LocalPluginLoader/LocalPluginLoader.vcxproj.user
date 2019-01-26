@@ -12,7 +12,4 @@
     <LocalDebuggerWorkingDirectory>C:\Program Files\Rainmeter\</LocalDebuggerWorkingDirectory>
     <LocalDebuggerAttach>false</LocalDebuggerAttach>
   </PropertyGroup>
-  <PropertyGroup>
-    <ShowAllFiles>false</ShowAllFiles>
-  </PropertyGroup>
 </Project>

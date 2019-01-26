@@ -1,0 +1,118 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\sound-handlers">
+      <UniqueIdentifier>{89ee3378-928c-4353-a5d1-3dd6fa638e74}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\kiss_fft">
+      <UniqueIdentifier>{9983f910-0024-44d2-bdc9-31dbc74164be}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Sources\AudioChild.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\AudioParent.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\Channel.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\SoundAnalyzer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\sound-handlers\SoundHandler.h">
+      <Filter>Source Files\sound-handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\sound-handlers\BandAnalyzer.h">
+      <Filter>Source Files\sound-handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\sound-handlers\FftAnalyzer.h">
+      <Filter>Source Files\sound-handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\sound-handlers\FftImpl.h">
+      <Filter>Source Files\sound-handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\MyWaveFormat.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\kiss_fft\KissFft.hh">
+      <Filter>Source Files\kiss_fft</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\ParamParser.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\DeviceManager.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\sound-handlers\BlockMean.h">
+      <Filter>Source Files\sound-handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\sound-handlers\Spectrogram.h">
+      <Filter>Source Files\sound-handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\sound-handlers\WaveForm.h">
+      <Filter>Source Files\sound-handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="local-version.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Sources\AudioChild.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\AudioParent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\Channel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\SoundAnalyzer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\sound-handlers\BandAnalyzer.cpp">
+      <Filter>Source Files\sound-handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\sound-handlers\FftAnalyzer.cpp">
+      <Filter>Source Files\sound-handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\sound-handlers\FftImpl.cpp">
+      <Filter>Source Files\sound-handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\MyWaveFormat.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\ParamParser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\DeviceManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\sound-handlers\BlockMean.cpp">
+      <Filter>Source Files\sound-handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\sound-handlers\Spectrogram.cpp">
+      <Filter>Source Files\sound-handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\sound-handlers\WaveForm.cpp">
+      <Filter>Source Files\sound-handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\AudioAnalyzer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\Common\resources\version.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\windows-wrappers">
+      <UniqueIdentifier>{cfe1b36f-90d4-4281-9bd6-dc9d34f62dfe}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="sources\BmpWriter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\BufferPrinter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\OptionParser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\RainmeterWrappers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\StringUtils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\TypeHolder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\windows-wrappers\FileWrapper.cpp">
+      <Filter>Source Files\windows-wrappers</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\MathExpressionParser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="sources\BmpWriter.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\BufferPrinter.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\Color.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\ContinuousBuffersHolder.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\FastMath.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\OptionParser.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\RainmeterWrappers.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\StringUtils.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\TypeHolder.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\windows-wrappers\BufferWrapper.h">
+      <Filter>Source Files\windows-wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\windows-wrappers\FileWrapper.h">
+      <Filter>Source Files\windows-wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\windows-wrappers\GenericComWrapper.h">
+      <Filter>Source Files\windows-wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\windows-wrappers\PropVariantWrapper.h">
+      <Filter>Source Files\windows-wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\windows-wrappers\WaveFormatWrapper.h">
+      <Filter>Source Files\windows-wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\MathExpressionParser.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

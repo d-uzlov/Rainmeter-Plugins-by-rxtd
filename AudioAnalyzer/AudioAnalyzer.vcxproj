@@ -20,9 +20,10 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
-    <ProjectGuid>{69B18C5D-6B5C-4711-8AB4-91C651EBA6E4}</ProjectGuid>
-    <RootNamespace>PerfMonRxtd</RootNamespace>
+    <ProjectGuid>{EDB8CA8D-F632-4CA4-B3D5-D03763F29724}</ProjectGuid>
+    <RootNamespace>AudioLevelRxtd</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <ProjectName>AudioAnalyzer</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -76,32 +77,32 @@
     <LibraryPath>$(SolutionDir)/Common/libs/;$(LibraryPath)</LibraryPath>
     <OutDir>_Build\$(Platform)-$(Configuration)\</OutDir>
     <IntDir>_Build\intermediate\$(Platform)-$(Configuration)\</IntDir>
-    <SourcePath>$(SolutionDir)/Common/sources/;$(VC_SourcePath)</SourcePath>
+    <SourcePath>$(SolutionDir)/Common/sources/;$(VC_SourcePath);</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>$(SolutionDir)/Common/sources/;$(SolutionDir)/Common/includes/;$(SolutionDir)/Common/resources/;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)/Common/libs/;$(LibraryPath)</LibraryPath>
     <OutDir>_Build\$(Platform)-$(Configuration)\</OutDir>
     <IntDir>_Build\intermediate\$(Platform)-$(Configuration)\</IntDir>
-    <SourcePath>$(SolutionDir)/Common/sources/;$(VC_SourcePath)</SourcePath>
+    <SourcePath>$(SolutionDir)/Common/sources/;$(VC_SourcePath);</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(SolutionDir)/Common/sources/;$(SolutionDir)/Common/includes/;$(SolutionDir)/Common/resources/;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)/Common/libs/;$(LibraryPath)</LibraryPath>
     <OutDir>_Build\$(Platform)-$(Configuration)\</OutDir>
     <IntDir>_Build\intermediate\$(Platform)-$(Configuration)\</IntDir>
-    <SourcePath>$(SolutionDir)/Common/sources/;$(VC_SourcePath)</SourcePath>
+    <SourcePath>$(SolutionDir)/Common/sources/;$(VC_SourcePath);</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(SolutionDir)/Common/sources/;$(SolutionDir)/Common/includes/;$(SolutionDir)/Common/resources/;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)/Common/libs/;$(LibraryPath)</LibraryPath>
     <OutDir>_Build\$(Platform)-$(Configuration)\</OutDir>
     <IntDir>_Build\intermediate\$(Platform)-$(Configuration)\</IntDir>
-    <SourcePath>$(SolutionDir)/Common/sources/;$(VC_SourcePath)</SourcePath>
+    <SourcePath>$(SolutionDir)/Common/sources/;$(VC_SourcePath);</SourcePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
@@ -109,7 +110,9 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
       <SupportJustMyCode>false</SupportJustMyCode>
-      <FloatingPointModel>Fast</FloatingPointModel>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <EnableParallelCodeGeneration>
+      </EnableParallelCodeGeneration>
       <AdditionalOptions>/Gw %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -125,7 +128,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
@@ -133,7 +136,9 @@
       <LanguageStandard>stdcpp17</LanguageStandard>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
       <SupportJustMyCode>false</SupportJustMyCode>
-      <FloatingPointModel>Fast</FloatingPointModel>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <EnableParallelCodeGeneration>
+      </EnableParallelCodeGeneration>
       <AdditionalOptions>/Gw %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -158,8 +163,10 @@
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <FloatingPointExceptions>false</FloatingPointExceptions>
+      <EnableParallelCodeGeneration>
+      </EnableParallelCodeGeneration>
       <AdditionalOptions>/Gw %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -186,6 +193,11 @@
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <FloatingPointExceptions>false</FloatingPointExceptions>
+      <OmitFramePointers>false</OmitFramePointers>
+      <EnableParallelCodeGeneration>
+      </EnableParallelCodeGeneration>
       <AdditionalOptions>/Gw %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -202,36 +214,47 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="sources\BlacklistManager.cpp" />
-    <ClCompile Include="sources\PerfmonChild.cpp" />
-    <ClCompile Include="sources\enums.h" />
-    <ClCompile Include="sources\ExpressionResolver.cpp" />
-    <ClCompile Include="sources\expressions.cpp" />
-    <ClCompile Include="sources\InstanceManager.cpp" />
-    <ClCompile Include="sources\PerfmonParent.cpp" />
-    <ClCompile Include="sources\pdh\PdhWrapper.cpp" />
-    <ClCompile Include="sources\pdh\NamesManager.cpp" />
-    <ClCompile Include="sources\PerfMonRXTD.cpp" />
+    <ClInclude Include="local-version.h" />
+    <ClInclude Include="Sources\AudioChild.h" />
+    <ClInclude Include="Sources\AudioParent.h" />
+    <ClInclude Include="Sources\Channel.h" />
+    <ClInclude Include="Sources\DeviceManager.h" />
+    <ClInclude Include="Sources\MyWaveFormat.h" />
+    <ClInclude Include="Sources\kiss_fft\KissFft.hh" />
+    <ClInclude Include="Sources\ParamParser.h" />
+    <ClInclude Include="Sources\sound-handlers\BandAnalyzer.h" />
+    <ClInclude Include="Sources\sound-handlers\BlockMean.h" />
+    <ClInclude Include="Sources\sound-handlers\FftAnalyzer.h" />
+    <ClInclude Include="Sources\sound-handlers\FftImpl.h" />
+    <ClInclude Include="Sources\sound-handlers\SoundHandler.h" />
+    <ClInclude Include="Sources\sound-handlers\Spectrogram.h" />
+    <ClInclude Include="Sources\sound-handlers\WaveForm.h" />
+    <ClInclude Include="Sources\SoundAnalyzer.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="local-version.h" />
-    <ClInclude Include="sources\BlacklistManager.h" />
-    <ClInclude Include="sources\PerfmonChild.h" />
-    <ClInclude Include="sources\ExpressionResolver.h" />
-    <ClInclude Include="sources\expressions.h" />
-    <ClInclude Include="sources\InstanceManager.h" />
-    <ClInclude Include="sources\PerfmonParent.h" />
-    <ClInclude Include="sources\pdh\PdhWrapper.h" />
-    <ClInclude Include="sources\pdh\NamesManager.h" />
-    <ClInclude Include="sources\PerfMonRXTD.h" />
+    <ClCompile Include="Sources\AudioChild.cpp" />
+    <ClCompile Include="Sources\AudioAnalyzer.cpp" />
+    <ClCompile Include="Sources\AudioParent.cpp" />
+    <ClCompile Include="Sources\Channel.cpp" />
+    <ClCompile Include="Sources\DeviceManager.cpp" />
+    <ClCompile Include="Sources\MyWaveFormat.cpp" />
+    <ClCompile Include="Sources\ParamParser.cpp" />
+    <ClCompile Include="Sources\sound-handlers\BandAnalyzer.cpp" />
+    <ClCompile Include="Sources\sound-handlers\BlockMean.cpp" />
+    <ClCompile Include="Sources\sound-handlers\FftAnalyzer.cpp" />
+    <ClCompile Include="Sources\sound-handlers\FftImpl.cpp" />
+    <ClCompile Include="Sources\sound-handlers\Spectrogram.cpp" />
+    <ClCompile Include="Sources\sound-handlers\WaveForm.cpp" />
+    <ClCompile Include="Sources\SoundAnalyzer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\Common\resources\version.rc" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.vcxproj">
       <Project>{8817a113-76ad-4df9-8ab8-ccc1d9cfdf09}</Project>
+      <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="..\Common\resources\version.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
