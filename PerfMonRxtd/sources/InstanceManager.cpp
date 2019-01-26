@@ -191,10 +191,10 @@ namespace rxpm {
 		// use the unique name for this search because we need a unique match
 		// counter buffers tend to be *mostly* aligned, so we'll try to short-circuit a full search
 
-		const auto itemCountPrevious = snapshotPrevious.getItemsCount();
+		const int itemCountPrevious = snapshotPrevious.getItemsCount();
 
 		// try for a direct hit
-		size_t previousInx = std::clamp<signed long long>(hint, 0, itemCountPrevious - 1);
+		int previousInx = std::clamp<int>(hint, 0, itemCountPrevious - 1);
 
 		if (uniqueName == namesPrevious.get(previousInx).uniqueName) {
 			return previousInx;
@@ -203,22 +203,22 @@ namespace rxpm {
 		// try a window around currentIndex
 		constexpr int windowSize = 5;
 
-		const size_t startInx = std::clamp<signed long long>(hint - windowSize, 0, itemCountPrevious - 1);
-		const size_t endInx = std::clamp<signed long long>(hint + windowSize, 0, itemCountPrevious - 1);
+		const auto lowBound = std::clamp<int>(hint - windowSize, 0, itemCountPrevious - 1);
+		const auto highBound = std::clamp<int>(hint + windowSize, 0, itemCountPrevious - 1);
 
-		for (previousInx = startInx; previousInx <= endInx; ++previousInx) {
+		for (previousInx = lowBound; previousInx <= highBound; ++previousInx) {
 			if (uniqueName == namesPrevious.get(previousInx).uniqueName) {
 				return previousInx;
 			}
 		}
 
 		// no luck, search the entire array
-		for (previousInx = 0; previousInx < startInx; ++previousInx) {
+		for (previousInx = lowBound - 1; previousInx >= 0; previousInx--) {
 			if (uniqueName == namesPrevious.get(previousInx).uniqueName) {
 				return previousInx;
 			}
 		}
-		for (previousInx = endInx; previousInx < itemCountPrevious; ++previousInx) {
+		for (previousInx = highBound; previousInx < itemCountPrevious; ++previousInx) {
 			if (uniqueName == namesPrevious.get(previousInx).uniqueName) {
 				return previousInx;
 			}

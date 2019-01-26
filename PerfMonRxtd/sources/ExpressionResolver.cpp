@@ -212,7 +212,7 @@ void rxpm::ExpressionResolver::setExpressions(rxu::OptionParser::OptionList expr
 }
 
 double rxpm::ExpressionResolver::getRaw(unsigned counterIndex, Indices originalIndexes) const {
-	return instanceManager.calculateRaw(counterIndex, originalIndexes);
+	return static_cast<double>(instanceManager.calculateRaw(counterIndex, originalIndexes));
 }
 
 double rxpm::ExpressionResolver::getFormatted(unsigned counterIndex, Indices originalIndexes) const {

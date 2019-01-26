@@ -248,7 +248,7 @@ std::tuple<double, const wchar_t*> rxpm::PerfmonParent::_update() {
 		instanceManager.sort(expressionResolver);
 	}
 
-	return std::make_tuple(snapshotCurrent.getItemsCount(), L"ok");
+	return std::make_tuple(1, L"ok");
 }
 
 void rxpm::PerfmonParent::_command(const wchar_t* bangArgs) {
@@ -284,6 +284,7 @@ const wchar_t* rxpm::PerfmonParent::_resolve(int argc, const wchar_t* argv[]) {
 	}
 
 	bufferString = argv[0];
+	rxu::StringUtils::trimInplace(bufferString);
 	rxu::StringUtils::lowerInplace(bufferString);
 	if (bufferString == L"fetch size") {
 		bufferString = std::to_wstring(snapshotCurrent.getItemsCount());

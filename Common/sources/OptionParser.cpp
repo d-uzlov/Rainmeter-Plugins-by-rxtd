@@ -139,7 +139,7 @@ rxu::Color rxu::OptionParser::Option::asColor(Color defaultValue) const {
 		return { };
 	}
 	double values[4];
-	for (int i = 0; i < count; ++i) {
+	for (unsigned i = 0; i < count; ++i) {
 		values[i] = parseNumber(numbers[i].makeView(view));
 	}
 
