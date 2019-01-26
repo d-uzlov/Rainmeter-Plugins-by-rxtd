@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <IncludePath>$(SolutionDir)/Common/sources/;$(SolutionDir)/Common/includes/;$(SolutionDir)/Common/resources/;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)\include\;</IncludePath>
+    <SourcePath>$(SolutionDir)/Common/sources/;$(VC_SourcePath);</SourcePath>
+    <OutDir>$(ProjectDir)/_Build/$(Platform)-$(Configuration)/</OutDir>
+    <IntDir>$(ProjectDir)/_Build/intermediate/$(Platform)-$(Configuration)/</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir)/Common/resources/;</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+</Project>

@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Test|Win32">
+      <Configuration>Test</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Test|x64">
+      <Configuration>Test</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
@@ -26,32 +34,40 @@
     <ProjectName>AudioAnalyzer</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v141</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Test|x64'">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -61,157 +77,70 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\_PropertySheets\Common.props" />
+    <Import Project="..\_PropertySheets\Solution.props" />
+    <Import Project="..\_PropertySheets\Debug.props" />
+    <Import Project="..\_PropertySheets\x86.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\_PropertySheets\Common.props" />
+    <Import Project="..\_PropertySheets\Solution.props" />
+    <Import Project="..\_PropertySheets\Test.props" />
+    <Import Project="..\_PropertySheets\x86.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\_PropertySheets\Common.props" />
+    <Import Project="..\_PropertySheets\Solution.props" />
+    <Import Project="..\_PropertySheets\Release.props" />
+    <Import Project="..\_PropertySheets\x86.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\_PropertySheets\Common.props" />
+    <Import Project="..\_PropertySheets\Solution.props" />
+    <Import Project="..\_PropertySheets\Debug.props" />
+    <Import Project="..\_PropertySheets\AMD64.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Test|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\_PropertySheets\Common.props" />
+    <Import Project="..\_PropertySheets\Solution.props" />
+    <Import Project="..\_PropertySheets\Test.props" />
+    <Import Project="..\_PropertySheets\AMD64.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\_PropertySheets\Common.props" />
+    <Import Project="..\_PropertySheets\Solution.props" />
+    <Import Project="..\_PropertySheets\Release.props" />
+    <Import Project="..\_PropertySheets\AMD64.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)/Common/sources/;$(SolutionDir)/Common/includes/;$(SolutionDir)/Common/resources/;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)/Common/libs/;$(LibraryPath)</LibraryPath>
-    <OutDir>_Build\$(Platform)-$(Configuration)\</OutDir>
-    <IntDir>_Build\intermediate\$(Platform)-$(Configuration)\</IntDir>
-    <SourcePath>$(SolutionDir)/Common/sources/;$(VC_SourcePath);</SourcePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(SolutionDir)/Common/sources/;$(SolutionDir)/Common/includes/;$(SolutionDir)/Common/resources/;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)/Common/libs/;$(LibraryPath)</LibraryPath>
-    <OutDir>_Build\$(Platform)-$(Configuration)\</OutDir>
-    <IntDir>_Build\intermediate\$(Platform)-$(Configuration)\</IntDir>
-    <SourcePath>$(SolutionDir)/Common/sources/;$(VC_SourcePath);</SourcePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)/Common/sources/;$(SolutionDir)/Common/includes/;$(SolutionDir)/Common/resources/;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)/Common/libs/;$(LibraryPath)</LibraryPath>
-    <OutDir>_Build\$(Platform)-$(Configuration)\</OutDir>
-    <IntDir>_Build\intermediate\$(Platform)-$(Configuration)\</IntDir>
-    <SourcePath>$(SolutionDir)/Common/sources/;$(VC_SourcePath);</SourcePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Test|x64'">
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)/Common/sources/;$(SolutionDir)/Common/includes/;$(SolutionDir)/Common/resources/;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)/Common/libs/;$(LibraryPath)</LibraryPath>
-    <OutDir>_Build\$(Platform)-$(Configuration)\</OutDir>
-    <IntDir>_Build\intermediate\$(Platform)-$(Configuration)\</IntDir>
-    <SourcePath>$(SolutionDir)/Common/sources/;$(VC_SourcePath);</SourcePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <SDLCheck>true</SDLCheck>
-      <ConformanceMode>true</ConformanceMode>
-      <WholeProgramOptimization>false</WholeProgramOptimization>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
-      <SupportJustMyCode>false</SupportJustMyCode>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <EnableParallelCodeGeneration>
-      </EnableParallelCodeGeneration>
-      <AdditionalOptions>/Gw %(AdditionalOptions)</AdditionalOptions>
-    </ClCompile>
-    <Link>
-      <AdditionalDependencies>Rainmeter32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-    <ProjectReference>
-      <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
-    </ProjectReference>
-    <ResourceCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)/Common/resources/;</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_UNICODE;UNICODE;_WIN64;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ResourceCompile>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <ClCompile>
-      <WarningLevel>Level4</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <SDLCheck>true</SDLCheck>
-      <ConformanceMode>true</ConformanceMode>
-      <WholeProgramOptimization>false</WholeProgramOptimization>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
-      <SupportJustMyCode>false</SupportJustMyCode>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <EnableParallelCodeGeneration>
-      </EnableParallelCodeGeneration>
-      <AdditionalOptions>/Gw %(AdditionalOptions)</AdditionalOptions>
-    </ClCompile>
-    <Link>
-      <AdditionalDependencies>Rainmeter64.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-    <ProjectReference>
-      <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
-    </ProjectReference>
-    <ResourceCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)/Common/resources/;</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_UNICODE;UNICODE;_WIN64;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ResourceCompile>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
-      <ConformanceMode>true</ConformanceMode>
-      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
-      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <FloatingPointModel>Fast</FloatingPointModel>
-      <FloatingPointExceptions>false</FloatingPointExceptions>
-      <EnableParallelCodeGeneration>
-      </EnableParallelCodeGeneration>
-      <AdditionalOptions>/Gw %(AdditionalOptions)</AdditionalOptions>
-    </ClCompile>
-    <Link>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Rainmeter32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-    <ProjectReference>
-      <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
-    </ProjectReference>
-    <ResourceCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)/Common/resources/;</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_UNICODE;UNICODE;_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Test|x64'">
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <Optimization>MaxSpeed</Optimization>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
-      <ConformanceMode>true</ConformanceMode>
-      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
-      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <LanguageStandard>stdcpp17</LanguageStandard>
-      <FloatingPointModel>Fast</FloatingPointModel>
-      <FloatingPointExceptions>false</FloatingPointExceptions>
-      <OmitFramePointers>false</OmitFramePointers>
-      <EnableParallelCodeGeneration>
-      </EnableParallelCodeGeneration>
-      <AdditionalOptions>/Gw %(AdditionalOptions)</AdditionalOptions>
-    </ClCompile>
-    <Link>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Rainmeter64.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-    <ProjectReference>
-      <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
-    </ProjectReference>
-    <ResourceCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)/Common/resources/;</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_UNICODE;UNICODE;_WIN64;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="local-version.h" />

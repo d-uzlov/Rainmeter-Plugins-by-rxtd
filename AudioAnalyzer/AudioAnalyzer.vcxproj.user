@@ -6,6 +6,12 @@
     <LocalDebuggerCommand>C:\Program Files\Rainmeter\Rainmeter.exe</LocalDebuggerCommand>
     <LocalDebuggerWorkingDirectory>C:\Program Files\Rainmeter\</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
+    <LocalDebuggerAttach>true</LocalDebuggerAttach>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerCommand>C:\Program Files\Rainmeter\Rainmeter.exe</LocalDebuggerCommand>
+    <LocalDebuggerWorkingDirectory>C:\Program Files\Rainmeter\</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LocalDebuggerAttach>true</LocalDebuggerAttach>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
@@ -13,6 +19,12 @@
     <LocalDebuggerWorkingDirectory>C:\Program Files\Rainmeter\</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LocalDebuggerAttach>true</LocalDebuggerAttach>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerCommand>C:\Program Files\Rainmeter\Rainmeter.exe</LocalDebuggerCommand>
+    <LocalDebuggerWorkingDirectory>C:\Program Files\Rainmeter\</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Test|x64'">
     <LocalDebuggerAttach>true</LocalDebuggerAttach>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <LocalDebuggerCommand>C:\Program Files\Rainmeter\Rainmeter.exe</LocalDebuggerCommand>

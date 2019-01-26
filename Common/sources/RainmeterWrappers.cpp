@@ -12,6 +12,8 @@
 
 #pragma warning(disable : 4458)
 
+#pragma comment(lib, "Rainmeter.lib")
+
 rxu::Rainmeter::Logger::Logger(void* rm) : rm(rm) { }
 
 rxu::Rainmeter::Logger::Logger(Logger&& other) noexcept :
