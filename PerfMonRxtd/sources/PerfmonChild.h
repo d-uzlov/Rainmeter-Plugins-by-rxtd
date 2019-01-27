@@ -11,20 +11,20 @@
 #include "PerfmonParent.h"
 #include "TypeHolder.h"
 
-namespace rxpm {
-	class PerfmonChild : public rxu::TypeHolder {
-		std::wstring resultString { };
+namespace rxtd::perfmon {
+	class PerfmonChild : public utils::TypeHolder {
+		string resultString { };
 
 		// options
 		Reference ref;
-		int instanceIndex = 0;
+		index instanceIndex = 0;
 		ResultString resultStringType = ResultString::NUMBER;
 
 		// data
 		const PerfmonParent* parent = nullptr;
 
 	public:
-		explicit PerfmonChild(rxu::Rainmeter&& _rain);
+		explicit PerfmonChild(utils::Rainmeter&& _rain);
 
 	protected:
 		void _reload() override;

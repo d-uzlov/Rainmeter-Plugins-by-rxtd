@@ -17,15 +17,15 @@ namespace rxaa {
 	using namespace std::string_literals;
 	using namespace std::literals::string_view_literals;
 
-	class AudioParent : public rxu::TypeHolder {
+	class AudioParent : public utils::TypeHolder {
 	private:
-		static rxu::ParentManager<AudioParent> parentManager;
+		static utils::ParentManager<AudioParent> parentManager;
 
 		SoundAnalyzer soundAnalyzer;
 		DeviceManager deviceManager;
 
 	public:
-		explicit AudioParent(rxu::Rainmeter&& rain);
+		explicit AudioParent(utils::Rainmeter&& rain);
 		~AudioParent();
 		/** This class is non copyable */
 		AudioParent(const AudioParent& other) = delete;
@@ -33,7 +33,7 @@ namespace rxaa {
 		AudioParent& operator=(const AudioParent& other) = delete;
 		AudioParent& operator=(AudioParent&& other) = delete;
 
-		static AudioParent* findInstance(rxu::Rainmeter::Skin skin, const wchar_t * measureName);
+		static AudioParent* findInstance(::rxtd::utils::Rainmeter::Skin skin, isview measureName);
 
 	protected:
 		void _reload() override;
@@ -42,7 +42,7 @@ namespace rxaa {
 		const wchar_t* _resolve(int argc, const wchar_t* argv[]) override;
 
 	public:
-		double getValue(const std::wstring &id, Channel channel, int index) const;
+		double getValue(const string &id, Channel channel, index index) const;
 	private:
 	};
 

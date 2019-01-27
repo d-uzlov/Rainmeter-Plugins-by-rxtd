@@ -8,15 +8,11 @@
  */
 
 #pragma once
-#include <cstdint>
-#include <string>
-#include <vector>
-#include <map>
 #include "Color.h"
 #include "StringUtils.h"
 #include <optional>
 
-namespace rxu {
+namespace rxtd::utils {
 	class OptionParser {
 		typedef StringViewUtils svu;
 
@@ -24,35 +20,46 @@ namespace rxu {
 			std::vector<SubstringViewInfo> tempList { };
 
 		public:
-			std::vector<SubstringViewInfo> parse(std::wstring_view string, wchar_t delimiter);
+			std::vector<SubstringViewInfo> parse(sview string, wchar_t delimiter);
 
 		private:
-			void emitToken(const size_t begin, const size_t end);
+			void emitToken(const index begin, const index end);
 
-			void tokenize(std::wstring_view string, wchar_t delimiter);
+			void tokenize(sview string, wchar_t delimiter);
 
-			std::vector<SubstringViewInfo> trimSpaces(std::wstring_view string);
+			std::vector<SubstringViewInfo> trimSpaces(sview string);
 		};
 
 		class Option {
-			std::wstring_view view;
+			sview view;
 
 		public:
 			Option();
-			explicit Option(std::wstring_view view);
+			explicit Option(sview view);
 
-			std::wstring_view asString(std::wstring_view defaultValue = { }) const;
+			sview asString(sview defaultValue = { }) const;
 
 			double asFloat(double defaultValue = 0.0) const;
 
-			int64_t asInt(int64_t defaultValue = 0) const;
+			template<typename I = int32_t>
+			typename std::enable_if<std::is_integral<I>::value, I>::type
+				asInt(I defaultValue = 0) const {
+				const auto dVal = asFloat(static_cast<double>(defaultValue));
+				if (dVal > static_cast<double>(std::numeric_limits<I>::max()) ||
+					dVal < static_cast<double>(std::numeric_limits<I>::lowest())) {
+					return defaultValue;
+				}
+				return static_cast<I>(dVal);
+			}
 
-			bool asBool(bool defaultValue = false) const;
+			bool asBool(bool defaultValue = false) const {
+				return asFloat(defaultValue ? 1.0 : 0.0) != 0.0;
+			}
 
 			Color asColor(Color defaultValue = { }) const;
 
 		private:
-			static double parseNumber(std::wstring_view source);
+			static double parseNumber(sview source);
 		};
 
 		Tokenizer tokenizer;
@@ -64,85 +71,55 @@ namespace rxu {
 		public:
 			OptionList();
 
-			OptionList(std::wstring_view string, std::vector<SubstringViewInfo>&& list);
+			OptionList(sview view, std::vector<SubstringViewInfo>&& list);
 
-			std::pair<std::vector<wchar_t>, std::vector<SubstringViewInfo>> consume() &&;
+			std::pair<std::vector<wchar_t>, std::vector<SubstringViewInfo>> consume() && ;
 
-			size_t size() const;
+			index size() const;
 			bool empty() const;
 
-			std::wstring_view get(size_t index) const;
-			Option getOption(size_t index) const;
+			sview get(index index) const;
+			Option getOption(index index) const;
 
+			template<typename C>
 			class iterator {
-				OptionList &container;
-				std::ptrdiff_t index;
+				C &container;
+				index ind;
 
 			public:
-				iterator(OptionList& container, std::ptrdiff_t index) :
+				iterator(C& container, index _index) :
 					container(container),
-					index(index) { }
+					ind(_index) { }
 
 				iterator& operator++() {
-					index++;
+					ind++;
 					return *this;
 				}
 				bool operator !=(const iterator& other) const {
-					return &container != &other.container || index != other.index;
+					return &container != &other.container || ind != other.ind;
 				}
-				std::wstring_view operator*() const {
-					return container.get(index);
-				}
-			};
-
-			iterator begin() {
-				return { *this, 0 };
-			}
-			iterator end() {
-				return { *this, static_cast<std::ptrdiff_t>(size()) };
-			}
-
-			class const_iterator {
-				const OptionList &container;
-				std::ptrdiff_t index;
-
-			public:
-				const_iterator(const OptionList& container, std::ptrdiff_t index) :
-					container(container),
-					index(index) { }
-
-				const_iterator& operator++() {
-					index++;
-					return *this;
-				}
-				bool operator !=(const const_iterator& other) const {
-					return &container != &other.container || index != other.index;
-				}
-				std::wstring_view operator*() const {
-					return container.get(index);
+				sview operator*() const {
+					return container.get(ind);
 				}
 			};
 
-			const_iterator begin() const {
+			iterator<const OptionList> begin() const {
 				return { *this, 0 };
 			}
-			const_iterator end() const {
-				return { *this, static_cast<std::ptrdiff_t>(size()) };
+			iterator<const OptionList> end() const {
+				return { *this, size() };
 			}
 		};
 
 		class OptionMap {
-			std::wstring stringLower;
-			std::wstring stringOriginal;
+			string source;
 			std::map<SubstringViewInfo, SubstringViewInfo> paramsInfo { };
 
-			std::map<std::wstring_view, SubstringViewInfo> params { };
-
-			mutable std::wstring nameBuffer;
+			std::map<isview, SubstringViewInfo> params { };
 
 		public:
 			OptionMap();
-			OptionMap(std::wstring&& string, std::map<SubstringViewInfo, SubstringViewInfo>&& paramsInfo);
+			OptionMap(string&& string, std::map<SubstringViewInfo, SubstringViewInfo>&& paramsInfo);
 			~OptionMap();
 
 			OptionMap(const OptionMap& other);
@@ -150,18 +127,19 @@ namespace rxu {
 			OptionMap& operator=(const OptionMap& other);
 			OptionMap& operator=(OptionMap&& other) noexcept;
 
-			Option get(std::wstring_view name) const;
-			Option getCS(std::wstring_view name) const;
+			Option get(sview name) const;
+			Option get(isview name) const;
+			Option get(const wchar_t* name) const;
 
-			const std::map<std::wstring_view, SubstringViewInfo>& getParams() const;
+			const std::map<isview, SubstringViewInfo>& getParams() const;
 		private:
 			void fillParams();
-			std::optional<SubstringViewInfo> find(std::wstring_view name) const;
+			std::optional<SubstringViewInfo> find(isview name) const;
 		};
 
-		OptionList asList(std::wstring_view string, wchar_t delimiter);
-		OptionMap asMap(std::wstring string, wchar_t optionDelimiter, wchar_t nameDelimiter);
-		OptionMap asMap(std::wstring_view string, wchar_t optionDelimiter, wchar_t nameDelimiter );
+		OptionList asList(sview string, wchar_t delimiter);
+		OptionMap asMap(string string, wchar_t optionDelimiter, wchar_t nameDelimiter);
+		OptionMap asMap(sview string, wchar_t optionDelimiter, wchar_t nameDelimiter);
 		OptionMap asMap(const wchar_t *string, wchar_t optionDelimiter, wchar_t nameDelimiter);
 	};
 }

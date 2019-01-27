@@ -1,5 +1,5 @@
-/* 
- * Copyright (C) 2018-2019 rxtd
+/*
+ * Copyright (C) 2019 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -9,21 +9,18 @@
 
 #pragma once
 
-#undef UNIQUE_NAME
+#include <cstdint>
+#include <vector>
+#include <map>
+#include <algorithm>
+#include <string>
+#include <string_view>
+#include <cwctype>
 
-namespace rxtd::perfmon {
-	enum class RollupFunction {
-		SUM,
-		AVERAGE,
-		MINIMUM,
-		MAXIMUM,
-		FIRST,
-	};
+#include "typedefs.h"
+#include "CaseInsensitiveString.h"
 
-	enum class ResultString {
-		NUMBER,
-		ORIGINAL_NAME,
-		UNIQUE_NAME,
-		DISPLAY_NAME,
-	};
-}
+#ifndef NOMINMAX
+# define NOMINMAX
+#endif
+

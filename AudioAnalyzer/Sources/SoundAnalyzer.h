@@ -8,12 +8,9 @@
  */
 
 #pragma once
-#include <cstdint>
-#include <vector>
 #include "MyWaveFormat.h"
 #include "sound-handlers/SoundHandler.h"
 #include <functional>
-#include <map>
 #include "Channel.h"
 #include <ContinuousBuffersHolder.h>
 #include <variant>
@@ -28,17 +25,17 @@ namespace rxaa {
 	private:
 		MyWaveFormat waveFormat;
 
-		std::map<Channel, std::vector<std::wstring>> orderOfHandlers;
-		std::map<std::wstring, std::function<SoundHandler*(SoundHandler*)>, std::less<>> patchers;
+		std::map<Channel, std::vector<string>> orderOfHandlers;
+		std::map<string, std::function<SoundHandler*(SoundHandler*)>, std::less<>> patchers;
 
-		unsigned targetRate = 0u;
-		unsigned divide = 1u;
+		index targetRate = 0u;
+		index divide = 1u;
 
-		rxu::ContinuousBuffersHolder<float> wave;
+		utils::ContinuousBuffersHolder<float> wave;
 
 		struct ChannelData {
 			std::vector<std::unique_ptr<SoundHandler>> handlers;
-			std::map<std::wstring, decltype(handlers)::size_type> indexMap;
+			std::map<string, decltype(handlers)::size_type, std::less<>> indexMap;
 		};
 
 		std::map<Channel, ChannelData> channels;
@@ -47,10 +44,10 @@ namespace rxaa {
 			SoundAnalyzer &parent;
 			ChannelData *channelData = nullptr;
 			Channel channel { };
-			unsigned channelIndex = 0;
-			unsigned waveSize { };
+			index channelIndex = 0;
+			index waveSize { };
 
-			mutable unsigned nextBufferIndex = 0;
+			mutable index nextBufferIndex = 0;
 			mutable std::vector<std::vector<uint8_t>> buffers;
 
 		public:
@@ -60,13 +57,13 @@ namespace rxaa {
 			void setChannel(Channel channel);
 
 			const float* getWave() const override;
-			unsigned getWaveSize() const override;
-			const SoundHandler* getHandler(const std::wstring& id) const override;
+			index getWaveSize() const override;
+			const SoundHandler* getHandler(const string& id) const override;
 			Channel getChannel() const override;
-			uint8_t* getBufferRaw(size_t size) const override;
+			uint8_t* getBufferRaw(index size) const override;
 
 			void resetBuffers();
-			void setWaveSize(unsigned value);
+			void setWaveSize(index value);
 		} dataSupplier;
 
 	public:
@@ -80,27 +77,27 @@ namespace rxaa {
 		SoundAnalyzer& operator=(const SoundAnalyzer& other) = delete;
 		SoundAnalyzer& operator=(SoundAnalyzer&& other) = delete;
 
-		void setTargetRate(unsigned value) noexcept;
+		void setTargetRate(index value) noexcept;
 
-		std::variant<SoundHandler*, SearchError> findHandler(Channel channel, const std::wstring& handlerId) const noexcept;
+		std::variant<SoundHandler*, SearchError> findHandler(Channel channel, sview handlerId) const noexcept; // TODO isview everywhere
 
-		double getValue(Channel channel, const std::wstring& handlerId, unsigned index) const noexcept;
-		std::variant<const wchar_t*, SearchError> getProp(Channel channel, const std::wstring& handlerId, const std::wstring_view& prop) const noexcept;
+		double getValue(Channel channel, const string& handlerId, index index) const noexcept;
+		std::variant<const wchar_t*, SearchError> getProp(Channel channel, sview handlerId, sview prop) const noexcept;
 
-		void setPatchHandlers(std::map<Channel, std::vector<std::wstring>> handlersOrder, std::map<std::wstring, std::function<SoundHandler*(SoundHandler*)>, std::less<>> handlerPatchersMap) noexcept;
+		void setPatchHandlers(std::map<Channel, std::vector<string>> handlersOrder, std::map<string, std::function<SoundHandler*(SoundHandler*)>, std::less<>> handlerPatchersMap) noexcept;
 
 		void setWaveFormat(MyWaveFormat waveFormat) noexcept;
 
-		void process(const uint8_t* buffer, bool isSilent, uint32_t framesCount) noexcept;
+		void process(const uint8_t* buffer, bool isSilent, index framesCount) noexcept;
 		void resetValues() noexcept;
 
 	private:
-		void decompose(const uint8_t* buffer, uint32_t framesCount) noexcept;
-		void resample(float* values, unsigned framesCount) const noexcept;
+		void decompose(const uint8_t* buffer, index framesCount) noexcept;
+		void resample(float* values, index framesCount) const noexcept;
 		void updateSampleRate() noexcept;
-		int createChannelAuto(uint32_t framesCount) noexcept;
-		void resampleToAuto(unsigned first, unsigned second, uint32_t framesCount) noexcept;
-		void copyToAuto(unsigned index, uint32_t framesCount) noexcept;
+		index createChannelAuto(index framesCount) noexcept;
+		void resampleToAuto(index first, index second, index framesCount) noexcept;
+		void copyToAuto(index channelIndex, index framesCount) noexcept;
 	};
 
 }

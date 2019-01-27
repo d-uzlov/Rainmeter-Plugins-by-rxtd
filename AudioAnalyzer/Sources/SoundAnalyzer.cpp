@@ -13,6 +13,8 @@
 #pragma warning(disable : 4458)
 #pragma warning(disable : 4267)
 
+#include "undef.h"
+
 rxaa::SoundAnalyzer::DataSupplierImpl::DataSupplierImpl(SoundAnalyzer& parent) : parent(parent) { }
 
 void rxaa::SoundAnalyzer::DataSupplierImpl::setChannelData(ChannelData *value) {
@@ -31,11 +33,11 @@ const float* rxaa::SoundAnalyzer::DataSupplierImpl::getWave() const {
 	return parent.wave[channelIndex];
 }
 
-unsigned rxaa::SoundAnalyzer::DataSupplierImpl::getWaveSize() const {
+index rxaa::SoundAnalyzer::DataSupplierImpl::getWaveSize() const {
 	return waveSize;
 }
 
-const rxaa::SoundHandler* rxaa::SoundAnalyzer::DataSupplierImpl::getHandler(const std::wstring& id) const {
+const rxaa::SoundHandler* rxaa::SoundAnalyzer::DataSupplierImpl::getHandler(const string& id) const {
 	const auto iter = channelData->indexMap.find(id);
 	if (iter == channelData->indexMap.end()) {
 		return nullptr;
@@ -47,7 +49,7 @@ rxaa::Channel rxaa::SoundAnalyzer::DataSupplierImpl::getChannel() const {
 	return channel;
 }
 
-uint8_t* rxaa::SoundAnalyzer::DataSupplierImpl::getBufferRaw(size_t size) const {
+uint8_t* rxaa::SoundAnalyzer::DataSupplierImpl::getBufferRaw(index size) const {
 	if (nextBufferIndex >= buffers.size()) {
 		buffers.emplace_back();
 	}
@@ -61,7 +63,7 @@ void rxaa::SoundAnalyzer::DataSupplierImpl::resetBuffers() {
 	nextBufferIndex = 0;
 }
 
-void rxaa::SoundAnalyzer::DataSupplierImpl::setWaveSize(unsigned value) {
+void rxaa::SoundAnalyzer::DataSupplierImpl::setWaveSize(index value) {
 	waveSize = value;
 }
 
@@ -69,22 +71,22 @@ rxaa::SoundAnalyzer::SoundAnalyzer() noexcept : dataSupplier(*this) {
 
 }
 
-void rxaa::SoundAnalyzer::decompose(const uint8_t* buffer, uint32_t framesCount) noexcept {
+void rxaa::SoundAnalyzer::decompose(const uint8_t* buffer, index framesCount) noexcept {
 	wave.setBufferSize(framesCount);
 
 	const auto channelsCount = waveFormat.channelsCount;
 	if (waveFormat.format == Format::PCM_F32) {
 		auto s = reinterpret_cast<const float*>(buffer);
-		for (unsigned int frame = 0; frame < framesCount; ++frame) {
-			for (unsigned int channel = 0; channel < channelsCount; ++channel) {
+		for (index frame = 0; frame < framesCount; ++frame) {
+			for (index channel = 0; channel < channelsCount; ++channel) {
 				wave[channel][frame] = *s;
 				++s;
 			}
 		}
 	} else if (waveFormat.format == Format::PCM_S16) {
 		auto s = reinterpret_cast<const int16_t*>(buffer);
-		for (unsigned int frame = 0; frame < framesCount; ++frame) {
-			for (unsigned int channel = 0; channel < channelsCount; ++channel) {
+		for (index frame = 0; frame < framesCount; ++frame) {
+			for (index channel = 0; channel < channelsCount; ++channel) {
 				wave[channel][frame] = *s * (1.0f / std::numeric_limits<int16_t>::max());
 				++s;
 			}
@@ -94,14 +96,14 @@ void rxaa::SoundAnalyzer::decompose(const uint8_t* buffer, uint32_t framesCount)
 	}
 }
 
-void rxaa::SoundAnalyzer::resample(float *values, unsigned framesCount) const noexcept {
+void rxaa::SoundAnalyzer::resample(float *values, index framesCount) const noexcept {
 	if (divide <= 1u) {
 		return;
 	}
 	const auto newCount = framesCount / divide;
-	for (auto i = 0u; i < newCount; ++i) {
+	for (index i = 0; i < newCount; ++i) {
 		double value = 0.0;
-		for (auto j = 0u; j < divide; ++j) {
+		for (index j = 0; j < divide; ++j) {
 			value += values[i * divide + j];
 		}
 		values[i] = static_cast<float>(value / divide);
@@ -131,13 +133,13 @@ void rxaa::SoundAnalyzer::updateSampleRate() noexcept {
 	}
 }
 
-void rxaa::SoundAnalyzer::setTargetRate(unsigned value) noexcept {
+void rxaa::SoundAnalyzer::setTargetRate(index value) noexcept {
 	targetRate = value;
 	updateSampleRate();
 }
 
 std::variant<rxaa::SoundHandler*, rxaa::SoundAnalyzer::SearchError>
-rxaa::SoundAnalyzer::findHandler(Channel channel, const std::wstring& handlerId) const noexcept {
+rxaa::SoundAnalyzer::findHandler(Channel channel, sview handlerId) const noexcept {
 	const auto channelIter = channels.find(channel);
 	if (channelIter == channels.end()) {
 		return SearchError::CHANNEL_NOT_FOUND;
@@ -153,7 +155,7 @@ rxaa::SoundAnalyzer::findHandler(Channel channel, const std::wstring& handlerId)
 	return handler.get();
 }
 
-double rxaa::SoundAnalyzer::getValue(Channel channel, const std::wstring& handlerId, unsigned index) const noexcept {
+double rxaa::SoundAnalyzer::getValue(Channel channel, const string& handlerId, index index) const noexcept {
 	const auto handlerVariant = findHandler(channel, handlerId);
 	if (handlerVariant.index() != 0) {
 		return 0.0;
@@ -171,7 +173,7 @@ double rxaa::SoundAnalyzer::getValue(Channel channel, const std::wstring& handle
 }
 
 std::variant<const wchar_t*, rxaa::SoundAnalyzer::SearchError>
-rxaa::SoundAnalyzer::getProp(Channel channel, const std::wstring& handlerId, const std::wstring_view& prop) const noexcept {
+rxaa::SoundAnalyzer::getProp(Channel channel, sview handlerId, sview prop) const noexcept {
 	const auto handlerVariant = findHandler(channel, handlerId);
 	if (handlerVariant.index() != 0) {
 		return std::get<1>(handlerVariant);
@@ -181,8 +183,8 @@ rxaa::SoundAnalyzer::getProp(Channel channel, const std::wstring& handlerId, con
 	return handler->getProp(prop);
 }
 
-void rxaa::SoundAnalyzer::setPatchHandlers(std::map<Channel, std::vector<std::wstring>> handlersOrder,
-	std::map<std::wstring, std::function<SoundHandler*(SoundHandler*)>, std::less<>> handlerPatchersMap) noexcept {
+void rxaa::SoundAnalyzer::setPatchHandlers(std::map<Channel, std::vector<string>> handlersOrder,
+	std::map<string, std::function<SoundHandler*(SoundHandler*)>, std::less<>> handlerPatchersMap) noexcept {
 
 	for (const auto &channelOrder : handlersOrder) {
 		auto channelIter = channels.find(channelOrder.first);
@@ -195,7 +197,7 @@ void rxaa::SoundAnalyzer::setPatchHandlers(std::map<Channel, std::vector<std::ws
 		decltype(ChannelData::indexMap) newIndexMap;
 
 		auto &channelData = channelIter->second;
-		auto index = 0u;
+		index index = 0;
 
 		for (auto &handlerName : channelOrder.second) {
 			auto iter3 = handlerPatchersMap.find(handlerName);
@@ -274,7 +276,7 @@ void rxaa::SoundAnalyzer::setWaveFormat(MyWaveFormat waveFormat) noexcept {
 		}
 
 		// Fill channelData with handlers
-		unsigned index = 0;
+		index index = 0;
 		for (const auto &handlerIndex : iterOrder->second) {
 			const auto iterPatcher = patchers.find(handlerIndex);
 			if (iterPatcher == patchers.end() || iterPatcher->second == nullptr) {
@@ -292,7 +294,7 @@ void rxaa::SoundAnalyzer::setWaveFormat(MyWaveFormat waveFormat) noexcept {
 	updateSampleRate();
 }
 
-void rxaa::SoundAnalyzer::process(const uint8_t* buffer, bool isSilent, uint32_t framesCount) noexcept {
+void rxaa::SoundAnalyzer::process(const uint8_t* buffer, bool isSilent, index framesCount) noexcept {
 	if (waveFormat.format == Format::INVALID || waveFormat.channelsCount <= 0) {
 		return;
 	}
@@ -340,9 +342,9 @@ void rxaa::SoundAnalyzer::process(const uint8_t* buffer, bool isSilent, uint32_t
 		dataSupplier.setChannelData(&data);
 		dataSupplier.setChannel(channel);
 
-		unsigned waveIndex;
+		index waveIndex;
 		if (waveFormat.channelLayout != nullptr) {
-			const std::optional<unsigned> waveIndexOpt = waveFormat.channelLayout->fromChannel(channel);
+			const std::optional<index> waveIndexOpt = waveFormat.channelLayout->fromChannel(channel);
 			if (!waveIndexOpt.has_value()) {
 				continue;
 			}
@@ -383,7 +385,7 @@ void rxaa::SoundAnalyzer::resetValues() noexcept {
 	}
 }
 
-int rxaa::SoundAnalyzer::createChannelAuto(uint32_t framesCount) noexcept {
+index rxaa::SoundAnalyzer::createChannelAuto(index framesCount) noexcept {
 	auto iter = orderOfHandlers.find(Channel::AUTO);
 	if (iter == orderOfHandlers.end()) {
 		return -1;
@@ -393,17 +395,17 @@ int rxaa::SoundAnalyzer::createChannelAuto(uint32_t framesCount) noexcept {
 		return -1;
 	}
 
-	const int index = wave.getBuffersCount() - 1;
+	const index channelIndex = wave.getBuffersCount() - 1;
 
 	if (waveFormat.channelLayout == nullptr) {
 		if (waveFormat.channelsCount >= 2) {
 			resampleToAuto(0, 1, framesCount);
 
-			return index;
+			return channelIndex;
 		}
 
 		copyToAuto(0, framesCount);
-		return index;
+		return channelIndex;
 	}
 
 	auto left = waveFormat.channelLayout->fromChannel(Channel::FRONT_LEFT);
@@ -411,21 +413,21 @@ int rxaa::SoundAnalyzer::createChannelAuto(uint32_t framesCount) noexcept {
 
 	if (left.has_value() && right.has_value()) {
 		resampleToAuto(left.value(), right.value(), framesCount);
-		return index;
+		return channelIndex;
 	}
 	if (left.has_value()) {
 		copyToAuto(left.value(), framesCount);
-		return index;
+		return channelIndex;
 	}
 	if (right.has_value()) {
 		copyToAuto(right.value(), framesCount);
-		return index;
+		return channelIndex;
 	}
 
 	auto center = waveFormat.channelLayout->fromChannel(Channel::CENTER);
 	if (center.has_value()) {
 		copyToAuto(center.value(), framesCount);
-		return index;
+		return channelIndex;
 	}
 
 	for (auto &handler : channels[Channel::AUTO].handlers) {
@@ -434,7 +436,7 @@ int rxaa::SoundAnalyzer::createChannelAuto(uint32_t framesCount) noexcept {
 	return -1;
 }
 
-void rxaa::SoundAnalyzer::resampleToAuto(unsigned first, unsigned second, uint32_t framesCount) noexcept {
+void rxaa::SoundAnalyzer::resampleToAuto(index first, index second, index framesCount) noexcept {
 	const auto bufferAuto = wave[wave.getBuffersCount() - 1];
 	const auto bufferFirst = wave[first];
 	const auto bufferSecond = wave[second];
@@ -444,9 +446,9 @@ void rxaa::SoundAnalyzer::resampleToAuto(unsigned first, unsigned second, uint32
 	}
 }
 
-void rxaa::SoundAnalyzer::copyToAuto(unsigned index, uint32_t framesCount) noexcept {
+void rxaa::SoundAnalyzer::copyToAuto(index channelIndex, index framesCount) noexcept {
 	const auto bufferAuto = wave[wave.getBuffersCount() - 1];
-	const auto bufferSource = wave[index];
+	const auto bufferSource = wave[channelIndex];
 
 	for (unsigned i = 0; i < framesCount; ++i) {
 		bufferAuto[i] = bufferSource[i];

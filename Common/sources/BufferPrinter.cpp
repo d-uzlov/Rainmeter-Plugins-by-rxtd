@@ -9,18 +9,22 @@
 
 #include "BufferPrinter.h"
 
+#include "undef.h"
+
 #pragma warning(disable : 4458)
 
-rxu::BufferPrinter::ReadableOutputBuffer::ReadableOutputBuffer() {
+using namespace utils;
+
+BufferPrinter::ReadableOutputBuffer::ReadableOutputBuffer() {
 	buffer.resize(16);
 	resetPointers();
 }
 
-rxu::BufferPrinter::ReadableOutputBuffer::ReadableOutputBuffer(ReadableOutputBuffer&& other) noexcept :
+BufferPrinter::ReadableOutputBuffer::ReadableOutputBuffer(ReadableOutputBuffer&& other) noexcept :
 	std::basic_streambuf<wchar_t>(other),
 	buffer(std::move(other.buffer)) { }
 
-rxu::BufferPrinter::ReadableOutputBuffer& rxu::BufferPrinter::ReadableOutputBuffer::operator=(ReadableOutputBuffer&& other) noexcept {
+BufferPrinter::ReadableOutputBuffer& BufferPrinter::ReadableOutputBuffer::operator=(ReadableOutputBuffer&& other) noexcept {
 	if (this == &other)
 		return *this;
 
@@ -30,11 +34,11 @@ rxu::BufferPrinter::ReadableOutputBuffer& rxu::BufferPrinter::ReadableOutputBuff
 	return *this;
 }
 
-rxu::BufferPrinter::ReadableOutputBuffer::ReadableOutputBuffer(const ReadableOutputBuffer& other) :
+BufferPrinter::ReadableOutputBuffer::ReadableOutputBuffer(const ReadableOutputBuffer& other) :
 	std::basic_streambuf<wchar_t>(other),
 	buffer(other.buffer) { }
 
-rxu::BufferPrinter::ReadableOutputBuffer& rxu::BufferPrinter::ReadableOutputBuffer::operator=(
+BufferPrinter::ReadableOutputBuffer& BufferPrinter::ReadableOutputBuffer::operator=(
 	const ReadableOutputBuffer& other) {
 	if (this == &other)
 		return *this;
@@ -45,20 +49,20 @@ rxu::BufferPrinter::ReadableOutputBuffer& rxu::BufferPrinter::ReadableOutputBuff
 	return *this;
 }
 
-const std::basic_streambuf<wchar_t>::char_type* rxu::BufferPrinter::ReadableOutputBuffer::getBuffer() {
+const std::basic_streambuf<wchar_t>::char_type* BufferPrinter::ReadableOutputBuffer::getBuffer() {
 	return buffer.data();
 }
 
-void rxu::BufferPrinter::ReadableOutputBuffer::resetPointers() {
+void BufferPrinter::ReadableOutputBuffer::resetPointers() {
 	char_type* buf = buffer.data();
 	setp(buf, buf + buffer.size() - 1);
 }
 
-void rxu::BufferPrinter::ReadableOutputBuffer::appendEOL() {
+void BufferPrinter::ReadableOutputBuffer::appendEOL() {
 	sputc(L'\0');
 }
 
-std::basic_streambuf<wchar_t>::int_type rxu::BufferPrinter::ReadableOutputBuffer::overflow(int_type c) {
+std::basic_streambuf<wchar_t>::int_type BufferPrinter::ReadableOutputBuffer::overflow(int_type c) {
 	const auto oldSize = pptr() - pbase();
 	buffer.resize(oldSize * 2);
 
@@ -70,17 +74,17 @@ std::basic_streambuf<wchar_t>::int_type rxu::BufferPrinter::ReadableOutputBuffer
 	return c;
 }
 
-rxu::BufferPrinter::BufferPrinter(BufferPrinter&& other) noexcept :
+BufferPrinter::BufferPrinter(BufferPrinter&& other) noexcept :
 	buffer(std::move(other.buffer)),
 	formatString(other.formatString),
 	skipUnlistedArgs(other.skipUnlistedArgs) { }
 
-rxu::BufferPrinter::BufferPrinter(const BufferPrinter& other) noexcept :
+BufferPrinter::BufferPrinter(const BufferPrinter& other) noexcept :
 	buffer(other.buffer),
 	formatString(other.formatString),
 	skipUnlistedArgs(other.skipUnlistedArgs) { }
 
-rxu::BufferPrinter& rxu::BufferPrinter::operator=(const BufferPrinter& other) noexcept {
+BufferPrinter& BufferPrinter::operator=(const BufferPrinter& other) noexcept {
 	if (this == &other)
 		return *this;
 
@@ -91,7 +95,7 @@ rxu::BufferPrinter& rxu::BufferPrinter::operator=(const BufferPrinter& other) no
 	return *this;
 }
 
-rxu::BufferPrinter& rxu::BufferPrinter::operator=(BufferPrinter&& other) noexcept {
+BufferPrinter& BufferPrinter::operator=(BufferPrinter&& other) noexcept {
 	if (this == &other)
 		return *this;
 
@@ -102,36 +106,27 @@ rxu::BufferPrinter& rxu::BufferPrinter::operator=(BufferPrinter&& other) noexcep
 	return *this;
 }
 
-void rxu::BufferPrinter::setSkipUnlistedArgs(bool value) {
+void BufferPrinter::setSkipUnlistedArgs(bool value) {
 	skipUnlistedArgs = value;
 }
 
-void rxu::BufferPrinter::writeToStream() {
+void BufferPrinter::writeToStream() {
 	std::wostream stream = std::wostream(&buffer);
 	stream << formatString;
 }
 
-void rxu::BufferPrinter::writeUnlisted() { }
+void BufferPrinter::writeUnlisted() { }
 
 
-namespace rxu {
+namespace rxtd::utils {
 
 	template <>
-	void writeIntegral(std::wostream& stream, const bool& t, std::wstring_view options) {
+	void writeIntegral(std::wostream& stream, bool t, sview options) {
 		if (options == L"number"sv) {
 			stream << static_cast<int>(t);
 		} else {
 			stream << (t ? L"true"sv : L"false"sv);
 		}
 	}
-
-	// template <>
-	// void writeObject(std::wostream& stream, const double& t, std::wstring_view options) {
-	// 	stream << t;
-	// }
-	//
-	// template <>
-	// void writeObject<unsigned long long>(std::wostream& stream, const uint64_t& t, std::wstring_view options) {
-	// }
 }
 

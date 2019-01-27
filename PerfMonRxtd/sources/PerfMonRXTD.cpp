@@ -14,14 +14,16 @@
 #include "PerfmonChild.h"
 #include "TypeHolder.h"
 
-PLUGIN_EXPORT void Initialize(void** data, void* rm) {
-	rxu::Rainmeter rain(rm);
+#include "undef.h"
 
-	const wchar_t *str = rain.readString(L"Type");
-	if (_wcsicmp(str, L"Parent") == 0) {
-		*data = new rxpm::PerfmonParent(std::move(rain));
+PLUGIN_EXPORT void Initialize(void** data, void* rm) {
+	utils::Rainmeter rain(rm);
+
+	auto str = rain.readString(L"Type");
+	if (_wcsicmp(str.data(), L"Parent") == 0) {
+		*data = new perfmon::PerfmonParent(std::move(rain));
 	} else {
-		*data = new rxpm::PerfmonChild(std::move(rain));
+		*data = new perfmon::PerfmonChild(std::move(rain));
 	}
 }
 
@@ -30,7 +32,7 @@ PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue) {
 		return;
 	}
 
-	static_cast<rxu::TypeHolder*>(data)->reload();
+	static_cast<utils::TypeHolder*>(data)->reload();
 }
 
 PLUGIN_EXPORT double Update(void* data) {
@@ -38,7 +40,7 @@ PLUGIN_EXPORT double Update(void* data) {
 		return 0.0;
 	}
 
-	return static_cast<rxu::TypeHolder*>(data)->update();
+	return static_cast<utils::TypeHolder*>(data)->update();
 }
 
 PLUGIN_EXPORT LPCWSTR GetString(void* data) {
@@ -46,7 +48,7 @@ PLUGIN_EXPORT LPCWSTR GetString(void* data) {
 		return nullptr;
 	}
 
-	return static_cast<rxu::TypeHolder*>(data)->getString();
+	return static_cast<utils::TypeHolder*>(data)->getString();
 }
 
 PLUGIN_EXPORT void Finalize(void* data) {
@@ -54,7 +56,7 @@ PLUGIN_EXPORT void Finalize(void* data) {
 		return;
 	}
 
-	delete static_cast<rxu::TypeHolder*>(data);
+	delete static_cast<utils::TypeHolder*>(data);
 }
 
 PLUGIN_EXPORT void ExecuteBang(void* data, LPCWSTR args) {
@@ -62,5 +64,5 @@ PLUGIN_EXPORT void ExecuteBang(void* data, LPCWSTR args) {
 		return;
 	}
 
-	static_cast<rxu::TypeHolder*>(data)->command(args);
+	static_cast<utils::TypeHolder*>(data)->command(args);
 }

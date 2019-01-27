@@ -11,7 +11,7 @@
 #include <type_traits>
 #include <Unknwn.h>
 
-namespace rxu {
+namespace rxtd::utils {
 	template <typename T>
 	class GenericComWrapper {
 		static_assert(std::is_base_of<IUnknown, T>::value, "T must extend IUnknown");
@@ -21,7 +21,7 @@ namespace rxu {
 
 		GenericComWrapper() = default;
 
-		GenericComWrapper(GenericComWrapper&& other) noexcept :ptr(other.ptr) {
+		GenericComWrapper(GenericComWrapper&& other) noexcept : ptr(other.ptr) {
 			other.ptr = nullptr;
 		}
 		GenericComWrapper& operator=(GenericComWrapper&& other) noexcept {

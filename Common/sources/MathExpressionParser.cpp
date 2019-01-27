@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2018-2019 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
@@ -8,18 +8,19 @@
  */
 
 #include <cwctype>
-#include <algorithm>
 
 #include "MathExpressionParser.h"
 
-#include <string>
-#include <string_view>
 #include "StringUtils.h"
+
+#include "undef.h"
 
 #pragma warning(disable : 4458)
 #pragma warning(disable : 4244)
 
-void rxu::ExpressionTreeNode::solve() {
+using namespace utils;
+
+void ExpressionTreeNode::solve() {
 	if (type == ExpressionType::NUMBER) {
 		return;
 	}
@@ -101,17 +102,19 @@ void rxu::ExpressionTreeNode::solve() {
 		type = ExpressionType::NUMBER;
 		return;
 	}
-	default: ;
+	default:;
 	}
 }
-rxu::MathExpressionParser::Lexer::Lexer(std::wstring_view source) : source(source) {
+MathExpressionParser::Lexer::Lexer(sview source) :
+	source(source),
+	sourceLength(static_cast<index>(source.length())) {
 
 }
 
-rxu::MathExpressionParser::Lexer::Lexeme rxu::MathExpressionParser::Lexer::next() {
+MathExpressionParser::Lexer::Lexeme MathExpressionParser::Lexer::next() {
 	skipSpaces();
 
-	if (position >= source.length()) {
+	if (position >= sourceLength) {
 		return Lexeme(LexemeType::END, { });
 	}
 
@@ -172,10 +175,10 @@ rxu::MathExpressionParser::Lexer::Lexeme rxu::MathExpressionParser::Lexer::next(
 	return result;
 }
 
-std::wstring_view rxu::MathExpressionParser::Lexer::getUntil(const wchar_t stop1, const wchar_t stop2) {
+sview MathExpressionParser::Lexer::getUntil(const wchar_t stop1, const wchar_t stop2) {
 	const auto startPos = position;
 	int i = 0;
-	while (position + i < source.length()) {
+	while (position + i < sourceLength) {
 		const wchar_t c1 = source[position + i];
 		if (c1 != stop1 && c1 != stop2 && c1 != L'\0') {
 			i++;
@@ -187,13 +190,13 @@ std::wstring_view rxu::MathExpressionParser::Lexer::getUntil(const wchar_t stop1
 	return source.substr(startPos, i);
 }
 
-void rxu::MathExpressionParser::Lexer::skipSpaces() {
-	while (position < source.length() && std::iswspace(source[position])) {
+void MathExpressionParser::Lexer::skipSpaces() {
+	while (position < sourceLength && std::iswspace(source[position])) {
 		position++;
 	}
 }
 
-bool rxu::MathExpressionParser::Lexer::isSymbol(const wchar_t c) {
+bool MathExpressionParser::Lexer::isSymbol(const wchar_t c) {
 	return
 		c == L'\0' ||
 		c == L'(' ||
@@ -209,10 +212,10 @@ bool rxu::MathExpressionParser::Lexer::isSymbol(const wchar_t c) {
 		c == L'#';
 }
 
-std::wstring_view rxu::MathExpressionParser::Lexer::readNumber() {
+sview MathExpressionParser::Lexer::readNumber() {
 	const auto startPos = position;
 	int i = 0;
-	while (position + i < source.length()) {
+	while (position + i < sourceLength) {
 		const wchar_t c1 = source[position + i];
 		if (std::iswdigit(c1)) {
 			i++;
@@ -224,39 +227,39 @@ std::wstring_view rxu::MathExpressionParser::Lexer::readNumber() {
 	return source.substr(startPos, i);
 }
 
-rxu::MathExpressionParser::MathExpressionParser(std::wstring source) : source(std::move(source)), lexer(this->source) {
+MathExpressionParser::MathExpressionParser(string source) : source(std::move(source)), lexer(this->source) {
 	readNext();
 }
 
-rxu::MathExpressionParser::MathExpressionParser(std::wstring_view source) : lexer(source) {
+MathExpressionParser::MathExpressionParser(sview source) : lexer(source) {
 	readNext();
 }
 
-void rxu::MathExpressionParser::parse() {
+void MathExpressionParser::parse() {
 	result = parseExpression();
 	if (next.type != Lexer::LexemeType::END) {
 		error = true;
 	}
 }
-bool rxu::MathExpressionParser::isError() const {
+bool MathExpressionParser::isError() const {
 	return error;
 }
-rxu::ExpressionTreeNode rxu::MathExpressionParser::getExpression() const {
+ExpressionTreeNode MathExpressionParser::getExpression() const {
 	return result;
 }
-void rxu::MathExpressionParser::readNext() {
+void MathExpressionParser::readNext() {
 	next = lexer.next();
 	if (next.type == Lexer::LexemeType::UNKNOWN) {
 		error = true;
 	}
 }
-void rxu::MathExpressionParser::toUpper(std::wstring& s) {
+void MathExpressionParser::toUpper(string& s) {
 	for (wchar_t& c : s) {
 		c = towupper(c);
 	}
 }
 
-rxu::ExpressionTreeNode rxu::MathExpressionParser::parseExpression() {
+ExpressionTreeNode MathExpressionParser::parseExpression() {
 	ExpressionTreeNode result = parseTerm();
 	if (error) {
 		return ExpressionTreeNode();
@@ -300,7 +303,7 @@ rxu::ExpressionTreeNode rxu::MathExpressionParser::parseExpression() {
 	return result;
 }
 
-rxu::ExpressionTreeNode rxu::MathExpressionParser::parseTerm() {
+ExpressionTreeNode MathExpressionParser::parseTerm() {
 	ExpressionTreeNode result = parseFactor();
 	if (error) {
 		return ExpressionTreeNode();
@@ -344,7 +347,7 @@ rxu::ExpressionTreeNode rxu::MathExpressionParser::parseTerm() {
 	return result;
 }
 
-rxu::ExpressionTreeNode rxu::MathExpressionParser::parseFactor() {
+ExpressionTreeNode MathExpressionParser::parseFactor() {
 	ExpressionTreeNode power = parsePower();
 	if (error) {
 		return ExpressionTreeNode();
@@ -367,7 +370,7 @@ rxu::ExpressionTreeNode rxu::MathExpressionParser::parseFactor() {
 	return power;
 }
 
-rxu::ExpressionTreeNode rxu::MathExpressionParser::parsePower() {
+ExpressionTreeNode MathExpressionParser::parsePower() {
 	if (next.type == Lexer::LexemeType::MINUS) {
 		ExpressionTreeNode res;
 		res.type = ExpressionType::INVERSE;
@@ -385,7 +388,7 @@ rxu::ExpressionTreeNode rxu::MathExpressionParser::parsePower() {
 	return parseAtom();
 }
 
-rxu::ExpressionTreeNode rxu::MathExpressionParser::parseAtom() {
+ExpressionTreeNode MathExpressionParser::parseAtom() {
 	if (next.type == Lexer::LexemeType::PAR_OPEN) {
 		readNext();
 		if (error) {
@@ -433,13 +436,13 @@ rxu::ExpressionTreeNode rxu::MathExpressionParser::parseAtom() {
 	return ExpressionTreeNode();
 }
 
-int64_t rxu::MathExpressionParser::parseInt(std::wstring_view string) {
+int64_t MathExpressionParser::parseInt(sview string) {
 	return std::stoi(string.data()); // will stop at first non-digit, doesn't require null-terminated string
 }
 
-double rxu::MathExpressionParser::parseFractional(std::wstring_view string) {
-	std::wstring temp = L"0.";
-	temp += string;
+double MathExpressionParser::parseFractional(sview view) {
+	string temp = L"0.";
+	temp += view;
 	return std::stod(temp); // TODO
 }
 

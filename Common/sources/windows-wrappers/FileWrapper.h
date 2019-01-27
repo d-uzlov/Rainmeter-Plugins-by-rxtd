@@ -8,13 +8,8 @@
  */
 
 #pragma once
-#include <cstdint>
-#include <string>
 
-#pragma warning(disable : 6215)
-#pragma warning(disable : 6217)
-
-namespace rxu {
+namespace rxtd::utils {
 	class FileWrapper {
 		void *fileHandle { };
 		bool valid = true;
@@ -30,9 +25,9 @@ namespace rxu {
 		~FileWrapper();
 
 		bool isValid() const;
-		void write(uint8_t *data, size_t count);
+		void write(std::byte *data, size_t count);
 
-		static void createDirectories(std::wstring_view path);
+		static void createDirectories(sview path);
 
 	};
 }

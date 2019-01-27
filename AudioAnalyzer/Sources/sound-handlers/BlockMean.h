@@ -23,28 +23,28 @@ namespace rxaa {
 	protected:
 		Params params { };
 
-		uint32_t samplesPerSec { };
+		index samplesPerSec { };
 
 		double attackDecayConstants[2] { };
-		unsigned blockSize { };
+		index blockSize { };
 
-		unsigned int counter = 0;
+		index counter = 0;
 		double intermediateResult = 0.0;
 		double result = 0.0;
 
-		std::wstring propString { };
+		string propString { };
 
 	public:
 		void setParams(Params params);
 
 		const double* getData() const override;
-		size_t getCount() const override;
-		void setSamplesPerSec(uint32_t samplesPerSec) override;
-		const wchar_t* getProp(const std::wstring_view& prop) override;
+		index getCount() const override;
+		void setSamplesPerSec(index samplesPerSec) override;
+		const wchar_t* getProp(const sview& prop) override;
 		void reset() override;
 		void processSilence(const DataSupplier& dataSupplier) override;
 
-		static std::optional<Params> parseParams(const rxu::OptionParser::OptionMap& optionMap, rxu::Rainmeter::ContextLogger &cl);
+		static std::optional<Params> parseParams(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger &cl);
 
 	private:
 		void recalculateConstants();

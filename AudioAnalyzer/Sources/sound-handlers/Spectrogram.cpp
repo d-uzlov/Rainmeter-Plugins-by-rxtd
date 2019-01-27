@@ -8,12 +8,12 @@
  */
 
 #include "Spectrogram.h"
-#include <string_view>
-#include <algorithm>
 #include "BandAnalyzer.h"
 #include "BmpWriter.h"
 #include <filesystem>
 #include "windows-wrappers/FileWrapper.h"
+
+#include "undef.h"
 
 #pragma warning(disable : 4458)
 #pragma warning(disable : 4244)
@@ -27,15 +27,15 @@ void rxaa::Spectrogram::setParams(const Params& _params) {
 
 	filepath.clear();
 
-	rxu::FileWrapper::createDirectories(params.prefix);
+	utils::FileWrapper::createDirectories(params.prefix);
 
 	updateParams();
 }
 
-std::optional<rxaa::Spectrogram::Params> rxaa::Spectrogram::parseParams(const rxu::OptionParser::OptionMap& optionMap, rxu::Rainmeter::ContextLogger& cl, const rxu::Rainmeter& rain) {
+std::optional<rxaa::Spectrogram::Params> rxaa::Spectrogram::parseParams(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl, const utils::Rainmeter& rain) {
 	Params params;
 	
-	params.sourceName = optionMap.getCS(L"source"sv).asString();
+	params.sourceName = optionMap.get(L"source"sv).asString();
 	if (params.sourceName.empty()) {
 		cl.error(L"source not found");
 		return std::nullopt;
@@ -54,13 +54,13 @@ std::optional<rxaa::Spectrogram::Params> rxaa::Spectrogram::parseParams(const rx
 	}
 	params.resolution *= 0.001;
 
-	std::wstring folder { optionMap.getCS(L"folder"sv).asString() };
+	string folder { optionMap.get(L"folder"sv).asString() };
 	if (!folder.empty() && folder[0] == L'\"') {
 		folder = folder.substr(1);
 	}
 	std::filesystem::path path { folder };
 	if (!path.is_absolute()) {
-		folder = rain.replaceVariables(L"[#CURRENTPATH]") + folder;
+		folder = (rain.replaceVariables(L"[#CURRENTPATH]") % toString()) + folder;
 	}
 	folder = std::filesystem::absolute(folder).wstring();
 	folder = LR"(\\?\)"s + folder;
@@ -80,17 +80,17 @@ const double* rxaa::Spectrogram::getData() const {
 	return &result;
 }
 
-size_t rxaa::Spectrogram::getCount() const {
+index rxaa::Spectrogram::getCount() const {
 	return 0;
 }
 
-void rxaa::Spectrogram::setSamplesPerSec(uint32_t samplesPerSec) {
+void rxaa::Spectrogram::setSamplesPerSec(index samplesPerSec) {
 	this->samplesPerSec = samplesPerSec;
 
 	updateParams();
 }
 
-const wchar_t* rxaa::Spectrogram::getProp(const std::wstring_view& prop) {
+const wchar_t* rxaa::Spectrogram::getProp(const sview& prop) {
 	if (prop == L"file"sv) {
 		return filepath.c_str();
 	} else if (prop == L"block size"sv) {
@@ -121,11 +121,11 @@ void rxaa::Spectrogram::writeFile(const DataSupplier& dataSupplier) {
 	auto height = params.length;
 	auto writeBufferSize = width * height;
 	auto writeBuffer = dataSupplier.getBuffer<uint32_t>(writeBufferSize);
-	rxu::BmpWriter::writeFile(filepath, buffer[0], width, height, index, writeBuffer, writeBufferSize);
+	utils::BmpWriter::writeFile(filepath, buffer[0], width, height, index, writeBuffer, writeBufferSize);
 }
 
 void rxaa::Spectrogram::fillLine(const double* data) {
-	for (auto i = 0u; i < sourceSize; ++i) {
+	for (index i = 0; i < sourceSize; ++i) {
 		double value = data[i];
 		value = std::clamp(value, 0.0, 1.0);
 
@@ -156,7 +156,7 @@ void rxaa::Spectrogram::process(const DataSupplier& dataSupplier) {
 	if (filepath.empty()) {
 		filepath = params.prefix;
 		filepath += L"spectrogram-";
-		filepath += dataSupplier.getChannel().toString();
+		filepath += dataSupplier.getChannel().technicalName();
 		filepath += L".bmp"sv;
 	}
 

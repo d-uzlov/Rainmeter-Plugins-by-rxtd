@@ -8,9 +8,8 @@
  */
 
 #pragma once
-#include <algorithm>
 
-namespace rxu {
+namespace rxtd::utils {
 	class Color {
 		double red { }, green { }, blue { }, alpha = 1.0;
 

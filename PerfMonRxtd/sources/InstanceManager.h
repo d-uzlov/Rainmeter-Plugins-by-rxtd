@@ -8,26 +8,22 @@
  */
 
 #pragma once
-#include <vector>
 #include "pdh/PdhWrapper.h"
 #include "pdh/NamesManager.h"
 #include "BlacklistManager.h"
 #include "enums.h"
 #include "expressions.h"
 
-#undef min
-#undef max
-
-namespace rxpm {
+namespace rxtd::perfmon {
 	class ExpressionResolver;
 
 	struct Indices {
-		unsigned long current;
-		unsigned long previous;
+		index current;
+		index previous;
 	};
 
 	struct InstanceInfo {
-		std::wstring_view sortName;
+		sview sortName;
 		double sortValue;
 		Indices indices;
 		std::vector<Indices> vectorIndices;
@@ -50,14 +46,12 @@ namespace rxpm {
 		};
 
 	private:
-		static constexpr size_t NO_INDEX = static_cast<size_t>(-1);
-
-		rxu::Rainmeter::Logger &log;
+		utils::Rainmeter::Logger &log;
 
 		bool keepDiscarded = false;
 		bool syncRawFormatted = true;
 		bool rollup = false;
-		int indexOffset = 0;
+		index indexOffset = 0;
 		bool limitIndexOffset = false;
 
 		SortBy sortBy = SortBy::NONE;
@@ -80,13 +74,13 @@ namespace rxpm {
 		pdh::NamesManager namesPrevious;
 
 		// (use orig name, partial match, name) -> instanceInfo
-		mutable std::map<std::tuple<bool, bool, std::wstring_view>, std::optional<const InstanceInfo*>> nameCache;
+		mutable std::map<std::tuple<bool, bool, sview>, std::optional<const InstanceInfo*>> nameCache;
 		mutable decltype(nameCache) nameCacheRollup;
 		mutable decltype(nameCache) nameCacheDiscarded;
 
 	public:
 		InstanceManager(
-			rxu::Rainmeter::Logger& log, const pdh::PdhWrapper& phWrapper, const pdh::Snapshot& idSnapshot,
+			utils::Rainmeter::Logger& log, const pdh::PdhWrapper& phWrapper, const pdh::Snapshot& idSnapshot,
 			const pdh::Snapshot& snapshotCurrent, const pdh::Snapshot& snapshotPrevious,
 			const BlacklistManager& blacklistManager
 		);
@@ -94,10 +88,10 @@ namespace rxpm {
 		void setKeepDiscarded(bool value);
 		void setSyncRawFormatted(bool value);
 		void setRollup(bool value);
-		void setIndexOffset(int value);
+		void setIndexOffset(index value);
 		void setLimitIndexOffset(bool value);
 
-		void setSortIndex(int value);
+		void setSortIndex(index value);
 		void setSortBy(SortBy value);
 		void setSortOrder(SortOrder value);
 		void setSortRollupFunction(RollupFunction value);
@@ -106,9 +100,9 @@ namespace rxpm {
 		bool isRollup() const;
 		unsigned getCountersCount() const;
 
-		const pdh::ModifiedNameItem& getNames(size_t index) const;
+		const pdh::ModifiedNameItem& getNames(index index) const;
 
-		void checkIndices(unsigned counters, unsigned expressions, unsigned rollupExpressions);
+		void checkIndices(index counters, index expressions, index rollupExpressions);
 
 		void update();
 
@@ -127,13 +121,13 @@ namespace rxpm {
 
 		void setNameModificationType(pdh::NamesManager::ModificationType value);
 
-		const InstanceInfo* findInstance(const Reference& ref, size_t sortedIndex) const;
+		const InstanceInfo* findInstance(const Reference& ref, index sortedIndex) const;
 
 		const InstanceInfo* findInstanceByName(const Reference& ref, bool useRollup) const;
 
-		long long calculateRaw(unsigned counterIndex, const Indices& originalIndexes) const;
+		long long calculateRaw(index counterIndex, Indices originalIndexes) const;
 
-		double calculateFormatted(unsigned counterIndex, const Indices& originalIndexes) const;
+		double calculateFormatted(index counterIndex, Indices originalIndexes) const;
 
 
 	private:
@@ -143,11 +137,11 @@ namespace rxpm {
 
 		void buildRollupKeys();
 
-		size_t findPreviousName(std::wstring_view uniqueName, size_t hint) const;
+		index findPreviousName(sview uniqueName, index hint) const;
 
 		const InstanceInfo* findInstanceByNameInList(
 			const Reference& ref,
-			const std::vector<InstanceInfo>& instances, std::map<std::tuple<bool, bool, std::wstring_view>,
+			const std::vector<InstanceInfo>& instances, std::map<std::tuple<bool, bool, sview>,
 			std::optional<const InstanceInfo*>>&cache) const;
 
 	};

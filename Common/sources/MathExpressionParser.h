@@ -9,11 +9,7 @@
 
 #pragma once
 
-#include <string>
-#include <vector>
-#include <cstdint>
-
-namespace rxu {
+namespace rxtd::utils {
 	enum class ExpressionType {
 		UNKNOWN,
 		NUMBER,
@@ -59,38 +55,39 @@ namespace rxu {
 
 			struct Lexeme {
 				LexemeType type { LexemeType::UNKNOWN };
-				std::wstring_view value;
+				sview value;
 
 				Lexeme() = default;
-				Lexeme(LexemeType type, std::wstring_view value) :
+				Lexeme(LexemeType type, sview value) :
 					type(type),
 					value(value) { }
 			};
 
 		private:
-			std::wstring_view source;
-			size_t position = 0;
+			sview source;
+			index sourceLength = 0;
+			index position = 0;
 
 		public:
-			explicit Lexer(std::wstring_view source);
+			explicit Lexer(sview source);
 			Lexeme next();
-			std::wstring_view getUntil(wchar_t stop1, wchar_t stop2);
+			sview getUntil(wchar_t stop1, wchar_t stop2);
 
 		private:
 			void skipSpaces();
 			static bool isSymbol(wchar_t c);
-			std::wstring_view readNumber();
+			sview readNumber();
 		};
 
-		std::wstring source { };
+		string source { };
 		Lexer lexer;
 		Lexer::Lexeme next = { };
 		ExpressionTreeNode result;
 		bool error = false;
 
 	public:
-		explicit MathExpressionParser(std::wstring source);
-		explicit MathExpressionParser(std::wstring_view source);
+		explicit MathExpressionParser(string source);
+		explicit MathExpressionParser(sview source);
 
 		void parse();
 		bool isError() const;
@@ -98,14 +95,14 @@ namespace rxu {
 
 	private:
 		void readNext();
-		static void toUpper(std::wstring& s);
+		static void toUpper(string& s); // TODO use string utils
 		ExpressionTreeNode parseExpression();
 		ExpressionTreeNode parseTerm();
 		ExpressionTreeNode parseFactor();
 		ExpressionTreeNode parsePower();
 		ExpressionTreeNode parseAtom();
 
-		static int64_t parseInt(std::wstring_view string);
-		static double parseFractional(std::wstring_view string);
+		static int64_t parseInt(sview string);
+		static double parseFractional(sview string);
 	};
 }

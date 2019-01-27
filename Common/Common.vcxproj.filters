@@ -38,6 +38,9 @@
     <ClCompile Include="sources\MathExpressionParser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="precompiled.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sources\BmpWriter.h">
@@ -83,6 +86,21 @@
       <Filter>Source Files\windows-wrappers</Filter>
     </ClInclude>
     <ClInclude Include="sources\MathExpressionParser.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\my-windows.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="precompiled.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="undef.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="typedefs.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\CaseInsensitiveString.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

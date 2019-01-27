@@ -161,6 +161,9 @@
     <ClInclude Include="Sources\SoundAnalyzer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\Common\precompiled.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="Sources\AudioChild.cpp" />
     <ClCompile Include="Sources\AudioAnalyzer.cpp" />
     <ClCompile Include="Sources\AudioParent.cpp" />

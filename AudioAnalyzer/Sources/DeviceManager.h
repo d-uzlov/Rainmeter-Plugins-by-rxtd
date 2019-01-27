@@ -8,9 +8,9 @@
  */
 
 #pragma once
+#include "my-windows.h"
 #include <mmdeviceapi.h>
 #include <Audioclient.h>
-#include <string>
 #include "MyWaveFormat.h"
 #include "windows-wrappers/BufferWrapper.h"
 #include <functional>
@@ -41,10 +41,10 @@ namespace rxaa {
 
 		class BufferFetchResult {
 			const BufferFetchState state;
-			const rxu::BufferWrapper buffer;
+			const utils::BufferWrapper buffer;
 
 			explicit BufferFetchResult(BufferFetchState state)
-				: state(state), buffer(rxu::BufferWrapper()) { }
+				: state(state), buffer(utils::BufferWrapper()) { }
 
 		public:
 			static BufferFetchResult noData() {
@@ -57,13 +57,13 @@ namespace rxaa {
 				return BufferFetchResult(BufferFetchState::INVALID_STATE);
 			}
 
-			BufferFetchResult(rxu::BufferWrapper&& buffer)
+			BufferFetchResult(utils::BufferWrapper&& buffer)
 				: state(BufferFetchState::OK), buffer(std::move(buffer)) { }
 
 			BufferFetchState getState() const {
 				return state;
 			}
-			const rxu::BufferWrapper& getBuffer() const {
+			const utils::BufferWrapper& getBuffer() const {
 				return buffer;
 			}
 		};
@@ -99,17 +99,17 @@ namespace rxaa {
 		class CaptureManager {
 		public:
 			struct Error {
-				const bool temporary;
-				std::wstring explanation;
-				const int32_t errorCode;
+				bool temporary;
+				string explanation;
+				int32_t errorCode;
 
-				Error(bool temporary, std::wstring explanation, int32_t errorCode) :
+				Error(bool temporary, string explanation, int32_t errorCode) :
 					temporary(temporary), explanation(std::move(explanation)), errorCode(errorCode) {
 				}
 			};
 		private:
-			rxu::GenericComWrapper<IAudioClient> audioClient { };
-			rxu::GenericComWrapper<IAudioCaptureClient> audioCaptureClient { };
+			utils::GenericComWrapper<IAudioClient> audioClient { };
+			utils::GenericComWrapper<IAudioCaptureClient> audioCaptureClient { };
 			MyWaveFormat waveFormat { };
 
 		public:
@@ -127,7 +127,7 @@ namespace rxaa {
 			MyWaveFormat getWaveFormat() const;
 			bool isEmpty() const;
 			bool isValid() const;
-			rxu::BufferWrapper readBuffer();
+			utils::BufferWrapper readBuffer();
 
 		private:
 			void releaseHandles();
@@ -135,12 +135,12 @@ namespace rxaa {
 
 		bool objectIsValid = true;
 
-		rxu::Rainmeter::Logger& logger;
+		utils::Rainmeter::Logger& logger;
 
 		Port port = Port::OUTPUT;
-		std::wstring deviceID;
+		string deviceID;
 
-		rxu::GenericComWrapper<IMMDeviceEnumerator> audioEnumeratorHandle;
+		utils::GenericComWrapper<IMMDeviceEnumerator> audioEnumeratorHandle;
 
 		IMMDevice *audioDeviceHandle { };
 
@@ -148,9 +148,9 @@ namespace rxaa {
 		CaptureManager captureManager;
 
 		struct {
-			std::wstring name;
-			std::wstring id;
-			std::wstring format;
+			string name;
+			string id;
+			string format;
 
 			void reset() {
 				name.clear();
@@ -159,7 +159,7 @@ namespace rxaa {
 			}
 		} deviceInfo;
 
-		std::wstring deviceList;
+		string deviceList;
 
 		clock::time_point lastBufferFillTime { };
 		clock::time_point lastDevicePollTime { };
@@ -169,7 +169,7 @@ namespace rxaa {
 		const std::function<void(MyWaveFormat waveFormat)> waveFormatUpdateCallback;
 
 	public:
-		DeviceManager(rxu::Rainmeter::Logger& logger, std::function<void(MyWaveFormat waveFormat)> waveFormatUpdateCallback);
+		DeviceManager(utils::Rainmeter::Logger& logger, std::function<void(MyWaveFormat waveFormat)> waveFormatUpdateCallback);
 
 		~DeviceManager();
 		/** This class is non copyable */
@@ -180,16 +180,16 @@ namespace rxaa {
 
 		bool isObjectValid() const;
 
-		void setOptions(Port port, std::wstring reqID);
+		void setOptions(Port port, sview deviceID);
 		void init();
 		BufferFetchResult nextBuffer();
 
-		const std::wstring& getDeviceName() const;
-		const std::wstring& getDeviceId() const;
-		const std::wstring& getDeviceList() const;
+		const string& getDeviceName() const;
+		const string& getDeviceId() const;
+		const string& getDeviceList() const;
 		void updateDeviceList();
 		bool getDeviceStatus() const;
-		const std::wstring& getDeviceFormat() const;
+		const string& getDeviceFormat() const;
 
 	private:
 		void deviceInit();

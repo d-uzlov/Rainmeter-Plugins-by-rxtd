@@ -9,10 +9,10 @@
 
 #include "BandAnalyzer.h"
 #include <cmath>
-#include <algorithm>
-#include <string_view>
 #include "FftAnalyzer.h"
 #include "FastMath.h"
+
+#include "undef.h"
 
 #pragma warning(disable : 4458)
 #pragma warning(disable : 26451)
@@ -23,7 +23,7 @@ using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
 
 const std::vector<double>& rxaa::BandAnalyzer::GaussianCoefficientsManager::forSigma(double sigma) {
-	int radius = static_cast<int>(std::lround(sigma * 3.0));
+	index radius = static_cast<index>(std::lround(sigma * 3.0));
 	if (radius < 1) {
 		radius = 1;
 	}
@@ -36,16 +36,16 @@ const std::vector<double>& rxaa::BandAnalyzer::GaussianCoefficientsManager::forS
 	return vec;
 }
 
-std::vector<double> rxaa::BandAnalyzer::GaussianCoefficientsManager::generateGaussianKernel(int radius, double sigma) {
+std::vector<double> rxaa::BandAnalyzer::GaussianCoefficientsManager::generateGaussianKernel(index radius, double sigma) {
 
 	std::vector<double> kernel;
 	kernel.resize(radius * 2ll + 1);
 
 	double powerFactor = 1.0 / (2.0 * sigma * sigma);
 
-	int r = -radius;
+	index r = -radius;
 	double sum = 0.0;
-	for (int i = 0; i < kernel.size(); i++) {
+	for (index i = 0; i < kernel.size(); i++) {
 		double x = r;
 		x *= x;
 		const auto coef = std::exp(-x * powerFactor);
@@ -61,9 +61,9 @@ std::vector<double> rxaa::BandAnalyzer::GaussianCoefficientsManager::generateGau
 	return kernel;
 }
 
-std::optional<rxaa::BandAnalyzer::Params> rxaa::BandAnalyzer::parseParams(const rxu::OptionParser::OptionMap& optionMap, rxu::Rainmeter::ContextLogger& cl, rxu::Rainmeter &rain) {
+std::optional<rxaa::BandAnalyzer::Params> rxaa::BandAnalyzer::parseParams(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl, utils::Rainmeter &rain) {
 	Params params;
-	params.fftId = optionMap.getCS(L"source"sv).asString();
+	params.fftId = optionMap.get(L"source"sv).asString();
 	if (params.fftId.empty()) {
 		cl.error(L"source not found");
 		return std::nullopt;
@@ -75,9 +75,9 @@ std::optional<rxaa::BandAnalyzer::Params> rxaa::BandAnalyzer::parseParams(const 
 		return std::nullopt;
 	}
 
-	rxu::OptionParser optionParser;
+	utils::OptionParser optionParser;
 	const auto bounds = optionParser.asList(rain.readString(L"FreqList_"s += freqListIndex), L'|');
-	rxu::Rainmeter::ContextLogger freqListLogger { rain.getLogger() };
+	utils::Rainmeter::ContextLogger freqListLogger { rain.getLogger() };
 	auto freqsOpt = parseFreqList(bounds, freqListLogger, rain);
 	if (!freqsOpt.has_value()) {
 		cl.error(L"freqList '{}' can't be parsed", freqListIndex);
@@ -109,7 +109,7 @@ std::optional<rxaa::BandAnalyzer::Params> rxaa::BandAnalyzer::parseParams(const 
 		params.smoothingFactor = 1;
 	}
 
-	auto smoothingCurveString = optionMap.getCS(L"smoothingCurve"sv).asString();
+	auto smoothingCurveString = optionMap.get(L"smoothingCurve"sv).asString();
 	params.exponentialFactor = 1;
 	if (smoothingCurveString.empty() || smoothingCurveString == L"exponential"sv) {
 		params.smoothingCurve = SmoothingCurve::EXPONENTIAL;
@@ -141,7 +141,7 @@ void rxaa::BandAnalyzer::setParams(Params params) {
 
 	bandFreqMultipliers.resize(bandsCount);
 	double multipliersSum { };
-	for (int i = 0; i < bandsCount; ++i) {
+	for (index i = 0; i < bandsCount; ++i) {
 		bandFreqMultipliers[i] = std::log(params.bandFreqs[i + 1] - params.bandFreqs[i] + 1.0) / std::log(50.0);
 		// bandFreqMultipliers[i] = params.bandFreqs[i + 1] - params.bandFreqs[i];
 		multipliersSum += bandFreqMultipliers[i];
@@ -184,18 +184,18 @@ const double* rxaa::BandAnalyzer::getData() const {
 	return values.data();
 }
 
-size_t rxaa::BandAnalyzer::getCount() const {
+index rxaa::BandAnalyzer::getCount() const {
 	if (params.bandFreqs.size() < 2) {
 		return 0;
 	}
 	return params.bandFreqs.size() - 1;
 }
 
-void rxaa::BandAnalyzer::setSamplesPerSec(uint32_t samplesPerSec) {
+void rxaa::BandAnalyzer::setSamplesPerSec(index samplesPerSec) {
 	this->samplesPerSec = samplesPerSec;
 }
 
-const wchar_t* rxaa::BandAnalyzer::getProp(const std::wstring_view& prop) {
+const wchar_t* rxaa::BandAnalyzer::getProp(const sview& prop) {
 	propString.clear();
 
 	const auto bandsCount = params.bandFreqs.size() - 1;
@@ -266,8 +266,8 @@ void rxaa::BandAnalyzer::updateValues() const {
 
 	const auto bandsCount = params.bandFreqs.size() - 1;
 
-	unsigned cascadeIndexBegin = 1u;
-	unsigned cascadeIndexEnd = cascadesCount + 1;
+	index cascadeIndexBegin = 1;
+	index cascadeIndexEnd = cascadesCount + 1;
 	if (analysisComputed) {
 		cascadeIndexBegin = analysis.minCascadeUsed;
 		cascadeIndexEnd = analysis.maxCascadeUsed + 1;
@@ -295,8 +295,8 @@ void rxaa::BandAnalyzer::updateValues() const {
 	double binWidth = static_cast<double>(samplesPerSec) / (source->getFftSize() * std::pow(2u, cascadeIndexBegin));
 
 	for (auto cascade = cascadeIndexBegin; cascade < cascadeIndexEnd; ++cascade) {
-		unsigned binIndex = params.includeZero ? 0 : 1; // bin 0 is ~DC
-		unsigned bandIndex = 0;
+		index binIndex = params.includeZero ? 0 : 1; // bin 0 is ~DC
+		index bandIndex = 0;
 
 		double bandMinFreq = params.bandFreqs[0];
 		double bandMaxFreq = params.bandFreqs[1];
@@ -349,23 +349,23 @@ void rxaa::BandAnalyzer::updateValues() const {
 		for (auto cascade = cascadeIndexBegin; cascade < cascadeIndexEnd; ++cascade) {
 			auto &cascadeBandInfo = bandInfo[cascade - cascadeIndexBegin];
 
-			for (int band = 0; band < bandsCount; ++band) {
+			for (index band = 0; band < bandsCount; ++band) {
 				double sigma = cascadeBandInfo[band].blurSigma;
 				if (sigma == 0.0) {
 					cascadeTempBuffer[band] = cascadeBandInfo[band].magnitude;
 					continue;
 				}
 				auto &kernel = gcm.forSigma(sigma);
-				int radius = kernel.size() >> 1;
-				int bandStartIndex = band - radius;
-				int kernelStartIndex = 0;
+				index radius = kernel.size() >> 1;
+				index bandStartIndex = band - radius;
+				index kernelStartIndex = 0;
 				if (bandStartIndex < 0) {
 					kernelStartIndex = -bandStartIndex;
 					bandStartIndex = 0;
 				}
 				double result = 0.0;
-				int kernelIndex = kernelStartIndex;
-				int bandIndex = bandStartIndex;
+				index kernelIndex = kernelStartIndex;
+				index bandIndex = bandStartIndex;
 				while (true) {
 					if (bandIndex >= static_cast<int>(bandsCount) || kernelIndex >= static_cast<int>(kernel.size())) {
 						break;
@@ -391,7 +391,7 @@ void rxaa::BandAnalyzer::updateValues() const {
 		pastValuesIndex = 0;
 	}
 
-	for (auto band = 0llu; band < values.size(); ++band) {
+	for (index band = 0; band < values.size(); ++band) {
 		double weight = 0.0;
 		unsigned cascadesSummed = 0u;
 
@@ -402,7 +402,7 @@ void rxaa::BandAnalyzer::updateValues() const {
 			value = 0.0;
 		}
 
-		for (auto cascade = cascadeIndexBegin; cascade < cascadeIndexEnd; ++cascade) {
+		for (index cascade = cascadeIndexBegin; cascade < cascadeIndexEnd; ++cascade) {
 			auto &info = bandInfo[cascade - cascadeIndexBegin][band];
 
 
@@ -429,7 +429,7 @@ void rxaa::BandAnalyzer::updateValues() const {
 
 		if (cascadesSummed > 0) {
 			if (params.minFunction == MixFunction::PRODUCT) {
-				value = rxu::FastMath::pow(value, 1.0 / cascadesSummed);
+				value = utils::FastMath::pow(value, 1.0 / cascadesSummed);
 			} else {
 				value /= cascadesSummed;
 			}
@@ -463,17 +463,17 @@ void rxaa::BandAnalyzer::updateValues() const {
 		}
 		case SmoothingCurve::LINEAR:
 		{
-			for (unsigned band = 0; band < values.size(); ++band) {
+			for (index band = 0; band < values.size(); ++band) {
 				double outValue = 0.0;
 				int smoothingWeight = 0;
 				double valueWeight = 1;
 
-				for (unsigned i = startPastIndex; i < params.smoothingFactor; ++i) {
+				for (index i = startPastIndex; i < params.smoothingFactor; ++i) {
 					outValue += pastValues[i][band] * valueWeight;
 					smoothingWeight += valueWeight;
 					valueWeight++;
 				}
-				for (unsigned i = 0; i < startPastIndex; ++i) {
+				for (index i = 0; i < startPastIndex; ++i) {
 					outValue += pastValues[i][band] * valueWeight;
 					smoothingWeight += valueWeight;
 					valueWeight++;
@@ -486,17 +486,17 @@ void rxaa::BandAnalyzer::updateValues() const {
 		}
 		case SmoothingCurve::EXPONENTIAL:
 		{
-			for (unsigned band = 0; band < values.size(); ++band) {
+			for (index band = 0; band < values.size(); ++band) {
 				double outValue = 0.0;
 				int smoothingWeight = 0;
 				double weight = 1;
 
-				for (unsigned i = startPastIndex; i < params.smoothingFactor; ++i) {
+				for (index i = startPastIndex; i < params.smoothingFactor; ++i) {
 					outValue += pastValues[i][band] * weight;
 					smoothingWeight += weight;
 					weight *= params.exponentialFactor;
 				}
-				for (unsigned i = 0; i < startPastIndex; ++i) {
+				for (index i = 0; i < startPastIndex; ++i) {
 					outValue += pastValues[i][band] * weight;
 					smoothingWeight += weight;
 					weight *= params.exponentialFactor;
@@ -514,14 +514,14 @@ void rxaa::BandAnalyzer::updateValues() const {
 	for (unsigned i = 0; i < bandsCount; ++i) {
 		double value = values[i];
 
-		value = rxu::FastMath::log2(value) * log10inverse;
+		value = utils::FastMath::log2(value) * log10inverse;
 		value = value * logNormalization + 1.0;
 		value += params.offset;
 		values[i] = value;
 	}
 }
 
-void rxaa::BandAnalyzer::computeAnalysis(unsigned startCascade, unsigned endCascade) const {
+void rxaa::BandAnalyzer::computeAnalysis(index startCascade, index endCascade) const {
 	if (analysisComputed) {
 		return;
 	}
@@ -534,12 +534,12 @@ void rxaa::BandAnalyzer::computeAnalysis(unsigned startCascade, unsigned endCasc
 	analysis.minCascadeUsed = -1;
 	analysis.maxCascadeUsed = -1;
 
-	for (auto band = 0llu; band < values.size(); ++band) {
+	for (index band = 0; band < values.size(); ++band) {
 		double weight = 0.0;
 		int bandStartCascade = -1;
 		int bandEndCascade = -1;
 
-		for (auto cascade = startCascade; cascade < endCascade; ++cascade) {
+		for (index cascade = startCascade; cascade < endCascade; ++cascade) {
 			auto &info = bandInfo[cascade - startCascade][band];
 
 			if (info.weight >= 1.0) {
@@ -560,12 +560,12 @@ void rxaa::BandAnalyzer::computeAnalysis(unsigned startCascade, unsigned endCasc
 				if (analysis.minCascadeUsed < 0) {
 					analysis.minCascadeUsed = cascade;
 				} else {
-					analysis.minCascadeUsed = std::min(static_cast<unsigned>(analysis.minCascadeUsed), cascade);
+					analysis.minCascadeUsed = std::min<index>(analysis.minCascadeUsed, cascade);
 				}
 				if (analysis.maxCascadeUsed < 0) {
 					analysis.maxCascadeUsed = cascade;
 				} else {
-					analysis.maxCascadeUsed = std::max(static_cast<unsigned>(analysis.maxCascadeUsed), cascade);
+					analysis.maxCascadeUsed = std::max<index>(analysis.maxCascadeUsed, cascade);
 				}
 			}
 
@@ -593,10 +593,10 @@ void rxaa::BandAnalyzer::computeAnalysis(unsigned startCascade, unsigned endCasc
 	analysisComputed = true;
 }
 
-std::optional<std::vector<double>> rxaa::BandAnalyzer::parseFreqList(rxu::OptionParser::OptionList bounds, rxu::Rainmeter::ContextLogger& cl, const rxu::Rainmeter &rain) {
+std::optional<std::vector<double>> rxaa::BandAnalyzer::parseFreqList(utils::OptionParser::OptionList bounds, utils::Rainmeter::ContextLogger& cl, const utils::Rainmeter &rain) {
 	std::vector<double> freqs;
 
-	rxu::OptionParser optionParser;
+	utils::OptionParser optionParser;
 	for (auto bound : bounds) {
 		if (bound.find(L"linear "sv) == 0 || bound.find(L"log "sv) == 0) {
 
@@ -606,7 +606,7 @@ std::optional<std::vector<double>> rxaa::BandAnalyzer::parseFreqList(rxu::Option
 				return std::nullopt;
 			}
 			int count;
-			std::wstringstream(std::wstring { options.get(1) }) >> count;
+			std::wstringstream(string { options.get(1) }) >> count;
 
 			if (count < 1) {
 				cl.error(L"count must be >= 1");
@@ -623,7 +623,7 @@ std::optional<std::vector<double>> rxaa::BandAnalyzer::parseFreqList(rxu::Option
 			if (bound.find(L"linear "sv) == 0) {
 				const double delta = max - min;
 
-				for (int i = 0; i <= count; ++i) {
+				for (index i = 0; i <= count; ++i) {
 					freqs.push_back(min + delta * i / count);
 				}
 			} else {

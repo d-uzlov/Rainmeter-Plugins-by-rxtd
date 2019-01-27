@@ -10,23 +10,27 @@
 #include "RainmeterWrappers.h"
 #include "RainmeterAPI.h"
 
+#include "undef.h"
+
 #pragma warning(disable : 4458)
 
 #pragma comment(lib, "Rainmeter.lib")
 
-rxu::Rainmeter::Logger::Logger(void* rm) : rm(rm) { }
+using namespace utils;
 
-rxu::Rainmeter::Logger::Logger(Logger&& other) noexcept :
+Rainmeter::Logger::Logger(void* rm) : rm(rm) { }
+
+Rainmeter::Logger::Logger(const Logger& other) :
+	rm(other.rm),
+	printer(other.printer) { }
+
+Rainmeter::Logger::Logger(Logger&& other) noexcept :
 	rm(other.rm),
 	printer(std::move(other.printer)) {
 	other.rm = { };
 }
 
-rxu::Rainmeter::Logger::Logger(const Logger& other) :
-	rm(other.rm),
-	printer(other.printer) { }
-
-rxu::Rainmeter::Logger& rxu::Rainmeter::Logger::operator=(const Logger& other) {
+Rainmeter::Logger& Rainmeter::Logger::operator=(const Logger& other) {
 	if (this == &other)
 		return *this;
 
@@ -36,7 +40,7 @@ rxu::Rainmeter::Logger& rxu::Rainmeter::Logger::operator=(const Logger& other) {
 	return *this;
 }
 
-rxu::Rainmeter::Logger& rxu::Rainmeter::Logger::operator=(Logger&& other) noexcept {
+Rainmeter::Logger& Rainmeter::Logger::operator=(Logger&& other) noexcept {
 	if (this == &other)
 		return *this;
 
@@ -47,19 +51,19 @@ rxu::Rainmeter::Logger& rxu::Rainmeter::Logger::operator=(Logger&& other) noexce
 	return *this;
 }
 
-void rxu::Rainmeter::Logger::log(LEVEL logLevel, const wchar_t* string) {
+void Rainmeter::Logger::log(LEVEL logLevel, const wchar_t* string) {
 	RmLog(rm, static_cast<int>(logLevel), string);
 }
 
-rxu::Rainmeter::Skin::Skin(void* skin) : skin(skin) { }
+Rainmeter::Skin::Skin(void* skin) : skin(skin) { }
 
-void* rxu::Rainmeter::Skin::getRawPointer() const {
+void* Rainmeter::Skin::getRawPointer() const {
 	return skin;
 }
 
-rxu::Rainmeter::Rainmeter() = default;
+Rainmeter::Rainmeter() = default;
 
-rxu::Rainmeter::Rainmeter(void* rm) :
+Rainmeter::Rainmeter(void* rm) :
 	rm(rm),
 	skin(RmGetSkin(rm)),
 	measureName(RmGetMeasureName(rm)),
@@ -67,22 +71,23 @@ rxu::Rainmeter::Rainmeter(void* rm) :
 
 }
 
-rxu::Rainmeter::Rainmeter(Rainmeter&& other) noexcept :
+Rainmeter::Rainmeter(Rainmeter&& other) noexcept :
 	rm(other.rm),
 	skin(other.skin),
 	measureName(std::move(other.measureName)),
 	logger(std::move(other.logger)) {
 	other.rm = { };
+	other.skin = { };
 }
 
-rxu::Rainmeter::Rainmeter(const Rainmeter& other) :
+Rainmeter::Rainmeter(const Rainmeter& other) :
 	rm(other.rm),
 	skin(other.skin),
 	measureName(other.measureName),
 	logger(other.logger),
 	optionNameBuffer(other.optionNameBuffer) { }
 
-rxu::Rainmeter& rxu::Rainmeter::operator=(const Rainmeter& other) {
+Rainmeter& Rainmeter::operator=(const Rainmeter& other) {
 	if (this == &other)
 		return *this;
 	rm = other.rm;
@@ -93,13 +98,15 @@ rxu::Rainmeter& rxu::Rainmeter::operator=(const Rainmeter& other) {
 	return *this;
 }
 
-rxu::Rainmeter& rxu::Rainmeter::operator=(Rainmeter&& other) noexcept {
+Rainmeter& Rainmeter::operator=(Rainmeter&& other) noexcept {
 	if (this == &other)
 		return *this;
 
 	rm = other.rm;
 	other.rm = { };
-	skin = std::move(other.skin);
+	skin = other.skin;
+	other.skin = { };
+	
 	measureName = std::move(other.measureName);
 	logger = std::move(other.logger);
 	optionNameBuffer = std::move(other.optionNameBuffer);
@@ -107,54 +114,55 @@ rxu::Rainmeter& rxu::Rainmeter::operator=(Rainmeter&& other) noexcept {
 	return *this;
 }
 
-const wchar_t* rxu::Rainmeter::readString(std::wstring_view optionName, const wchar_t* defaultValue) const {
+sview Rainmeter::readString(sview optionName, const wchar_t* defaultValue) const {
 	return RmReadString(rm, makeNullTerminated(optionName), defaultValue);
 }
 
-const wchar_t* rxu::Rainmeter::readPath(std::wstring_view optionName, const wchar_t* defaultValue) const {
+sview Rainmeter::readPath(sview optionName, const wchar_t* defaultValue) const {
 	return RmReadPath(rm, makeNullTerminated(optionName), defaultValue);
 }
 
-double rxu::Rainmeter::readDouble(std::wstring_view optionName, double defaultValue) const {
+double Rainmeter::readDouble(sview optionName, double defaultValue) const {
 	return RmReadFormula(rm, makeNullTerminated(optionName), defaultValue);
 }
 
-const wchar_t* rxu::Rainmeter::replaceVariables(std::wstring_view string) const {
+sview Rainmeter::replaceVariables(sview string) const {
 	return RmReplaceVariables(rm, makeNullTerminated(string));
 }
 
-const wchar_t* rxu::Rainmeter::transformPathToAbsolute(std::wstring_view path) const {
+sview Rainmeter::transformPathToAbsolute(sview path) const {
 	return RmPathToAbsolute(rm, makeNullTerminated(path));
 }
 
-void rxu::Rainmeter::executeCommand(std::wstring_view command, Skin skin) {
+void Rainmeter::executeCommand(sview command, Skin skin) {
 	RmExecute(skin.getRawPointer(), makeNullTerminated(command));
 }
 
-rxu::Rainmeter::Logger& rxu::Rainmeter::getLogger() {
+Rainmeter::Logger& Rainmeter::getLogger() {
 	return logger;
 }
 
-void* rxu::Rainmeter::getRawPointer() {
+void* Rainmeter::getRawPointer() {
 	return rm;
 }
 
-rxu::Rainmeter::Skin rxu::Rainmeter::getSkin() const {
+Rainmeter::Skin Rainmeter::getSkin() const {
 	return skin;
 }
 
-const std::wstring& rxu::Rainmeter::getMeasureName() const {
+const string& Rainmeter::getMeasureName() const {
 	return measureName;
 }
 
-void* rxu::Rainmeter::getWindowHandle() {
+void* Rainmeter::getWindowHandle() {
 	return RmGetSkinWindow(rm);
 }
 
-const wchar_t* rxu::Rainmeter::makeNullTerminated(std::wstring_view view) const {
+const wchar_t* Rainmeter::makeNullTerminated(sview view) const {
 	if (view.data()[view.length()] == L'\0') {
 		return view.data();
 	}
+
 	optionNameBuffer = view;
 	return optionNameBuffer.c_str();
 }

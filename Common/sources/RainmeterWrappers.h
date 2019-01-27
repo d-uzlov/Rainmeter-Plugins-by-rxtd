@@ -8,19 +8,14 @@
  */
 
 #pragma once
-#include <string_view>
-#include <optional>
-#include <string>
+
 #include "BufferPrinter.h"
 
 #undef ERROR
-#undef WARNING
-#undef NOTICE
-#undef DEBUG
+#undef min
+#undef max
 
-namespace rxu {
-	using namespace std::literals::string_view_literals;
-
+namespace rxtd::utils {
 	class Rainmeter {
 	public:
 		class Logger {
@@ -56,7 +51,7 @@ namespace rxu {
 			}
 
 		private:
-			enum class LEVEL : int {
+			enum class LEVEL {
 				ERROR = 1,
 				WARNING = 2,
 				NOTICE = 3,
@@ -76,7 +71,7 @@ namespace rxu {
 		};
 		class ContextLogger {
 			Logger& log;
-			std::wstring prefix { };
+			string prefix { };
 
 		public:
 			ContextLogger(Logger &logger) : log(logger) { }
@@ -132,9 +127,9 @@ namespace rxu {
 	private:
 		void *rm { };
 		Skin skin;
-		std::wstring measureName;
+		string measureName;
 		Logger logger;
-		mutable std::wstring optionNameBuffer;
+		mutable string optionNameBuffer;
 
 	public:
 		Rainmeter();
@@ -146,35 +141,42 @@ namespace rxu {
 		Rainmeter& operator=(const Rainmeter& other);
 		Rainmeter& operator=(Rainmeter&& other) noexcept;
 
-		const wchar_t* readString(std::wstring_view optionName, const wchar_t* defaultValue = L"") const;
-		const wchar_t* readPath(std::wstring_view optionName, const wchar_t* defaultValue = L"") const;
-		double readDouble(std::wstring_view optionName, double defaultValue = 0.0) const;
+		sview readString(sview optionName, const wchar_t* defaultValue = L"") const;
+		sview readPath(sview optionName, const wchar_t* defaultValue = L"") const;
+		double readDouble(sview optionName, double defaultValue = 0.0) const;
 
-		int64_t readInt(std::wstring_view optionName, int64_t defaultValue = 0) const {
-			return static_cast<int64_t>(readDouble(optionName, static_cast<double>(defaultValue)));
+		template<typename I = int32_t>
+		typename std::enable_if<std::is_integral<I>::value, I>::type
+		readInt(sview optionName, I defaultValue = 0) const {
+			const auto dVal = readDouble(optionName, static_cast<double>(defaultValue));
+			if (dVal > static_cast<double>(std::numeric_limits<I>::max()) ||
+				dVal < static_cast<double>(std::numeric_limits<I>::lowest())) {
+				return defaultValue;
+			}
+			return static_cast<I>(dVal);
 		}
 
-		bool readBool(std::wstring_view optionName, bool defaultValue = false) const {
+		bool readBool(sview optionName, bool defaultValue = false) const {
 			return readInt(optionName, defaultValue ? 1 : 0) != 0;
 		}
 
-		const wchar_t* replaceVariables(std::wstring_view string) const;
-		const wchar_t* transformPathToAbsolute(std::wstring_view path) const;
+		sview replaceVariables(sview string) const;
+		sview transformPathToAbsolute(sview path) const;
 
-		void executeCommand(std::wstring_view command) {
+		void executeCommand(sview command) {
 			executeCommand(command, skin);
 		}
 
-		void executeCommand(std::wstring_view command, Skin skin);
+		void executeCommand(sview command, Skin skin);
 
 		Logger& getLogger();
 
 		void* getRawPointer();
 		Skin getSkin() const;
-		const std::wstring& getMeasureName() const;
+		const string& getMeasureName() const;
 		void* getWindowHandle();
 
 	private:
-		const wchar_t* makeNullTerminated(std::wstring_view view) const;
+		const wchar_t* makeNullTerminated(sview view) const;
 	};
 }

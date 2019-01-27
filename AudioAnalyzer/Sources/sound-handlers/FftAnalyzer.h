@@ -9,7 +9,6 @@
 
 #pragma once
 #include "FftImpl.h"
-#include <vector>
 #include "SoundHandler.h"
 #include <random>
 #include "RainmeterWrappers.h"
@@ -32,7 +31,7 @@ namespace rxaa {
 			double resolution { };
 			double overlap = 0.0;
 
-			unsigned cascadesCount = 0u;
+			index cascadesCount = 0u;
 
 			double randomTest = 0.0;
 			bool correctZero = true;
@@ -46,37 +45,37 @@ namespace rxaa {
 			double attackDecay[2] { 0.0, 0.0 };
 			std::vector<float> ringBuffer;
 			std::vector<double> values;
-			unsigned filledElements { };
-			unsigned transferredElements { };
+			index filledElements { };
+			index transferredElements { };
 			float odd = 10.0f; // 10.0 means no value because valid values are in [-1.0; 1.0]
 			double dc { };
 			// Fourier transform looses energy due to downsample, so we multiply result of FFT by (2^0.5)^countOfDownsampleIterations
 			double downsampleGain { };
 
-			void setParams(FftAnalyzer* parent, CascadeData* successor, unsigned index);
-			void process(const float *wave, size_t waveSize);
-			void processRandom(unsigned waveSize, double amplitude);
-			void processSilent(unsigned waveSize);
+			void setParams(FftAnalyzer* parent, CascadeData* successor, index index);
+			void process(const float *wave, index waveSize);
+			void processRandom(index waveSize, double amplitude);
+			void processSilent(index waveSize);
 			void reset();
 
 		private:
 			void doFft();
-			void processResampled(const float* wave, size_t waveSize);
+			void processResampled(const float* wave, index waveSize);
 		};
 
 		Params params { };
 
-		uint32_t samplesPerSec { };
+		index samplesPerSec { };
 
-		unsigned fftSize = 0u;
+		index fftSize = 0u;
 
-		unsigned inputStride = 0u;
+		index inputStride = 0u;
 
 		std::vector<CascadeData> cascades;
 
 		FftImpl *fftImpl = nullptr;
 
-		std::wstring propString { };
+		string propString { };
 
 		class Random {
 			std::random_device rd;
@@ -98,20 +97,20 @@ namespace rxaa {
 		FftAnalyzer& operator=(const FftAnalyzer& other) = delete;
 		FftAnalyzer& operator=(FftAnalyzer&& other) = delete;
 
-		static std::optional<Params> parseParams(const rxu::OptionParser::OptionMap& optionMap, rxu::Rainmeter::ContextLogger& cl);
+		static std::optional<Params> parseParams(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl);
 
-		double getFftFreq(unsigned fft) const;
+		double getFftFreq(index fft) const;
 
-		unsigned getFftSize() const;
-		unsigned getCascadesCount() const;
-		const double* getCascade(unsigned cascade) const;
+		index getFftSize() const;
+		index getCascadesCount() const;
+		const double* getCascade(index cascade) const;
 
 		void process(const DataSupplier& dataSupplier) override;
 		void processSilence(const DataSupplier& dataSupplier) override;
 		const double* getData() const override;
-		size_t getCount() const override;
-		void setSamplesPerSec(uint32_t samplesPerSec) override;
-		const wchar_t* getProp(const std::wstring_view& prop) override;
+		index getCount() const override;
+		void setSamplesPerSec(index samplesPerSec) override;
+		const wchar_t* getProp(const sview& prop) override;
 		void reset() override;
 
 		void setParams(Params params);

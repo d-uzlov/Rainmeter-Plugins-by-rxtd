@@ -8,8 +8,6 @@
  */
 
 #pragma once
-#include <cstdint>
-#include <string>
 #include "../Channel.h"
 
 namespace rxaa {
@@ -19,8 +17,8 @@ namespace rxaa {
 	public:
 		virtual ~DataSupplier() = default;
 		virtual const float* getWave() const = 0;
-		virtual unsigned getWaveSize()  const = 0;
-		virtual const SoundHandler* getHandler(const std::wstring &id) const = 0;
+		virtual index getWaveSize()  const = 0;
+		virtual const SoundHandler* getHandler(const string &id) const = 0;
 		virtual Channel getChannel() const = 0;
 
 		/**
@@ -34,7 +32,7 @@ namespace rxaa {
 		}
 
 	protected:
-		virtual uint8_t* getBufferRaw(size_t size) const = 0;
+		virtual uint8_t* getBufferRaw(index size) const = 0;
 	};
 
 	class SoundHandler {
@@ -43,27 +41,27 @@ namespace rxaa {
 		virtual void process(const DataSupplier &dataSupplier) = 0;
 		virtual void processSilence(const DataSupplier &dataSupplier) = 0;
 		virtual const double* getData() const = 0;
-		virtual size_t getCount() const = 0;
-		virtual void setSamplesPerSec(uint32_t samplesPerSec) = 0;
-		virtual const wchar_t* getProp(const std::wstring_view& prop) {
+		virtual index getCount() const = 0;
+		virtual void setSamplesPerSec(index samplesPerSec) = 0;
+		virtual const wchar_t* getProp(const sview& prop) {
 			return nullptr;
 		}
 		virtual void reset() = 0;
 
 	protected:
-		static double calculateAttackDecayConstant(double time, uint32_t samplesPerSec, unsigned int stride) {
+		static double calculateAttackDecayConstant(double time, index samplesPerSec, index stride) {
 			return exp(-2.0 * stride / (samplesPerSec * time));
 		}
 
-		static double calculateAttackDecayConstant(double time, uint32_t samplesPerSec) {
+		static double calculateAttackDecayConstant(double time, index samplesPerSec) {
 			return calculateAttackDecayConstant(time, samplesPerSec, 1u);
 		}
 
-		static int parseIndexProp(const std::wstring_view& request, const std::wstring_view& propName, int endBound) {
+		static int parseIndexProp(const sview& request, const sview& propName, index endBound) {
 			return parseIndexProp(request, propName, 0, endBound);
 		}
 
-		static int parseIndexProp(const std::wstring_view& request, const std::wstring_view& propName, int minBound, int endBound) {
+		static int parseIndexProp(const sview& request, const sview& propName, index minBound, index endBound) {
 			const auto indexPos = request.find(propName);
 
 			if (indexPos != 0) {

@@ -8,13 +8,12 @@
  */
 
 #include <cwctype>
-#include <algorithm>
 
 #include "expressions.h"
 
-#include <string>
-#include <string_view>
 #include "StringUtils.h"
+
+#include "undef.h"
 
 #pragma warning(disable : 4458)
 #pragma warning(disable : 4244)
@@ -22,7 +21,9 @@
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
 
-void rxpm::ExpressionTreeNode::simplify() {
+using namespace perfmon;
+
+void ExpressionTreeNode::simplify() {
 	if (type == ExpressionType::NUMBER ||
 		type == ExpressionType::REF) {
 		return;
@@ -108,8 +109,8 @@ void rxpm::ExpressionTreeNode::simplify() {
 	default:;
 	}
 }
-int rxpm::ExpressionTreeNode::maxExpRef() const {
-	int max = -1;
+index ExpressionTreeNode::maxExpRef() const {
+	index max = -1;
 	if (type == ExpressionType::REF && ref.type == ReferenceType::EXPRESSION) {
 		max = ref.counter;
 	} else {
@@ -120,8 +121,8 @@ int rxpm::ExpressionTreeNode::maxExpRef() const {
 	return max;
 }
 
-int rxpm::ExpressionTreeNode::maxRUERef() const {
-	int max = -1;
+index ExpressionTreeNode::maxRUERef() const {
+	index max = -1;
 	if (type == ExpressionType::REF && ref.type == ReferenceType::ROLLUP_EXPRESSION) {
 		max = ref.counter;
 	} else {
@@ -132,7 +133,7 @@ int rxpm::ExpressionTreeNode::maxRUERef() const {
 	return max;
 }
 
-void rxpm::ExpressionTreeNode::processRefs(void(*handler)(Reference&)) {
+void ExpressionTreeNode::processRefs(void(*handler)(Reference&)) {
 	if (type == ExpressionType::REF) {
 		handler(ref);
 	} else {
@@ -142,11 +143,11 @@ void rxpm::ExpressionTreeNode::processRefs(void(*handler)(Reference&)) {
 	}
 }
 
-rxpm::ExpressionParser::Lexer::Lexer(std::wstring_view source) : source(source) {
+ExpressionParser::Lexer::Lexer(sview source) : source(source) {
 
 }
 
-rxpm::ExpressionParser::Lexer::Lexeme rxpm::ExpressionParser::Lexer::next() {
+ExpressionParser::Lexer::Lexeme ExpressionParser::Lexer::next() {
 	skipSpaces();
 
 	if (position >= source.length()) {
@@ -214,7 +215,7 @@ rxpm::ExpressionParser::Lexer::Lexeme rxpm::ExpressionParser::Lexer::next() {
 	return result;
 }
 
-std::wstring_view rxpm::ExpressionParser::Lexer::getUntil(const wchar_t stop1, const wchar_t stop2) {
+sview ExpressionParser::Lexer::getUntil(const wchar_t stop1, const wchar_t stop2) {
 	const auto startPos = position;
 	int i = 0;
 	while (position + i < source.length()) {
@@ -229,13 +230,13 @@ std::wstring_view rxpm::ExpressionParser::Lexer::getUntil(const wchar_t stop1, c
 	return source.substr(startPos, i);
 }
 
-void rxpm::ExpressionParser::Lexer::skipSpaces() {
+void ExpressionParser::Lexer::skipSpaces() {
 	while (position < source.length() && std::iswspace(source[position])) {
 		position++;
 	}
 }
 
-bool rxpm::ExpressionParser::Lexer::isSymbol(const wchar_t c) {
+bool ExpressionParser::Lexer::isSymbol(const wchar_t c) {
 	return
 		c == L'\0' ||
 		c == L'(' ||
@@ -251,7 +252,7 @@ bool rxpm::ExpressionParser::Lexer::isSymbol(const wchar_t c) {
 		c == L'#';
 }
 
-std::wstring_view rxpm::ExpressionParser::Lexer::readWord() {
+sview ExpressionParser::Lexer::readWord() {
 	const auto startPos = position;
 	int i = 0;
 	while (position + i < source.length()) {
@@ -265,7 +266,7 @@ std::wstring_view rxpm::ExpressionParser::Lexer::readWord() {
 	position += i;
 	return source.substr(startPos, i);
 }
-std::wstring_view rxpm::ExpressionParser::Lexer::readNumber() {
+sview ExpressionParser::Lexer::readNumber() {
 	const auto startPos = position;
 	int i = 0;
 	while (position + i < source.length()) {
@@ -280,39 +281,39 @@ std::wstring_view rxpm::ExpressionParser::Lexer::readNumber() {
 	return source.substr(startPos, i);
 }
 
-rxpm::ExpressionParser::ExpressionParser(std::wstring source) : source(std::move(source)), lexer(this->source) {
+ExpressionParser::ExpressionParser(string source) : source(std::move(source)), lexer(this->source) {
 	readNext();
 }
 
-rxpm::ExpressionParser::ExpressionParser(std::wstring_view source) : lexer(source) {
+ExpressionParser::ExpressionParser(sview source) : lexer(source) {
 	readNext();
 }
 
-void rxpm::ExpressionParser::parse() {
+void ExpressionParser::parse() {
 	result = parseExpression();
 	if (next.type != Lexer::LexemeType::END) {
 		error = true;
 	}
 }
-bool rxpm::ExpressionParser::isError() const {
+bool ExpressionParser::isError() const {
 	return error;
 }
-rxpm::ExpressionTreeNode rxpm::ExpressionParser::getExpression() const {
+ExpressionTreeNode ExpressionParser::getExpression() const {
 	return result;
 }
-void rxpm::ExpressionParser::readNext() {
+void ExpressionParser::readNext() {
 	next = lexer.next();
 	if (next.type == Lexer::LexemeType::UNKNOWN) {
 		error = true;
 	}
 }
-void rxpm::ExpressionParser::toUpper(std::wstring& s) {
+void ExpressionParser::toUpper(string& s) {
 	for (wchar_t& c : s) {
 		c = towupper(c);
 	}
 }
 
-rxpm::ExpressionTreeNode rxpm::ExpressionParser::parseExpression() {
+ExpressionTreeNode ExpressionParser::parseExpression() {
 	ExpressionTreeNode result = parseTerm();
 	if (error) {
 		return ExpressionTreeNode();
@@ -356,7 +357,7 @@ rxpm::ExpressionTreeNode rxpm::ExpressionParser::parseExpression() {
 	return result;
 }
 
-rxpm::ExpressionTreeNode rxpm::ExpressionParser::parseTerm() {
+ExpressionTreeNode ExpressionParser::parseTerm() {
 	ExpressionTreeNode result = parseFactor();
 	if (error) {
 		return ExpressionTreeNode();
@@ -400,7 +401,7 @@ rxpm::ExpressionTreeNode rxpm::ExpressionParser::parseTerm() {
 	return result;
 }
 
-rxpm::ExpressionTreeNode rxpm::ExpressionParser::parseFactor() {
+ExpressionTreeNode ExpressionParser::parseFactor() {
 	ExpressionTreeNode power = parsePower();
 	if (error) {
 		return ExpressionTreeNode();
@@ -425,7 +426,7 @@ rxpm::ExpressionTreeNode rxpm::ExpressionParser::parseFactor() {
 	return power;
 }
 
-rxpm::ExpressionTreeNode rxpm::ExpressionParser::parsePower() {
+ExpressionTreeNode ExpressionParser::parsePower() {
 	if (next.type == Lexer::LexemeType::MINUS) {
 		ExpressionTreeNode res;
 		res.type = ExpressionType::INVERSE;
@@ -443,7 +444,7 @@ rxpm::ExpressionTreeNode rxpm::ExpressionParser::parsePower() {
 	return parseAtom();
 }
 
-rxpm::ExpressionTreeNode rxpm::ExpressionParser::parseAtom() {
+ExpressionTreeNode ExpressionParser::parseAtom() {
 	if (next.type == Lexer::LexemeType::PAR_OPEN) {
 		readNext();
 		if (error) {
@@ -500,13 +501,13 @@ rxpm::ExpressionTreeNode rxpm::ExpressionParser::parseAtom() {
 	return ExpressionTreeNode();
 }
 
-rxpm::Reference rxpm::ExpressionParser::parseReference() {
+Reference ExpressionParser::parseReference() {
 	if (next.type != Lexer::LexemeType::WORD) {
 		error = true;
 		return Reference();
 	}
 	Reference ref;
-	std::wstring name { next.value };
+	string name { next.value };
 	toUpper(name);
 	if (name == L"COUNTERRAW" || name == L"CR") {
 		ref.type = ReferenceType::COUNTER_RAW;
@@ -542,11 +543,11 @@ rxpm::Reference rxpm::ExpressionParser::parseReference() {
 		ref.named = !ref.name.empty();
 		if (ref.named) {
 			if (ref.name[0] == L'\\') {
-				std::wstring::size_type indexOfFirstNonFlag = ref.name.find_first_of(L' ');
+				string::size_type indexOfFirstNonFlag = ref.name.find_first_of(L' ');
 				if (indexOfFirstNonFlag == std::string::npos) {
 					indexOfFirstNonFlag = ref.name.length();
 				}
-				std::wstring flags = ref.name.substr(1, indexOfFirstNonFlag - 1);
+				string flags = ref.name.substr(1, indexOfFirstNonFlag - 1);
 				toUpper(flags);
 
 				if (flags.find(L'D') != std::string::npos) {
@@ -561,7 +562,7 @@ rxpm::Reference rxpm::ExpressionParser::parseReference() {
 				ref.name = ref.name.substr(indexOfFirstNonFlag);
 			}
 
-			rxu::StringUtils::trimInplace(ref.name);
+			rxtd::utils::StringUtils::trimInplace(ref.name);
 
 			const auto len = ref.name.size();
 			if (len >= 2 && ref.name[0] == L'*' && ref.name[len - 1] == L'*') {
@@ -583,7 +584,7 @@ rxpm::Reference rxpm::ExpressionParser::parseReference() {
 		}
 	}
 	if (next.type == Lexer::LexemeType::WORD) {
-		std::wstring suffix { next.value };
+		string suffix { next.value };
 		toUpper(suffix);
 		if (suffix == L"SUM" || suffix == L"S") {
 			ref.rollupFunction = RollupFunction::SUM;
@@ -607,13 +608,13 @@ rxpm::Reference rxpm::ExpressionParser::parseReference() {
 	return ref;
 }
 
-int64_t rxpm::ExpressionParser::parseInt(std::wstring_view string) {
-	return std::stoi(string.data()); // will stop at first non-digit, doesn't require null-terminated string
+intmax_t ExpressionParser::parseInt(sview view) {
+	return std::stoi(view.data()); // will stop at first non-digit, doesn't require null-terminated string
 }
 
-double rxpm::ExpressionParser::parseFractional(std::wstring_view string) {
-	std::wstring temp = L"0.";
-	temp += string;
+double ExpressionParser::parseFractional(sview view) {
+	string temp = L"0.";
+	temp += view;
 	return std::stod(temp); // TODO
 }
 

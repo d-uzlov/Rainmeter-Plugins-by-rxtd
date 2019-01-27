@@ -11,38 +11,37 @@
 
 #include "windows-wrappers/BufferWrapper.h"
 
-#include <algorithm>
 #include "ParamParser.h"
+
+#include "undef.h"
+#include "CaseInsensitiveString.h"
 
 #pragma warning(disable : 4458)
 #pragma warning(disable : 4244)
 
-#undef max
-#undef min
+utils::ParentManager<rxaa::AudioParent> rxaa::AudioParent::parentManager { };
 
-rxu::ParentManager<rxaa::AudioParent> rxaa::AudioParent::parentManager { };
-
-rxaa::AudioParent::AudioParent(rxu::Rainmeter&& rain) : TypeHolder(std::move(rain)), deviceManager(log, [this](auto format) { soundAnalyzer.setWaveFormat(format); }) {
+rxaa::AudioParent::AudioParent(utils::Rainmeter&& rain) : TypeHolder(std::move(rain)), deviceManager(log, [this](auto format) { soundAnalyzer.setWaveFormat(format); }) {
 	parentManager.add(*this);
 
 	if (!deviceManager.isObjectValid()) {
-		setMeasureState(rxu::MeasureState::BROKEN);
+		setMeasureState(utils::MeasureState::BROKEN);
 		return;
 	}
 
 	// parse port specifier
-	const wchar_t *port = this->rain.readString(L"Port");
+	const auto port = this->rain.readString(L"Port") % ciView();
 	DeviceManager::Port portEnum;
-	if (_wcsicmp(port, L"") == 0 || _wcsicmp(port, L"Output") == 0) {
+	if (port == L"" || port == L"Output") {
 		portEnum = DeviceManager::Port::OUTPUT;
-	} else if (_wcsicmp(port, L"Input") == 0) {
+	} else if (port == L"Input") {
 		portEnum = DeviceManager::Port::INPUT;
 	} else {
 		log.error(L"Invalid Port '{}', must be one of: Output, Input. Set to Output.", port);
 		portEnum = DeviceManager::Port::OUTPUT;
 	}
 
-	std::wstring id = this->rain.readString(L"DeviceID");
+	auto id = this->rain.readString(L"DeviceID");
 
 	deviceManager.setOptions(portEnum, id);
 	deviceManager.init();
@@ -52,7 +51,7 @@ rxaa::AudioParent::~AudioParent() {
 	parentManager.remove(*this);
 }
 
-rxaa::AudioParent* rxaa::AudioParent::findInstance(rxu::Rainmeter::Skin skin, const wchar_t* measureName) {
+rxaa::AudioParent* rxaa::AudioParent::findInstance(utils::Rainmeter::Skin skin, isview measureName) {
 	return parentManager.findParent(skin, measureName);
 }
 
@@ -61,17 +60,17 @@ void rxaa::AudioParent::_reload() {
 	paramParser.parse();
 
 	// TODO add min target
-	const auto rateLimit = rain.readInt(L"TargetRate");
-	soundAnalyzer.setTargetRate(std::max<int>(0, rateLimit));
+	const auto rateLimit = rain.readInt(L"TargetRate"); // TODO add read UInt
+	soundAnalyzer.setTargetRate(std::max<index>(0, rateLimit));
 
 	soundAnalyzer.setPatchHandlers(paramParser.getHandlers(), paramParser.getPatches());
 }
 
 std::tuple<double, const wchar_t*> rxaa::AudioParent::_update() {
 	// TODO make an option for this value?
-	constexpr int maxBuffers = 15;
+	constexpr index maxBuffers = 15;
 
-	for (int i = 0; i < maxBuffers; ++i) {
+	for (index i = 0; i < maxBuffers; ++i) {
 		const auto fetchResult = deviceManager.nextBuffer();
 		switch (fetchResult.getState()) {
 		case DeviceManager::BufferFetchState::OK:
@@ -95,12 +94,12 @@ std::tuple<double, const wchar_t*> rxaa::AudioParent::_update() {
 		case DeviceManager::BufferFetchState::INVALID_STATE:
 			soundAnalyzer.resetValues();
 			log.error(L"Unrecoverable error");
-			setMeasureState(rxu::MeasureState::BROKEN);
+			setMeasureState(utils::MeasureState::BROKEN);
 			goto loop_end;
 
 		default:
 			log.error(L"Unexpected BufferFetchState {}", fetchResult.getState());
-			setMeasureState(rxu::MeasureState::BROKEN);
+			setMeasureState(utils::MeasureState::BROKEN);
 			goto loop_end;
 		}
 	}
@@ -110,7 +109,7 @@ loop_end:
 }
 
 void rxaa::AudioParent::_command(const wchar_t* args) {
-	const std::wstring_view command = args;
+	const isview command = args;
 	if (command == L"updateDevList") {
 		deviceManager.updateDeviceList();
 		return;
@@ -125,9 +124,9 @@ const wchar_t* rxaa::AudioParent::_resolve(int argc, const wchar_t* argv[]) {
 		return nullptr;
 	}
 
-	auto& optionName = argv[0];
+	const isview optionName = argv[0];
 
-	if (optionName == L"prop"sv) {
+	if (optionName == L"prop") {
 		if (argc < 4) {
 			log.error(L"Invalid section variable resolve: need >= 4 argc, but only {} found", argc);
 			return nullptr;
@@ -169,27 +168,27 @@ const wchar_t* rxaa::AudioParent::_resolve(int argc, const wchar_t* argv[]) {
 		return nullptr;
 	}
 
-	if (optionName == L"current device"sv) {
+	if (optionName == L"current device") {
 		if (argc < 2) {
 			log.error(L"Invalid section variable resolve: need >= 2 argc, but only {} found", argc);
 			return nullptr;
 		}
 
-		auto& deviceProperty = argv[1];
+		const isview deviceProperty = argv[1];
 
-		if (deviceProperty == L"status"sv) {
+		if (deviceProperty == L"status") {
 			return deviceManager.getDeviceStatus() ? L"1" : L"0";
 		}
-		if (deviceProperty == L"status string"sv) {
+		if (deviceProperty == L"status string") {
 			return deviceManager.getDeviceStatus() ? L"active" : L"down";
 		}
-		if (deviceProperty == L"name"sv) {
+		if (deviceProperty == L"name") {
 			return deviceManager.getDeviceName().c_str();
 		}
-		if (deviceProperty == L"id"sv) {
+		if (deviceProperty == L"id") {
 			return deviceManager.getDeviceId().c_str();
 		}
-		if (deviceProperty == L"format"sv) {
+		if (deviceProperty == L"format") {
 			return deviceManager.getDeviceFormat().c_str();
 		}
 
@@ -197,7 +196,7 @@ const wchar_t* rxaa::AudioParent::_resolve(int argc, const wchar_t* argv[]) {
 	}
 
 
-	if (optionName == L"device list"sv) {
+	if (optionName == L"device list") {
 		return deviceManager.getDeviceList().c_str();
 	}
 
@@ -205,6 +204,6 @@ const wchar_t* rxaa::AudioParent::_resolve(int argc, const wchar_t* argv[]) {
 	return nullptr;
 }
 
-double rxaa::AudioParent::getValue(const std::wstring& id, Channel channel, int index) const {
+double rxaa::AudioParent::getValue(const string& id, Channel channel, index index) const {
 	return soundAnalyzer.getValue(channel, id, index);
 }

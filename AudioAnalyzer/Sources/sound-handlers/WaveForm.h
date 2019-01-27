@@ -14,7 +14,7 @@
 #include "OptionParser.h"
 #include "RainmeterWrappers.h"
 
-namespace rxu {
+namespace rxtd::utils {
 	class Rainmeter;
 }
 
@@ -29,36 +29,36 @@ namespace rxaa {
 
 		struct Params {
 			double resolution { };
-			unsigned width { };
-			unsigned height { };
-			std::wstring prefix = L".";
-			rxu::Color backgroundColor { };
-			rxu::Color waveColor { };
-			rxu::Color lineColor { };
+			index width { };
+			index height { };
+			string prefix = L".";
+			utils::Color backgroundColor { };
+			utils::Color waveColor { };
+			utils::Color lineColor { };
 			LineDrawingPolicy lineDrawingPolicy { };
 			double gain { };
 		};
 
 	private:
-		uint32_t samplesPerSec { };
+		index samplesPerSec { };
 
 		Params params;
 
-		unsigned blockSize { };
+		index blockSize { };
 		uint32_t backgroundInt { };
 		uint32_t waveInt { };
 		uint32_t lineInt { };
 
-		unsigned int counter = 0;
-		std::size_t lastIndex = 0;
+		index counter = 0;
+		index lastIndex = 0;
 		double result = 0.0;
 		double min { };
 		double max { };
 
-		std::wstring propString { };
+		string propString { };
 
-		rxu::ContinuousBuffersHolder<uint32_t> imageBuffer;
-		std::wstring filepath { };
+		utils::ContinuousBuffersHolder<uint32_t> imageBuffer;
+		string filepath { };
 
 		class MutableLinearInterpolator {
 			double valMin = 0;
@@ -91,16 +91,16 @@ namespace rxaa {
 
 	public:
 		void setParams(const Params& _params);
-		// void setParams(double resolution, unsigned width, unsigned height, std::wstring prefix, rxu::Color backgroundColor, rxu::Color waveColor, rxu::Color lineColor, LineDrawingPolicy lineDrawingPolicy, double gain);
+		// void setParams(double resolution, unsigned width, unsigned height, string prefix, rxu::Color backgroundColor, rxu::Color waveColor, rxu::Color lineColor, LineDrawingPolicy lineDrawingPolicy, double gain);
 
-		static std::optional<Params> parseParams(const rxu::OptionParser::OptionMap& optionMap, rxu::Rainmeter::ContextLogger &cl, const rxu::Rainmeter& rain);
+		static std::optional<Params> parseParams(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger &cl, const utils::Rainmeter& rain);
 
 		void process(const DataSupplier& dataSupplier) override;
 		void processSilence(const DataSupplier& dataSupplier) override;
 		const double* getData() const override;
-		size_t getCount() const override;
-		void setSamplesPerSec(uint32_t samplesPerSec) override;
-		const wchar_t* getProp(const std::wstring_view& prop) override;
+		index getCount() const override;
+		void setSamplesPerSec(index samplesPerSec) override;
+		const wchar_t* getProp(const sview& prop) override;
 		void reset() override;
 
 	private:

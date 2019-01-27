@@ -8,20 +8,14 @@
  */
 
 #pragma once
-#include <vector>
 #include "PdhWrapper.h"
 
-#undef min
-#undef max
-#undef IN
-#undef OUT
-
-namespace rxpm::pdh {
+namespace rxtd::perfmon::pdh {
 	struct ModifiedNameItem {
-		std::wstring_view originalName;
-		std::wstring_view uniqueName;
-		std::wstring_view displayName;
-		std::wstring_view searchName;
+		sview originalName;
+		sview uniqueName;
+		sview displayName;
+		sview searchName;
 	};
 
 	class NamesManager {
@@ -38,14 +32,14 @@ namespace rxpm::pdh {
 
 	private:
 		std::vector<ModifiedNameItem> names;
-		size_t buffersCount { };
+		index buffersCount { };
 		std::vector<std::vector<wchar_t>> buffers;
-		size_t originalNamesSize { };
+		index originalNamesSize { };
 
 		ModificationType modificationType { };
 
 	public:
-		const ModifiedNameItem& get(size_t index) const;
+		const ModifiedNameItem& get(index index) const;
 
 		void setModificationType(ModificationType value);
 
@@ -57,9 +51,9 @@ namespace rxpm::pdh {
 		void generateSearchNames();
 
 		void resetBuffers();
-		wchar_t* getBuffer(size_t value);
+		wchar_t* getBuffer(index value);
 		
-		static std::wstring_view copyString(std::wstring_view source, wchar_t* dest);
+		static sview copyString(sview source, wchar_t* dest);
 
 		void modifyNameProcess(const Snapshot& idSnapshot);
 

@@ -9,7 +9,6 @@
 
 #pragma once
 #include "SoundHandler.h"
-#include <vector>
 #include "FftAnalyzer.h"
 
 namespace rxaa {
@@ -25,9 +24,9 @@ namespace rxaa {
 			PRODUCT,
 		};
 		struct Params {
-			int minCascade { };
-			int maxCascade { };
-			std::wstring fftId;
+			index minCascade { };
+			index maxCascade { };
+			string fftId;
 			std::vector<double> bandFreqs;
 			double targetWeight { };
 			double minWeight { };
@@ -39,7 +38,7 @@ namespace rxaa {
 			double offset { };
 			double sensitivity { };
 			SmoothingCurve smoothingCurve { };
-			unsigned smoothingFactor { };
+			index smoothingFactor { };
 			double exponentialFactor { };
 		};
 	private:
@@ -57,19 +56,19 @@ namespace rxaa {
 
 		class GaussianCoefficientsManager {
 			// radius -> coefs vector
-			std::unordered_map<unsigned, std::vector<double>> gaussianBlurCoefficients;
+			std::unordered_map<index, std::vector<double>> gaussianBlurCoefficients;
 
 		public:
 			const std::vector<double>& forSigma(double sigma);
 
 		private:
-			static std::vector<double> generateGaussianKernel(int radius, double sigma);
+			static std::vector<double> generateGaussianKernel(index radius, double sigma);
 		};
 		mutable GaussianCoefficientsManager gcm;
 
 		Params params { };
 
-		uint32_t samplesPerSec { };
+		index samplesPerSec { };
 
 		std::vector<double> bandFreqMultipliers;
 		double logNormalization { };
@@ -84,33 +83,33 @@ namespace rxaa {
 		mutable bool analysisComputed = false;
 		const FftAnalyzer* source = nullptr;
 
-		std::wstring propString { };
+		string propString { };
 		mutable struct {
-			std::wstring analysisString { };
-			int minCascadeUsed = -1;
-			int maxCascadeUsed = -1;
+			string analysisString { };
+			index minCascadeUsed = -1;
+			index maxCascadeUsed = -1;
 		} analysis;
 
 
 	public:
 
-		static std::optional<Params> parseParams(const rxu::OptionParser::OptionMap& optionMap, rxu::Rainmeter::ContextLogger& cl, rxu::Rainmeter& rain);
+		static std::optional<Params> parseParams(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl, utils::Rainmeter& rain);
 
 		void setParams(Params params);
 
 		void process(const DataSupplier& dataSupplier) override;
 		void processSilence(const DataSupplier& dataSupplier) override;
 		const double* getData() const override;
-		size_t getCount() const override;
-		void setSamplesPerSec(uint32_t samplesPerSec) override;
-		const wchar_t* getProp(const std::wstring_view& prop) override;
+		index getCount() const override;
+		void setSamplesPerSec(index samplesPerSec) override;
+		const wchar_t* getProp(const sview& prop) override;
 		void reset() override;
 
 	private:
 		void updateValues() const;
-		void computeAnalysis(unsigned startCascade, unsigned endCascade) const;
+		void computeAnalysis(index startCascade, index endCascade) const;
 
 
-		static std::optional<std::vector<double>> parseFreqList(rxu::OptionParser::OptionList bounds, rxu::Rainmeter::ContextLogger& cl, const rxu::Rainmeter& rain);
+		static std::optional<std::vector<double>> parseFreqList(utils::OptionParser::OptionList bounds, utils::Rainmeter::ContextLogger& cl, const utils::Rainmeter& rain);
 	};
 }

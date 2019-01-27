@@ -8,18 +8,18 @@
  */
 
 #pragma once
+#include "my-windows.h"
 #include <Pdh.h>
-#include <vector>
 #include "RainmeterWrappers.h"
 #include "OptionParser.h"
 
 #undef UNIQUE_NAME
 
-namespace rxpm::pdh {
+namespace rxtd::perfmon::pdh {
 	class Snapshot {
-		size_t itemsCount = 0;
-		size_t counterBufferSize = 0;
-		unsigned countersCount = 0;
+		index itemsCount = 0;
+		index counterBufferSize = 0;
+		index countersCount = 0;
 		std::vector<std::byte> buffer;
 
 	public:
@@ -32,9 +32,9 @@ namespace rxpm::pdh {
 		Snapshot(const Snapshot& other) = delete;
 		Snapshot& operator=(const Snapshot& other) = delete;
 
-		size_t getItemsCount() const;
+		index getItemsCount() const;
 
-		unsigned getCountersCount() const;
+		index getCountersCount() const;
 
 		void clear();
 
@@ -42,7 +42,7 @@ namespace rxpm::pdh {
 
 		void setCountersCount(unsigned value);
 
-		void setBufferSize(size_t size, size_t items);
+		void setBufferSize(index size, index items);
 
 		void updateSize();
 
@@ -50,9 +50,9 @@ namespace rxpm::pdh {
 
 		const PDH_RAW_COUNTER_ITEM_W* getCounterPointer(unsigned counter) const;
 
-		const PDH_RAW_COUNTER& getItem(unsigned counter, size_t index) const;
+		const PDH_RAW_COUNTER& getItem(index counter, index index) const;
 
-		const wchar_t* getName(size_t index) const;
+		const wchar_t* getName(index index) const;
 
 		/**
 		 * in wchar_t
@@ -79,14 +79,14 @@ namespace rxpm::pdh {
 			bool isValid() const;
 		};
 
-		rxu::Rainmeter::Logger log;
+		utils::Rainmeter::Logger log;
 
 		QueryWrapper query;
 
 		bool needFetchExtraIDs = false;
 
 		std::vector<PDH_HCOUNTER> counterHandlers;
-		uint32_t itemsCount = 0;
+		index itemsCount = 0;
 
 		PDH_HCOUNTER idCounterHandler = nullptr;
 
@@ -94,7 +94,7 @@ namespace rxpm::pdh {
 		PdhWrapper() = default;
 		~PdhWrapper() = default;
 
-		explicit PdhWrapper(rxu::Rainmeter::Logger _log, std::wstring objectName, rxu::OptionParser::OptionList counterTokens);
+		explicit PdhWrapper(utils::Rainmeter::Logger _log, string objectName, utils::OptionParser::OptionList counterTokens);
 
 		PdhWrapper(PdhWrapper&& other) noexcept = default;
 		PdhWrapper& operator=(PdhWrapper&& other) noexcept = default;
@@ -109,10 +109,10 @@ namespace rxpm::pdh {
 		 */
 		bool fetch(Snapshot& snapshot, Snapshot& idSnapshot);
 
-		size_t getCountersCount() const;
+		index getCountersCount() const;
 
-		uint32_t getItemsCount() const;
+		index getItemsCount() const;
 
-		double extractFormattedValue(unsigned counter, const PDH_RAW_COUNTER& current, const PDH_RAW_COUNTER& previous) const;
+		double extractFormattedValue(index counter, const PDH_RAW_COUNTER& current, const PDH_RAW_COUNTER& previous) const;
 	};
 }

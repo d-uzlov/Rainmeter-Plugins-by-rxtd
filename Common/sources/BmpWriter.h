@@ -8,10 +8,8 @@
  */
 
 #pragma once
-#include <cstdint>
-#include <xstring>
 
-namespace rxu {
+namespace rxtd::utils {
 	class BmpWriter {
 #pragma pack( push, 1 ) 
 		struct BMPHeader {
@@ -55,12 +53,11 @@ namespace rxu {
 			}
 
 		private:
-			uint8_t pad[dibSize - sizeof(dibHeader)] { };
+			std::byte pad[dibSize - sizeof(dibHeader)] { };
 		};
 #pragma pack( pop )
 
 	public:
-		static void writeFile(const std::wstring& filepath, const uint32_t* data, size_t width, size_t height, size_t offset, uint32_t* writeBuffer, size_t
-		                      bufferSize);
+		static void writeFile(const string& filepath, const uint32_t* data, index width, index height, index offset, uint32_t* writeBuffer, index bufferSize);
 	};
 }

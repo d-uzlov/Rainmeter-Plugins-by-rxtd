@@ -9,8 +9,8 @@
 
 #include "BlockMean.h"
 #include <cmath>
-#include <string_view>
-#include <algorithm>
+
+#include "undef.h"
 
 #pragma warning(disable : 4458)
 #pragma warning(disable : 4244)
@@ -28,17 +28,17 @@ const double* rxaa::BlockMean::getData() const {
 	return &result;
 }
 
-size_t rxaa::BlockMean::getCount() const {
+index rxaa::BlockMean::getCount() const {
 	return 0;
 }
 
-void rxaa::BlockMean::setSamplesPerSec(uint32_t samplesPerSec) {
+void rxaa::BlockMean::setSamplesPerSec(index samplesPerSec) {
 	this->samplesPerSec = samplesPerSec;
 
 	recalculateConstants();
 }
 
-const wchar_t* rxaa::BlockMean::getProp(const std::wstring_view& prop) {
+const wchar_t* rxaa::BlockMean::getProp(const sview& prop) {
 	if (prop == L"block size"sv) {
 		propString = std::to_wstring(blockSize);
 	} else if (prop == L"attack"sv) {
@@ -68,7 +68,7 @@ void rxaa::BlockMean::recalculateConstants() {
 
 void rxaa::BlockRms::process(const DataSupplier& dataSupplier) {
 	const auto wave = dataSupplier.getWave();
-	for (unsigned int frame = 0; frame < dataSupplier.getWaveSize(); ++frame) {
+	for (index frame = 0; frame < dataSupplier.getWaveSize(); ++frame) {
 		const double x = wave[frame];
 		intermediateResult += x * x;
 		counter++;
@@ -95,7 +95,7 @@ void rxaa::BlockMean::processSilence(const DataSupplier& dataSupplier) {
 	}
 }
 
-std::optional<rxaa::BlockMean::Params> rxaa::BlockMean::parseParams(const rxu::OptionParser::OptionMap& optionMap, rxu::Rainmeter::ContextLogger& cl) {
+std::optional<rxaa::BlockMean::Params> rxaa::BlockMean::parseParams(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl) {
 	Params params;
 	params.attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.0) * 0.001;
 	params.decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.attackTime), 0.0) * 0.001;
@@ -120,7 +120,7 @@ void rxaa::BlockRms::finish() {
 void rxaa::BlockPeak::process(const DataSupplier& dataSupplier) {
 	const auto wave = dataSupplier.getWave();
 	const auto waveSize = dataSupplier.getWaveSize();
-	for (unsigned int frame = 0; frame < waveSize; ++frame) {
+	for (index frame = 0; frame < waveSize; ++frame) {
 		intermediateResult = std::max(intermediateResult, static_cast<double>(std::abs(wave[frame])));
 		counter++;
 		if (counter >= blockSize) {

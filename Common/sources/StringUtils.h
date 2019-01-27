@@ -8,54 +8,134 @@
  */
 
 #pragma once
-#include <string>
-#include <vector>
 
-namespace rxu {
+namespace rxtd::utils {
 	class SubstringViewInfo {
-		size_t offset { };
-		size_t length { };
+		index offset { };
+		index length { };
 
 	public:
 		SubstringViewInfo();
-		SubstringViewInfo(size_t offset, size_t length);
+		SubstringViewInfo(index offset, index length);
 
 		bool empty() const;
 
-		std::wstring_view makeView(const wchar_t* base) const;
+		sview makeView(const wchar_t* base) const;
 
-		std::wstring_view makeView(std::wstring_view base) const;
+		template<typename CT>
+		std::basic_string_view<wchar_t, CT> makeView(std::basic_string_view<wchar_t, CT> base) const {
+			return std::basic_string_view<wchar_t, CT>(base.data() + offset, length);
+		}
 
-		std::wstring_view makeView(const std::vector<wchar_t>& base) const;
+		template<typename CT, typename A>
+		std::basic_string_view<wchar_t, CT> makeView(const std::basic_string<wchar_t, CT, A>& base) const {
+			return std::basic_string_view<wchar_t, CT>(base.data() + offset, length);
+		}
 
-		SubstringViewInfo substr(size_t subOffset, size_t subLength = std::wstring_view::npos) const;
+		sview makeView(const std::vector<wchar_t>& base) const;
+
+		SubstringViewInfo substr(index subOffset, index subLength = sview::npos) const;
 
 		bool operator <(const SubstringViewInfo& other) const;
 	};
 
 	class StringViewUtils {
 	public:
-		static std::wstring_view trim(std::wstring_view view);
+		template<typename CT>
+		static std::basic_string_view<wchar_t, CT> trim(std::basic_string_view<wchar_t, CT> view) {
+			const auto begin = view.find_first_not_of(L" \t");
+			if (begin == sview::npos) {
+				return { };
+			}
 
-		static SubstringViewInfo trim(const wchar_t* base, SubstringViewInfo viewInfo);
+			const auto end = view.find_last_not_of(L" \t"); // always valid if find_first_not_of succeeded
 
-		static SubstringViewInfo trim(std::wstring_view source, SubstringViewInfo viewInfo);
+			return { view.data() + begin, end - begin + 1 };
+		}
+
+		static sview trim(const wchar_t* view) {
+			return trim(sview { view });
+		}
+
+		static SubstringViewInfo trimInfo(const wchar_t* base, SubstringViewInfo viewInfo);
+
+		static SubstringViewInfo trimInfo(sview source, SubstringViewInfo viewInfo);
 	};
 
 	class StringUtils {
 	public:
-		static void lowerInplace(std::wstring& string);
-		static void upperInplace(std::wstring& string);
+		template<typename CT, typename A>
+		static void lowerInplace(std::basic_string<wchar_t, CT, A>& str) {
+			for (auto& c : str) {
+				c = std::towlower(c);
+			}
+		}
+		template<typename CT, typename A>
+		static void upperInplace(std::basic_string<wchar_t, CT, A>& str) {
+			for (auto& c : str) {
+				c = std::towupper(c);
+			}
+		}
 
-		static std::wstring copyLower(std::wstring_view string);
-		static std::wstring copyUpper(std::wstring_view string);
+		template<typename CT>
+		static string copyLower(std::basic_string_view<wchar_t, CT> str) {
+			std::basic_string<wchar_t, CT> buffer { str };
+			lowerInplace(buffer);
 
-		static std::wstring trimCopy(std::wstring_view string);
+			return buffer;
+		}
 
-		static void trimInplace(std::wstring &string);
+		template<typename CT>
+		static string copyUpper(std::basic_string_view<wchar_t, CT> str) {
+			std::basic_string<wchar_t, CT> buffer { str };
+			upperInplace(buffer);
 
-		static bool endsWith(std::wstring_view str, std::wstring_view suffix);
+			return buffer;
+		}
 
-		static bool startsWith(std::wstring_view str, std::wstring_view prefix);
+		template<typename CT, typename A>
+		static void trimInplace(std::basic_string<wchar_t, CT, A>& str) {
+			const auto firstNotSpace = std::find_if_not(str.begin(), str.end(), [](wint_t c) { return std::iswspace(c); });
+			str.erase(str.begin(), firstNotSpace);
+			const auto lastNotSpace = std::find_if_not(str.rbegin(), str.rend(), [](wint_t c) { return std::iswspace(c); }).base();
+			str.erase(lastNotSpace, str.end());
+		}
+
+		template<typename CT>
+		static std::basic_string<wchar_t, CT> trimCopy(std::basic_string_view<wchar_t, CT> str) {
+			// from stackoverflow
+			const auto firstNotSpace = std::find_if_not(str.begin(), str.end(), [](wint_t c) { return std::iswspace(c); });
+			const auto lastNotSpace = std::find_if_not(str.rbegin(), sview::const_reverse_iterator(firstNotSpace), [](wint_t c) { return std::iswspace(c); }).base();
+
+			return { firstNotSpace, lastNotSpace };
+		}
+
+		static string trimCopy(const wchar_t*str) {
+			return trimCopy(sview { str });
+		}
+
+
+		template<typename CT>
+		static bool endsWith(std::basic_string_view<wchar_t, CT> str, std::basic_string_view<wchar_t, CT> suffix) {
+			// from stackoverflow
+			return str.size() >= suffix.size() && 0 == str.compare(str.size() - suffix.size(), suffix.size(), suffix);
+		}
+
+		template<typename CT>
+		static bool startsWith(std::basic_string_view<wchar_t, CT> str, std::basic_string_view<wchar_t, CT> prefix) {
+			// from stackoverflow
+			return str.size() >= prefix.size() && 0 == str.compare(0, prefix.size(), prefix);
+		}
+
+		template<typename CT, typename A>
+		static void substringInplace(std::basic_string<wchar_t, CT, A>& str, index begin, index count) {
+			if (begin > 0) {
+				str.erase(0, begin);
+			}
+			if (count <= index(str.length())) {
+				str.erase(count);
+			}
+		}
+
 	};
 }

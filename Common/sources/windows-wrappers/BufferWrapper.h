@@ -8,61 +8,74 @@
  */
 
 #pragma once
-#include <cstdint>
+#include "my-windows.h"
 #include <Audioclient.h>
 #include <type_traits>
 
 #pragma warning(disable : 6215)
 #pragma warning(disable : 6217)
 
-namespace rxu {
+namespace rxtd::utils {
 	static_assert(std::is_same<BYTE, uint8_t>::value);
 	static_assert(std::is_same<UINT32, uint32_t>::value);
 	// static_assert(std::is_same<DWORD, uint32_t>::value); // ...
 
 	class BufferWrapper {
-		IAudioCaptureClient *const client;
+		IAudioCaptureClient *client = nullptr;
 		uint8_t* buffer = nullptr;
-		uint32_t framesCount {};
-		HRESULT result {};
-		bool silent {};
+		uint32_t framesCount { };
+		HRESULT result { };
+		bool silent { };
 
 	public:
-
-		BufferWrapper() : client(nullptr) {
-		}
+		BufferWrapper() = default;
 
 		BufferWrapper(IAudioCaptureClient *client) : client(client) {
-			DWORD flags {};
+			DWORD flags { };
 			result = client->GetBuffer(&buffer, &framesCount, &flags, nullptr, nullptr);
 			silent = (flags & AUDCLNT_BUFFERFLAGS_SILENT) != 0;
 		}
 
-		BufferWrapper(BufferWrapper&& other) noexcept
-			: client(other.client),
-			  buffer(other.buffer),
-			  framesCount(other.framesCount),
-			  result(other.result),
-			  silent(other.silent) {
+		BufferWrapper(BufferWrapper&& other) noexcept :
+			client(other.client),
+			buffer(other.buffer),
+			framesCount(other.framesCount),
+			result(other.result),
+			silent(other.silent) {
+
 			other.buffer = nullptr;
 			other.framesCount = 0u;
 			other.silent = true;
 			other.result = { };
 		}
 
-		BufferWrapper& operator=(BufferWrapper&& other) noexcept = delete;
+		BufferWrapper& operator=(BufferWrapper&& other) noexcept {
+			if (this == &other)
+				return *this;
+
+			release();
+
+			client = other.client;
+			other.client = { };
+			buffer = other.buffer;
+			other.buffer = { };
+			framesCount = other.framesCount;
+			other.framesCount = { };
+			result = other.result;
+			other.result = { };
+			silent = other.silent;
+			other.silent = { };
+
+
+			return *this;
+		}
+
 		BufferWrapper(const BufferWrapper& other) = delete;
 		BufferWrapper& operator=(const BufferWrapper& other) = delete;
 
 
 		~BufferWrapper() {
-			if (client != nullptr && buffer != nullptr) {
-				client->ReleaseBuffer(framesCount);
-			}
-			buffer = nullptr;
-			framesCount = 0u;
-			silent = true;
-			result = decltype(result)();
+			release();
 		}
 
 		const uint8_t* getBuffer() const {
@@ -79,6 +92,17 @@ namespace rxu {
 
 		HRESULT getResult() const {
 			return result;
+		}
+
+	private:
+		void release() {
+			if (client != nullptr && buffer != nullptr) {
+				client->ReleaseBuffer(framesCount);
+			}
+			buffer = nullptr;
+			framesCount = 0u;
+			silent = true;
+			result = decltype(result)();
 		}
 	};
 }

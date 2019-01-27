@@ -8,11 +8,10 @@
  */
 
 #pragma once
-#include <map>
 #include "RainmeterWrappers.h"
 #include "StringUtils.h"
 
-namespace rxu {
+namespace rxtd::utils {
 	enum class MeasureState {
 		WORKING,
 		TEMP_BROKEN,
@@ -63,18 +62,17 @@ namespace rxu {
 		static_assert(std::is_base_of<TypeHolder, T>::value);
 
 		// skin -> { name -> parent }
-		std::map<void*, std::map<std::wstring, T*>> skinMap;
+		std::map<void*, std::map<istring, T*, std::less<>>> skinMap;
 
 	public:
 		void add(T& parent);
 		void remove(T& parent);
-		T* findParent(Rainmeter::Skin skin, const wchar_t *measureName);
+		T* findParent(Rainmeter::Skin skin, isview measureName);
 	};
 
 	template <typename T>
 	void ParentManager<T>::add(T& parent) {
-		std::wstring name = StringUtils::copyUpper(parent.rain.getMeasureName());
-		skinMap[parent.rain.getSkin().getRawPointer()][name] = &parent;
+		skinMap[parent.rain.getSkin().getRawPointer()][parent.rain.getMeasureName() % ciString()] = &parent;
 	}
 
 	template<typename T>
@@ -85,9 +83,7 @@ namespace rxu {
 		}
 		auto& measuresMap = iterMap->second;
 
-		std::wstring name = StringUtils::copyUpper(parent.rain.getMeasureName());
-
-		const auto iterMeasure = measuresMap.find(name);
+		const auto iterMeasure = measuresMap.find(parent.rain.getMeasureName() % ciView());
 		if (iterMeasure == measuresMap.end()) {
 			std::terminate();
 		}
@@ -99,16 +95,14 @@ namespace rxu {
 	}
 
 	template<typename T>
-	T* ParentManager<T>::findParent(Rainmeter::Skin skin, const wchar_t * measureName) {
+	T* ParentManager<T>::findParent(Rainmeter::Skin skin, isview measureName) {
 		const auto iterMap = skinMap.find(skin.getRawPointer());
 		if (iterMap == skinMap.end()) {
 			return nullptr;
 		}
 		const auto& measuresMap = iterMap->second;
 
-		std::wstring copy = StringUtils::copyUpper(measureName);
-
-		const auto iterMeasure = measuresMap.find(copy);
+		const auto iterMeasure = measuresMap.find(measureName);
 		if (iterMeasure == measuresMap.end()) {
 			return nullptr;
 		}

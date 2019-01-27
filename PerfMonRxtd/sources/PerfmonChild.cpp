@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2018-2019 rxtd
  * Copyright (C) 2018 buckb
  *
@@ -10,30 +10,34 @@
 
 #include "PerfmonChild.h"
 
-rxpm::PerfmonChild::PerfmonChild(rxu::Rainmeter&& _rain) : TypeHolder(std::move(_rain)) {
-	std::wstring parentName = rain.readString(L"Parent");
+#include "undef.h"
+
+using namespace perfmon;
+
+PerfmonChild::PerfmonChild(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rain)) {
+	auto parentName = rain.readString(L"Parent") % ciView() % toString();
 	if (parentName.empty()) {
 		log.error(L"Parent must be specified");
-		setMeasureState(rxu::MeasureState::BROKEN);
+		setMeasureState(utils::MeasureState::BROKEN);
 		return;
 	}
-	parent = PerfmonParent::findInstance(rain.getSkin(), parentName.c_str());
+	parent = PerfmonParent::findInstance(rain.getSkin(), parentName);
 
 	if (parent == nullptr) {
 		log.error(L"Parent '{}' not found", parentName);
-		setMeasureState(rxu::MeasureState::BROKEN);
+		setMeasureState(utils::MeasureState::BROKEN);
 		return;
 	}
 
-	if (parent->getState() == rxu::MeasureState::BROKEN) {
+	if (parent->getState() == utils::MeasureState::BROKEN) {
 		log.error(L"Parent '{}' is broken", parentName);
-		setMeasureState(rxu::MeasureState::BROKEN);
+		setMeasureState(utils::MeasureState::BROKEN);
 		return;
 	}
 }
 
-void rxpm::PerfmonChild::_reload() {
-	setMeasureState(rxu::MeasureState::WORKING);
+void PerfmonChild::_reload() {
+	setMeasureState(utils::MeasureState::WORKING);
 
 	instanceIndex = rain.readInt(L"InstanceIndex");
 	ref.counter = rain.readInt(L"CounterIndex");
@@ -41,82 +45,81 @@ void rxpm::PerfmonChild::_reload() {
 	ref.total = rain.readBool(L"Total");
 	ref.discarded = rain.readBool(L"Discarded");
 
-	std::wstring instanceName = rain.readString(L"InstanceName");
+	ref.name = rain.readString(L"InstanceName");
 	if (!ref.useOrigName) {
-		CharUpperW(&instanceName[0]);
+		CharUpperW(&ref.name[0]);
 	}
-	const auto len = instanceName.size();
-	if (len >= 2 && instanceName[0] == L'*' && instanceName[len - 1] == L'*') {
-		ref.name = instanceName.substr(1, len - 2);
+	const auto len = ref.name.size(); // TODO unite match record creation
+	if (len >= 2 && ref.name.front() == L'*' && ref.name.back() == L'*') {
+		utils::StringUtils::substringInplace(ref.name, 1, len - 2);
 		ref.namePartialMatch = true;
 	} else {
-		ref.name = instanceName;
 		ref.namePartialMatch = false;
 	}
 
 	bool needReadRollupFunction = true;
 	bool forceUseName = false;
-	const wchar_t* type = rain.readString(L"Type");
-	if (_wcsicmp(type, L"GetInstanceCount") == 0) {
+	const auto type = rain.readString(L"Type") % ciView();
+	if (type == L"GetInstanceCount") {
 		log.warning(L"Type 'GetInstanceCount' is deprecated, set to 'GetCount' with Total=1 and RollupFunction=Sum");
 		ref.type = ReferenceType::COUNT;
 		ref.total = true;
 		ref.rollupFunction = RollupFunction::SUM;
 		needReadRollupFunction = false;
-	} else if (_wcsicmp(type, L"GetCount") == 0)
+	} else if (type == L"GetCount")
 		ref.type = ReferenceType::COUNT;
-	else if (_wcsicmp(type, L"GetInstanceName") == 0) {
-		log.warning(L"Type 'GetInstanceName' is deprecated, set to 'GetCount' with Total=0 and ResultString=DisplayName");
+	else if (type == L"GetInstanceName") {
+		log.warning(L"Type 'GetInstanceName' is deprecated, set to 'GetCount' with Total=0 and ResultString not Number");
 		ref.type = ReferenceType::COUNT;
 		ref.total = false;
 		ref.rollupFunction = RollupFunction::FIRST;
 		resultStringType = ResultString::DISPLAY_NAME;
 		forceUseName = true;
-	} else if (_wcsicmp(type, L"GetRawCounter") == 0) {
+	} else if (type == L"GetRawCounter") {
 		ref.type = ReferenceType::COUNTER_RAW;
-	} else if (_wcsicmp(type, L"GetFormattedCounter") == 0) {
+	} else if (type == L"GetFormattedCounter") {
 		ref.type = ReferenceType::COUNTER_FORMATTED;
-	} else if (_wcsicmp(type, L"GetExpression") == 0)
+	} else if (type == L"GetExpression") {
 		ref.type = ReferenceType::EXPRESSION;
-	else if (_wcsicmp(type, L"GetRollupExpression") == 0)
+	} else if (type == L"GetRollupExpression") {
 		ref.type = ReferenceType::ROLLUP_EXPRESSION;
-	else {
+	} else {
 		log.error(L"Type '{}' is invalid for child measure", type);
-		setMeasureState(rxu::MeasureState::TEMP_BROKEN);
+		setMeasureState(utils::MeasureState::TEMP_BROKEN);
 		return;
 	}
 
 	if (needReadRollupFunction) {
-		const wchar_t* rollupFunctionStr = rain.readString(L"RollupFunction");
-		if (_wcsicmp(rollupFunctionStr, L"") == 0 || _wcsicmp(rollupFunctionStr, L"Sum") == 0)
+		auto rollupFunctionStr = rain.readString(L"RollupFunction") % ciView();
+		if (rollupFunctionStr.empty() || rollupFunctionStr == L"Sum") {
 			ref.rollupFunction = RollupFunction::SUM;
-		else if (_wcsicmp(rollupFunctionStr, L"Average") == 0)
+		} else if (rollupFunctionStr == L"Average") {
 			ref.rollupFunction = RollupFunction::AVERAGE;
-		else if (_wcsicmp(rollupFunctionStr, L"Minimum") == 0)
+		} else if (rollupFunctionStr == L"Minimum") {
 			ref.rollupFunction = RollupFunction::MINIMUM;
-		else if (_wcsicmp(rollupFunctionStr, L"Maximum") == 0)
+		} else if (rollupFunctionStr == L"Maximum") {
 			ref.rollupFunction = RollupFunction::MAXIMUM;
-		else if (_wcsicmp(rollupFunctionStr, L"Count") == 0) {
+		} else if (rollupFunctionStr == L"Count") {
 			log.warning(L"RollupFunction 'Count' is deprecated, measure type set to 'GetCount'");
 			ref.type = ReferenceType::COUNT;
-		} else if (_wcsicmp(rollupFunctionStr, L"First") == 0)
+		} else if (rollupFunctionStr == L"First") {
 			ref.rollupFunction = RollupFunction::FIRST;
-		else {
+		} else {
 			log.error(L"RollupFunction '{}' is invalid, set to 'Sum'", rollupFunctionStr);
 			ref.rollupFunction = RollupFunction::SUM;
 		}
 	}
 
-	const wchar_t* const resultStringStr = rain.readString(L"ResultString");
-	if (!forceUseName && (_wcsicmp(resultStringStr, L"") == 0 || _wcsicmp(resultStringStr, L"Number") == 0)) {
+	const auto resultStringStr = rain.readString(L"ResultString") % ciView();
+	if (!forceUseName && (resultStringStr.empty() || resultStringStr == L"Number")) {
 		resultStringType = ResultString::NUMBER;
-	} else if (_wcsicmp(resultStringStr, L"OriginalName") == 0 || _wcsicmp(resultStringStr, L"OriginalInstanceName") == 0)
+	} else if (resultStringStr == L"OriginalName" || resultStringStr == L"OriginalInstanceName") {
 		resultStringType = ResultString::ORIGINAL_NAME;
-	else if (_wcsicmp(resultStringStr, L"UniqueName") == 0 || _wcsicmp(resultStringStr, L"UniqueInstanceName") == 0)
+	} else if (resultStringStr == L"UniqueName" || resultStringStr == L"UniqueInstanceName") {
 		resultStringType = ResultString::UNIQUE_NAME;
-	else if (_wcsicmp(resultStringStr, L"DisplayName") == 0 || _wcsicmp(resultStringStr, L"DisplayInstanceName") == 0)
+	} else if (resultStringStr == L"DisplayName" || resultStringStr == L"DisplayInstanceName") {
 		resultStringType = ResultString::DISPLAY_NAME;
-	else if (_wcsicmp(resultStringStr, L"RollupInstanceName") == 0) {
+	} else if (resultStringStr == L"RollupInstanceName") {
 		log.warning(L"ResultString 'RollupInstanceName' is deprecated, set to 'DisplayName'");
 		resultStringType = ResultString::DISPLAY_NAME;
 	} else if (forceUseName) {
@@ -126,14 +129,14 @@ void rxpm::PerfmonChild::_reload() {
 		resultStringType = ResultString::NUMBER;
 	}
 
-	ref.named = ref.useOrigName || !instanceName.empty();
+	ref.named = ref.useOrigName || !ref.name.empty();
 }
 
-const wchar_t*  rxpm::PerfmonChild::makeRetString() const {
+const wchar_t*  PerfmonChild::makeRetString() const {
 	return resultStringType == ResultString::NUMBER ? nullptr : resultString.c_str();
 }
 
-std::tuple<double, const wchar_t*>  rxpm::PerfmonChild::_update() {
+std::tuple<double, const wchar_t*>  PerfmonChild::_update() {
 	resultString.clear();
 
 	if (!parent->canGetRaw() || ref.type == ReferenceType::COUNTER_FORMATTED && !parent->canGetFormatted()) {
@@ -145,7 +148,7 @@ std::tuple<double, const wchar_t*>  rxpm::PerfmonChild::_update() {
 		return std::make_tuple(parent->getValue(ref, nullptr, log), makeRetString());
 	}
 
-	const InstanceInfo* const instance = parent->findInstance(ref, instanceIndex);
+	const auto instance = parent->findInstance(ref, instanceIndex);
 	if (instance == nullptr) {
 		return std::make_tuple(0, makeRetString());
 	}

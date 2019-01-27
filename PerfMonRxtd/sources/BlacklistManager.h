@@ -8,21 +8,17 @@
  */
 
 #pragma once
-#include <vector>
 #include "OptionParser.h"
 
-#undef min
-#undef max
-
-namespace rxpm {
+namespace rxtd::perfmon {
 	struct MatchTestRecord {
-		std::wstring_view pattern;
+		sview pattern;
 		bool matchSubstring { };
 
 		MatchTestRecord();
-		MatchTestRecord(std::wstring_view pattern, bool substring);
+		MatchTestRecord(sview pattern, bool substring);
 
-		bool match(std::wstring_view string) const;
+		bool match(sview string) const;
 	};
 
 	class BlacklistManager {
@@ -33,9 +29,9 @@ namespace rxpm {
 		public:
 			MatchList();
 
-			MatchList(rxu::OptionParser::OptionList optionList, bool upperCase);
+			MatchList(utils::OptionParser::OptionList optionList, bool upperCase);
 
-			bool match(std::wstring_view string) const;
+			bool match(sview string) const;
 
 			bool empty() const;
 		};
@@ -47,12 +43,12 @@ namespace rxpm {
 
 	public:
 		void setLists(
-			rxu::OptionParser::OptionList black,
-			rxu::OptionParser::OptionList blackOrig,
-			rxu::OptionParser::OptionList white,
-			rxu::OptionParser::OptionList whiteOrig
+			utils::OptionParser::OptionList black,
+			utils::OptionParser::OptionList blackOrig,
+			utils::OptionParser::OptionList white,
+			utils::OptionParser::OptionList whiteOrig
 		);
 
-		bool isAllowed(std::wstring_view searchName, std::wstring_view originalName) const;
+		bool isAllowed(sview searchName, sview originalName) const;
 	};
 }

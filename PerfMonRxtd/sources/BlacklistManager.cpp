@@ -10,22 +10,26 @@
 #include "BlacklistManager.h"
 #include "Windows.h"
 
-rxpm::MatchTestRecord::MatchTestRecord() { }
+#include "undef.h"
 
-rxpm::MatchTestRecord::MatchTestRecord(std::wstring_view pattern, bool substring) :
+using namespace perfmon;
+
+MatchTestRecord::MatchTestRecord() = default;
+
+MatchTestRecord::MatchTestRecord(sview pattern, bool substring) :
 	pattern(pattern),
 	matchSubstring(substring) { }
 
-bool rxpm::MatchTestRecord::match(std::wstring_view string) const {
+bool MatchTestRecord::match(sview string) const {
 	if (!matchSubstring) {
 		return pattern == string;
 	}
-	return string.find(pattern) != std::wstring_view::npos;
+	return string.find(pattern) != sview::npos;
 }
 
-rxpm::BlacklistManager::MatchList::MatchList() { }
+BlacklistManager::MatchList::MatchList() = default;
 
-rxpm::BlacklistManager::MatchList::MatchList(rxu::OptionParser::OptionList optionList, bool upperCase) {
+BlacklistManager::MatchList::MatchList(rxtd::utils::OptionParser::OptionList optionList, bool upperCase) {
 	auto[optVec, optList] = std::move(optionList).consume();
 	source = std::move(optVec);
 	if (upperCase) {
@@ -51,9 +55,9 @@ rxpm::BlacklistManager::MatchList::MatchList(rxu::OptionParser::OptionList optio
 	}
 }
 
-bool rxpm::BlacklistManager::MatchList::match(std::wstring_view string) const {
+bool BlacklistManager::MatchList::match(sview view) const {
 	for (auto record : list) {
-		if (record.match(string)) {
+		if (record.match(view)) {
 			return true;
 		}
 	}
@@ -61,19 +65,19 @@ bool rxpm::BlacklistManager::MatchList::match(std::wstring_view string) const {
 	return false;
 }
 
-bool rxpm::BlacklistManager::MatchList::empty() const {
+bool BlacklistManager::MatchList::empty() const {
 	return list.empty();
 }
 
-void rxpm::BlacklistManager::setLists(rxu::OptionParser::OptionList black, rxu::OptionParser::OptionList blackOrig,
-	rxu::OptionParser::OptionList white, rxu::OptionParser::OptionList whiteOrig) {
+void BlacklistManager::setLists(utils::OptionParser::OptionList black, utils::OptionParser::OptionList blackOrig,
+	utils::OptionParser::OptionList white, utils::OptionParser::OptionList whiteOrig) {
 	blacklist = { std::move(black), true };
 	blacklistOrig = { std::move(blackOrig), false };
 	whitelist = { std::move(white), true };
 	whitelistOrig = { std::move(whiteOrig), false };
 }
 
-bool rxpm::BlacklistManager::isAllowed(std::wstring_view searchName, std::wstring_view originalName) const {
+bool BlacklistManager::isAllowed(sview searchName, sview originalName) const {
 	// blacklist → discard
 	if (blacklist.match(searchName) || blacklistOrig.match(originalName)) {
 		return false;

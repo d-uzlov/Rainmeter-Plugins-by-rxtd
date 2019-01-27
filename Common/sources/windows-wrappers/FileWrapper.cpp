@@ -8,10 +8,13 @@
  */
 
 #include "FileWrapper.h"
-#include <Windows.h>
-#include <string_view>
+#include "my-windows.h"
 
-rxu::FileWrapper::FileWrapper(const wchar_t *path) {
+#include "undef.h"
+
+using namespace utils;
+
+FileWrapper::FileWrapper(const wchar_t *path) {
 	fileHandle = CreateFileW(path,
 		0
 		| GENERIC_WRITE
@@ -30,18 +33,18 @@ rxu::FileWrapper::FileWrapper(const wchar_t *path) {
 	}
 }
 
-rxu::FileWrapper::~FileWrapper() {
+FileWrapper::~FileWrapper() {
 	if (fileHandle != INVALID_HANDLE_VALUE) {
 		CloseHandle(fileHandle);
 		fileHandle = INVALID_HANDLE_VALUE;
 	}
 }
 
-bool rxu::FileWrapper::isValid() const {
+bool FileWrapper::isValid() const {
 	return valid;
 }
 
-void rxu::FileWrapper::write(uint8_t* data, size_t count) {
+void FileWrapper::write(std::byte* data, size_t count) {
 	if (!valid) {
 		return;
 	}
@@ -57,15 +60,15 @@ void rxu::FileWrapper::write(uint8_t* data, size_t count) {
 	}
 }
 
-void rxu::FileWrapper::createDirectories(std::wstring_view path) {
-	std::wstring buffer { path };
+void FileWrapper::createDirectories(sview path) {
+	string buffer { path };
 
 	size_t pos = buffer.find(L':') + 1; // either npos+1 == 0 or index of first meaningful symbol
 
 	while (true) {
 		const auto nextPos = buffer.find(L'\\', pos);
 
-		if (nextPos == std::wstring::npos) {
+		if (nextPos == string::npos) {
 			break;
 		}
 

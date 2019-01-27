@@ -11,7 +11,7 @@
 #include "AudioParent.h"
 
 namespace rxaa {
-	class AudioChild : public rxu::TypeHolder {
+	class AudioChild : public utils::TypeHolder {
 		enum class StringValue {
 			NUMBER,
 			INFO
@@ -27,19 +27,19 @@ namespace rxaa {
 		Channel channel = Channel::FRONT_LEFT;
 		NumberTransform numberTransform = NumberTransform::LINEAR;
 		StringValue stringValueType = StringValue::NUMBER;
-		unsigned index = 0;
-		std::wstring valueId;
+		index index = 0;
+		string valueId;
 		double correctingConstant = 0.0;
 		bool clamp = true;
-		std::vector<std::wstring> infoRequest;
+		std::vector<string> infoRequest;
 		std::vector<const wchar_t*> infoRequestC;
 
 		// data
 		AudioParent* parent = nullptr;
-		std::wstring stringValue;
+		string stringValue;
 
 	public:
-		explicit AudioChild(rxu::Rainmeter&& _rain);
+		explicit AudioChild(utils::Rainmeter&& _rain);
 		~AudioChild();
 		/** This class is non copyable */
 		AudioChild(const AudioChild& other) = delete;

@@ -9,6 +9,8 @@
 
 #include "MyWaveFormat.h"
 
+#include "undef.h"
+
 rxaa::Format::Format(Value value): value(value) {
 }
 

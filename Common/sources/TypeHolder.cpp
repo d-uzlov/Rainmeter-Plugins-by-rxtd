@@ -9,27 +9,31 @@
 
 #include "TypeHolder.h"
 
+#include "undef.h"
+
 #pragma warning(disable : 4458)
 
-rxu::TypeHolder::TypeHolder(Rainmeter&& rain) : rain(std::move(rain)), log(this->rain.getLogger()) {
+using namespace utils;
+
+TypeHolder::TypeHolder(Rainmeter&& rain) : rain(std::move(rain)), log(this->rain.getLogger()) {
 
 }
 
-rxu::TypeHolder::~TypeHolder() { }
+TypeHolder::~TypeHolder() { }
 
-void rxu::TypeHolder::_command(const wchar_t* bangArgs) {
+void TypeHolder::_command(const wchar_t* bangArgs) {
 	log.warning(L"Measure does not have commands");
 }
 
-const wchar_t* rxu::TypeHolder::_resolve(int argc, const wchar_t* argv[]) {
+const wchar_t* TypeHolder::_resolve(int argc, const wchar_t* argv[]) {
 	return nullptr;
 }
 
-void rxu::TypeHolder::setMeasureState(MeasureState brokenState) {
+void TypeHolder::setMeasureState(MeasureState brokenState) {
 	this->measureState = brokenState;
 }
 
-double rxu::TypeHolder::update() {
+double TypeHolder::update() {
 	if (measureState != MeasureState::WORKING) {
 		return 0.0;
 	}
@@ -39,14 +43,14 @@ double rxu::TypeHolder::update() {
 	return resultDouble;
 }
 
-void rxu::TypeHolder::reload() {
+void TypeHolder::reload() {
 	if (measureState == MeasureState::BROKEN) { // skip reload only if the measure is unrecoverable
 		return;
 	}
 	_reload();
 }
 
-void rxu::TypeHolder::command(const wchar_t *bangArgs) {
+void TypeHolder::command(const wchar_t *bangArgs) {
 	if (measureState != MeasureState::WORKING) {
 		log.warning(L"Skipping bang on the broken measure");
 		return;
@@ -54,7 +58,7 @@ void rxu::TypeHolder::command(const wchar_t *bangArgs) {
 	_command(bangArgs);
 }
 
-const wchar_t* rxu::TypeHolder::resolve(int argc, const wchar_t* argv[]) {
+const wchar_t* TypeHolder::resolve(int argc, const wchar_t* argv[]) {
 	if (measureState != MeasureState::WORKING) {
 		log.printer.print(L"Measure {} is broken", rain.getMeasureName());
 		return log.printer.getBufferPtr();
@@ -66,13 +70,13 @@ const wchar_t* rxu::TypeHolder::resolve(int argc, const wchar_t* argv[]) {
 	return result;
 }
 
-const wchar_t* rxu::TypeHolder::getString() const {
+const wchar_t* TypeHolder::getString() const {
 	if (measureState != MeasureState::WORKING) {
 		return L"broken";
 	}
 	return resultString;
 }
 
-rxu::MeasureState rxu::TypeHolder::getState() const {
+MeasureState TypeHolder::getState() const {
 	return measureState;
 }

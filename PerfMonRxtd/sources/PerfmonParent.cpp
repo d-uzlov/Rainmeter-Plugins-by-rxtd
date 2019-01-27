@@ -8,29 +8,27 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include <vector>
-#include <algorithm>
-#include <cwctype>
 #include <functional>
 #include <unordered_map>
-#include <string>
-#include <string_view>
 
 #include "expressions.h"
 #include "PerfmonParent.h"
 #include "OptionParser.h"
 
+#include "undef.h"
 
 
 #pragma warning(disable : 26451)
 
-rxu::ParentManager<rxpm::PerfmonParent> rxpm::PerfmonParent::parentManager { };
+using namespace perfmon;
 
-rxpm::PerfmonParent::~PerfmonParent() {
+utils::ParentManager<PerfmonParent> PerfmonParent::parentManager { };
+
+PerfmonParent::~PerfmonParent() {
 	parentManager.remove(*this);
 }
 
-rxpm::PerfmonParent::PerfmonParent(rxu::Rainmeter&& _rain) : TypeHolder(std::move(_rain)) {
+PerfmonParent::PerfmonParent(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rain)) {
 	parentManager.add(*this);
 
 	objectName = rain.readString(L"ObjectName");
@@ -39,32 +37,32 @@ rxpm::PerfmonParent::PerfmonParent(rxu::Rainmeter&& _rain) : TypeHolder(std::mov
 
 	if (objectName.empty()) {
 		log.error(L"ObjectName must be specified");
-		setMeasureState(rxu::MeasureState::BROKEN);
+		setMeasureState(utils::MeasureState::BROKEN);
 		return;
 	}
 
-	rxu::OptionParser optionParser;
+	utils::OptionParser optionParser;
 	auto counterTokens = optionParser.asList(rain.readString(L"CounterList"), L'|');
 
 	if (counterTokens.empty()) {
 		log.error(L"CounterList must have at least one entry");
-		setMeasureState(rxu::MeasureState::BROKEN);
+		setMeasureState(utils::MeasureState::BROKEN);
 		return;
 	}
 
 	pdhWrapper = pdh::PdhWrapper { log, objectName, counterTokens };
 	if (!pdhWrapper.isValid()) {
-		setMeasureState(rxu::MeasureState::BROKEN);
+		setMeasureState(utils::MeasureState::BROKEN);
 	}
 
 }
 
-rxpm::PerfmonParent* rxpm::PerfmonParent::findInstance(rxu::Rainmeter::Skin skin, const wchar_t* measureName) {
+PerfmonParent* PerfmonParent::findInstance(utils::Rainmeter::Skin skin, isview measureName) {
 	return parentManager.findParent(skin, measureName);
 }
 
-void rxpm::PerfmonParent::_reload() {
-	if (getState() == rxu::MeasureState::BROKEN) {
+void PerfmonParent::_reload() {
+	if (getState() == utils::MeasureState::BROKEN) {
 		return;
 	}
 
@@ -78,22 +76,22 @@ void rxpm::PerfmonParent::_reload() {
 	instanceManager.setLimitIndexOffset(rain.readBool(L"LimitIndexOffset"));
 
 
-	auto str = rain.readString(L"SortBy");
+	auto str = rain.readString(L"SortBy") % ciView();
 	typedef InstanceManager::SortBy SortBy;
 	SortBy sortBy;
-	if (_wcsicmp(str, L"") == 0 || _wcsicmp(str, L"None") == 0)
+	if (str.empty() || str== L"None")
 		sortBy = SortBy::NONE;
-	else if (_wcsicmp(str, L"InstanceName") == 0)
+	else if (str==L"InstanceName")
 		sortBy = SortBy::INSTANCE_NAME;
-	else if (_wcsicmp(str, L"RawCounter") == 0)
+	else if (str==L"RawCounter")
 		sortBy = SortBy::RAW_COUNTER;
-	else if (_wcsicmp(str, L"FormattedCounter") == 0)
+	else if (str==L"FormattedCounter")
 		sortBy = SortBy::FORMATTED_COUNTER;
-	else if (_wcsicmp(str, L"Expression") == 0)
+	else if (str==L"Expression")
 		sortBy = SortBy::EXPRESSION;
-	else if (_wcsicmp(str, L"RollupExpression") == 0)
+	else if (str==L"RollupExpression")
 		sortBy = SortBy::ROLLUP_EXPRESSION;
-	else if (_wcsicmp(str, L"Count") == 0)
+	else if (str==L"Count")
 		sortBy = SortBy::COUNT;
 	else {
 		log.error(L"SortBy '{}' is invalid, set to 'None'", str);
@@ -101,12 +99,12 @@ void rxpm::PerfmonParent::_reload() {
 	}
 	instanceManager.setSortBy(sortBy);
 
-	str = rain.readString(L"SortOrder");
+	str = rain.readString(L"SortOrder") % ciView();
 	typedef InstanceManager::SortOrder SortOrder;
 	SortOrder sortOrder;
-	if (_wcsicmp(str, L"") == 0 || _wcsicmp(str, L"Descending") == 0)
+	if (str==L"" || str==L"Descending")
 		sortOrder = SortOrder::DESCENDING;
-	else if (_wcsicmp(str, L"Ascending") == 0)
+	else if (str==L"Ascending")
 		sortOrder = SortOrder::ASCENDING;
 	else {
 		log.error(L"SortOrder '{}' is invalid, set to 'Descending'", str);
@@ -114,17 +112,17 @@ void rxpm::PerfmonParent::_reload() {
 	}
 	instanceManager.setSortOrder(sortOrder);
 
-	str = rain.readString(L"SortRollupFunction");
+	str = rain.readString(L"SortRollupFunction") % ciView();
 	RollupFunction sortRollupFunction;
-	if (_wcsicmp(str, L"") == 0 || _wcsicmp(str, L"Sum") == 0)
+	if (str==L"" || str==L"Sum")
 		sortRollupFunction = RollupFunction::SUM;
-	else if (_wcsicmp(str, L"Average") == 0)
+	else if (str==L"Average")
 		sortRollupFunction = RollupFunction::AVERAGE;
-	else if (_wcsicmp(str, L"Minimum") == 0)
+	else if (str==L"Minimum")
 		sortRollupFunction = RollupFunction::MINIMUM;
-	else if (_wcsicmp(str, L"Maximum") == 0)
+	else if (str==L"Maximum")
 		sortRollupFunction = RollupFunction::MAXIMUM;
-	else if (_wcsicmp(str, L"Count") == 0) {
+	else if (str==L"Count") {
 		log.warning(L"SortRollupFunction 'Count' is deprecated, SortBy set to 'Count'");
 		instanceManager.setSortBy(SortBy::COUNT);
 		sortRollupFunction = RollupFunction::SUM;
@@ -141,7 +139,7 @@ void rxpm::PerfmonParent::_reload() {
 		optionParser.asList(rain.readString(L"WhitelistOrig"), L'|')
 	);
 
-	rxu::OptionParser optionParser;
+	utils::OptionParser optionParser;
 
 	const auto expressionTokens = optionParser.asList(rain.readString(L"ExpressionList"), L'|');
 	const auto rollupExpressionTokens = optionParser.asList(rain.readString(L"RollupExpressionList"), L'|');
@@ -158,12 +156,12 @@ void rxpm::PerfmonParent::_reload() {
 	NMT nameModificationType;
 	if (objectName == L"GPU Engine" || objectName == L"GPU Process Memory") {
 
-		const wchar_t* displayName = rain.readString(L"DisplayName");
-		if (_wcsicmp(displayName, L"") == 0 || _wcsicmp(displayName, L"Original") == 0) {
+		const auto displayName = rain.readString(L"DisplayName") % ciView();
+		if (displayName==L"" || displayName==L"Original") {
 			nameModificationType = NMT::NONE;
-		} else if (_wcsicmp(displayName, L"ProcessName") == 0 || _wcsicmp(displayName, L"GpuProcessName") == 0) {
+		} else if (displayName==L"ProcessName" || displayName==L"GpuProcessName") {
 			nameModificationType = NMT::GPU_PROCESS;
-		} else if (_wcsicmp(displayName, L"EngType") == 0 || _wcsicmp(displayName, L"GpuEngType") == 0) {
+		} else if (displayName==L"EngType" || displayName==L"GpuEngType") {
 			nameModificationType = NMT::GPU_ENGTYPE;
 		} else {
 			log.error(L"Object '{}' don't support DisplayName '{}', set to 'Original'", objectName, displayName);
@@ -172,12 +170,12 @@ void rxpm::PerfmonParent::_reload() {
 
 	} else if (objectName == L"LogicalDisk") {
 
-		const wchar_t* displayName = rain.readString(L"DisplayName");
-		if (_wcsicmp(displayName, L"") == 0 || _wcsicmp(displayName, L"Original") == 0) {
+		const auto displayName = rain.readString(L"DisplayName") % ciView();
+		if (displayName==L"" || displayName==L"Original") {
 			nameModificationType = NMT::NONE;
-		} else if (_wcsicmp(displayName, L"DriveLetter") == 0) {
+		} else if (displayName==L"DriveLetter") {
 			nameModificationType = NMT::LOGICAL_DISK_DRIVE_LETTER;
-		} else if (_wcsicmp(displayName, L"MountFolder") == 0) {
+		} else if (displayName==L"MountFolder") {
 			nameModificationType = NMT::LOGICAL_DISK_MOUNT_PATH;
 		} else {
 			log.error(L"Object '{}' don't support DisplayName '{}', set to 'Original'", objectName, displayName);
@@ -195,11 +193,11 @@ void rxpm::PerfmonParent::_reload() {
 	instanceManager.setNameModificationType(nameModificationType);
 }
 
-const rxpm::InstanceInfo* rxpm::PerfmonParent::findInstance(const Reference& ref, unsigned long sortedIndex) const {
+const InstanceInfo* PerfmonParent::findInstance(const Reference& ref, index sortedIndex) const {
 	return instanceManager.findInstance(ref, sortedIndex);
 }
 
-std::wstring_view rxpm::PerfmonParent::getInstanceName(const InstanceInfo& instance, ResultString stringType) const {
+sview PerfmonParent::getInstanceName(const InstanceInfo& instance, ResultString stringType) const {
 	if (stringType == ResultString::NUMBER) {
 		return L"";
 	}
@@ -220,7 +218,7 @@ std::wstring_view rxpm::PerfmonParent::getInstanceName(const InstanceInfo& insta
 	}
 }
 
-std::tuple<double, const wchar_t*> rxpm::PerfmonParent::_update() {
+std::tuple<double, const wchar_t*> PerfmonParent::_update() {
 
 	if (!stopped) {
 		std::swap(snapshotCurrent, snapshotPrevious);
@@ -251,41 +249,41 @@ std::tuple<double, const wchar_t*> rxpm::PerfmonParent::_update() {
 	return std::make_tuple(1, L"ok");
 }
 
-void rxpm::PerfmonParent::_command(const wchar_t* bangArgs) {
-	if (_wcsicmp(bangArgs, L"Stop") == 0) {
+void PerfmonParent::_command(const wchar_t* bangArgsC) {
+	isview bangArgs = bangArgsC;
+	if (bangArgs== L"Stop") {
 		setStopped(true);
 		return;
 	}
-	if (_wcsicmp(bangArgs, L"Resume") == 0) {
+	if (bangArgs==L"Resume") {
 		setStopped(false);
 		return;
 	}
-	if (_wcsicmp(bangArgs, L"StopResume") == 0) {
+	if (bangArgs== L"StopResume") {
 		changeStopState();
 		return;
 	}
-	std::wstring str = bangArgs;
-	if (_wcsicmp(str.substr(0, 14).c_str(), L"SetIndexOffset") == 0) {
-		std::wstring arg = str.substr(14);
-		arg = rxu::StringUtils::trimCopy(arg);
+	if (bangArgs.substr(0, 14)== L"SetIndexOffset") {
+		auto arg = bangArgs.substr(14);
+		arg = utils::StringViewUtils::trim(arg);
 		if (arg[0] == L'-' || arg[0] == L'+') {
-			const int offset = getIndexOffset() + _wtoi(arg.c_str());
+			const auto offset = getIndexOffset() + std::wcstoll(arg.data(), nullptr, 10);
 			setIndexOffset(offset);
 		} else {
-			const int offset = _wtoi(arg.c_str());
+			const auto offset = std::wcstoll(arg.data(), nullptr, 10);
 			setIndexOffset(offset);
 		}
 	}
 }
 
-const wchar_t* rxpm::PerfmonParent::_resolve(int argc, const wchar_t* argv[]) {
+const wchar_t* PerfmonParent::_resolve(int argc, const wchar_t* argv[]) {
 	if (argc < 1) {
 		return nullptr;
 	}
 
 	bufferString = argv[0];
-	rxu::StringUtils::trimInplace(bufferString);
-	rxu::StringUtils::lowerInplace(bufferString);
+	utils::StringUtils::trimInplace(bufferString);
+	utils::StringUtils::lowerInplace(bufferString);
 	if (bufferString == L"fetch size") {
 		bufferString = std::to_wstring(snapshotCurrent.getItemsCount());
 		return bufferString.c_str();
@@ -297,31 +295,32 @@ const wchar_t* rxpm::PerfmonParent::_resolve(int argc, const wchar_t* argv[]) {
 	return nullptr;
 }
 
-void rxpm::PerfmonParent::setStopped(const bool value) {
+void PerfmonParent::setStopped(const bool value) {
 	stopped = value;
 }
-void rxpm::PerfmonParent::changeStopState() {
+void PerfmonParent::changeStopState() {
 	stopped = !stopped;
 }
-void rxpm::PerfmonParent::setIndexOffset(int value) {
+void PerfmonParent::setIndexOffset(index value) {
 	instanceManager.setIndexOffset(value);
 }
-int rxpm::PerfmonParent::getIndexOffset() const {
+index PerfmonParent::getIndexOffset() const {
 	return instanceManager.getIndexOffset();
 }
 
-double rxpm::PerfmonParent::getValue(const Reference& ref, const InstanceInfo* instance, rxu::Rainmeter::Logger& logger) const {
+double PerfmonParent::getValue(const Reference& ref, const InstanceInfo* instance, utils::Rainmeter::Logger& logger) const {
 	return expressionResolver.getValue(ref, instance, logger);
 }
 
-size_t rxpm::PerfmonParent::getCountersCount() const {
+index PerfmonParent::getCountersCount() const {
 	return pdhWrapper.getCountersCount();
 }
 
-bool rxpm::PerfmonParent::canGetRaw() const {
+bool PerfmonParent::canGetRaw() const {
 	return instanceManager.canGetRaw();
 }
 
-bool rxpm::PerfmonParent::canGetFormatted() const {
+bool PerfmonParent::canGetFormatted() const {
 	return instanceManager.canGetFormatted();
 }
+

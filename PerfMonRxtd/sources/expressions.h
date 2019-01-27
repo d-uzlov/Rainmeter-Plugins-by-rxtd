@@ -8,13 +8,9 @@
  */
 
 #pragma once
-
-#include <string>
-#include <vector>
-#include <cstdint>
 #include "enums.h"
 
-namespace rxpm {
+namespace rxtd::perfmon {
 	enum class ExpressionType {
 		UNKNOWN,
 		NUMBER,
@@ -38,8 +34,8 @@ namespace rxpm {
 	};
 
 	struct Reference {
-		std::wstring name;
-		int counter = 0;
+		string name;
+		index counter = 0;
 		RollupFunction rollupFunction = RollupFunction::SUM;
 		ReferenceType type = ReferenceType::UNKNOWN;
 		bool discarded = false;
@@ -56,8 +52,8 @@ namespace rxpm {
 		ExpressionType type = ExpressionType::UNKNOWN;
 
 		void simplify();
-		int maxExpRef() const;
-		int maxRUERef() const;
+		index maxExpRef() const;
+		index maxRUERef() const;
 		void processRefs(void(*handler)(Reference&));
 	};
 
@@ -86,39 +82,39 @@ namespace rxpm {
 
 			struct Lexeme {
 				LexemeType type { LexemeType::UNKNOWN };
-				std::wstring_view value;
+				sview value;
 
 				Lexeme() = default;
-				Lexeme(LexemeType type, std::wstring_view value) :
+				Lexeme(LexemeType type, sview value) :
 					type(type),
 					value(value) { }
 			};
 
 		private:
-			std::wstring_view source;
+			sview source;
 			size_t position = 0;
 
 		public:
-			explicit Lexer(std::wstring_view source);
+			explicit Lexer(sview source);
 			Lexeme next();
-			std::wstring_view getUntil(wchar_t stop1, wchar_t stop2);
+			sview getUntil(wchar_t stop1, wchar_t stop2);
 
 		private:
 			void skipSpaces();
 			static bool isSymbol(wchar_t c);
-			std::wstring_view readWord();
-			std::wstring_view readNumber();
+			sview readWord();
+			sview readNumber();
 		};
 
-		std::wstring source { };
+		string source { };
 		Lexer lexer;
 		Lexer::Lexeme next = { };
 		ExpressionTreeNode result;
 		bool error = false;
 
 	public:
-		explicit ExpressionParser(std::wstring source);
-		explicit ExpressionParser(std::wstring_view source);
+		explicit ExpressionParser(string source);
+		explicit ExpressionParser(sview source);
 
 		void parse();
 		bool isError() const;
@@ -126,7 +122,7 @@ namespace rxpm {
 
 	private:
 		void readNext();
-		static void toUpper(std::wstring& s);
+		static void toUpper(string& s);
 		ExpressionTreeNode parseExpression();
 		ExpressionTreeNode parseTerm();
 		ExpressionTreeNode parseFactor();
@@ -134,7 +130,7 @@ namespace rxpm {
 		ExpressionTreeNode parseAtom();
 		Reference parseReference();
 
-		static int64_t parseInt(std::wstring_view string);
-		static double parseFractional(std::wstring_view string);
+		static intmax_t parseInt(sview view);
+		static double parseFractional(sview view);
 	};
 }

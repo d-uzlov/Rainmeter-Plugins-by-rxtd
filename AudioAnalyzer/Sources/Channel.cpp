@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2019 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
@@ -8,31 +8,15 @@
  */
 
 #include "Channel.h"
-#include <Windows.h>
+#include <my-windows.h>
 #include <Audioclient.h>
 #include <cwctype>
 #include "StringUtils.h"
 
+#include "undef.h"
+
 rxaa::ChannelLayoutKeeper rxaa::layoutKeeper { };
 rxaa::Channel::ChannelParser rxaa::Channel::channelParser { };
-
-// bool rxaa::Channel::ChannelParser::CaseInsensitiveComparator::
-// operator()(std::wstring_view left, std::wstring_view right) const {
-// 	if (left.length() < right.length()) {
-// 		return true;
-// 	}
-// 	if (left.length() > right.length()) {
-// 		return false;
-// 	}
-//
-// 	for (unsigned i = 0; i < left.length(); ++i) {
-// 		if (std::towlower(left[i]) < std::towlower(right[i])) {
-// 			return true;
-// 		}
-// 	}
-//
-// 	return false;
-// }
 
 rxaa::Channel::ChannelParser::ChannelParser() {
 	addElement(L"Auto", AUTO);
@@ -54,13 +38,8 @@ rxaa::Channel::ChannelParser::ChannelParser() {
 	addElement(L"SR", SIDE_RIGHT);
 }
 
-std::optional<rxaa::Channel> rxaa::Channel::ChannelParser::find(const std::wstring_view string) {
-	std::wstring stringLower { string };
-	for (auto&c : stringLower) {
-		c = std::towlower(c);
-	}
-
-	const auto iter = map.find(stringLower);
+std::optional<rxaa::Channel> rxaa::Channel::ChannelParser::find(const sview str) {
+	const auto iter = map.find(str % ciView());
 
 	if (iter == map.end()) {
 		return std::nullopt;
@@ -69,8 +48,8 @@ std::optional<rxaa::Channel> rxaa::Channel::ChannelParser::find(const std::wstri
 	return iter->second;
 }
 
-void rxaa::Channel::ChannelParser::addElement(std::wstring_view name, Channel value) {
-	map[rxu::StringUtils::copyLower(name)] = value;
+void rxaa::Channel::ChannelParser::addElement(isview name, Channel value) {
+	map[name % toString()] = value;
 }
 
 rxaa::Channel::Channel(Value value) : value(value) { }
@@ -83,11 +62,11 @@ bool rxaa::Channel::operator!=(Channel a) const {
 	return value != a.value;
 }
 
-unsigned short rxaa::Channel::toInt() const {
+index rxaa::Channel::toInt() const {
 	return value;
 }
 
-const wchar_t* rxaa::Channel::toString() const {
+const wchar_t* rxaa::Channel::technicalName() const {
 	switch (value) {
 	case FRONT_LEFT: return L"FRONT_LEFT";
 	case FRONT_RIGHT:return L"FRONT_RIGHT";
@@ -106,11 +85,11 @@ bool rxaa::operator<(Channel left, Channel right) {
 	return left.value < right.value;
 }
 
-const std::wstring& rxaa::ChannelLayout::getName() const {
+const string& rxaa::ChannelLayout::getName() const {
 	return name;
 }
 
-std::optional<unsigned> rxaa::ChannelLayout::fromChannel(Channel channel) const {
+std::optional<index> rxaa::ChannelLayout::fromChannel(Channel channel) const {
 	const auto iter = forward.find(channel);
 	if (iter == forward.end()) {
 		return std::nullopt;

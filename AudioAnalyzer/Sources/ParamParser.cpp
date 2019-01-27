@@ -8,8 +8,6 @@
  */
 
 #include "ParamParser.h"
-#include <string>
-#include <set>
 #include "sound-handlers/BlockMean.h"
 #include "sound-handlers/FftAnalyzer.h"
 #include "sound-handlers/BandAnalyzer.h"
@@ -17,21 +15,23 @@
 #include "sound-handlers/Spectrogram.h"
 #include "sound-handlers/WaveForm.h"
 
+#include "undef.h"
+
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
 
-rxaa::ParamParser::ParamParser(rxu::Rainmeter& rain) : rain(rain), log(rain.getLogger()) { }
+rxaa::ParamParser::ParamParser(utils::Rainmeter& rain) : rain(rain), log(rain.getLogger()) { }
 
 void rxaa::ParamParser::parse() {
 	handlerPatchersMap.clear();
 
-	rxu::OptionParser optionParser { };
+	utils::OptionParser optionParser { };
 	auto processingIndices = optionParser.asList(rain.readString(L"Processing"), L'|');
 	for (auto processingName : processingIndices) {
-		rxu::Rainmeter::ContextLogger cl { rain.getLogger() };
+		utils::Rainmeter::ContextLogger cl { rain.getLogger() };
 		cl.setPrefix(L"Processing {}:", processingName);
 
-		std::wstring processingOptionIndex = L"Processing"s;
+		string processingOptionIndex = L"Processing"s;
 		processingOptionIndex += L"_";
 		processingOptionIndex += processingName;
 		auto processingMap = optionParser.asMap(rain.readString(processingOptionIndex), L'|', L' ');
@@ -63,16 +63,16 @@ void rxaa::ParamParser::parse() {
 	}
 }
 
-const std::map<rxaa::Channel, std::vector<std::wstring>>& rxaa::ParamParser::getHandlers() const {
+const std::map<rxaa::Channel, std::vector<string>>& rxaa::ParamParser::getHandlers() const {
 	return handlers;
 }
 
-const std::map<std::wstring, std::function<rxaa::SoundHandler*(rxaa::SoundHandler*)>, std::less<>>&
+const std::map<string, std::function<rxaa::SoundHandler*(rxaa::SoundHandler*)>, std::less<>>&
 rxaa::ParamParser::getPatches() const {
 	return handlerPatchersMap;
 }
 
-std::set<rxaa::Channel> rxaa::ParamParser::parseChannels(rxu::OptionParser::OptionList channelsStringList) const {
+std::set<rxaa::Channel> rxaa::ParamParser::parseChannels(utils::OptionParser::OptionList channelsStringList) const {
 	std::set<Channel> set;
 
 	for (auto channel : channelsStringList) {
@@ -87,8 +87,8 @@ std::set<rxaa::Channel> rxaa::ParamParser::parseChannels(rxu::OptionParser::Opti
 	return set;
 }
 
-void rxaa::ParamParser::cacheHandlers(rxu::OptionParser::OptionList indices) {
-	rxu::OptionParser optionParser;
+void rxaa::ParamParser::cacheHandlers(utils::OptionParser::OptionList indices) {
+	utils::OptionParser optionParser;
 
 	for (auto index : indices) {
 
@@ -98,12 +98,12 @@ void rxaa::ParamParser::cacheHandlers(rxu::OptionParser::OptionList indices) {
 			continue;
 		}
 
-		std::wstring optionName = L"Handler"s;
+		string optionName = L"Handler"s;
 		optionName += L"_";
 		optionName += index;
 		auto optionMap = optionParser.asMap(rain.readString(optionName), L'|', L' ');
 
-		rxu::Rainmeter::ContextLogger cl { rain.getLogger() };
+		utils::Rainmeter::ContextLogger cl { rain.getLogger() };
 		cl.setPrefix(L"Handler {}:", index);
 		auto patcher = parseHandler(optionMap, cl);
 		if (patcher == nullptr) {
@@ -115,7 +115,7 @@ void rxaa::ParamParser::cacheHandlers(rxu::OptionParser::OptionList indices) {
 	}
 }
 
-std::function<rxaa::SoundHandler*(rxaa::SoundHandler*)> rxaa::ParamParser::parseHandler(const rxu::OptionParser::OptionMap& optionMap, rxu::Rainmeter::ContextLogger &cl) {
+std::function<rxaa::SoundHandler*(rxaa::SoundHandler*)> rxaa::ParamParser::parseHandler(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger &cl) {
 	const auto type = optionMap.get(L"type"sv).asString();
 
 	if (type.empty()) {

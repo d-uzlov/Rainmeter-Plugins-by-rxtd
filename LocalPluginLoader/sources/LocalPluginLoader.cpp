@@ -7,11 +7,12 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include <Windows.h>
 #include "RainmeterAPI.h"
 
 #include "LocalPluginLoader.h"
 #include "StringUtils.h"
+
+#include "undef.h"
 
 PLUGIN_EXPORT void Initialize(void** data, void* rm) {
 	*data = new LocalPluginLoader(rm);
@@ -40,7 +41,7 @@ PLUGIN_EXPORT void* LocalPluginLoaderRecursionPrevention_123_() {
 
 LocalPluginLoader::LocalPluginLoader(void* rm) {
 	this->rm = rm;
-	std::wstring pluginPath = RmReadPath(rm, L"PluginPath", L"");
+	string pluginPath = RmReadPath(rm, L"PluginPath", L"");
 	if (pluginPath.empty()) {
 		RmLogF(rm, LOG_ERROR, L"Plugin path must be specified");
 		return;
@@ -125,7 +126,7 @@ void LocalPluginLoader::executeBang(const wchar_t* args) const {
 	executeBangFunc(pluginData, args);
 }
 
-const wchar_t* LocalPluginLoader::solveSectionVariable(const int count, const wchar_t* argv[]) const {
+const wchar_t* LocalPluginLoader::solveSectionVariable(const int count, const wchar_t* args[]) const {
 	if (hLib == nullptr) {
 		return nullptr;
 	}
@@ -134,7 +135,7 @@ const wchar_t* LocalPluginLoader::solveSectionVariable(const int count, const wc
 		return nullptr;
 	}
 
-	const std::wstring funcName = rxu::StringUtils::trimCopy(argv[0]);
+	const auto funcName = utils::StringViewUtils::trim(args[0]) % toString();
 	// Prevent calling known API functions
 	if (funcName == L"Initialize" ||
 		funcName == L"Reload" ||
@@ -144,18 +145,18 @@ const wchar_t* LocalPluginLoader::solveSectionVariable(const int count, const wc
 		funcName == L"Finalize" ||
 		funcName == L"Update2" ||				// Old API
 		funcName == L"GetPluginAuthor" ||		// Old API
-		funcName == L"GetPluginVersion") {
-		// Old API
+		funcName == L"GetPluginVersion") {		// Old API
 		return nullptr;
 	}
 
 	std::string byteFuncName;
 	byteFuncName.resize(funcName.length());
-	for (unsigned i = 0; i < funcName.length(); ++i) {
+	for (index i = 0; i < funcName.length(); ++i) {
 		// let's only support ascii
 		const wchar_t wc = funcName[i];
 		const char c = static_cast<char>(wc);
 		if (c != wc) {
+			RmLogF(rm, LOG_ERROR, L"Can not find function '%s'", funcName.c_str());
 			return nullptr;
 		}
 		byteFuncName[i] = c;
@@ -166,5 +167,5 @@ const wchar_t* LocalPluginLoader::solveSectionVariable(const int count, const wc
 		RmLogF(rm, LOG_ERROR, L"Can not find function '%s'", funcName.c_str());
 		return nullptr;
 	}
-	return funcPtr(pluginData, count - 1, argv + 1);
+	return funcPtr(pluginData, count - 1, args + 1);
 }

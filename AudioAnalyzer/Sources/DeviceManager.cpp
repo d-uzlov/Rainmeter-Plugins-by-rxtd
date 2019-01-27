@@ -17,8 +17,7 @@
 #include "windows-wrappers/GenericComWrapper.h"
 #include "windows-wrappers/PropVariantWrapper.h"
 
-#undef min
-#undef max
+#include "undef.h"
 
 #pragma warning(disable : 4458)
 
@@ -49,7 +48,7 @@ rxaa::DeviceManager::SilentRenderer::SilentRenderer(IMMDevice *audioDeviceHandle
 		return;
 	}
 
-	rxu::WaveFormatWrapper waveFormatWrapper;
+	utils::WaveFormatWrapper waveFormatWrapper;
 	hr = audioClient->GetMixFormat(&waveFormatWrapper);
 	if (hr != S_OK) {
 		releaseHandles();
@@ -159,15 +158,15 @@ void rxaa::DeviceManager::SilentRenderer::releaseHandles() {
 
 std::variant<rxaa::DeviceManager::CaptureManager, rxaa::DeviceManager::CaptureManager::Error>
 rxaa::DeviceManager::CaptureManager::create(IMMDevice& audioDeviceHandle, bool loopback) {
-	rxu::GenericComWrapper<IAudioClient> audioClient { };
-	rxu::GenericComWrapper<IAudioCaptureClient> audioCaptureClient { };
+	utils::GenericComWrapper<IAudioClient> audioClient { };
+	utils::GenericComWrapper<IAudioCaptureClient> audioCaptureClient { };
 
 	HRESULT hr = audioDeviceHandle.Activate(IID_IAudioClient, CLSCTX_ALL, nullptr, reinterpret_cast<void**>(&audioClient));
 	if (hr != S_OK) {
 		return Error { true, L"Can't create AudioClient", hr };
 	}
 
-	rxu::WaveFormatWrapper waveFormatWrapper;
+	utils::WaveFormatWrapper waveFormatWrapper;
 	hr = audioClient->GetMixFormat(&waveFormatWrapper);
 	if (hr != S_OK) {
 		return Error { true, L"GetMixFormat() fail", hr };
@@ -229,8 +228,8 @@ bool rxaa::DeviceManager::CaptureManager::isValid() const {
 	return !isEmpty() && waveFormat.format != Format::INVALID;
 }
 
-rxu::BufferWrapper rxaa::DeviceManager::CaptureManager::readBuffer() {
-	return rxu::BufferWrapper(audioCaptureClient.getPointer());
+utils::BufferWrapper rxaa::DeviceManager::CaptureManager::readBuffer() {
+	return utils::BufferWrapper(audioCaptureClient.getPointer());
 }
 
 void rxaa::DeviceManager::CaptureManager::releaseHandles() {
@@ -241,7 +240,7 @@ void rxaa::DeviceManager::CaptureManager::releaseHandles() {
 
 
 
-rxaa::DeviceManager::DeviceManager(rxu::Rainmeter::Logger& logger, std::function<void(MyWaveFormat waveFormat)> waveFormatUpdateCallback)
+rxaa::DeviceManager::DeviceManager(utils::Rainmeter::Logger& logger, std::function<void(MyWaveFormat waveFormat)> waveFormatUpdateCallback)
 	: logger(logger), waveFormatUpdateCallback(std::move(waveFormatUpdateCallback)) {
 	// create the enumerator
 	HRESULT res = CoCreateInstance(
@@ -328,12 +327,12 @@ void rxaa::DeviceManager::readDeviceName() {
 		return;
 	}
 
-	rxu::GenericComWrapper<IPropertyStore>	props;
+	utils::GenericComWrapper<IPropertyStore>	props;
 	if (audioDeviceHandle->OpenPropertyStore(STGM_READ, &props) != S_OK) {
 		return;
 	}
 
-	rxu::PropVariantWrapper	prop;
+	utils::PropVariantWrapper	prop;
 	if (props->GetValue(PKEY_Device_FriendlyName, &prop) != S_OK) {
 		return;
 	}
@@ -479,7 +478,7 @@ bool rxaa::DeviceManager::isObjectValid() const {
 	return objectIsValid;
 }
 
-void rxaa::DeviceManager::setOptions(Port port, std::wstring deviceID) {
+void rxaa::DeviceManager::setOptions(Port port, sview deviceID) {
 	if (!objectIsValid) {
 		return;
 	}
@@ -542,22 +541,22 @@ rxaa::DeviceManager::BufferFetchResult rxaa::DeviceManager::nextBuffer() {
 	}
 }
 
-const std::wstring& rxaa::DeviceManager::getDeviceName() const {
+const string& rxaa::DeviceManager::getDeviceName() const {
 	return deviceInfo.name;
 }
 
-const std::wstring& rxaa::DeviceManager::getDeviceId() const {
+const string& rxaa::DeviceManager::getDeviceId() const {
 	return deviceInfo.id;
 }
 
-const std::wstring& rxaa::DeviceManager::getDeviceList() const {
+const string& rxaa::DeviceManager::getDeviceList() const {
 	return deviceList;
 }
 
 void rxaa::DeviceManager::updateDeviceList() {
 	deviceList.clear();
 
-	rxu::GenericComWrapper<IMMDeviceCollection> collection;
+	utils::GenericComWrapper<IMMDeviceCollection> collection;
 	if (audioEnumeratorHandle->EnumAudioEndpoints(port == Port::OUTPUT ? eRender : eCapture,
 		DEVICE_STATE_ACTIVE | DEVICE_STATE_UNPLUGGED, &collection) != S_OK) {
 		return;
@@ -570,15 +569,15 @@ void rxaa::DeviceManager::updateDeviceList() {
 	deviceList.reserve(devicesCount * 120LL);
 	bool first = true;
 
-	for (auto deviceIndex = 0u; deviceIndex < devicesCount; ++deviceIndex) {
-		rxu::GenericComWrapper<IMMDevice> device;
-		rxu::GenericComWrapper<IPropertyStore> props;
+	for (index deviceIndex = 0; deviceIndex < index(devicesCount); ++deviceIndex) {
+		utils::GenericComWrapper<IMMDevice> device;
+		utils::GenericComWrapper<IPropertyStore> props;
 		if (collection->Item(deviceIndex, &device) != S_OK || device->OpenPropertyStore(STGM_READ, &props) != S_OK) {
 			continue;
 		}
 
 		wchar_t *idCString = nullptr;
-		rxu::PropVariantWrapper	prop;
+		utils::PropVariantWrapper	prop;
 
 		if (device->GetId(&idCString) == S_OK &&
 			props->GetValue(PKEY_Device_FriendlyName, &prop) == S_OK) {
@@ -609,6 +608,6 @@ bool rxaa::DeviceManager::getDeviceStatus() const {
 	return state == DEVICE_STATE_ACTIVE;
 }
 
-const std::wstring& rxaa::DeviceManager::getDeviceFormat() const {
+const string& rxaa::DeviceManager::getDeviceFormat() const {
 	return deviceInfo.format;
 }

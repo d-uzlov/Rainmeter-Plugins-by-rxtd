@@ -11,27 +11,20 @@
 #include <optional>
 #include <unordered_map>
 #include <unordered_set>
-#include <map>
 
 namespace rxaa {
 	class Channel {
 	public:
 		class ChannelParser {
-			// class CaseInsensitiveComparator {
-			// public:
-				// typedef int is_transparent;
-				// bool operator()(std::wstring_view left, std::wstring_view right) const;
-			// };
-
-			std::map<std::wstring, Channel> map { };
+			std::map<istring, Channel, std::less<>> map { };
 
 		public:
 			ChannelParser();
 
-			std::optional<Channel> find(std::wstring_view string);
+			std::optional<Channel> find(sview string);
 
 		private:
-			void addElement(std::wstring_view name, Channel value);
+			void addElement(isview name, Channel value);
 		};
 
 		static ChannelParser channelParser;
@@ -59,8 +52,8 @@ namespace rxaa {
 
 		bool operator!=(Channel a) const;
 
-		unsigned short toInt() const;
-		const wchar_t* toString() const;
+		index toInt() const;
+		const wchar_t* technicalName() const;
 
 	private:
 		friend bool operator <(Channel left, Channel right);
@@ -82,7 +75,7 @@ namespace std {
 
 namespace rxaa {
 	class ChannelLayout {
-		std::wstring name;
+		string name;
 		std::unordered_set<Channel> channels;
 		std::unordered_map<Channel, size_t> forward;
 
@@ -90,12 +83,12 @@ namespace rxaa {
 
 	public:
 
-		const std::wstring& getName() const;
-		std::optional<unsigned> fromChannel(Channel channel) const;
+		const string& getName() const;
+		std::optional<index> fromChannel(Channel channel) const;
 		const std::unordered_set<Channel> & channelsView() const;
 
 		template<Channel::Value... channels>
-		static ChannelLayout create(std::wstring name);
+		static ChannelLayout create(string name);
 	private:
 		template<size_t N, Channel::Value nextChannel, Channel::Value... otherChannels>
 		typename std::enable_if<sizeof...(otherChannels) != 0, void>::type
@@ -105,7 +98,7 @@ namespace rxaa {
 	};
 
 	template <Channel::Value... channels>
-	ChannelLayout ChannelLayout::create(std::wstring name) {
+	ChannelLayout ChannelLayout::create(string name) {
 		ChannelLayout result;
 		result.name = name;
 		result.insert<0, channels...>();

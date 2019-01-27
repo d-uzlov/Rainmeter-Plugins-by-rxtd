@@ -8,7 +8,6 @@
  */
 
 #pragma once
-#include <cstdint>
 #include "Channel.h"
 
 namespace rxaa {
@@ -34,8 +33,8 @@ namespace rxaa {
 	};
 
 	struct MyWaveFormat {
-		uint32_t samplesPerSec = 0;
-		uint16_t channelsCount = 0;
+		index samplesPerSec = 0;
+		index channelsCount = 0;
 		Format format = Format::INVALID;
 		const ChannelLayout* channelLayout = nullptr;
 
@@ -51,7 +50,7 @@ namespace rxaa {
 		MyWaveFormat(MyWaveFormat&& other) noexcept
 			: samplesPerSec(other.samplesPerSec),
 			  channelsCount(other.channelsCount),
-			  format(std::move(other.format)),
+			  format(other.format),
 			  channelLayout(other.channelLayout) {
 			other.destroy();
 		}

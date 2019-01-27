@@ -11,7 +11,7 @@
 #include <mmeapi.h>
 #include <combaseapi.h>
 
-namespace rxu {
+namespace rxtd::utils {
 	class WaveFormatWrapper {
 		WAVEFORMATEX *ptr = nullptr;
 

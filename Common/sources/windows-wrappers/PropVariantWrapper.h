@@ -10,7 +10,7 @@
 #pragma once
 #include <combaseapi.h>
 
-namespace rxu {
+namespace rxtd::utils {
 	class PropVariantWrapper {
 		PROPVARIANT	handle { };
 

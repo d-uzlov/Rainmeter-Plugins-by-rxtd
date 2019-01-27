@@ -11,10 +11,11 @@
 #include "MathExpressionParser.h"
 #include <cwctype>
 
-#pragma warning(disable : 4244)
+#include "undef.h"
 
-std::vector<rxu::SubstringViewInfo> rxu::OptionParser::Tokenizer::parse(std::wstring_view string,
-	wchar_t delimiter) {
+using namespace utils;
+
+std::vector<SubstringViewInfo> OptionParser::Tokenizer::parse(sview string, wchar_t delimiter) {
 	if (string.empty()) {
 		return { };
 	}
@@ -28,19 +29,19 @@ std::vector<rxu::SubstringViewInfo> rxu::OptionParser::Tokenizer::parse(std::wst
 	return list;
 }
 
-void rxu::OptionParser::Tokenizer::emitToken(const size_t begin, const size_t end) {
+void OptionParser::Tokenizer::emitToken(const index begin, const index end) {
 	if (end <= begin) {
 		return;
 	}
 	tempList.emplace_back(begin, end - begin);
 }
 
-void rxu::OptionParser::Tokenizer::tokenize(std::wstring_view string, wchar_t delimiter) {
-	size_t begin = 0u;
+void OptionParser::Tokenizer::tokenize(sview string, wchar_t delimiter) {
+	index begin = 0u;
 
-	for (size_t i = 0; i < string.length(); ++i) {
+	for (index i = 0; i < string.length(); ++i) {
 		if (string[i] == delimiter) {
-			const size_t end = i;
+			const index end = i;
 			emitToken(begin, end);
 			begin = end + 1;
 		}
@@ -49,11 +50,11 @@ void rxu::OptionParser::Tokenizer::tokenize(std::wstring_view string, wchar_t de
 	emitToken(begin, string.length());
 }
 
-std::vector<rxu::SubstringViewInfo> rxu::OptionParser::Tokenizer::trimSpaces(std::wstring_view string) {
+std::vector<SubstringViewInfo> OptionParser::Tokenizer::trimSpaces(sview string) {
 	std::vector<SubstringViewInfo> list { };
 
 	for (auto& view : tempList) {
-		auto trimmed = svu::trim(string, view);
+		auto trimmed = svu::trimInfo(string, view);
 		if (trimmed.empty()) {
 			continue;
 		}
@@ -66,52 +67,45 @@ std::vector<rxu::SubstringViewInfo> rxu::OptionParser::Tokenizer::trimSpaces(std
 
 
 
-rxu::OptionParser::OptionList::OptionList() = default;
+OptionParser::OptionList::OptionList() = default;
 
-rxu::OptionParser::OptionList::OptionList(std::wstring_view string, std::vector<SubstringViewInfo>&& list) :
-	list(std::move(list)) {
-	auto data = string.data();
-	
-	source.resize(string.length() + 1);
-	for (unsigned i = 0; i < string.size(); ++i) {
-		source[i] = string[i];
-	}
-	source.back() = L'\0';
-}
+OptionParser::OptionList::OptionList(sview view, std::vector<SubstringViewInfo>&& list) :
+	source(view.begin(), view.end() + 1),
+	list(std::move(list)) { }
 
-std::pair<std::vector<wchar_t>, std::vector<rxu::SubstringViewInfo>> rxu::OptionParser::OptionList::consume() && {
+std::pair<std::vector<wchar_t>, std::vector<SubstringViewInfo>> OptionParser::OptionList::consume() && {
 	return { std::move(source), std::move(list) };
 }
 
-size_t rxu::OptionParser::OptionList::size() const {
+index OptionParser::OptionList::size() const {
 	return list.size();
 }
 
-bool rxu::OptionParser::OptionList::empty() const {
+bool OptionParser::OptionList::empty() const {
 	return list.empty();
 }
 
-std::wstring_view rxu::OptionParser::OptionList::get(size_t index) const {
+sview OptionParser::OptionList::get(index index) const {
 	return list[index].makeView(source);
 }
 
-rxu::OptionParser::Option rxu::OptionParser::OptionList::getOption(size_t index) const {
+OptionParser::Option OptionParser::OptionList::getOption(index index) const {
 	return Option { list[index].makeView(source) };
 }
 
 
-rxu::OptionParser::Option::Option() = default;
+OptionParser::Option::Option() = default;
 
-rxu::OptionParser::Option::Option(std::wstring_view view) : view(view) { }
+OptionParser::Option::Option(sview view) : view(view) { }
 
-std::wstring_view rxu::OptionParser::Option::asString(std::wstring_view defaultValue) const {
+sview OptionParser::Option::asString(sview defaultValue) const {
 	if (view.empty()) {
 		return defaultValue;
 	}
 	return view;
 }
 
-double rxu::OptionParser::Option::asFloat(double defaultValue) const {
+double OptionParser::Option::asFloat(double defaultValue) const {
 	if (view.empty()) {
 		return defaultValue;
 	}
@@ -119,15 +113,7 @@ double rxu::OptionParser::Option::asFloat(double defaultValue) const {
 	return parseNumber(view);
 }
 
-int64_t rxu::OptionParser::Option::asInt(int64_t defaultValue) const {
-	return asFloat(defaultValue);
-}
-
-bool rxu::OptionParser::Option::asBool(bool defaultValue) const {
-	return asFloat(defaultValue ? 1.0 : 0.0) != 0.0;
-}
-
-rxu::Color rxu::OptionParser::Option::asColor(Color defaultValue) const {
+Color OptionParser::Option::asColor(Color defaultValue) const {
 	if (view.empty()) {
 		return defaultValue;
 	}
@@ -149,7 +135,7 @@ rxu::Color rxu::OptionParser::Option::asColor(Color defaultValue) const {
 	return { values[0], values[1], values[2], values[3] };
 }
 
-double rxu::OptionParser::Option::parseNumber(std::wstring_view source) {
+double OptionParser::Option::parseNumber(sview source) {
 	MathExpressionParser parser(source);
 
 	parser.parse();
@@ -170,44 +156,37 @@ double rxu::OptionParser::Option::parseNumber(std::wstring_view source) {
 
 
 
-rxu::OptionParser::OptionMap::OptionMap() = default;
+OptionParser::OptionMap::OptionMap() = default;
 
-rxu::OptionParser::OptionMap::OptionMap(std::wstring&& string,
+OptionParser::OptionMap::OptionMap(string&& string,
 	std::map<SubstringViewInfo, SubstringViewInfo>&& paramsInfo) :
-	stringOriginal(std::move(string)),
+	source(std::move(string)),
 	paramsInfo(std::move(paramsInfo)) {
-	stringLower = stringOriginal;
-	for (auto&c : stringLower) {
-		c = std::towlower(c);
-	}
 
 	fillParams();
 }
 
-rxu::OptionParser::OptionMap::~OptionMap() = default;
+OptionParser::OptionMap::~OptionMap() = default;
 
-rxu::OptionParser::OptionMap::OptionMap(const OptionMap& other) :
-	stringLower(other.stringLower),
-	stringOriginal(other.stringOriginal),
+OptionParser::OptionMap::OptionMap(const OptionMap& other) :
+	source(other.source),
 	paramsInfo(other.paramsInfo) {
 	fillParams();
 }
 
-rxu::OptionParser::OptionMap::OptionMap(OptionMap&& other) noexcept :
-	stringLower(std::move(other.stringLower)),
-	stringOriginal(std::move(other.stringOriginal)),
+OptionParser::OptionMap::OptionMap(OptionMap&& other) noexcept :
+	source(std::move(other.source)),
 	paramsInfo(std::move(other.paramsInfo)) {
 	other.params.clear();
 
 	fillParams();
 }
 
-rxu::OptionParser::OptionMap& rxu::OptionParser::OptionMap::operator=(const OptionMap& other) {
+OptionParser::OptionMap& OptionParser::OptionMap::operator=(const OptionMap& other) {
 	if (this == &other)
 		return *this;
 
-	stringLower = other.stringLower;
-	stringOriginal = other.stringOriginal;
+	source = other.source;
 	paramsInfo = other.paramsInfo;
 
 	fillParams();
@@ -215,12 +194,11 @@ rxu::OptionParser::OptionMap& rxu::OptionParser::OptionMap::operator=(const Opti
 	return *this;
 }
 
-rxu::OptionParser::OptionMap& rxu::OptionParser::OptionMap::operator=(OptionMap&& other) noexcept {
+OptionParser::OptionMap& OptionParser::OptionMap::operator=(OptionMap&& other) noexcept {
 	if (this == &other)
 		return *this;
 
-	stringLower = std::move(other.stringLower);
-	stringOriginal = std::move(other.stringOriginal);
+	source = std::move(other.source);
 	paramsInfo = std::move(other.paramsInfo);
 	other.params.clear();
 
@@ -229,61 +207,61 @@ rxu::OptionParser::OptionMap& rxu::OptionParser::OptionMap::operator=(OptionMap&
 	return *this;
 }
 
-rxu::OptionParser::Option rxu::OptionParser::OptionMap::get(std::wstring_view name) const {
-	auto viewInfoOpt = find(name);
-	return viewInfoOpt.has_value() ? Option { viewInfoOpt.value().makeView(stringLower) } : Option { };
+OptionParser::Option OptionParser::OptionMap::get(sview name) const {
+	return get(name % ciView());
 }
 
-rxu::OptionParser::Option rxu::OptionParser::OptionMap::getCS(std::wstring_view name) const {
+OptionParser::Option OptionParser::OptionMap::get(isview name) const {
 	auto viewInfoOpt = find(name);
-	return viewInfoOpt.has_value() ? Option { viewInfoOpt.value().makeView(stringOriginal) } : Option { };
+	return viewInfoOpt.has_value() ? Option { viewInfoOpt.value().makeView(source) } : Option { };
 }
 
-const std::map<std::wstring_view, rxu::SubstringViewInfo>& rxu::OptionParser::OptionMap::getParams() const {
+OptionParser::Option OptionParser::OptionMap::get(const wchar_t* name) const {
+	return get(isview { name });
+}
+
+const std::map<isview, SubstringViewInfo>& OptionParser::OptionMap::getParams() const {
 	return params;
 }
 
-void rxu::OptionParser::OptionMap::fillParams() {
+void OptionParser::OptionMap::fillParams() {
 	params.clear();
 	for (auto& iter : paramsInfo) {
-		params[iter.first.makeView(stringLower)] = iter.second;
+		params[iter.first.makeView(source) % ciView()] = iter.second;
 	}
 }
 
-std::optional<rxu::SubstringViewInfo> rxu::OptionParser::OptionMap::find(std::wstring_view name) const {
-	nameBuffer = name;
-	StringUtils::lowerInplace(nameBuffer);
-
-	const auto iter = params.find(nameBuffer);
+std::optional<SubstringViewInfo> OptionParser::OptionMap::find(isview name) const {
+	const auto iter = params.find(name);
 	if (iter == params.end()) {
 		return std::nullopt;
 	}
 	return iter->second;
 }
 
-rxu::OptionParser::OptionList rxu::OptionParser::asList(std::wstring_view string, wchar_t delimiter) {
+OptionParser::OptionList OptionParser::asList(sview string, wchar_t delimiter) {
 	auto list = tokenizer.parse(string, delimiter);
 	return { string, std::move(list) };
 }
 
-rxu::OptionParser::OptionMap rxu::OptionParser::asMap(std::wstring string, wchar_t optionDelimiter, wchar_t nameDelimiter) {
+OptionParser::OptionMap OptionParser::asMap(string string, wchar_t optionDelimiter, wchar_t nameDelimiter) {
 	auto list = tokenizer.parse(string, optionDelimiter);
 
 	std::map<SubstringViewInfo, SubstringViewInfo> paramsInfo { };
 	for (const auto &viewInfo : list) {
 		const auto delimiterPlace = viewInfo.makeView(string).find_first_of(nameDelimiter);
-		if (delimiterPlace == std::wstring_view::npos) {
+		if (delimiterPlace == sview::npos) {
 			// tokenizer.parse is guarantied to return non-empty views
 			paramsInfo[viewInfo] = { };
 			continue;
 		}
 
-		auto name = svu::trim(string, viewInfo.substr(0, delimiterPlace));
+		auto name = svu::trimInfo(string, viewInfo.substr(0, delimiterPlace));
 		if (name.empty()) {
 			continue;
 		}
 
-		auto value = svu::trim(string, viewInfo.substr(delimiterPlace + 1));
+		auto value = svu::trimInfo(string, viewInfo.substr(delimiterPlace + 1));
 
 		paramsInfo[name] = value;
 	}
@@ -291,10 +269,10 @@ rxu::OptionParser::OptionMap rxu::OptionParser::asMap(std::wstring string, wchar
 	return { std::move(string), std::move(paramsInfo) };
 }
 
-rxu::OptionParser::OptionMap rxu::OptionParser::asMap(std::wstring_view string, wchar_t optionDelimiter, wchar_t nameDelimiter) {
-	return asMap(std::wstring { string }, optionDelimiter, nameDelimiter);
+OptionParser::OptionMap OptionParser::asMap(sview view, wchar_t optionDelimiter, wchar_t nameDelimiter) {
+	return asMap(string { view }, optionDelimiter, nameDelimiter);
 }
 
-rxu::OptionParser::OptionMap rxu::OptionParser::asMap(const wchar_t* string, wchar_t optionDelimiter, wchar_t nameDelimiter) {
-	return asMap(std::wstring { string }, optionDelimiter, nameDelimiter);
+OptionParser::OptionMap OptionParser::asMap(const wchar_t* str, wchar_t optionDelimiter, wchar_t nameDelimiter) {
+	return asMap(string { str }, optionDelimiter, nameDelimiter);
 }

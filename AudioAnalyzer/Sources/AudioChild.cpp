@@ -11,29 +11,28 @@
 #include <algorithm>
 #include "OptionParser.h"
 
-#undef max
-#undef min
+#include "undef.h"
 
 #pragma warning (disable : 4267)
 
-rxaa::AudioChild::AudioChild(rxu::Rainmeter&& _rain) : TypeHolder(std::move(_rain)) {
-	const wchar_t *parentName = rain.readString(L"Parent");
-	if (_wcsicmp(parentName, L"") == 0) {
+rxaa::AudioChild::AudioChild(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rain)) {
+	const auto parentName = rain.readString(L"Parent") % ciView();
+	if (parentName == L"") {
 		log.error(L"Parent must be specified");
-		setMeasureState(rxu::MeasureState::BROKEN);
+		setMeasureState(utils::MeasureState::BROKEN);
 		return;
 	}
 	parent = AudioParent::findInstance(rain.getSkin(), parentName);
 
 	if (parent == nullptr) {
 		log.error(L"Parent '{}' not found", parentName);
-		setMeasureState(rxu::MeasureState::BROKEN);
+		setMeasureState(utils::MeasureState::BROKEN);
 		return;
 	}
 
-	if (parent->getState() == rxu::MeasureState::BROKEN) {
+	if (parent->getState() == utils::MeasureState::BROKEN) {
 		log.error(L"Parent '{}' is broken", parentName);
-		setMeasureState(rxu::MeasureState::BROKEN);
+		setMeasureState(utils::MeasureState::BROKEN);
 		return;
 	}
 }
@@ -41,9 +40,9 @@ rxaa::AudioChild::AudioChild(rxu::Rainmeter&& _rain) : TypeHolder(std::move(_rai
 rxaa::AudioChild::~AudioChild() { }
 
 void rxaa::AudioChild::_reload() {
-	const wchar_t *channelStr = rain.readString(L"Channel");
+	const auto channelStr = rain.readString(L"Channel");
 
-	if (_wcsicmp(channelStr, L"") == 0) {
+	if (channelStr == L"") {
 		channel = Channel::AUTO;
 	} else {
 		auto channelOpt = Channel::channelParser.find(channelStr);
@@ -62,15 +61,15 @@ void rxaa::AudioChild::_reload() {
 	}
 	clamp = rain.readBool(L"Clamp01", true);
 
-	const auto stringValueStr = rain.readString(L"StringValue");
-	if (_wcsicmp(stringValueStr, L"") == 0 || _wcsicmp(stringValueStr, L"Number") == 0) {
+	const auto stringValueStr = rain.readString(L"StringValue") % ciView();
+	if (stringValueStr == L"" || stringValueStr == L"Number") {
 		stringValueType = StringValue::NUMBER;
-	} else if (_wcsicmp(stringValueStr, L"Info") == 0) {
+	} else if (stringValueStr == L"Info") {
 		stringValueType = StringValue::INFO;
 		const auto infoStr = rain.readString(L"InfoRequest");
-		
-		auto requestList = rxu::OptionParser {}.asList(infoStr, L',');;
-		
+
+		auto requestList = utils::OptionParser {}.asList(infoStr, L',');;
+
 		infoRequest.clear();
 		for (auto view : requestList) {
 			infoRequest.emplace_back(view);
@@ -87,12 +86,12 @@ void rxaa::AudioChild::_reload() {
 
 	// TODO default number transform in handlers
 
-	const wchar_t *typeStr = rain.readString(L"NumberTransform");
-	if (_wcsicmp(typeStr, L"") == 0 || _wcsicmp(typeStr, L"Linear") == 0) {
+	const auto typeStr = rain.readString(L"NumberTransform") % ciView();
+	if (typeStr == L"" || typeStr == L"Linear") {
 		numberTransform = NumberTransform::LINEAR;
-	} else if (_wcsicmp(typeStr, L"DB") == 0) {
+	} else if (typeStr == L"DB") {
 		numberTransform = NumberTransform::DB;
-	} else if (_wcsicmp(typeStr, L"None") == 0) {
+	} else if (typeStr == L"None") {
 		numberTransform = NumberTransform::NONE;
 	} else {
 		log.error(L"Invalid NumberTransform '{}', set to Linear.", typeStr);
@@ -130,7 +129,7 @@ std::tuple<double, const wchar_t*> rxaa::AudioChild::_update() {
 
 	default:
 		log.error(L"Unexpected numberTransform: '{}'", numberTransform);
-		setMeasureState(rxu::MeasureState::BROKEN);
+		setMeasureState(utils::MeasureState::BROKEN);
 		result = 0.0;
 		break;
 	}

@@ -8,24 +8,21 @@
  */
 
 #pragma once
-#include <vector>
-#include <string>
-#include <string_view>
 #include <optional>
 #include <iomanip>
 
-namespace rxu {
+namespace rxtd::utils {
 	using namespace std::literals::string_view_literals;
 
 	template<typename E>
-	typename std::enable_if<std::is_enum<E>::value, std::wstring_view>::type
+	typename std::enable_if<std::is_enum<E>::value, sview>::type
 		getEnumName(E value) {
 		return L"<unknown enum>"sv;
 	}
 
 	template <typename E>
 	typename std::enable_if<std::is_enum<E>::value, void>::type
-		writeEnum(std::wostream& stream, const E& e, std::wstring_view options) {
+		writeEnum(std::wostream& stream, const E& e, sview options) {
 		if (options == L"name"sv) {
 			stream << getEnumName(e);
 		} else {
@@ -35,7 +32,7 @@ namespace rxu {
 
 	template <typename T>
 	typename std::enable_if<std::is_integral<T>::value, void>::type
-		writeIntegral(std::wostream& stream, const T& t, std::wstring_view options) {
+		writeIntegral(std::wostream& stream, T t, sview options) {
 		if (options == L"error"sv) {
 			stream << L"0x"sv;
 			stream << std::setfill(L'0') << std::setw(sizeof(T) * 2) << std::hex;
@@ -47,16 +44,16 @@ namespace rxu {
 	}
 
 	template <>
-	void writeIntegral(std::wostream& stream, const bool& t, std::wstring_view options);
+	void writeIntegral(std::wostream& stream, bool t, sview options);
 
 	template <typename F>
 	typename std::enable_if<std::is_floating_point<F>::value, void>::type
-		writeFloat(std::wostream& stream, const F& t, std::wstring_view options) {
+		writeFloat(std::wostream& stream, const F& t, sview options) {
 		stream << t;
 	}
 
 	template <typename O>
-	void writeObject(std::wostream& stream, const O& t, std::wstring_view options) {
+	void writeObject(std::wostream& stream, const O& t, sview options) {
 		stream << t;
 	}
 
@@ -75,7 +72,7 @@ namespace rxu {
 	 *		"error"		— print zero-padded value with "0x" prefix
 	 *		""			— print number as is
 	 *	2. Enums:
-	 *		"name"		— use user-provided function "std::wstring_view getEnumName(Enum value)"
+	 *		"name"		— use user-provided function "sview getEnumName(Enum value)"
 	 *		""			— cast enum to number
 	 *	3. Bool:
 	 *		"number"	— cast bool to int
@@ -153,7 +150,7 @@ namespace rxu {
 		void writeUnlisted();
 
 		template <typename T>
-		void writeType(std::wostream& stream, const T& t, std::wstring_view options) {
+		void writeType(std::wostream& stream, const T& t, sview options) {
 			if constexpr (std::is_enum<T>::value) {
 				writeEnum(stream, t, options);
 			} else if constexpr (std::is_integral<T>::value) {
@@ -182,7 +179,7 @@ namespace rxu {
 	void BufferPrinter::writeToStream(const T& t, const Args&... args) {
 
 		auto begin = formatString;
-		std::optional<std::wstring_view> option;
+		std::optional<sview> option;
 
 		std::wostream stream = std::wostream(&buffer);
 
@@ -200,7 +197,7 @@ namespace rxu {
 			}
 
 			if (current == L'{') {
-				stream << std::wstring_view(begin, formatString - begin);
+				stream << sview(begin, formatString - begin);
 
 				formatString++;
 				begin = formatString;
@@ -226,7 +223,7 @@ namespace rxu {
 					formatString++;
 				}
 
-				const auto view = std::wstring_view(begin, end - begin);
+				const auto view = sview(begin, end - begin);
 
 				if (view == L"!"sv) {
 					stream << L'{';

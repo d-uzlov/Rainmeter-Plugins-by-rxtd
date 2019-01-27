@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2018-2019 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
@@ -9,23 +9,27 @@
 
 #include "ExpressionResolver.h"
 
-rxpm::ExpressionResolver::ExpressionResolver(rxu::Rainmeter::Logger& log, const InstanceManager& instanceManager) :
+#include "undef.h"
+
+using namespace perfmon;
+
+ExpressionResolver::ExpressionResolver(utils::Rainmeter::Logger& log, const InstanceManager& instanceManager) :
 	log(log),
 	instanceManager(instanceManager) { }
 
-unsigned rxpm::ExpressionResolver::getExpressionsCount() const {
+unsigned ExpressionResolver::getExpressionsCount() const {
 	return expressions.size();
 }
 
-unsigned rxpm::ExpressionResolver::getRollupExpressionsCount() const {
+unsigned ExpressionResolver::getRollupExpressionsCount() const {
 	return rollupExpressions.size();
 }
 
-void rxpm::ExpressionResolver::resetCaches() {
+void ExpressionResolver::resetCaches() {
 	totalsCache.clear();
 }
 
-double rxpm::ExpressionResolver::getValue(const Reference& ref, const InstanceInfo* instance, rxu::Rainmeter::Logger& logger) const {
+double ExpressionResolver::getValue(const Reference& ref, const InstanceInfo* instance, utils::Rainmeter::Logger& logger) const {
 	const auto rollup = instanceManager.isRollup();
 
 	switch (ref.type) {
@@ -123,8 +127,8 @@ double rxpm::ExpressionResolver::getValue(const Reference& ref, const InstanceIn
 	}
 }
 
-void rxpm::ExpressionResolver::setExpressions(rxu::OptionParser::OptionList expressionsList,
-	rxu::OptionParser::OptionList rollupExpressionsList) {
+void ExpressionResolver::setExpressions(utils::OptionParser::OptionList expressionsList,
+	utils::OptionParser::OptionList rollupExpressionsList) {
 	expressions.resize(expressionsList.size());
 	for (unsigned i = 0; i < expressionsList.size(); ++i) {
 		ExpressionParser parser(expressionsList.get(i));
@@ -169,7 +173,7 @@ void rxpm::ExpressionResolver::setExpressions(rxu::OptionParser::OptionList expr
 	}
 
 	rollupExpressions.resize(rollupExpressionsList.size());
-	for (unsigned i = 0; static_cast<std::vector<std::wstring>::size_type>(i) < rollupExpressionsList.size(); ++i) {
+	for (unsigned i = 0; static_cast<std::vector<string>::size_type>(i) < rollupExpressionsList.size(); ++i) {
 		ExpressionParser parser(rollupExpressionsList.get(i));
 		parser.parse();
 		if (parser.isError()) {
@@ -202,7 +206,7 @@ void rxpm::ExpressionResolver::setExpressions(rxu::OptionParser::OptionList expr
 			expressions[i] = node;
 			continue;
 		}
-		expression.processRefs([](rxpm::Reference& ref) {
+		expression.processRefs([](Reference& ref) {
 			if (!ref.useOrigName) {
 				CharUpperW(&ref.name[0]);
 			}
@@ -211,42 +215,42 @@ void rxpm::ExpressionResolver::setExpressions(rxu::OptionParser::OptionList expr
 	}
 }
 
-double rxpm::ExpressionResolver::getRaw(unsigned counterIndex, Indices originalIndexes) const {
+double ExpressionResolver::getRaw(index counterIndex, Indices originalIndexes) const {
 	return static_cast<double>(instanceManager.calculateRaw(counterIndex, originalIndexes));
 }
 
-double rxpm::ExpressionResolver::getFormatted(unsigned counterIndex, Indices originalIndexes) const {
+double ExpressionResolver::getFormatted(index counterIndex, Indices originalIndexes) const {
 	return instanceManager.calculateFormatted(counterIndex, originalIndexes);
 }
 
-double rxpm::ExpressionResolver::getRawRollup(const RollupFunction rollupType, const unsigned counterIndex,
+double ExpressionResolver::getRawRollup(RollupFunction rollupType, index counterIndex,
 	const InstanceInfo& instance) const {
 	return calculateRollup<&ExpressionResolver::getRaw>(rollupType, counterIndex, instance);
 }
 
-double rxpm::ExpressionResolver::getFormattedRollup(const RollupFunction rollupType, const unsigned counterIndex,
+double ExpressionResolver::getFormattedRollup(RollupFunction rollupType, index counterIndex,
 	const InstanceInfo& instance) const {
 	return calculateRollup<&ExpressionResolver::getFormatted>(rollupType, counterIndex, instance);
 }
 
-double rxpm::ExpressionResolver::getExpressionRollup(const RollupFunction rollupType, const unsigned expressionIndex,
+double ExpressionResolver::getExpressionRollup(RollupFunction rollupType, index expressionIndex,
 	const InstanceInfo& instance) const {
 	expressionCurrentItem = &instance;
 	return calculateExpressionRollup(expressions[expressionIndex], rollupType);
 }
 
-double rxpm::ExpressionResolver::getExpression(const unsigned expressionIndex, const InstanceInfo& instance) const {
+double ExpressionResolver::getExpression(const unsigned expressionIndex, const InstanceInfo& instance) const {
 	expressionCurrentItem = &instance;
 	return calculateExpression<&ExpressionResolver::resolveReference>(expressions[expressionIndex]);
 }
 
-double rxpm::ExpressionResolver::getRollupExpression(const unsigned expressionIndex,
+double ExpressionResolver::getRollupExpression(const unsigned expressionIndex,
 	const InstanceInfo& instance) const {
 	expressionCurrentItem = &instance;
 	return calculateExpression<&ExpressionResolver::resolveRollupReference>(rollupExpressions[expressionIndex]);
 }
 
-double rxpm::ExpressionResolver::calculateTotal(const TotalSource source, const unsigned counterIndex, const RollupFunction rollupFunction) const {
+double ExpressionResolver::calculateTotal(const TotalSource source, const unsigned counterIndex, const RollupFunction rollupFunction) const {
 	switch (source) {
 	case TotalSource::RAW_COUNTER: return calculateTotal<&ExpressionResolver::getRaw>(rollupFunction, counterIndex);
 	case TotalSource::FORMATTED_COUNTER: return calculateTotal<&ExpressionResolver::getFormatted>(
@@ -261,11 +265,11 @@ double rxpm::ExpressionResolver::calculateTotal(const TotalSource source, const 
 	}
 }
 
-const rxpm::InstanceInfo* rxpm::ExpressionResolver::findAndCacheName(const Reference& ref, const bool useRollup) const {
+const InstanceInfo* ExpressionResolver::findAndCacheName(const Reference& ref, const bool useRollup) const {
 	return instanceManager.findInstanceByName(ref, useRollup); // TODO remove function
 }
 
-double rxpm::ExpressionResolver::calculateAndCacheTotal(const TotalSource source, const unsigned counterIndex, RollupFunction rollupFunction) const {
+double ExpressionResolver::calculateAndCacheTotal(TotalSource source, index counterIndex, RollupFunction rollupFunction) const {
 	auto &totalOpt = totalsCache[{ source, counterIndex, rollupFunction }];
 	if (totalOpt.has_value()) {
 		// already calculated
@@ -277,7 +281,7 @@ double rxpm::ExpressionResolver::calculateAndCacheTotal(const TotalSource source
 	return totalOpt.value();
 }
 
-double rxpm::ExpressionResolver::resolveReference(const Reference& ref) const {
+double ExpressionResolver::resolveReference(const Reference& ref) const {
 	if (ref.type == ReferenceType::UNKNOWN) {
 		log.error(L"unknown reference being solved");
 		return 0.0;
@@ -340,7 +344,7 @@ double rxpm::ExpressionResolver::resolveReference(const Reference& ref) const {
 	return 0.0;
 }
 
-double rxpm::ExpressionResolver::calculateExpressionRollup(const ExpressionTreeNode& expression,
+double ExpressionResolver::calculateExpressionRollup(const ExpressionTreeNode& expression,
 	const RollupFunction rollupFunction) const {
 	const InstanceInfo& instance = *expressionCurrentItem;
 	InstanceInfo tmp; // we only need InstanceKeyItem::originalIndexes member to solve usual expressions 
@@ -394,7 +398,7 @@ double rxpm::ExpressionResolver::calculateExpressionRollup(const ExpressionTreeN
 	return value;
 }
 
-double rxpm::ExpressionResolver::calculateCountTotal(const RollupFunction rollupFunction) const {
+double ExpressionResolver::calculateCountTotal(const RollupFunction rollupFunction) const {
 	switch (rollupFunction) {
 	case RollupFunction::SUM: return static_cast<double>(instanceManager.getInstances().size());
 	case RollupFunction::AVERAGE:
@@ -407,7 +411,7 @@ double rxpm::ExpressionResolver::calculateCountTotal(const RollupFunction rollup
 	}
 }
 
-double rxpm::ExpressionResolver::calculateRollupCountTotal(const RollupFunction rollupFunction) const {
+double ExpressionResolver::calculateRollupCountTotal(const RollupFunction rollupFunction) const {
 	switch (rollupFunction) {
 	case RollupFunction::SUM: return static_cast<double>(instanceManager.getRollupInstances().size());
 	case RollupFunction::AVERAGE: return static_cast<double>(instanceManager.getInstances().size()) / instanceManager
@@ -442,7 +446,7 @@ double rxpm::ExpressionResolver::calculateRollupCountTotal(const RollupFunction 
 	}
 }
 
-double rxpm::ExpressionResolver::resolveRollupReference(const Reference& ref) const {
+double ExpressionResolver::resolveRollupReference(const Reference& ref) const {
 	if (ref.type == ReferenceType::UNKNOWN) {
 		log.error(L"unknown reference being solved");
 		return 0.0;
@@ -522,10 +526,8 @@ double rxpm::ExpressionResolver::resolveRollupReference(const Reference& ref) co
 	return 0.0;
 }
 
-template <double(rxpm::ExpressionResolver::* calculateValueFunction)(unsigned counterIndex, rxpm::Indices
-	originalIndexes) const>
-	double rxpm::ExpressionResolver::calculateRollup(const RollupFunction rollupType, const unsigned counterIndex,
-		const InstanceInfo& instance) const {
+template <double(ExpressionResolver::* calculateValueFunction)(index counterIndex, Indices originalIndexes) const>
+double ExpressionResolver::calculateRollup(RollupFunction rollupType, index counterIndex, const InstanceInfo& instance) const {
 	const double firstValue = (this->*calculateValueFunction)(counterIndex, instance.indices);
 	const auto& indexes = instance.vectorIndices;
 
@@ -569,8 +571,8 @@ template <double(rxpm::ExpressionResolver::* calculateValueFunction)(unsigned co
 	}
 }
 
-template <double (rxpm::ExpressionResolver::* calculateValueFunction)(unsigned counterIndex, rxpm::Indices originalIndexes) const>
-double rxpm::ExpressionResolver::calculateTotal(const RollupFunction rollupType, const unsigned counterIndex) const {
+template <double (ExpressionResolver::* calculateValueFunction)(index counterIndex, Indices originalIndexes) const>
+double ExpressionResolver::calculateTotal(RollupFunction rollupType, index counterIndex) const {
 	auto& vectorInstanceKeys = instanceManager.getInstances();
 
 	switch (rollupType) {
@@ -615,8 +617,8 @@ double rxpm::ExpressionResolver::calculateTotal(const RollupFunction rollupType,
 	}
 }
 
-template <double(rxpm::ExpressionResolver::* calculateExpressionFunction)(const rxpm::ExpressionTreeNode& expression)const>
-double rxpm::ExpressionResolver::calculateExpressionTotal(const RollupFunction rollupType,
+template <double(ExpressionResolver::* calculateExpressionFunction)(const ExpressionTreeNode& expression)const>
+double ExpressionResolver::calculateExpressionTotal(const RollupFunction rollupType,
 	const ExpressionTreeNode& expression, bool rollup) const {
 	auto& vectorInstanceKeys = rollup ? instanceManager.getRollupInstances() : instanceManager.getInstances();
 
@@ -667,8 +669,8 @@ double rxpm::ExpressionResolver::calculateExpressionTotal(const RollupFunction r
 	}
 }
 
-template <double(rxpm::ExpressionResolver::* resolveReferenceFunction)(const rxpm::Reference& ref) const>
-double rxpm::ExpressionResolver::calculateExpression(const ExpressionTreeNode& expression) const {
+template <double(ExpressionResolver::* resolveReferenceFunction)(const Reference& ref) const>
+double ExpressionResolver::calculateExpression(const ExpressionTreeNode& expression) const {
 	switch (expression.type) {
 	case ExpressionType::UNKNOWN:
 		log.error(L"unknown expression being solved");
@@ -725,6 +727,6 @@ double rxpm::ExpressionResolver::calculateExpression(const ExpressionTreeNode& e
 	}
 }
 
-bool rxpm::ExpressionResolver::indexIsInBounds(int index, int min, int max) {
-	return index >= min && index <= max;
+bool ExpressionResolver::indexIsInBounds(index ind, index min, index max) {
+	return ind >= min && ind <= max;
 }

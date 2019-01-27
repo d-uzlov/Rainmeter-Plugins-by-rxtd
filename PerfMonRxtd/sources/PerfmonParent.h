@@ -62,18 +62,13 @@
 #include "InstanceManager.h"
 #include "ExpressionResolver.h"
 
-#undef max
-#undef min
-#undef IN
-#undef OUT
+namespace rxtd::perfmon {
 
-namespace rxpm {
-
-	class PerfmonParent : public rxu::TypeHolder {
+	class PerfmonParent : public utils::TypeHolder {
 	private:
-		static rxu::ParentManager<PerfmonParent> parentManager;
+		static utils::ParentManager<PerfmonParent> parentManager;
 
-		std::wstring objectName;
+		string objectName;
 
 		bool stopped = false;
 		bool needUpdate = true;
@@ -90,11 +85,11 @@ namespace rxpm {
 
 		ExpressionResolver expressionResolver { log, instanceManager };
 
-		std::wstring bufferString;
-		rxu::OptionParser optionParser;
+		string bufferString;
+		utils::OptionParser optionParser;
 
 	public:
-		explicit PerfmonParent(rxu::Rainmeter&& _rain);
+		explicit PerfmonParent(utils::Rainmeter&& _rain);
 		~PerfmonParent();
 		/** This class is non copyable */
 		PerfmonParent(const PerfmonParent& other) = delete;
@@ -102,7 +97,7 @@ namespace rxpm {
 		PerfmonParent& operator=(const PerfmonParent& other) = delete;
 		PerfmonParent& operator=(PerfmonParent&& other) = delete;
 
-		static PerfmonParent* findInstance(rxu::Rainmeter::Skin skin, const wchar_t * measureName);
+		static PerfmonParent* findInstance(utils::Rainmeter::Skin skin, isview measureName);
 
 	protected:
 		void _reload() override;
@@ -117,21 +112,21 @@ namespace rxpm {
 		void setStopped(bool value);
 
 		void changeStopState();
-		void setIndexOffset(int value);
-		int getIndexOffset() const;
+		void setIndexOffset(index value);
+		index getIndexOffset() const;
 
-		double getValue(const Reference& ref, const InstanceInfo* instance, rxu::Rainmeter::Logger& logger) const;
+		double getValue(const Reference& ref, const InstanceInfo* instance, utils::Rainmeter::Logger& logger) const;
 
-		size_t getCountersCount() const;
+		index getCountersCount() const;
 
 		/** We only need one snapshot for raw values, but if sync is enabled then we'll wait for two snapshots */
 		bool canGetRaw() const;
 		/** We need two complete snapshots for formatted values values */
 		bool canGetFormatted() const;
 		
-		const InstanceInfo* findInstance(const Reference& ref, unsigned long sortedIndex) const;
+		const InstanceInfo* findInstance(const Reference& ref, index sortedIndex) const;
 		
-		std::wstring_view getInstanceName(const InstanceInfo& instance, ResultString stringType) const;
+		sview getInstanceName(const InstanceInfo& instance, ResultString stringType) const;
 	};
 
 }

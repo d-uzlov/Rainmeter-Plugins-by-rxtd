@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include <Windows.h>
+#include <my-windows.h>
 
 class LocalPluginLoader {
 public:

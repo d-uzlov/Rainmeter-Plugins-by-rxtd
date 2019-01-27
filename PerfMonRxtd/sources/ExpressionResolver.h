@@ -8,17 +8,11 @@
  */
 
 #pragma once
-#include <vector>
 #include <unordered_map>
 #include "InstanceManager.h"
 #include "expressions.h"
 
-#undef min
-#undef max
-#undef IN
-#undef OUT
-
-namespace rxpm {
+namespace rxtd::perfmon {
 	class ExpressionResolver {
 	public:
 		enum class SortBy {
@@ -43,7 +37,7 @@ namespace rxpm {
 			ROLLUP_EXPRESSION,
 		};
 
-		rxu::Rainmeter::Logger &log;
+		utils::Rainmeter::Logger &log;
 
 		const InstanceManager &instanceManager;
 
@@ -53,10 +47,10 @@ namespace rxpm {
 		mutable const InstanceInfo* expressionCurrentItem = nullptr;
 
 		// (source, counterIndex, rollupFunction) -> value
-		mutable std::map<std::tuple<TotalSource, unsigned int, RollupFunction>, std::optional<double>> totalsCache;
+		mutable std::map<std::tuple<TotalSource, index, RollupFunction>, std::optional<double>> totalsCache;
 
 	public:
-		ExpressionResolver(rxu::Rainmeter::Logger& log, const InstanceManager& instanceManager);
+		ExpressionResolver(utils::Rainmeter::Logger& log, const InstanceManager& instanceManager);
 
 		unsigned getExpressionsCount() const;
 
@@ -64,19 +58,19 @@ namespace rxpm {
 
 		void resetCaches();
 
-		double getValue(const Reference& ref, const InstanceInfo* instance, rxu::Rainmeter::Logger& logger) const;
+		double getValue(const Reference& ref, const InstanceInfo* instance, utils::Rainmeter::Logger& logger) const;
 
-		void setExpressions(rxu::OptionParser::OptionList expressionsList, rxu::OptionParser::OptionList rollupExpressionsList);
+		void setExpressions(utils::OptionParser::OptionList expressionsList, utils::OptionParser::OptionList rollupExpressionsList);
 
-		double getRaw(unsigned counterIndex, Indices originalIndexes) const;
+		double getRaw(index counterIndex, Indices originalIndexes) const;
 
-		double getFormatted(unsigned counterIndex, Indices originalIndexes) const;
+		double getFormatted(index counterIndex, Indices originalIndexes) const;
 
-		double getRawRollup(RollupFunction rollupType, unsigned counterIndex, const InstanceInfo& instance) const;
+		double getRawRollup(RollupFunction rollupType, index counterIndex, const InstanceInfo& instance) const;
 
-		double getFormattedRollup(RollupFunction rollupType, unsigned counterIndex, const InstanceInfo& instance) const;
+		double getFormattedRollup(RollupFunction rollupType, index counterIndex, const InstanceInfo& instance) const;
 
-		double getExpressionRollup(RollupFunction rollupType, unsigned expressionIndex, const InstanceInfo& instance) const;
+		double getExpressionRollup(RollupFunction rollupType, index expressionIndex, const InstanceInfo& instance) const;
 
 		double getExpression(unsigned expressionIndex, const InstanceInfo& instance) const;
 
@@ -87,7 +81,7 @@ namespace rxpm {
 
 		const InstanceInfo* findAndCacheName(const Reference& ref, bool useRollup) const;
 
-		double calculateAndCacheTotal(TotalSource source, unsigned int counterIndex, RollupFunction rollupFunction) const;
+		double calculateAndCacheTotal(TotalSource source, index counterIndex, RollupFunction rollupFunction) const;
 
 		double resolveReference(const Reference& ref) const;
 
@@ -100,11 +94,11 @@ namespace rxpm {
 		double resolveRollupReference(const Reference& ref) const;
 
 
-		template <double (ExpressionResolver::* calculateValueFunction)(unsigned counterIndex, Indices originalIndexes) const>
-		double calculateRollup(RollupFunction rollupType, unsigned counterIndex, const InstanceInfo& instance) const;
+		template <double (ExpressionResolver::* calculateValueFunction)(index counterIndex, Indices originalIndexes) const>
+		double calculateRollup(RollupFunction rollupType, index counterIndex, const InstanceInfo& instance) const;
 
-		template <double (ExpressionResolver::* calculateValueFunction)(unsigned counterIndex, Indices originalIndexes) const>
-		double calculateTotal(RollupFunction rollupType, unsigned counterIndex) const;
+		template <double (ExpressionResolver::* calculateValueFunction)(index counterIndex, Indices originalIndexes) const>
+		double calculateTotal(RollupFunction rollupType, index counterIndex) const;
 
 		template <double(ExpressionResolver::* calculateExpressionFunction)(const ExpressionTreeNode& expression) const>
 		double calculateExpressionTotal(RollupFunction rollupType, const ExpressionTreeNode& expression, bool rollup) const;
@@ -113,6 +107,6 @@ namespace rxpm {
 		double calculateExpression(const ExpressionTreeNode& expression) const;
 
 
-		static bool indexIsInBounds(int index, int min, int max);
+		static bool indexIsInBounds(index ind, index min, index max);
 	};
 }

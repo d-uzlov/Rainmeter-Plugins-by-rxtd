@@ -19,42 +19,42 @@ namespace rxaa {
 	public:
 		struct Params {
 			double resolution { };
-			unsigned length { };
-			std::wstring sourceName { };
-			std::wstring prefix = { };
-			rxu::Color baseColor { };
-			rxu::Color maxColor { };
+			index length { };
+			string sourceName { };
+			string prefix = { };
+			utils::Color baseColor { };
+			utils::Color maxColor { };
 		};
 
 	private:
 		Params params;
 
-		uint32_t samplesPerSec { };
+		index samplesPerSec { };
 
-		unsigned blockSize { };
+		index blockSize { };
 
-		unsigned int counter = 0;
-		std::size_t lastIndex = 0;
-		unsigned int sourceSize = 0;
+		index counter = 0;
+		index lastIndex = 0;
+		index sourceSize = 0;
 		double result = 0.0;
 
-		std::wstring propString { };
+		string propString { };
 
-		rxu::ContinuousBuffersHolder<uint32_t> buffer;
-		std::wstring filepath { };
+		utils::ContinuousBuffersHolder<uint32_t> buffer;
+		string filepath { };
 
 	public:
 		void setParams(const Params& _params);
-		// void setParams(double resolution, unsigned length, std::wstring_view sourceName, std::wstring prefix, rxu::Color baseColor, rxu::Color maxColor);
+		// void setParams(double resolution, unsigned length, sview sourceName, string prefix, rxu::Color baseColor, rxu::Color maxColor);
 
-		static std::optional<Params> parseParams(const rxu::OptionParser::OptionMap& optionMap, rxu::Rainmeter::ContextLogger &cl, const rxu::Rainmeter& rain);
+		static std::optional<Params> parseParams(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger &cl, const utils::Rainmeter& rain);
 
 		void process(const DataSupplier& dataSupplier) override;
 		void processSilence(const DataSupplier& dataSupplier) override;
 		const double* getData() const override;
-		size_t getCount() const override;
-		void setSamplesPerSec(uint32_t samplesPerSec) override;
-		const wchar_t* getProp(const std::wstring_view& prop) override;
+		index getCount() const override;
+		void setSamplesPerSec(index samplesPerSec) override;
+		const wchar_t* getProp(const sview& prop) override;
 		void reset() override;
 
 	private:

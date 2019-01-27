@@ -140,10 +140,14 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Test|x64'">
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="precompiled.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="sources\BmpWriter.cpp" />
     <ClCompile Include="sources\BufferPrinter.cpp" />
     <ClCompile Include="sources\MathExpressionParser.cpp" />
@@ -154,12 +158,15 @@
     <ClCompile Include="sources\windows-wrappers\FileWrapper.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="precompiled.h" />
     <ClInclude Include="sources\BmpWriter.h" />
     <ClInclude Include="sources\BufferPrinter.h" />
+    <ClInclude Include="sources\CaseInsensitiveString.h" />
     <ClInclude Include="sources\Color.h" />
     <ClInclude Include="sources\ContinuousBuffersHolder.h" />
     <ClInclude Include="sources\FastMath.h" />
     <ClInclude Include="sources\MathExpressionParser.h" />
+    <ClInclude Include="sources\my-windows.h" />
     <ClInclude Include="sources\OptionParser.h" />
     <ClInclude Include="sources\RainmeterWrappers.h" />
     <ClInclude Include="sources\StringUtils.h" />
@@ -169,6 +176,8 @@
     <ClInclude Include="sources\windows-wrappers\GenericComWrapper.h" />
     <ClInclude Include="sources\windows-wrappers\PropVariantWrapper.h" />
     <ClInclude Include="sources\windows-wrappers\WaveFormatWrapper.h" />
+    <ClInclude Include="typedefs.h" />
+    <ClInclude Include="undef.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

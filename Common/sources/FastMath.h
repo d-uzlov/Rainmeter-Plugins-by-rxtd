@@ -9,7 +9,7 @@
 
 #pragma once
 
-namespace rxu {
+namespace rxtd::utils {
 	class FastMath {
 	public:
 		static double pow(double a, double b) {
