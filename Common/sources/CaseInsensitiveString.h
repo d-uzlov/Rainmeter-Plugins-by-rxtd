@@ -29,6 +29,8 @@ namespace rxtd {
 					auto c1 = ToUpper(*s1);
 					auto c2 = ToUpper(*s2);
 					if (c1 == c2) {
+						++s1;
+						++s2;
 						continue;
 					}
 					return c1 < c2 ? -1 : 1;
@@ -37,11 +39,12 @@ namespace rxtd {
 				return 0;
 			}
 			static const char_type* find(const char_type* s, size_t n, char_type a) {
-				auto upperA = ToUpper(a);
-				while (n-- > 0 && ToUpper(*s) != upperA) {
-					++s;
+				for (size_t i = 0; i < n; ++i) {
+					if (ToUpper(s[i]) == ToUpper(a)) {
+						return s + i;
+					}
 				}
-				return s;
+				return nullptr;
 			}
 		};
 
@@ -71,22 +74,9 @@ namespace rxtd {
 			}
 		} ciString { };
 
-
-		inline istring operator%(sview view, conversion_details::caseInsensitiveObject) {
-			return { view.data(), view.length() };
-		}
-
 		inline istring operator%(string&& str, conversion_details::caseInsensitiveObject) {
 			istring result { reinterpret_cast<istring&&>(str) };
 			return result;
-		}
-
-		inline istring operator%(isview view, conversion_details::caseInsensitiveObject) {
-			return { view.data(), view.length() };
-		}
-
-		inline istring operator%(istring&& str, conversion_details::caseInsensitiveObject) {
-			return str;
 		}
 
 		inline struct {
@@ -95,22 +85,9 @@ namespace rxtd {
 			}
 		} csString { };
 
-
-		inline string operator&(isview view, conversion_details::caseSensitiveObject) {
-			return { view.data(), view.length() };
-		}
-
-		inline string operator|(istring&& str, conversion_details::caseSensitiveObject) {
+		inline string operator%(istring&& str, conversion_details::caseSensitiveObject) {
 			string result { reinterpret_cast<string&&>(str) };
 			return result;
-		}
-
-		inline string operator%(sview view, conversion_details::caseSensitiveObject) {
-			return { view.data(), view.length() };
-		}
-
-		inline string operator%(string&& str, conversion_details::caseSensitiveObject) {
-			return str;
 		}
 
 
@@ -124,19 +101,11 @@ namespace rxtd {
 			return { view.data(), view.length() };
 		}
 
-		inline isview operator%(isview view, conversion_details::caseInsensitiveViewObject) {
-			return view;
-		}
-
 		inline struct {
 			conversion_details::caseSensitiveViewObject operator()() const {
 				return { };
 			}
 		} csView { };
-
-		inline sview operator%(sview view, conversion_details::caseSensitiveViewObject) {
-			return view;
-		}
 
 		inline sview operator%(isview view, conversion_details::caseSensitiveViewObject) {
 			return { view.data(), view.length() };
@@ -147,23 +116,16 @@ namespace rxtd {
 			struct conversion_details::stringCreationObject operator()() const {
 				return { };
 			}
-		} toString { };
+		} own { };
 
 
 		inline string operator%(sview view, conversion_details::stringCreationObject) {
 			return { view.data(), view.length() };
 		}
 
-		inline string operator%(string&& str, conversion_details::stringCreationObject) {
-			return str;
-		}
 
 		inline istring operator%(isview view, conversion_details::stringCreationObject) {
 			return { view.data(), view.length() };
-		}
-
-		inline istring operator%(istring&& str, conversion_details::stringCreationObject) {
-			return str;
 		}
 
 	}

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2018-2019 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
@@ -307,11 +307,6 @@ void ExpressionParser::readNext() {
 		error = true;
 	}
 }
-void ExpressionParser::toUpper(string& s) {
-	for (wchar_t& c : s) {
-		c = towupper(c);
-	}
-}
 
 ExpressionTreeNode ExpressionParser::parseExpression() {
 	ExpressionTreeNode result = parseTerm();
@@ -507,8 +502,7 @@ Reference ExpressionParser::parseReference() {
 		return Reference();
 	}
 	Reference ref;
-	string name { next.value };
-	toUpper(name);
+	const isview name = next.value % ciView();
 	if (name == L"COUNTERRAW" || name == L"CR") {
 		ref.type = ReferenceType::COUNTER_RAW;
 	} else if (name == L"COUNTERFORMATED" || name == L"CF") {
@@ -532,7 +526,7 @@ Reference ExpressionParser::parseReference() {
 			error = true;
 			return Reference();
 		}
-		ref.counter = std::stoi(next.value.data()); // will stop at first non-digit, doesn't require null-terminated string
+		ref.counter = utils::StringUtils::parseInt(next.value);
 		readNext();
 		if (error) {
 			return Reference();
@@ -543,12 +537,11 @@ Reference ExpressionParser::parseReference() {
 		ref.named = !ref.name.empty();
 		if (ref.named) {
 			if (ref.name[0] == L'\\') {
-				string::size_type indexOfFirstNonFlag = ref.name.find_first_of(L' ');
+				string::size_type indexOfFirstNonFlag = ref.name.find_first_of(L" \t");
 				if (indexOfFirstNonFlag == std::string::npos) {
 					indexOfFirstNonFlag = ref.name.length();
 				}
-				string flags = ref.name.substr(1, indexOfFirstNonFlag - 1);
-				toUpper(flags);
+				const isview flags = (ref.name % ciView()).substr(1, indexOfFirstNonFlag - 1);
 
 				if (flags.find(L'D') != std::string::npos) {
 					ref.discarded = true;
@@ -559,10 +552,10 @@ Reference ExpressionParser::parseReference() {
 				if (flags.find(L'T') != std::string::npos) {
 					ref.total = true;
 				}
-				ref.name = ref.name.substr(indexOfFirstNonFlag);
+				ref.name = ref.name.substr(indexOfFirstNonFlag); // TODO mem alloc
 			}
 
-			rxtd::utils::StringUtils::trimInplace(ref.name);
+			utils::StringUtils::trimInplace(ref.name);
 
 			const auto len = ref.name.size();
 			if (len >= 2 && ref.name[0] == L'*' && ref.name[len - 1] == L'*') {
@@ -584,8 +577,7 @@ Reference ExpressionParser::parseReference() {
 		}
 	}
 	if (next.type == Lexer::LexemeType::WORD) {
-		string suffix { next.value };
-		toUpper(suffix);
+		const isview suffix = next.value % ciView();
 		if (suffix == L"SUM" || suffix == L"S") {
 			ref.rollupFunction = RollupFunction::SUM;
 		} else if (suffix == L"AVG" || suffix == L"A") {
@@ -608,13 +600,11 @@ Reference ExpressionParser::parseReference() {
 	return ref;
 }
 
-intmax_t ExpressionParser::parseInt(sview view) {
-	return std::stoi(view.data()); // will stop at first non-digit, doesn't require null-terminated string
+index ExpressionParser::parseInt(sview view) {
+	return utils::StringUtils::parseInt(view);
 }
 
 double ExpressionParser::parseFractional(sview view) {
-	string temp = L"0.";
-	temp += view;
-	return std::stod(temp); // TODO
+	return utils::StringUtils::parseFractional(view);
 }
 

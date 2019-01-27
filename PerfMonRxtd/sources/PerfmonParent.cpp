@@ -265,12 +265,12 @@ void PerfmonParent::_command(const wchar_t* bangArgsC) {
 	}
 	if (bangArgs.substr(0, 14)== L"SetIndexOffset") {
 		auto arg = bangArgs.substr(14);
-		arg = utils::StringViewUtils::trim(arg);
+		arg = utils::StringUtils::trim(arg);
 		if (arg[0] == L'-' || arg[0] == L'+') {
-			const auto offset = getIndexOffset() + std::wcstoll(arg.data(), nullptr, 10);
+			const auto offset = getIndexOffset() + utils::StringUtils::parseInt(arg % csView());
 			setIndexOffset(offset);
 		} else {
-			const auto offset = std::wcstoll(arg.data(), nullptr, 10);
+			const auto offset = utils::StringUtils::parseInt(arg % csView());
 			setIndexOffset(offset);
 		}
 	}

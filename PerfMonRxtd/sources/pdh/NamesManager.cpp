@@ -109,9 +109,8 @@ wchar_t* NamesManager::getBuffer(index value) {
 }
 
 sview NamesManager::copyString(sview source, wchar_t* dest) {
-	const auto len = source.length();
-	std::copy_n(source.data(), len, dest);
-	return { dest, len };
+	std::copy(source.begin(), source.end(), dest);
+	return { dest, source.length() };
 }
 
 void NamesManager::modifyNameProcess(const Snapshot& idSnapshot) {
@@ -201,7 +200,7 @@ void NamesManager::modifyNameLogicalDiskDriveLetter() {
 
 		if (item.originalName[1] == L':') {
 			item.displayName = item.originalName.substr(0, 2);
-		} else if (rxtd::utils::StringUtils::startsWith(item.originalName, L"HarddiskVolume"sv)) {
+		} else if (utils::StringUtils::startsWith(item.originalName, L"HarddiskVolume"sv)) {
 			item.displayName = L"HarddiskVolume"sv;
 		}
 	}
@@ -221,7 +220,7 @@ void NamesManager::modifyNameLogicalDiskMountPath() {
 			if (slashPosition != sview::npos) {
 				item.displayName = item.originalName.substr(0, slashPosition + 1);
 			}
-		} else if (rxtd::utils::StringUtils::startsWith(item.originalName, L"HarddiskVolume"sv)) {
+		} else if (utils::StringUtils::startsWith(item.originalName, L"HarddiskVolume"sv)) {
 			item.displayName = L"HarddiskVolume"sv;
 		}
 	}
@@ -248,7 +247,7 @@ void NamesManager::modifyNameGPUProcessName(const Snapshot& idSnapshot) {
 			continue;
 		}
 
-		const auto pid = wcstoul(item.originalName.data() + pidPosition + 4, nullptr, 10);
+		const auto pid = utils::StringUtils::parseInt(item.originalName.substr(pidPosition + 4));
 		const auto iter = pidToName.find(pid);
 		if (iter == pidToName.end()) {
 			continue;

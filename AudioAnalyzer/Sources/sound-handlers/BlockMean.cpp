@@ -38,12 +38,12 @@ void rxaa::BlockMean::setSamplesPerSec(index samplesPerSec) {
 	recalculateConstants();
 }
 
-const wchar_t* rxaa::BlockMean::getProp(const sview& prop) {
-	if (prop == L"block size"sv) {
+const wchar_t* rxaa::BlockMean::getProp(const isview& prop) {
+	if (prop == L"block size") {
 		propString = std::to_wstring(blockSize);
-	} else if (prop == L"attack"sv) {
+	} else if (prop == L"attack") {
 		propString = std::to_wstring(params.attackTime * 1000.0);
-	} else if (prop == L"decay"sv) {
+	} else if (prop == L"decay") {
 		propString = std::to_wstring(params.decayTime * 1000.0);
 	} else {
 		return nullptr;

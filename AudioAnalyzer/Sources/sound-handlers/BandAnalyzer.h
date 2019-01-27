@@ -24,9 +24,12 @@ namespace rxaa {
 			PRODUCT,
 		};
 		struct Params {
+		private:
+			friend BandAnalyzer;
+
 			index minCascade { };
 			index maxCascade { };
-			string fftId;
+			istring fftId;
 			std::vector<double> bandFreqs;
 			double targetWeight { };
 			double minWeight { };
@@ -99,17 +102,16 @@ namespace rxaa {
 
 		void process(const DataSupplier& dataSupplier) override;
 		void processSilence(const DataSupplier& dataSupplier) override;
-		const double* getData() const override;
+		const double* getData() const override; // TODO vector_view?
 		index getCount() const override;
 		void setSamplesPerSec(index samplesPerSec) override;
-		const wchar_t* getProp(const sview& prop) override;
+		const wchar_t* getProp(const isview& prop) override;
 		void reset() override;
 
 	private:
 		void updateValues() const;
 		void computeAnalysis(index startCascade, index endCascade) const;
 
-
-		static std::optional<std::vector<double>> parseFreqList(utils::OptionParser::OptionList bounds, utils::Rainmeter::ContextLogger& cl, const utils::Rainmeter& rain);
+		static std::optional<std::vector<double>> parseFreqList(const utils::OptionParser::OptionList& bounds, utils::Rainmeter::ContextLogger& cl, const utils::Rainmeter& rain);
 	};
 }

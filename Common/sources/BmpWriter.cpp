@@ -12,8 +12,6 @@
 
 #include "undef.h"
 
-#pragma warning(disable : 4267)
-
 void utils::BmpWriter::writeFile(const string& filepath, const uint32_t* data, index width, index height, index offset,
 	uint32_t* writeBuffer, index bufferSize) {
 	const auto pixelsCount = width * height;

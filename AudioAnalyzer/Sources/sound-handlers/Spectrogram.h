@@ -9,7 +9,7 @@
 
 #pragma once
 #include "SoundHandler.h"
-#include <ContinuousBuffersHolder.h>
+#include <Vector2D.h>
 #include "Color.h"
 #include "RainmeterWrappers.h"
 #include "OptionParser.h"
@@ -18,9 +18,12 @@ namespace rxaa {
 	class Spectrogram : public SoundHandler {
 	public:
 		struct Params {
+		private:
+			friend Spectrogram;
+
 			double resolution { };
 			index length { };
-			string sourceName { };
+			istring sourceName { };
 			string prefix = { };
 			utils::Color baseColor { };
 			utils::Color maxColor { };
@@ -40,7 +43,7 @@ namespace rxaa {
 
 		string propString { };
 
-		utils::ContinuousBuffersHolder<uint32_t> buffer;
+		utils::Vector2D<uint32_t> buffer;
 		string filepath { };
 
 	public:
@@ -54,7 +57,7 @@ namespace rxaa {
 		const double* getData() const override;
 		index getCount() const override;
 		void setSamplesPerSec(index samplesPerSec) override;
-		const wchar_t* getProp(const sview& prop) override;
+		const wchar_t* getProp(const isview& prop) override;
 		void reset() override;
 
 	private:

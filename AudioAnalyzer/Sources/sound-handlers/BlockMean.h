@@ -16,6 +16,9 @@ namespace rxaa {
 	class BlockMean : public SoundHandler {
 	public:
 		struct Params {
+		private:
+			friend BlockMean;
+
 			double attackTime { };
 			double decayTime { };
 			double resolution { };
@@ -40,7 +43,7 @@ namespace rxaa {
 		const double* getData() const override;
 		index getCount() const override;
 		void setSamplesPerSec(index samplesPerSec) override;
-		const wchar_t* getProp(const sview& prop) override;
+		const wchar_t* getProp(const isview& prop) override;
 		void reset() override;
 		void processSilence(const DataSupplier& dataSupplier) override;
 

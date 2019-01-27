@@ -12,8 +12,6 @@
 
 #include "undef.h"
 
-#pragma warning(disable : 4458)
-
 #pragma comment(lib, "Rainmeter.lib")
 
 using namespace utils;

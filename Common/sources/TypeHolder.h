@@ -72,7 +72,7 @@ namespace rxtd::utils {
 
 	template <typename T>
 	void ParentManager<T>::add(T& parent) {
-		skinMap[parent.rain.getSkin().getRawPointer()][parent.rain.getMeasureName() % ciString()] = &parent;
+		skinMap[parent.rain.getSkin().getRawPointer()][parent.rain.getMeasureName() % ciView() % own()] = &parent;
 	}
 
 	template<typename T>

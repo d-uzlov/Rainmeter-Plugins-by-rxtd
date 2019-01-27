@@ -84,7 +84,7 @@ std::optional<rxaa::WaveForm::Params> rxaa::WaveForm::parseParams(const utils::O
 	}
 	std::filesystem::path path { folder };
 	if (!path.is_absolute()) {
-		folder = rain.replaceVariables(L"[#CURRENTPATH]") %toString() + folder;
+		folder = rain.replaceVariables(L"[#CURRENTPATH]") %own() + folder;
 	}
 	folder = std::filesystem::absolute(folder).wstring();
 	folder = LR"(\\?\)"s + folder;
@@ -99,12 +99,12 @@ std::optional<rxaa::WaveForm::Params> rxaa::WaveForm::parseParams(const utils::O
 	params.waveColor = optionMap.get(L"waveColor"sv).asColor({ 1, 1, 1, 1 });
 	params.lineColor = optionMap.get(L"lineColor"sv).asColor(params.waveColor);
 
-	auto ldpString = optionMap.get(L"lineDrawingPolicy"sv).asString();
-	if (ldpString.empty() || ldpString == L"always"sv) {
+	auto ldpString = optionMap.get(L"lineDrawingPolicy"sv).asIString();
+	if (ldpString.empty() || ldpString == L"always") {
 		params.lineDrawingPolicy = LineDrawingPolicy::ALWAYS;
-	} else if (ldpString == L"belowWave"sv) {
+	} else if (ldpString == L"belowWave") {
 		params.lineDrawingPolicy = LineDrawingPolicy::BELOW_WAVE;
-	} else if (ldpString == L"never"sv) {
+	} else if (ldpString == L"never") {
 		params.lineDrawingPolicy = LineDrawingPolicy::NEVER;
 	} else {
 		cl.warning(L"lineDrawingPolicy '{}' now recognized, assume 'always'", ldpString);
@@ -130,10 +130,10 @@ void rxaa::WaveForm::setSamplesPerSec(index samplesPerSec) {
 	updateParams();
 }
 
-const wchar_t* rxaa::WaveForm::getProp(const sview& prop) {
-	if (prop == L"file"sv) {
+const wchar_t* rxaa::WaveForm::getProp(const isview& prop) {
+	if (prop == L"file") {
 		return filepath.c_str();
-	} else if (prop == L"block size"sv) {
+	} else if (prop == L"block size") {
 		propString = std::to_wstring(blockSize);
 	} else {
 		return nullptr;

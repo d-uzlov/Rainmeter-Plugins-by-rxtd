@@ -204,6 +204,6 @@ const wchar_t* rxaa::AudioParent::_resolve(int argc, const wchar_t* argv[]) {
 	return nullptr;
 }
 
-double rxaa::AudioParent::getValue(const string& id, Channel channel, index index) const {
-	return soundAnalyzer.getValue(channel, id, index);
+double rxaa::AudioParent::getValue(sview id, Channel channel, index index) const {
+	return soundAnalyzer.getValue(channel, id % ciView(), index);
 }

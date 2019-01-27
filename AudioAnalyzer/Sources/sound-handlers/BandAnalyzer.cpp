@@ -63,7 +63,7 @@ std::vector<double> rxaa::BandAnalyzer::GaussianCoefficientsManager::generateGau
 
 std::optional<rxaa::BandAnalyzer::Params> rxaa::BandAnalyzer::parseParams(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl, utils::Rainmeter &rain) {
 	Params params;
-	params.fftId = optionMap.get(L"source"sv).asString();
+	params.fftId = optionMap.get(L"source"sv).asIString();
 	if (params.fftId.empty()) {
 		cl.error(L"source not found");
 		return std::nullopt;
@@ -109,21 +109,21 @@ std::optional<rxaa::BandAnalyzer::Params> rxaa::BandAnalyzer::parseParams(const 
 		params.smoothingFactor = 1;
 	}
 
-	auto smoothingCurveString = optionMap.get(L"smoothingCurve"sv).asString();
+	auto smoothingCurveString = optionMap.get(L"smoothingCurve"sv).asIString();
 	params.exponentialFactor = 1;
-	if (smoothingCurveString.empty() || smoothingCurveString == L"exponential"sv) {
+	if (smoothingCurveString.empty() || smoothingCurveString == L"exponential") {
 		params.smoothingCurve = SmoothingCurve::EXPONENTIAL;
-		params.exponentialFactor = optionMap.get(L"exponentialFactor"sv).asFloat(1.5);
-	} else if (smoothingCurveString == L"flat"sv) {
+		params.exponentialFactor = optionMap.get(L"exponentialFactor").asFloat(1.5);
+	} else if (smoothingCurveString == L"flat") {
 		params.smoothingCurve = SmoothingCurve::FLAT;
-	} else if (smoothingCurveString == L"linear"sv) {
+	} else if (smoothingCurveString == L"linear") {
 		params.smoothingCurve = SmoothingCurve::LINEAR;
 	} else {
 		cl.warning(L"smoothingCurve '{}' now recognized, assume 'flat'", smoothingCurveString);
 		params.smoothingCurve = SmoothingCurve::FLAT;
 	}
 
-	params.minFunction = optionMap.get(L"mixFunction").asString(L"product") == L"product"sv ? MixFunction::PRODUCT : MixFunction::AVERAGE;
+	params.minFunction = optionMap.get(L"mixFunction").asIString(L"product") == L"product" ? MixFunction::PRODUCT : MixFunction::AVERAGE;
 
 	return params;
 }
@@ -195,21 +195,21 @@ void rxaa::BandAnalyzer::setSamplesPerSec(index samplesPerSec) {
 	this->samplesPerSec = samplesPerSec;
 }
 
-const wchar_t* rxaa::BandAnalyzer::getProp(const sview& prop) {
+const wchar_t* rxaa::BandAnalyzer::getProp(const isview& prop) {
 	propString.clear();
 
 	const auto bandsCount = params.bandFreqs.size() - 1;
 
-	if (prop == L"bands count"sv) {
+	if (prop == L"bands count") {
 		propString = std::to_wstring(bandsCount);
-	} else if (prop == L"cascade analysis"sv) {
+	} else if (prop == L"cascade analysis") {
 		return analysis.analysisString.c_str();
-	} else if (prop == L"min cascade used"sv) {
+	} else if (prop == L"min cascade used") {
 		propString = std::to_wstring(analysis.minCascadeUsed);
-	} else if (prop == L"max cascade used"sv) {
+	} else if (prop == L"max cascade used") {
 		propString = std::to_wstring(analysis.maxCascadeUsed);
 	} else {
-		auto index = parseIndexProp(prop, L"lower bound"sv, bandsCount + 1);
+		auto index = parseIndexProp(prop, L"lower bound", bandsCount + 1);
 		if (index == -2) {
 			return L"0";
 		}
@@ -221,7 +221,7 @@ const wchar_t* rxaa::BandAnalyzer::getProp(const sview& prop) {
 			return propString.c_str();
 		}
 
-		index = parseIndexProp(prop, L"upper bound"sv, bandsCount + 1);
+		index = parseIndexProp(prop, L"upper bound", bandsCount + 1);
 		if (index == -2) {
 			return L"0";
 		}
@@ -233,7 +233,7 @@ const wchar_t* rxaa::BandAnalyzer::getProp(const sview& prop) {
 			return propString.c_str();
 		}
 
-		index = parseIndexProp(prop, L"central frequency"sv, bandsCount + 1);
+		index = parseIndexProp(prop, L"central frequency", bandsCount + 1);
 		if (index == -2) {
 			return L"0";
 		}
@@ -264,7 +264,7 @@ void rxaa::BandAnalyzer::updateValues() const {
 	const auto fftBinsCount = source->getCount();
 	const auto cascadesCount = source->getCascadesCount();
 
-	const auto bandsCount = params.bandFreqs.size() - 1;
+	const index bandsCount = params.bandFreqs.size() - 1;
 
 	index cascadeIndexBegin = 1;
 	index cascadeIndexEnd = cascadesCount + 1;
@@ -593,12 +593,12 @@ void rxaa::BandAnalyzer::computeAnalysis(index startCascade, index endCascade) c
 	analysisComputed = true;
 }
 
-std::optional<std::vector<double>> rxaa::BandAnalyzer::parseFreqList(utils::OptionParser::OptionList bounds, utils::Rainmeter::ContextLogger& cl, const utils::Rainmeter &rain) {
+std::optional<std::vector<double>> rxaa::BandAnalyzer::parseFreqList(const utils::OptionParser::OptionList& bounds, utils::Rainmeter::ContextLogger& cl, const utils::Rainmeter &rain) {
 	std::vector<double> freqs;
 
 	utils::OptionParser optionParser;
-	for (auto bound : bounds) {
-		if (bound.find(L"linear "sv) == 0 || bound.find(L"log "sv) == 0) {
+	for (auto bound : bounds.viewCI()) {
+		if (bound.find(L"linear ") == 0 || bound.find(L"log ") == 0) {
 
 			auto options = optionParser.asList(bound, L' ');
 			if (options.size() != 4) {
@@ -606,7 +606,7 @@ std::optional<std::vector<double>> rxaa::BandAnalyzer::parseFreqList(utils::Opti
 				return std::nullopt;
 			}
 			int count;
-			std::wstringstream(string { options.get(1) }) >> count;
+			std::wstringstream(string { options.get(1) }) >> count; // TODO rewrite
 
 			if (count < 1) {
 				cl.error(L"count must be >= 1");
@@ -620,7 +620,7 @@ std::optional<std::vector<double>> rxaa::BandAnalyzer::parseFreqList(utils::Opti
 				return std::nullopt;
 			}
 
-			if (bound.find(L"linear "sv) == 0) {
+			if (bound.find(L"linear ") == 0) {
 				const double delta = max - min;
 
 				for (index i = 0; i <= count; ++i) {
@@ -639,7 +639,7 @@ std::optional<std::vector<double>> rxaa::BandAnalyzer::parseFreqList(utils::Opti
 			}
 			continue;
 		}
-		if (bound.find(L"custom "sv) == 0) {
+		if (bound.find(L"custom ") == 0) {
 			auto options = optionParser.asList(bound, L' ');
 			if (options.size() < 2) {
 				cl.error(L"custom must have at least two frequencies specified but {} found", options.size());

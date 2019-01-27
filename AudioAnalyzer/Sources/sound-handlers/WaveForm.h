@@ -10,7 +10,7 @@
 #pragma once
 #include "SoundHandler.h"
 #include "Color.h"
-#include <ContinuousBuffersHolder.h>
+#include <Vector2D.h>
 #include "OptionParser.h"
 #include "RainmeterWrappers.h"
 
@@ -28,6 +28,9 @@ namespace rxaa {
 		};
 
 		struct Params {
+		private:
+			friend WaveForm;
+
 			double resolution { };
 			index width { };
 			index height { };
@@ -57,7 +60,7 @@ namespace rxaa {
 
 		string propString { };
 
-		utils::ContinuousBuffersHolder<uint32_t> imageBuffer;
+		utils::Vector2D<uint32_t> imageBuffer;
 		string filepath { };
 
 		class MutableLinearInterpolator {
@@ -100,7 +103,7 @@ namespace rxaa {
 		const double* getData() const override;
 		index getCount() const override;
 		void setSamplesPerSec(index samplesPerSec) override;
-		const wchar_t* getProp(const sview& prop) override;
+		const wchar_t* getProp(const isview& prop) override;
 		void reset() override;
 
 	private:

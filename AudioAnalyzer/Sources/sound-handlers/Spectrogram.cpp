@@ -35,7 +35,7 @@ void rxaa::Spectrogram::setParams(const Params& _params) {
 std::optional<rxaa::Spectrogram::Params> rxaa::Spectrogram::parseParams(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl, const utils::Rainmeter& rain) {
 	Params params;
 	
-	params.sourceName = optionMap.get(L"source"sv).asString();
+	params.sourceName = optionMap.get(L"source"sv).asIString();
 	if (params.sourceName.empty()) {
 		cl.error(L"source not found");
 		return std::nullopt;
@@ -60,7 +60,7 @@ std::optional<rxaa::Spectrogram::Params> rxaa::Spectrogram::parseParams(const ut
 	}
 	std::filesystem::path path { folder };
 	if (!path.is_absolute()) {
-		folder = (rain.replaceVariables(L"[#CURRENTPATH]") % toString()) + folder;
+		folder = (rain.replaceVariables(L"[#CURRENTPATH]") % own()) + folder;
 	}
 	folder = std::filesystem::absolute(folder).wstring();
 	folder = LR"(\\?\)"s + folder;
@@ -90,10 +90,10 @@ void rxaa::Spectrogram::setSamplesPerSec(index samplesPerSec) {
 	updateParams();
 }
 
-const wchar_t* rxaa::Spectrogram::getProp(const sview& prop) {
-	if (prop == L"file"sv) {
+const wchar_t* rxaa::Spectrogram::getProp(const isview& prop) {
+	if (prop == L"file") {
 		return filepath.c_str();
-	} else if (prop == L"block size"sv) {
+	} else if (prop == L"block size") {
 		propString = std::to_wstring(blockSize);
 	} else {
 		return nullptr;

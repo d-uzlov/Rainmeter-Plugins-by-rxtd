@@ -238,8 +238,8 @@ rxaa::FftAnalyzer::~FftAnalyzer() {
 
 std::optional<rxaa::FftAnalyzer::Params> rxaa::FftAnalyzer::parseParams(const utils::OptionParser::OptionMap &optionMap, utils::Rainmeter::ContextLogger& cl) {
 	Params params;
-	params.attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.0) * 0.001;
-	params.decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.attackTime), 0.0) * 0.001;
+	params.attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.1) * 0.001;
+	params.decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.attackTime), 0.1) * 0.001;
 	params.overlap = std::clamp(optionMap.get(L"overlap"sv).asFloat(0.5), 0.0, 1.0);
 
 	params.cascadesCount = optionMap.get(L"cascadesCount"sv).asInt(5);
@@ -251,9 +251,9 @@ std::optional<rxaa::FftAnalyzer::Params> rxaa::FftAnalyzer::parseParams(const ut
 	params.randomTest = std::abs(optionMap.get(L"testRandom"sv).asFloat(0.0));
 	params.correctZero = optionMap.get(L"correctZero"sv).asBool(true);
 
-	const auto sizeBy = optionMap.get(L"sizeBy"sv).asString(L"resolution"sv);
+	const auto sizeBy = optionMap.get(L"sizeBy"sv).asIString(L"resolution");
 
-	if (sizeBy == L"resolution"sv) {
+	if (sizeBy == L"resolution") {
 		params.resolution = optionMap.get(L"resolution"sv).asFloat(100.0);
 		if (params.resolution <= 0.0) {
 			cl.error(L"Resolution must be > 0 but {} found", params.resolution);
@@ -263,7 +263,7 @@ std::optional<rxaa::FftAnalyzer::Params> rxaa::FftAnalyzer::parseParams(const ut
 			cl.warning(L"Resolution {} is too small, use values > 1", params.resolution);
 		}
 		params.sizeBy = SizeBy::RESOLUTION;
-	} else if (sizeBy == L"size"sv) {
+	} else if (sizeBy == L"size") {
 		params.resolution = optionMap.get(L"size"sv).asInt(1000);
 		if (params.resolution < 2) {
 			cl.warning(L"Size must be >= 2 but {} found. Assume 1000", params.resolution);
@@ -271,7 +271,7 @@ std::optional<rxaa::FftAnalyzer::Params> rxaa::FftAnalyzer::parseParams(const ut
 		}
 		params.sizeBy = SizeBy::SIZE;
 
-	} else if (sizeBy == L"sizeExact"sv) {
+	} else if (sizeBy == L"sizeExact") {
 		params.resolution = optionMap.get(L"size"sv).asInt(1000);
 		if (params.resolution < 2) {
 			cl.error(L"Size must be >= 2, must be even, but {} found", params.resolution);
@@ -301,7 +301,7 @@ index rxaa::FftAnalyzer::getCascadesCount() const {
 	return cascades.size();
 }
 
-const double* rxaa::FftAnalyzer::getCascade(index cascade) const {
+const double* rxaa::FftAnalyzer::getCascade(index cascade) const { // TODO vector_view
 	return cascades[cascade].values.data();
 }
 
@@ -361,21 +361,21 @@ void rxaa::FftAnalyzer::setSamplesPerSec(index samplesPerSec) {
 	updateParams();
 }
 
-const wchar_t* rxaa::FftAnalyzer::getProp(const sview& prop) {
+const wchar_t* rxaa::FftAnalyzer::getProp(const isview& prop) {
 	propString.clear();
 
-	if (prop == L"size"sv) {
+	if (prop == L"size") {
 		propString = std::to_wstring(fftSize);
-	} else if (prop == L"attack"sv) {
+	} else if (prop == L"attack") {
 		propString = std::to_wstring(params.attackTime * 1000.0);
-	} else if (prop == L"decay"sv) {
+	} else if (prop == L"decay") {
 		propString = std::to_wstring(params.decayTime * 1000.0);
-	} else if (prop == L"cascades count"sv) {
+	} else if (prop == L"cascades count") {
 		propString = std::to_wstring(cascades.size());
-	} else if (prop == L"overlap"sv) {
+	} else if (prop == L"overlap") {
 		propString = std::to_wstring(params.overlap);
 	} else {
-		auto cascadeIndex = parseIndexProp(prop, L"nyquist frequency"sv, cascades.size() + 1);
+		auto cascadeIndex = parseIndexProp(prop, L"nyquist frequency", cascades.size() + 1);
 		if (cascadeIndex == -2) {
 			return L"0";
 		}
@@ -387,7 +387,7 @@ const wchar_t* rxaa::FftAnalyzer::getProp(const sview& prop) {
 			return propString.c_str();
 		}
 
-		cascadeIndex = parseIndexProp(prop, L"dc"sv, cascades.size() + 1);
+		cascadeIndex = parseIndexProp(prop, L"dc", cascades.size() + 1);
 		if (cascadeIndex == -2) {
 			return L"0";
 		}
@@ -399,7 +399,7 @@ const wchar_t* rxaa::FftAnalyzer::getProp(const sview& prop) {
 			return propString.c_str();
 		}
 
-		cascadeIndex = parseIndexProp(prop, L"resolution"sv, cascades.size() + 1);
+		cascadeIndex = parseIndexProp(prop, L"resolution", cascades.size() + 1);
 		if (cascadeIndex == -2) {
 			return L"0";
 		}

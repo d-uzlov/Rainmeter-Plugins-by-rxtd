@@ -122,7 +122,6 @@ namespace rxtd::perfmon {
 
 	private:
 		void readNext();
-		static void toUpper(string& s);
 		ExpressionTreeNode parseExpression();
 		ExpressionTreeNode parseTerm();
 		ExpressionTreeNode parseFactor();

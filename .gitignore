@@ -2,3 +2,4 @@ _Build/
 nppBackup/
 .vs/
 _ReSharper.Caches
+*~*.TMP

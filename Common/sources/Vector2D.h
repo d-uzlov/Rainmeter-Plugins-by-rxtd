@@ -9,29 +9,30 @@
 
 #pragma once
 
-namespace rxtd::utils { // TODO rewrite
+namespace rxtd::utils {
 	/**
 	 * Class is used to use one array for several arrays of known size.
-	 * Main purpose is to make it more cache friendly than vector<vector<T>>, I guess.
+	 * More cache friendly than vector<vector<>>.
+	 * Continuous, unlike vector<vector<>>.
 	 */
 	template <typename T>
-	class ContinuousBuffersHolder {
+	class Vector2D {
 		std::vector<T> array { };
 		index buffersCount = 0;
 		index bufferSize = 0;
 
 	public:
-		ContinuousBuffersHolder() = default;
-		~ContinuousBuffersHolder() = default;
+		Vector2D() = default;
+		~Vector2D() = default;
 
-		ContinuousBuffersHolder(ContinuousBuffersHolder&& other) noexcept :
+		Vector2D(Vector2D&& other) noexcept :
 			array(std::move(other.array)),
 			buffersCount(other.buffersCount),
 			bufferSize(other.bufferSize) {
 			other.buffersCount = 0;
 			other.bufferSize = 0;
 		}
-		ContinuousBuffersHolder& operator=(ContinuousBuffersHolder&& other) noexcept {
+		Vector2D& operator=(Vector2D&& other) noexcept {
 			if (this == &other)
 				return *this;
 
@@ -46,8 +47,8 @@ namespace rxtd::utils { // TODO rewrite
 			return *this;
 		}
 
-		ContinuousBuffersHolder(const ContinuousBuffersHolder& other) = delete;
-		ContinuousBuffersHolder& operator=(const ContinuousBuffersHolder& other) = delete;
+		Vector2D(const Vector2D& other) = delete;
+		Vector2D& operator=(const Vector2D& other) = delete;
 
 		void setBuffersCount(index count) {
 			buffersCount = count;

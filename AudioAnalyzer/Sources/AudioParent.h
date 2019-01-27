@@ -42,7 +42,7 @@ namespace rxaa {
 		const wchar_t* _resolve(int argc, const wchar_t* argv[]) override;
 
 	public:
-		double getValue(const string &id, Channel channel, index index) const;
+		double getValue(sview id, Channel channel, index index) const;
 	private:
 	};
 

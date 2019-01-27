@@ -70,8 +70,10 @@ std::vector<SubstringViewInfo> OptionParser::Tokenizer::trimSpaces(sview string)
 OptionParser::OptionList::OptionList() = default;
 
 OptionParser::OptionList::OptionList(sview view, std::vector<SubstringViewInfo>&& list) :
-	source(view.begin(), view.end() + 1),
-	list(std::move(list)) { }
+	source(view.begin(), view.end()),
+	list(std::move(list)) {
+	source.push_back(L'\0');
+}
 
 std::pair<std::vector<wchar_t>, std::vector<SubstringViewInfo>> OptionParser::OptionList::consume() && {
 	return { std::move(source), std::move(list) };
@@ -85,12 +87,79 @@ bool OptionParser::OptionList::empty() const {
 	return list.empty();
 }
 
-sview OptionParser::OptionList::get(index index) const {
-	return list[index].makeView(source);
+sview OptionParser::OptionList::get(index ind) const {
+	return list[ind].makeView(source);
 }
 
-OptionParser::Option OptionParser::OptionList::getOption(index index) const {
-	return Option { list[index].makeView(source) };
+isview OptionParser::OptionList::getCI(index ind) const {
+	return get(ind) % ciView();
+}
+
+OptionParser::Option OptionParser::OptionList::getOption(index ind) const {
+	return Option { list[ind].makeView(source) };
+}
+
+OptionParser::OptionList::iterator::iterator(const OptionList& container, index _index):
+	container(container),
+	ind(_index) {
+}
+
+OptionParser::OptionList::iterator& OptionParser::OptionList::iterator::operator++() {
+	ind++;
+	return *this;
+}
+
+bool OptionParser::OptionList::iterator::operator!=(const iterator& other) const {
+	return &container != &other.container || ind != other.ind;
+}
+
+sview OptionParser::OptionList::iterator::operator*() const {
+	return container.get(ind);
+}
+
+OptionParser::OptionList::iterator OptionParser::OptionList::begin() const {
+	return { *this, 0 };
+}
+
+OptionParser::OptionList::iterator OptionParser::OptionList::end() const {
+	return { *this, size() };
+}
+
+OptionParser::OptionList::CaseInsensitiveView::
+CaseInsensitiveView(const OptionList& basicStringViews): container(basicStringViews) {
+}
+
+OptionParser::OptionList::CaseInsensitiveView::iterator::iterator(const OptionList& container, index _index):
+	container(container),
+	ind(_index) {
+}
+
+OptionParser::OptionList::CaseInsensitiveView::iterator& OptionParser::OptionList::CaseInsensitiveView::iterator
+::operator++() {
+	ind++;
+	return *this;
+}
+
+bool OptionParser::OptionList::CaseInsensitiveView::iterator::operator!=(const iterator& other) const {
+	return &container != &other.container || ind != other.ind;
+}
+
+isview OptionParser::OptionList::CaseInsensitiveView::iterator::operator*() const {
+	return container.getCI(ind);
+}
+
+OptionParser::OptionList::CaseInsensitiveView::iterator OptionParser::OptionList::CaseInsensitiveView::
+begin() const {
+	return { container, 0 };
+}
+
+OptionParser::OptionList::CaseInsensitiveView::iterator OptionParser::OptionList::CaseInsensitiveView::
+end() const {
+	return { container, container.size() };
+}
+
+OptionParser::OptionList::CaseInsensitiveView OptionParser::OptionList::viewCI() const {
+	return CaseInsensitiveView{ *this };
 }
 
 
@@ -103,6 +172,14 @@ sview OptionParser::Option::asString(sview defaultValue) const {
 		return defaultValue;
 	}
 	return view;
+}
+
+isview OptionParser::Option::asIString(isview defaultValue) const {
+	if (view.empty()) {
+		return defaultValue;
+	}
+	return view % ciView();
+
 }
 
 double OptionParser::Option::asFloat(double defaultValue) const {
@@ -239,12 +316,20 @@ std::optional<SubstringViewInfo> OptionParser::OptionMap::find(isview name) cons
 	return iter->second;
 }
 
-OptionParser::OptionList OptionParser::asList(sview string, wchar_t delimiter) {
-	auto list = tokenizer.parse(string, delimiter);
-	return { string, std::move(list) };
+OptionParser::OptionList OptionParser::asList(sview view, wchar_t delimiter) {
+	auto list = tokenizer.parse(view, delimiter);
+	return { view, std::move(list) };
 }
 
-OptionParser::OptionMap OptionParser::asMap(string string, wchar_t optionDelimiter, wchar_t nameDelimiter) {
+OptionParser::OptionList OptionParser::asList(isview view, wchar_t delimiter) {
+	return asList(view % csView(), delimiter);
+}
+
+OptionParser::OptionList OptionParser::asList(const wchar_t* str, wchar_t delimiter) {
+	return asList(sview { str }, delimiter);
+}
+
+OptionParser::OptionMap OptionParser::asMap(string&& string, wchar_t optionDelimiter, wchar_t nameDelimiter) {
 	auto list = tokenizer.parse(string, optionDelimiter);
 
 	std::map<SubstringViewInfo, SubstringViewInfo> paramsInfo { };
@@ -269,8 +354,16 @@ OptionParser::OptionMap OptionParser::asMap(string string, wchar_t optionDelimit
 	return { std::move(string), std::move(paramsInfo) };
 }
 
+OptionParser::OptionMap OptionParser::asMap(istring&& str, wchar_t optionDelimiter, wchar_t nameDelimiter) {
+	return asMap(std::move(str) % csString(), optionDelimiter, nameDelimiter);
+}
+
 OptionParser::OptionMap OptionParser::asMap(sview view, wchar_t optionDelimiter, wchar_t nameDelimiter) {
 	return asMap(string { view }, optionDelimiter, nameDelimiter);
+}
+
+OptionParser::OptionMap OptionParser::asMap(isview str, wchar_t optionDelimiter, wchar_t nameDelimiter) {
+	return asMap(str % csView(), optionDelimiter, nameDelimiter);
 }
 
 OptionParser::OptionMap OptionParser::asMap(const wchar_t* str, wchar_t optionDelimiter, wchar_t nameDelimiter) {

@@ -56,18 +56,18 @@ void rxaa::ParamParser::parse() {
 		cacheHandlers(handlersList);
 
 		for (auto channel : channels) {
-			for (auto handlerName : handlersList) {
+			for (auto handlerName : handlersList.viewCI()) {
 				handlers[channel].emplace_back(handlerName);
 			}
 		}
 	}
 }
 
-const std::map<rxaa::Channel, std::vector<string>>& rxaa::ParamParser::getHandlers() const {
+const std::map<rxaa::Channel, std::vector<istring>>& rxaa::ParamParser::getHandlers() const {
 	return handlers;
 }
 
-const std::map<string, std::function<rxaa::SoundHandler*(rxaa::SoundHandler*)>, std::less<>>&
+const std::map<istring, std::function<rxaa::SoundHandler*(rxaa::SoundHandler*)>, std::less<>>&
 rxaa::ParamParser::getPatches() const {
 	return handlerPatchersMap;
 }
@@ -90,7 +90,7 @@ std::set<rxaa::Channel> rxaa::ParamParser::parseChannels(utils::OptionParser::Op
 void rxaa::ParamParser::cacheHandlers(utils::OptionParser::OptionList indices) {
 	utils::OptionParser optionParser;
 
-	for (auto index : indices) {
+	for (auto index : indices.viewCI()) {
 
 		auto iter = handlerPatchersMap.lower_bound(index);
 		if (iter != handlerPatchersMap.end() && !(handlerPatchersMap.key_comp()(index, iter->first))) {
@@ -98,10 +98,10 @@ void rxaa::ParamParser::cacheHandlers(utils::OptionParser::OptionList indices) {
 			continue;
 		}
 
-		string optionName = L"Handler"s;
+		istring optionName = L"Handler";
 		optionName += L"_";
 		optionName += index;
-		auto optionMap = optionParser.asMap(rain.readString(optionName), L'|', L' ');
+		auto optionMap = optionParser.asMap(rain.readString(optionName % csView()), L'|', L' ');
 
 		utils::Rainmeter::ContextLogger cl { rain.getLogger() };
 		cl.setPrefix(L"Handler {}:", index);
@@ -116,28 +116,28 @@ void rxaa::ParamParser::cacheHandlers(utils::OptionParser::OptionList indices) {
 }
 
 std::function<rxaa::SoundHandler*(rxaa::SoundHandler*)> rxaa::ParamParser::parseHandler(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger &cl) {
-	const auto type = optionMap.get(L"type"sv).asString();
+	const auto type = optionMap.get(L"type"sv).asIString();
 
 	if (type.empty()) {
 		return nullptr;
 	}
 
-	if (type == L"rms"sv) {
+	if (type == L"rms") {
 		return parseHandlerT<BlockRms>(optionMap, cl);
 	}
-	if (type == L"peak"sv) {
+	if (type == L"peak") {
 		return parseHandlerT<BlockPeak>(optionMap, cl);
 	}
-	if (type == L"fft"sv) {
+	if (type == L"fft") {
 		return parseHandlerT<FftAnalyzer>(optionMap, cl);
 	}
-	if (type == L"band"sv) {
+	if (type == L"band") {
 		return parseHandlerT2<BandAnalyzer>(optionMap, cl);
 	}
-	if (type == L"spectrogram"sv) {
+	if (type == L"spectrogram") {
 		return parseHandlerT2<Spectrogram>(optionMap, cl);
 	}
-	if (type == L"waveform"sv) {
+	if (type == L"waveform") {
 		return parseHandlerT2<WaveForm>(optionMap, cl);
 	}
 

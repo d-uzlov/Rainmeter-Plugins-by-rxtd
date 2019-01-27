@@ -15,9 +15,6 @@
 
 #include "undef.h"
 
-#pragma warning(disable : 4458)
-#pragma warning(disable : 4244)
-
 using namespace utils;
 
 void ExpressionTreeNode::solve() {
@@ -253,11 +250,6 @@ void MathExpressionParser::readNext() {
 		error = true;
 	}
 }
-void MathExpressionParser::toUpper(string& s) {
-	for (wchar_t& c : s) {
-		c = towupper(c);
-	}
-}
 
 ExpressionTreeNode MathExpressionParser::parseExpression() {
 	ExpressionTreeNode result = parseTerm();
@@ -436,13 +428,11 @@ ExpressionTreeNode MathExpressionParser::parseAtom() {
 	return ExpressionTreeNode();
 }
 
-int64_t MathExpressionParser::parseInt(sview string) {
-	return std::stoi(string.data()); // will stop at first non-digit, doesn't require null-terminated string
+index MathExpressionParser::parseInt(sview view) {
+	return StringUtils::parseInt(view);
 }
 
 double MathExpressionParser::parseFractional(sview view) {
-	string temp = L"0.";
-	temp += view;
-	return std::stod(temp); // TODO
+	return StringUtils::parseFractional(view);
 }
 

@@ -10,8 +10,6 @@
 #include "Channel.h"
 #include <my-windows.h>
 #include <Audioclient.h>
-#include <cwctype>
-#include "StringUtils.h"
 
 #include "undef.h"
 
@@ -49,7 +47,7 @@ std::optional<rxaa::Channel> rxaa::Channel::ChannelParser::find(const sview str)
 }
 
 void rxaa::Channel::ChannelParser::addElement(isview name, Channel value) {
-	map[name % toString()] = value;
+	map[name % own()] = value;
 }
 
 rxaa::Channel::Channel(Value value) : value(value) { }

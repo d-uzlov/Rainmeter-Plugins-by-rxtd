@@ -95,14 +95,13 @@ namespace rxtd::utils {
 
 	private:
 		void readNext();
-		static void toUpper(string& s); // TODO use string utils
 		ExpressionTreeNode parseExpression();
 		ExpressionTreeNode parseTerm();
 		ExpressionTreeNode parseFactor();
 		ExpressionTreeNode parsePower();
 		ExpressionTreeNode parseAtom();
 
-		static int64_t parseInt(sview string);
-		static double parseFractional(sview string);
+		static int64_t parseInt(sview view);
+		static double parseFractional(sview view);
 	};
 }

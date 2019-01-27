@@ -54,7 +54,7 @@ bool SubstringViewInfo::operator<(const SubstringViewInfo& other) const {
 
 
 
-SubstringViewInfo StringViewUtils::trimInfo(const wchar_t* base, SubstringViewInfo viewInfo) {
+SubstringViewInfo StringUtils::trimInfo(const wchar_t* base, SubstringViewInfo viewInfo) {
 	sview view = viewInfo.makeView(base);
 
 	const auto begin = view.find_first_not_of(L" \t");
@@ -67,6 +67,6 @@ SubstringViewInfo StringViewUtils::trimInfo(const wchar_t* base, SubstringViewIn
 	return viewInfo.substr(begin, end - begin + 1);
 }
 
-SubstringViewInfo StringViewUtils::trimInfo(sview source, SubstringViewInfo viewInfo) {
+SubstringViewInfo StringUtils::trimInfo(sview source, SubstringViewInfo viewInfo) {
 	return trimInfo(source.data(), viewInfo);
 }

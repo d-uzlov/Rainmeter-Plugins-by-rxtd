@@ -15,7 +15,7 @@
 using namespace perfmon;
 
 PerfmonChild::PerfmonChild(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rain)) {
-	auto parentName = rain.readString(L"Parent") % ciView() % toString();
+	auto parentName = rain.readString(L"Parent") % ciView() % own();
 	if (parentName.empty()) {
 		log.error(L"Parent must be specified");
 		setMeasureState(utils::MeasureState::BROKEN);

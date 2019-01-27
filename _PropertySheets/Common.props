@@ -13,6 +13,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <DiagnosticsFormat>Classic</DiagnosticsFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
   </ItemDefinitionGroup>
 </Project>

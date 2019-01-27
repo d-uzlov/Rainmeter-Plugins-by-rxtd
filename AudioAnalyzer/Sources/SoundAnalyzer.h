@@ -12,7 +12,7 @@
 #include "sound-handlers/SoundHandler.h"
 #include <functional>
 #include "Channel.h"
-#include <ContinuousBuffersHolder.h>
+#include <Vector2D.h>
 #include <variant>
 
 namespace rxaa {
@@ -25,17 +25,17 @@ namespace rxaa {
 	private:
 		MyWaveFormat waveFormat;
 
-		std::map<Channel, std::vector<string>> orderOfHandlers;
-		std::map<string, std::function<SoundHandler*(SoundHandler*)>, std::less<>> patchers;
+		std::map<Channel, std::vector<istring>> orderOfHandlers;
+		std::map<istring, std::function<SoundHandler*(SoundHandler*)>, std::less<>> patchers;
 
 		index targetRate = 0u;
 		index divide = 1u;
 
-		utils::ContinuousBuffersHolder<float> wave;
+		utils::Vector2D<float> wave;
 
 		struct ChannelData {
 			std::vector<std::unique_ptr<SoundHandler>> handlers;
-			std::map<string, decltype(handlers)::size_type, std::less<>> indexMap;
+			std::map<istring, decltype(handlers)::size_type, std::less<>> indexMap;
 		};
 
 		std::map<Channel, ChannelData> channels;
@@ -58,7 +58,7 @@ namespace rxaa {
 
 			const float* getWave() const override;
 			index getWaveSize() const override;
-			const SoundHandler* getHandler(const string& id) const override;
+			const SoundHandler* getHandler(isview id) const override;
 			Channel getChannel() const override;
 			uint8_t* getBufferRaw(index size) const override;
 
@@ -79,12 +79,12 @@ namespace rxaa {
 
 		void setTargetRate(index value) noexcept;
 
-		std::variant<SoundHandler*, SearchError> findHandler(Channel channel, sview handlerId) const noexcept; // TODO isview everywhere
+		std::variant<SoundHandler*, SearchError> findHandler(Channel channel, isview handlerId) const noexcept;
 
-		double getValue(Channel channel, const string& handlerId, index index) const noexcept;
+		double getValue(Channel channel, isview handlerId, index index) const noexcept;
 		std::variant<const wchar_t*, SearchError> getProp(Channel channel, sview handlerId, sview prop) const noexcept;
 
-		void setPatchHandlers(std::map<Channel, std::vector<string>> handlersOrder, std::map<string, std::function<SoundHandler*(SoundHandler*)>, std::less<>> handlerPatchersMap) noexcept;
+		void setPatchHandlers(std::map<Channel, std::vector<istring>> handlersOrder, std::map<istring, std::function<SoundHandler*(SoundHandler*)>, std::less<>> handlerPatchersMap) noexcept;
 
 		void setWaveFormat(MyWaveFormat waveFormat) noexcept;
 

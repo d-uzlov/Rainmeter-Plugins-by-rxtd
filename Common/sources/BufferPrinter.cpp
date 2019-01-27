@@ -11,8 +11,6 @@
 
 #include "undef.h"
 
-#pragma warning(disable : 4458)
-
 using namespace utils;
 
 BufferPrinter::ReadableOutputBuffer::ReadableOutputBuffer() {

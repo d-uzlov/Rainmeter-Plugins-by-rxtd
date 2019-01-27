@@ -11,8 +11,6 @@
 
 #include "undef.h"
 
-#pragma warning(disable : 4458)
-
 using namespace utils;
 
 TypeHolder::TypeHolder(Rainmeter&& rain) : rain(std::move(rain)), log(this->rain.getLogger()) {

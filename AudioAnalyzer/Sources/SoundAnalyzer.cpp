@@ -37,7 +37,7 @@ index rxaa::SoundAnalyzer::DataSupplierImpl::getWaveSize() const {
 	return waveSize;
 }
 
-const rxaa::SoundHandler* rxaa::SoundAnalyzer::DataSupplierImpl::getHandler(const string& id) const {
+const rxaa::SoundHandler* rxaa::SoundAnalyzer::DataSupplierImpl::getHandler(isview id) const {
 	const auto iter = channelData->indexMap.find(id);
 	if (iter == channelData->indexMap.end()) {
 		return nullptr;
@@ -50,7 +50,7 @@ rxaa::Channel rxaa::SoundAnalyzer::DataSupplierImpl::getChannel() const {
 }
 
 uint8_t* rxaa::SoundAnalyzer::DataSupplierImpl::getBufferRaw(index size) const {
-	if (nextBufferIndex >= buffers.size()) {
+	if (nextBufferIndex >= index(buffers.size())) {
 		buffers.emplace_back();
 	}
 	auto &buffer = buffers[nextBufferIndex];
@@ -139,7 +139,7 @@ void rxaa::SoundAnalyzer::setTargetRate(index value) noexcept {
 }
 
 std::variant<rxaa::SoundHandler*, rxaa::SoundAnalyzer::SearchError>
-rxaa::SoundAnalyzer::findHandler(Channel channel, sview handlerId) const noexcept {
+rxaa::SoundAnalyzer::findHandler(Channel channel, isview handlerId) const noexcept {
 	const auto channelIter = channels.find(channel);
 	if (channelIter == channels.end()) {
 		return SearchError::CHANNEL_NOT_FOUND;
@@ -155,7 +155,7 @@ rxaa::SoundAnalyzer::findHandler(Channel channel, sview handlerId) const noexcep
 	return handler.get();
 }
 
-double rxaa::SoundAnalyzer::getValue(Channel channel, const string& handlerId, index index) const noexcept {
+double rxaa::SoundAnalyzer::getValue(Channel channel, isview handlerId, index index) const noexcept {
 	const auto handlerVariant = findHandler(channel, handlerId);
 	if (handlerVariant.index() != 0) {
 		return 0.0;
@@ -174,17 +174,17 @@ double rxaa::SoundAnalyzer::getValue(Channel channel, const string& handlerId, i
 
 std::variant<const wchar_t*, rxaa::SoundAnalyzer::SearchError>
 rxaa::SoundAnalyzer::getProp(Channel channel, sview handlerId, sview prop) const noexcept {
-	const auto handlerVariant = findHandler(channel, handlerId);
+	const auto handlerVariant = findHandler(channel, handlerId % ciView());
 	if (handlerVariant.index() != 0) {
 		return std::get<1>(handlerVariant);
 	}
 
 	auto &handler = std::get<0>(handlerVariant);
-	return handler->getProp(prop);
+	return handler->getProp(prop % ciView());
 }
 
-void rxaa::SoundAnalyzer::setPatchHandlers(std::map<Channel, std::vector<string>> handlersOrder,
-	std::map<string, std::function<SoundHandler*(SoundHandler*)>, std::less<>> handlerPatchersMap) noexcept {
+void rxaa::SoundAnalyzer::setPatchHandlers(std::map<Channel, std::vector<istring>> handlersOrder,
+	std::map<istring, std::function<SoundHandler*(SoundHandler*)>, std::less<>> handlerPatchersMap) noexcept {
 
 	for (const auto &channelOrder : handlersOrder) {
 		auto channelIter = channels.find(channelOrder.first);

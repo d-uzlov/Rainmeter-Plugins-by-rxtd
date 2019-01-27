@@ -8,6 +8,7 @@
  */
 
 #pragma once
+#include <charconv>
 
 namespace rxtd::utils {
 	class SubstringViewInfo {
@@ -34,12 +35,12 @@ namespace rxtd::utils {
 
 		sview makeView(const std::vector<wchar_t>& base) const;
 
-		SubstringViewInfo substr(index subOffset, index subLength = sview::npos) const;
+		SubstringViewInfo substr(index subOffset, index subLength = std::numeric_limits<index>::max()) const;
 
 		bool operator <(const SubstringViewInfo& other) const;
 	};
 
-	class StringViewUtils {
+	class StringUtils {
 	public:
 		template<typename CT>
 		static std::basic_string_view<wchar_t, CT> trim(std::basic_string_view<wchar_t, CT> view) {
@@ -60,10 +61,7 @@ namespace rxtd::utils {
 		static SubstringViewInfo trimInfo(const wchar_t* base, SubstringViewInfo viewInfo);
 
 		static SubstringViewInfo trimInfo(sview source, SubstringViewInfo viewInfo);
-	};
 
-	class StringUtils {
-	public:
 		template<typename CT, typename A>
 		static void lowerInplace(std::basic_string<wchar_t, CT, A>& str) {
 			for (auto& c : str) {
@@ -110,7 +108,7 @@ namespace rxtd::utils {
 			return { firstNotSpace, lastNotSpace };
 		}
 
-		static string trimCopy(const wchar_t*str) {
+		static string trimCopy(const wchar_t *str) {
 			return trimCopy(sview { str });
 		}
 
@@ -137,5 +135,92 @@ namespace rxtd::utils {
 			}
 		}
 
+		static index parseInt(sview view) {
+			char buffer[80];
+
+			view = trim(view);
+			bool hex = false;
+			if ((startsWith(view, sview { L"0x" }) || startsWith(view, sview { L"0X" }))) {
+				hex = true;
+				view = view.substr(2);
+			} else if (startsWith(view, sview { L"+" })) {
+				view = view.substr(1);
+			}
+
+			if (view.length() > 0 && !iswdigit(view.front())) {
+				return 0;
+			}
+
+			index size = std::min(view.length(), sizeof(buffer));
+			for (index i = 0; i < size; ++i) {
+				const auto wc = view[i];
+				if (wc > std::numeric_limits<uint8_t>::max()) {
+					buffer[i] = '\0';
+					size = i;
+					break;
+				}
+				buffer[i] = static_cast<char>(wc);
+			}
+
+			index result = 0;
+			const int base = hex ? 16 : 10;
+			std::from_chars(buffer, buffer + size, result, base);
+			return result;
+		}
+
+		static double parseFloat(sview view) {
+			char buffer[80];
+
+			view = trim(view);
+			if (startsWith(view, sview { L"+" })) {
+				view = view.substr(1);
+			}
+
+			if (view.empty() || !iswdigit(view.front())) {
+				return 0;
+			}
+
+			index size = std::min(view.length(), sizeof(buffer));
+			for (index i = 0; i < size; ++i) {
+				const auto wc = view[i];
+				if (wc > std::numeric_limits<uint8_t>::max()) {
+					buffer[i] = '\0';
+					size = i;
+					break;
+				}
+				buffer[i] = static_cast<char>(wc);
+			}
+
+			double result = 0;
+			std::from_chars(buffer, buffer + size, result);
+			return result;
+		}
+
+		static double parseFractional(sview view) {
+			char buffer[80];
+
+			view = trim(view);
+			if (view.empty() || !iswdigit(view.front())) {
+				return 0;
+			}
+
+			buffer[0] = '0';
+			buffer[1] = '.';
+
+			index size = std::min(view.length(), sizeof(buffer));
+			for (index i = 0; i < size; ++i) {
+				const auto wc = view[i];
+				if (wc > std::numeric_limits<uint8_t>::max()) {
+					buffer[i + 2] = '\0';
+					size = i;
+					break;
+				}
+				buffer[i + 2] = static_cast<char>(wc);
+			}
+
+			double result = 0;
+			std::from_chars(buffer, buffer + size + 2, result);
+			return result;
+		}
 	};
 }

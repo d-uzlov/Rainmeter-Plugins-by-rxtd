@@ -23,6 +23,9 @@ namespace rxaa {
 			SIZE_EXACT
 		};
 		struct Params {
+		private:
+			friend FftAnalyzer;
+
 			SizeBy sizeBy { };
 
 			double attackTime { };
@@ -110,7 +113,7 @@ namespace rxaa {
 		const double* getData() const override;
 		index getCount() const override;
 		void setSamplesPerSec(index samplesPerSec) override;
-		const wchar_t* getProp(const sview& prop) override;
+		const wchar_t* getProp(const isview& prop) override;
 		void reset() override;
 
 		void setParams(Params params);

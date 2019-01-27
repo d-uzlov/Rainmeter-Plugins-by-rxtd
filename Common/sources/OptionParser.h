@@ -14,7 +14,7 @@
 
 namespace rxtd::utils {
 	class OptionParser {
-		typedef StringViewUtils svu;
+		typedef StringUtils svu;
 
 		class Tokenizer {
 			std::vector<SubstringViewInfo> tempList { };
@@ -23,13 +23,14 @@ namespace rxtd::utils {
 			std::vector<SubstringViewInfo> parse(sview string, wchar_t delimiter);
 
 		private:
-			void emitToken(const index begin, const index end);
+			void emitToken(index begin, index end);
 
 			void tokenize(sview string, wchar_t delimiter);
 
 			std::vector<SubstringViewInfo> trimSpaces(sview string);
 		};
 
+		// Class, that allows you to parse options.
 		class Option {
 			sview view;
 
@@ -37,10 +38,14 @@ namespace rxtd::utils {
 			Option();
 			explicit Option(sview view);
 
+			// Raw view of option.
 			sview asString(sview defaultValue = { }) const;
-
+			// Raw case-insensitive view of option.
+			isview asIString(isview defaultValue = { }) const;
+			// Parse float, support math operations.
 			double asFloat(double defaultValue = 0.0) const;
 
+			// Parse integer value, support math operations.
 			template<typename I = int32_t>
 			typename std::enable_if<std::is_integral<I>::value, I>::type
 				asInt(I defaultValue = 0) const {
@@ -51,11 +56,11 @@ namespace rxtd::utils {
 				}
 				return static_cast<I>(dVal);
 			}
-
+			// Alias to asFloat() != 0
 			bool asBool(bool defaultValue = false) const {
 				return asFloat(defaultValue ? 1.0 : 0.0) != 0.0;
 			}
-
+			// Parse Color, support math operations per color component.
 			Color asColor(Color defaultValue = { }) const;
 
 		private:
@@ -64,6 +69,7 @@ namespace rxtd::utils {
 
 		Tokenizer tokenizer;
 	public:
+		// List of string.
 		class OptionList {
 			std::vector<wchar_t> source;
 			std::vector<SubstringViewInfo> list;
@@ -73,48 +79,75 @@ namespace rxtd::utils {
 
 			OptionList(sview view, std::vector<SubstringViewInfo>&& list);
 
+			// Allows you to steal inner resources.
 			std::pair<std::vector<wchar_t>, std::vector<SubstringViewInfo>> consume() && ;
 
+			// Count of elements in list.
 			index size() const;
+			// Alias to "size() == 0".
 			bool empty() const;
 
-			sview get(index index) const;
-			Option getOption(index index) const;
+			// View of Nth option.
+			sview get(index ind) const;
+			// Case-insensitive view of Nth option.
+			isview getCI(index ind) const;
+			// Parseable view of Nth option.
+			Option getOption(index ind) const;
 
-			template<typename C>
 			class iterator {
-				C &container;
+				const OptionList& container;
 				index ind;
 
 			public:
-				iterator(C& container, index _index) :
-					container(container),
-					ind(_index) { }
+				iterator(const OptionList& container, index _index);
 
-				iterator& operator++() {
-					ind++;
-					return *this;
-				}
-				bool operator !=(const iterator& other) const {
-					return &container != &other.container || ind != other.ind;
-				}
-				sview operator*() const {
-					return container.get(ind);
-				}
+				iterator& operator++();
+
+				bool operator !=(const iterator& other) const;
+
+				sview operator*() const;
 			};
 
-			iterator<const OptionList> begin() const {
-				return { *this, 0 };
-			}
-			iterator<const OptionList> end() const {
-				return { *this, size() };
-			}
+			iterator begin() const;
+
+			iterator end() const;
+
+			class CaseInsensitiveView {
+				const OptionList& container;
+
+			public:
+				explicit CaseInsensitiveView(const OptionList& basicStringViews);
+
+				class iterator {
+					const OptionList& container;
+					index ind;
+
+				public:
+					iterator(const OptionList& container, index _index);
+
+					iterator& operator++();
+
+					bool operator !=(const iterator& other) const;
+
+					isview operator*() const;
+				};
+
+				iterator begin() const;
+
+				iterator end() const;
+			};
+
+			// Allows you to iterate over case-insensitive views.
+			CaseInsensitiveView viewCI() const;
 		};
 
 		class OptionMap {
+			// All string views targets here
 			string source;
+			// For move and copy operations.
 			std::map<SubstringViewInfo, SubstringViewInfo> paramsInfo { };
 
+			// For fast search.
 			std::map<isview, SubstringViewInfo> params { };
 
 		public:
@@ -127,19 +160,37 @@ namespace rxtd::utils {
 			OptionMap& operator=(const OptionMap& other);
 			OptionMap& operator=(OptionMap&& other) noexcept;
 
+			//Returns named option, search is case-insensitive.
 			Option get(sview name) const;
+
+			//Returns named option, search is case-insensitive.
 			Option get(isview name) const;
+			
+			//Returns named option, search is case-insensitive.
 			Option get(const wchar_t* name) const;
 
+			// Allows you to iterate over all available options.
 			const std::map<isview, SubstringViewInfo>& getParams() const;
 		private:
 			void fillParams();
 			std::optional<SubstringViewInfo> find(isview name) const;
 		};
-
+		// Parses and creates OptionList.
 		OptionList asList(sview string, wchar_t delimiter);
-		OptionMap asMap(string string, wchar_t optionDelimiter, wchar_t nameDelimiter);
+		// Parses and creates OptionList.
+		OptionList asList(isview string, wchar_t delimiter);
+		// Parses and creates OptionList.
+		OptionList asList(const wchar_t *string, wchar_t delimiter);
+
+		// Parses and creates OptionMap.
+		OptionMap asMap(string&& string, wchar_t optionDelimiter, wchar_t nameDelimiter);
+		// Parses and creates OptionMap.
+		OptionMap asMap(istring&& string, wchar_t optionDelimiter, wchar_t nameDelimiter);
+		// Parses and creates OptionMap.
 		OptionMap asMap(sview string, wchar_t optionDelimiter, wchar_t nameDelimiter);
+		// Parses and creates OptionMap.
+		OptionMap asMap(isview string, wchar_t optionDelimiter, wchar_t nameDelimiter);
+		// Parses and creates OptionMap.
 		OptionMap asMap(const wchar_t *string, wchar_t optionDelimiter, wchar_t nameDelimiter);
 	};
 }

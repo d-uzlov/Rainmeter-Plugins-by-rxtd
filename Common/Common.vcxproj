@@ -147,6 +147,11 @@
   <ItemGroup>
     <ClCompile Include="precompiled.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Test|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="sources\BmpWriter.cpp" />
     <ClCompile Include="sources\BufferPrinter.cpp" />
@@ -163,7 +168,7 @@
     <ClInclude Include="sources\BufferPrinter.h" />
     <ClInclude Include="sources\CaseInsensitiveString.h" />
     <ClInclude Include="sources\Color.h" />
-    <ClInclude Include="sources\ContinuousBuffersHolder.h" />
+    <ClInclude Include="sources\Vector2D.h" />
     <ClInclude Include="sources\FastMath.h" />
     <ClInclude Include="sources\MathExpressionParser.h" />
     <ClInclude Include="sources\my-windows.h" />

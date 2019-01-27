@@ -12,9 +12,6 @@
 #include <Audioclient.h>
 #include <type_traits>
 
-#pragma warning(disable : 6215)
-#pragma warning(disable : 6217)
-
 namespace rxtd::utils {
 	static_assert(std::is_same<BYTE, uint8_t>::value);
 	static_assert(std::is_same<UINT32, uint32_t>::value);

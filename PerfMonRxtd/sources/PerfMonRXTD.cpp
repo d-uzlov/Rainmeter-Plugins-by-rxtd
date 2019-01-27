@@ -1,4 +1,4 @@
-/*  
+/*
  * Copyright (C) 2018-2019 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
@@ -19,8 +19,8 @@
 PLUGIN_EXPORT void Initialize(void** data, void* rm) {
 	utils::Rainmeter rain(rm);
 
-	auto str = rain.readString(L"Type");
-	if (_wcsicmp(str.data(), L"Parent") == 0) {
+	auto str = rain.readString(L"Type") % ciView();
+	if (str == L"Parent") {
 		*data = new perfmon::PerfmonParent(std::move(rain));
 	} else {
 		*data = new perfmon::PerfmonChild(std::move(rain));

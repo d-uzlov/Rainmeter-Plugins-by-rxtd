@@ -9,6 +9,7 @@
 
 #pragma once
 #include "../Channel.h"
+#include "StringUtils.h"
 
 namespace rxaa {
 	class SoundHandler;
@@ -18,7 +19,7 @@ namespace rxaa {
 		virtual ~DataSupplier() = default;
 		virtual const float* getWave() const = 0;
 		virtual index getWaveSize()  const = 0;
-		virtual const SoundHandler* getHandler(const string &id) const = 0;
+		virtual const SoundHandler* getHandler(isview id) const = 0;
 		virtual Channel getChannel() const = 0;
 
 		/**
@@ -43,7 +44,7 @@ namespace rxaa {
 		virtual const double* getData() const = 0;
 		virtual index getCount() const = 0;
 		virtual void setSamplesPerSec(index samplesPerSec) = 0;
-		virtual const wchar_t* getProp(const sview& prop) {
+		virtual const wchar_t* getProp(const isview& prop) {
 			return nullptr;
 		}
 		virtual void reset() = 0;
@@ -57,23 +58,23 @@ namespace rxaa {
 			return calculateAttackDecayConstant(time, samplesPerSec, 1u);
 		}
 
-		static int parseIndexProp(const sview& request, const sview& propName, index endBound) {
+		static int parseIndexProp(const isview& request, const isview& propName, index endBound) {
 			return parseIndexProp(request, propName, 0, endBound);
 		}
 
-		static int parseIndexProp(const sview& request, const sview& propName, index minBound, index endBound) {
+		static int parseIndexProp(const isview& request, const isview& propName, index minBound, index endBound) {
 			const auto indexPos = request.find(propName);
 
 			if (indexPos != 0) {
 				return -1;
 			}
 
-			const auto cascadeIndexView = request.substr(propName.length());
-			if (cascadeIndexView.length() == 0) {
+			const auto indexView = request.substr(propName.length());
+			if (indexView.length() == 0) {
 				return 0;
 			}
 
-			const auto cascadeIndex = std::wcstol(cascadeIndexView.data(), nullptr, 10);
+			const auto cascadeIndex = utils::StringUtils::parseInt(indexView % csView());
 
 			if (cascadeIndex < minBound || cascadeIndex >= endBound) {
 				return -2;

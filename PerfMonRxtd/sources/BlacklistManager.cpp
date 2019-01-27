@@ -29,10 +29,11 @@ bool MatchTestRecord::match(sview string) const {
 
 BlacklistManager::MatchList::MatchList() = default;
 
-BlacklistManager::MatchList::MatchList(rxtd::utils::OptionParser::OptionList optionList, bool upperCase) {
+BlacklistManager::MatchList::MatchList(utils::OptionParser::OptionList optionList, bool upperCase) {
 	auto[optVec, optList] = std::move(optionList).consume();
 	source = std::move(optVec);
 	if (upperCase) {
+		source.push_back(L'\0');
 		CharUpperW(source.data());
 	}
 

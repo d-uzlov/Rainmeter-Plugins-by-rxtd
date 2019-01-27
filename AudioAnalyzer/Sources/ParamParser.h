@@ -21,8 +21,8 @@ namespace rxaa {
 		utils::Rainmeter& rain;
 		utils::Rainmeter::Logger& log;
 
-		std::map<Channel, std::vector<string>> handlers;
-		std::map<string, std::function<SoundHandler*(SoundHandler*)>, std::less<>> handlerPatchersMap;
+		std::map<Channel, std::vector<istring>> handlers;
+		std::map<istring, std::function<SoundHandler*(SoundHandler*)>, std::less<>> handlerPatchersMap;
 
 	public:
 		explicit ParamParser(utils::Rainmeter& rain);
@@ -35,8 +35,8 @@ namespace rxaa {
 		ParamParser& operator=(ParamParser&& other) = delete;
 
 		void parse();
-		const std::map<Channel, std::vector<string>>& getHandlers() const;
-		const std::map<string, std::function<SoundHandler*(SoundHandler*)>, std::less<>>& getPatches() const;
+		const std::map<Channel, std::vector<istring>>& getHandlers() const;
+		const std::map<istring, std::function<SoundHandler*(SoundHandler*)>, std::less<>>& getPatches() const;
 
 	private:
 		std::set<Channel> parseChannels(utils::OptionParser::OptionList channelsStringList) const;
