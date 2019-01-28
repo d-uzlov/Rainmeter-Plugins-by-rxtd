@@ -379,9 +379,19 @@ void rxaa::SoundAnalyzer::process(const uint8_t* buffer, bool isSilent, index fr
 }
 
 void rxaa::SoundAnalyzer::resetValues() noexcept {
-	for (auto& channel : channels) {
-		for (auto& handler : channel.second.handlers) {
+	for (auto& [_, channel] : channels) {
+		for (auto& handler : channel.handlers) {
 			handler->reset();
+		}
+	}
+}
+
+void rxaa::SoundAnalyzer::finish() noexcept {
+	for (auto&[_, channel] : channels) {
+		for (auto& handler : channel.handlers) {
+			if (handler->isStandalone()) {
+				handler->finish(dataSupplier);
+			}
 		}
 	}
 }

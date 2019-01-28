@@ -63,6 +63,9 @@ namespace rxaa {
 		index getCount() const override;
 
 		const wchar_t* getProp(const isview& prop) const override;
+		bool isStandalone() override {
+			return true;
+		}
 
 	private:
 		void updateParams();

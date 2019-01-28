@@ -118,7 +118,7 @@ std::optional<rxaa::BandAnalyzer::Params> rxaa::BandAnalyzer::parseParams(const 
 		params.smoothingCurve = SmoothingCurve::FLAT;
 	}
 
-	params.minFunction = optionMap.get(L"mixFunction").asIString(L"product") == L"product" ? MixFunction::PRODUCT : MixFunction::AVERAGE;
+	params.mixFunction = optionMap.get(L"mixFunction").asIString(L"product") == L"product" ? MixFunction::PRODUCT : MixFunction::AVERAGE;
 
 	return params;
 }
@@ -282,82 +282,131 @@ void rxaa::BandAnalyzer::updateValues() {
 	cascadeIndexBegin--;
 	cascadeIndexEnd--;
 
+	if (!analysisComputed) {
+		computeBandInfo(cascadeIndexBegin, cascadeIndexEnd);
+		computeAnalysis(cascadeIndexBegin + 1, cascadeIndexEnd + 1);
+	}
+
 	resampleData(cascadeIndexBegin, cascadeIndexEnd);
 
-	computeAnalysis(cascadeIndexBegin + 1, cascadeIndexEnd + 1);
-
 	if (params.blurCascades) {
-		blurData(cascadeIndexBegin, cascadeIndexEnd);
+		blurData();
 	}
 
-	pastValuesIndex++;
-	if (pastValuesIndex >= params.smoothingFactor) {
-		pastValuesIndex = 0;
-	}
-
-	collectData(cascadeIndexBegin, cascadeIndexEnd);
+	gatherData();
 	
 	applyTimeFiltering();
 
 	transformToLog();
+}
+
+void rxaa::BandAnalyzer::computeBandInfo(index cascadeIndexBegin, index cascadeIndexEnd) {
+
+	cascadesInfo.resize(cascadeIndexEnd - cascadeIndexBegin);
+	for (auto &cascadeInfo : cascadesInfo) {
+		cascadeInfo.setSize(bandsCount);
+	}
+
+	const auto fftBinsCount = source->getCount();
+	double binWidth = static_cast<double>(samplesPerSec) / (source->getFftSize() * std::pow(2u, cascadeIndexBegin));
+	double binWidthInverse = 1.0 / binWidth;
+
+	for (auto& [_, cascadeBandInfo] : cascadesInfo) {
+		index bin = params.includeZero ? 0 : 1; // bin 0 is ~DC
+		index band = 0;
+
+		double bandMinFreq = params.bandFreqs[0];
+		double bandMaxFreq = params.bandFreqs[1];
+
+		while (bin < fftBinsCount && band < bandsCount) {
+			const double binUpperFreq = (bin + 0.5) * binWidth;
+			if (binUpperFreq < bandMinFreq) {
+				bin++;
+				continue;
+			}
+
+			double weight = 1.0;
+			const double binLowerFreq = (bin - 0.5) * binWidth;
+
+			if (binLowerFreq < bandMinFreq) {
+				weight -= (bandMinFreq - binLowerFreq) * binWidthInverse;
+			}
+			if (binUpperFreq > bandMaxFreq) {
+				weight -= (binUpperFreq - bandMaxFreq) * binWidthInverse;
+			}
+			if (weight > 0) {
+				cascadeBandInfo[band].weight += weight;
+			}
+
+			if (bandMaxFreq >= binUpperFreq) {
+				bin++;
+			} else {
+				band++;
+				if (band >= bandsCount) {
+					break;
+				}
+				bandMinFreq = bandMaxFreq;
+				bandMaxFreq = params.bandFreqs[band + 1];
+			}
+		}
+		binWidth *= 0.5;
+		binWidthInverse *= 2.0;
+	}
 
 }
 
 void rxaa::BandAnalyzer::resampleData(index cascadeIndexBegin, index cascadeIndexEnd) {
 
-	bandInfo.resize(cascadeIndexEnd - cascadeIndexBegin);
-	for (auto &vec : bandInfo) {
-		vec.resize(bandsCount);
-	}
-
 	const auto fftBinsCount = source->getCount();
 	double binWidth = static_cast<double>(samplesPerSec) / (source->getFftSize() * std::pow(2u, cascadeIndexBegin));
+	double binWidthInverse = 1.0 / binWidth;
 
 	for (auto cascade = cascadeIndexBegin; cascade < cascadeIndexEnd; ++cascade) {
-		index binIndex = params.includeZero ? 0 : 1; // bin 0 is ~DC
-		index bandIndex = 0;
+		index bin = params.includeZero ? 0 : 1; // bin 0 is ~DC
+		index band = 0;
 
 		double bandMinFreq = params.bandFreqs[0];
 		double bandMaxFreq = params.bandFreqs[1];
 
 		const auto fftData = source->getCascade(cascade);
 
-		auto &cascadeBandInfo = bandInfo[cascade - cascadeIndexBegin];
+		auto &cascadeMagnitudes = cascadesInfo[cascade - cascadeIndexBegin].magnitudes;
+		std::fill(cascadeMagnitudes.begin(), cascadeMagnitudes.end(), 0.0);
 
-		while (binIndex < fftBinsCount && bandIndex < bandsCount) {
-			const double binUpperFreq = (binIndex + 0.5) * binWidth;
+		while (bin < fftBinsCount && band < bandsCount) {
+			const double binUpperFreq = (bin + 0.5) * binWidth;
 			if (binUpperFreq < bandMinFreq) {
-				binIndex++;
+				bin++;
 				continue;
 			}
 
 			double weight = 1.0;
-			const double binLowerFreq = (binIndex - 0.5) * binWidth;
+			const double binLowerFreq = (bin - 0.5) * binWidth;
 
 			if (binLowerFreq < bandMinFreq) {
-				weight -= (bandMinFreq - binLowerFreq) / binWidth;
+				weight -= (bandMinFreq - binLowerFreq) * binWidthInverse;
 			}
-			if (bandMaxFreq < binUpperFreq) {
-				weight -= (binUpperFreq - bandMaxFreq) / binWidth;
+			if (binUpperFreq > bandMaxFreq) {
+				weight -= (binUpperFreq - bandMaxFreq) * binWidthInverse;
 			}
 			if (weight > 0) {
-				const auto fftValue = fftData[binIndex];
-				cascadeBandInfo[bandIndex].magnitude += fftValue * weight;
-				cascadeBandInfo[bandIndex].weight += weight;
+				const auto fftValue = fftData[bin];
+				cascadeMagnitudes[band] += fftValue * weight;
 			}
 
 			if (bandMaxFreq >= binUpperFreq) {
-				binIndex++;
+				bin++;
 			} else {
-				bandIndex++;
-				if (bandIndex >= bandsCount) {
+				band++;
+				if (band >= bandsCount) {
 					break;
 				}
 				bandMinFreq = bandMaxFreq;
-				bandMaxFreq = params.bandFreqs[bandIndex + 1];
+				bandMaxFreq = params.bandFreqs[band + 1];
 			}
 		}
 		binWidth *= 0.5;
+		binWidthInverse *= 2.0;
 	}
 
 }
@@ -381,11 +430,11 @@ void rxaa::BandAnalyzer::computeAnalysis(index startCascade, index endCascade) {
 		index bandEndCascade = -1;
 
 		for (index cascade = startCascade; cascade < endCascade; ++cascade) {
-			auto &info = bandInfo[cascade - startCascade][band];
+			auto &info = cascadesInfo[cascade - startCascade].bandsInfo[band];
 
 			if (info.weight >= 1.0) {
 				info.blurSigma = 0.0;
-			} else if (info.weight >= std::numeric_limits<double>::epsilon()) {
+			} else if (info.weight >= std::numeric_limits<float>::epsilon()) { // float on purpose
 				info.blurSigma = 1.0 / info.weight * params.blurRadius;
 			} else {
 				info.blurSigma = 0.0;
@@ -401,12 +450,12 @@ void rxaa::BandAnalyzer::computeAnalysis(index startCascade, index endCascade) {
 				if (analysis.minCascadeUsed < 0) {
 					analysis.minCascadeUsed = cascade;
 				} else {
-					analysis.minCascadeUsed = std::min<index>(analysis.minCascadeUsed, cascade);
+					analysis.minCascadeUsed = std::min(analysis.minCascadeUsed, cascade);
 				}
 				if (analysis.maxCascadeUsed < 0) {
 					analysis.maxCascadeUsed = cascade;
 				} else {
-					analysis.maxCascadeUsed = std::max<index>(analysis.maxCascadeUsed, cascade);
+					analysis.maxCascadeUsed = std::max(analysis.maxCascadeUsed, cascade);
 				}
 			}
 
@@ -434,15 +483,13 @@ void rxaa::BandAnalyzer::computeAnalysis(index startCascade, index endCascade) {
 	analysisComputed = true;
 }
 
-void rxaa::BandAnalyzer::blurData(index cascadeIndexBegin, index cascadeIndexEnd) {
+void rxaa::BandAnalyzer::blurData() {
 	cascadeTempBuffer.resize(bandsCount);
-	for (auto cascade = cascadeIndexBegin; cascade < cascadeIndexEnd; ++cascade) {
-		auto &cascadeBandInfo = bandInfo[cascade - cascadeIndexBegin];
-
+	for (auto& [cascadeMagnitudes, cascadeBandInfo] : cascadesInfo) {
 		for (index band = 0; band < bandsCount; ++band) {
-			double sigma = cascadeBandInfo[band].blurSigma;
+			const double sigma = cascadeBandInfo[band].blurSigma;
 			if (sigma == 0.0) {
-				cascadeTempBuffer[band] = cascadeBandInfo[band].magnitude;
+				cascadeTempBuffer[band] = cascadeMagnitudes[band];
 				continue;
 			}
 			auto &kernel = gcm.forSigma(sigma);
@@ -460,40 +507,44 @@ void rxaa::BandAnalyzer::blurData(index cascadeIndexBegin, index cascadeIndexEnd
 				if (bandIndex >= bandsCount || kernelIndex >= index(kernel.size())) {
 					break;
 				}
-				result += kernel[kernelIndex] * cascadeBandInfo[bandIndex].magnitude;
+				result += kernel[kernelIndex] * cascadeMagnitudes[bandIndex];
 
 				kernelIndex++;
 				bandIndex++;
 			}
 			cascadeTempBuffer[band] = result;
 		}
-		for (index i = 0; i < bandsCount; ++i) {
-			cascadeBandInfo[i].magnitude = cascadeTempBuffer[i];
-		}
+
+		cascadeMagnitudes = cascadeTempBuffer;
 	}
 }
 
-void rxaa::BandAnalyzer::collectData(index cascadeIndexBegin, index cascadeIndexEnd) {
+void rxaa::BandAnalyzer::gatherData() {
+	pastValuesIndex++;
+	if (pastValuesIndex >= params.smoothingFactor) {
+		pastValuesIndex = 0;
+	}
+
 	for (index band = 0; band < index(values.size()); ++band) {
 		double weight = 0.0;
 		index cascadesSummed = 0u;
 
 		double value;
-		if (params.minFunction == MixFunction::PRODUCT) {
+		if (params.mixFunction == MixFunction::PRODUCT) {
 			value = 1.0;
 		} else {
 			value = 0.0;
 		}
 
-		for (index cascade = cascadeIndexBegin; cascade < cascadeIndexEnd; ++cascade) {
-			auto &info = bandInfo[cascade - cascadeIndexBegin][band];
-
+		for (auto& [cascadeMagnitudes, cascadeBandsInfo] : cascadesInfo) {
+			const auto &info = cascadeBandsInfo[band];
+			const auto magnitude = cascadeMagnitudes[band];
 
 			if (info.weight >= params.minWeight) {
-				auto cascadeBandValue = info.magnitude;
+				auto cascadeBandValue = magnitude;
 				cascadeBandValue /= info.weight;
 
-				if (params.minFunction == MixFunction::PRODUCT) {
+				if (params.mixFunction == MixFunction::PRODUCT) {
 					value *= cascadeBandValue;
 				} else {
 					value += cascadeBandValue;
@@ -503,15 +554,13 @@ void rxaa::BandAnalyzer::collectData(index cascadeIndexBegin, index cascadeIndex
 				cascadesSummed++;
 			}
 
-			info.reset();
-
 			if (weight >= params.targetWeight) {
 				break;
 			}
 		}
 
 		if (cascadesSummed > 0) {
-			if (params.minFunction == MixFunction::PRODUCT) {
+			if (params.mixFunction == MixFunction::PRODUCT) {
 				value = utils::FastMath::pow(value, 1.0 / cascadesSummed);
 			} else {
 				value /= cascadesSummed;
@@ -527,73 +576,74 @@ void rxaa::BandAnalyzer::collectData(index cascadeIndexBegin, index cascadeIndex
 
 void rxaa::BandAnalyzer::applyTimeFiltering() {
 	if (params.smoothingFactor <= 1) {
-		values = pastValues[0];
-	} else {
-		auto startPastIndex = pastValuesIndex + 1;
-		if (startPastIndex >= params.smoothingFactor) {
-			startPastIndex = 0;
-		}
-		switch (params.smoothingCurve) {
-		case SmoothingCurve::FLAT:
-		{
-			for (index band = 0; band < values.size(); ++band) {
-				double outValue = 0.0;
-				for (index i = 0; i < params.smoothingFactor; ++i) {
-					outValue += pastValues[i][band];
-				}
-				outValue /= params.smoothingFactor;
-				values[band] = outValue;
+		values = pastValues[0]; // pastValues consists of only one array
+		return;
+	}
+
+	auto startPastIndex = pastValuesIndex + 1;
+	if (startPastIndex >= params.smoothingFactor) {
+		startPastIndex = 0;
+	}
+	switch (params.smoothingCurve) {
+	case SmoothingCurve::FLAT:
+	{
+		for (index band = 0; band < values.size(); ++band) {
+			double outValue = 0.0;
+			for (index i = 0; i < params.smoothingFactor; ++i) {
+				outValue += pastValues[i][band];
 			}
-			break;
+			outValue /= params.smoothingFactor;
+			values[band] = outValue;
 		}
-		case SmoothingCurve::LINEAR:
-		{
-			for (index band = 0; band < values.size(); ++band) {
-				double outValue = 0.0;
-				index smoothingWeight = 0;
-				double valueWeight = 1;
+		break;
+	}
+	case SmoothingCurve::LINEAR:
+	{
+		for (index band = 0; band < values.size(); ++band) {
+			double outValue = 0.0;
+			index smoothingWeight = 0;
+			double valueWeight = 1;
 
-				for (index i = startPastIndex; i < params.smoothingFactor; ++i) {
-					outValue += pastValues[i][band] * valueWeight;
-					smoothingWeight += valueWeight;
-					valueWeight++;
-				}
-				for (index i = 0; i < startPastIndex; ++i) {
-					outValue += pastValues[i][band] * valueWeight;
-					smoothingWeight += valueWeight;
-					valueWeight++;
-				}
-
-				outValue /= smoothingWeight;
-				values[band] = outValue;
+			for (index i = startPastIndex; i < params.smoothingFactor; ++i) {
+				outValue += pastValues[i][band] * valueWeight;
+				smoothingWeight += valueWeight;
+				valueWeight++;
 			}
-			break;
-		}
-		case SmoothingCurve::EXPONENTIAL:
-		{
-			for (index band = 0; band < values.size(); ++band) {
-				double outValue = 0.0;
-				index smoothingWeight = 0;
-				double weight = 1;
-
-				for (index i = startPastIndex; i < params.smoothingFactor; ++i) {
-					outValue += pastValues[i][band] * weight;
-					smoothingWeight += weight;
-					weight *= params.exponentialFactor;
-				}
-				for (index i = 0; i < startPastIndex; ++i) {
-					outValue += pastValues[i][band] * weight;
-					smoothingWeight += weight;
-					weight *= params.exponentialFactor;
-				}
-
-				outValue /= smoothingWeight;
-				values[band] = outValue;
+			for (index i = 0; i < startPastIndex; ++i) {
+				outValue += pastValues[i][band] * valueWeight;
+				smoothingWeight += valueWeight;
+				valueWeight++;
 			}
-			break;
+
+			outValue /= smoothingWeight;
+			values[band] = outValue;
 		}
-		default: std::terminate(); // should be unreachable statement
+		break;
+	}
+	case SmoothingCurve::EXPONENTIAL:
+	{
+		for (index band = 0; band < values.size(); ++band) {
+			double outValue = 0.0;
+			index smoothingWeight = 0;
+			double weight = 1;
+
+			for (index i = startPastIndex; i < params.smoothingFactor; ++i) {
+				outValue += pastValues[i][band] * weight;
+				smoothingWeight += weight;
+				weight *= params.exponentialFactor;
+			}
+			for (index i = 0; i < startPastIndex; ++i) {
+				outValue += pastValues[i][band] * weight;
+				smoothingWeight += weight;
+				weight *= params.exponentialFactor;
+			}
+
+			outValue /= smoothingWeight;
+			values[band] = outValue;
 		}
+		break;
+	}
+	default: std::terminate(); // should be unreachable statement
 	}
 }
 

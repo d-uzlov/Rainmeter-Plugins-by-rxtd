@@ -90,6 +90,7 @@ namespace rxaa {
 
 		void process(const uint8_t* buffer, bool isSilent, index framesCount) noexcept;
 		void resetValues() noexcept;
+		void finish() noexcept;
 
 	private:
 		void decompose(const uint8_t* buffer, index framesCount) noexcept;

@@ -102,6 +102,8 @@ std::tuple<double, const wchar_t*> rxaa::AudioParent::_update() {
 	}
 loop_end:
 
+	soundAnalyzer.finish();
+
 	return std::make_tuple(deviceManager.getDeviceStatus(), nullptr);
 }
 

@@ -62,6 +62,9 @@ namespace rxaa {
 		virtual const wchar_t* getProp(const isview& prop) const {
 			return nullptr;
 		}
+		virtual bool isStandalone() {
+			return false;
+		}
 
 	protected:
 		static double calculateAttackDecayConstant(double time, index samplesPerSec, index stride) {

@@ -36,7 +36,7 @@ namespace rxaa {
 			bool includeZero = true;
 			bool proportionalValues = false;
 			bool blurCascades = true;
-			MixFunction minFunction { };
+			MixFunction mixFunction { };
 			double blurRadius = true;
 			double offset { };
 			double sensitivity { };
@@ -45,15 +45,17 @@ namespace rxaa {
 			double exponentialFactor { };
 		};
 	private:
-		struct BandValueInfo {
-			double magnitude { };
+		struct BandInfo {
 			double weight { };
 			double blurSigma { };
+		};
+		struct CascadeBandInfo {
+			std::vector<double> magnitudes;
+			std::vector<BandInfo> bandsInfo;
 
-			void reset() {
-				magnitude = 0.0;
-				weight = 0.0;
-				// blurRadius should not be changed
+			void setSize(index size) {
+				magnitudes.resize(size);
+				bandsInfo.resize(size);
 			}
 		};
 
@@ -67,7 +69,7 @@ namespace rxaa {
 		private:
 			static std::vector<double> generateGaussianKernel(index radius, double sigma);
 		};
-		mutable GaussianCoefficientsManager gcm;
+		GaussianCoefficientsManager gcm;
 
 		Params params { };
 
@@ -77,7 +79,7 @@ namespace rxaa {
 		mutable index bandsCount = 0;
 		double logNormalization { };
 
-		std::vector<std::vector<BandValueInfo>> bandInfo;
+		std::vector<CascadeBandInfo> cascadesInfo;
 		std::vector<std::vector<double>> pastValues;
 		index pastValuesIndex = 0;
 		std::vector<double> values;
@@ -88,7 +90,7 @@ namespace rxaa {
 		const FftAnalyzer* source = nullptr;
 
 		mutable string propString { };
-		mutable struct {
+		struct {
 			string analysisString { };
 			index minCascadeUsed = -1;
 			index maxCascadeUsed = -1;
@@ -115,10 +117,11 @@ namespace rxaa {
 
 	private:
 		void updateValues();
+		void computeBandInfo(index startCascade, index endCascade);
 		void resampleData(index startCascade, index endCascade);
 		void computeAnalysis(index startCascade, index endCascade);
-		void blurData(index startCascade, index endCascade);
-		void collectData(index startCascade, index endCascade);
+		void blurData();
+		void gatherData();
 		void applyTimeFiltering();
 		void transformToLog();
 
