@@ -38,16 +38,30 @@ namespace rxaa {
 
 	class SoundHandler {
 	public:
+		SoundHandler() = default;
+
+		SoundHandler(const SoundHandler& other) = delete;
+		SoundHandler(SoundHandler&& other) noexcept = delete;
+		SoundHandler& operator=(const SoundHandler& other) = delete;
+		SoundHandler& operator=(SoundHandler&& other) noexcept = delete;
+
 		virtual ~SoundHandler() = default;
+
+		virtual void setSamplesPerSec(index samplesPerSec) = 0;
+		virtual void reset() = 0;
+
 		virtual void process(const DataSupplier &dataSupplier) = 0;
 		virtual void processSilence(const DataSupplier &dataSupplier) = 0;
+
+		// Method can be called several time, handler should check for changes
+		virtual void finish(const DataSupplier &dataSupplier) = 0;
+
 		virtual const double* getData() const = 0;
 		virtual index getCount() const = 0;
-		virtual void setSamplesPerSec(index samplesPerSec) = 0;
-		virtual const wchar_t* getProp(const isview& prop) {
+
+		virtual const wchar_t* getProp(const isview& prop) const {
 			return nullptr;
 		}
-		virtual void reset() = 0;
 
 	protected:
 		static double calculateAttackDecayConstant(double time, index samplesPerSec, index stride) {
@@ -55,7 +69,7 @@ namespace rxaa {
 		}
 
 		static double calculateAttackDecayConstant(double time, index samplesPerSec) {
-			return calculateAttackDecayConstant(time, samplesPerSec, 1u);
+			return calculateAttackDecayConstant(time, samplesPerSec, 1);
 		}
 
 		static index parseIndexProp(const isview& request, const isview& propName, index endBound) {

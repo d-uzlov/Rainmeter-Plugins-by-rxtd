@@ -55,7 +55,7 @@ namespace rxaa {
 			// Fourier transform looses energy due to downsample, so we multiply result of FFT by (2^0.5)^countOfDownsampleIterations
 			double downsampleGain { };
 
-			void setParams(FftAnalyzer* parent, CascadeData* successor, index index);
+			void setParams(FftAnalyzer* parent, CascadeData* successor, index ind);
 			void process(const float *wave, index waveSize);
 			void processRandom(index waveSize, double amplitude);
 			void processSilent(index waveSize);
@@ -70,15 +70,15 @@ namespace rxaa {
 
 		index samplesPerSec { };
 
-		index fftSize = 0u;
+		index fftSize = 0;
 
-		index inputStride = 0u;
+		index inputStride = 0;
 
 		std::vector<CascadeData> cascades;
 
 		FftImpl *fftImpl = nullptr;
 
-		string propString { };
+		mutable string propString { };
 
 		class Random {
 			std::random_device rd;
@@ -108,13 +108,17 @@ namespace rxaa {
 		index getCascadesCount() const;
 		const double* getCascade(index cascade) const;
 
+		void setSamplesPerSec(index samplesPerSec) override;
+		void reset() override;
+
 		void process(const DataSupplier& dataSupplier) override;
 		void processSilence(const DataSupplier& dataSupplier) override;
+		void finish(const DataSupplier& dataSupplier) override { }
+
 		const double* getData() const override;
 		index getCount() const override;
-		void setSamplesPerSec(index samplesPerSec) override;
-		const wchar_t* getProp(const isview& prop) override;
-		void reset() override;
+
+		const wchar_t* getProp(const isview& prop) const override;
 
 		void setParams(Params params);
 

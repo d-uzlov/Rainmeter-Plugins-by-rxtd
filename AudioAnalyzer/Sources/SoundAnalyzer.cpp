@@ -39,7 +39,9 @@ const rxaa::SoundHandler* rxaa::SoundAnalyzer::DataSupplierImpl::getHandler(isvi
 	if (iter == channelData->indexMap.end()) {
 		return nullptr;
 	}
-	return channelData->handlers[iter->second].get();
+	auto handler = channelData->handlers[iter->second].get();
+	handler->finish(*this); // TODO check for endless loop
+	return handler;
 }
 
 rxaa::Channel rxaa::SoundAnalyzer::DataSupplierImpl::getChannel() const {
@@ -159,6 +161,8 @@ double rxaa::SoundAnalyzer::getValue(Channel channel, isview handlerId, index in
 	}
 
 	auto &handler = std::get<0>(handlerVariant);
+	handler->finish(dataSupplier);
+
 	const auto count = handler->getCount();
 	if (count == 0) {
 		return handler->getData()[0];

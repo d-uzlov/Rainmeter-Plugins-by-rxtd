@@ -356,7 +356,7 @@ void rxaa::FftAnalyzer::setSamplesPerSec(index samplesPerSec) {
 	updateParams();
 }
 
-const wchar_t* rxaa::FftAnalyzer::getProp(const isview& prop) {
+const wchar_t* rxaa::FftAnalyzer::getProp(const isview& prop) const {
 	propString.clear();
 
 	if (prop == L"size") {
@@ -439,8 +439,8 @@ void rxaa::FftAnalyzer::updateParams() {
 	default: // must be unreachable statement
 		std::abort();
 	}
-	if (fftSize <= 1u) {
-		fftSize = 0u;
+	if (fftSize <= 1) {
+		fftSize = 0; // TODO eliminate 0u, 1u, etc.
 		return;
 	}
 	fftImpl = FftImpl::change(fftImpl, fftSize);

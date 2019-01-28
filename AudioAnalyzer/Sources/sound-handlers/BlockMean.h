@@ -35,23 +35,27 @@ namespace rxaa {
 		double intermediateResult = 0.0;
 		double result = 0.0;
 
-		string propString { };
+		mutable string propString { };
 
 	public:
 		void setParams(Params params);
 
+		void setSamplesPerSec(index samplesPerSec) override;
+		void reset() override;
+
+		void processSilence(const DataSupplier& dataSupplier) override;
+		void finish(const DataSupplier& dataSupplier) override { };
+
 		const double* getData() const override;
 		index getCount() const override;
-		void setSamplesPerSec(index samplesPerSec) override;
-		const wchar_t* getProp(const isview& prop) override;
-		void reset() override;
-		void processSilence(const DataSupplier& dataSupplier) override;
+
+		const wchar_t* getProp(const isview& prop) const override;
 
 		static std::optional<Params> parseParams(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger &cl);
 
 	private:
 		void recalculateConstants();
-		virtual void finish() = 0;
+		virtual void finishBlock() = 0;
 	};
 
 	class BlockRms : public BlockMean {
@@ -59,7 +63,7 @@ namespace rxaa {
 		void process(const DataSupplier& dataSupplier) override;
 
 	private:
-		void finish() override;
+		void finishBlock() override;
 	};
 
 	class BlockPeak : public BlockMean {
@@ -67,6 +71,6 @@ namespace rxaa {
 		void process(const DataSupplier& dataSupplier) override;
 
 	private:
-		void finish() override;
+		void finishBlock() override;
 	};
 }

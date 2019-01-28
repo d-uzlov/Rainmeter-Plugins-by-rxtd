@@ -127,7 +127,7 @@ void rxaa::WaveForm::setSamplesPerSec(index samplesPerSec) {
 	updateParams();
 }
 
-const wchar_t* rxaa::WaveForm::getProp(const isview& prop) {
+const wchar_t* rxaa::WaveForm::getProp(const isview& prop) const {
 	if (prop == L"file") {
 		return filepath.c_str();
 	} else if (prop == L"block size") {
@@ -220,8 +220,6 @@ void rxaa::WaveForm::process(const DataSupplier& dataSupplier) {
 	const auto wave = dataSupplier.getWave();
 	const auto waveSize = dataSupplier.getWaveSize();
 
-	bool changed = false;
-
 	for (index frame = 0; frame < waveSize; ++frame) {
 		min = std::min<double>(min, wave[frame]);
 		max = std::max<double>(max, wave[frame]);
@@ -233,10 +231,6 @@ void rxaa::WaveForm::process(const DataSupplier& dataSupplier) {
 			max = -10.0;
 			changed = true;
 		}
-	}
-
-	if (changed) {
-		writeFile(dataSupplier);
 	}
 }
 
@@ -254,8 +248,6 @@ void rxaa::WaveForm::processSilence(const DataSupplier& dataSupplier) {
 
 	const auto waveSize = dataSupplier.getWaveSize();
 
-	bool changed = false;
-
 	// TODO rewrite
 	for (index frame = 0; frame < waveSize; ++frame) {
 		min = std::min<double>(min, 0.0);
@@ -269,8 +261,11 @@ void rxaa::WaveForm::processSilence(const DataSupplier& dataSupplier) {
 			changed = true;
 		}
 	}
+}
 
+void rxaa::WaveForm::finish(const DataSupplier& dataSupplier) {
 	if (changed) {
 		writeFile(dataSupplier);
+		changed = false;
 	}
 }

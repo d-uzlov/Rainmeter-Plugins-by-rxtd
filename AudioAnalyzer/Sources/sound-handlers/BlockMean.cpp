@@ -35,7 +35,7 @@ void rxaa::BlockMean::setSamplesPerSec(index samplesPerSec) {
 	recalculateConstants();
 }
 
-const wchar_t* rxaa::BlockMean::getProp(const isview& prop) {
+const wchar_t* rxaa::BlockMean::getProp(const isview& prop) const {
 	if (prop == L"block size") {
 		propString = std::to_wstring(blockSize);
 	} else if (prop == L"attack") {
@@ -70,19 +70,19 @@ void rxaa::BlockRms::process(const DataSupplier& dataSupplier) {
 		intermediateResult += x * x;
 		counter++;
 		if (counter >= blockSize) {
-			finish();
+			finishBlock();
 		}
 	}
 }
 
 void rxaa::BlockMean::processSilence(const DataSupplier& dataSupplier) {
 	const auto waveSize = dataSupplier.getWaveSize();
-	auto waveProcessed = 0u;
+	auto waveProcessed = 0;
 
 	while (waveProcessed != waveSize) {
 		const auto missingPoints = blockSize - counter;
 		if (waveProcessed + missingPoints <= waveSize) {
-			finish();
+			finishBlock();
 			waveProcessed += missingPoints;
 		} else {
 			const auto waveRemainder = waveSize - waveProcessed;
@@ -107,7 +107,7 @@ std::optional<rxaa::BlockMean::Params> rxaa::BlockMean::parseParams(const utils:
 	return params;
 }
 
-void rxaa::BlockRms::finish() {
+void rxaa::BlockRms::finishBlock() {
 	const double value = std::sqrt(intermediateResult / blockSize);
 	result = value + attackDecayConstants[(value < result)] * (result - value);
 	counter = 0;
@@ -121,12 +121,12 @@ void rxaa::BlockPeak::process(const DataSupplier& dataSupplier) {
 		intermediateResult = std::max(intermediateResult, static_cast<double>(std::abs(wave[frame])));
 		counter++;
 		if (counter >= blockSize) {
-			finish();
+			finishBlock();
 		}
 	}
 }
 
-void rxaa::BlockPeak::finish() {
+void rxaa::BlockPeak::finishBlock() {
 	result = intermediateResult + attackDecayConstants[(intermediateResult < result)] * (result - intermediateResult);
 	counter = 0;
 	intermediateResult = 0.0;

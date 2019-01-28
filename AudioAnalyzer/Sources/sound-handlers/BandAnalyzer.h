@@ -74,19 +74,20 @@ namespace rxaa {
 		index samplesPerSec { };
 
 		std::vector<double> bandFreqMultipliers;
+		mutable index bandsCount = 0;
 		double logNormalization { };
 
-		mutable std::vector<std::vector<BandValueInfo>> bandInfo;
-		mutable std::vector<std::vector<double>> pastValues;
-		mutable index pastValuesIndex = 0;
-		mutable std::vector<double> values;
-		mutable std::vector<double> cascadeTempBuffer;
+		std::vector<std::vector<BandValueInfo>> bandInfo;
+		std::vector<std::vector<double>> pastValues;
+		index pastValuesIndex = 0;
+		std::vector<double> values;
+		std::vector<double> cascadeTempBuffer;
 
-		mutable bool next = true;
-		mutable bool analysisComputed = false;
+		bool next = true;
+		bool analysisComputed = false;
 		const FftAnalyzer* source = nullptr;
 
-		string propString { };
+		mutable string propString { };
 		mutable struct {
 			string analysisString { };
 			index minCascadeUsed = -1;
@@ -98,19 +99,28 @@ namespace rxaa {
 
 		static std::optional<Params> parseParams(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl, utils::Rainmeter& rain);
 
-		void setParams(Params params);
+		void setParams(Params _params);
+
+		void setSamplesPerSec(index samplesPerSec) override;
+		void reset() override;
 
 		void process(const DataSupplier& dataSupplier) override;
 		void processSilence(const DataSupplier& dataSupplier) override;
+		void finish(const DataSupplier& dataSupplier) override;
+
 		const double* getData() const override; // TODO vector_view?
 		index getCount() const override;
-		void setSamplesPerSec(index samplesPerSec) override;
-		const wchar_t* getProp(const isview& prop) override;
-		void reset() override;
+
+		const wchar_t* getProp(const isview& prop) const override;
 
 	private:
-		void updateValues() const;
-		void computeAnalysis(index startCascade, index endCascade) const;
+		void updateValues();
+		void resampleData(index startCascade, index endCascade);
+		void computeAnalysis(index startCascade, index endCascade);
+		void blurData(index startCascade, index endCascade);
+		void collectData(index startCascade, index endCascade);
+		void applyTimeFiltering();
+		void transformToLog();
 
 		static std::optional<std::vector<double>> parseFreqList(const utils::OptionParser::OptionList& bounds, utils::Rainmeter::ContextLogger& cl, const utils::Rainmeter& rain);
 	};

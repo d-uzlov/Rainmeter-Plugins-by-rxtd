@@ -57,8 +57,9 @@ namespace rxaa {
 		double result = 0.0;
 		double min { };
 		double max { };
+		bool changed = false;
 
-		string propString { };
+		mutable string propString { };
 
 		utils::Vector2D<uint32_t> imageBuffer;
 		string filepath { };
@@ -97,13 +98,17 @@ namespace rxaa {
 
 		static std::optional<Params> parseParams(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger &cl, const utils::Rainmeter& rain);
 
+		void setSamplesPerSec(index samplesPerSec) override;
+		void reset() override;
+
 		void process(const DataSupplier& dataSupplier) override;
 		void processSilence(const DataSupplier& dataSupplier) override;
+		void finish(const DataSupplier& dataSupplier) override;
+
 		const double* getData() const override;
 		index getCount() const override;
-		void setSamplesPerSec(index samplesPerSec) override;
-		const wchar_t* getProp(const isview& prop) override;
-		void reset() override;
+
+		const wchar_t* getProp(const isview& prop) const override;
 
 	private:
 		void updateParams();

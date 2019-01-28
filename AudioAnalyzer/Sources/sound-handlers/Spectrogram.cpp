@@ -86,7 +86,7 @@ void rxaa::Spectrogram::setSamplesPerSec(index samplesPerSec) {
 	updateParams();
 }
 
-const wchar_t* rxaa::Spectrogram::getProp(const isview& prop) {
+const wchar_t* rxaa::Spectrogram::getProp(const isview& prop) const {
 	if (prop == L"file") {
 		return filepath.c_str();
 	} else if (prop == L"block size") {
@@ -160,7 +160,6 @@ void rxaa::Spectrogram::process(const DataSupplier& dataSupplier) {
 	counter += waveSize;
 
 
-	bool changed = false;
 	while (counter >= blockSize) {
 		changed = true;
 
@@ -173,12 +172,15 @@ void rxaa::Spectrogram::process(const DataSupplier& dataSupplier) {
 
 		counter -= blockSize;
 	}
-
-	if (changed) {
-		writeFile(dataSupplier);
-	}
 }
 
 void rxaa::Spectrogram::processSilence(const DataSupplier& dataSupplier) {
 	process(dataSupplier);
+}
+
+void rxaa::Spectrogram::finish(const DataSupplier& dataSupplier) {
+	if (changed) {
+		writeFile(dataSupplier);
+		changed = false;
+	}
 }
