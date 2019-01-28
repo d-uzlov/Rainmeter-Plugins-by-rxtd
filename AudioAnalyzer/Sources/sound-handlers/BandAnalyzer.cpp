@@ -14,11 +14,6 @@
 
 #include "undef.h"
 
-#pragma warning(disable : 4458)
-#pragma warning(disable : 26451)
-#pragma warning(disable : 4244)
-#pragma warning(disable : 4267)
-
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
 

@@ -16,9 +16,6 @@
 #include "undef.h"
 #include "CaseInsensitiveString.h"
 
-#pragma warning(disable : 4458)
-#pragma warning(disable : 4244)
-
 utils::ParentManager<rxaa::AudioParent> rxaa::AudioParent::parentManager { };
 
 rxaa::AudioParent::AudioParent(utils::Rainmeter&& rain) : TypeHolder(std::move(rain)), deviceManager(log, [this](auto format) { soundAnalyzer.setWaveFormat(format); }) {

@@ -13,8 +13,6 @@
 
 #include "undef.h"
 
-#pragma warning (disable : 4267)
-
 rxaa::AudioChild::AudioChild(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rain)) {
 	const auto parentName = rain.readString(L"Parent") % ciView();
 	if (parentName == L"") {

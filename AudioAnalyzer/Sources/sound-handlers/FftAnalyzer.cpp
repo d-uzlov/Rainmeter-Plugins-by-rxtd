@@ -11,11 +11,6 @@
 
 #include "undef.h"
 
-#pragma warning(disable : 4458)
-#pragma warning(disable : 4244)
-#pragma warning(disable : 4267)
-#pragma warning(disable : 26451)
-
 using namespace std::literals::string_view_literals;
 
 void rxaa::FftAnalyzer::CascadeData::setParams(FftAnalyzer* parent, CascadeData *successor, index cascadeIndex) {

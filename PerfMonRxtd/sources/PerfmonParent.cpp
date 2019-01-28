@@ -18,8 +18,6 @@
 #include "undef.h"
 
 
-#pragma warning(disable : 26451)
-
 using namespace perfmon;
 
 utils::ParentManager<PerfmonParent> PerfmonParent::parentManager { };

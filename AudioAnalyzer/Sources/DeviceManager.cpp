@@ -19,8 +19,6 @@
 
 #include "undef.h"
 
-#pragma warning(disable : 4458)
-
 const CLSID CLSID_MMDeviceEnumerator = __uuidof(MMDeviceEnumerator);
 
 const IID IID_IMMDeviceEnumerator = __uuidof(IMMDeviceEnumerator);

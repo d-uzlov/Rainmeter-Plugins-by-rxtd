@@ -10,9 +10,6 @@
 #include "SoundAnalyzer.h"
 #include <limits>
 
-#pragma warning(disable : 4458)
-#pragma warning(disable : 4267)
-
 #include "undef.h"
 
 rxaa::SoundAnalyzer::DataSupplierImpl::DataSupplierImpl(SoundAnalyzer& parent) : parent(parent) { }
