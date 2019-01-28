@@ -17,11 +17,11 @@ ExpressionResolver::ExpressionResolver(utils::Rainmeter::Logger& log, const Inst
 	log(log),
 	instanceManager(instanceManager) { }
 
-unsigned ExpressionResolver::getExpressionsCount() const {
+index ExpressionResolver::getExpressionsCount() const {
 	return expressions.size();
 }
 
-unsigned ExpressionResolver::getRollupExpressionsCount() const {
+index ExpressionResolver::getRollupExpressionsCount() const {
 	return rollupExpressions.size();
 }
 
@@ -84,7 +84,7 @@ double ExpressionResolver::getValue(const Reference& ref, const InstanceInfo* in
 		return getFormatted(ref.counter, instance->indices);
 
 	case ReferenceType::EXPRESSION:
-		if (!indexIsInBounds(ref.counter, 0, static_cast<int>(expressions.size() - 1))) {
+		if (!indexIsInBounds(ref.counter, 0, index(expressions.size()))) {
 			logger.error(L"Trying to get a non-existing expression {}", ref.counter);
 			return 0.0;
 		}
@@ -101,7 +101,7 @@ double ExpressionResolver::getValue(const Reference& ref, const InstanceInfo* in
 		return calculateExpression<&ExpressionResolver::resolveReference>(expressions[ref.counter]);
 
 	case ReferenceType::ROLLUP_EXPRESSION:
-		if (!indexIsInBounds(ref.counter, 0, static_cast<int>(rollupExpressions.size() - 1))) {
+		if (!indexIsInBounds(ref.counter, 0, index(rollupExpressions.size()) - 1)) {
 			logger.error(L"Trying to get a non-existing expression {}", ref.counter);
 			return 0.0;
 		}
@@ -130,7 +130,7 @@ double ExpressionResolver::getValue(const Reference& ref, const InstanceInfo* in
 void ExpressionResolver::setExpressions(utils::OptionParser::OptionList expressionsList,
 	utils::OptionParser::OptionList rollupExpressionsList) {
 	expressions.resize(expressionsList.size());
-	for (unsigned i = 0; i < expressionsList.size(); ++i) {
+	for (index i = 0; i < expressionsList.size(); ++i) {
 		ExpressionParser parser(expressionsList.get(i));
 		parser.parse();
 		if (parser.isError()) {
@@ -144,8 +144,8 @@ void ExpressionResolver::setExpressions(utils::OptionParser::OptionList expressi
 		ExpressionTreeNode expression = parser.getExpression();
 		expression.simplify();
 
-		const int maxRef = expression.maxExpRef();
-		if (maxRef >= static_cast<int>(i)) {
+		const auto maxRef = expression.maxExpRef();
+		if (maxRef >= i) {
 			log.error(L"Expression {} can't reference Expression {}", i, maxRef);
 			ExpressionTreeNode node;
 			node.type = ExpressionType::NUMBER;
@@ -154,7 +154,7 @@ void ExpressionResolver::setExpressions(utils::OptionParser::OptionList expressi
 			continue;
 		}
 
-		const int maxRURef = expression.maxExpRef();
+		const auto maxRURef = expression.maxExpRef();
 		if (maxRURef >= 0) {
 			log.error(L"Expressions can't reference RollupExpressions");
 			ExpressionTreeNode node;
@@ -173,7 +173,7 @@ void ExpressionResolver::setExpressions(utils::OptionParser::OptionList expressi
 	}
 
 	rollupExpressions.resize(rollupExpressionsList.size());
-	for (unsigned i = 0; static_cast<std::vector<string>::size_type>(i) < rollupExpressionsList.size(); ++i) {
+	for (index i = 0; i < rollupExpressionsList.size(); ++i) {
 		ExpressionParser parser(rollupExpressionsList.get(i));
 		parser.parse();
 		if (parser.isError()) {
@@ -187,8 +187,8 @@ void ExpressionResolver::setExpressions(utils::OptionParser::OptionList expressi
 		ExpressionTreeNode expression = parser.getExpression();
 		expression.simplify();
 
-		const int maxRef = expression.maxExpRef();
-		if (maxRef >= static_cast<int>(expressions.size())) {
+		const auto maxRef = expression.maxExpRef();
+		if (maxRef >= index(expressions.size())) {
 			log.error(L"Expression {} doesn't exist", i);
 			ExpressionTreeNode node;
 			node.type = ExpressionType::NUMBER;
@@ -197,8 +197,8 @@ void ExpressionResolver::setExpressions(utils::OptionParser::OptionList expressi
 			continue;
 		}
 
-		const int maxRURef = expression.maxRUERef();
-		if (maxRURef >= static_cast<int>(i)) {
+		const auto maxRURef = expression.maxRUERef();
+		if (maxRURef >= i) {
 			log.error(L"RollupExpression {} can't reference RollupExpression {}", i, maxRef);
 			ExpressionTreeNode node;
 			node.type = ExpressionType::NUMBER;
@@ -239,18 +239,18 @@ double ExpressionResolver::getExpressionRollup(RollupFunction rollupType, index 
 	return calculateExpressionRollup(expressions[expressionIndex], rollupType);
 }
 
-double ExpressionResolver::getExpression(const unsigned expressionIndex, const InstanceInfo& instance) const {
+double ExpressionResolver::getExpression(index expressionIndex, const InstanceInfo& instance) const {
 	expressionCurrentItem = &instance;
 	return calculateExpression<&ExpressionResolver::resolveReference>(expressions[expressionIndex]);
 }
 
-double ExpressionResolver::getRollupExpression(const unsigned expressionIndex,
+double ExpressionResolver::getRollupExpression(index expressionIndex,
 	const InstanceInfo& instance) const {
 	expressionCurrentItem = &instance;
 	return calculateExpression<&ExpressionResolver::resolveRollupReference>(rollupExpressions[expressionIndex]);
 }
 
-double ExpressionResolver::calculateTotal(const TotalSource source, const unsigned counterIndex, const RollupFunction rollupFunction) const {
+double ExpressionResolver::calculateTotal(const TotalSource source, index counterIndex, const RollupFunction rollupFunction) const {
 	switch (source) {
 	case TotalSource::RAW_COUNTER: return calculateTotal<&ExpressionResolver::getRaw>(rollupFunction, counterIndex);
 	case TotalSource::FORMATTED_COUNTER: return calculateTotal<&ExpressionResolver::getFormatted>(
@@ -687,7 +687,7 @@ double ExpressionResolver::calculateExpression(const ExpressionTreeNode& express
 	case ExpressionType::DIFF:
 	{
 		double value = calculateExpression<resolveReferenceFunction>(expression.nodes[0]);
-		for (unsigned int i = 1; i < expression.nodes.size(); i++) {
+		for (index i = 1; i < expression.nodes.size(); i++) {
 			value -= calculateExpression<resolveReferenceFunction>(expression.nodes[i]);
 		}
 		return value;
@@ -705,7 +705,7 @@ double ExpressionResolver::calculateExpression(const ExpressionTreeNode& express
 	case ExpressionType::DIV:
 	{
 		double value = calculateExpression<resolveReferenceFunction>(expression.nodes[0]);
-		for (unsigned int i = 1; i < expression.nodes.size(); i++) {
+		for (index i = 1; i < expression.nodes.size(); i++) {
 			const double denominator = calculateExpression<resolveReferenceFunction>(expression.nodes[i]);
 			if (denominator == 0) {
 				value = 0;

@@ -53,7 +53,7 @@ namespace rxaa {
 		public:
 			explicit DataSupplierImpl(SoundAnalyzer& parent);
 			void setChannelData(ChannelData*);
-			void setChannelIndex(unsigned channelIndex);
+			void setChannelIndex(index channelIndex);
 			void setChannel(Channel channel);
 
 			const float* getWave() const override;

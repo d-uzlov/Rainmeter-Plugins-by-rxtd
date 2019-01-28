@@ -48,7 +48,6 @@ namespace rxaa {
 
 	public:
 		void setParams(const Params& _params);
-		// void setParams(double resolution, unsigned length, sview sourceName, string prefix, rxu::Color baseColor, rxu::Color maxColor);
 
 		static std::optional<Params> parseParams(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger &cl, const utils::Rainmeter& rain);
 

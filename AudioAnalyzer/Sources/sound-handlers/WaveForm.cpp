@@ -44,8 +44,8 @@ void rxaa::WaveForm::setParams(const Params &_params) {
 	} else {
 		color = waveInt;
 	}
-	const unsigned centerPixel = std::lround(interpolator.toValue(0.0));
-	for (unsigned i = 0; i < this->params.width; ++i) {
+	const index centerPixel = std::lround(interpolator.toValue(0.0));
+	for (index i = 0; i < this->params.width; ++i) {
 		imageBuffer[i][centerPixel] = color;
 	}
 

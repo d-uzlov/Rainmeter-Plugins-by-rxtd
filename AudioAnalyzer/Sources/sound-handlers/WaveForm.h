@@ -94,7 +94,6 @@ namespace rxaa {
 
 	public:
 		void setParams(const Params& _params);
-		// void setParams(double resolution, unsigned width, unsigned height, string prefix, rxu::Color backgroundColor, rxu::Color waveColor, rxu::Color lineColor, LineDrawingPolicy lineDrawingPolicy, double gain);
 
 		static std::optional<Params> parseParams(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger &cl, const utils::Rainmeter& rain);
 

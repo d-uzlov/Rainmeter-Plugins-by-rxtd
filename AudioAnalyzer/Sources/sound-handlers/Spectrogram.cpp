@@ -60,7 +60,7 @@ std::optional<rxaa::Spectrogram::Params> rxaa::Spectrogram::parseParams(const ut
 	}
 	std::filesystem::path path { folder };
 	if (!path.is_absolute()) {
-		folder = (rain.replaceVariables(L"[#CURRENTPATH]") % own()) + folder;
+		folder = rain.replaceVariables(L"[#CURRENTPATH]") % own() + folder;
 	}
 	folder = std::filesystem::absolute(folder).wstring();
 	folder = LR"(\\?\)"s + folder;
@@ -140,7 +140,7 @@ void rxaa::Spectrogram::process(const DataSupplier& dataSupplier) {
 		return;
 	}
 
-	const auto source = dynamic_cast<const BandAnalyzer*>(dataSupplier.getHandler(params.sourceName));
+	const auto source = dataSupplier.getHandler(params.sourceName);
 	if (source == nullptr) {
 		return;
 	}

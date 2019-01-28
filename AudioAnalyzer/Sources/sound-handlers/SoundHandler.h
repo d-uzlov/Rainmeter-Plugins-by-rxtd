@@ -58,11 +58,11 @@ namespace rxaa {
 			return calculateAttackDecayConstant(time, samplesPerSec, 1u);
 		}
 
-		static int parseIndexProp(const isview& request, const isview& propName, index endBound) {
+		static index parseIndexProp(const isview& request, const isview& propName, index endBound) {
 			return parseIndexProp(request, propName, 0, endBound);
 		}
 
-		static int parseIndexProp(const isview& request, const isview& propName, index minBound, index endBound) {
+		static index parseIndexProp(const isview& request, const isview& propName, index minBound, index endBound) {
 			const auto indexPos = request.find(propName);
 
 			if (indexPos != 0) {

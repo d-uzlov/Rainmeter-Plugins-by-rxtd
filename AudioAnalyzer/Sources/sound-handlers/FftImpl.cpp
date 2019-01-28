@@ -13,7 +13,7 @@
 #include "undef.h"
 
 struct CountPair {
-	int count = 0;
+	index count = 0;
 	std::unique_ptr<rxaa::FftImpl> ptr;
 };
 static std::map<index, CountPair> cache;
@@ -71,7 +71,7 @@ void rxaa::FftImpl::setBuffers(input_buffer_type* inputBuffer, output_buffer_typ
 }
 
 void rxaa::FftImpl::process(const float* wave) {
-	for (unsigned int iBin = 0; iBin < fftSize; ++iBin) {
+	for (index iBin = 0; iBin < fftSize; ++iBin) {
 		inputBuffer[iBin] = wave[iBin] * windowFunction[iBin];
 	}
 

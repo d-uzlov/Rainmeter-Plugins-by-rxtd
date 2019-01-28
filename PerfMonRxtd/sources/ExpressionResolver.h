@@ -52,9 +52,9 @@ namespace rxtd::perfmon {
 	public:
 		ExpressionResolver(utils::Rainmeter::Logger& log, const InstanceManager& instanceManager);
 
-		unsigned getExpressionsCount() const;
+		index getExpressionsCount() const;
 
-		unsigned getRollupExpressionsCount() const;
+		index getRollupExpressionsCount() const;
 
 		void resetCaches();
 
@@ -72,12 +72,12 @@ namespace rxtd::perfmon {
 
 		double getExpressionRollup(RollupFunction rollupType, index expressionIndex, const InstanceInfo& instance) const;
 
-		double getExpression(unsigned expressionIndex, const InstanceInfo& instance) const;
+		double getExpression(index expressionIndex, const InstanceInfo& instance) const;
 
-		double getRollupExpression(unsigned expressionIndex, const InstanceInfo& instance) const;
+		double getRollupExpression(index expressionIndex, const InstanceInfo& instance) const;
 
 	private:
-		double calculateTotal(TotalSource source, unsigned counterIndex, RollupFunction rollupFunction) const;
+		double calculateTotal(TotalSource source, index counterIndex, RollupFunction rollupFunction) const;
 
 		const InstanceInfo* findAndCacheName(const Reference& ref, bool useRollup) const;
 

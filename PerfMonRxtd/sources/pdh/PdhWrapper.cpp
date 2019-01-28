@@ -38,7 +38,7 @@ bool Snapshot::isEmpty() const {
 	return getCountersCount() == 0 || getItemsCount() == 0;
 }
 
-void Snapshot::setCountersCount(unsigned value) {
+void Snapshot::setCountersCount(index value) {
 	countersCount = value;
 
 	updateSize();
@@ -58,11 +58,11 @@ void Snapshot::updateSize() {
 	buffer.reserve(countersCount * (itemsCount - 1) * sizeof(PDH_RAW_COUNTER_ITEM_W) + counterBufferSize);
 }
 
-PDH_RAW_COUNTER_ITEM_W* Snapshot::getCounterPointer(unsigned counter) {
+PDH_RAW_COUNTER_ITEM_W* Snapshot::getCounterPointer(index counter) {
 	return reinterpret_cast<PDH_RAW_COUNTER_ITEM_W*>(buffer.data()) + itemsCount * counter;
 }
 
-const PDH_RAW_COUNTER_ITEM_W* Snapshot::getCounterPointer(unsigned counter) const {
+const PDH_RAW_COUNTER_ITEM_W* Snapshot::getCounterPointer(index counter) const {
 	return reinterpret_cast<const PDH_RAW_COUNTER_ITEM_W*>(buffer.data()) + itemsCount * counter;
 }
 
@@ -114,7 +114,7 @@ bool PdhWrapper::QueryWrapper::isValid() const {
 	return handler != nullptr;
 }
 
-PdhWrapper::PdhWrapper(rxtd::utils::Rainmeter::Logger _log, string objectName, rxtd::utils::OptionParser::OptionList counterTokens) : log(std::move(_log)) {
+PdhWrapper::PdhWrapper(utils::Rainmeter::Logger _log, string objectName, utils::OptionParser::OptionList counterTokens) : log(std::move(_log)) {
 	QueryWrapper query;
 
 	PDH_STATUS pdhStatus = PdhOpenQueryW(nullptr, 0, query.getPointer());
@@ -134,7 +134,7 @@ PdhWrapper::PdhWrapper(rxtd::utils::Rainmeter::Logger _log, string objectName, r
 
 	counterHandlers.resize(counterTokens.size());
 	string counterPath;
-	for (unsigned int inx = 0; inx < counterHandlers.size(); ++inx) {
+	for (index inx = 0; inx < counterHandlers.size(); ++inx) {
 		counterPath = L"\\" + objectName + L"(*)" + L"\\" + string { counterTokens.get(inx) };
 		pdhStatus = PdhAddEnglishCounterW(query.get(), counterPath.c_str(), 0, &counterHandlers[inx]);
 		if (pdhStatus != ERROR_SUCCESS) {
@@ -226,7 +226,7 @@ bool PdhWrapper::fetch(Snapshot& snapshot, Snapshot& idSnapshot) {
 	snapshot.setBufferSize(bufferSize, count);
 
 	// Retrieve counter data for all counters in the measure's counterList.
-	for (unsigned int i = 0; i < counterHandlers.size(); ++i) {
+	for (index i = 0; i < counterHandlers.size(); ++i) {
 		DWORD dwBufferSize2 = bufferSize;
 		PDH_RAW_COUNTER_ITEM_W* buffer = snapshot.getCounterPointer(i);
 

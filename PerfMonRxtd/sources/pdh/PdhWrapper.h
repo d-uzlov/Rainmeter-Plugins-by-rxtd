@@ -40,15 +40,15 @@ namespace rxtd::perfmon::pdh {
 
 		bool isEmpty() const;
 
-		void setCountersCount(unsigned value);
+		void setCountersCount(index value);
 
 		void setBufferSize(index size, index items);
 
 		void updateSize();
 
-		PDH_RAW_COUNTER_ITEM_W* getCounterPointer(unsigned counter);
+		PDH_RAW_COUNTER_ITEM_W* getCounterPointer(index counter);
 
-		const PDH_RAW_COUNTER_ITEM_W* getCounterPointer(unsigned counter) const;
+		const PDH_RAW_COUNTER_ITEM_W* getCounterPointer(index counter) const;
 
 		const PDH_RAW_COUNTER& getItem(index counter, index index) const;
 

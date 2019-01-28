@@ -439,7 +439,7 @@ void rxaa::FftAnalyzer::updateParams() {
 		fftSize = kiss_fft::calculateNextFastSize(params.resolution, true);
 		break;
 	case SizeBy::SIZE_EXACT:
-		fftSize = static_cast<unsigned>(params.resolution) & ~1; // only even sizes are allowed
+		fftSize = static_cast<index>(static_cast<size_t>(params.resolution) & ~1); // only even sizes are allowed
 		break;
 	default: // must be unreachable statement
 		std::abort();
@@ -454,7 +454,7 @@ void rxaa::FftAnalyzer::updateParams() {
 	inputStride = std::clamp<index>(inputStride, std::min<index>(16, fftSize), fftSize);
 
 	cascades.resize(params.cascadesCount);
-	for (index i = 0; i < cascades.size(); i++) {
+	for (index i = 0; i < index(cascades.size()); i++) {
 		const auto next = i + 1 < cascades.size() ? &cascades[i + 1] : nullptr;
 		cascades[i].setParams(this, next, i);
 	}

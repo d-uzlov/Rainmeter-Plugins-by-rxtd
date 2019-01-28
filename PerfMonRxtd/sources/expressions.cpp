@@ -55,7 +55,7 @@ void ExpressionTreeNode::simplify() {
 	case ExpressionType::DIFF:
 	{
 		double value = nodes[0].number;
-		for (unsigned int i = 1; i < nodes.size(); i++) {
+		for (index i = 1; i < nodes.size(); i++) {
 			value -= nodes[i].number;
 		}
 		nodes.clear();
@@ -84,7 +84,7 @@ void ExpressionTreeNode::simplify() {
 	case ExpressionType::DIV:
 	{
 		double value = nodes[0].number;
-		for (unsigned int i = 1; i < nodes.size(); i++) {
+		for (index i = 1; i < nodes.size(); i++) {
 			const double nodeValue = nodes[i].number;
 			if (nodeValue == 0) {
 				value = 0.0;
@@ -215,9 +215,9 @@ ExpressionParser::Lexer::Lexeme ExpressionParser::Lexer::next() {
 	return result;
 }
 
-sview ExpressionParser::Lexer::getUntil(const wchar_t stop1, const wchar_t stop2) {
+sview ExpressionParser::Lexer::getUntil(const wchar_t stop1, const wchar_t stop2) { // todo use find first not of
 	const auto startPos = position;
-	int i = 0;
+	index i = 0;
 	while (position + i < source.length()) {
 		const wchar_t c1 = source[position + i];
 		if (c1 != stop1 && c1 != stop2 && c1 != L'\0') {
@@ -254,7 +254,7 @@ bool ExpressionParser::Lexer::isSymbol(const wchar_t c) {
 
 sview ExpressionParser::Lexer::readWord() {
 	const auto startPos = position;
-	int i = 0;
+	index i = 0;
 	while (position + i < source.length()) {
 		const wchar_t c1 = source[position + i];
 		if (std::iswalpha(c1)) {
@@ -268,7 +268,7 @@ sview ExpressionParser::Lexer::readWord() {
 }
 sview ExpressionParser::Lexer::readNumber() {
 	const auto startPos = position;
-	int i = 0;
+	index i = 0;
 	while (position + i < source.length()) {
 		const wchar_t c1 = source[position + i];
 		if (std::iswdigit(c1)) {

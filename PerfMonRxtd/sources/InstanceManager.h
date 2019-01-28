@@ -55,7 +55,7 @@ namespace rxtd::perfmon {
 		bool limitIndexOffset = false;
 
 		SortBy sortBy = SortBy::NONE;
-		unsigned sortIndex = 0;
+		index sortIndex = 0;
 		SortOrder sortOrder = SortOrder::DESCENDING;
 		RollupFunction sortRollupFunction = RollupFunction::SUM;
 
@@ -96,9 +96,9 @@ namespace rxtd::perfmon {
 		void setSortOrder(SortOrder value);
 		void setSortRollupFunction(RollupFunction value);
 
-		int getIndexOffset() const;
+		index getIndexOffset() const;
 		bool isRollup() const;
-		unsigned getCountersCount() const;
+		index getCountersCount() const;
 
 		const pdh::ModifiedNameItem& getNames(index index) const;
 

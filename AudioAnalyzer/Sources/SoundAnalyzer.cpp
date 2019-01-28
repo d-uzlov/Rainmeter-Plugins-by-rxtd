@@ -21,7 +21,7 @@ void rxaa::SoundAnalyzer::DataSupplierImpl::setChannelData(ChannelData *value) {
 	channelData = value;
 }
 
-void rxaa::SoundAnalyzer::DataSupplierImpl::setChannelIndex(unsigned channelIndex) {
+void rxaa::SoundAnalyzer::DataSupplierImpl::setChannelIndex(index channelIndex) {
 	this->channelIndex = channelIndex;
 }
 
@@ -441,7 +441,7 @@ void rxaa::SoundAnalyzer::resampleToAuto(index first, index second, index frames
 	const auto bufferFirst = wave[first];
 	const auto bufferSecond = wave[second];
 
-	for (unsigned i = 0; i < framesCount; ++i) {
+	for (index i = 0; i < framesCount; ++i) {
 		bufferAuto[i] = (bufferFirst[i] + bufferSecond[i]) * 0.5f;
 	}
 }
@@ -450,7 +450,7 @@ void rxaa::SoundAnalyzer::copyToAuto(index channelIndex, index framesCount) noex
 	const auto bufferAuto = wave[wave.getBuffersCount() - 1];
 	const auto bufferSource = wave[channelIndex];
 
-	for (unsigned i = 0; i < framesCount; ++i) {
+	for (index i = 0; i < framesCount; ++i) {
 		bufferAuto[i] = bufferSource[i];
 	}
 }

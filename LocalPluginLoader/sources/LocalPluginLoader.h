@@ -23,7 +23,7 @@ public:
 	double update() const;
 	const wchar_t* getStringValue() const;
 	void executeBang(const wchar_t* args) const;
-	const wchar_t* solveSectionVariable(const int count, const wchar_t* argv[]) const;
+	const wchar_t* solveSectionVariable(int count, const wchar_t* argv[]) const;
 
 private:
 	void* rm = nullptr;

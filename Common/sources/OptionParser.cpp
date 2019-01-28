@@ -202,7 +202,7 @@ Color OptionParser::Option::asColor(Color defaultValue) const {
 		return { };
 	}
 	double values[4];
-	for (unsigned i = 0; i < count; ++i) {
+	for (index i = 0; i < count; ++i) {
 		values[i] = parseNumber(numbers[i].makeView(view));
 	}
 

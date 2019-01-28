@@ -13,7 +13,7 @@ namespace rxtd::utils {
 	class BmpWriter {
 #pragma pack( push, 1 ) 
 		struct BMPHeader {
-			static constexpr int dibSize = 108;
+			static constexpr index dibSize = 108;
 
 			struct {
 				uint16_t ID = 0x4d42; // == 'BM' (little-endian)

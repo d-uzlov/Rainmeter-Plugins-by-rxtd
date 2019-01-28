@@ -48,7 +48,7 @@ void ExpressionTreeNode::solve() {
 	case ExpressionType::DIFF:
 	{
 		double value = nodes[0].number;
-		for (unsigned int i = 1; i < nodes.size(); i++) {
+		for (index i = 1; i < nodes.size(); i++) {
 			value -= nodes[i].number;
 		}
 		nodes.clear();
@@ -77,7 +77,7 @@ void ExpressionTreeNode::solve() {
 	case ExpressionType::DIV:
 	{
 		double value = nodes[0].number;
-		for (unsigned int i = 1; i < nodes.size(); i++) {
+		for (index i = 1; i < nodes.size(); i++) {
 			const double nodeValue = nodes[i].number;
 			if (nodeValue == 0) {
 				value = 0.0;
@@ -174,7 +174,7 @@ MathExpressionParser::Lexer::Lexeme MathExpressionParser::Lexer::next() {
 
 sview MathExpressionParser::Lexer::getUntil(const wchar_t stop1, const wchar_t stop2) {
 	const auto startPos = position;
-	int i = 0;
+	index i = 0;
 	while (position + i < sourceLength) {
 		const wchar_t c1 = source[position + i];
 		if (c1 != stop1 && c1 != stop2 && c1 != L'\0') {
@@ -211,7 +211,7 @@ bool MathExpressionParser::Lexer::isSymbol(const wchar_t c) {
 
 sview MathExpressionParser::Lexer::readNumber() {
 	const auto startPos = position;
-	int i = 0;
+	index i = 0;
 	while (position + i < sourceLength) {
 		const wchar_t c1 = source[position + i];
 		if (std::iswdigit(c1)) {

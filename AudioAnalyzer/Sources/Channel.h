@@ -29,7 +29,7 @@ namespace rxaa {
 
 		static ChannelParser channelParser;
 
-		enum Value : unsigned short {
+		enum Value {
 			FRONT_LEFT = 0,
 			FRONT_RIGHT = 1,
 			CENTER = 2,
@@ -68,7 +68,7 @@ namespace std {
 	template<>
 	struct hash<rxaa::Channel> {
 		std::size_t operator()(const rxaa::Channel &c) const {
-			return std::hash<unsigned short>()(c.toInt());
+			return std::hash<decltype(c.toInt())>()(c.toInt());
 		}
 	};
 }

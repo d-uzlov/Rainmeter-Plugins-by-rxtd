@@ -78,7 +78,7 @@ namespace rxaa {
 
 		mutable std::vector<std::vector<BandValueInfo>> bandInfo;
 		mutable std::vector<std::vector<double>> pastValues;
-		mutable size_t pastValuesIndex = 0u;
+		mutable index pastValuesIndex = 0;
 		mutable std::vector<double> values;
 		mutable std::vector<double> cascadeTempBuffer;
 

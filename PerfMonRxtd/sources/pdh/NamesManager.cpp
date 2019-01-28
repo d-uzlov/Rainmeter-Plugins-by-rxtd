@@ -63,7 +63,7 @@ void NamesManager::createModifiedNames(const Snapshot& snapshot, const Snapshot&
 void NamesManager::copyOriginalNames(const Snapshot& snapshot) {
 	wchar_t* namesBuffer = getBuffer(originalNamesSize);
 
-	for (unsigned long instanceInx = 0; instanceInx < snapshot.getItemsCount(); ++instanceInx) {
+	for (index instanceInx = 0; instanceInx < snapshot.getItemsCount(); ++instanceInx) {
 		const wchar_t* namePtr = snapshot.getName(instanceInx);
 		ModifiedNameItem& item = names[instanceInx];
 

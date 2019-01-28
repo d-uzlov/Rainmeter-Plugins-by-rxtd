@@ -367,7 +367,7 @@ void rxaa::BandAnalyzer::updateValues() const {
 				index kernelIndex = kernelStartIndex;
 				index bandIndex = bandStartIndex;
 				while (true) {
-					if (bandIndex >= static_cast<int>(bandsCount) || kernelIndex >= static_cast<int>(kernel.size())) {
+					if (bandIndex >= static_cast<int>(bandsCount) || kernelIndex >= index(kernel.size())) {
 						break;
 					}
 					result += kernel[kernelIndex] * cascadeBandInfo[bandIndex].magnitude;
@@ -377,7 +377,7 @@ void rxaa::BandAnalyzer::updateValues() const {
 				}
 				cascadeTempBuffer[band] = result;
 			}
-			for (int i = 0; i < bandsCount; ++i) {
+			for (index i = 0; i < bandsCount; ++i) {
 				cascadeBandInfo[i].magnitude = cascadeTempBuffer[i];
 			}
 		}
@@ -393,7 +393,7 @@ void rxaa::BandAnalyzer::updateValues() const {
 
 	for (index band = 0; band < values.size(); ++band) {
 		double weight = 0.0;
-		unsigned cascadesSummed = 0u;
+		index cascadesSummed = 0u;
 
 		double value;
 		if (params.minFunction == MixFunction::PRODUCT) {
@@ -451,9 +451,9 @@ void rxaa::BandAnalyzer::updateValues() const {
 		switch (params.smoothingCurve) {
 		case SmoothingCurve::FLAT:
 		{
-			for (unsigned band = 0; band < values.size(); ++band) {
+			for (index band = 0; band < values.size(); ++band) {
 				double outValue = 0.0;
-				for (unsigned i = 0; i < params.smoothingFactor; ++i) {
+				for (index i = 0; i < params.smoothingFactor; ++i) {
 					outValue += pastValues[i][band];
 				}
 				outValue /= params.smoothingFactor;
@@ -465,7 +465,7 @@ void rxaa::BandAnalyzer::updateValues() const {
 		{
 			for (index band = 0; band < values.size(); ++band) {
 				double outValue = 0.0;
-				int smoothingWeight = 0;
+				index smoothingWeight = 0;
 				double valueWeight = 1;
 
 				for (index i = startPastIndex; i < params.smoothingFactor; ++i) {
@@ -488,7 +488,7 @@ void rxaa::BandAnalyzer::updateValues() const {
 		{
 			for (index band = 0; band < values.size(); ++band) {
 				double outValue = 0.0;
-				int smoothingWeight = 0;
+				index smoothingWeight = 0;
 				double weight = 1;
 
 				for (index i = startPastIndex; i < params.smoothingFactor; ++i) {
@@ -511,7 +511,7 @@ void rxaa::BandAnalyzer::updateValues() const {
 		}
 	}
 
-	for (unsigned i = 0; i < bandsCount; ++i) {
+	for (index i = 0; i < bandsCount; ++i) {
 		double value = values[i];
 
 		value = utils::FastMath::log2(value) * log10inverse;
@@ -536,8 +536,8 @@ void rxaa::BandAnalyzer::computeAnalysis(index startCascade, index endCascade) c
 
 	for (index band = 0; band < values.size(); ++band) {
 		double weight = 0.0;
-		int bandStartCascade = -1;
-		int bandEndCascade = -1;
+		index bandStartCascade = -1;
+		index bandEndCascade = -1;
 
 		for (index cascade = startCascade; cascade < endCascade; ++cascade) {
 			auto &info = bandInfo[cascade - startCascade][band];
@@ -605,7 +605,7 @@ std::optional<std::vector<double>> rxaa::BandAnalyzer::parseFreqList(const utils
 				cl.error(L"linear/log must have 3 options (count, min, max)");
 				return std::nullopt;
 			}
-			int count;
+			index count;
 			std::wstringstream(string { options.get(1) }) >> count; // TODO rewrite
 
 			if (count < 1) {

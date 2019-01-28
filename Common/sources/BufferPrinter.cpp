@@ -67,7 +67,7 @@ std::basic_streambuf<wchar_t>::int_type BufferPrinter::ReadableOutputBuffer::ove
 	buffer[oldSize] = static_cast<char_type>(c);
 
 	resetPointers();
-	pbump(static_cast<int>(oldSize + 1));
+	pbump(int(oldSize) + 1);
 
 	return c;
 }
@@ -121,7 +121,7 @@ namespace rxtd::utils {
 	template <>
 	void writeIntegral(std::wostream& stream, bool t, sview options) {
 		if (options == L"number"sv) {
-			stream << static_cast<int>(t);
+			stream << index(t);
 		} else {
 			stream << (t ? L"true"sv : L"false"sv);
 		}

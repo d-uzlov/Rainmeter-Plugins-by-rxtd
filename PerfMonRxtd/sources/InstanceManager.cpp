@@ -49,7 +49,7 @@ void InstanceManager::setLimitIndexOffset(bool value) {
 	}
 }
 
-int InstanceManager::getIndexOffset() const {
+index InstanceManager::getIndexOffset() const {
 	return indexOffset;
 }
 
@@ -57,7 +57,7 @@ bool InstanceManager::isRollup() const {
 	return rollup;
 }
 
-unsigned InstanceManager::getCountersCount() const {
+index InstanceManager::getCountersCount() const {
 	return pdhWrapper.getCountersCount();
 }
 
@@ -112,7 +112,7 @@ void InstanceManager::checkIndices(index counters, index expressions, index roll
 		}
 	}
 
-	unsigned checkCount;
+	index checkCount;
 	switch (sortBy) {
 	case SortBy::NONE: return;
 	case SortBy::INSTANCE_NAME: return;
@@ -194,20 +194,20 @@ index InstanceManager::findPreviousName(sview uniqueName, index hint) const {
 	// use the unique name for this search because we need a unique match
 	// counter buffers tend to be *mostly* aligned, so we'll try to short-circuit a full search
 
-	const int itemCountPrevious = snapshotPrevious.getItemsCount();
+	const auto itemCountPrevious = snapshotPrevious.getItemsCount();
 
 	// try for a direct hit
-	int previousInx = std::clamp<int>(hint, 0, itemCountPrevious - 1);
+	auto previousInx = std::clamp<index>(hint, 0, itemCountPrevious - 1);
 
 	if (uniqueName == namesPrevious.get(previousInx).uniqueName) {
 		return previousInx;
 	}
 
 	// try a window around currentIndex
-	constexpr int windowSize = 5;
+	constexpr index windowSize = 5;
 
-	const auto lowBound = std::clamp<int>(hint - windowSize, 0, itemCountPrevious - 1);
-	const auto highBound = std::clamp<int>(hint + windowSize, 0, itemCountPrevious - 1);
+	const auto lowBound = std::clamp<index>(hint - windowSize, 0, itemCountPrevious - 1);
+	const auto highBound = std::clamp<index>(hint + windowSize, 0, itemCountPrevious - 1);
 
 	for (previousInx = lowBound; previousInx <= highBound; ++previousInx) {
 		if (uniqueName == namesPrevious.get(previousInx).uniqueName) {
@@ -233,7 +233,7 @@ index InstanceManager::findPreviousName(sview uniqueName, index hint) const {
 void InstanceManager::buildInstanceKeysZero() {
 	instances.reserve(snapshotCurrent.getItemsCount());
 
-	for (unsigned currentInx = 0; currentInx < snapshotCurrent.getItemsCount(); ++currentInx) {
+	for (index currentInx = 0; currentInx < snapshotCurrent.getItemsCount(); ++currentInx) {
 		const auto& item = namesCurrent.get(currentInx);
 
 		InstanceInfo instanceKey;
