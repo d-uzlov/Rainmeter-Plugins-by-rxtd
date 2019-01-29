@@ -145,7 +145,7 @@ void rxaa::WaveForm::reset() {
 }
 
 void rxaa::WaveForm::updateParams() {
-	blockSize = samplesPerSec * params.resolution;
+	blockSize = index(samplesPerSec * params.resolution);
 	reset();
 }
 

@@ -57,7 +57,7 @@ namespace rxtd::perfmon::pdh {
 		/**
 		 * in wchar_t
 		 */
-		size_t getNamesSize() const;
+		index getNamesSize() const;
 	};
 
 	class PdhWrapper {

@@ -151,7 +151,7 @@ const wchar_t* LocalPluginLoader::solveSectionVariable(const int count, const wc
 
 	std::string byteFuncName;
 	byteFuncName.resize(funcName.length());
-	for (index i = 0; i < funcName.length(); ++i) {
+	for (index i = 0; i < index(funcName.length()); ++i) {
 		// let's only support ascii
 		const wchar_t wc = funcName[i];
 		const char c = static_cast<char>(wc);

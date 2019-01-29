@@ -67,7 +67,7 @@ namespace rxaa {
 namespace std {
 	template<>
 	struct hash<rxaa::Channel> {
-		std::size_t operator()(const rxaa::Channel &c) const {
+		size_t operator()(const rxaa::Channel &c) const {
 			return std::hash<decltype(c.toInt())>()(c.toInt());
 		}
 	};
@@ -77,7 +77,7 @@ namespace rxaa {
 	class ChannelLayout {
 		string name;
 		std::unordered_set<Channel> channels;
-		std::unordered_map<Channel, size_t> forward;
+		std::unordered_map<Channel, index> forward;
 
 		ChannelLayout() = default;
 
@@ -90,10 +90,10 @@ namespace rxaa {
 		template<Channel::Value... channels>
 		static ChannelLayout create(string name);
 	private:
-		template<size_t N, Channel::Value nextChannel, Channel::Value... otherChannels>
+		template<index N, Channel::Value nextChannel, Channel::Value... otherChannels>
 		typename std::enable_if<sizeof...(otherChannels) != 0, void>::type
 			insert();
-		template<size_t N, Channel::Value nextChannel>
+		template<index N, Channel::Value nextChannel>
 		void insert();
 	};
 
@@ -106,7 +106,7 @@ namespace rxaa {
 		return result;
 	}
 
-	template <size_t N, Channel::Value nextChannel, Channel::Value... otherChannels>
+	template <index N, Channel::Value nextChannel, Channel::Value... otherChannels>
 	typename std::enable_if<sizeof...(otherChannels) != 0, void>::type
 		ChannelLayout::insert() {
 		channels.insert(nextChannel);
@@ -115,7 +115,7 @@ namespace rxaa {
 		insert<N + 1, otherChannels...>();
 	}
 
-	template <size_t N, Channel::Value lastChannel>
+	template <index N, Channel::Value lastChannel>
 	void ChannelLayout::insert() {
 		channels.insert(lastChannel);
 		forward[lastChannel] = N;

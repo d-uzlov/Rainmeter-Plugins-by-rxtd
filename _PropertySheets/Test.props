@@ -26,7 +26,6 @@
   <ItemDefinitionGroup>
     <ClCompile>
       <OmitFramePointers>false</OmitFramePointers>
-      <CreateHotpatchableImage>true</CreateHotpatchableImage>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <SupportJustMyCode>false</SupportJustMyCode>

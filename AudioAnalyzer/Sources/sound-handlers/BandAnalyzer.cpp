@@ -84,8 +84,8 @@ std::optional<rxaa::BandAnalyzer::Params> rxaa::BandAnalyzer::parseParams(const 
 		return std::nullopt;
 	}
 
-	params.minCascade = std::max<index>(optionMap.get(L"minCascade"sv).asInt(0), 0);
-	params.maxCascade = std::max<index>(optionMap.get(L"maxCascade"sv).asInt(0), 0);
+	params.minCascade = std::max<cascade_t>(optionMap.get(L"minCascade"sv).asInt<cascade_t>(0), 0);
+	params.maxCascade = std::max<cascade_t>(optionMap.get(L"maxCascade"sv).asInt<cascade_t>(0), 0);
 
 	params.minWeight = std::max<double>(optionMap.get(L"minWeight"sv).asFloat(0.1), std::numeric_limits<float>::epsilon());
 	params.targetWeight = std::max<double>(optionMap.get(L"targetWeight"sv).asFloat(1.5), std::numeric_limits<float>::epsilon());
@@ -530,7 +530,7 @@ void rxaa::BandAnalyzer::blurData() {
 
 	for (auto&[cascadeMagnitudes, cascadeBandInfo] : cascadesInfo) {
 
-		gcm.setRadiusBounds(minRadius, maxRadius);
+		gcm.setRadiusBounds(index(minRadius), index(maxRadius));
 
 		for (index band = 0; band < bandsCount; ++band) {
 			const double sigma = cascadeBandInfo[band].blurSigma;
@@ -704,7 +704,7 @@ void rxaa::BandAnalyzer::applyTimeFiltering() {
 		for (index band = 0; band < index(values.size()); ++band) {
 			double outValue = 0.0;
 			index smoothingWeight = 0;
-			double valueWeight = 1;
+			index valueWeight = 1;
 
 			for (index i = startPastIndex; i < params.smoothingFactor; ++i) {
 				outValue += pastValues[i][band] * valueWeight;
@@ -725,7 +725,7 @@ void rxaa::BandAnalyzer::applyTimeFiltering() {
 	case SmoothingCurve::EXPONENTIAL:
 		for (index band = 0; band < index(values.size()); ++band) {
 			double outValue = 0.0;
-			index smoothingWeight = 0;
+			double smoothingWeight = 0;
 			double weight = 1;
 
 			for (index i = startPastIndex; i < params.smoothingFactor; ++i) {
@@ -754,7 +754,7 @@ void rxaa::BandAnalyzer::transformToLog() {
 	for (index i = 0; i < bandsCount; ++i) {
 		double value = values[i];
 
-		value = utils::FastMath::log2(value) * log10inverse;
+		value = utils::FastMath::log2(float(value)) * log10inverse;
 		value = value * logNormalization + 1.0;
 		value += params.offset;
 		values[i] = value;

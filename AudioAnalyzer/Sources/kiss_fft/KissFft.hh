@@ -16,7 +16,7 @@ namespace kiss_fft {
 	 * Returns the smallest integer k, such that k >= @c size and k has only "fast" factors (2,3,5)
 	 * If @c real is @c true, then returned value is guaranteed to be even.
 	 */
-	inline std::size_t calculateNextFastSize(std::size_t size, bool real) {
+	inline index calculateNextFastSize(index size, bool real) {
 		if (size == 0) {
 			return 0;
 		}
@@ -283,7 +283,7 @@ void kiss_fft::KissFft<scalar_t>::kf_bfly3(cpx_t* Fout, const std::size_t fstrid
 template <typename scalar_t>
 void kiss_fft::KissFft<scalar_t>::kf_bfly4(cpx_t* const Fout, const std::size_t fstride, const std::size_t m) const {
 	cpx_t scratch[7];
-	const scalar_t negative_if_inverse = _inverse ? -1 : +1;
+	const scalar_t negative_if_inverse = scalar_t(_inverse ? -1 : +1);
 	for (std::size_t k = 0; k < m; ++k) {
 		scratch[0] = Fout[k + m] * _twiddles[k * fstride];
 		scratch[1] = Fout[k + 2 * m] * _twiddles[k * fstride * 2];

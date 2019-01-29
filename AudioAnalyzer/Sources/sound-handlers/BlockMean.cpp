@@ -77,10 +77,10 @@ void rxaa::BlockRms::process(const DataSupplier& dataSupplier) {
 
 void rxaa::BlockMean::processSilence(const DataSupplier& dataSupplier) {
 	const auto waveSize = dataSupplier.getWaveSize();
-	auto waveProcessed = 0;
+	index waveProcessed = 0;
 
 	while (waveProcessed != waveSize) {
-		const auto missingPoints = blockSize - counter;
+		const index missingPoints = blockSize - counter;
 		if (waveProcessed + missingPoints <= waveSize) {
 			finishBlock();
 			waveProcessed += missingPoints;

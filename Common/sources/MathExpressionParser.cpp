@@ -48,7 +48,7 @@ void ExpressionTreeNode::solve() {
 	case ExpressionType::DIFF:
 	{
 		double value = nodes[0].number;
-		for (index i = 1; i < nodes.size(); i++) {
+		for (index i = 1; i < index(nodes.size()); i++) {
 			value -= nodes[i].number;
 		}
 		nodes.clear();
@@ -77,7 +77,7 @@ void ExpressionTreeNode::solve() {
 	case ExpressionType::DIV:
 	{
 		double value = nodes[0].number;
-		for (index i = 1; i < nodes.size(); i++) {
+		for (index i = 1; i < index(nodes.size()); i++) {
 			const double nodeValue = nodes[i].number;
 			if (nodeValue == 0) {
 				value = 0.0;
@@ -400,7 +400,7 @@ ExpressionTreeNode MathExpressionParser::parseAtom() {
 	if (next.type == Lexer::LexemeType::NUMBER) {
 		ExpressionTreeNode res;
 		res.type = ExpressionType::NUMBER;
-		const double i = parseInt(next.value);
+		const double i = double(parseInt(next.value));
 		double m = 0;
 		readNext();
 		if (error) {

@@ -570,7 +570,7 @@ void rxaa::DeviceManager::updateDeviceList() {
 	for (index deviceIndex = 0; deviceIndex < index(devicesCount); ++deviceIndex) {
 		utils::GenericComWrapper<IMMDevice> device;
 		utils::GenericComWrapper<IPropertyStore> props;
-		if (collection->Item(deviceIndex, &device) != S_OK || device->OpenPropertyStore(STGM_READ, &props) != S_OK) {
+		if (collection->Item(UINT(deviceIndex), &device) != S_OK || device->OpenPropertyStore(STGM_READ, &props) != S_OK) {
 			continue;
 		}
 

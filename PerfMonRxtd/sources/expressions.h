@@ -92,7 +92,7 @@ namespace rxtd::perfmon {
 
 		private:
 			sview source;
-			size_t position = 0;
+			index position = 0;
 
 		public:
 			explicit Lexer(sview source);

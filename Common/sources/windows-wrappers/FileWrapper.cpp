@@ -44,17 +44,17 @@ bool FileWrapper::isValid() const {
 	return valid;
 }
 
-void FileWrapper::write(std::byte* data, size_t count) {
+void FileWrapper::write(std::byte * data, index count) {
 	if (!valid) {
 		return;
 	}
 
 	DWORD bytesWritten;
 	const bool success = WriteFile(fileHandle, data,
-		count,  // number of bytes to write
+		DWORD(count),  // number of bytes to write
 		&bytesWritten, nullptr);
 
-	if (!success || bytesWritten != count) {
+	if (!success || index(bytesWritten) != count) {
 		valid = false;
 		return;
 	}
@@ -63,7 +63,7 @@ void FileWrapper::write(std::byte* data, size_t count) {
 void FileWrapper::createDirectories(sview path) {
 	string buffer { path };
 
-	size_t pos = buffer.find(L':') + 1; // either npos+1 == 0 or index of first meaningful symbol
+	auto pos = buffer.find(L':') + 1; // either npos+1 == 0 or index of first meaningful symbol
 
 	while (true) {
 		const auto nextPos = buffer.find(L'\\', pos);

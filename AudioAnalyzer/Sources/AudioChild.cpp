@@ -101,7 +101,7 @@ void rxaa::AudioChild::_reload() {
 		log.error(L"Invalid Index {}. Index should be > 0. Set to 0.", signedIndex);
 		signedIndex = 0;
 	}
-	index = static_cast<decltype(index)>(signedIndex);
+	valueIndex = static_cast<decltype(valueIndex)>(signedIndex);
 }
 
 std::tuple<double, const wchar_t*> rxaa::AudioChild::_update() {
@@ -112,7 +112,7 @@ std::tuple<double, const wchar_t*> rxaa::AudioChild::_update() {
 	case NumberTransform::LINEAR:
 	case NumberTransform::DB:
 	{
-		result = parent->getValue(valueId, channel, index);
+		result = parent->getValue(valueId, channel, valueIndex);
 		if (numberTransform == NumberTransform::LINEAR) {
 			result = result * correctingConstant;
 		} else { // NumberTransform::DB
@@ -142,7 +142,7 @@ std::tuple<double, const wchar_t*> rxaa::AudioChild::_update() {
 		break;
 
 	case StringValue::INFO:
-		stringValue = parent->resolve(infoRequestC.size(), infoRequestC.data());
+		stringValue = parent->resolve(index(infoRequestC.size()), infoRequestC.data());
 		break;
 
 	default:

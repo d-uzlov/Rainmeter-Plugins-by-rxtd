@@ -39,7 +39,7 @@ void OptionParser::Tokenizer::emitToken(const index begin, const index end) {
 void OptionParser::Tokenizer::tokenize(sview string, wchar_t delimiter) {
 	index begin = 0u;
 
-	for (index i = 0; i < string.length(); ++i) {
+	for (index i = 0; i < index(string.length()); ++i) {
 		if (string[i] == delimiter) {
 			const index end = i;
 			emitToken(begin, end);
@@ -197,7 +197,7 @@ Color OptionParser::Option::asColor(Color defaultValue) const {
 
 	Tokenizer tokenizer;
 	auto numbers = tokenizer.parse(view, L',');
-	const auto count = numbers.size();
+	const auto count = index(numbers.size());
 	if (count != 3 && count != 4) {
 		return { };
 	}

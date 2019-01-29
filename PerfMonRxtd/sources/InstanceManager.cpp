@@ -421,7 +421,7 @@ const InstanceInfo* InstanceManager::findInstance(const Reference& ref, index so
 
 	const std::vector<InstanceInfo>& instances = rollup ? instancesRolledUp : this->instances;
 	sortedIndex += indexOffset;
-	if (sortedIndex < 0 || sortedIndex >= instances.size()) {
+	if (sortedIndex < 0 || sortedIndex >= index(instances.size())) {
 		return nullptr;
 	}
 
@@ -467,8 +467,8 @@ const InstanceInfo* InstanceManager::findInstanceByNameInList(const Reference& r
 	return itemOpt.value();
 }
 
-long long InstanceManager::calculateRaw(index counterIndex, Indices originalIndexes) const {
-	return snapshotCurrent.getItem(counterIndex, originalIndexes.current).FirstValue;
+double InstanceManager::calculateRaw(index counterIndex, Indices originalIndexes) const {
+	return double(snapshotCurrent.getItem(counterIndex, originalIndexes.current).FirstValue);
 }
 
 double InstanceManager::calculateFormatted(index counterIndex, Indices originalIndexes) const {

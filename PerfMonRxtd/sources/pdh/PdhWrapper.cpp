@@ -74,7 +74,7 @@ const wchar_t* Snapshot::getName(index index) const {
 	return getCounterPointer(countersCount - 1)[index].szName;
 }
 
-size_t Snapshot::getNamesSize() const {
+index Snapshot::getNamesSize() const {
 	return (counterBufferSize - itemsCount * sizeof(PDH_RAW_COUNTER_ITEM_W)) / sizeof(wchar_t);
 }
 
@@ -134,7 +134,7 @@ PdhWrapper::PdhWrapper(utils::Rainmeter::Logger _log, string objectName, utils::
 
 	counterHandlers.resize(counterTokens.size());
 	string counterPath;
-	for (index inx = 0; inx < counterHandlers.size(); ++inx) {
+	for (index inx = 0; inx < index(counterHandlers.size()); ++inx) {
 		counterPath = L"\\" + objectName + L"(*)" + L"\\" + string { counterTokens.get(inx) };
 		pdhStatus = PdhAddEnglishCounterW(query.get(), counterPath.c_str(), 0, &counterHandlers[inx]);
 		if (pdhStatus != ERROR_SUCCESS) {
@@ -226,7 +226,7 @@ bool PdhWrapper::fetch(Snapshot& snapshot, Snapshot& idSnapshot) {
 	snapshot.setBufferSize(bufferSize, count);
 
 	// Retrieve counter data for all counters in the measure's counterList.
-	for (index i = 0; i < counterHandlers.size(); ++i) {
+	for (index i = 0; i < index(counterHandlers.size()); ++i) {
 		DWORD dwBufferSize2 = bufferSize;
 		PDH_RAW_COUNTER_ITEM_W* buffer = snapshot.getCounterPointer(i);
 

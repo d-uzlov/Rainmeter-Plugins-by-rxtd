@@ -27,7 +27,7 @@ namespace rxaa {
 		Channel channel = Channel::FRONT_LEFT;
 		NumberTransform numberTransform = NumberTransform::LINEAR;
 		StringValue stringValueType = StringValue::NUMBER;
-		index index = 0;
+		index valueIndex = 0;
 		string valueId;
 		double correctingConstant = 0.0;
 		bool clamp = true;

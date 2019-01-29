@@ -24,7 +24,7 @@ void rxaa::FftAnalyzer::CascadeData::setParams(FftAnalyzer* parent, CascadeData 
 	std::fill(values.begin(), values.end(), 0.0);
 
 	auto samplesPerSec = parent->samplesPerSec;
-	samplesPerSec /= std::pow(2, cascadeIndex);
+	samplesPerSec = index(samplesPerSec / std::pow(2, cascadeIndex));
 
 	attackDecay[0] = calculateAttackDecayConstant(parent->params.attackTime, samplesPerSec, parent->inputStride);
 	attackDecay[1] = calculateAttackDecayConstant(parent->params.decayTime, samplesPerSec, parent->inputStride);
@@ -78,7 +78,7 @@ void rxaa::FftAnalyzer::CascadeData::processRandom(index waveSize, double amplit
 
 		if (waveProcessed + copySize <= waveSize) {
 			for (index i = 0; i < copySize; ++i) {
-				tmpIn[filledElements + i] = random.next() * amplitude;
+				tmpIn[filledElements + i] = float(random.next() * amplitude);
 			}
 
 			if (successor != nullptr) {
@@ -93,7 +93,7 @@ void rxaa::FftAnalyzer::CascadeData::processRandom(index waveSize, double amplit
 			transferredElements = filledElements;
 		} else {
 			for (index i = 0; i < waveSize - waveProcessed; ++i) {
-				tmpIn[filledElements + i] = random.next();
+				tmpIn[filledElements + i] = float(random.next());
 			}
 
 			filledElements = filledElements + waveSize - waveProcessed;
@@ -169,7 +169,7 @@ void rxaa::FftAnalyzer::CascadeData::processSilence(index waveSize) {
 		const auto copySize = fftSize - filledElements;
 
 		if (waveProcessed + copySize <= waveSize) {
-			std::fill_n(tmpIn + filledElements, copySize, 0.0);
+			std::fill_n(tmpIn + filledElements, copySize, 0.0f);
 
 			if (successor != nullptr) {
 				successor->processResampled(tmpIn + transferredElements, ringBuffer.size() - transferredElements);
@@ -182,7 +182,7 @@ void rxaa::FftAnalyzer::CascadeData::processSilence(index waveSize) {
 			filledElements = fftSize - inputStride;
 			transferredElements = filledElements;
 		} else {
-			std::fill_n(tmpIn + filledElements, waveSize - waveProcessed, 0.0);
+			std::fill_n(tmpIn + filledElements, waveSize - waveProcessed, 0.0f);
 
 			filledElements = filledElements + waveSize - waveProcessed;
 			waveProcessed = waveSize;
@@ -295,7 +295,7 @@ index rxaa::FftAnalyzer::getFftSize() const {
 }
 
 rxaa::FftAnalyzer::cascade_t rxaa::FftAnalyzer::getCascadesCount() const {
-	return cascades.size();
+	return cascade_t(cascades.size());
 }
 
 const double* rxaa::FftAnalyzer::getCascade(cascade_t cascade) const { // TODO vector_view
@@ -452,10 +452,10 @@ void rxaa::FftAnalyzer::setParams(Params params) {
 void rxaa::FftAnalyzer::updateParams() {
 	switch (params.sizeBy) {
 	case SizeBy::RESOLUTION:
-		fftSize = kiss_fft::calculateNextFastSize(samplesPerSec / params.resolution, true);
+		fftSize = kiss_fft::calculateNextFastSize(index(samplesPerSec / params.resolution), true);
 		break;
 	case SizeBy::SIZE:
-		fftSize = kiss_fft::calculateNextFastSize(params.resolution, true);
+		fftSize = kiss_fft::calculateNextFastSize(index(params.resolution), true);
 		break;
 	case SizeBy::SIZE_EXACT:
 		fftSize = static_cast<index>(static_cast<size_t>(params.resolution) & ~1); // only even sizes are allowed
@@ -473,7 +473,7 @@ void rxaa::FftAnalyzer::updateParams() {
 	inputStride = static_cast<index>(fftSize * (1 - params.overlap));
 	inputStride = std::clamp<index>(inputStride, std::min<index>(16, fftSize), fftSize);
 
-	randomBlockSize = params.randomDuration * samplesPerSec * fftSize / inputStride;
+	randomBlockSize = index(params.randomDuration * samplesPerSec * fftSize / inputStride);
 	randomCurrentOffset = 0;
 
 	cascades.resize(params.cascadesCount);

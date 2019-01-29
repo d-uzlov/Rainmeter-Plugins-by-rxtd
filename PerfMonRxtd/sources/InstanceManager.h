@@ -125,7 +125,7 @@ namespace rxtd::perfmon {
 
 		const InstanceInfo* findInstanceByName(const Reference& ref, bool useRollup) const;
 
-		long long calculateRaw(index counterIndex, Indices originalIndexes) const;
+		double calculateRaw(index counterIndex, Indices originalIndexes) const;
 
 		double calculateFormatted(index counterIndex, Indices originalIndexes) const;
 

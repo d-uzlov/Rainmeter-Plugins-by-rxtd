@@ -419,18 +419,18 @@ double ExpressionResolver::calculateRollupCountTotal(const RollupFunction rollup
 		.size();
 	case RollupFunction::MINIMUM:
 	{
-		size_t min = std::numeric_limits<size_t>::max();
+		index min = std::numeric_limits<index>::max();
 		for (const auto& item : instanceManager.getRollupInstances()) {
-			size_t val = item.vectorIndices.size() + 1;
+			index val = index(item.vectorIndices.size()) + 1;
 			min = min < val ? min : val;
 		}
 		return static_cast<double>(min);
 	}
 	case RollupFunction::MAXIMUM:
 	{
-		size_t max = 0;
+		index max = 0;
 		for (const auto& item : instanceManager.getRollupInstances()) {
-			size_t val = item.vectorIndices.size() + 1;
+			index val = index(item.vectorIndices.size()) + 1;
 			max = max > val ? max : val;
 		}
 		return static_cast<double>(max);
@@ -687,7 +687,7 @@ double ExpressionResolver::calculateExpression(const ExpressionTreeNode& express
 	case ExpressionType::DIFF:
 	{
 		double value = calculateExpression<resolveReferenceFunction>(expression.nodes[0]);
-		for (index i = 1; i < expression.nodes.size(); i++) {
+		for (index i = 1; i < index(expression.nodes.size()); i++) {
 			value -= calculateExpression<resolveReferenceFunction>(expression.nodes[i]);
 		}
 		return value;
@@ -705,7 +705,7 @@ double ExpressionResolver::calculateExpression(const ExpressionTreeNode& express
 	case ExpressionType::DIV:
 	{
 		double value = calculateExpression<resolveReferenceFunction>(expression.nodes[0]);
-		for (index i = 1; i < expression.nodes.size(); i++) {
+		for (index i = 1; i < index(expression.nodes.size()); i++) {
 			const double denominator = calculateExpression<resolveReferenceFunction>(expression.nodes[i]);
 			if (denominator == 0) {
 				value = 0;

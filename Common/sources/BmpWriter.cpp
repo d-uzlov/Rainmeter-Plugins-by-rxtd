@@ -52,7 +52,7 @@ void utils::BmpWriter::writeFile(const string& filepath, const uint32_t* data, i
 		}
 	}
 
-	BMPHeader header(height, width);
+	BMPHeader header(static_cast<uint32_t>(height), static_cast<uint32_t>(width));
 
 	FileWrapper file(filepath.c_str());
 

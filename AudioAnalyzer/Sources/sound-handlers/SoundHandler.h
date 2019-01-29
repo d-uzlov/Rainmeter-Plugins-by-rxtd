@@ -28,7 +28,7 @@ namespace rxaa {
 		 * Released automatically after end of process() and processSilent().
 		 */
 		template<typename T>
-		T* getBuffer(size_t size) const {
+		T* getBuffer(index size) const {
 			return reinterpret_cast<T*>(getBufferRaw(size * sizeof(T)));
 		}
 

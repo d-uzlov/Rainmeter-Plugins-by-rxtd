@@ -101,7 +101,7 @@ void rxaa::Spectrogram::reset() {
 }
 
 void rxaa::Spectrogram::updateParams() {
-	blockSize = samplesPerSec * params.resolution;
+	blockSize = index(samplesPerSec * params.resolution);
 	buffer.setBuffersCount(params.length);
 
 	reset();

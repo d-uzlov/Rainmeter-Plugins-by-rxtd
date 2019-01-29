@@ -35,7 +35,7 @@ namespace rxaa {
 
 		struct ChannelData {
 			std::vector<std::unique_ptr<SoundHandler>> handlers;
-			std::map<istring, decltype(handlers)::size_type, std::less<>> indexMap;
+			std::map<istring, index, std::less<>> indexMap;
 		};
 
 		std::map<Channel, ChannelData> channels;
