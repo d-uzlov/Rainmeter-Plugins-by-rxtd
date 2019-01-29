@@ -260,6 +260,7 @@ void WaveForm::processSilence(const DataSupplier& dataSupplier) {
 
 		if (waveProcessed + blockRemaining <= waveSize) {
 			fillLine();
+			waveProcessed += blockRemaining;
 			counter = 0;
 			min = 10.0;
 			max = -10.0;

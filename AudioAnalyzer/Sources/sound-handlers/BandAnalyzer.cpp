@@ -476,6 +476,8 @@ void BandAnalyzer::sampleData() {
 	const cascade_t cascadeIndexEnd = analysis.maxCascadeUsed + 1;
 
 	const auto fftBinsCount = source->getCount();
+	// TODO this should be mostly const between params changes, but can actually change sometimes
+	// TODO change of binWidth invalidates almost everything
 	double binWidth = static_cast<double>(samplesPerSec) / (source->getFftSize() * std::pow(2, cascadeIndexBegin));
 	double binWidthInverse = 1.0 / binWidth;
 
@@ -489,7 +491,7 @@ void BandAnalyzer::sampleData() {
 		const auto fftData = source->getCascade(cascade);
 
 		auto &cascadeMagnitudes = cascadesInfo[cascade - cascadeIndexBegin].magnitudes;
-		std::fill(cascadeMagnitudes.begin(), cascadeMagnitudes.end(), 0.0);
+		std::fill(cascadeMagnitudes.begin(), cascadeMagnitudes.end(), 0.0f);
 
 		while (bin < fftBinsCount && band < bandsCount) {
 			const double binUpperFreq = (bin + 0.5) * binWidth;
@@ -687,7 +689,10 @@ void BandAnalyzer::gatherData() {
 
 void BandAnalyzer::applyTimeFiltering() {
 	if (params.smoothingFactor <= 1) {
-		std::swap(values, pastValues[0]); // pastValues consists of only one array
+		// pastValues consists of only one array
+		for (index i = 0; i < index(pastValues[0].size()); ++i) {
+			values[i] = pastValues[0][i];
+		}
 		return;
 	}
 

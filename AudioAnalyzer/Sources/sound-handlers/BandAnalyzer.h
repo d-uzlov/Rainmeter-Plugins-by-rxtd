@@ -74,7 +74,7 @@ namespace rxtd::audio_analyzer {
 				cascade_t endCascade { };
 			};
 
-			std::vector<double> magnitudes;
+			std::vector<float> magnitudes;
 			std::vector<BandInfo> bandsInfo;
 
 			void setSize(index size) {
@@ -108,11 +108,11 @@ namespace rxtd::audio_analyzer {
 		double logNormalization { };
 
 		std::vector<CascadeInfo> cascadesInfo;
-		std::vector<std::vector<double>> pastValues;
+		std::vector<std::vector<float>> pastValues;
 		cascade_t pastValuesIndex = 0;
 
 		std::vector<double> values;
-		std::vector<double> cascadeTempBuffer;
+		std::vector<float> cascadeTempBuffer; // TODO get buffer from data supplier instead
 
 		bool changed = true;
 		bool analysisComputed = false;
