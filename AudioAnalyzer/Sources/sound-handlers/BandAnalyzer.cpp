@@ -93,7 +93,7 @@ std::optional<BandAnalyzer::Params> BandAnalyzer::parseParams(const utils::Optio
 	params.targetWeight = std::max<double>(optionMap.get(L"targetWeight"sv).asFloat(1.5), std::numeric_limits<float>::epsilon());
 	params.weightFallback = std::clamp(optionMap.get(L"weightFallback"sv).asFloat(0.5), 0.0, 1.0) * params.targetWeight;
 
-	params.zeroLevel = std::max<double>(optionMap.get(L"zeroLevelMultiplier"sv).asFloat(1.0), 0.0)
+	params.zeroLevel = std::max<double>(optionMap.get(L"zeroLevelMultiplier"sv).asFloat(0.66), 0.0)
 		* std::numeric_limits<float>::epsilon();
 	params.zeroLevelHard = std::clamp<double>(optionMap.get(L"zeroLevelHardMultiplier"sv).asFloat(0.01), 0.0, 1.0)
 		* params.zeroLevel;
@@ -111,8 +111,8 @@ std::optional<BandAnalyzer::Params> BandAnalyzer::parseParams(const utils::Optio
 	params.minBlurRadius = std::max<index>(optionMap.get(L"minBlurRadius"sv).asInt(1), 0);
 	params.maxBlurRadius = std::max<index>(optionMap.get(L"maxBlurRadius"sv).asInt(20), params.minBlurRadius);
 
-	params.blurMinAdaptation = std::max<double>(optionMap.get(L"blurMinAdaptation"sv).asFloat(2.0), 1.0);
-	params.blurMaxAdaptation = std::max<double>(optionMap.get(L"blurMaxAdaptation"sv).asFloat(params.blurMinAdaptation), 1.0);
+	params.blurMinAdaptation = std::max<double>(optionMap.get(L"blurMinAdaptation"sv).asFloat(1.0), 0.0);
+	params.blurMaxAdaptation = std::max<double>(optionMap.get(L"blurMaxAdaptation"sv).asFloat(params.blurMinAdaptation), 0.0);
 
 	params.sensitivity = std::clamp<double>(optionMap.get(L"sensitivity"sv).asFloat(35.0), std::numeric_limits<float>::epsilon(), 1000.0);
 	params.offset = optionMap.get(L"offset"sv).asFloat(0.0);
