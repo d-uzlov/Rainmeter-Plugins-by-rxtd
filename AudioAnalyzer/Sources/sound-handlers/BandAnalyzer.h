@@ -10,10 +10,15 @@
 #pragma once
 #include "SoundHandler.h"
 #include "FftAnalyzer.h"
+#include <chrono>
 
 namespace rxaa {
 	class BandAnalyzer : public SoundHandler {
 	public:
+		using cascade_t = FftAnalyzer::cascade_t;
+		using clock = std::chrono::high_resolution_clock;
+		static_assert(clock::is_steady);
+
 		enum class SmoothingCurve {
 			FLAT,
 			LINEAR,
@@ -27,29 +32,48 @@ namespace rxaa {
 		private:
 			friend BandAnalyzer;
 
-			index minCascade { };
-			index maxCascade { };
 			istring fftId;
+			cascade_t minCascade;
+			cascade_t maxCascade;
+
 			std::vector<double> bandFreqs;
-			double targetWeight { };
-			double minWeight { };
-			bool includeZero = true;
-			bool proportionalValues = false;
-			bool blurCascades = true;
-			MixFunction mixFunction { };
-			double blurRadius = true;
-			double offset { };
-			double sensitivity { };
-			SmoothingCurve smoothingCurve { };
-			index smoothingFactor { };
-			double exponentialFactor { };
+
+			double minWeight;
+			double targetWeight;
+			double weightFallback;
+
+			double zeroLevel;
+			double zeroLevelHard;
+			double zeroWeight;
+
+			bool includeDC;
+			bool proportionalValues;
+
+			MixFunction mixFunction;
+
+			double blurRadiusMultiplier;
+
+			index minBlurRadius;
+			index maxBlurRadius;
+			double blurMinAdaptation;
+			double blurMaxAdaptation;
+
+			double offset;
+			double sensitivity;
+
+			SmoothingCurve smoothingCurve;
+			index smoothingFactor;
+			double exponentialFactor;
 		};
+
 	private:
-		struct BandInfo {
-			double weight { };
-			double blurSigma { };
-		};
-		struct CascadeBandInfo {
+		struct CascadeInfo {
+			struct BandInfo {
+				double weight { };
+				double blurSigma { };
+				cascade_t endCascade { };
+			};
+
 			std::vector<double> magnitudes;
 			std::vector<BandInfo> bandsInfo;
 
@@ -61,10 +85,14 @@ namespace rxaa {
 
 		class GaussianCoefficientsManager {
 			// radius -> coefs vector
-			std::unordered_map<index, std::vector<double>> gaussianBlurCoefficients;
+			std::unordered_map<index, std::vector<double>> blurCoefficients;
+
+			index minRadius { };
+			index maxRadius { };
 
 		public:
 			const std::vector<double>& forSigma(double sigma);
+			void setRadiusBounds(index min, index max);
 
 		private:
 			static std::vector<double> generateGaussianKernel(index radius, double sigma);
@@ -79,21 +107,26 @@ namespace rxaa {
 		mutable index bandsCount = 0;
 		double logNormalization { };
 
-		std::vector<CascadeBandInfo> cascadesInfo;
+		std::vector<CascadeInfo> cascadesInfo;
 		std::vector<std::vector<double>> pastValues;
-		index pastValuesIndex = 0;
+		cascade_t pastValuesIndex = 0;
+
 		std::vector<double> values;
 		std::vector<double> cascadeTempBuffer;
 
-		bool next = true;
+		bool changed = true;
 		bool analysisComputed = false;
 		const FftAnalyzer* source = nullptr;
+		clock::time_point lastFilteringTime { };
 
 		mutable string propString { };
+
 		struct {
 			string analysisString { };
-			index minCascadeUsed = -1;
-			index maxCascadeUsed = -1;
+			cascade_t minCascadeUsed = -1;
+			cascade_t maxCascadeUsed = -1;
+			std::vector<cascade_t> bandEndCascades;
+			bool weightError = false;
 		} analysis;
 
 
@@ -117,9 +150,9 @@ namespace rxaa {
 
 	private:
 		void updateValues();
-		void computeBandInfo(index startCascade, index endCascade);
-		void resampleData(index startCascade, index endCascade);
-		void computeAnalysis(index startCascade, index endCascade);
+		void computeBandInfo(cascade_t startCascade, cascade_t endCascade);
+		void computeAnalysis(cascade_t startCascade, cascade_t endCascade);
+		void sampleData();
 		void blurData();
 		void gatherData();
 		void applyTimeFiltering();

@@ -68,7 +68,7 @@ namespace rxaa {
 
 	protected:
 		static double calculateAttackDecayConstant(double time, index samplesPerSec, index stride) {
-			return exp(-2.0 * stride / (samplesPerSec * time));
+			return std::exp(-2.0 * stride / (samplesPerSec * time));
 		}
 
 		static double calculateAttackDecayConstant(double time, index samplesPerSec) {

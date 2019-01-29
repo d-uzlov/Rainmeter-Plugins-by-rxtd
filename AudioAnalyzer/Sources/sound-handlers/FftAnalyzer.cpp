@@ -13,7 +13,7 @@
 
 using namespace std::literals::string_view_literals;
 
-void rxaa::FftAnalyzer::CascadeData::setParams(FftAnalyzer* parent, CascadeData *successor, index cascadeIndex) {
+void rxaa::FftAnalyzer::CascadeData::setParams(FftAnalyzer* parent, CascadeData *successor, cascade_t cascadeIndex) {
 	this->parent = parent;
 	this->successor = successor;
 
@@ -106,7 +106,7 @@ void rxaa::FftAnalyzer::CascadeData::processResampled(const float* const wave, i
 	const auto fftSize = parent->fftSize;
 	const auto inputStride = parent->inputStride;
 
-	if (waveSize <= 0u) {
+	if (waveSize <= 0) {
 		return;
 	}
 
@@ -158,7 +158,7 @@ void rxaa::FftAnalyzer::CascadeData::processResampled(const float* const wave, i
 	}
 }
 
-void rxaa::FftAnalyzer::CascadeData::processSilent(index waveSize) {
+void rxaa::FftAnalyzer::CascadeData::processSilence(index waveSize) {
 	const auto fftSize = parent->fftSize;
 	const auto inputStride = parent->inputStride;
 
@@ -237,13 +237,15 @@ std::optional<rxaa::FftAnalyzer::Params> rxaa::FftAnalyzer::parseParams(const ut
 	params.decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.attackTime), 0.1) * 0.001;
 	params.overlap = std::clamp(optionMap.get(L"overlap"sv).asFloat(0.5), 0.0, 1.0);
 
-	params.cascadesCount = optionMap.get(L"cascadesCount"sv).asInt(5);
+	params.cascadesCount = optionMap.get(L"cascadesCount"sv).asInt<cascade_t>(5);
 	if (params.cascadesCount <= 0) {
 		cl.warning(L"cascadesCount must be >= 1 but {} found. Assume 1", params.cascadesCount);
 		params.cascadesCount = 1;
 	}
 
 	params.randomTest = std::abs(optionMap.get(L"testRandom"sv).asFloat(0.0));
+	params.randomDuration = std::abs(optionMap.get(L"randomDuration"sv).asFloat(1000.0)) * 0.001;
+
 	params.correctZero = optionMap.get(L"correctZero"sv).asBool(true);
 
 	const auto sizeBy = optionMap.get(L"sizeBy"sv).asIString(L"resolution");
@@ -292,11 +294,11 @@ index rxaa::FftAnalyzer::getFftSize() const {
 	return fftSize;
 }
 
-index rxaa::FftAnalyzer::getCascadesCount() const {
+rxaa::FftAnalyzer::cascade_t rxaa::FftAnalyzer::getCascadesCount() const {
 	return cascades.size();
 }
 
-const double* rxaa::FftAnalyzer::getCascade(index cascade) const { // TODO vector_view
+const double* rxaa::FftAnalyzer::getCascade(cascade_t cascade) const { // TODO vector_view
 	return cascades[cascade].values.data();
 }
 
@@ -320,7 +322,7 @@ void rxaa::FftAnalyzer::process(const DataSupplier& dataSupplier) {
 	fftImpl->setBuffers(fftInputBuffer, fftOutputBuffer);
 
 	if (params.randomTest != 0.0) {
-		cascades[0].processRandom(waveSize, params.randomTest);
+		processRandom(waveSize);
 	} else {
 		const auto wave = dataSupplier.getWave();
 		cascades[0].process(wave, waveSize);
@@ -335,20 +337,42 @@ void rxaa::FftAnalyzer::processSilence(const DataSupplier& dataSupplier) {
 		return;
 	}
 
+	const auto waveSize = dataSupplier.getWaveSize();
+
 	const auto fftInputBuffer = dataSupplier.getBuffer<FftImpl::input_buffer_type>(fftImpl->getInputBufferSize());
 	const auto fftOutputBuffer = dataSupplier.getBuffer<FftImpl::output_buffer_type>(fftImpl->getOutputBufferSize());
 	fftImpl->setBuffers(fftInputBuffer, fftOutputBuffer);
 
-	const auto waveSize = dataSupplier.getWaveSize();
-
 	if (params.randomTest != 0.0) {
-		cascades[0].processRandom(waveSize, params.randomTest);
+		processRandom(waveSize);
 	} else {
-		cascades[0].processSilent(waveSize);
+		cascades[0].processSilence(waveSize);
 	}
 
 	// TODO that's ugly and error prone
 	fftImpl->setBuffers(nullptr, nullptr);
+}
+
+void rxaa::FftAnalyzer::processRandom(index waveSize) {
+	index remainingWave = waveSize;
+	while (remainingWave != 0) {
+		const index toProcess = std::min(randomBlockSize - randomCurrentOffset, remainingWave);
+		if (randomState == RandomState::ON) {
+			cascades[0].processRandom(waveSize, params.randomTest);
+		} else {
+			cascades[0].processSilence(waveSize);
+		}
+		remainingWave -= toProcess;
+		randomCurrentOffset += toProcess;
+		if (randomCurrentOffset == randomBlockSize) {
+			randomCurrentOffset = 0;
+			if (randomState == RandomState::ON) {
+				randomState = RandomState::OFF;
+			} else {
+				randomState = RandomState::ON;
+			}
+		}
+	}
 }
 
 void rxaa::FftAnalyzer::setSamplesPerSec(index samplesPerSec) {
@@ -445,11 +469,15 @@ void rxaa::FftAnalyzer::updateParams() {
 	}
 	fftImpl = FftImpl::change(fftImpl, fftSize);
 
+
 	inputStride = static_cast<index>(fftSize * (1 - params.overlap));
 	inputStride = std::clamp<index>(inputStride, std::min<index>(16, fftSize), fftSize);
 
+	randomBlockSize = params.randomDuration * samplesPerSec * fftSize / inputStride;
+	randomCurrentOffset = 0;
+
 	cascades.resize(params.cascadesCount);
-	for (index i = 0; i < index(cascades.size()); i++) {
+	for (cascade_t i = 0; i < cascade_t(cascades.size()); i++) {
 		const auto next = i + 1 < cascades.size() ? &cascades[i + 1] : nullptr;
 		cascades[i].setParams(this, next, i);
 	}

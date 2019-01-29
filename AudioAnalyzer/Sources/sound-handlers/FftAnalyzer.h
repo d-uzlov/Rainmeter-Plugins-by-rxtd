@@ -17,27 +17,31 @@
 namespace rxaa {
 	class FftAnalyzer : public SoundHandler {
 	public:
+		using cascade_t = int8_t;
+
 		enum class SizeBy {
 			RESOLUTION,
 			SIZE,
 			SIZE_EXACT
 		};
+
 		struct Params {
 		private:
 			friend FftAnalyzer;
 
-			SizeBy sizeBy { };
+			SizeBy sizeBy;
 
-			double attackTime { };
-			double decayTime { };
+			double attackTime;
+			double decayTime;
 
-			double resolution { };
-			double overlap = 0.0;
+			double resolution;
+			double overlap;
 
-			index cascadesCount = 0u;
+			cascade_t cascadesCount;
 
-			double randomTest = 0.0;
-			bool correctZero = true;
+			double randomTest;
+			double randomDuration;
+			bool correctZero;
 		};
 
 	private:
@@ -55,10 +59,10 @@ namespace rxaa {
 			// Fourier transform looses energy due to downsample, so we multiply result of FFT by (2^0.5)^countOfDownsampleIterations
 			double downsampleGain { };
 
-			void setParams(FftAnalyzer* parent, CascadeData* successor, index ind);
+			void setParams(FftAnalyzer* parent, CascadeData* successor, cascade_t ind);
 			void process(const float *wave, index waveSize);
 			void processRandom(index waveSize, double amplitude);
-			void processSilent(index waveSize);
+			void processSilence(index waveSize);
 			void reset();
 
 		private:
@@ -71,8 +75,11 @@ namespace rxaa {
 		index samplesPerSec { };
 
 		index fftSize = 0;
-
 		index inputStride = 0;
+
+		index randomBlockSize = 0;
+		index randomCurrentOffset = 0;
+		enum class RandomState { ON, OFF } randomState { RandomState::ON };
 
 		std::vector<CascadeData> cascades;
 
@@ -105,8 +112,8 @@ namespace rxaa {
 		double getFftFreq(index fft) const;
 
 		index getFftSize() const;
-		index getCascadesCount() const;
-		const double* getCascade(index cascade) const;
+		cascade_t getCascadesCount() const;
+		const double* getCascade(cascade_t cascade) const;
 
 		void setSamplesPerSec(index samplesPerSec) override;
 		void reset() override;
@@ -123,6 +130,7 @@ namespace rxaa {
 		void setParams(Params params);
 
 	private:
+		void processRandom(index waveSize);
 		void updateParams();
 	};
 }
