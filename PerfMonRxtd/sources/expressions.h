@@ -11,6 +11,9 @@
 #include "enums.h"
 
 namespace rxtd::perfmon {
+	using counter_t = int16_t; // TODO unite using declarations
+	using item_t = int16_t;
+
 	enum class ExpressionType {
 		UNKNOWN,
 		NUMBER,
@@ -35,7 +38,7 @@ namespace rxtd::perfmon {
 
 	struct Reference {
 		string name;
-		index counter = 0;
+		counter_t counter = 0;
 		RollupFunction rollupFunction = RollupFunction::SUM;
 		ReferenceType type = ReferenceType::UNKNOWN;
 		bool discarded = false;
@@ -52,8 +55,8 @@ namespace rxtd::perfmon {
 		ExpressionType type = ExpressionType::UNKNOWN;
 
 		void simplify();
-		index maxExpRef() const;
-		index maxRUERef() const;
+		counter_t maxExpRef() const;
+		counter_t maxRUERef() const;
 		void processRefs(void(*handler)(Reference&));
 	};
 
@@ -128,8 +131,5 @@ namespace rxtd::perfmon {
 		ExpressionTreeNode parsePower();
 		ExpressionTreeNode parseAtom();
 		Reference parseReference();
-
-		static intmax_t parseInt(sview view);
-		static double parseFractional(sview view);
 	};
 }

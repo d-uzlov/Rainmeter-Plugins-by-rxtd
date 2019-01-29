@@ -13,7 +13,7 @@
 #include "SoundAnalyzer.h"
 #include "DeviceManager.h"
 
-namespace rxaa {
+namespace rxtd::audio_analyzer {
 	using namespace std::string_literals;
 	using namespace std::literals::string_view_literals;
 

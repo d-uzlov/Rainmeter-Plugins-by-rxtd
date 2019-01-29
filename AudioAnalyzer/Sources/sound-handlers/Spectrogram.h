@@ -14,7 +14,7 @@
 #include "RainmeterWrappers.h"
 #include "OptionParser.h"
 
-namespace rxaa {
+namespace rxtd::audio_analyzer {
 	class Spectrogram : public SoundHandler {
 	public:
 		struct Params {

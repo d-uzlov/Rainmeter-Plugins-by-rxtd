@@ -19,7 +19,7 @@ VS_VERSION_INFO VERSIONINFO
     {
         BLOCK "040904E4"
         {
-			VALUE "OriginalFilename", PLUGIN_NAME ".dll"
+			VALUE "OriginalFilename", FINAL_PLUGIN_NAME ".dll"
             VALUE "FileVersion", PLUGIN_VERSION_STRING BITNESS_STRING
             VALUE "LegalCopyright", COPYRIGHT_STRING
             VALUE "ProductName", "Rainmeter"

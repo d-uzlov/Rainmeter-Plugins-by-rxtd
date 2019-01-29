@@ -20,9 +20,11 @@
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
 
-rxaa::ParamParser::ParamParser(utils::Rainmeter& rain) : rain(rain), log(rain.getLogger()) { }
+using namespace audio_analyzer;
 
-void rxaa::ParamParser::parse() {
+ParamParser::ParamParser(utils::Rainmeter& rain) : rain(rain), log(rain.getLogger()) { }
+
+void ParamParser::parse() {
 	handlerPatchersMap.clear();
 
 	utils::OptionParser optionParser { };
@@ -63,16 +65,16 @@ void rxaa::ParamParser::parse() {
 	}
 }
 
-const std::map<rxaa::Channel, std::vector<istring>>& rxaa::ParamParser::getHandlers() const {
+const std::map<Channel, std::vector<istring>>& ParamParser::getHandlers() const {
 	return handlers;
 }
 
-const std::map<istring, std::function<rxaa::SoundHandler*(rxaa::SoundHandler*)>, std::less<>>&
-rxaa::ParamParser::getPatches() const {
+const std::map<istring, std::function<SoundHandler*(SoundHandler*)>, std::less<>>&
+ParamParser::getPatches() const {
 	return handlerPatchersMap;
 }
 
-std::set<rxaa::Channel> rxaa::ParamParser::parseChannels(utils::OptionParser::OptionList channelsStringList) const {
+std::set<Channel> ParamParser::parseChannels(utils::OptionParser::OptionList channelsStringList) const {
 	std::set<Channel> set;
 
 	for (auto channel : channelsStringList) {
@@ -87,7 +89,7 @@ std::set<rxaa::Channel> rxaa::ParamParser::parseChannels(utils::OptionParser::Op
 	return set;
 }
 
-void rxaa::ParamParser::cacheHandlers(utils::OptionParser::OptionList indices) {
+void ParamParser::cacheHandlers(utils::OptionParser::OptionList indices) {
 	utils::OptionParser optionParser;
 
 	for (auto index : indices.viewCI()) {
@@ -115,7 +117,7 @@ void rxaa::ParamParser::cacheHandlers(utils::OptionParser::OptionList indices) {
 	}
 }
 
-std::function<rxaa::SoundHandler*(rxaa::SoundHandler*)> rxaa::ParamParser::parseHandler(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger &cl) {
+std::function<SoundHandler*(SoundHandler*)> ParamParser::parseHandler(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger &cl) {
 	const auto type = optionMap.get(L"type"sv).asIString();
 
 	if (type.empty()) {

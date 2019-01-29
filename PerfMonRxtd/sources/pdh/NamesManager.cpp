@@ -16,7 +16,7 @@ using namespace perfmon::pdh;
 
 using namespace std::string_view_literals;
 
-const ModifiedNameItem& NamesManager::get(index index) const {
+const ModifiedNameItem& NamesManager::get(item_t index) const {
 	return names[index];
 }
 
@@ -63,9 +63,9 @@ void NamesManager::createModifiedNames(const Snapshot& snapshot, const Snapshot&
 void NamesManager::copyOriginalNames(const Snapshot& snapshot) {
 	wchar_t* namesBuffer = getBuffer(originalNamesSize);
 
-	for (index instanceInx = 0; instanceInx < snapshot.getItemsCount(); ++instanceInx) {
-		const wchar_t* namePtr = snapshot.getName(instanceInx);
-		ModifiedNameItem& item = names[instanceInx];
+	for (item_t instanceIndex = 0; instanceIndex < snapshot.getItemsCount(); ++instanceIndex) {
+		const wchar_t* namePtr = snapshot.getName(instanceIndex);
+		ModifiedNameItem& item = names[instanceIndex];
 
 		sview name = copyString(namePtr, namesBuffer);
 		namesBuffer += name.length();
@@ -95,7 +95,7 @@ void NamesManager::resetBuffers() {
 	buffersCount = 0;
 }
 
-wchar_t* NamesManager::getBuffer(index value) {
+wchar_t* NamesManager::getBuffer(index size) {
 	const auto nextBufferIndex = buffersCount;
 	buffersCount++;
 
@@ -104,7 +104,7 @@ wchar_t* NamesManager::getBuffer(index value) {
 	}
 
 	auto& buffer = buffers[nextBufferIndex];
-	buffer.reserve(value);
+	buffer.reserve(size);
 	return buffer.data();
 }
 
@@ -122,11 +122,11 @@ void NamesManager::modifyNameProcess(const Snapshot& idSnapshot) {
 
 	utils::BufferPrinter printer { };
 
-	const index namesCount(names.size());
-	for (index instanceInx = 0; instanceInx < namesCount; ++instanceInx) {
-		ModifiedNameItem& item = names[instanceInx];
+	const item_t namesCount(names.size());
+	for (item_t instanceIndex = 0; instanceIndex < namesCount; ++instanceIndex) {
+		ModifiedNameItem& item = names[instanceIndex];
 
-		const long long pid = idSnapshot.getItem(0, instanceInx).FirstValue;
+		const long long pid = idSnapshot.getItem(0, instanceIndex).FirstValue;
 
 		auto nameCopy = copyString(item.originalName, namesBuffer);
 		namesBuffer += nameCopy.length();
@@ -161,11 +161,11 @@ void NamesManager::modifyNameThread(const Snapshot& idSnapshot) {
 
 	wchar_t* namesBuffer = getBuffer(originalNamesSize + names.size() * 20);
 
-	const index namesCount(names.size());
-	for (index instanceInx = 0; instanceInx < namesCount; ++instanceInx) {
-		ModifiedNameItem& item = names[instanceInx];
+	const item_t namesCount(names.size());
+	for (item_t instanceIndex = 0; instanceIndex < namesCount; ++instanceIndex) {
+		ModifiedNameItem& item = names[instanceIndex];
 
-		const long long tid = idSnapshot.getItem(0, instanceInx).FirstValue;
+		const long long tid = idSnapshot.getItem(0, instanceIndex).FirstValue;
 
 		sview nameCopy = copyString(item.originalName, namesBuffer);
 		if (tid != 0) {
@@ -232,12 +232,12 @@ void NamesManager::modifyNameGPUProcessName(const Snapshot& idSnapshot) {
 	wchar_t* processNamesBuffer = getBuffer(idSnapshot.getNamesSize());
 
 	std::unordered_map<long long, sview> pidToName(idSnapshot.getItemsCount());
-	const index namesCount(idSnapshot.getItemsCount());
-	for (index instanceInx = 0; instanceInx < namesCount; ++instanceInx) {
-		sview name = copyString(idSnapshot.getName(instanceInx), processNamesBuffer);
+	const item_t namesCount(idSnapshot.getItemsCount());
+	for (item_t instanceIndex = 0; instanceIndex < namesCount; ++instanceIndex) {
+		sview name = copyString(idSnapshot.getName(instanceIndex), processNamesBuffer);
 		processNamesBuffer += name.length();
 
-		const auto pid = idSnapshot.getItem(0, instanceInx).FirstValue;
+		const auto pid = idSnapshot.getItem(0, instanceIndex).FirstValue;
 		pidToName[pid] = name;
 	}
 

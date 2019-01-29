@@ -39,7 +39,7 @@ namespace rxtd::perfmon::pdh {
 		ModificationType modificationType { };
 
 	public:
-		const ModifiedNameItem& get(index index) const;
+		const ModifiedNameItem& get(item_t index) const;
 
 		void setModificationType(ModificationType value);
 
@@ -51,7 +51,7 @@ namespace rxtd::perfmon::pdh {
 		void generateSearchNames();
 
 		void resetBuffers();
-		wchar_t* getBuffer(index value);
+		wchar_t* getBuffer(index size);
 		
 		static sview copyString(sview source, wchar_t* dest);
 

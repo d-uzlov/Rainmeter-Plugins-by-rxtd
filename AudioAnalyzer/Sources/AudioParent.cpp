@@ -16,9 +16,11 @@
 #include "undef.h"
 #include "CaseInsensitiveString.h"
 
-utils::ParentManager<rxaa::AudioParent> rxaa::AudioParent::parentManager { };
+using namespace audio_analyzer;
 
-rxaa::AudioParent::AudioParent(utils::Rainmeter&& rain) : TypeHolder(std::move(rain)), deviceManager(log, [this](auto format) { soundAnalyzer.setWaveFormat(format); }) {
+utils::ParentManager<AudioParent> AudioParent::parentManager { };
+
+AudioParent::AudioParent(utils::Rainmeter&& rain) : TypeHolder(std::move(rain)), deviceManager(log, [this](auto format) { soundAnalyzer.setWaveFormat(format); }) {
 	parentManager.add(*this);
 
 	if (!deviceManager.isObjectValid()) {
@@ -44,15 +46,15 @@ rxaa::AudioParent::AudioParent(utils::Rainmeter&& rain) : TypeHolder(std::move(r
 	deviceManager.init();
 }
 
-rxaa::AudioParent::~AudioParent() {
+AudioParent::~AudioParent() {
 	parentManager.remove(*this);
 }
 
-rxaa::AudioParent* rxaa::AudioParent::findInstance(utils::Rainmeter::Skin skin, isview measureName) {
+AudioParent* AudioParent::findInstance(utils::Rainmeter::Skin skin, isview measureName) {
 	return parentManager.findParent(skin, measureName);
 }
 
-void rxaa::AudioParent::_reload() {
+void AudioParent::_reload() {
 	ParamParser paramParser(rain);
 	paramParser.parse();
 
@@ -63,7 +65,7 @@ void rxaa::AudioParent::_reload() {
 	soundAnalyzer.setPatchHandlers(paramParser.getHandlers(), paramParser.getPatches());
 }
 
-std::tuple<double, const wchar_t*> rxaa::AudioParent::_update() {
+std::tuple<double, const wchar_t*> AudioParent::_update() {
 	// TODO make an option for this value?
 	constexpr index maxBuffers = 15;
 
@@ -107,7 +109,7 @@ loop_end:
 	return std::make_tuple(deviceManager.getDeviceStatus(), nullptr);
 }
 
-void rxaa::AudioParent::_command(const wchar_t* args) {
+void AudioParent::_command(const wchar_t* args) {
 	const isview command = args;
 	if (command == L"updateDevList") {
 		deviceManager.updateDeviceList();
@@ -117,7 +119,7 @@ void rxaa::AudioParent::_command(const wchar_t* args) {
 	log.error(L"unknown command '{}'", command);
 }
 
-const wchar_t* rxaa::AudioParent::_resolve(int argc, const wchar_t* argv[]) {
+const wchar_t* AudioParent::_resolve(int argc, const wchar_t* argv[]) {
 	if (argc < 1) {
 		log.error(L"Invalid section variable resolve: args needed", argc);
 		return nullptr;
@@ -203,6 +205,6 @@ const wchar_t* rxaa::AudioParent::_resolve(int argc, const wchar_t* argv[]) {
 	return nullptr;
 }
 
-double rxaa::AudioParent::getValue(sview id, Channel channel, index index) const {
+double AudioParent::getValue(sview id, Channel channel, index index) const {
 	return soundAnalyzer.getValue(channel, id % ciView(), index);
 }

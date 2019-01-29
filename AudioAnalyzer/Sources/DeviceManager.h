@@ -21,7 +21,7 @@
 
 #undef NO_DATA
 
-namespace rxaa {
+namespace rxtd::audio_analyzer {
 	class DeviceManager {
 		using clock = std::chrono::high_resolution_clock;
 		static_assert(clock::is_steady);

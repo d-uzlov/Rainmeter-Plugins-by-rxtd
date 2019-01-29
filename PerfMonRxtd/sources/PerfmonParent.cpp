@@ -66,7 +66,7 @@ void PerfmonParent::_reload() {
 
 	needUpdate = true;
 
-	instanceManager.setSortIndex(rain.readInt(L"SortIndex"));
+	instanceManager.setSortIndex(rain.readInt<counter_t>(L"SortIndex"));
 	instanceManager.setSyncRawFormatted(rain.readBool(L"SyncRawFormatted"));
 	instanceManager.setKeepDiscarded(rain.readBool(L"KeepDiscarded"));
 
@@ -191,7 +191,7 @@ void PerfmonParent::_reload() {
 	instanceManager.setNameModificationType(nameModificationType);
 }
 
-const InstanceInfo* PerfmonParent::findInstance(const Reference& ref, index sortedIndex) const {
+const InstanceInfo* PerfmonParent::findInstance(const Reference& ref, item_t sortedIndex) const {
 	return instanceManager.findInstance(ref, sortedIndex);
 }
 
@@ -299,10 +299,10 @@ void PerfmonParent::setStopped(const bool value) {
 void PerfmonParent::changeStopState() {
 	stopped = !stopped;
 }
-void PerfmonParent::setIndexOffset(index value) {
+void PerfmonParent::setIndexOffset(item_t value) {
 	instanceManager.setIndexOffset(value);
 }
-index PerfmonParent::getIndexOffset() const {
+item_t PerfmonParent::getIndexOffset() const {
 	return instanceManager.getIndexOffset();
 }
 
@@ -310,7 +310,7 @@ double PerfmonParent::getValue(const Reference& ref, const InstanceInfo* instanc
 	return expressionResolver.getValue(ref, instance, logger);
 }
 
-index PerfmonParent::getCountersCount() const {
+counter_t PerfmonParent::getCountersCount() const {
 	return pdhWrapper.getCountersCount();
 }
 

@@ -11,7 +11,7 @@
 #include "../Channel.h"
 #include "StringUtils.h"
 
-namespace rxaa {
+namespace rxtd::audio_analyzer {
 	class SoundHandler;
 
 	class DataSupplier {

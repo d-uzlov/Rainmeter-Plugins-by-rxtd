@@ -22,11 +22,11 @@ Snapshot::~Snapshot() = default;
 Snapshot::Snapshot(Snapshot&& other) noexcept = default;
 Snapshot& Snapshot::operator=(Snapshot&& other) noexcept = default;
 
-index Snapshot::getItemsCount() const {
+item_t Snapshot::getItemsCount() const {
 	return itemsCount;
 }
 
-index Snapshot::getCountersCount() const {
+counter_t Snapshot::getCountersCount() const {
 	return countersCount;
 }
 
@@ -38,13 +38,13 @@ bool Snapshot::isEmpty() const {
 	return getCountersCount() == 0 || getItemsCount() == 0;
 }
 
-void Snapshot::setCountersCount(index value) {
+void Snapshot::setCountersCount(counter_t value) {
 	countersCount = value;
 
 	updateSize();
 }
 
-void Snapshot::setBufferSize(index size, index items) {
+void Snapshot::setBufferSize(index size, item_t items) {
 	counterBufferSize = size;
 	itemsCount = items;
 
@@ -58,20 +58,20 @@ void Snapshot::updateSize() {
 	buffer.reserve(countersCount * (itemsCount - 1) * sizeof(PDH_RAW_COUNTER_ITEM_W) + counterBufferSize);
 }
 
-PDH_RAW_COUNTER_ITEM_W* Snapshot::getCounterPointer(index counter) {
+PDH_RAW_COUNTER_ITEM_W* Snapshot::getCounterPointer(counter_t counter) {
 	return reinterpret_cast<PDH_RAW_COUNTER_ITEM_W*>(buffer.data()) + itemsCount * counter;
 }
 
-const PDH_RAW_COUNTER_ITEM_W* Snapshot::getCounterPointer(index counter) const {
+const PDH_RAW_COUNTER_ITEM_W* Snapshot::getCounterPointer(counter_t counter) const {
 	return reinterpret_cast<const PDH_RAW_COUNTER_ITEM_W*>(buffer.data()) + itemsCount * counter;
 }
 
-const PDH_RAW_COUNTER& Snapshot::getItem(index counter, index index) const {
-	return getCounterPointer(counter)[index].RawValue;
+const PDH_RAW_COUNTER& Snapshot::getItem(counter_t counter, item_t item) const {
+	return getCounterPointer(counter)[item].RawValue;
 }
 
-const wchar_t* Snapshot::getName(index index) const {
-	return getCounterPointer(countersCount - 1)[index].szName;
+const wchar_t* Snapshot::getName(item_t item) const {
+	return getCounterPointer(countersCount - 1)[item].szName;
 }
 
 index Snapshot::getNamesSize() const {
@@ -114,8 +114,14 @@ bool PdhWrapper::QueryWrapper::isValid() const {
 	return handler != nullptr;
 }
 
-PdhWrapper::PdhWrapper(utils::Rainmeter::Logger _log, string objectName, utils::OptionParser::OptionList counterTokens) : log(std::move(_log)) {
+PdhWrapper::PdhWrapper(utils::Rainmeter::Logger _log, const string& objectName, const utils::OptionParser::OptionList&counterList) :
+	log(std::move(_log)) {
 	QueryWrapper query;
+
+	if (index(counterList.size()) > std::numeric_limits<counter_t>::max()) {
+		log.error(L"too many counters"); // TODO add validity check in parent
+		return;
+	}
 
 	PDH_STATUS pdhStatus = PdhOpenQueryW(nullptr, 0, query.getPointer());
 	if (pdhStatus != ERROR_SUCCESS) {
@@ -132,16 +138,16 @@ PdhWrapper::PdhWrapper(utils::Rainmeter::Logger _log, string objectName, utils::
 	//   counterPath = L"\\System(*)\Processes" returns a single instance with an instance name of "*"
 	//   counterPath = L"\\System\Processes"    returns a single instance with an instance name of ""
 
-	counterHandlers.resize(counterTokens.size());
+	counterHandlers.resize(counterList.size());
 	string counterPath;
-	for (index inx = 0; inx < index(counterHandlers.size()); ++inx) {
-		counterPath = L"\\" + objectName + L"(*)" + L"\\" + string { counterTokens.get(inx) };
-		pdhStatus = PdhAddEnglishCounterW(query.get(), counterPath.c_str(), 0, &counterHandlers[inx]);
+	for (index counter = 0; counter < index(counterHandlers.size()); ++counter) {
+		counterPath = L"\\" + objectName + L"(*)" + L"\\" + string { counterList.get(counter) };
+		pdhStatus = PdhAddEnglishCounterW(query.get(), counterPath.c_str(), 0, &counterHandlers[counter]);
 		if (pdhStatus != ERROR_SUCCESS) {
 			if (pdhStatus == PDH_CSTATUS_NO_OBJECT) {
 				log.error(L"ObjectName '{}' does not exist", objectName);
 			} else if (pdhStatus == PDH_CSTATUS_NO_COUNTER) {
-				log.error(L"Counter '{}' does not exist", counterTokens.get(inx));
+				log.error(L"Counter '{}' does not exist", counterList.get(counter));
 			} else {
 				log.error(L"PdhAddEnglishCounter failed, path='{}' status {error}", counterPath, pdhStatus);
 			}
@@ -153,7 +159,7 @@ PdhWrapper::PdhWrapper(utils::Rainmeter::Logger _log, string objectName, utils::
 	// add a counter to retrieve Process or Thread IDs
 
 	string idsCounterPath;
-	if ((objectName == L"Process") || (objectName == L"GPU Engine") || (objectName == L"GPU Process Memory")) {
+	if (objectName == L"Process" || objectName == L"GPU Engine" || objectName == L"GPU Process Memory") {
 		idsCounterPath = L"\\Process(*)\\ID Process";
 		needFetchExtraIDs = true;
 	} else if (objectName == L"Thread") {
@@ -201,12 +207,14 @@ bool PdhWrapper::fetch(Snapshot& snapshot, Snapshot& idSnapshot) {
 			log.error(L"PdhGetRawCounterArray get dwBufferSize failed, status {error}", pdhStatus);
 			return false;
 		}
+		if (index(count) > std::numeric_limits<item_t>::max()) {
+			log.error(L"too many items");
+			return false;
+		}
 
-		idSnapshot.setBufferSize(bufferSize, count);
+		idSnapshot.setBufferSize(index(bufferSize), item_t(count));
 
-		PDH_RAW_COUNTER_ITEM_W* buffer = idSnapshot.getCounterPointer(0);
-
-		pdhStatus = PdhGetRawCounterArrayW(idCounterHandler, &bufferSize, &count, buffer);
+		pdhStatus = PdhGetRawCounterArrayW(idCounterHandler, &bufferSize, &count, idSnapshot.getCounterPointer(0));
 		if (pdhStatus != ERROR_SUCCESS) {
 			log.error(L"PdhGetRawCounterArray failed, status {error}", pdhStatus);
 			return false;
@@ -222,15 +230,17 @@ bool PdhWrapper::fetch(Snapshot& snapshot, Snapshot& idSnapshot) {
 		log.error(L"PdhGetRawCounterArray get dwBufferSize failed, status {error}", pdhStatus);
 		return false;
 	}
+	if (index(count) > std::numeric_limits<item_t>::max()) {
+		log.error(L"too many items");
+		return false;
+	}
 
-	snapshot.setBufferSize(bufferSize, count);
+	snapshot.setBufferSize(index(bufferSize), item_t(count));
 
 	// Retrieve counter data for all counters in the measure's counterList.
-	for (index i = 0; i < index(counterHandlers.size()); ++i) {
+	for (counter_t i = 0; i < counter_t(counterHandlers.size()); ++i) {
 		DWORD dwBufferSize2 = bufferSize;
-		PDH_RAW_COUNTER_ITEM_W* buffer = snapshot.getCounterPointer(i);
-
-		pdhStatus = PdhGetRawCounterArrayW(counterHandlers[i], &dwBufferSize2, &count, buffer);
+		pdhStatus = PdhGetRawCounterArrayW(counterHandlers[i], &dwBufferSize2, &count, snapshot.getCounterPointer(i));
 		if (pdhStatus != ERROR_SUCCESS) {
 			log.error(L"PdhGetRawCounterArray failed, status {error}", pdhStatus);
 			return false;
@@ -241,20 +251,15 @@ bool PdhWrapper::fetch(Snapshot& snapshot, Snapshot& idSnapshot) {
 		}
 
 	}
-	itemsCount = count;
 
 	return true;
 }
 
-index PdhWrapper::getCountersCount() const {
+counter_t PdhWrapper::getCountersCount() const {
 	return counterHandlers.size();
 }
 
-index PdhWrapper::getItemsCount() const {
-	return itemsCount;
-}
-
-double PdhWrapper::extractFormattedValue(index counter, const PDH_RAW_COUNTER& current, const PDH_RAW_COUNTER& previous) const {
+double PdhWrapper::extractFormattedValue(counter_t counter, const PDH_RAW_COUNTER& current, const PDH_RAW_COUNTER& previous) const {
 
 	// PdhCalculateCounterFromRawValue sometimes fails with the status PDH_CALC_NEGATIVE_VALUE, PDH_CALC_NEGATIVE_DENOMINATOR, or
 	// PDH_CALC_NEGATIVE_TIMEBASE.  This has mainly been observed for "_Total" instances, and occurs when an instance has dropped out

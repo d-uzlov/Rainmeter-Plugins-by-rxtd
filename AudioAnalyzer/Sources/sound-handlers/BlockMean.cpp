@@ -15,27 +15,29 @@
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
 
-void rxaa::BlockMean::setParams(Params params) {
+using namespace audio_analyzer;
+
+void BlockMean::setParams(Params params) {
 	this->params = params;
 
 	recalculateConstants();
 }
 
-const double* rxaa::BlockMean::getData() const {
+const double* BlockMean::getData() const {
 	return &result;
 }
 
-index rxaa::BlockMean::getCount() const {
+index BlockMean::getCount() const {
 	return 0;
 }
 
-void rxaa::BlockMean::setSamplesPerSec(index samplesPerSec) {
+void BlockMean::setSamplesPerSec(index samplesPerSec) {
 	this->samplesPerSec = samplesPerSec;
 
 	recalculateConstants();
 }
 
-const wchar_t* rxaa::BlockMean::getProp(const isview& prop) const {
+const wchar_t* BlockMean::getProp(const isview& prop) const {
 	if (prop == L"block size") {
 		propString = std::to_wstring(blockSize);
 	} else if (prop == L"attack") {
@@ -48,13 +50,13 @@ const wchar_t* rxaa::BlockMean::getProp(const isview& prop) const {
 	return propString.c_str();
 }
 
-void rxaa::BlockMean::reset() {
+void BlockMean::reset() {
 	counter = 0;
 	intermediateResult = 0.0;
 	result = 0.0;
 }
 
-void rxaa::BlockMean::recalculateConstants() {
+void BlockMean::recalculateConstants() {
 	blockSize = static_cast<decltype(blockSize)>(samplesPerSec * params.resolution);
 
 	attackDecayConstants[0] = calculateAttackDecayConstant(params.attackTime, samplesPerSec, blockSize);
@@ -63,7 +65,7 @@ void rxaa::BlockMean::recalculateConstants() {
 	reset();
 }
 
-void rxaa::BlockRms::process(const DataSupplier& dataSupplier) {
+void BlockRms::process(const DataSupplier& dataSupplier) {
 	const auto wave = dataSupplier.getWave();
 	for (index frame = 0; frame < dataSupplier.getWaveSize(); ++frame) {
 		const double x = wave[frame];
@@ -75,7 +77,7 @@ void rxaa::BlockRms::process(const DataSupplier& dataSupplier) {
 	}
 }
 
-void rxaa::BlockMean::processSilence(const DataSupplier& dataSupplier) {
+void BlockMean::processSilence(const DataSupplier& dataSupplier) {
 	const auto waveSize = dataSupplier.getWaveSize();
 	index waveProcessed = 0;
 
@@ -92,7 +94,7 @@ void rxaa::BlockMean::processSilence(const DataSupplier& dataSupplier) {
 	}
 }
 
-std::optional<rxaa::BlockMean::Params> rxaa::BlockMean::parseParams(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl) {
+std::optional<BlockMean::Params> BlockMean::parseParams(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl) {
 	Params params;
 	params.attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.0) * 0.001;
 	params.decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.attackTime), 0.0) * 0.001;
@@ -107,14 +109,14 @@ std::optional<rxaa::BlockMean::Params> rxaa::BlockMean::parseParams(const utils:
 	return params;
 }
 
-void rxaa::BlockRms::finishBlock() {
+void BlockRms::finishBlock() {
 	const double value = std::sqrt(intermediateResult / blockSize);
 	result = value + attackDecayConstants[(value < result)] * (result - value);
 	counter = 0;
 	intermediateResult = 0.0;
 }
 
-void rxaa::BlockPeak::process(const DataSupplier& dataSupplier) {
+void BlockPeak::process(const DataSupplier& dataSupplier) {
 	const auto wave = dataSupplier.getWave();
 	const auto waveSize = dataSupplier.getWaveSize();
 	for (index frame = 0; frame < waveSize; ++frame) {
@@ -126,7 +128,7 @@ void rxaa::BlockPeak::process(const DataSupplier& dataSupplier) {
 	}
 }
 
-void rxaa::BlockPeak::finishBlock() {
+void BlockPeak::finishBlock() {
 	result = intermediateResult + attackDecayConstants[(intermediateResult < result)] * (result - intermediateResult);
 	counter = 0;
 	intermediateResult = 0.0;

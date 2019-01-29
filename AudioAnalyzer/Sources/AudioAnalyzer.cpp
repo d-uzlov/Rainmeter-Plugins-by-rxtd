@@ -25,9 +25,9 @@ PLUGIN_EXPORT void Initialize(void** data, void* rm) {
 	utils::Rainmeter rain(rm);
 	const auto str = rain.readString(L"Type");
 	if (str == L"Parent") {
-		*data = new rxaa::AudioParent(std::move(rain));
+		*data = new rxtd::audio_analyzer::AudioParent(std::move(rain));
 	} else {
-		*data = new rxaa::AudioChild(std::move(rain));
+		*data = new rxtd::audio_analyzer::AudioChild(std::move(rain));
 	}
 }
 

@@ -112,19 +112,19 @@ namespace rxtd::perfmon {
 		void setStopped(bool value);
 
 		void changeStopState();
-		void setIndexOffset(index value);
-		index getIndexOffset() const;
+		void setIndexOffset(item_t value);
+		item_t getIndexOffset() const;
 
 		double getValue(const Reference& ref, const InstanceInfo* instance, utils::Rainmeter::Logger& logger) const;
 
-		index getCountersCount() const;
+		counter_t getCountersCount() const;
 
 		/** We only need one snapshot for raw values, but if sync is enabled then we'll wait for two snapshots */
 		bool canGetRaw() const;
 		/** We need two complete snapshots for formatted values values */
 		bool canGetFormatted() const;
 		
-		const InstanceInfo* findInstance(const Reference& ref, index sortedIndex) const;
+		const InstanceInfo* findInstance(const Reference& ref, item_t sortedIndex) const;
 		
 		sview getInstanceName(const InstanceInfo& instance, ResultString stringType) const;
 	};

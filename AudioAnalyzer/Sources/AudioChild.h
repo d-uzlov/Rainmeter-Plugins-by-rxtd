@@ -10,7 +10,7 @@
 #pragma once
 #include "AudioParent.h"
 
-namespace rxaa {
+namespace rxtd::audio_analyzer {
 	class AudioChild : public utils::TypeHolder {
 		enum class StringValue {
 			NUMBER,

@@ -14,7 +14,7 @@
 #include "RainmeterWrappers.h"
 #include "OptionParser.h"
 
-namespace rxaa {
+namespace rxtd::audio_analyzer {
 	class FftAnalyzer : public SoundHandler {
 	public:
 		using cascade_t = int8_t;

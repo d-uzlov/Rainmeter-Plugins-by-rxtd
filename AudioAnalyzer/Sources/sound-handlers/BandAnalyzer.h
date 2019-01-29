@@ -12,7 +12,7 @@
 #include "FftAnalyzer.h"
 #include <chrono>
 
-namespace rxaa {
+namespace rxtd::audio_analyzer {
 	class BandAnalyzer : public SoundHandler {
 	public:
 		using cascade_t = FftAnalyzer::cascade_t;
@@ -69,8 +69,8 @@ namespace rxaa {
 	private:
 		struct CascadeInfo {
 			struct BandInfo {
-				double weight { };
-				double blurSigma { };
+				float weight { };
+				float blurSigma { };
 				cascade_t endCascade { };
 			};
 

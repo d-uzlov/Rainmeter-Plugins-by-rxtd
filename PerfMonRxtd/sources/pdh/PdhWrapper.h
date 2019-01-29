@@ -16,11 +16,14 @@
 #undef UNIQUE_NAME
 
 namespace rxtd::perfmon::pdh {
+	using counter_t = int16_t; // because expressions?
+	using item_t = int16_t;
+
 	class Snapshot {
-		index itemsCount = 0;
-		index counterBufferSize = 0;
-		index countersCount = 0;
 		std::vector<std::byte> buffer;
+		index counterBufferSize = 0;
+		item_t itemsCount = 0;
+		counter_t countersCount = 0;
 
 	public:
 		Snapshot();
@@ -32,27 +35,27 @@ namespace rxtd::perfmon::pdh {
 		Snapshot(const Snapshot& other) = delete;
 		Snapshot& operator=(const Snapshot& other) = delete;
 
-		index getItemsCount() const;
+		item_t getItemsCount() const;
 
-		index getCountersCount() const;
+		counter_t getCountersCount() const;
 
 		void clear();
 
 		bool isEmpty() const;
 
-		void setCountersCount(index value);
+		void setCountersCount(counter_t value);
 
-		void setBufferSize(index size, index items);
+		void setBufferSize(index size, item_t items);
 
 		void updateSize();
 
-		PDH_RAW_COUNTER_ITEM_W* getCounterPointer(index counter);
+		PDH_RAW_COUNTER_ITEM_W* getCounterPointer(counter_t counter);
 
-		const PDH_RAW_COUNTER_ITEM_W* getCounterPointer(index counter) const;
+		const PDH_RAW_COUNTER_ITEM_W* getCounterPointer(counter_t counter) const;
 
-		const PDH_RAW_COUNTER& getItem(index counter, index index) const;
+		const PDH_RAW_COUNTER& getItem(counter_t counter, item_t item) const;
 
-		const wchar_t* getName(index index) const;
+		const wchar_t* getName(item_t item) const;
 
 		/**
 		 * in wchar_t
@@ -86,7 +89,6 @@ namespace rxtd::perfmon::pdh {
 		bool needFetchExtraIDs = false;
 
 		std::vector<PDH_HCOUNTER> counterHandlers;
-		index itemsCount = 0;
 
 		PDH_HCOUNTER idCounterHandler = nullptr;
 
@@ -94,7 +96,8 @@ namespace rxtd::perfmon::pdh {
 		PdhWrapper() = default;
 		~PdhWrapper() = default;
 
-		explicit PdhWrapper(utils::Rainmeter::Logger _log, string objectName, utils::OptionParser::OptionList counterTokens);
+		explicit PdhWrapper(utils::Rainmeter::Logger _log, const string& objectName, const utils::OptionParser::OptionList
+		                    & counterTokens);
 
 		PdhWrapper(PdhWrapper&& other) noexcept = default;
 		PdhWrapper& operator=(PdhWrapper&& other) noexcept = default;
@@ -109,10 +112,8 @@ namespace rxtd::perfmon::pdh {
 		 */
 		bool fetch(Snapshot& snapshot, Snapshot& idSnapshot);
 
-		index getCountersCount() const;
+		counter_t getCountersCount() const;
 
-		index getItemsCount() const;
-
-		double extractFormattedValue(index counter, const PDH_RAW_COUNTER& current, const PDH_RAW_COUNTER& previous) const;
+		double extractFormattedValue(counter_t counter, const PDH_RAW_COUNTER& current, const PDH_RAW_COUNTER& previous) const;
 	};
 }

@@ -32,7 +32,9 @@ static constexpr long long REF_TIMES_PER_SEC = 1000'000'0; // 1 sec in ns
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
 
-rxaa::DeviceManager::SilentRenderer::SilentRenderer(IMMDevice *audioDeviceHandle) {
+using namespace audio_analyzer;
+
+DeviceManager::SilentRenderer::SilentRenderer(IMMDevice *audioDeviceHandle) {
 	if (audioDeviceHandle == nullptr) {
 		return;
 	}
@@ -106,7 +108,7 @@ rxaa::DeviceManager::SilentRenderer::SilentRenderer(IMMDevice *audioDeviceHandle
 	}
 }
 
-rxaa::DeviceManager::SilentRenderer::SilentRenderer(SilentRenderer&& other) noexcept {
+DeviceManager::SilentRenderer::SilentRenderer(SilentRenderer&& other) noexcept {
 	releaseHandles();
 
 	audioClient = other.audioClient;
@@ -116,7 +118,7 @@ rxaa::DeviceManager::SilentRenderer::SilentRenderer(SilentRenderer&& other) noex
 	other.renderer = nullptr;
 }
 
-rxaa::DeviceManager::SilentRenderer& rxaa::DeviceManager::SilentRenderer::operator=(SilentRenderer&& other) noexcept {
+DeviceManager::SilentRenderer& DeviceManager::SilentRenderer::operator=(SilentRenderer&& other) noexcept {
 	if (this == &other)
 		return *this;
 
@@ -131,15 +133,15 @@ rxaa::DeviceManager::SilentRenderer& rxaa::DeviceManager::SilentRenderer::operat
 	return *this;
 }
 
-rxaa::DeviceManager::SilentRenderer::~SilentRenderer() {
+DeviceManager::SilentRenderer::~SilentRenderer() {
 	releaseHandles();
 }
 
-bool rxaa::DeviceManager::SilentRenderer::isError() const {
+bool DeviceManager::SilentRenderer::isError() const {
 	return audioClient == nullptr || renderer == nullptr;
 }
 
-void rxaa::DeviceManager::SilentRenderer::releaseHandles() {
+void DeviceManager::SilentRenderer::releaseHandles() {
 	if (renderer != nullptr) {
 		renderer->Release();
 		renderer = nullptr;
@@ -154,8 +156,8 @@ void rxaa::DeviceManager::SilentRenderer::releaseHandles() {
 
 
 
-std::variant<rxaa::DeviceManager::CaptureManager, rxaa::DeviceManager::CaptureManager::Error>
-rxaa::DeviceManager::CaptureManager::create(IMMDevice& audioDeviceHandle, bool loopback) {
+std::variant<DeviceManager::CaptureManager, DeviceManager::CaptureManager::Error>
+DeviceManager::CaptureManager::create(IMMDevice& audioDeviceHandle, bool loopback) {
 	utils::GenericComWrapper<IAudioClient> audioClient { };
 	utils::GenericComWrapper<IAudioCaptureClient> audioCaptureClient { };
 
@@ -210,27 +212,27 @@ rxaa::DeviceManager::CaptureManager::create(IMMDevice& audioDeviceHandle, bool l
 	return captureManager;
 }
 
-rxaa::DeviceManager::CaptureManager::~CaptureManager() {
+DeviceManager::CaptureManager::~CaptureManager() {
 	releaseHandles();
 }
 
-rxaa::MyWaveFormat rxaa::DeviceManager::CaptureManager::getWaveFormat() const {
+MyWaveFormat DeviceManager::CaptureManager::getWaveFormat() const {
 	return waveFormat;
 }
 
-bool rxaa::DeviceManager::CaptureManager::isEmpty() const {
+bool DeviceManager::CaptureManager::isEmpty() const {
 	return !audioCaptureClient.isValid() || !audioClient.isValid();
 }
 
-bool rxaa::DeviceManager::CaptureManager::isValid() const {
+bool DeviceManager::CaptureManager::isValid() const {
 	return !isEmpty() && waveFormat.format != Format::INVALID;
 }
 
-utils::BufferWrapper rxaa::DeviceManager::CaptureManager::readBuffer() {
+utils::BufferWrapper DeviceManager::CaptureManager::readBuffer() {
 	return utils::BufferWrapper(audioCaptureClient.getPointer());
 }
 
-void rxaa::DeviceManager::CaptureManager::releaseHandles() {
+void DeviceManager::CaptureManager::releaseHandles() {
 	waveFormat = { };
 	audioCaptureClient = { };
 	audioClient = { };
@@ -238,7 +240,7 @@ void rxaa::DeviceManager::CaptureManager::releaseHandles() {
 
 
 
-rxaa::DeviceManager::DeviceManager(utils::Rainmeter::Logger& logger, std::function<void(MyWaveFormat waveFormat)> waveFormatUpdateCallback)
+DeviceManager::DeviceManager(utils::Rainmeter::Logger& logger, std::function<void(MyWaveFormat waveFormat)> waveFormatUpdateCallback)
 	: logger(logger), waveFormatUpdateCallback(std::move(waveFormatUpdateCallback)) {
 	// create the enumerator
 	HRESULT res = CoCreateInstance(
@@ -256,11 +258,11 @@ rxaa::DeviceManager::DeviceManager(utils::Rainmeter::Logger& logger, std::functi
 	}
 }
 
-rxaa::DeviceManager::~DeviceManager() {
+DeviceManager::~DeviceManager() {
 	deviceRelease();
 }
 
-void rxaa::DeviceManager::deviceInit() {
+void DeviceManager::deviceInit() {
 	lastDevicePollTime = clock::now();
 
 	const bool handleAcquired = acquireDeviceHandle();
@@ -286,7 +288,7 @@ void rxaa::DeviceManager::deviceInit() {
 	waveFormatUpdateCallback(captureManager.getWaveFormat());
 }
 
-bool rxaa::DeviceManager::acquireDeviceHandle() {
+bool DeviceManager::acquireDeviceHandle() {
 	HRESULT resultCode;
 	// if a specific ID was requested, search for that one, otherwise get the default
 	if (!deviceID.empty()) {
@@ -306,7 +308,7 @@ bool rxaa::DeviceManager::acquireDeviceHandle() {
 	return true;
 }
 
-void rxaa::DeviceManager::deviceRelease() {
+void DeviceManager::deviceRelease() {
 	silentRenderer = SilentRenderer();
 	captureManager = CaptureManager();
 
@@ -318,7 +320,7 @@ void rxaa::DeviceManager::deviceRelease() {
 	deviceInfo.reset();
 }
 
-void rxaa::DeviceManager::readDeviceName() {
+void DeviceManager::readDeviceName() {
 	deviceInfo.name.clear();
 
 	if (audioDeviceHandle == nullptr) {
@@ -338,7 +340,7 @@ void rxaa::DeviceManager::readDeviceName() {
 	deviceInfo.name = prop.getCString();
 }
 
-void rxaa::DeviceManager::readDeviceId() {
+void DeviceManager::readDeviceId() {
 	deviceInfo.id.clear();
 
 	if (audioDeviceHandle == nullptr) {
@@ -354,7 +356,7 @@ void rxaa::DeviceManager::readDeviceId() {
 	CoTaskMemFree(resultCString);
 }
 
-void rxaa::DeviceManager::readDeviceFormat() {
+void DeviceManager::readDeviceFormat() {
 	const auto& waveFormat = captureManager.getWaveFormat();
 	auto &format = deviceInfo.format;
 
@@ -382,7 +384,7 @@ void rxaa::DeviceManager::readDeviceFormat() {
 	}
 }
 
-bool rxaa::DeviceManager::createSilentRenderer() {
+bool DeviceManager::createSilentRenderer() {
 	return true;
 	// TODO remove function or uncomment
 	if (port == Port::OUTPUT) {
@@ -393,7 +395,7 @@ bool rxaa::DeviceManager::createSilentRenderer() {
 	}
 }
 
-bool rxaa::DeviceManager::createCaptureManager() {
+bool DeviceManager::createCaptureManager() {
 	auto result = CaptureManager::create(*audioDeviceHandle, port == Port::OUTPUT);
 	
 	if (result.index() == 1) {
@@ -414,7 +416,7 @@ bool rxaa::DeviceManager::createCaptureManager() {
 	return true;
 }
 
-void rxaa::DeviceManager::ensureDeviceAcquired() {
+void DeviceManager::ensureDeviceAcquired() {
 	if (captureManager.isValid()) {
 		return;
 	}
@@ -426,7 +428,7 @@ void rxaa::DeviceManager::ensureDeviceAcquired() {
 	deviceInit();
 }
 
-std::optional<rxaa::MyWaveFormat> rxaa::DeviceManager::parseStreamFormat(WAVEFORMATEX *waveFormatEx) {
+std::optional<MyWaveFormat> DeviceManager::parseStreamFormat(WAVEFORMATEX *waveFormatEx) {
 	MyWaveFormat waveFormat;
 	waveFormat.channelsCount = waveFormatEx->nChannels;
 	waveFormat.samplesPerSec = waveFormatEx->nSamplesPerSec;
@@ -466,17 +468,17 @@ std::optional<rxaa::MyWaveFormat> rxaa::DeviceManager::parseStreamFormat(WAVEFOR
 	return waveFormat;
 }
 
-void rxaa::DeviceManager::readDeviceInfo() {
+void DeviceManager::readDeviceInfo() {
 	readDeviceName();
 	readDeviceId();
 	readDeviceFormat();
 }
 
-bool rxaa::DeviceManager::isObjectValid() const {
+bool DeviceManager::isObjectValid() const {
 	return objectIsValid;
 }
 
-void rxaa::DeviceManager::setOptions(Port port, sview deviceID) {
+void DeviceManager::setOptions(Port port, sview deviceID) {
 	if (!objectIsValid) {
 		return;
 	}
@@ -485,7 +487,7 @@ void rxaa::DeviceManager::setOptions(Port port, sview deviceID) {
 	this->deviceID = deviceID;
 }
 
-void rxaa::DeviceManager::init() {
+void DeviceManager::init() {
 	if (!objectIsValid) {
 		return;
 	}
@@ -493,7 +495,7 @@ void rxaa::DeviceManager::init() {
 	deviceInit();
 }
 
-rxaa::DeviceManager::BufferFetchResult rxaa::DeviceManager::nextBuffer() {
+DeviceManager::BufferFetchResult DeviceManager::nextBuffer() {
 	if (!objectIsValid) {
 		return BufferFetchResult::invalidState();
 	}
@@ -539,19 +541,19 @@ rxaa::DeviceManager::BufferFetchResult rxaa::DeviceManager::nextBuffer() {
 	}
 }
 
-const string& rxaa::DeviceManager::getDeviceName() const {
+const string& DeviceManager::getDeviceName() const {
 	return deviceInfo.name;
 }
 
-const string& rxaa::DeviceManager::getDeviceId() const {
+const string& DeviceManager::getDeviceId() const {
 	return deviceInfo.id;
 }
 
-const string& rxaa::DeviceManager::getDeviceList() const {
+const string& DeviceManager::getDeviceList() const {
 	return deviceList;
 }
 
-void rxaa::DeviceManager::updateDeviceList() {
+void DeviceManager::updateDeviceList() {
 	deviceList.clear();
 
 	utils::GenericComWrapper<IMMDeviceCollection> collection;
@@ -593,7 +595,7 @@ void rxaa::DeviceManager::updateDeviceList() {
 	}
 }
 
-bool rxaa::DeviceManager::getDeviceStatus() const {
+bool DeviceManager::getDeviceStatus() const {
 	if (audioDeviceHandle == nullptr) {
 		return false;
 	}
@@ -606,6 +608,6 @@ bool rxaa::DeviceManager::getDeviceStatus() const {
 	return state == DEVICE_STATE_ACTIVE;
 }
 
-const string& rxaa::DeviceManager::getDeviceFormat() const {
+const string& DeviceManager::getDeviceFormat() const {
 	return deviceInfo.format;
 }

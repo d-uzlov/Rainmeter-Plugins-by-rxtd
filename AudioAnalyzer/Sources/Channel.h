@@ -12,7 +12,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
-namespace rxaa {
+namespace rxtd::audio_analyzer {
 	class Channel {
 	public:
 		class ChannelParser {
@@ -66,14 +66,14 @@ namespace rxaa {
 
 namespace std {
 	template<>
-	struct hash<rxaa::Channel> {
-		size_t operator()(const rxaa::Channel &c) const {
+	struct hash<rxtd::audio_analyzer::Channel> {
+		size_t operator()(const rxtd::audio_analyzer::Channel &c) const {
 			return std::hash<decltype(c.toInt())>()(c.toInt());
 		}
 	};
 }
 
-namespace rxaa {
+namespace rxtd::audio_analyzer {
 	class ChannelLayout {
 		string name;
 		std::unordered_set<Channel> channels;

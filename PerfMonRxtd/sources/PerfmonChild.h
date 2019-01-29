@@ -17,7 +17,7 @@ namespace rxtd::perfmon {
 
 		// options
 		Reference ref;
-		index instanceIndex = 0;
+		item_t instanceIndex = 0;
 		ResultString resultStringType = ResultString::NUMBER;
 
 		// data

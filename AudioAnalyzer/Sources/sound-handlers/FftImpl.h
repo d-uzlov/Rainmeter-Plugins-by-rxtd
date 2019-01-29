@@ -10,7 +10,7 @@
 #pragma once
 #include "../kiss_fft/KissFft.hh"
 
-namespace rxaa {
+namespace rxtd::audio_analyzer {
 	class FftImpl {
 	private:
 		index fftSize;

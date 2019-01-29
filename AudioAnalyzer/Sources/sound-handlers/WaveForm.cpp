@@ -18,7 +18,9 @@
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
 
-void rxaa::WaveForm::setParams(const Params &_params) {
+using namespace audio_analyzer;
+
+void WaveForm::setParams(const Params &_params) {
 	this->params = _params;
 
 	if (params.width <= 0 || params.height <= 0) {
@@ -53,7 +55,7 @@ void rxaa::WaveForm::setParams(const Params &_params) {
 	updateParams();
 }
 
-std::optional<rxaa::WaveForm::Params> rxaa::WaveForm::parseParams(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl, const utils::Rainmeter& rain) {
+std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl, const utils::Rainmeter& rain) {
 	Params params;
 
 	params.width = optionMap.get(L"width"sv).asInt(100);
@@ -113,21 +115,21 @@ std::optional<rxaa::WaveForm::Params> rxaa::WaveForm::parseParams(const utils::O
 	return params;
 }
 
-const double* rxaa::WaveForm::getData() const {
+const double* WaveForm::getData() const {
 	return &result;
 }
 
-index rxaa::WaveForm::getCount() const {
+index WaveForm::getCount() const {
 	return 0;
 }
 
-void rxaa::WaveForm::setSamplesPerSec(index samplesPerSec) {
+void WaveForm::setSamplesPerSec(index samplesPerSec) {
 	this->samplesPerSec = samplesPerSec;
 
 	updateParams();
 }
 
-const wchar_t* rxaa::WaveForm::getProp(const isview& prop) const {
+const wchar_t* WaveForm::getProp(const isview& prop) const {
 	if (prop == L"file") {
 		return filepath.c_str();
 	} else if (prop == L"block size") {
@@ -138,24 +140,24 @@ const wchar_t* rxaa::WaveForm::getProp(const isview& prop) const {
 	return propString.c_str();
 }
 
-void rxaa::WaveForm::reset() {
+void WaveForm::reset() {
 	counter = 0;
 	min = 10.0;
 	max = -10.0;
 }
 
-void rxaa::WaveForm::updateParams() {
+void WaveForm::updateParams() {
 	blockSize = index(samplesPerSec * params.resolution);
 	reset();
 }
 
-void rxaa::WaveForm::writeFile(const DataSupplier& dataSupplier) {
+void WaveForm::writeFile(const DataSupplier& dataSupplier) {
 	auto writeBufferSize = params.width * params.height;
 	auto writeBuffer = dataSupplier.getBuffer<uint32_t>(writeBufferSize);
 	utils::BmpWriter::writeFile(filepath, imageBuffer[0], params.height, params.width, lastIndex, writeBuffer, writeBufferSize);
 }
 
-void rxaa::WaveForm::fillLine() {
+void WaveForm::fillLine() {
 	min *= params.gain;
 	max *= params.gain;
 
@@ -205,7 +207,7 @@ void rxaa::WaveForm::fillLine() {
 	}
 }
 
-void rxaa::WaveForm::process(const DataSupplier& dataSupplier) {
+void WaveForm::process(const DataSupplier& dataSupplier) {
 	if (blockSize <= 0 || params.width <= 0 || params.height <= 0) {
 		return;
 	}
@@ -234,7 +236,7 @@ void rxaa::WaveForm::process(const DataSupplier& dataSupplier) {
 	}
 }
 
-void rxaa::WaveForm::processSilence(const DataSupplier& dataSupplier) {
+void WaveForm::processSilence(const DataSupplier& dataSupplier) {
 	if (blockSize <= 0 || params.width <= 0 || params.height <= 0) {
 		return;
 	}
@@ -268,7 +270,7 @@ void rxaa::WaveForm::processSilence(const DataSupplier& dataSupplier) {
 	}
 }
 
-void rxaa::WaveForm::finish(const DataSupplier& dataSupplier) {
+void WaveForm::finish(const DataSupplier& dataSupplier) {
 	if (changed) {
 		writeFile(dataSupplier);
 		changed = false;

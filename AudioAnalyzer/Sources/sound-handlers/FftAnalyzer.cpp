@@ -13,7 +13,9 @@
 
 using namespace std::literals::string_view_literals;
 
-void rxaa::FftAnalyzer::CascadeData::setParams(FftAnalyzer* parent, CascadeData *successor, cascade_t cascadeIndex) {
+using namespace audio_analyzer;
+
+void FftAnalyzer::CascadeData::setParams(FftAnalyzer* parent, CascadeData *successor, cascade_t cascadeIndex) {
 	this->parent = parent;
 	this->successor = successor;
 
@@ -32,7 +34,7 @@ void rxaa::FftAnalyzer::CascadeData::setParams(FftAnalyzer* parent, CascadeData 
 	downsampleGain = std::pow(2, cascadeIndex * 0.5);
 }
 
-void rxaa::FftAnalyzer::CascadeData::process(const float* wave, index waveSize) {
+void FftAnalyzer::CascadeData::process(const float* wave, index waveSize) {
 	const auto fftSize = parent->fftSize;
 	const auto inputStride = parent->inputStride;
 
@@ -65,7 +67,7 @@ void rxaa::FftAnalyzer::CascadeData::process(const float* wave, index waveSize) 
 	}
 }
 
-void rxaa::FftAnalyzer::CascadeData::processRandom(index waveSize, double amplitude) {
+void FftAnalyzer::CascadeData::processRandom(index waveSize, double amplitude) {
 	const auto fftSize = parent->fftSize;
 	const auto inputStride = parent->inputStride;
 	auto& random = parent->random;
@@ -102,7 +104,7 @@ void rxaa::FftAnalyzer::CascadeData::processRandom(index waveSize, double amplit
 	}
 }
 
-void rxaa::FftAnalyzer::CascadeData::processResampled(const float* const wave, index waveSize) {
+void FftAnalyzer::CascadeData::processResampled(const float* const wave, index waveSize) {
 	const auto fftSize = parent->fftSize;
 	const auto inputStride = parent->inputStride;
 
@@ -158,7 +160,7 @@ void rxaa::FftAnalyzer::CascadeData::processResampled(const float* const wave, i
 	}
 }
 
-void rxaa::FftAnalyzer::CascadeData::processSilence(index waveSize) {
+void FftAnalyzer::CascadeData::processSilence(index waveSize) {
 	const auto fftSize = parent->fftSize;
 	const auto inputStride = parent->inputStride;
 
@@ -191,7 +193,7 @@ void rxaa::FftAnalyzer::CascadeData::processSilence(index waveSize) {
 
 }
 
-void rxaa::FftAnalyzer::CascadeData::doFft() {
+void FftAnalyzer::CascadeData::doFft() {
 	parent->fftImpl->process(ringBuffer.data());
 
 	const auto binsCount = parent->fftSize / 2;
@@ -217,21 +219,21 @@ void rxaa::FftAnalyzer::CascadeData::doFft() {
 	}
 }
 
-void rxaa::FftAnalyzer::CascadeData::reset() {
+void FftAnalyzer::CascadeData::reset() {
 	std::fill(values.begin(), values.end(), 0.0);
 }
 
-rxaa::FftAnalyzer::Random::Random() : e2(rd()), dist(-1.0, 1.0) { }
+FftAnalyzer::Random::Random() : e2(rd()), dist(-1.0, 1.0) { }
 
-double rxaa::FftAnalyzer::Random::next() {
+double FftAnalyzer::Random::next() {
 	return dist(e2);
 }
 
-rxaa::FftAnalyzer::~FftAnalyzer() {
+FftAnalyzer::~FftAnalyzer() {
 	fftImpl = FftImpl::change(fftImpl, 0);
 }
 
-std::optional<rxaa::FftAnalyzer::Params> rxaa::FftAnalyzer::parseParams(const utils::OptionParser::OptionMap &optionMap, utils::Rainmeter::ContextLogger& cl) {
+std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(const utils::OptionParser::OptionMap &optionMap, utils::Rainmeter::ContextLogger& cl) {
 	Params params;
 	params.attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.1) * 0.001;
 	params.decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.attackTime), 0.1) * 0.001;
@@ -283,34 +285,34 @@ std::optional<rxaa::FftAnalyzer::Params> rxaa::FftAnalyzer::parseParams(const ut
 	return params;
 }
 
-double rxaa::FftAnalyzer::getFftFreq(index fft) const {
+double FftAnalyzer::getFftFreq(index fft) const {
 	if (fft > fftSize / 2) {
 		return 0.0;
 	}
 	return static_cast<double>(fft) * samplesPerSec / fftSize;
 }
 
-index rxaa::FftAnalyzer::getFftSize() const {
+index FftAnalyzer::getFftSize() const {
 	return fftSize;
 }
 
-rxaa::FftAnalyzer::cascade_t rxaa::FftAnalyzer::getCascadesCount() const {
+FftAnalyzer::cascade_t FftAnalyzer::getCascadesCount() const {
 	return cascade_t(cascades.size());
 }
 
-const double* rxaa::FftAnalyzer::getCascade(cascade_t cascade) const { // TODO vector_view
+const double* FftAnalyzer::getCascade(cascade_t cascade) const { // TODO vector_view
 	return cascades[cascade].values.data();
 }
 
-const double* rxaa::FftAnalyzer::getData() const {
+const double* FftAnalyzer::getData() const {
 	return getCascade(0);
 }
 
-index rxaa::FftAnalyzer::getCount() const {
+index FftAnalyzer::getCount() const {
 	return fftSize / 2;
 }
 
-void rxaa::FftAnalyzer::process(const DataSupplier& dataSupplier) {
+void FftAnalyzer::process(const DataSupplier& dataSupplier) {
 	if (fftSize <= 0) {
 		return;
 	}
@@ -332,7 +334,7 @@ void rxaa::FftAnalyzer::process(const DataSupplier& dataSupplier) {
 	fftImpl->setBuffers(nullptr, nullptr);
 }
 
-void rxaa::FftAnalyzer::processSilence(const DataSupplier& dataSupplier) {
+void FftAnalyzer::processSilence(const DataSupplier& dataSupplier) {
 	if (fftSize <= 0) {
 		return;
 	}
@@ -353,7 +355,7 @@ void rxaa::FftAnalyzer::processSilence(const DataSupplier& dataSupplier) {
 	fftImpl->setBuffers(nullptr, nullptr);
 }
 
-void rxaa::FftAnalyzer::processRandom(index waveSize) {
+void FftAnalyzer::processRandom(index waveSize) {
 	index remainingWave = waveSize;
 	while (remainingWave != 0) {
 		const index toProcess = std::min(randomBlockSize - randomCurrentOffset, remainingWave);
@@ -375,12 +377,12 @@ void rxaa::FftAnalyzer::processRandom(index waveSize) {
 	}
 }
 
-void rxaa::FftAnalyzer::setSamplesPerSec(index samplesPerSec) {
+void FftAnalyzer::setSamplesPerSec(index samplesPerSec) {
 	this->samplesPerSec = samplesPerSec;
 	updateParams();
 }
 
-const wchar_t* rxaa::FftAnalyzer::getProp(const isview& prop) const {
+const wchar_t* FftAnalyzer::getProp(const isview& prop) const {
 	propString.clear();
 
 	if (prop == L"size") {
@@ -437,19 +439,19 @@ const wchar_t* rxaa::FftAnalyzer::getProp(const isview& prop) const {
 	return propString.c_str();
 }
 
-void rxaa::FftAnalyzer::reset() {
+void FftAnalyzer::reset() {
 	for (auto& cascade : cascades) {
 		cascade.reset();
 	}
 }
 
-void rxaa::FftAnalyzer::setParams(Params params) {
+void FftAnalyzer::setParams(Params params) {
 	this->params = params;
 
 	updateParams();
 }
 
-void rxaa::FftAnalyzer::updateParams() {
+void FftAnalyzer::updateParams() {
 	switch (params.sizeBy) {
 	case SizeBy::RESOLUTION:
 		fftSize = kiss_fft::calculateNextFastSize(index(samplesPerSec / params.resolution), true);

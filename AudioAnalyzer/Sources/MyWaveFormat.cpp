@@ -11,18 +11,20 @@
 
 #include "undef.h"
 
-rxaa::Format::Format(Value value): value(value) {
+using namespace audio_analyzer;
+
+Format::Format(Value value): value(value) {
 }
 
-bool rxaa::Format::operator==(Format a) const {
+bool Format::operator==(Format a) const {
 	return value == a.value;
 }
 
-bool rxaa::Format::operator!=(Format a) const {
+bool Format::operator!=(Format a) const {
 	return value != a.value;
 }
 
-const wchar_t* rxaa::Format::toString() const {
+const wchar_t* Format::toString() const {
 	if (value == INVALID) {
 		return L"<invalid>";
 	}

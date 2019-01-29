@@ -106,8 +106,8 @@ void ExpressionTreeNode::simplify() {
 	default:;
 	}
 }
-index ExpressionTreeNode::maxExpRef() const {
-	index max = -1;
+counter_t ExpressionTreeNode::maxExpRef() const {
+	counter_t max = -1;
 	if (type == ExpressionType::REF && ref.type == ReferenceType::EXPRESSION) {
 		max = ref.counter;
 	} else {
@@ -118,8 +118,8 @@ index ExpressionTreeNode::maxExpRef() const {
 	return max;
 }
 
-index ExpressionTreeNode::maxRUERef() const {
-	index max = -1;
+counter_t ExpressionTreeNode::maxRUERef() const {
+	counter_t max = -1;
 	if (type == ExpressionType::REF && ref.type == ReferenceType::ROLLUP_EXPRESSION) {
 		max = ref.counter;
 	} else {
@@ -456,7 +456,7 @@ ExpressionTreeNode ExpressionParser::parseAtom() {
 	if (next.type == Lexer::LexemeType::NUMBER) {
 		ExpressionTreeNode res;
 		res.type = ExpressionType::NUMBER;
-		const double i = double(parseInt(next.value));
+		const double i = double(utils::StringUtils::parseInt(next.value));
 		double m = 0;
 		readNext();
 		if (error) {
@@ -471,7 +471,7 @@ ExpressionTreeNode ExpressionParser::parseAtom() {
 				error = true;
 				return ExpressionTreeNode();
 			}
-			m = parseFractional(next.value);
+			m = utils::StringUtils::parseFractional(next.value);
 			readNext();
 			if (error) {
 				return ExpressionTreeNode();
@@ -596,12 +596,3 @@ Reference ExpressionParser::parseReference() {
 	}
 	return ref;
 }
-
-index ExpressionParser::parseInt(sview view) {
-	return utils::StringUtils::parseInt(view);
-}
-
-double ExpressionParser::parseFractional(sview view) {
-	return utils::StringUtils::parseFractional(view);
-}
-

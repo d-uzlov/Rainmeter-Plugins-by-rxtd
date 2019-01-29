@@ -86,7 +86,7 @@
  // v1.2.2: Fixed: remove check for NameSource option
  //         Fixed: caches didn't work properly
  //         
- // v1.3.0: Fixed: totals for rollupExpressions was calculated as for usual expressions
+ // v1.2.3: Fixed: totals for rollupExpressions was calculated as for usual expressions
  //         Fixed: rollup min/max for raw values was calculated incorrectly
  //         Code: rewrite everything for readability
  //         Code: use string_view where possible → lower memory usage, better performance

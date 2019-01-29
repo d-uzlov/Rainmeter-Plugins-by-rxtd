@@ -17,12 +17,12 @@ ExpressionResolver::ExpressionResolver(utils::Rainmeter::Logger& log, const Inst
 	log(log),
 	instanceManager(instanceManager) { }
 
-index ExpressionResolver::getExpressionsCount() const {
-	return expressions.size();
+counter_t ExpressionResolver::getExpressionsCount() const {
+	return counter_t(expressions.size());
 }
 
-index ExpressionResolver::getRollupExpressionsCount() const {
-	return rollupExpressions.size();
+counter_t ExpressionResolver::getRollupExpressionsCount() const {
+	return counter_t(rollupExpressions.size());
 }
 
 void ExpressionResolver::resetCaches() {
@@ -128,7 +128,7 @@ double ExpressionResolver::getValue(const Reference& ref, const InstanceInfo* in
 }
 
 void ExpressionResolver::setExpressions(utils::OptionParser::OptionList expressionsList,
-	utils::OptionParser::OptionList rollupExpressionsList) {
+	utils::OptionParser::OptionList rollupExpressionsList) { // TODO check count of expressions
 	expressions.resize(expressionsList.size());
 	for (index i = 0; i < expressionsList.size(); ++i) {
 		ExpressionParser parser(expressionsList.get(i));
@@ -215,42 +215,42 @@ void ExpressionResolver::setExpressions(utils::OptionParser::OptionList expressi
 	}
 }
 
-double ExpressionResolver::getRaw(index counterIndex, Indices originalIndexes) const {
+double ExpressionResolver::getRaw(counter_t counterIndex, Indices originalIndexes) const {
 	return static_cast<double>(instanceManager.calculateRaw(counterIndex, originalIndexes));
 }
 
-double ExpressionResolver::getFormatted(index counterIndex, Indices originalIndexes) const {
+double ExpressionResolver::getFormatted(counter_t counterIndex, Indices originalIndexes) const {
 	return instanceManager.calculateFormatted(counterIndex, originalIndexes);
 }
 
-double ExpressionResolver::getRawRollup(RollupFunction rollupType, index counterIndex,
+double ExpressionResolver::getRawRollup(RollupFunction rollupType, counter_t counterIndex,
 	const InstanceInfo& instance) const {
 	return calculateRollup<&ExpressionResolver::getRaw>(rollupType, counterIndex, instance);
 }
 
-double ExpressionResolver::getFormattedRollup(RollupFunction rollupType, index counterIndex,
+double ExpressionResolver::getFormattedRollup(RollupFunction rollupType, counter_t counterIndex,
 	const InstanceInfo& instance) const {
 	return calculateRollup<&ExpressionResolver::getFormatted>(rollupType, counterIndex, instance);
 }
 
-double ExpressionResolver::getExpressionRollup(RollupFunction rollupType, index expressionIndex,
+double ExpressionResolver::getExpressionRollup(RollupFunction rollupType, counter_t expressionIndex,
 	const InstanceInfo& instance) const {
 	expressionCurrentItem = &instance;
 	return calculateExpressionRollup(expressions[expressionIndex], rollupType);
 }
 
-double ExpressionResolver::getExpression(index expressionIndex, const InstanceInfo& instance) const {
+double ExpressionResolver::getExpression(counter_t expressionIndex, const InstanceInfo& instance) const {
 	expressionCurrentItem = &instance;
 	return calculateExpression<&ExpressionResolver::resolveReference>(expressions[expressionIndex]);
 }
 
-double ExpressionResolver::getRollupExpression(index expressionIndex,
+double ExpressionResolver::getRollupExpression(counter_t expressionIndex,
 	const InstanceInfo& instance) const {
 	expressionCurrentItem = &instance;
 	return calculateExpression<&ExpressionResolver::resolveRollupReference>(rollupExpressions[expressionIndex]);
 }
 
-double ExpressionResolver::calculateTotal(const TotalSource source, index counterIndex, const RollupFunction rollupFunction) const {
+double ExpressionResolver::calculateTotal(const TotalSource source, counter_t counterIndex, const RollupFunction rollupFunction) const {
 	switch (source) {
 	case TotalSource::RAW_COUNTER: return calculateTotal<&ExpressionResolver::getRaw>(rollupFunction, counterIndex);
 	case TotalSource::FORMATTED_COUNTER: return calculateTotal<&ExpressionResolver::getFormatted>(
@@ -265,7 +265,7 @@ double ExpressionResolver::calculateTotal(const TotalSource source, index counte
 	}
 }
 
-double ExpressionResolver::calculateAndCacheTotal(TotalSource source, index counterIndex, RollupFunction rollupFunction) const {
+double ExpressionResolver::calculateAndCacheTotal(TotalSource source, counter_t counterIndex, RollupFunction rollupFunction) const {
 	auto &totalOpt = totalsCache[{ source, counterIndex, rollupFunction }];
 	if (totalOpt.has_value()) {
 		// already calculated
@@ -522,8 +522,8 @@ double ExpressionResolver::resolveRollupReference(const Reference& ref) const {
 	return 0.0;
 }
 
-template <double(ExpressionResolver::* calculateValueFunction)(index counterIndex, Indices originalIndexes) const>
-double ExpressionResolver::calculateRollup(RollupFunction rollupType, index counterIndex, const InstanceInfo& instance) const {
+template <double(ExpressionResolver::* calculateValueFunction)(counter_t counterIndex, Indices originalIndexes) const>
+double ExpressionResolver::calculateRollup(RollupFunction rollupType, counter_t counterIndex, const InstanceInfo& instance) const {
 	const double firstValue = (this->*calculateValueFunction)(counterIndex, instance.indices);
 	const auto& indexes = instance.vectorIndices;
 
@@ -567,8 +567,8 @@ double ExpressionResolver::calculateRollup(RollupFunction rollupType, index coun
 	}
 }
 
-template <double (ExpressionResolver::* calculateValueFunction)(index counterIndex, Indices originalIndexes) const>
-double ExpressionResolver::calculateTotal(RollupFunction rollupType, index counterIndex) const {
+template <double (ExpressionResolver::* calculateValueFunction)(counter_t counterIndex, Indices originalIndexes) const>
+double ExpressionResolver::calculateTotal(RollupFunction rollupType, counter_t counterIndex) const {
 	auto& vectorInstanceKeys = instanceManager.getInstances();
 
 	switch (rollupType) {

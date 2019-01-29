@@ -15,7 +15,7 @@
 #include "RainmeterWrappers.h"
 #include "OptionParser.h"
 
-namespace rxaa {
+namespace rxtd::audio_analyzer {
 	class ParamParser {
 	private:
 		utils::Rainmeter& rain;

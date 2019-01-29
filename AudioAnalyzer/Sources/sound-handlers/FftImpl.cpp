@@ -12,14 +12,16 @@
 
 #include "undef.h"
 
+using namespace audio_analyzer;
+
 struct CountPair {
 	index count = 0;
-	std::unique_ptr<rxaa::FftImpl> ptr;
+	std::unique_ptr<FftImpl> ptr;
 };
 static std::map<index, CountPair> cache;
-static rxaa::FftImpl zeroFft(0);
+static FftImpl zeroFft(0);
 
-rxaa::FftImpl* rxaa::FftImpl::change(FftImpl* old, index newSize) {
+FftImpl* FftImpl::change(FftImpl* old, index newSize) {
 	if (old != nullptr && old->fftSize == newSize) {
 		return old;
 	}
@@ -44,7 +46,7 @@ rxaa::FftImpl* rxaa::FftImpl::change(FftImpl* old, index newSize) {
 	return pair.ptr.get();
 }
 
-rxaa::FftImpl::FftImpl(index fftSize) :
+FftImpl::FftImpl(index fftSize) :
 	fftSize(fftSize),
 	scalar(1.0 / std::sqrt(fftSize)),
 	windowFunction(createWindowFunction(fftSize)),
@@ -54,23 +56,23 @@ rxaa::FftImpl::FftImpl(index fftSize) :
 	outputBufferSize = fftSize / 2;
 }
 
-double rxaa::FftImpl::getDC() const {
+double FftImpl::getDC() const {
 	return outputBuffer[0].real() * scalar;
 }
 
-double rxaa::FftImpl::getBinMagnitude(index binIndex) const {
+double FftImpl::getBinMagnitude(index binIndex) const {
 	const auto &v = outputBuffer[binIndex];
 	const auto square = v.real() * v.real() + v.imag() * v.imag();
 	// return fastSqrt(square); // doesn't seem to improve performance
 	return std::sqrt(square) * scalar;
 }
 
-void rxaa::FftImpl::setBuffers(input_buffer_type* inputBuffer, output_buffer_type* outputBuffer) {
+void FftImpl::setBuffers(input_buffer_type* inputBuffer, output_buffer_type* outputBuffer) {
 	this->inputBuffer = inputBuffer;
 	this->outputBuffer = outputBuffer;
 }
 
-void rxaa::FftImpl::process(const float* wave) {
+void FftImpl::process(const float* wave) {
 	for (index iBin = 0; iBin < fftSize; ++iBin) {
 		inputBuffer[iBin] = wave[iBin] * windowFunction[iBin];
 	}
@@ -78,15 +80,15 @@ void rxaa::FftImpl::process(const float* wave) {
 	kiss.transform_real(inputBuffer, outputBuffer);
 }
 
-index rxaa::FftImpl::getInputBufferSize() const {
+index FftImpl::getInputBufferSize() const {
 	return inputBufferSize;
 }
 
-index rxaa::FftImpl::getOutputBufferSize() const {
+index FftImpl::getOutputBufferSize() const {
 	return outputBufferSize;
 }
 
-std::vector<float> rxaa::FftImpl::createWindowFunction(index fftSize) {
+std::vector<float> FftImpl::createWindowFunction(index fftSize) {
 	std::vector<float> windowFunction;
 	windowFunction.resize(fftSize);
 	constexpr double _2pi = 2 * 3.14159265358979323846;

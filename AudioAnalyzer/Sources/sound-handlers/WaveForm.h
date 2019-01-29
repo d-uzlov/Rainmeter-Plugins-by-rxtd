@@ -18,7 +18,7 @@ namespace rxtd::utils {
 	class Rainmeter;
 }
 
-namespace rxaa {
+namespace rxtd::audio_analyzer {
 	class WaveForm : public SoundHandler {
 	public:
 		enum class LineDrawingPolicy {

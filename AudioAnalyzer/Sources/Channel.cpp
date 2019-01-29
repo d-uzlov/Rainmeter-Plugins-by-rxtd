@@ -13,10 +13,12 @@
 
 #include "undef.h"
 
-rxaa::ChannelLayoutKeeper rxaa::layoutKeeper { };
-rxaa::Channel::ChannelParser rxaa::Channel::channelParser { };
+using namespace audio_analyzer;
 
-rxaa::Channel::ChannelParser::ChannelParser() {
+ChannelLayoutKeeper audio_analyzer::layoutKeeper { };
+Channel::ChannelParser Channel::channelParser { };
+
+Channel::ChannelParser::ChannelParser() {
 	addElement(L"Auto", AUTO);
 	addElement(L"FrontLeft", FRONT_LEFT);
 	addElement(L"FL", FRONT_LEFT);
@@ -36,7 +38,7 @@ rxaa::Channel::ChannelParser::ChannelParser() {
 	addElement(L"SR", SIDE_RIGHT);
 }
 
-std::optional<rxaa::Channel> rxaa::Channel::ChannelParser::find(const sview str) {
+std::optional<Channel> Channel::ChannelParser::find(const sview str) {
 	const auto iter = map.find(str % ciView());
 
 	if (iter == map.end()) {
@@ -46,25 +48,25 @@ std::optional<rxaa::Channel> rxaa::Channel::ChannelParser::find(const sview str)
 	return iter->second;
 }
 
-void rxaa::Channel::ChannelParser::addElement(isview name, Channel value) {
+void Channel::ChannelParser::addElement(isview name, Channel value) {
 	map[name % own()] = value;
 }
 
-rxaa::Channel::Channel(Value value) : value(value) { }
+Channel::Channel(Value value) : value(value) { }
 
-bool rxaa::Channel::operator==(Channel a) const {
+bool Channel::operator==(Channel a) const {
 	return value == a.value;
 }
 
-bool rxaa::Channel::operator!=(Channel a) const {
+bool Channel::operator!=(Channel a) const {
 	return value != a.value;
 }
 
-index rxaa::Channel::toInt() const {
+index Channel::toInt() const {
 	return value;
 }
 
-const wchar_t* rxaa::Channel::technicalName() const {
+const wchar_t* Channel::technicalName() const {
 	switch (value) {
 	case FRONT_LEFT: return L"FRONT_LEFT";
 	case FRONT_RIGHT:return L"FRONT_RIGHT";
@@ -79,15 +81,16 @@ const wchar_t* rxaa::Channel::technicalName() const {
 	}
 }
 
-bool rxaa::operator<(Channel left, Channel right) {
+bool audio_analyzer::operator<(Channel left, Channel right) {
 	return left.value < right.value;
 }
 
-const string& rxaa::ChannelLayout::getName() const {
+
+const string& ChannelLayout::getName() const {
 	return name;
 }
 
-std::optional<index> rxaa::ChannelLayout::fromChannel(Channel channel) const {
+std::optional<index> ChannelLayout::fromChannel(Channel channel) const {
 	const auto iter = forward.find(channel);
 	if (iter == forward.end()) {
 		return std::nullopt;
@@ -95,19 +98,19 @@ std::optional<index> rxaa::ChannelLayout::fromChannel(Channel channel) const {
 	return iter->second;
 }
 
-const std::unordered_set<rxaa::Channel>& rxaa::ChannelLayout::channelsView() const {
+const std::unordered_set<Channel>& ChannelLayout::channelsView() const {
 	return channels;
 }
 
-const rxaa::ChannelLayout* rxaa::ChannelLayoutKeeper::getMono() const {
+const ChannelLayout* ChannelLayoutKeeper::getMono() const {
 	return &mono;
 }
 
-const rxaa::ChannelLayout* rxaa::ChannelLayoutKeeper::getStereo() const {
+const ChannelLayout* ChannelLayoutKeeper::getStereo() const {
 	return &stereo;
 }
 
-const rxaa::ChannelLayout* rxaa::ChannelLayoutKeeper::layoutFromChannelMask(uint32_t mask) const {
+const ChannelLayout* ChannelLayoutKeeper::layoutFromChannelMask(uint32_t mask) const {
 	switch (mask) {
 	case KSAUDIO_SPEAKER_MONO:				return &mono;
 	case KSAUDIO_SPEAKER_1POINT1:			return &_1_1;

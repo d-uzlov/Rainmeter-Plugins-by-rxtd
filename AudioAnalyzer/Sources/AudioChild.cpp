@@ -13,7 +13,9 @@
 
 #include "undef.h"
 
-rxaa::AudioChild::AudioChild(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rain)) {
+using namespace audio_analyzer;
+
+AudioChild::AudioChild(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rain)) {
 	const auto parentName = rain.readString(L"Parent") % ciView();
 	if (parentName == L"") {
 		log.error(L"Parent must be specified");
@@ -35,9 +37,9 @@ rxaa::AudioChild::AudioChild(utils::Rainmeter&& _rain) : TypeHolder(std::move(_r
 	}
 }
 
-rxaa::AudioChild::~AudioChild() { }
+AudioChild::~AudioChild() { }
 
-void rxaa::AudioChild::_reload() {
+void AudioChild::_reload() {
 	const auto channelStr = rain.readString(L"Channel");
 
 	if (channelStr == L"") {
@@ -104,7 +106,7 @@ void rxaa::AudioChild::_reload() {
 	valueIndex = static_cast<decltype(valueIndex)>(signedIndex);
 }
 
-std::tuple<double, const wchar_t*> rxaa::AudioChild::_update() {
+std::tuple<double, const wchar_t*> AudioChild::_update() {
 
 	double result;
 

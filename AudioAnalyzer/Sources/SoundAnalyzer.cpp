@@ -12,29 +12,31 @@
 
 #include "undef.h"
 
-rxaa::SoundAnalyzer::DataSupplierImpl::DataSupplierImpl(SoundAnalyzer& parent) : parent(parent) { }
+using namespace audio_analyzer;
 
-void rxaa::SoundAnalyzer::DataSupplierImpl::setChannelData(ChannelData *value) {
+SoundAnalyzer::DataSupplierImpl::DataSupplierImpl(SoundAnalyzer& parent) : parent(parent) { }
+
+void SoundAnalyzer::DataSupplierImpl::setChannelData(ChannelData *value) {
 	channelData = value;
 }
 
-void rxaa::SoundAnalyzer::DataSupplierImpl::setChannelIndex(index channelIndex) {
+void SoundAnalyzer::DataSupplierImpl::setChannelIndex(index channelIndex) {
 	this->channelIndex = channelIndex;
 }
 
-void rxaa::SoundAnalyzer::DataSupplierImpl::setChannel(Channel channel) {
+void SoundAnalyzer::DataSupplierImpl::setChannel(Channel channel) {
 	this->channel = channel;
 }
 
-const float* rxaa::SoundAnalyzer::DataSupplierImpl::getWave() const {
+const float* SoundAnalyzer::DataSupplierImpl::getWave() const {
 	return parent.wave[channelIndex];
 }
 
-index rxaa::SoundAnalyzer::DataSupplierImpl::getWaveSize() const {
+index SoundAnalyzer::DataSupplierImpl::getWaveSize() const {
 	return waveSize;
 }
 
-const rxaa::SoundHandler* rxaa::SoundAnalyzer::DataSupplierImpl::getHandler(isview id) const {
+const SoundHandler* SoundAnalyzer::DataSupplierImpl::getHandler(isview id) const {
 	const auto iter = channelData->indexMap.find(id);
 	if (iter == channelData->indexMap.end()) {
 		return nullptr;
@@ -44,11 +46,11 @@ const rxaa::SoundHandler* rxaa::SoundAnalyzer::DataSupplierImpl::getHandler(isvi
 	return handler;
 }
 
-rxaa::Channel rxaa::SoundAnalyzer::DataSupplierImpl::getChannel() const {
+Channel SoundAnalyzer::DataSupplierImpl::getChannel() const {
 	return channel;
 }
 
-uint8_t* rxaa::SoundAnalyzer::DataSupplierImpl::getBufferRaw(index size) const {
+uint8_t* SoundAnalyzer::DataSupplierImpl::getBufferRaw(index size) const {
 	if (nextBufferIndex >= index(buffers.size())) {
 		buffers.emplace_back();
 	}
@@ -58,19 +60,19 @@ uint8_t* rxaa::SoundAnalyzer::DataSupplierImpl::getBufferRaw(index size) const {
 	return buffer.data();
 }
 
-void rxaa::SoundAnalyzer::DataSupplierImpl::resetBuffers() {
+void SoundAnalyzer::DataSupplierImpl::resetBuffers() {
 	nextBufferIndex = 0;
 }
 
-void rxaa::SoundAnalyzer::DataSupplierImpl::setWaveSize(index value) {
+void SoundAnalyzer::DataSupplierImpl::setWaveSize(index value) {
 	waveSize = value;
 }
 
-rxaa::SoundAnalyzer::SoundAnalyzer() noexcept : dataSupplier(*this) {
+SoundAnalyzer::SoundAnalyzer() noexcept : dataSupplier(*this) {
 
 }
 
-void rxaa::SoundAnalyzer::decompose(const uint8_t* buffer, index framesCount) noexcept {
+void SoundAnalyzer::decompose(const uint8_t* buffer, index framesCount) noexcept {
 	wave.setBufferSize(framesCount);
 
 	const auto channelsCount = waveFormat.channelsCount;
@@ -95,7 +97,7 @@ void rxaa::SoundAnalyzer::decompose(const uint8_t* buffer, index framesCount) no
 	}
 }
 
-void rxaa::SoundAnalyzer::resample(float *values, index framesCount) const noexcept {
+void SoundAnalyzer::resample(float *values, index framesCount) const noexcept {
 	if (divide <= 1) {
 		return;
 	}
@@ -109,7 +111,7 @@ void rxaa::SoundAnalyzer::resample(float *values, index framesCount) const noexc
 	}
 }
 
-void rxaa::SoundAnalyzer::updateSampleRate() noexcept {
+void SoundAnalyzer::updateSampleRate() noexcept {
 	if (waveFormat.format == Format::INVALID) {
 		return;
 	}
@@ -132,13 +134,13 @@ void rxaa::SoundAnalyzer::updateSampleRate() noexcept {
 	}
 }
 
-void rxaa::SoundAnalyzer::setTargetRate(index value) noexcept {
+void SoundAnalyzer::setTargetRate(index value) noexcept {
 	targetRate = value;
 	updateSampleRate();
 }
 
-std::variant<rxaa::SoundHandler*, rxaa::SoundAnalyzer::SearchError>
-rxaa::SoundAnalyzer::findHandler(Channel channel, isview handlerId) const noexcept {
+std::variant<SoundHandler*, SoundAnalyzer::SearchError>
+SoundAnalyzer::findHandler(Channel channel, isview handlerId) const noexcept {
 	const auto channelIter = channels.find(channel);
 	if (channelIter == channels.end()) {
 		return SearchError::CHANNEL_NOT_FOUND;
@@ -154,7 +156,7 @@ rxaa::SoundAnalyzer::findHandler(Channel channel, isview handlerId) const noexce
 	return handler.get();
 }
 
-double rxaa::SoundAnalyzer::getValue(Channel channel, isview handlerId, index index) const noexcept {
+double SoundAnalyzer::getValue(Channel channel, isview handlerId, index index) const noexcept {
 	const auto handlerVariant = findHandler(channel, handlerId);
 	if (handlerVariant.index() != 0) {
 		return 0.0;
@@ -173,8 +175,8 @@ double rxaa::SoundAnalyzer::getValue(Channel channel, isview handlerId, index in
 	return handler->getData()[index];
 }
 
-std::variant<const wchar_t*, rxaa::SoundAnalyzer::SearchError>
-rxaa::SoundAnalyzer::getProp(Channel channel, sview handlerId, sview prop) const noexcept {
+std::variant<const wchar_t*, SoundAnalyzer::SearchError>
+SoundAnalyzer::getProp(Channel channel, sview handlerId, sview prop) const noexcept {
 	const auto handlerVariant = findHandler(channel, handlerId % ciView());
 	if (handlerVariant.index() != 0) {
 		return std::get<1>(handlerVariant);
@@ -184,7 +186,7 @@ rxaa::SoundAnalyzer::getProp(Channel channel, sview handlerId, sview prop) const
 	return handler->getProp(prop % ciView());
 }
 
-void rxaa::SoundAnalyzer::setPatchHandlers(std::map<Channel, std::vector<istring>> handlersOrder,
+void SoundAnalyzer::setPatchHandlers(std::map<Channel, std::vector<istring>> handlersOrder,
 	std::map<istring, std::function<SoundHandler*(SoundHandler*)>, std::less<>> handlerPatchersMap) noexcept {
 
 	for (const auto &channelOrder : handlersOrder) {
@@ -237,7 +239,7 @@ void rxaa::SoundAnalyzer::setPatchHandlers(std::map<Channel, std::vector<istring
 	updateSampleRate();
 }
 
-void rxaa::SoundAnalyzer::setWaveFormat(MyWaveFormat waveFormat) noexcept {
+void SoundAnalyzer::setWaveFormat(MyWaveFormat waveFormat) noexcept {
 	if (waveFormat.format == Format::INVALID) {
 		this->waveFormat = waveFormat;
 		return;
@@ -295,7 +297,7 @@ void rxaa::SoundAnalyzer::setWaveFormat(MyWaveFormat waveFormat) noexcept {
 	updateSampleRate();
 }
 
-void rxaa::SoundAnalyzer::process(const uint8_t* buffer, bool isSilent, index framesCount) noexcept {
+void SoundAnalyzer::process(const uint8_t* buffer, bool isSilent, index framesCount) noexcept {
 	if (waveFormat.format == Format::INVALID || waveFormat.channelsCount <= 0) {
 		return;
 	}
@@ -378,7 +380,7 @@ void rxaa::SoundAnalyzer::process(const uint8_t* buffer, bool isSilent, index fr
 	dataSupplier.setChannelData(nullptr);
 }
 
-void rxaa::SoundAnalyzer::resetValues() noexcept {
+void SoundAnalyzer::resetValues() noexcept {
 	for (auto& [_, channel] : channels) {
 		for (auto& handler : channel.handlers) {
 			handler->reset();
@@ -386,7 +388,7 @@ void rxaa::SoundAnalyzer::resetValues() noexcept {
 	}
 }
 
-void rxaa::SoundAnalyzer::finish() noexcept {
+void SoundAnalyzer::finish() noexcept {
 	for (auto&[_, channel] : channels) {
 		for (auto& handler : channel.handlers) {
 			if (handler->isStandalone()) {
@@ -396,7 +398,7 @@ void rxaa::SoundAnalyzer::finish() noexcept {
 	}
 }
 
-index rxaa::SoundAnalyzer::createChannelAuto(index framesCount) noexcept {
+index SoundAnalyzer::createChannelAuto(index framesCount) noexcept {
 	auto iter = orderOfHandlers.find(Channel::AUTO);
 	if (iter == orderOfHandlers.end()) {
 		return -1;
@@ -447,7 +449,7 @@ index rxaa::SoundAnalyzer::createChannelAuto(index framesCount) noexcept {
 	return -1;
 }
 
-void rxaa::SoundAnalyzer::resampleToAuto(index first, index second, index framesCount) noexcept {
+void SoundAnalyzer::resampleToAuto(index first, index second, index framesCount) noexcept {
 	const auto bufferAuto = wave[wave.getBuffersCount() - 1];
 	const auto bufferFirst = wave[first];
 	const auto bufferSecond = wave[second];
@@ -457,7 +459,7 @@ void rxaa::SoundAnalyzer::resampleToAuto(index first, index second, index frames
 	}
 }
 
-void rxaa::SoundAnalyzer::copyToAuto(index channelIndex, index framesCount) noexcept {
+void SoundAnalyzer::copyToAuto(index channelIndex, index framesCount) noexcept {
 	const auto bufferAuto = wave[wave.getBuffersCount() - 1];
 	const auto bufferSource = wave[channelIndex];
 

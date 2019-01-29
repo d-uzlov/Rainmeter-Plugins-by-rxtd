@@ -18,7 +18,9 @@
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
 
-void rxaa::Spectrogram::setParams(const Params& _params) {
+using namespace audio_analyzer;
+
+void Spectrogram::setParams(const Params& _params) {
 	this->params = _params;
 
 	filepath.clear();
@@ -28,7 +30,7 @@ void rxaa::Spectrogram::setParams(const Params& _params) {
 	updateParams();
 }
 
-std::optional<rxaa::Spectrogram::Params> rxaa::Spectrogram::parseParams(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl, const utils::Rainmeter& rain) {
+std::optional<Spectrogram::Params> Spectrogram::parseParams(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl, const utils::Rainmeter& rain) {
 	Params params;
 	
 	params.sourceName = optionMap.get(L"source"sv).asIString();
@@ -72,21 +74,21 @@ std::optional<rxaa::Spectrogram::Params> rxaa::Spectrogram::parseParams(const ut
 	return params;
 }
 
-const double* rxaa::Spectrogram::getData() const {
+const double* Spectrogram::getData() const {
 	return &result;
 }
 
-index rxaa::Spectrogram::getCount() const {
+index Spectrogram::getCount() const {
 	return 0;
 }
 
-void rxaa::Spectrogram::setSamplesPerSec(index samplesPerSec) {
+void Spectrogram::setSamplesPerSec(index samplesPerSec) {
 	this->samplesPerSec = samplesPerSec;
 
 	updateParams();
 }
 
-const wchar_t* rxaa::Spectrogram::getProp(const isview& prop) const {
+const wchar_t* Spectrogram::getProp(const isview& prop) const {
 	if (prop == L"file") {
 		return filepath.c_str();
 	} else if (prop == L"block size") {
@@ -97,17 +99,17 @@ const wchar_t* rxaa::Spectrogram::getProp(const isview& prop) const {
 	return propString.c_str();
 }
 
-void rxaa::Spectrogram::reset() {
+void Spectrogram::reset() {
 }
 
-void rxaa::Spectrogram::updateParams() {
+void Spectrogram::updateParams() {
 	blockSize = index(samplesPerSec * params.resolution);
 	buffer.setBuffersCount(params.length);
 
 	reset();
 }
 
-void rxaa::Spectrogram::writeFile(const DataSupplier& dataSupplier) {
+void Spectrogram::writeFile(const DataSupplier& dataSupplier) {
 	auto index = lastIndex + 1;
 	if (index >= params.length) {
 		index = 0;
@@ -120,7 +122,7 @@ void rxaa::Spectrogram::writeFile(const DataSupplier& dataSupplier) {
 	utils::BmpWriter::writeFile(filepath, buffer[0], width, height, index, writeBuffer, writeBufferSize);
 }
 
-void rxaa::Spectrogram::fillLine(const double* data) {
+void Spectrogram::fillLine(const double* data) {
 	for (index i = 0; i < sourceSize; ++i) {
 		double value = data[i];
 		value = std::clamp(value, 0.0, 1.0);
@@ -131,7 +133,7 @@ void rxaa::Spectrogram::fillLine(const double* data) {
 	}
 }
 
-void rxaa::Spectrogram::process(const DataSupplier& dataSupplier) {
+void Spectrogram::process(const DataSupplier& dataSupplier) {
 	if (blockSize <= 0) {
 		return;
 	}
@@ -174,11 +176,11 @@ void rxaa::Spectrogram::process(const DataSupplier& dataSupplier) {
 	}
 }
 
-void rxaa::Spectrogram::processSilence(const DataSupplier& dataSupplier) {
+void Spectrogram::processSilence(const DataSupplier& dataSupplier) {
 	process(dataSupplier);
 }
 
-void rxaa::Spectrogram::finish(const DataSupplier& dataSupplier) {
+void Spectrogram::finish(const DataSupplier& dataSupplier) {
 	if (changed) {
 		writeFile(dataSupplier);
 		changed = false;

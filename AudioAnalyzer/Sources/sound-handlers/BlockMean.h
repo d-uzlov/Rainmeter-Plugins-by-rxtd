@@ -12,7 +12,7 @@
 #include "OptionParser.h"
 #include "RainmeterWrappers.h"
 
-namespace rxaa {
+namespace rxtd::audio_analyzer {
 	class BlockMean : public SoundHandler {
 	public:
 		struct Params {

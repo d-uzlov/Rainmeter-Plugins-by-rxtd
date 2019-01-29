@@ -15,7 +15,7 @@
 #include <Vector2D.h>
 #include <variant>
 
-namespace rxaa {
+namespace rxtd::audio_analyzer {
 	class SoundAnalyzer {
 	public:
 		enum class SearchError {

@@ -10,7 +10,7 @@
 #pragma once
 #include "Channel.h"
 
-namespace rxaa {
+namespace rxtd::audio_analyzer {
 	class Format {
 	public:
 		enum Value {

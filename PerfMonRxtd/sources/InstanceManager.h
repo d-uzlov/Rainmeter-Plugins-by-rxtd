@@ -15,11 +15,14 @@
 #include "expressions.h"
 
 namespace rxtd::perfmon {
+	using counter_t = pdh::counter_t;
+	using item_t = pdh::item_t;
+
 	class ExpressionResolver;
 
 	struct Indices {
-		index current;
-		index previous;
+		item_t current;
+		item_t previous;
 	};
 
 	struct InstanceInfo {
@@ -88,21 +91,21 @@ namespace rxtd::perfmon {
 		void setKeepDiscarded(bool value);
 		void setSyncRawFormatted(bool value);
 		void setRollup(bool value);
-		void setIndexOffset(index value);
+		void setIndexOffset(item_t value);
 		void setLimitIndexOffset(bool value);
 
-		void setSortIndex(index value);
+		void setSortIndex(counter_t value);
 		void setSortBy(SortBy value);
 		void setSortOrder(SortOrder value);
 		void setSortRollupFunction(RollupFunction value);
 
-		index getIndexOffset() const;
+		item_t getIndexOffset() const;
 		bool isRollup() const;
-		index getCountersCount() const;
+		counter_t getCountersCount() const;
 
 		const pdh::ModifiedNameItem& getNames(index index) const;
 
-		void checkIndices(index counters, index expressions, index rollupExpressions);
+		void checkIndices(counter_t counters, counter_t expressions, counter_t rollupExpressions);
 
 		void update();
 
@@ -121,13 +124,13 @@ namespace rxtd::perfmon {
 
 		void setNameModificationType(pdh::NamesManager::ModificationType value);
 
-		const InstanceInfo* findInstance(const Reference& ref, index sortedIndex) const;
+		const InstanceInfo* findInstance(const Reference& ref, item_t sortedIndex) const;
 
 		const InstanceInfo* findInstanceByName(const Reference& ref, bool useRollup) const;
 
-		double calculateRaw(index counterIndex, Indices originalIndexes) const;
+		double calculateRaw(counter_t counterIndex, Indices originalIndexes) const;
 
-		double calculateFormatted(index counterIndex, Indices originalIndexes) const;
+		double calculateFormatted(counter_t counterIndex, Indices originalIndexes) const;
 
 
 	private:
@@ -137,7 +140,7 @@ namespace rxtd::perfmon {
 
 		void buildRollupKeys();
 
-		index findPreviousName(sview uniqueName, index hint) const;
+		item_t findPreviousName(sview uniqueName, item_t hint) const;
 
 		const InstanceInfo* findInstanceByNameInList(
 			const Reference& ref,
