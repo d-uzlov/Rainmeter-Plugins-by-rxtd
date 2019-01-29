@@ -112,7 +112,8 @@ namespace rxtd::audio_analyzer {
 		cascade_t pastValuesIndex = 0;
 
 		std::vector<double> values;
-		std::vector<float> cascadeTempBuffer; // TODO get buffer from data supplier instead
+		std::vector<float> cascadeTempBuffer;
+		double smoothingNormConstant { };
 
 		bool changed = true;
 		bool analysisComputed = false;

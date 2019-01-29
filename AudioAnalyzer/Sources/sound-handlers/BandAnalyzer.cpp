@@ -22,7 +22,7 @@ using namespace audio_analyzer;
 const std::vector<double>& BandAnalyzer::GaussianCoefficientsManager::forSigma(double sigma) {
 	const auto radius = std::clamp<index>(std::lround(sigma * 3.0), minRadius, maxRadius);
 
-	auto &vec = blurCoefficients[radius];
+	auto &vec = blurCoefficients[radius]; // TODO this caching is incorrect as not only radius is needed
 	if (!vec.empty()) {
 		return vec;
 	}
@@ -177,6 +177,39 @@ void BandAnalyzer::setParams(Params _params) {
 	lastFilteringTime = { };
 
 	analysisComputed = false;
+
+	if (params.smoothingFactor <= 1) {
+		smoothingNormConstant = 1.0;
+	} else {
+		switch (params.smoothingCurve) {
+		case SmoothingCurve::FLAT:
+			smoothingNormConstant = 1.0 / params.smoothingFactor;
+			break;
+
+		case SmoothingCurve::LINEAR:
+		{
+			const index smoothingWeight = params.smoothingFactor * (params.smoothingFactor + 1) / 2;
+			smoothingNormConstant = 1.0 / smoothingWeight;
+			break;
+		}
+
+		case SmoothingCurve::EXPONENTIAL:
+		{
+			double smoothingWeight = 0;
+			double weight = 1;
+
+			for (index i = 0; i < params.smoothingFactor; ++i) {
+				smoothingWeight += weight;
+				weight *= params.exponentialFactor;
+			}
+
+			smoothingNormConstant = 1.0 / smoothingWeight;
+			break;
+		}
+
+		default: std::terminate();
+		}
+	}
 }
 
 void BandAnalyzer::process(const DataSupplier& dataSupplier) {
@@ -319,14 +352,14 @@ void BandAnalyzer::updateValues() {
 	transformToLog();
 }
 
-void BandAnalyzer::computeBandInfo(cascade_t cascadeIndexBegin, cascade_t cascadeIndexEnd) {
-	cascadesInfo.resize(cascadeIndexEnd - cascadeIndexBegin);
+void BandAnalyzer::computeBandInfo(cascade_t startCascade, cascade_t endCascade) {
+	cascadesInfo.resize(endCascade - startCascade);
 	for (auto &cascadeInfo : cascadesInfo) {
 		cascadeInfo.setSize(bandsCount);
 	}
 
 	const auto fftBinsCount = source->getCount();
-	double binWidth = static_cast<double>(samplesPerSec) / (source->getFftSize() * std::pow(2, cascadeIndexBegin));
+	double binWidth = static_cast<double>(samplesPerSec) / (source->getFftSize() * std::pow(2, startCascade));
 	double binWidthInverse = 1.0 / binWidth;
 
 	for (auto&[_, cascadeBandInfo] : cascadesInfo) {
@@ -700,6 +733,7 @@ void BandAnalyzer::applyTimeFiltering() {
 	if (startPastIndex >= params.smoothingFactor) {
 		startPastIndex = 0;
 	}
+
 	switch (params.smoothingCurve) {
 	case SmoothingCurve::FLAT:
 		for (index band = 0; band < index(values.size()); ++band) {
@@ -707,30 +741,26 @@ void BandAnalyzer::applyTimeFiltering() {
 			for (index i = 0; i < params.smoothingFactor; ++i) {
 				outValue += pastValues[i][band];
 			}
-			outValue /= params.smoothingFactor;
-			values[band] = outValue;
+
+			values[band] = outValue * smoothingNormConstant;
 		}
 		break;
 
 	case SmoothingCurve::LINEAR:
 		for (index band = 0; band < index(values.size()); ++band) {
 			double outValue = 0.0;
-			index smoothingWeight = 0;
 			index valueWeight = 1;
 
 			for (index i = startPastIndex; i < params.smoothingFactor; ++i) {
 				outValue += pastValues[i][band] * valueWeight;
-				smoothingWeight += valueWeight;
 				valueWeight++;
 			}
 			for (index i = 0; i < startPastIndex; ++i) {
 				outValue += pastValues[i][band] * valueWeight;
-				smoothingWeight += valueWeight;
 				valueWeight++;
 			}
 
-			outValue /= smoothingWeight;
-			values[band] = outValue;
+			values[band] = outValue * smoothingNormConstant;
 		}
 		break;
 
@@ -751,8 +781,7 @@ void BandAnalyzer::applyTimeFiltering() {
 				weight *= params.exponentialFactor;
 			}
 
-			outValue /= smoothingWeight;
-			values[band] = outValue;
+			values[band] = outValue * smoothingNormConstant;
 		}
 		break;
 
