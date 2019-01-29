@@ -265,10 +265,6 @@ double ExpressionResolver::calculateTotal(const TotalSource source, index counte
 	}
 }
 
-const InstanceInfo* ExpressionResolver::findAndCacheName(const Reference& ref, const bool useRollup) const {
-	return instanceManager.findInstanceByName(ref, useRollup); // TODO remove function
-}
-
 double ExpressionResolver::calculateAndCacheTotal(TotalSource source, index counterIndex, RollupFunction rollupFunction) const {
 	auto &totalOpt = totalsCache[{ source, counterIndex, rollupFunction }];
 	if (totalOpt.has_value()) {
@@ -293,7 +289,7 @@ double ExpressionResolver::resolveReference(const Reference& ref) const {
 		if (!ref.named) {
 			return 1;
 		}
-		return findAndCacheName(ref, false) != nullptr;
+		return instanceManager.findInstanceByName(ref, false) != nullptr;
 	}
 	if (ref.type == ReferenceType::COUNTER_RAW || ref.type == ReferenceType::COUNTER_FORMATTED) {
 		if (ref.type == ReferenceType::COUNTER_FORMATTED && !instanceManager.canGetFormatted()) {
@@ -313,7 +309,7 @@ double ExpressionResolver::resolveReference(const Reference& ref) const {
 				return getFormatted(ref.counter, expressionCurrentItem->indices);
 			}
 		}
-		const auto instance = findAndCacheName(ref, false);
+		const auto instance = instanceManager.findInstanceByName(ref, false);
 		if (instance == nullptr) {
 			return 0.0;
 		}
@@ -330,7 +326,7 @@ double ExpressionResolver::resolveReference(const Reference& ref) const {
 		if (!ref.named) {
 			return calculateExpression<&ExpressionResolver::resolveReference>(expressions[ref.counter]);
 		}
-		const auto instance = findAndCacheName(ref, false);
+		const auto instance = instanceManager.findInstanceByName(ref, false);
 		if (instance == nullptr) {
 			return 0.0;
 		}
@@ -458,7 +454,7 @@ double ExpressionResolver::resolveRollupReference(const Reference& ref) const {
 		if (!ref.named) {
 			return static_cast<double>(expressionCurrentItem->vectorIndices.size() + 1);
 		}
-		const auto instance = findAndCacheName(ref, true);
+		const auto instance = instanceManager.findInstanceByName(ref, true);
 		return instance == nullptr ? 0 : static_cast<double>(instance->vectorIndices.size() + 1);
 	}
 	if (ref.type == ReferenceType::COUNTER_RAW || ref.type == ReferenceType::COUNTER_FORMATTED) {
@@ -481,7 +477,7 @@ double ExpressionResolver::resolveRollupReference(const Reference& ref) const {
 					ref.rollupFunction, ref.counter, *expressionCurrentItem);
 			}
 		}
-		const auto instance = findAndCacheName(ref, true);
+		const auto instance = instanceManager.findInstanceByName(ref, true);
 		if (instance == nullptr) {
 			return 0.0;
 		}
@@ -506,7 +502,7 @@ double ExpressionResolver::resolveRollupReference(const Reference& ref) const {
 				return calculateExpression<&ExpressionResolver::resolveRollupReference>(rollupExpressions[ref.counter]);
 			}
 		}
-		const auto instance = findAndCacheName(ref, true);
+		const auto instance = instanceManager.findInstanceByName(ref, true);
 		if (instance == nullptr) {
 			return 0.0;
 		}
@@ -587,9 +583,9 @@ double ExpressionResolver::calculateTotal(RollupFunction rollupType, index count
 			sum += (this->*calculateValueFunction)(counterIndex, item.indices);
 		}
 		if (rollupType == RollupFunction::SUM) {
-			return static_cast<double>(sum);
+			return sum;
 		}
-		return static_cast<double>(sum) / vectorInstanceKeys.size();
+		return sum / vectorInstanceKeys.size();
 	}
 	case RollupFunction::MINIMUM:
 	{
@@ -597,15 +593,15 @@ double ExpressionResolver::calculateTotal(RollupFunction rollupType, index count
 		for (const auto& item : vectorInstanceKeys) {
 			min = std::min(min, (this->*calculateValueFunction)(counterIndex, item.indices));
 		}
-		return static_cast<double>(min);
+		return min;
 	}
 	case RollupFunction::MAXIMUM:
 	{
-		double max = -std::numeric_limits<double>::max(); // TODO wrong for uint?
+		double max = -std::numeric_limits<double>::max();
 		for (const auto& item : vectorInstanceKeys) {
 			max = std::max(max, (this->*calculateValueFunction)(counterIndex, item.indices));
 		}
-		return static_cast<double>(max);
+		return max;
 	}
 	case RollupFunction::FIRST:
 		return vectorInstanceKeys.empty()

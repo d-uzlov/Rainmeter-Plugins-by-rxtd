@@ -96,7 +96,7 @@ void rxaa::SoundAnalyzer::decompose(const uint8_t* buffer, index framesCount) no
 }
 
 void rxaa::SoundAnalyzer::resample(float *values, index framesCount) const noexcept {
-	if (divide <= 1u) {
+	if (divide <= 1) {
 		return;
 	}
 	const auto newCount = framesCount / divide;
@@ -114,7 +114,7 @@ void rxaa::SoundAnalyzer::updateSampleRate() noexcept {
 		return;
 	}
 
-	if (targetRate == 0u) {
+	if (targetRate == 0) {
 		divide = 1;
 	} else {
 		const auto ratio = static_cast<double>(waveFormat.samplesPerSec) / targetRate;

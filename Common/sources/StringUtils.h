@@ -126,7 +126,7 @@ namespace rxtd::utils {
 		}
 
 		template<typename CT, typename A>
-		static void substringInplace(std::basic_string<wchar_t, CT, A>& str, index begin, index count) {
+		static void substringInplace(std::basic_string<wchar_t, CT, A>& str, index begin, index count = string::npos) {
 			if (begin > 0) {
 				str.erase(0, begin);
 			}

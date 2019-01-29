@@ -37,7 +37,7 @@ void OptionParser::Tokenizer::emitToken(const index begin, const index end) {
 }
 
 void OptionParser::Tokenizer::tokenize(sview string, wchar_t delimiter) {
-	index begin = 0u;
+	index begin = 0;
 
 	for (index i = 0; i < index(string.length()); ++i) {
 		if (string[i] == delimiter) {

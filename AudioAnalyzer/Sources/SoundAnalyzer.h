@@ -28,8 +28,8 @@ namespace rxaa {
 		std::map<Channel, std::vector<istring>> orderOfHandlers;
 		std::map<istring, std::function<SoundHandler*(SoundHandler*)>, std::less<>> patchers;
 
-		index targetRate = 0u;
-		index divide = 1u;
+		index targetRate = 0;
+		index divide = 1;
 
 		utils::Vector2D<float> wave;
 

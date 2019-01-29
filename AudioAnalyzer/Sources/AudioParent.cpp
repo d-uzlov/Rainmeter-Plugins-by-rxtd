@@ -57,8 +57,8 @@ void rxaa::AudioParent::_reload() {
 	paramParser.parse();
 
 	// TODO add min target
-	const auto rateLimit = rain.readInt(L"TargetRate"); // TODO add read UInt
-	soundAnalyzer.setTargetRate(std::max<index>(0, rateLimit));
+	const auto rateLimit = std::max<index>(rain.readInt(L"TargetRate"), 0);
+	soundAnalyzer.setTargetRate(rateLimit);
 
 	soundAnalyzer.setPatchHandlers(paramParser.getHandlers(), paramParser.getPatches());
 }

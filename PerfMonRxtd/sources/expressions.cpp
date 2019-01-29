@@ -549,7 +549,7 @@ Reference ExpressionParser::parseReference() {
 				if (flags.find(L'T') != std::string::npos) {
 					ref.total = true;
 				}
-				ref.name = ref.name.substr(indexOfFirstNonFlag); // TODO mem alloc
+				utils::StringUtils::substringInplace(ref.name, indexOfFirstNonFlag);
 			}
 
 			utils::StringUtils::trimInplace(ref.name);

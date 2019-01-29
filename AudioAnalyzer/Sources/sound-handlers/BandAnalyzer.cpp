@@ -102,6 +102,7 @@ std::optional<rxaa::BandAnalyzer::Params> rxaa::BandAnalyzer::parseParams(const 
 	params.includeDC = optionMap.get(L"includeDC"sv).asBool(true);
 	params.proportionalValues = optionMap.get(L"proportionalValues"sv).asBool(true);
 
+	// TODO 35 Hz make strange figure on spectrum
 	//                                                                          ?? ↓↓ looks best ?? at 0.25 ↓↓ ??
 	params.blurRadiusMultiplier = std::max<double>(optionMap.get(L"blurRadiusMultiplier"sv).asFloat(1.0) * 0.25, 0.0);
 
@@ -469,7 +470,7 @@ void rxaa::BandAnalyzer::sampleData() {
 	const cascade_t cascadeIndexEnd = analysis.maxCascadeUsed + 1;
 
 	const auto fftBinsCount = source->getCount();
-	double binWidth = static_cast<double>(samplesPerSec) / (source->getFftSize() * std::pow(2u, cascadeIndexBegin));
+	double binWidth = static_cast<double>(samplesPerSec) / (source->getFftSize() * std::pow(2, cascadeIndexBegin));
 	double binWidthInverse = 1.0 / binWidth;
 
 	for (auto cascade = cascadeIndexBegin; cascade < cascadeIndexEnd; ++cascade) {
@@ -773,9 +774,8 @@ std::optional<std::vector<double>> rxaa::BandAnalyzer::parseFreqList(const utils
 				cl.error(L"linear/log must have 3 options (count, min, max)");
 				return std::nullopt;
 			}
-			index count;
-			std::wstringstream(string { options.get(1) }) >> count; // TODO rewrite
 
+			const index count = options.getOption(1).asInt(0);
 			if (count < 1) {
 				cl.error(L"count must be >= 1");
 				return std::nullopt;
@@ -800,7 +800,7 @@ std::optional<std::vector<double>> rxaa::BandAnalyzer::parseFreqList(const utils
 				double freq = min;
 				freqs.push_back(freq);
 
-				for (auto i = 0ll; i < count; ++i) {
+				for (index i = 0; i < count; ++i) {
 					freq *= step;
 					freqs.push_back(freq);
 				}
@@ -813,7 +813,7 @@ std::optional<std::vector<double>> rxaa::BandAnalyzer::parseFreqList(const utils
 				cl.error(L"custom must have at least two frequencies specified but {} found", options.size());
 				return std::nullopt;
 			}
-			for (auto i = 1u; i < options.size(); ++i) {
+			for (index i = 1; i < options.size(); ++i) {
 				freqs.push_back(options.getOption(i).asFloat());
 			}
 		}

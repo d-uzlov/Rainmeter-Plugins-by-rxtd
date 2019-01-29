@@ -79,8 +79,6 @@ namespace rxtd::perfmon {
 	private:
 		double calculateTotal(TotalSource source, index counterIndex, RollupFunction rollupFunction) const;
 
-		const InstanceInfo* findAndCacheName(const Reference& ref, bool useRollup) const;
-
 		double calculateAndCacheTotal(TotalSource source, index counterIndex, RollupFunction rollupFunction) const;
 
 		double resolveReference(const Reference& ref) const;

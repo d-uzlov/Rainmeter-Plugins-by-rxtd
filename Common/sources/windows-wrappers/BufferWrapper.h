@@ -41,7 +41,7 @@ namespace rxtd::utils {
 			silent(other.silent) {
 
 			other.buffer = nullptr;
-			other.framesCount = 0u;
+			other.framesCount = 0;
 			other.silent = true;
 			other.result = { };
 		}
@@ -97,7 +97,7 @@ namespace rxtd::utils {
 				client->ReleaseBuffer(framesCount);
 			}
 			buffer = nullptr;
-			framesCount = 0u;
+			framesCount = 0;
 			silent = true;
 			result = decltype(result)();
 		}

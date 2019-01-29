@@ -17,8 +17,8 @@ void rxaa::FftAnalyzer::CascadeData::setParams(FftAnalyzer* parent, CascadeData 
 	this->parent = parent;
 	this->successor = successor;
 
-	filledElements = 0u;
-	transferredElements = 0u;
+	filledElements = 0;
+	transferredElements = 0;
 	ringBuffer.resize(parent->fftSize);
 	values.resize(parent->fftSize / 2);
 	std::fill(values.begin(), values.end(), 0.0);
@@ -303,7 +303,7 @@ const double* rxaa::FftAnalyzer::getCascade(cascade_t cascade) const { // TODO v
 }
 
 const double* rxaa::FftAnalyzer::getData() const {
-	return getCascade(0u);
+	return getCascade(0);
 }
 
 index rxaa::FftAnalyzer::getCount() const {
@@ -464,7 +464,7 @@ void rxaa::FftAnalyzer::updateParams() {
 		std::abort();
 	}
 	if (fftSize <= 1) {
-		fftSize = 0; // TODO eliminate 0u, 1u, etc.
+		fftSize = 0;
 		return;
 	}
 	fftImpl = FftImpl::change(fftImpl, fftSize);

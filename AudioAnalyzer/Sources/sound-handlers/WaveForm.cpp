@@ -247,18 +247,23 @@ void rxaa::WaveForm::processSilence(const DataSupplier& dataSupplier) {
 	}
 
 	const auto waveSize = dataSupplier.getWaveSize();
+	
+	index waveProcessed = 0;
 
-	// TODO rewrite
-	for (index frame = 0; frame < waveSize; ++frame) {
+	while (waveProcessed != waveSize) {
+		const auto blockRemaining = blockSize - counter;
 		min = std::min<double>(min, 0.0);
 		max = std::max<double>(max, 0.0);
-		counter++;
-		if (counter >= blockSize) {
+		changed = true;
+
+		if (waveProcessed + blockRemaining <= waveSize) {
 			fillLine();
 			counter = 0;
 			min = 10.0;
 			max = -10.0;
-			changed = true;
+		} else {
+			counter = counter + waveSize - waveProcessed;
+			waveProcessed = waveSize;
 		}
 	}
 }
