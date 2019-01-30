@@ -237,31 +237,18 @@ std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(const utils::OptionP
 	Params params;
 	params.attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.1) * 0.001;
 	params.decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.attackTime), 0.1) * 0.001;
-	params.overlap = std::clamp(optionMap.get(L"overlap"sv).asFloat(0.5), 0.0, 1.0);
-
-	params.cascadesCount = optionMap.get(L"cascadesCount"sv).asInt<cascade_t>(5);
-	if (params.cascadesCount <= 0) {
-		cl.warning(L"cascadesCount must be >= 1 but {} found. Assume 1", params.cascadesCount);
-		params.cascadesCount = 1;
-	}
-
-	params.randomTest = std::abs(optionMap.get(L"testRandom"sv).asFloat(0.0));
-	params.randomDuration = std::abs(optionMap.get(L"randomDuration"sv).asFloat(1000.0)) * 0.001;
-
-	params.correctZero = optionMap.get(L"correctZero"sv).asBool(true);
 
 	const auto sizeBy = optionMap.get(L"sizeBy"sv).asIString(L"resolution");
-
-	if (sizeBy == L"resolution") {
-		params.resolution = optionMap.get(L"resolution"sv).asFloat(100.0);
+	if (sizeBy == L"binWidth") {
+		params.resolution = optionMap.get(L"binWidth"sv).asFloat(100.0);
 		if (params.resolution <= 0.0) {
 			cl.error(L"Resolution must be > 0 but {} found", params.resolution);
 			return std::nullopt;
 		}
 		if (params.resolution <= 1.0) {
-			cl.warning(L"Resolution {} is too small, use values > 1", params.resolution);
+			cl.warning(L"BinWidth {} is dangerously small, use values > 1", params.resolution);
 		}
-		params.sizeBy = SizeBy::RESOLUTION;
+		params.sizeBy = SizeBy::BIN_WIDTH;
 	} else if (sizeBy == L"size") {
 		params.resolution = optionMap.get(L"size"sv).asInt(1000);
 		if (params.resolution < 2) {
@@ -281,6 +268,19 @@ std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(const utils::OptionP
 		cl.error(L"Unknown fft sizeBy '{}'", sizeBy);
 		return std::nullopt;
 	}
+
+	params.overlap = std::clamp(optionMap.get(L"overlap"sv).asFloat(0.5), 0.0, 1.0);
+
+	params.cascadesCount = optionMap.get(L"cascadesCount"sv).asInt<cascade_t>(5);
+	if (params.cascadesCount <= 0) {
+		cl.warning(L"cascadesCount must be >= 1 but {} found. Assume 1", params.cascadesCount);
+		params.cascadesCount = 1;
+	}
+
+	params.correctZero = optionMap.get(L"correctZero"sv).asBool(true);
+
+	params.randomTest = std::abs(optionMap.get(L"testRandom"sv).asFloat(0.0));
+	params.randomDuration = std::abs(optionMap.get(L"randomDuration"sv).asFloat(1000.0)) * 0.001;
 
 	return params;
 }
@@ -453,7 +453,7 @@ void FftAnalyzer::setParams(Params params) {
 
 void FftAnalyzer::updateParams() {
 	switch (params.sizeBy) {
-	case SizeBy::RESOLUTION:
+	case SizeBy::BIN_WIDTH:
 		fftSize = kiss_fft::calculateNextFastSize(index(samplesPerSec / params.resolution), true);
 		break;
 	case SizeBy::SIZE:

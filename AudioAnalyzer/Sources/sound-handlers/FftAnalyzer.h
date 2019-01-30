@@ -20,7 +20,7 @@ namespace rxtd::audio_analyzer {
 		using cascade_t = int8_t;
 
 		enum class SizeBy {
-			RESOLUTION,
+			BIN_WIDTH,
 			SIZE,
 			SIZE_EXACT
 		};

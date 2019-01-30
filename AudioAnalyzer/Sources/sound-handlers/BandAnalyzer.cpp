@@ -90,14 +90,14 @@ std::optional<BandAnalyzer::Params> BandAnalyzer::parseParams(const utils::Optio
 	params.maxCascade = std::max<cascade_t>(optionMap.get(L"maxCascade"sv).asInt<cascade_t>(0), 0);
 
 	params.minWeight = std::max<double>(optionMap.get(L"minWeight"sv).asFloat(0.1), std::numeric_limits<float>::epsilon());
-	params.targetWeight = std::max<double>(optionMap.get(L"targetWeight"sv).asFloat(1.5), std::numeric_limits<float>::epsilon());
-	params.weightFallback = std::clamp(optionMap.get(L"weightFallback"sv).asFloat(0.5), 0.0, 1.0) * params.targetWeight;
+	params.targetWeight = std::max<double>(optionMap.get(L"targetWeight"sv).asFloat(2.5), params.minWeight);
+	params.weightFallback = std::clamp(optionMap.get(L"weightFallback"sv).asFloat(0.4), 0.0, 1.0) * params.targetWeight;
 
-	params.zeroLevel = std::max<double>(optionMap.get(L"zeroLevelMultiplier"sv).asFloat(0.66), 0.0)
+	params.zeroLevel = std::max<double>(optionMap.get(L"zeroLevelMultiplier"sv).asFloat(1.0), 0.0) * 0.66
 		* std::numeric_limits<float>::epsilon();
 	params.zeroLevelHard = std::clamp<double>(optionMap.get(L"zeroLevelHardMultiplier"sv).asFloat(0.01), 0.0, 1.0)
 		* params.zeroLevel;
-	params.zeroWeight = std::max<double>(optionMap.get(L"zeroWeightMultiplier"sv).asFloat(1.0), 0.0)
+	params.zeroWeight = std::max<double>(optionMap.get(L"zeroWeightMultiplier"sv).asFloat(1.0), 0.0) // should I clamp it below minWeight?
 		* std::numeric_limits<float>::epsilon();
 
 
@@ -108,10 +108,10 @@ std::optional<BandAnalyzer::Params> BandAnalyzer::parseParams(const utils::Optio
 	//                                                                          ?? ↓↓ looks best ?? at 0.25 ↓↓ ?? // TODO
 	params.blurRadiusMultiplier = std::max<double>(optionMap.get(L"blurRadiusMultiplier"sv).asFloat(1.0) * 0.25, 0.0);
 
-	params.minBlurRadius = std::max<index>(optionMap.get(L"minBlurRadius"sv).asInt(1), 0);
-	params.maxBlurRadius = std::max<index>(optionMap.get(L"maxBlurRadius"sv).asInt(20), params.minBlurRadius);
+	params.minBlurRadius = std::max<double>(optionMap.get(L"minBlurRadius"sv).asFloat(1.0), 0.0);
+	params.maxBlurRadius = std::max<double>(optionMap.get(L"maxBlurRadius"sv).asFloat(20.0), params.minBlurRadius);
 
-	params.blurMinAdaptation = std::max<double>(optionMap.get(L"blurMinAdaptation"sv).asFloat(1.0), 0.0);
+	params.blurMinAdaptation = std::max<double>(optionMap.get(L"blurMinAdaptation"sv).asFloat(2.0), 0.0);
 	params.blurMaxAdaptation = std::max<double>(optionMap.get(L"blurMaxAdaptation"sv).asFloat(params.blurMinAdaptation), 0.0);
 
 	params.sensitivity = std::clamp<double>(optionMap.get(L"sensitivity"sv).asFloat(35.0), std::numeric_limits<float>::epsilon(), 1000.0);
@@ -123,9 +123,9 @@ std::optional<BandAnalyzer::Params> BandAnalyzer::parseParams(const utils::Optio
 		params.smoothingFactor = 1;
 	}
 
-	auto smoothingCurveString = optionMap.get(L"smoothingCurve"sv).asIString();
 	params.exponentialFactor = 1;
-	if (smoothingCurveString.empty() || smoothingCurveString == L"exponential") {
+	if (auto smoothingCurveString = optionMap.get(L"smoothingCurve"sv).asIString();
+		smoothingCurveString.empty() || smoothingCurveString == L"exponential") {
 		params.smoothingCurve = SmoothingCurve::EXPONENTIAL;
 		params.exponentialFactor = optionMap.get(L"exponentialFactor").asFloat(1.5);
 	} else if (smoothingCurveString == L"flat") {
@@ -137,7 +137,15 @@ std::optional<BandAnalyzer::Params> BandAnalyzer::parseParams(const utils::Optio
 		params.smoothingCurve = SmoothingCurve::FLAT;
 	}
 
-	params.mixFunction = optionMap.get(L"mixFunction"sv).asIString(L"product") == L"product" ? MixFunction::PRODUCT : MixFunction::AVERAGE;
+	if (auto mixFunctionString = optionMap.get(L"mixFunction"sv).asIString(L"product");
+		mixFunctionString.empty() || mixFunctionString == L"product") {
+		params.mixFunction = MixFunction::PRODUCT;
+	} else if (mixFunctionString == L"average") {
+		params.mixFunction = MixFunction::AVERAGE;
+	} else {
+		cl.warning(L"mixFunction '{}' now recognized, assume 'product'", mixFunctionString);
+		params.mixFunction = MixFunction::PRODUCT;
+	}
 
 	return params;
 }

@@ -53,8 +53,8 @@ namespace rxtd::audio_analyzer {
 
 			double blurRadiusMultiplier;
 
-			index minBlurRadius;
-			index maxBlurRadius;
+			double minBlurRadius;
+			double maxBlurRadius;
 			double blurMinAdaptation;
 			double blurMaxAdaptation;
 
