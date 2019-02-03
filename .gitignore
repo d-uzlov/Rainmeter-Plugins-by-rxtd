@@ -3,3 +3,4 @@ nppBackup/
 .vs/
 _ReSharper.Caches
 *~*.TMP
+*.ipch

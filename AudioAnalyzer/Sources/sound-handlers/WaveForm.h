@@ -54,7 +54,6 @@ namespace rxtd::audio_analyzer {
 
 		index counter = 0;
 		index lastIndex = 0;
-		double result = 0.0;
 		double min { };
 		double max { };
 		bool changed = false;
@@ -105,8 +104,15 @@ namespace rxtd::audio_analyzer {
 		void processSilence(const DataSupplier& dataSupplier) override;
 		void finish(const DataSupplier& dataSupplier) override;
 
-		const double* getData() const override;
-		index getCount() const override;
+		bool isValid() const override {
+			return true; // TODO
+		}
+		array_view<float> getData(layer_t layer) const override {
+			return { };
+		}
+		layer_t getLayersCount() const override {
+			return 0;
+		}
 
 		const wchar_t* getProp(const isview& prop) const override;
 		bool isStandalone() override {

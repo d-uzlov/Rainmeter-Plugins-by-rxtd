@@ -8,7 +8,6 @@
  */
 
 #include "WaveForm.h"
-#include "BandAnalyzer.h"
 #include "BmpWriter.h"
 #include "windows-wrappers/FileWrapper.h"
 #include <filesystem>
@@ -35,7 +34,7 @@ void WaveForm::setParams(const Params &_params) {
 
 	imageBuffer.setBuffersCount(params.width);
 	imageBuffer.setBufferSize(params.height);
-	std::fill_n(imageBuffer[0], params.width* params.height, backgroundInt);
+	std::fill_n(imageBuffer[0].data(), params.width* params.height, backgroundInt);
 
 	uint32_t color;
 	if (params.lineDrawingPolicy == LineDrawingPolicy::ALWAYS) {
@@ -115,14 +114,6 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionParser:
 	return params;
 }
 
-const double* WaveForm::getData() const {
-	return &result;
-}
-
-index WaveForm::getCount() const {
-	return 0;
-}
-
 void WaveForm::setSamplesPerSec(index samplesPerSec) {
 	this->samplesPerSec = samplesPerSec;
 
@@ -154,7 +145,7 @@ void WaveForm::updateParams() {
 void WaveForm::writeFile(const DataSupplier& dataSupplier) {
 	auto writeBufferSize = params.width * params.height;
 	auto writeBuffer = dataSupplier.getBuffer<uint32_t>(writeBufferSize);
-	utils::BmpWriter::writeFile(filepath, imageBuffer[0], params.height, params.width, lastIndex, writeBuffer, writeBufferSize);
+	utils::BmpWriter::writeFile(filepath, imageBuffer[0].data(), params.height, params.width, lastIndex, writeBuffer.data(), writeBufferSize); // TODO remove .data()
 }
 
 void WaveForm::fillLine() {
@@ -178,7 +169,7 @@ void WaveForm::fillLine() {
 		}
 	}
 
-	const auto buffer = imageBuffer[lastIndex];
+	auto buffer = imageBuffer[lastIndex];
 
 	for (index i = 0; i < minPixel; ++i) {
 		buffer[i] = backgroundInt;

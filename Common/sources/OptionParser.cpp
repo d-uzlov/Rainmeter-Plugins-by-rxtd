@@ -284,36 +284,64 @@ OptionParser::OptionMap& OptionParser::OptionMap::operator=(OptionMap&& other) n
 	return *this;
 }
 
+OptionParser::Option OptionParser::OptionMap::getUntouched(sview name) const {
+	const auto optionInfoPtr = find(name % ciView());
+	if (optionInfoPtr == nullptr) {
+		return { };
+	}
+
+	return Option { optionInfoPtr->substringInfo.makeView(source) };
+}
+
 OptionParser::Option OptionParser::OptionMap::get(sview name) const {
 	return get(name % ciView());
 }
 
 OptionParser::Option OptionParser::OptionMap::get(isview name) const {
-	auto viewInfoOpt = find(name);
-	return viewInfoOpt.has_value() ? Option { viewInfoOpt.value().makeView(source) } : Option { };
+	const auto optionInfoPtr = find(name);
+	if (optionInfoPtr == nullptr) {
+		return { };
+	}
+
+	optionInfoPtr->touched = true;
+	return Option { optionInfoPtr->substringInfo.makeView(source)};
 }
 
 OptionParser::Option OptionParser::OptionMap::get(const wchar_t* name) const {
 	return get(isview { name });
 }
 
-const std::map<isview, SubstringViewInfo>& OptionParser::OptionMap::getParams() const {
+const std::map<isview, OptionParser::OptionMap::MapOptionInfo>& OptionParser::OptionMap::getParams() const {
 	return params;
+}
+
+std::vector<isview> OptionParser::OptionMap::getUntouched() const {
+	std::vector<isview> result;
+
+	for (auto[name, valueInfo] : params) {
+		if (valueInfo.touched) {
+			continue;
+		}
+
+		result.emplace_back(name);
+	}
+
+	return result;
 }
 
 void OptionParser::OptionMap::fillParams() {
 	params.clear();
-	for (auto& iter : paramsInfo) {
-		params[iter.first.makeView(source) % ciView()] = iter.second;
+	for (auto [nameInfo, valueInfo] : paramsInfo) {
+		params[nameInfo.makeView(source) % ciView()] = valueInfo;
 	}
 }
 
-std::optional<SubstringViewInfo> OptionParser::OptionMap::find(isview name) const {
+OptionParser::OptionMap::MapOptionInfo* OptionParser::OptionMap::find(isview name) const {
 	const auto iter = params.find(name);
 	if (iter == params.end()) {
-		return std::nullopt;
+		return nullptr;
 	}
-	return iter->second;
+	return &iter->second;
 }
 
 OptionParser::OptionList OptionParser::asList(sview view, wchar_t delimiter) {

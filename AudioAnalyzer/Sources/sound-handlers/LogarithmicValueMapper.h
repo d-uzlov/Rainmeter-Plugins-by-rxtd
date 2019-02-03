@@ -9,47 +9,41 @@
 
 #pragma once
 #include "SoundHandler.h"
-#include <Vector2D.h>
-#include "Color.h"
-#include "RainmeterWrappers.h"
 #include "OptionParser.h"
+#include "RainmeterWrappers.h"
 
 namespace rxtd::audio_analyzer {
-	class Spectrogram : public SoundHandler {
+	class LogarithmicValueMapper : public SoundHandler {
 	public:
 		struct Params {
 		private:
-			friend Spectrogram;
+			friend LogarithmicValueMapper;
 
-			double resolution { };
-			index length { };
-			istring sourceName { };
-			string prefix = { };
-			utils::Color baseColor { };
-			utils::Color maxColor { };
+			istring sourceId;
+
+			double offset;
+			double sensitivity;
 		};
 
 	private:
-		Params params;
+		Params params { };
 
 		index samplesPerSec { };
 
-		index blockSize { };
+		double logNormalization { };
 
-		index counter = 0;
-		index lastIndex = 0;
-		index sourceSize = 0;
-		bool changed = false;
+		std::vector<std::vector<float>> resultValues;
+
+		bool changed = true;
+		bool valid = false;
 
 		mutable string propString { };
 
-		utils::Vector2D<uint32_t> buffer;
-		string filepath { };
-
 	public:
-		void setParams(const Params& _params);
 
-		static std::optional<Params> parseParams(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger &cl, const utils::Rainmeter& rain);
+		static std::optional<Params> parseParams(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl);
+
+		void setParams(Params _params);
 
 		void setSamplesPerSec(index samplesPerSec) override;
 		void reset() override;
@@ -58,24 +52,20 @@ namespace rxtd::audio_analyzer {
 		void processSilence(const DataSupplier& dataSupplier) override;
 		void finish(const DataSupplier& dataSupplier) override;
 
+
 		bool isValid() const override {
-			return true; // TODO
+			return valid;
 		}
 		array_view<float> getData(layer_t layer) const override {
-			return { };
+			return resultValues[layer];
 		}
 		layer_t getLayersCount() const override {
-			return 0;
+			return layer_t(resultValues.size());
 		}
-
 		const wchar_t* getProp(const isview& prop) const override;
-		bool isStandalone() override {
-			return true;
-		}
 
 	private:
-		void updateParams();
-		void writeFile(const DataSupplier& dataSupplier);
-		void fillLine(array_view<float> data);
+		void updateValues(const DataSupplier& dataSupplier);
+		void transformToLog(const SoundHandler& source);
 	};
 }

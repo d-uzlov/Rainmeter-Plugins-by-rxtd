@@ -41,6 +41,9 @@
     <ClCompile Include="precompiled.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="sources\array_view.h">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sources\BmpWriter.h">
@@ -103,5 +106,8 @@
     <ClInclude Include="sources\Vector2D.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="array_view.natvis" />
   </ItemGroup>
 </Project>

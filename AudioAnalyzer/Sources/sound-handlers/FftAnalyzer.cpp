@@ -15,7 +15,7 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-void FftAnalyzer::CascadeData::setParams(FftAnalyzer* parent, CascadeData *successor, cascade_t cascadeIndex) {
+void FftAnalyzer::CascadeData::setParams(FftAnalyzer* parent, CascadeData *successor, layer_t cascadeIndex) {
 	this->parent = parent;
 	this->successor = successor;
 
@@ -23,7 +23,7 @@ void FftAnalyzer::CascadeData::setParams(FftAnalyzer* parent, CascadeData *succe
 	transferredElements = 0;
 	ringBuffer.resize(parent->fftSize);
 	values.resize(parent->fftSize / 2);
-	std::fill(values.begin(), values.end(), 0.0);
+	std::fill(values.begin(), values.end(), 0.0f);
 
 	auto samplesPerSec = parent->samplesPerSec;
 	samplesPerSec = index(samplesPerSec / std::pow(2, cascadeIndex));
@@ -220,7 +220,7 @@ void FftAnalyzer::CascadeData::doFft() {
 }
 
 void FftAnalyzer::CascadeData::reset() {
-	std::fill(values.begin(), values.end(), 0.0);
+	std::fill(values.begin(), values.end(), 0.0f);
 }
 
 FftAnalyzer::Random::Random() : e2(rd()), dist(-1.0, 1.0) { }
@@ -238,7 +238,7 @@ std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(const utils::OptionP
 	params.attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.1) * 0.001;
 	params.decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.attackTime), 0.1) * 0.001;
 
-	const auto sizeBy = optionMap.get(L"sizeBy"sv).asIString(L"resolution");
+	const auto sizeBy = optionMap.get(L"sizeBy"sv).asIString(L"binWidth");
 	if (sizeBy == L"binWidth") {
 		params.resolution = optionMap.get(L"binWidth"sv).asFloat(100.0);
 		if (params.resolution <= 0.0) {
@@ -271,7 +271,7 @@ std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(const utils::OptionP
 
 	params.overlap = std::clamp(optionMap.get(L"overlap"sv).asFloat(0.5), 0.0, 1.0);
 
-	params.cascadesCount = optionMap.get(L"cascadesCount"sv).asInt<cascade_t>(5);
+	params.cascadesCount = optionMap.get(L"cascadesCount"sv).asInt<layer_t>(5);
 	if (params.cascadesCount <= 0) {
 		cl.warning(L"cascadesCount must be >= 1 but {} found. Assume 1", params.cascadesCount);
 		params.cascadesCount = 1;
@@ -296,22 +296,6 @@ index FftAnalyzer::getFftSize() const {
 	return fftSize;
 }
 
-FftAnalyzer::cascade_t FftAnalyzer::getCascadesCount() const {
-	return cascade_t(cascades.size());
-}
-
-const double* FftAnalyzer::getCascade(cascade_t cascade) const { // TODO vector_view
-	return cascades[cascade].values.data();
-}
-
-const double* FftAnalyzer::getData() const {
-	return getCascade(0);
-}
-
-index FftAnalyzer::getCount() const {
-	return fftSize / 2;
-}
-
 void FftAnalyzer::process(const DataSupplier& dataSupplier) {
 	if (fftSize <= 0) {
 		return;
@@ -319,9 +303,9 @@ void FftAnalyzer::process(const DataSupplier& dataSupplier) {
 
 	const auto waveSize = dataSupplier.getWaveSize();
 
-	const auto fftInputBuffer = dataSupplier.getBuffer<FftImpl::input_buffer_type>(fftImpl->getInputBufferSize());
-	const auto fftOutputBuffer = dataSupplier.getBuffer<FftImpl::output_buffer_type>(fftImpl->getOutputBufferSize());
-	fftImpl->setBuffers(fftInputBuffer, fftOutputBuffer);
+	auto fftInputBuffer = dataSupplier.getBuffer<FftImpl::input_buffer_type>(fftImpl->getInputBufferSize());
+	auto fftOutputBuffer = dataSupplier.getBuffer<FftImpl::output_buffer_type>(fftImpl->getOutputBufferSize());
+	fftImpl->setBuffers(fftInputBuffer.data(), fftOutputBuffer.data());
 
 	if (params.randomTest != 0.0) {
 		processRandom(waveSize);
@@ -341,9 +325,9 @@ void FftAnalyzer::processSilence(const DataSupplier& dataSupplier) {
 
 	const auto waveSize = dataSupplier.getWaveSize();
 
-	const auto fftInputBuffer = dataSupplier.getBuffer<FftImpl::input_buffer_type>(fftImpl->getInputBufferSize());
-	const auto fftOutputBuffer = dataSupplier.getBuffer<FftImpl::output_buffer_type>(fftImpl->getOutputBufferSize());
-	fftImpl->setBuffers(fftInputBuffer, fftOutputBuffer);
+	auto fftInputBuffer = dataSupplier.getBuffer<FftImpl::input_buffer_type>(fftImpl->getInputBufferSize());
+	auto fftOutputBuffer = dataSupplier.getBuffer<FftImpl::output_buffer_type>(fftImpl->getOutputBufferSize());
+	fftImpl->setBuffers(fftInputBuffer.data(), fftOutputBuffer.data());
 
 	if (params.randomTest != 0.0) {
 		processRandom(waveSize);
@@ -353,6 +337,14 @@ void FftAnalyzer::processSilence(const DataSupplier& dataSupplier) {
 
 	// TODO that's ugly and error prone
 	fftImpl->setBuffers(nullptr, nullptr);
+}
+
+SoundHandler::layer_t FftAnalyzer::getLayersCount() const {
+	return layer_t(cascades.size());
+}
+
+array_view<float> FftAnalyzer::getData(layer_t layer) const {
+	return cascades[layer].values;
 }
 
 void FftAnalyzer::processRandom(index waveSize) {
@@ -479,7 +471,7 @@ void FftAnalyzer::updateParams() {
 	randomCurrentOffset = 0;
 
 	cascades.resize(params.cascadesCount);
-	for (cascade_t i = 0; i < cascade_t(cascades.size()); i++) {
+	for (layer_t i = 0; i < layer_t(cascades.size()); i++) {
 		const auto next = i + 1 < cascades.size() ? &cascades[i + 1] : nullptr;
 		cascades[i].setParams(this, next, i);
 	}

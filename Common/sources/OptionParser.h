@@ -142,13 +142,23 @@ namespace rxtd::utils {
 		};
 
 		class OptionMap {
+		public:
+			struct MapOptionInfo {
+				SubstringViewInfo substringInfo { };
+				bool touched = false;
+
+				MapOptionInfo() = default;
+				MapOptionInfo(SubstringViewInfo substringInfo) : substringInfo(substringInfo) { }
+			};
+
+		private:
 			// All string views targets here
 			string source;
 			// For move and copy operations.
 			std::map<SubstringViewInfo, SubstringViewInfo> paramsInfo { };
 
 			// For fast search.
-			std::map<isview, SubstringViewInfo> params { };
+			mutable std::map<isview, MapOptionInfo> params { };
 
 		public:
 			OptionMap();
@@ -161,20 +171,26 @@ namespace rxtd::utils {
 			OptionMap& operator=(OptionMap&& other) noexcept;
 
 			//Returns named option, search is case-insensitive.
+			Option getUntouched(sview name) const;
+
+			//Returns named option, search is case-insensitive.
 			Option get(sview name) const;
 
 			//Returns named option, search is case-insensitive.
 			Option get(isview name) const;
-			
+
 			//Returns named option, search is case-insensitive.
 			Option get(const wchar_t* name) const;
 
 			// Allows you to iterate over all available options.
-			const std::map<isview, SubstringViewInfo>& getParams() const;
+			const std::map<isview, MapOptionInfo>& getParams() const;
+
+			std::vector<isview> getUntouched() const;
 		private:
 			void fillParams();
-			std::optional<SubstringViewInfo> find(isview name) const;
+			MapOptionInfo* find(isview name) const;
 		};
+
 		// Parses and creates OptionList.
 		OptionList asList(sview string, wchar_t delimiter);
 		// Parses and creates OptionList.

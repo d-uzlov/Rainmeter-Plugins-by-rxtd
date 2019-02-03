@@ -32,9 +32,6 @@
     <ClInclude Include="Sources\sound-handlers\SoundHandler.h">
       <Filter>Source Files\sound-handlers</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-handlers\BandAnalyzer.h">
-      <Filter>Source Files\sound-handlers</Filter>
-    </ClInclude>
     <ClInclude Include="Sources\sound-handlers\FftAnalyzer.h">
       <Filter>Source Files\sound-handlers</Filter>
     </ClInclude>
@@ -65,6 +62,24 @@
     <ClInclude Include="local-version.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
+    <ClInclude Include="Sources\sound-handlers\BandCascadeTransformer.h">
+      <Filter>Source Files\sound-handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\sound-handlers\BandResampler.h">
+      <Filter>Source Files\sound-handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\sound-handlers\FiniteTimeFilter.h">
+      <Filter>Source Files\sound-handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\sound-handlers\WeightedBlur.h">
+      <Filter>Source Files\sound-handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\sound-handlers\UniformBlur.h">
+      <Filter>Source Files\sound-handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\sound-handlers\LogarithmicValueMapper.h">
+      <Filter>Source Files\sound-handlers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sources\AudioChild.cpp">
@@ -78,9 +93,6 @@
     </ClCompile>
     <ClCompile Include="Sources\SoundAnalyzer.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\sound-handlers\BandAnalyzer.cpp">
-      <Filter>Source Files\sound-handlers</Filter>
     </ClCompile>
     <ClCompile Include="Sources\sound-handlers\FftAnalyzer.cpp">
       <Filter>Source Files\sound-handlers</Filter>
@@ -112,10 +124,31 @@
     <ClCompile Include="..\Common\precompiled.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Sources\sound-handlers\BandCascadeTransformer.cpp">
+      <Filter>Source Files\sound-handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\sound-handlers\BandResampler.cpp">
+      <Filter>Source Files\sound-handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\sound-handlers\FiniteTimeFilter.cpp">
+      <Filter>Source Files\sound-handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\sound-handlers\WeightedBlur.cpp">
+      <Filter>Source Files\sound-handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\sound-handlers\UniformBlur.cpp">
+      <Filter>Source Files\sound-handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\sound-handlers\LogarithmicValueMapper.cpp">
+      <Filter>Source Files\sound-handlers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\Common\resources\version.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="..\Common\array_view.natvis" />
   </ItemGroup>
 </Project>

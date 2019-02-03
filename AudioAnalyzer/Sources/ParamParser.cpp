@@ -10,10 +10,14 @@
 #include "ParamParser.h"
 #include "sound-handlers/BlockMean.h"
 #include "sound-handlers/FftAnalyzer.h"
-#include "sound-handlers/BandAnalyzer.h"
-
 #include "sound-handlers/Spectrogram.h"
 #include "sound-handlers/WaveForm.h"
+#include "sound-handlers/BandResampler.h"
+#include "sound-handlers/BandCascadeTransformer.h"
+#include "sound-handlers/FiniteTimeFilter.h"
+#include "sound-handlers/LogarithmicValueMapper.h"
+#include "sound-handlers/WeightedBlur.h"
+#include "sound-handlers/UniformBlur.h"
 
 #include "undef.h"
 
@@ -22,7 +26,10 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-ParamParser::ParamParser(utils::Rainmeter& rain) : rain(rain), log(rain.getLogger()) { }
+ParamParser::ParamParser(utils::Rainmeter& rain, bool unusedOptionsWarning) :
+	rain(rain),
+	log(rain.getLogger()),
+	unusedOptionsWarning(unusedOptionsWarning) { }
 
 void ParamParser::parse() {
 	handlerPatchersMap.clear();
@@ -89,7 +96,7 @@ std::set<Channel> ParamParser::parseChannels(utils::OptionParser::OptionList cha
 	return set;
 }
 
-void ParamParser::cacheHandlers(utils::OptionParser::OptionList indices) {
+void ParamParser::cacheHandlers(const utils::OptionParser::OptionList& indices) {
 	utils::OptionParser optionParser;
 
 	for (auto index : indices.viewCI()) {
@@ -103,14 +110,25 @@ void ParamParser::cacheHandlers(utils::OptionParser::OptionList indices) {
 		istring optionName = L"Handler";
 		optionName += L"_";
 		optionName += index;
-		auto optionMap = optionParser.asMap(rain.readString(optionName % csView()), L'|', L' ');
+
+		const auto descriptionView = rain.readString(optionName % csView());
+		if (descriptionView.empty()) {
+			log.error(L"Description of '{}' not found", index);
+			continue;
+		}
+
+		auto optionMap = optionParser.asMap(descriptionView, L'|', L' ');
 
 		utils::Rainmeter::ContextLogger cl { rain.getLogger() };
-		cl.setPrefix(L"Handler {}:", index);
+		cl.setPrefix(L"Handler {}: ", index);
 		auto patcher = parseHandler(optionMap, cl);
 		if (patcher == nullptr) {
-			log.error(L"Handler {}: not a valid description", index);
+			cl.error(L"not a valid description", index);
 			continue;
+		}
+		const auto unusedOptions = optionMap.getUntouched();
+		if (unusedOptionsWarning && !unusedOptions.empty()) {
+			cl.warning(L"unused options {}", unusedOptions);
 		}
 
 		handlerPatchersMap.insert(iter, decltype(handlerPatchersMap)::value_type(index, patcher));
@@ -124,6 +142,12 @@ std::function<SoundHandler*(SoundHandler*)> ParamParser::parseHandler(const util
 		return nullptr;
 	}
 
+	const auto source = optionMap.getUntouched(L"source").asIString();
+	if (!source.empty() && handlerPatchersMap.find(source) == handlerPatchersMap.end()) {
+		cl.error(L"reverse or unknown dependency {}", source);
+		return nullptr;
+	}
+
 	if (type == L"rms") {
 		return parseHandlerT<BlockRms>(optionMap, cl);
 	}
@@ -133,8 +157,23 @@ std::function<SoundHandler*(SoundHandler*)> ParamParser::parseHandler(const util
 	if (type == L"fft") {
 		return parseHandlerT<FftAnalyzer>(optionMap, cl);
 	}
-	if (type == L"band") {
-		return parseHandlerT2<BandAnalyzer>(optionMap, cl);
+	if (type == L"BandResampler") {
+		return parseHandlerT2<BandResampler>(optionMap, cl);
+	}
+	if (type == L"BandCascadeTransformer") {
+		return parseHandlerT<BandCascadeTransformer>(optionMap, cl);
+	}
+	if (type == L"WeightedBlur") {
+		return parseHandlerT<WeightedBlur>(optionMap, cl);
+	}
+	if (type == L"UniformBlur") {
+		return parseHandlerT<UniformBlur>(optionMap, cl);
+	}
+	if (type == L"FiniteTimeFilter") {
+		return parseHandlerT<FiniteTimeFilter>(optionMap, cl);
+	}
+	if (type == L"LogarithmicValueMapper") {
+		return parseHandlerT<LogarithmicValueMapper>(optionMap, cl);
 	}
 	if (type == L"spectrogram") {
 		return parseHandlerT2<Spectrogram>(optionMap, cl);
@@ -142,6 +181,8 @@ std::function<SoundHandler*(SoundHandler*)> ParamParser::parseHandler(const util
 	if (type == L"waveform") {
 		return parseHandlerT2<WaveForm>(optionMap, cl);
 	}
+
+	cl.error(L"unknown type '{}'", type);
 
 	return nullptr;
 }

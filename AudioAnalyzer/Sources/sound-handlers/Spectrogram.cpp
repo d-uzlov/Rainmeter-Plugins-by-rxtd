@@ -8,7 +8,6 @@
  */
 
 #include "Spectrogram.h"
-#include "BandAnalyzer.h"
 #include "BmpWriter.h"
 #include <filesystem>
 #include "windows-wrappers/FileWrapper.h"
@@ -74,14 +73,6 @@ std::optional<Spectrogram::Params> Spectrogram::parseParams(const utils::OptionP
 	return params;
 }
 
-const double* Spectrogram::getData() const {
-	return &result;
-}
-
-index Spectrogram::getCount() const {
-	return 0;
-}
-
 void Spectrogram::setSamplesPerSec(index samplesPerSec) {
 	this->samplesPerSec = samplesPerSec;
 
@@ -119,10 +110,10 @@ void Spectrogram::writeFile(const DataSupplier& dataSupplier) {
 	auto height = params.length;
 	auto writeBufferSize = width * height;
 	auto writeBuffer = dataSupplier.getBuffer<uint32_t>(writeBufferSize);
-	utils::BmpWriter::writeFile(filepath, buffer[0], width, height, index, writeBuffer, writeBufferSize);
+	utils::BmpWriter::writeFile(filepath, buffer[0].data(), width, height, index, writeBuffer.data(), writeBufferSize); // TODO remove .data()
 }
 
-void Spectrogram::fillLine(const double* data) {
+void Spectrogram::fillLine(array_view<float> data) {
 	for (index i = 0; i < sourceSize; ++i) {
 		double value = data[i];
 		value = std::clamp(value, 0.0, 1.0);
@@ -143,12 +134,13 @@ void Spectrogram::process(const DataSupplier& dataSupplier) {
 		return;
 	}
 
-	const auto dataSize = source->getCount();
+	const auto data = source->getData(0);
+	const auto dataSize = data.size();
 
 	if (dataSize != sourceSize) {
 		sourceSize = dataSize;
 		buffer.setBufferSize(dataSize);
-		std::fill_n(buffer[0], dataSize * params.length, params.baseColor.toInt());
+		std::fill_n(buffer[0].data(), dataSize * params.length, params.baseColor.toInt());
 	}
 
 	if (filepath.empty()) {
@@ -170,7 +162,7 @@ void Spectrogram::process(const DataSupplier& dataSupplier) {
 			lastIndex = 0;
 		}
 
-		fillLine(source->getData());
+		fillLine(data);
 
 		counter -= blockSize;
 	}

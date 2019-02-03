@@ -25,6 +25,6 @@
     <LocalDebuggerAttach>false</LocalDebuggerAttach>
   </PropertyGroup>
   <PropertyGroup>
-    <ShowAllFiles>false</ShowAllFiles>
+    <ShowAllFiles>true</ShowAllFiles>
   </PropertyGroup>
 </Project>

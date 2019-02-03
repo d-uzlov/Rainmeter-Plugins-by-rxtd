@@ -23,14 +23,6 @@ void BlockMean::setParams(Params params) {
 	recalculateConstants();
 }
 
-const double* BlockMean::getData() const {
-	return &result;
-}
-
-index BlockMean::getCount() const {
-	return 0;
-}
-
 void BlockMean::setSamplesPerSec(index samplesPerSec) {
 	this->samplesPerSec = samplesPerSec;
 

@@ -153,6 +153,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Test|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="sources\array_view.h" />
     <ClCompile Include="sources\BmpWriter.cpp" />
     <ClCompile Include="sources\BufferPrinter.cpp" />
     <ClCompile Include="sources\MathExpressionParser.cpp" />
@@ -183,6 +184,9 @@
     <ClInclude Include="sources\windows-wrappers\WaveFormatWrapper.h" />
     <ClInclude Include="typedefs.h" />
     <ClInclude Include="undef.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="array_view.natvis" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

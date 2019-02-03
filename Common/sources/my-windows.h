@@ -8,9 +8,12 @@
  */
 
 #pragma once
+
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
 #include "Windows.h"
 
-#undef min
-#undef max
 #undef IN
 #undef OUT

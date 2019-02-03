@@ -17,8 +17,6 @@
 namespace rxtd::audio_analyzer {
 	class FftAnalyzer : public SoundHandler {
 	public:
-		using cascade_t = int8_t;
-
 		enum class SizeBy {
 			BIN_WIDTH,
 			SIZE,
@@ -37,7 +35,7 @@ namespace rxtd::audio_analyzer {
 			double resolution;
 			double overlap;
 
-			cascade_t cascadesCount;
+			layer_t cascadesCount;
 
 			double randomTest;
 			double randomDuration;
@@ -51,7 +49,7 @@ namespace rxtd::audio_analyzer {
 
 			double attackDecay[2] { 0.0, 0.0 };
 			std::vector<float> ringBuffer;
-			std::vector<double> values;
+			std::vector<float> values;
 			index filledElements { };
 			index transferredElements { };
 			float odd = 10.0f; // 10.0 means no value because valid values are in [-1.0; 1.0]
@@ -59,7 +57,7 @@ namespace rxtd::audio_analyzer {
 			// Fourier transform looses energy due to downsample, so we multiply result of FFT by (2^0.5)^countOfDownsampleIterations
 			double downsampleGain { };
 
-			void setParams(FftAnalyzer* parent, CascadeData* successor, cascade_t ind);
+			void setParams(FftAnalyzer* parent, CascadeData* successor, layer_t ind);
 			void process(const float *wave, index waveSize);
 			void processRandom(index waveSize, double amplitude);
 			void processSilence(index waveSize);
@@ -112,8 +110,6 @@ namespace rxtd::audio_analyzer {
 		double getFftFreq(index fft) const;
 
 		index getFftSize() const;
-		cascade_t getCascadesCount() const;
-		const double* getCascade(cascade_t cascade) const;
 
 		void setSamplesPerSec(index samplesPerSec) override;
 		void reset() override;
@@ -122,8 +118,11 @@ namespace rxtd::audio_analyzer {
 		void processSilence(const DataSupplier& dataSupplier) override;
 		void finish(const DataSupplier& dataSupplier) override { }
 
-		const double* getData() const override;
-		index getCount() const override;
+		bool isValid() const override {
+			return true; // TODO
+		}
+		layer_t getLayersCount() const override;
+		array_view<float> getData(layer_t layer) const override;
 
 		const wchar_t* getProp(const isview& prop) const override;
 

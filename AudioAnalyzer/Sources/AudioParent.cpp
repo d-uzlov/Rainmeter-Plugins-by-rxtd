@@ -55,7 +55,7 @@ AudioParent* AudioParent::findInstance(utils::Rainmeter::Skin skin, isview measu
 }
 
 void AudioParent::_reload() {
-	ParamParser paramParser(rain);
+	ParamParser paramParser(rain, rain.readBool(L"UnusedOptionsWarning", true));
 	paramParser.parse();
 
 	// TODO add min target

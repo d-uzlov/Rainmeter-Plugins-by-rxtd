@@ -20,12 +20,13 @@ namespace rxtd::audio_analyzer {
 	private:
 		utils::Rainmeter& rain;
 		utils::Rainmeter::Logger& log;
+		bool unusedOptionsWarning;
 
 		std::map<Channel, std::vector<istring>> handlers;
 		std::map<istring, std::function<SoundHandler*(SoundHandler*)>, std::less<>> handlerPatchersMap;
 
 	public:
-		explicit ParamParser(utils::Rainmeter& rain);
+		explicit ParamParser(utils::Rainmeter& rain, bool unusedOptionsWarning);
 
 		~ParamParser() = default;
 		/** This class is non copyable */
@@ -40,7 +41,7 @@ namespace rxtd::audio_analyzer {
 
 	private:
 		std::set<Channel> parseChannels(utils::OptionParser::OptionList channelsStringList) const;
-		void cacheHandlers(utils::OptionParser::OptionList indices);
+		void cacheHandlers(const utils::OptionParser::OptionList& indices);
 		std::function<SoundHandler*(SoundHandler*)> parseHandler(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger &cl);
 
 		template<typename T>

@@ -8,6 +8,7 @@
  */
 
 #pragma once
+#include "array_view.h"
 
 namespace rxtd::utils {
 	/**
@@ -50,11 +51,15 @@ namespace rxtd::utils {
 		Vector2D(const Vector2D& other) = delete;
 		Vector2D& operator=(const Vector2D& other) = delete;
 
+		void init(const T value = {}) {
+			std::fill_n(array.data(), buffersCount * bufferSize, value);
+		}
+
 		void setBuffersCount(index count) {
 			buffersCount = count;
 			setBufferSize(bufferSize);
 		}
-		index getBuffersCount() const {
+		constexpr index getBuffersCount() const {
 			return buffersCount;
 		}
 
@@ -62,19 +67,19 @@ namespace rxtd::utils {
 			bufferSize = size;
 			array.reserve(buffersCount * size);
 		}
-		index getBufferSize() const {
+		constexpr index getBufferSize() const {
 			return bufferSize;
 		}
 
-		bool isEmpty() const {
+		constexpr bool isEmpty() const {
 			return bufferSize == 0;
 		}
 
-		T* operator[](index bufferNumber) {
-			return array.data() + bufferSize * bufferNumber;
+		constexpr array_span<T> operator[](index bufferNumber) {
+			return { array.data() + bufferSize * bufferNumber, bufferSize };
 		}
-		const T* operator[](index bufferNumber) const {
-			return array.data() + bufferSize * bufferNumber;
+		constexpr array_view<T> operator[](index bufferNumber) const {
+			return { array.data() + bufferSize * bufferNumber, bufferSize };
 		}
 	};
 }

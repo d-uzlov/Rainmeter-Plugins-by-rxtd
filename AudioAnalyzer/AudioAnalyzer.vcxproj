@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Test|Win32">
@@ -151,12 +151,17 @@
     <ClInclude Include="Sources\MyWaveFormat.h" />
     <ClInclude Include="Sources\kiss_fft\KissFft.hh" />
     <ClInclude Include="Sources\ParamParser.h" />
-    <ClInclude Include="Sources\sound-handlers\BandAnalyzer.h" />
+    <ClInclude Include="Sources\sound-handlers\BandCascadeTransformer.h" />
+    <ClInclude Include="Sources\sound-handlers\BandResampler.h" />
     <ClInclude Include="Sources\sound-handlers\BlockMean.h" />
+    <ClInclude Include="Sources\sound-handlers\UniformBlur.h" />
+    <ClInclude Include="Sources\sound-handlers\WeightedBlur.h" />
     <ClInclude Include="Sources\sound-handlers\FftAnalyzer.h" />
     <ClInclude Include="Sources\sound-handlers\FftImpl.h" />
+    <ClInclude Include="Sources\sound-handlers\FiniteTimeFilter.h" />
     <ClInclude Include="Sources\sound-handlers\SoundHandler.h" />
     <ClInclude Include="Sources\sound-handlers\Spectrogram.h" />
+    <ClInclude Include="Sources\sound-handlers\LogarithmicValueMapper.h" />
     <ClInclude Include="Sources\sound-handlers\WaveForm.h" />
     <ClInclude Include="Sources\SoundAnalyzer.h" />
   </ItemGroup>
@@ -176,11 +181,16 @@
     <ClCompile Include="Sources\DeviceManager.cpp" />
     <ClCompile Include="Sources\MyWaveFormat.cpp" />
     <ClCompile Include="Sources\ParamParser.cpp" />
-    <ClCompile Include="Sources\sound-handlers\BandAnalyzer.cpp" />
+    <ClCompile Include="Sources\sound-handlers\BandCascadeTransformer.cpp" />
+    <ClCompile Include="Sources\sound-handlers\BandResampler.cpp" />
     <ClCompile Include="Sources\sound-handlers\BlockMean.cpp" />
+    <ClCompile Include="Sources\sound-handlers\UniformBlur.cpp" />
+    <ClCompile Include="Sources\sound-handlers\WeightedBlur.cpp" />
     <ClCompile Include="Sources\sound-handlers\FftAnalyzer.cpp" />
     <ClCompile Include="Sources\sound-handlers\FftImpl.cpp" />
+    <ClCompile Include="Sources\sound-handlers\FiniteTimeFilter.cpp" />
     <ClCompile Include="Sources\sound-handlers\Spectrogram.cpp" />
+    <ClCompile Include="Sources\sound-handlers\LogarithmicValueMapper.cpp" />
     <ClCompile Include="Sources\sound-handlers\WaveForm.cpp" />
     <ClCompile Include="Sources\SoundAnalyzer.cpp" />
   </ItemGroup>
@@ -192,6 +202,9 @@
       <Project>{8817a113-76ad-4df9-8ab8-ccc1d9cfdf09}</Project>
       <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="..\Common\array_view.natvis" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

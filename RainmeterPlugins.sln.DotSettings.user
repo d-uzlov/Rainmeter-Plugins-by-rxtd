@@ -3,7 +3,11 @@
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=autoscale/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=BITNESS/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=buckb/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/UserDictionary/Words/=cbegin/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/UserDictionary/Words/=cend/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=cistring/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/UserDictionary/Words/=crbegin/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/UserDictionary/Words/=crend/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=ENGTYPE/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=freqs/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=inplace/@EntryIndexedValue">True</s:Boolean>
@@ -11,7 +15,9 @@
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=isview/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=iter/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Perfmon/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/UserDictionary/Words/=rbegin/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=resample/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/UserDictionary/Words/=Resampler/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=rxaa/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=rxpm/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=rxtd/@EntryIndexedValue">True</s:Boolean>

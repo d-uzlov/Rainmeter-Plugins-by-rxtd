@@ -10,6 +10,7 @@
 #pragma once
 #include "../Channel.h"
 #include "StringUtils.h"
+#include "array_view.h"
 
 namespace rxtd::audio_analyzer {
 	class SoundHandler;
@@ -19,7 +20,11 @@ namespace rxtd::audio_analyzer {
 		virtual ~DataSupplier() = default;
 		virtual const float* getWave() const = 0;
 		virtual index getWaveSize()  const = 0;
-		virtual const SoundHandler* getHandler(isview id) const = 0;
+
+		template<typename T = SoundHandler>
+		const T* getHandler(isview id) const {
+			return dynamic_cast<const T*>(getHandlerRaw(id));
+		}
 		virtual Channel getChannel() const = 0;
 
 		/**
@@ -28,16 +33,19 @@ namespace rxtd::audio_analyzer {
 		 * Released automatically after end of process() and processSilent().
 		 */
 		template<typename T>
-		T* getBuffer(index size) const {
-			return reinterpret_cast<T*>(getBufferRaw(size * sizeof(T)));
+		array_span<T> getBuffer(index size) const {
+			return { reinterpret_cast<T*>(getBufferRaw(size * sizeof(T))), size };
 		}
 
 	protected:
-		virtual uint8_t* getBufferRaw(index size) const = 0;
+		virtual std::byte* getBufferRaw(index size) const = 0;
+		virtual const SoundHandler* getHandlerRaw(isview id) const = 0;
 	};
 
 	class SoundHandler {
 	public:
+		using layer_t = int8_t;
+
 		SoundHandler() = default;
 
 		SoundHandler(const SoundHandler& other) = delete;
@@ -56,8 +64,12 @@ namespace rxtd::audio_analyzer {
 		// Method can be called several time, handler should check for changes
 		virtual void finish(const DataSupplier &dataSupplier) = 0;
 
-		virtual const double* getData() const = 0;
-		virtual index getCount() const = 0;
+		virtual bool isValid() const = 0;
+		virtual array_view<float> getData(layer_t layer) const = 0;
+		virtual layer_t getLayersCount() const = 0;
+		virtual layer_t getStartingLayer() const {
+			return 0;
+		}
 
 		virtual const wchar_t* getProp(const isview& prop) const {
 			return nullptr;
@@ -99,6 +111,5 @@ namespace rxtd::audio_analyzer {
 
 			return cascadeIndex;
 		}
-
 	};
 }

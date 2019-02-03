@@ -16,7 +16,7 @@ using namespace audio_analyzer;
 
 SoundAnalyzer::DataSupplierImpl::DataSupplierImpl(SoundAnalyzer& parent) : parent(parent) { }
 
-void SoundAnalyzer::DataSupplierImpl::setChannelData(ChannelData *value) {
+void SoundAnalyzer::DataSupplierImpl::setChannelData(const ChannelData *value) {
 	channelData = value;
 }
 
@@ -29,20 +29,25 @@ void SoundAnalyzer::DataSupplierImpl::setChannel(Channel channel) {
 }
 
 const float* SoundAnalyzer::DataSupplierImpl::getWave() const {
-	return parent.wave[channelIndex];
+	return parent.wave[channelIndex].data();
 }
 
 index SoundAnalyzer::DataSupplierImpl::getWaveSize() const {
 	return waveSize;
 }
 
-const SoundHandler* SoundAnalyzer::DataSupplierImpl::getHandler(isview id) const {
+const SoundHandler* SoundAnalyzer::DataSupplierImpl::getHandlerRaw(isview id) const {
 	const auto iter = channelData->indexMap.find(id);
 	if (iter == channelData->indexMap.end()) {
 		return nullptr;
 	}
 	auto handler = channelData->handlers[iter->second].get();
 	handler->finish(*this); // TODO check for endless loop
+
+	if (!handler->isValid()) {
+		return nullptr;
+	}
+
 	return handler;
 }
 
@@ -50,7 +55,7 @@ Channel SoundAnalyzer::DataSupplierImpl::getChannel() const {
 	return channel;
 }
 
-uint8_t* SoundAnalyzer::DataSupplierImpl::getBufferRaw(index size) const {
+std::byte* SoundAnalyzer::DataSupplierImpl::getBufferRaw(index size) const {
 	if (nextBufferIndex >= index(buffers.size())) {
 		buffers.emplace_back();
 	}
@@ -97,7 +102,7 @@ void SoundAnalyzer::decompose(const uint8_t* buffer, index framesCount) noexcept
 	}
 }
 
-void SoundAnalyzer::resample(float *values, index framesCount) const noexcept {
+void SoundAnalyzer::resample(array_span<float> values, index framesCount) const noexcept {
 	if (divide <= 1) {
 		return;
 	}
@@ -163,16 +168,32 @@ double SoundAnalyzer::getValue(Channel channel, isview handlerId, index index) c
 	}
 
 	auto &handler = std::get<0>(handlerVariant);
-	handler->finish(dataSupplier);
 
-	const auto count = handler->getCount();
-	if (count == 0) {
-		return handler->getData()[0];
-	}
-	if (index >= count) {
+	const auto channelDataIter = channels.find(channel);
+	if (channelDataIter == channels.end()) {
 		return 0.0;
 	}
-	return handler->getData()[index];
+	dataSupplier.setChannelData(&channelDataIter->second);
+	dataSupplier.setChannel(channel);
+
+	handler->finish(dataSupplier);
+	if (!handler->isValid()) {
+		return 0.0;
+	}
+
+	const auto layersCount = handler->getLayersCount();
+	if (layersCount <= 0) {
+		return 0.0;
+	}
+
+	const auto data = handler->getData(0);
+	if (data.empty()) {
+		return 0.0;
+	}
+	if (index >= data.size()) {
+		return 0.0;
+	}
+	return data[index];
 }
 
 std::variant<const wchar_t*, SoundAnalyzer::SearchError>
@@ -450,7 +471,7 @@ index SoundAnalyzer::createChannelAuto(index framesCount) noexcept {
 }
 
 void SoundAnalyzer::resampleToAuto(index first, index second, index framesCount) noexcept {
-	const auto bufferAuto = wave[wave.getBuffersCount() - 1];
+	auto bufferAuto = wave[wave.getBuffersCount() - 1];
 	const auto bufferFirst = wave[first];
 	const auto bufferSecond = wave[second];
 
@@ -460,7 +481,7 @@ void SoundAnalyzer::resampleToAuto(index first, index second, index framesCount)
 }
 
 void SoundAnalyzer::copyToAuto(index channelIndex, index framesCount) noexcept {
-	const auto bufferAuto = wave[wave.getBuffersCount() - 1];
+	auto bufferAuto = wave[wave.getBuffersCount() - 1];
 	const auto bufferSource = wave[channelIndex];
 
 	for (index i = 0; i < framesCount; ++i) {

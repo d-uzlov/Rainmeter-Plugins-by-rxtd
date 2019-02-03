@@ -33,7 +33,7 @@ namespace rxtd::audio_analyzer {
 
 		index counter = 0;
 		double intermediateResult = 0.0;
-		double result = 0.0;
+		float result = 0.0;
 
 		mutable string propString { };
 
@@ -46,8 +46,15 @@ namespace rxtd::audio_analyzer {
 		void processSilence(const DataSupplier& dataSupplier) override;
 		void finish(const DataSupplier& dataSupplier) override { };
 
-		const double* getData() const override;
-		index getCount() const override;
+		bool isValid() const override {
+			return true;
+		}
+		array_view<float> getData(layer_t layer) const override {
+			return { &result, 1 };
+		}
+		layer_t getLayersCount() const override {
+			return 1;
+		}
 
 		const wchar_t* getProp(const isview& prop) const override;
 

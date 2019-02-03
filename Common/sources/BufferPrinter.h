@@ -10,6 +10,7 @@
 #pragma once
 #include <optional>
 #include <iomanip>
+#include <iterator>
 
 namespace rxtd::utils {
 	using namespace std::literals::string_view_literals;
@@ -55,6 +56,23 @@ namespace rxtd::utils {
 	template <typename O>
 	void writeObject(std::wostream& stream, const O& t, sview options) {
 		stream << t;
+	}
+
+	template<typename T>
+	void writeObject(std::wostream& stream, const std::vector<T>& vec, sview options) {
+		stream << L'[';
+		if (!vec.empty()) {
+			bool first = true;
+			for (const auto& value : vec) {
+				if (first) {
+					first = false;
+				} else {
+					stream << L", ";
+				}
+				stream << value;
+			}
+		}
+		stream << L']';
 	}
 
 	/**

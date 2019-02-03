@@ -42,29 +42,30 @@ namespace rxtd::audio_analyzer {
 
 		class DataSupplierImpl : public DataSupplier {
 			SoundAnalyzer &parent;
-			ChannelData *channelData = nullptr;
+			const ChannelData *channelData = nullptr;
 			Channel channel { };
 			index channelIndex = 0;
 			index waveSize { };
 
 			mutable index nextBufferIndex = 0;
-			mutable std::vector<std::vector<uint8_t>> buffers;
+			mutable std::vector<std::vector<std::byte>> buffers;
 
 		public:
 			explicit DataSupplierImpl(SoundAnalyzer& parent);
-			void setChannelData(ChannelData*);
+			void setChannelData(const ChannelData*);
 			void setChannelIndex(index channelIndex);
 			void setChannel(Channel channel);
 
 			const float* getWave() const override;
 			index getWaveSize() const override;
-			const SoundHandler* getHandler(isview id) const override;
+			const SoundHandler* getHandlerRaw(isview id) const override;
 			Channel getChannel() const override;
-			uint8_t* getBufferRaw(index size) const override;
+			std::byte* getBufferRaw(index size) const override;
 
 			void resetBuffers();
 			void setWaveSize(index value);
-		} dataSupplier;
+		};
+		mutable DataSupplierImpl dataSupplier;
 
 	public:
 
@@ -94,7 +95,7 @@ namespace rxtd::audio_analyzer {
 
 	private:
 		void decompose(const uint8_t* buffer, index framesCount) noexcept;
-		void resample(float* values, index framesCount) const noexcept;
+		void resample(array_span<float> values, index framesCount) const noexcept;
 		void updateSampleRate() noexcept;
 		index createChannelAuto(index framesCount) noexcept;
 		void resampleToAuto(index first, index second, index framesCount) noexcept;
