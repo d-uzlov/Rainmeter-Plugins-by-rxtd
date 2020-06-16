@@ -18,14 +18,14 @@
 using namespace utils;
 
 void ExpressionTreeNode::solve() {
-	if (type == ExpressionType::NUMBER) {
+	if (type == ExpressionType::eNUMBER) {
 		return;
 	}
 
 	bool isConst = true;
 	for (ExpressionTreeNode& node : nodes) {
 		node.solve();
-		if (node.type != ExpressionType::NUMBER) {
+		if (node.type != ExpressionType::eNUMBER) {
 			isConst = false;
 		}
 	}
@@ -34,7 +34,7 @@ void ExpressionTreeNode::solve() {
 	}
 
 	switch (type) {
-	case ExpressionType::SUM:
+	case ExpressionType::eSUM:
 	{
 		double value = 0;
 		for (ExpressionTreeNode& node : nodes) {
@@ -42,10 +42,10 @@ void ExpressionTreeNode::solve() {
 		}
 		nodes.clear();
 		number = value;
-		type = ExpressionType::NUMBER;
+		type = ExpressionType::eNUMBER;
 		return;
 	}
-	case ExpressionType::DIFF:
+	case ExpressionType::eDIFF:
 	{
 		double value = nodes[0].number;
 		for (index i = 1; i < index(nodes.size()); i++) {
@@ -53,17 +53,17 @@ void ExpressionTreeNode::solve() {
 		}
 		nodes.clear();
 		number = value;
-		type = ExpressionType::NUMBER;
+		type = ExpressionType::eNUMBER;
 		return;
 	}
-	case ExpressionType::INVERSE:
+	case ExpressionType::eINVERSE:
 	{
 		number = -nodes[0].number;
 		nodes.clear();
-		type = ExpressionType::NUMBER;
+		type = ExpressionType::eNUMBER;
 		return;
 	}
-	case ExpressionType::MULT:
+	case ExpressionType::eMULT:
 	{
 		double value = 1;
 		for (ExpressionTreeNode& node : nodes) {
@@ -71,10 +71,10 @@ void ExpressionTreeNode::solve() {
 		}
 		nodes.clear();
 		number = value;
-		type = ExpressionType::NUMBER;
+		type = ExpressionType::eNUMBER;
 		return;
 	}
-	case ExpressionType::DIV:
+	case ExpressionType::eDIV:
 	{
 		double value = nodes[0].number;
 		for (index i = 1; i < index(nodes.size()); i++) {
@@ -87,16 +87,16 @@ void ExpressionTreeNode::solve() {
 		}
 		nodes.clear();
 		number = value;
-		type = ExpressionType::NUMBER;
+		type = ExpressionType::eNUMBER;
 		return;
 	}
-	case ExpressionType::POWER:
+	case ExpressionType::ePOWER:
 	{
 		double value = nodes[0].number;
 		value = std::pow(value, nodes[1].number);
 		nodes.clear();
 		number = value;
-		type = ExpressionType::NUMBER;
+		type = ExpressionType::eNUMBER;
 		return;
 	}
 	default:;
@@ -112,62 +112,62 @@ MathExpressionParser::Lexer::Lexeme MathExpressionParser::Lexer::next() {
 	skipSpaces();
 
 	if (position >= sourceLength) {
-		return Lexeme(LexemeType::END, { });
+		return Lexeme(LexemeType::eEND, { });
 	}
 
 	if (isSymbol(source[position])) {
 		const wchar_t value = source[position];
-		LexemeType type = LexemeType::UNKNOWN;
+		LexemeType type = LexemeType::eUNKNOWN;
 		position++;
 		switch (value) {
 		case L'(':
-			type = LexemeType::PAR_OPEN;
+			type = LexemeType::ePAR_OPEN;
 			break;
 		case L')':
-			type = LexemeType::PAR_CLOSE;
+			type = LexemeType::ePAR_CLOSE;
 			break;
 		case L'[':
-			type = LexemeType::BR_OPEN;
+			type = LexemeType::eBRACKET_OPEN;
 			break;
 		case L']':
-			type = LexemeType::BR_CLOSE;
+			type = LexemeType::eBRACKET_CLOSE;
 			break;
 		case L'+':
-			type = LexemeType::PLUS;
+			type = LexemeType::ePLUS;
 			break;
 		case L'-':
-			type = LexemeType::MINUS;
+			type = LexemeType::eMINUS;
 			break;
 		case L'*':
-			type = LexemeType::MULT;
+			type = LexemeType::eASTERISK;
 			break;
 		case L'/':
-			type = LexemeType::DIV;
+			type = LexemeType::eFORWARD_SLASH;
 			break;
 		case L'^':
-			type = LexemeType::POWER;
+			type = LexemeType::eCARET;
 			break;
 		case L'\0':
-			type = LexemeType::END;
+			type = LexemeType::eEND;
 			break;
 		case L'.':
-			type = LexemeType::DOT;
+			type = LexemeType::eDOT;
 			break;
 		case L'#':
-			type = LexemeType::HASH;
+			type = LexemeType::eHASH;
 			break;
 		default:
-			type = LexemeType::UNKNOWN;
+			type = LexemeType::eUNKNOWN;
 			break;
 		}
 		return Lexeme(type, std::to_wstring(value));
 	}
 
 	if (std::iswdigit(source[position])) {
-		return Lexeme(LexemeType::NUMBER, readNumber());
+		return Lexeme(LexemeType::eNUMBER, readNumber());
 	}
 
-	Lexeme result(LexemeType::UNKNOWN, std::to_wstring(source[position]));
+	Lexeme result(LexemeType::eUNKNOWN, std::to_wstring(source[position]));
 	position++;
 	return result;
 }
@@ -234,7 +234,7 @@ MathExpressionParser::MathExpressionParser(sview source) : lexer(source) {
 
 void MathExpressionParser::parse() {
 	result = parseExpression();
-	if (next.type != Lexer::LexemeType::END) {
+	if (next.type != Lexer::LexemeType::eEND) {
 		error = true;
 	}
 }
@@ -246,7 +246,7 @@ ExpressionTreeNode MathExpressionParser::getExpression() const {
 }
 void MathExpressionParser::readNext() {
 	next = lexer.next();
-	if (next.type == Lexer::LexemeType::UNKNOWN) {
+	if (next.type == Lexer::LexemeType::eUNKNOWN) {
 		error = true;
 	}
 }
@@ -256,12 +256,12 @@ ExpressionTreeNode MathExpressionParser::parseExpression() {
 	if (error) {
 		return ExpressionTreeNode();
 	}
-	while (next.type == Lexer::LexemeType::PLUS || next.type == Lexer::LexemeType::MINUS) {
-		if (next.type == Lexer::LexemeType::PLUS) {
+	while (next.type == Lexer::LexemeType::ePLUS || next.type == Lexer::LexemeType::eMINUS) {
+		if (next.type == Lexer::LexemeType::ePLUS) {
 			ExpressionTreeNode sumResult;
-			sumResult.type = ExpressionType::SUM;
+			sumResult.type = ExpressionType::eSUM;
 			sumResult.nodes.push_back(result);
-			while (next.type == Lexer::LexemeType::PLUS) {
+			while (next.type == Lexer::LexemeType::ePLUS) {
 				readNext();
 				if (error) {
 					return ExpressionTreeNode();
@@ -274,11 +274,11 @@ ExpressionTreeNode MathExpressionParser::parseExpression() {
 			}
 			result = std::move(sumResult);
 		}
-		if (next.type == Lexer::LexemeType::MINUS) {
+		if (next.type == Lexer::LexemeType::eMINUS) {
 			ExpressionTreeNode diffResult;
-			diffResult.type = ExpressionType::DIFF;
+			diffResult.type = ExpressionType::eDIFF;
 			diffResult.nodes.push_back(result);
-			while (next.type == Lexer::LexemeType::MINUS) {
+			while (next.type == Lexer::LexemeType::eMINUS) {
 				readNext();
 				if (error) {
 					return ExpressionTreeNode();
@@ -300,12 +300,12 @@ ExpressionTreeNode MathExpressionParser::parseTerm() {
 	if (error) {
 		return ExpressionTreeNode();
 	}
-	while (next.type == Lexer::LexemeType::MULT || next.type == Lexer::LexemeType::DIV) {
-		if (next.type == Lexer::LexemeType::MULT) {
+	while (next.type == Lexer::LexemeType::eASTERISK || next.type == Lexer::LexemeType::eFORWARD_SLASH) {
+		if (next.type == Lexer::LexemeType::eASTERISK) {
 			ExpressionTreeNode multResult;
-			multResult.type = ExpressionType::MULT;
+			multResult.type = ExpressionType::eMULT;
 			multResult.nodes.push_back(result);
-			while (next.type == Lexer::LexemeType::MULT) {
+			while (next.type == Lexer::LexemeType::eASTERISK) {
 				readNext();
 				if (error) {
 					return ExpressionTreeNode();
@@ -318,11 +318,11 @@ ExpressionTreeNode MathExpressionParser::parseTerm() {
 			}
 			result = std::move(multResult);
 		}
-		if (next.type == Lexer::LexemeType::DIV) {
+		if (next.type == Lexer::LexemeType::eFORWARD_SLASH) {
 			ExpressionTreeNode divResult;
-			divResult.type = ExpressionType::DIV;
+			divResult.type = ExpressionType::eDIV;
 			divResult.nodes.push_back(result);
-			while (next.type == Lexer::LexemeType::DIV) {
+			while (next.type == Lexer::LexemeType::eFORWARD_SLASH) {
 				readNext();
 				if (error) {
 					return ExpressionTreeNode();
@@ -344,9 +344,9 @@ ExpressionTreeNode MathExpressionParser::parseFactor() {
 	if (error) {
 		return ExpressionTreeNode();
 	}
-	if (next.type == Lexer::LexemeType::POWER) {
+	if (next.type == Lexer::LexemeType::eCARET) {
 		ExpressionTreeNode res;
-		res.type = ExpressionType::POWER;
+		res.type = ExpressionType::ePOWER;
 		res.nodes.push_back(power);
 		readNext();
 		if (error) {
@@ -363,9 +363,9 @@ ExpressionTreeNode MathExpressionParser::parseFactor() {
 }
 
 ExpressionTreeNode MathExpressionParser::parsePower() {
-	if (next.type == Lexer::LexemeType::MINUS) {
+	if (next.type == Lexer::LexemeType::eMINUS) {
 		ExpressionTreeNode res;
-		res.type = ExpressionType::INVERSE;
+		res.type = ExpressionType::eINVERSE;
 		readNext();
 		if (error) {
 			return ExpressionTreeNode();
@@ -381,13 +381,13 @@ ExpressionTreeNode MathExpressionParser::parsePower() {
 }
 
 ExpressionTreeNode MathExpressionParser::parseAtom() {
-	if (next.type == Lexer::LexemeType::PAR_OPEN) {
+	if (next.type == Lexer::LexemeType::ePAR_OPEN) {
 		readNext();
 		if (error) {
 			return ExpressionTreeNode();
 		}
 		ExpressionTreeNode res = parseExpression();
-		if (next.type != Lexer::LexemeType::PAR_CLOSE) {
+		if (next.type != Lexer::LexemeType::ePAR_CLOSE) {
 			error = true;
 			return ExpressionTreeNode();
 		}
@@ -397,21 +397,21 @@ ExpressionTreeNode MathExpressionParser::parseAtom() {
 		}
 		return res;
 	}
-	if (next.type == Lexer::LexemeType::NUMBER) {
+	if (next.type == Lexer::LexemeType::eNUMBER) {
 		ExpressionTreeNode res;
-		res.type = ExpressionType::NUMBER;
+		res.type = ExpressionType::eNUMBER;
 		const double i = double(parseInt(next.value));
 		double m = 0;
 		readNext();
 		if (error) {
 			return ExpressionTreeNode();
 		}
-		if (next.type == Lexer::LexemeType::DOT) {
+		if (next.type == Lexer::LexemeType::eDOT) {
 			readNext();
 			if (error) {
 				return ExpressionTreeNode();
 			}
-			if (next.type != Lexer::LexemeType::NUMBER) {
+			if (next.type != Lexer::LexemeType::eNUMBER) {
 				error = true;
 				return ExpressionTreeNode();
 			}

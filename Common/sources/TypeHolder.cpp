@@ -32,7 +32,7 @@ void TypeHolder::setMeasureState(MeasureState brokenState) {
 }
 
 double TypeHolder::update() {
-	if (measureState != MeasureState::WORKING) {
+	if (measureState != MeasureState::eWORKING) {
 		return 0.0;
 	}
 	std::tuple<double, const wchar_t*> result = _update();
@@ -42,14 +42,14 @@ double TypeHolder::update() {
 }
 
 void TypeHolder::reload() {
-	if (measureState == MeasureState::BROKEN) { // skip reload only if the measure is unrecoverable
+	if (measureState == MeasureState::eBROKEN) { // skip reload only if the measure is unrecoverable
 		return;
 	}
 	_reload();
 }
 
 void TypeHolder::command(const wchar_t *bangArgs) {
-	if (measureState != MeasureState::WORKING) {
+	if (measureState != MeasureState::eWORKING) {
 		log.warning(L"Skipping bang on the broken measure");
 		return;
 	}
@@ -57,7 +57,7 @@ void TypeHolder::command(const wchar_t *bangArgs) {
 }
 
 const wchar_t* TypeHolder::resolve(int argc, const wchar_t* argv[]) {
-	if (measureState != MeasureState::WORKING) {
+	if (measureState != MeasureState::eWORKING) {
 		log.printer.print(L"Measure {} is broken", rain.getMeasureName());
 		return log.printer.getBufferPtr();
 	}
@@ -69,7 +69,7 @@ const wchar_t* TypeHolder::resolve(int argc, const wchar_t* argv[]) {
 }
 
 const wchar_t* TypeHolder::getString() const {
-	if (measureState != MeasureState::WORKING) {
+	if (measureState != MeasureState::eWORKING) {
 		return L"broken";
 	}
 	return resultString;

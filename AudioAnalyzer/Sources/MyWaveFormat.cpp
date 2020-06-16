@@ -25,13 +25,13 @@ bool Format::operator!=(Format a) const {
 }
 
 const wchar_t* Format::toString() const {
-	if (value == INVALID) {
+	if (value == eINVALID) {
 		return L"<invalid>";
 	}
-	if (value == PCM_S16) {
+	if (value == ePCM_S16) {
 		return L"PCM 16b";
 	}
-	if (value == PCM_F32) {
+	if (value == ePCM_F32) {
 		return L"PCM 32b";
 	}
 	return nullptr;

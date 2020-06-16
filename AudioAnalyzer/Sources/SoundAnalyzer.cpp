@@ -81,7 +81,7 @@ void SoundAnalyzer::decompose(const uint8_t* buffer, index framesCount) noexcept
 	wave.setBufferSize(framesCount);
 
 	const auto channelsCount = waveFormat.channelsCount;
-	if (waveFormat.format == Format::PCM_F32) {
+	if (waveFormat.format == Format::ePCM_F32) {
 		auto s = reinterpret_cast<const float*>(buffer);
 		for (index frame = 0; frame < framesCount; ++frame) {
 			for (index channel = 0; channel < channelsCount; ++channel) {
@@ -89,7 +89,7 @@ void SoundAnalyzer::decompose(const uint8_t* buffer, index framesCount) noexcept
 				++s;
 			}
 		}
-	} else if (waveFormat.format == Format::PCM_S16) {
+	} else if (waveFormat.format == Format::ePCM_S16) {
 		auto s = reinterpret_cast<const int16_t*>(buffer);
 		for (index frame = 0; frame < framesCount; ++frame) {
 			for (index channel = 0; channel < channelsCount; ++channel) {
@@ -117,7 +117,7 @@ void SoundAnalyzer::resample(array_span<float> values, index framesCount) const 
 }
 
 void SoundAnalyzer::updateSampleRate() noexcept {
-	if (waveFormat.format == Format::INVALID) {
+	if (waveFormat.format == Format::eINVALID) {
 		return;
 	}
 
@@ -148,13 +148,13 @@ std::variant<SoundHandler*, SoundAnalyzer::SearchError>
 SoundAnalyzer::findHandler(Channel channel, isview handlerId) const noexcept {
 	const auto channelIter = channels.find(channel);
 	if (channelIter == channels.end()) {
-		return SearchError::CHANNEL_NOT_FOUND;
+		return SearchError::eCHANNEL_NOT_FOUND;
 	}
 
 	const auto &channelData = channelIter->second;
 	const auto iter = channelData.indexMap.find(handlerId);
 	if (iter == channelData.indexMap.end()) {
-		return SearchError::HANDLER_NOT_FOUND;
+		return SearchError::eHANDLER_NOT_FOUND;
 	}
 
 	auto &handler = channelData.handlers[iter->second];
@@ -261,21 +261,23 @@ void SoundAnalyzer::setPatchHandlers(std::map<Channel, std::vector<istring>> han
 }
 
 void SoundAnalyzer::setWaveFormat(MyWaveFormat waveFormat) noexcept {
-	if (waveFormat.format == Format::INVALID) {
+	if (waveFormat.format == Format::eINVALID) {
 		this->waveFormat = waveFormat;
 		return;
 	}
 
 	wave.setBuffersCount(waveFormat.channelsCount + 1ll);
-	auto availableChannels = waveFormat.channelLayout->channelsView();
-	availableChannels.insert(Channel::AUTO);
 
 	// remove channels that no longer exist
 	std::vector<Channel> toDelete;
 	for (const auto &channelIter : channels) {
 		Channel c = channelIter.first;
 
-		if (availableChannels.find(c) == availableChannels.end()) {
+		if (c == Channel::eAUTO) {
+			continue;
+		}
+
+		if (!waveFormat.channelLayout.contains(c)) {
 			toDelete.push_back(c);
 		}
 	}
@@ -283,14 +285,18 @@ void SoundAnalyzer::setWaveFormat(MyWaveFormat waveFormat) noexcept {
 		channels.erase(c);
 	}
 
+	auto channelLayoutMap = waveFormat.channelLayout.getChannelsView();
+	channelLayoutMap[Channel::eAUTO] = -1;
+
 	// add channels that didn't exist
-	for (auto &newChannel : availableChannels) {
+	for (auto [newChannel, _] : channelLayoutMap) {
 		// skip already existing channels
 		if (channels.find(newChannel) != channels.end()) {
 			continue;
 		}
 
 		// create channel data before checking existing of handlers for this channel
+		// data should always exist, even when empty
 		auto &data = channels[newChannel];
 
 		// keep channel empty if no handlers specified
@@ -319,7 +325,7 @@ void SoundAnalyzer::setWaveFormat(MyWaveFormat waveFormat) noexcept {
 }
 
 void SoundAnalyzer::process(const uint8_t* buffer, bool isSilent, index framesCount) noexcept {
-	if (waveFormat.format == Format::INVALID || waveFormat.channelsCount <= 0) {
+	if (waveFormat.format == Format::eINVALID || waveFormat.channelsCount <= 0) {
 		return;
 	}
 
@@ -329,10 +335,10 @@ void SoundAnalyzer::process(const uint8_t* buffer, bool isSilent, index framesCo
 
 	dataSupplier.setWaveSize(framesCount / divide);
 
-	dataSupplier.setChannelData(&channels[Channel::AUTO]);
-	dataSupplier.setChannel(Channel::AUTO);
+	dataSupplier.setChannelData(&channels[Channel::eAUTO]);
+	dataSupplier.setChannel(Channel::eAUTO);
 
-	auto &autoHandlers = channels[Channel::AUTO].handlers;
+	auto &autoHandlers = channels[Channel::eAUTO].handlers;
 	if (!autoHandlers.empty()) {
 		// must be processed before other channels because wave is destroyed after resample()
 		if (isSilent) {
@@ -366,16 +372,11 @@ void SoundAnalyzer::process(const uint8_t* buffer, bool isSilent, index framesCo
 		dataSupplier.setChannelData(&data);
 		dataSupplier.setChannel(channel);
 
-		index waveIndex;
-		if (waveFormat.channelLayout != nullptr) {
-			const std::optional<index> waveIndexOpt = waveFormat.channelLayout->fromChannel(channel);
-			if (!waveIndexOpt.has_value()) {
-				continue;
-			}
-			waveIndex = waveIndexOpt.value();
-		} else {
-			waveIndex = channel.toInt();
+		const std::optional<index> waveIndexOpt = waveFormat.channelLayout.fromChannel(channel);
+		if (!waveIndexOpt.has_value()) {
+			continue;
 		}
+		const index waveIndex = waveIndexOpt.value();
 
 		if (waveIndex < 0 || waveIndex >= waveFormat.channelsCount) {
 			continue;
@@ -420,7 +421,7 @@ void SoundAnalyzer::finish() noexcept {
 }
 
 index SoundAnalyzer::createChannelAuto(index framesCount) noexcept {
-	auto iter = orderOfHandlers.find(Channel::AUTO);
+	auto iter = orderOfHandlers.find(Channel::eAUTO);
 	if (iter == orderOfHandlers.end()) {
 		return -1;
 	}
@@ -431,19 +432,8 @@ index SoundAnalyzer::createChannelAuto(index framesCount) noexcept {
 
 	const index channelIndex = wave.getBuffersCount() - 1;
 
-	if (waveFormat.channelLayout == nullptr) {
-		if (waveFormat.channelsCount >= 2) {
-			resampleToAuto(0, 1, framesCount);
-
-			return channelIndex;
-		}
-
-		copyToAuto(0, framesCount);
-		return channelIndex;
-	}
-
-	auto left = waveFormat.channelLayout->fromChannel(Channel::FRONT_LEFT);
-	auto right = waveFormat.channelLayout->fromChannel(Channel::FRONT_RIGHT);
+	auto left = waveFormat.channelLayout.fromChannel(Channel::eFRONT_LEFT);
+	auto right = waveFormat.channelLayout.fromChannel(Channel::eFRONT_RIGHT);
 
 	if (left.has_value() && right.has_value()) {
 		resampleToAuto(left.value(), right.value(), framesCount);
@@ -458,16 +448,14 @@ index SoundAnalyzer::createChannelAuto(index framesCount) noexcept {
 		return channelIndex;
 	}
 
-	auto center = waveFormat.channelLayout->fromChannel(Channel::CENTER);
+	auto center = waveFormat.channelLayout.fromChannel(Channel::eCENTER);
 	if (center.has_value()) {
 		copyToAuto(center.value(), framesCount);
 		return channelIndex;
 	}
 
-	for (auto &handler : channels[Channel::AUTO].handlers) {
-		handler->reset();
-	}
-	return -1;
+	copyToAuto(0, framesCount);
+	return channelIndex;
 }
 
 void SoundAnalyzer::resampleToAuto(index first, index second, index framesCount) noexcept {

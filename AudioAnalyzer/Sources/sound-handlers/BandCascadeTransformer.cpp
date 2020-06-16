@@ -213,7 +213,7 @@ void BandCascadeTransformer::updateValues(const SoundHandler& source, const Band
 			} else {
 				value /= cascadesSummed;
 			}
-		} else if (params.mixFunction == MixFunction::PRODUCT) {
+		} else {
 			value = 0.0;
 		}
 

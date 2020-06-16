@@ -14,12 +14,12 @@ namespace rxtd::audio_analyzer {
 	class Format {
 	public:
 		enum Value {
-			INVALID,
-			PCM_S16,
-			PCM_F32,
+			eINVALID,
+			ePCM_S16,
+			ePCM_F32,
 		};
 	private:
-		Value value = INVALID;
+		Value value = eINVALID;
 
 	public:
 		Format() = default;
@@ -35,46 +35,8 @@ namespace rxtd::audio_analyzer {
 	struct MyWaveFormat {
 		index samplesPerSec = 0;
 		index channelsCount = 0;
-		Format format = Format::INVALID;
-		const ChannelLayout* channelLayout = nullptr;
-
-
-		MyWaveFormat() = default;
-		~MyWaveFormat() {
-			destroy();
-		}
-
-		MyWaveFormat(const MyWaveFormat& other) = default;
-		MyWaveFormat& operator=(const MyWaveFormat& other) = default;
-
-		MyWaveFormat(MyWaveFormat&& other) noexcept
-			: samplesPerSec(other.samplesPerSec),
-			  channelsCount(other.channelsCount),
-			  format(other.format),
-			  channelLayout(other.channelLayout) {
-			other.destroy();
-		}
-		MyWaveFormat& operator=(MyWaveFormat&& other) noexcept {
-			if (this == &other)
-				return *this;
-
-			samplesPerSec = other.samplesPerSec;
-			channelsCount = other.channelsCount;
-			format = std::move(other.format);
-			channelLayout = other.channelLayout;
-
-			other.destroy();
-
-			return *this;
-		}
-
-	private:
-		void destroy() {
-			samplesPerSec = 0;
-			channelsCount = 0;
-			format = Format::INVALID;
-			channelLayout = nullptr;
-		}
+		Format format = Format::eINVALID;
+		ChannelLayout channelLayout;
 	};
 
 }

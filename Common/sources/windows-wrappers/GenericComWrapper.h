@@ -61,5 +61,8 @@ namespace rxtd::utils {
 		T* operator->() {
 			return ptr;
 		}
+		const T* operator->() const {
+			return ptr;
+		}
 	};
 }

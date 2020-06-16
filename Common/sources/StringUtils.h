@@ -10,6 +10,9 @@
 #pragma once
 #include <charconv>
 
+#undef min
+#undef max
+
 namespace rxtd::utils {
 	class SubstringViewInfo {
 		index offset { };
@@ -23,14 +26,14 @@ namespace rxtd::utils {
 
 		sview makeView(const wchar_t* base) const;
 
-		template<typename CT>
-		std::basic_string_view<wchar_t, CT> makeView(std::basic_string_view<wchar_t, CT> base) const {
-			return std::basic_string_view<wchar_t, CT>(base.data() + offset, length);
+		template<typename CharTraits>
+		std::basic_string_view<wchar_t, CharTraits> makeView(std::basic_string_view<wchar_t, CharTraits> base) const {
+			return std::basic_string_view<wchar_t, CharTraits>(base.data() + offset, length);
 		}
 
-		template<typename CT, typename A>
-		std::basic_string_view<wchar_t, CT> makeView(const std::basic_string<wchar_t, CT, A>& base) const {
-			return std::basic_string_view<wchar_t, CT>(base.data() + offset, length);
+		template<typename CharTraits, typename Allocator>
+		std::basic_string_view<wchar_t, CharTraits> makeView(const std::basic_string<wchar_t, CharTraits, Allocator>& base) const {
+			return std::basic_string_view<wchar_t, CharTraits>(base.data() + offset, length);
 		}
 
 		sview makeView(const std::vector<wchar_t>& base) const;
@@ -42,8 +45,8 @@ namespace rxtd::utils {
 
 	class StringUtils {
 	public:
-		template<typename CT>
-		static std::basic_string_view<wchar_t, CT> trim(std::basic_string_view<wchar_t, CT> view) {
+		template<typename CharTraits>
+		static std::basic_string_view<wchar_t, CharTraits> trim(std::basic_string_view<wchar_t, CharTraits> view) {
 			const auto begin = view.find_first_not_of(L" \t");
 			if (begin == sview::npos) {
 				return { };
@@ -62,45 +65,45 @@ namespace rxtd::utils {
 
 		static SubstringViewInfo trimInfo(sview source, SubstringViewInfo viewInfo);
 
-		template<typename CT, typename A>
-		static void lowerInplace(std::basic_string<wchar_t, CT, A>& str) {
+		template<typename CharTraits, typename Allocator>
+		static void lowerInplace(std::basic_string<wchar_t, CharTraits, Allocator>& str) {
 			for (auto& c : str) {
 				c = std::towlower(c);
 			}
 		}
-		template<typename CT, typename A>
-		static void upperInplace(std::basic_string<wchar_t, CT, A>& str) {
+		template<typename CharTraits, typename Allocator>
+		static void upperInplace(std::basic_string<wchar_t, CharTraits, Allocator>& str) {
 			for (auto& c : str) {
 				c = std::towupper(c);
 			}
 		}
 
-		template<typename CT>
-		static string copyLower(std::basic_string_view<wchar_t, CT> str) {
-			std::basic_string<wchar_t, CT> buffer { str };
+		template<typename CharTraits>
+		static string copyLower(std::basic_string_view<wchar_t, CharTraits> str) {
+			std::basic_string<wchar_t, CharTraits> buffer { str };
 			lowerInplace(buffer);
 
 			return buffer;
 		}
 
-		template<typename CT>
-		static string copyUpper(std::basic_string_view<wchar_t, CT> str) {
-			std::basic_string<wchar_t, CT> buffer { str };
+		template<typename CharTraits>
+		static string copyUpper(std::basic_string_view<wchar_t, CharTraits> str) {
+			std::basic_string<wchar_t, CharTraits> buffer { str };
 			upperInplace(buffer);
 
 			return buffer;
 		}
 
-		template<typename CT, typename A>
-		static void trimInplace(std::basic_string<wchar_t, CT, A>& str) {
+		template<typename CharTraits, typename Allocator>
+		static void trimInplace(std::basic_string<wchar_t, CharTraits, Allocator>& str) {
 			const auto firstNotSpace = std::find_if_not(str.begin(), str.end(), [](wint_t c) { return std::iswspace(c); });
 			str.erase(str.begin(), firstNotSpace);
 			const auto lastNotSpace = std::find_if_not(str.rbegin(), str.rend(), [](wint_t c) { return std::iswspace(c); }).base();
 			str.erase(lastNotSpace, str.end());
 		}
 
-		template<typename CT>
-		static std::basic_string<wchar_t, CT> trimCopy(std::basic_string_view<wchar_t, CT> str) {
+		template<typename CharTraits>
+		static std::basic_string<wchar_t, CharTraits> trimCopy(std::basic_string_view<wchar_t, CharTraits> str) {
 			// from stackoverflow
 			const auto firstNotSpace = std::find_if_not(str.begin(), str.end(), [](wint_t c) { return std::iswspace(c); });
 			const auto lastNotSpace = std::find_if_not(str.rbegin(), sview::const_reverse_iterator(firstNotSpace), [](wint_t c) { return std::iswspace(c); }).base();
@@ -113,20 +116,20 @@ namespace rxtd::utils {
 		}
 
 
-		template<typename CT>
-		static bool endsWith(std::basic_string_view<wchar_t, CT> str, std::basic_string_view<wchar_t, CT> suffix) {
+		template<typename CharTraits>
+		static bool endsWith(std::basic_string_view<wchar_t, CharTraits> str, std::basic_string_view<wchar_t, CharTraits> suffix) {
 			// from stackoverflow
 			return str.size() >= suffix.size() && 0 == str.compare(str.size() - suffix.size(), suffix.size(), suffix);
 		}
 
-		template<typename CT>
-		static bool startsWith(std::basic_string_view<wchar_t, CT> str, std::basic_string_view<wchar_t, CT> prefix) {
+		template<typename CharTraits>
+		static bool startsWith(std::basic_string_view<wchar_t, CharTraits> str, std::basic_string_view<wchar_t, CharTraits> prefix) {
 			// from stackoverflow
 			return str.size() >= prefix.size() && 0 == str.compare(0, prefix.size(), prefix);
 		}
 
-		template<typename CT, typename A>
-		static void substringInplace(std::basic_string<wchar_t, CT, A>& str, index begin, index count = string::npos) {
+		template<typename CharTraits, typename Allocator>
+		static void substringInplace(std::basic_string<wchar_t, CharTraits, Allocator>& str, index begin, index count = string::npos) {
 			if (begin > 0) {
 				str.erase(0, begin);
 			}
@@ -196,7 +199,7 @@ namespace rxtd::utils {
 			return result;
 		}
 
-		static double parseFractional(sview view) {
+		static double parseFractional(sview view) { // TODO remove this mess
 			char buffer[80];
 
 			view = trim(view);

@@ -13,10 +13,7 @@
 #include <Vector2D.h>
 #include "OptionParser.h"
 #include "RainmeterWrappers.h"
-
-namespace rxtd::utils {
-	class Rainmeter;
-}
+#include "MutableLinearInterpolator.h"
 
 namespace rxtd::audio_analyzer {
 	class WaveForm : public SoundHandler {
@@ -63,34 +60,7 @@ namespace rxtd::audio_analyzer {
 		utils::Vector2D<uint32_t> imageBuffer;
 		string filepath { };
 
-		class MutableLinearInterpolator {
-			double valMin = 0;
-			double linMin = 0;
-			double alpha = 1;
-			double reverseAlpha = 1;
-
-		public:
-			MutableLinearInterpolator() = default;
-
-			MutableLinearInterpolator(double linMin, double linMax, double valMin, double valMax) {
-				setParams(linMin, linMax, valMin, valMax);
-			}
-
-			void setParams(double linMin, double linMax, double valMin, double valMax) {
-				this->linMin = linMin;
-				this->valMin = valMin;
-				this->alpha = (valMax - valMin) / (linMax - linMin);
-				this->reverseAlpha = 1 / alpha;
-			}
-
-			double toValue(double linear) const {
-				return valMin + (linear - linMin) * alpha;
-			}
-
-			double toLinear(double value) const {
-				return linMin + (value - valMin) * reverseAlpha;
-			}
-		} interpolator;
+		utils::MutableLinearInterpolator interpolator;
 
 	public:
 		void setParams(const Params& _params);

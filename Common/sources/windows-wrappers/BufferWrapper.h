@@ -40,10 +40,11 @@ namespace rxtd::utils {
 			result(other.result),
 			silent(other.silent) {
 
+			other.client = nullptr;
 			other.buffer = nullptr;
 			other.framesCount = 0;
-			other.silent = true;
 			other.result = { };
+			other.silent = true;
 		}
 
 		BufferWrapper& operator=(BufferWrapper&& other) noexcept {

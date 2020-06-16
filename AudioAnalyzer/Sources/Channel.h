@@ -30,30 +30,35 @@ namespace rxtd::audio_analyzer {
 		static ChannelParser channelParser;
 
 		enum Value {
-			FRONT_LEFT = 0,
-			FRONT_RIGHT = 1,
-			CENTER = 2,
-			LOW_FREQUENCY = 3,
-			BACK_LEFT = 4,
-			BACK_RIGHT = 5,
-			SIDE_LEFT = 6,
-			SIDE_RIGHT = 7,
-			AUTO,
+			eFRONT_LEFT,
+			eFRONT_RIGHT,
+			eCENTER,
+			eCENTER_BACK,
+			eLOW_FREQUENCY,
+			eBACK_LEFT,
+			eBACK_RIGHT,
+			eSIDE_LEFT,
+			eSIDE_RIGHT,
+			eAUTO,
 		};
 
+		using underlying_type = std::underlying_type<Value>::type;
+
 	private:
-		Value value = FRONT_LEFT;
+		Value value = eFRONT_LEFT;
 
 	public:
 		Channel() = default;
 		Channel(Value value);
+		underlying_type toUnderlyingType() const {
+			return static_cast<underlying_type>(value);
+		}
 
 		bool operator==(Channel a) const;
 
 		bool operator!=(Channel a) const;
 
-		index toInt() const;
-		const wchar_t* technicalName() const;
+		sview technicalName() const;
 
 	private:
 		friend bool operator <(Channel left, Channel right);
@@ -67,118 +72,80 @@ namespace rxtd::audio_analyzer {
 namespace std {
 	template<>
 	struct hash<rxtd::audio_analyzer::Channel> {
-		size_t operator()(const rxtd::audio_analyzer::Channel &c) const {
-			return std::hash<decltype(c.toInt())>()(c.toInt());
+		using Channel = audio_analyzer::Channel;
+		using hash_type = audio_analyzer::Channel::underlying_type;
+
+		size_t operator()(const Channel &c) const {
+			return std::hash<hash_type>()(c.toUnderlyingType());
 		}
 	};
 }
 
 namespace rxtd::audio_analyzer {
+	class LayoutBuilder;
+
 	class ChannelLayout {
-		string name;
-		std::unordered_set<Channel> channels;
-		std::unordered_map<Channel, index> forward;
-
-		ChannelLayout() = default;
-
+		friend LayoutBuilder;
+	
+		sview name = { };
+		std::unordered_map<Channel, index> channelMap;
+	
 	public:
-
-		const string& getName() const;
+	
+		sview getName() const;
 		std::optional<index> fromChannel(Channel channel) const;
-		const std::unordered_set<Channel> & channelsView() const;
+		bool contains(Channel channel) const;
 
-		template<Channel::Value... channels>
-		static ChannelLayout create(string name);
-	private:
-		template<index N, Channel::Value nextChannel, Channel::Value... otherChannels>
-		typename std::enable_if<sizeof...(otherChannels) != 0, void>::type
-			insert();
-		template<index N, Channel::Value nextChannel>
-		void insert();
+		static ChannelLayout create(string name, std::vector<Channel::Value> channels);
+	
+		class const_iterator {
+			decltype(channelMap)::const_iterator iter;
+	
+		public:
+			explicit const_iterator(const decltype(channelMap)::const_iterator& iter) :
+				iter(iter) { }
+	
+			const_iterator& operator++() {
+				++iter;
+				return *this;
+			}
+			Channel operator*() const {
+				return (*iter).first;
+			}
+			bool operator!=(const const_iterator& other) const {
+				return iter != other.iter;
+			}
+		};
+		const_iterator begin() const {
+			return const_iterator { channelMap.cbegin() };
+		}
+		const_iterator end() const {
+			return const_iterator { channelMap.cend() };
+		}
+
+		const std::unordered_map<Channel, index>& getChannelsView() const;
 	};
 
-	template <Channel::Value... channels>
-	ChannelLayout ChannelLayout::create(string name) {
-		ChannelLayout result;
-		result.name = name;
-		result.insert<0, channels...>();
-
-		return result;
-	}
-
-	template <index N, Channel::Value nextChannel, Channel::Value... otherChannels>
-	typename std::enable_if<sizeof...(otherChannels) != 0, void>::type
-		ChannelLayout::insert() {
-		channels.insert(nextChannel);
-		forward[nextChannel] = N;
-
-		insert<N + 1, otherChannels...>();
-	}
-
-	template <index N, Channel::Value lastChannel>
-	void ChannelLayout::insert() {
-		channels.insert(lastChannel);
-		forward[lastChannel] = N;
-	}
-
-	class ChannelLayoutKeeper {
-		ChannelLayout mono = ChannelLayout::create<
-			Channel::CENTER
-		>(L"1.0 mono");
-		ChannelLayout _1_1 = ChannelLayout::create<
-			Channel::CENTER, Channel::LOW_FREQUENCY
-		>(L"1.1");
-		ChannelLayout stereo = ChannelLayout::create<
-			Channel::FRONT_LEFT, Channel::FRONT_RIGHT
-		>(L"2.0 stereo");
-		ChannelLayout _2_1 = ChannelLayout::create<
-			Channel::FRONT_LEFT, Channel::FRONT_RIGHT,
-			Channel::LOW_FREQUENCY
-		>(L"2.1");
-		ChannelLayout _3_0 = ChannelLayout::create<
-			Channel::FRONT_LEFT, Channel::FRONT_RIGHT,
-			Channel::CENTER
-		>(L"3.0");
-		ChannelLayout _3_1 = ChannelLayout::create<
-			Channel::FRONT_LEFT, Channel::FRONT_RIGHT,
-			Channel::CENTER, Channel::LOW_FREQUENCY
-		>(L"3.1");
-		ChannelLayout quad = ChannelLayout::create<
-			Channel::FRONT_LEFT, Channel::FRONT_RIGHT,
-			Channel::BACK_LEFT, Channel::BACK_RIGHT
-		>(L"4.0 quad");
-		ChannelLayout _5_0 = ChannelLayout::create<
-			Channel::FRONT_LEFT, Channel::FRONT_RIGHT,
-			Channel::CENTER,
-			Channel::SIDE_LEFT, Channel::SIDE_RIGHT
-		>(L"5.0");
-		ChannelLayout _5_1 = ChannelLayout::create<
-			Channel::FRONT_LEFT, Channel::FRONT_RIGHT,
-			Channel::CENTER, Channel::LOW_FREQUENCY,
-			Channel::BACK_LEFT, Channel::BACK_RIGHT
-		>(L"5.1");
-		ChannelLayout _7_0 = ChannelLayout::create<
-			Channel::FRONT_LEFT, Channel::FRONT_RIGHT,
-			Channel::CENTER,
-			Channel::BACK_LEFT, Channel::BACK_RIGHT,
-			Channel::SIDE_LEFT, Channel::SIDE_RIGHT
-		>(L"7.0");
-		ChannelLayout _7_1surround = ChannelLayout::create<
-			Channel::FRONT_LEFT, Channel::FRONT_RIGHT,
-			Channel::CENTER, Channel::LOW_FREQUENCY,
-			Channel::BACK_LEFT, Channel::BACK_RIGHT,
-			Channel::SIDE_LEFT, Channel::SIDE_RIGHT
-		>(L"7.1 surround");
+	class LayoutBuilder {
+		index nextIndex = 0;
+		ChannelLayout layout { };
 
 	public:
-		ChannelLayoutKeeper() = default;
+		LayoutBuilder& add(Channel channel);
+		LayoutBuilder& skip() {
+			nextIndex++;
 
-		const ChannelLayout* getMono() const;
-		const ChannelLayout* getStereo() const;
-		const ChannelLayout* layoutFromChannelMask(uint32_t mask) const;
+			return *this;
+		}
+		ChannelLayout finish() const;
 	};
 
-	extern ChannelLayoutKeeper layoutKeeper;
+	class ChannelLayouts {
+	public:
+		static ChannelLayout getMono();
+		static ChannelLayout getStereo();
+		static ChannelLayout layoutFromChannelMask(uint32_t mask, bool forceBackSpeakers);
+	};
 }
 
 

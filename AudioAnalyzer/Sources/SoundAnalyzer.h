@@ -19,8 +19,8 @@ namespace rxtd::audio_analyzer {
 	class SoundAnalyzer {
 	public:
 		enum class SearchError {
-			CHANNEL_NOT_FOUND,
-			HANDLER_NOT_FOUND,
+			eCHANNEL_NOT_FOUND,
+			eHANDLER_NOT_FOUND,
 		};
 	private:
 		MyWaveFormat waveFormat;

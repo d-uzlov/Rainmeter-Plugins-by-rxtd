@@ -224,7 +224,7 @@ double OptionParser::Option::parseNumber(sview source) {
 	auto exp = parser.getExpression();
 	exp.solve();
 
-	if (exp.type != ExpressionType::NUMBER) {
+	if (exp.type != ExpressionType::eNUMBER) {
 		return 0;
 	}
 

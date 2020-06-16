@@ -9,13 +9,12 @@
 
 #pragma once
 #include "RainmeterWrappers.h"
-#include "StringUtils.h"
 
 namespace rxtd::utils {
 	enum class MeasureState {
-		WORKING,
-		TEMP_BROKEN,
-		BROKEN
+		eWORKING,
+		eTEMP_BROKEN,
+		eBROKEN
 	};
 	class TypeHolder {
 	protected:
@@ -26,7 +25,7 @@ namespace rxtd::utils {
 		Rainmeter::Logger& log;
 
 	private:
-		MeasureState measureState = MeasureState::WORKING;
+		MeasureState measureState = MeasureState::eWORKING;
 
 		double resultDouble = 0.0;
 		const wchar_t *resultString = nullptr;

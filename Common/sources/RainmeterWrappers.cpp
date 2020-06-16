@@ -49,7 +49,7 @@ Rainmeter::Logger& Rainmeter::Logger::operator=(Logger&& other) noexcept {
 	return *this;
 }
 
-void Rainmeter::Logger::log(LEVEL logLevel, const wchar_t* string) {
+void Rainmeter::Logger::log(LogLevel logLevel, const wchar_t* string) {
 	RmLog(rm, static_cast<int>(logLevel), string);
 }
 

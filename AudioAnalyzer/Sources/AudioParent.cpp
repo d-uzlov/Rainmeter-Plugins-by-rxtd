@@ -24,7 +24,7 @@ AudioParent::AudioParent(utils::Rainmeter&& rain) : TypeHolder(std::move(rain)),
 	parentManager.add(*this);
 
 	if (!deviceManager.isObjectValid()) {
-		setMeasureState(utils::MeasureState::BROKEN);
+		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
 	}
 
@@ -32,12 +32,12 @@ AudioParent::AudioParent(utils::Rainmeter&& rain) : TypeHolder(std::move(rain)),
 	const auto port = this->rain.readString(L"Port") % ciView();
 	DeviceManager::Port portEnum;
 	if (port == L"" || port == L"Output") {
-		portEnum = DeviceManager::Port::OUTPUT;
+		portEnum = DeviceManager::Port::eOUTPUT;
 	} else if (port == L"Input") {
-		portEnum = DeviceManager::Port::INPUT;
+		portEnum = DeviceManager::Port::eINPUT;
 	} else {
 		log.error(L"Invalid Port '{}', must be one of: Output, Input. Set to Output.", port);
-		portEnum = DeviceManager::Port::OUTPUT;
+		portEnum = DeviceManager::Port::eOUTPUT;
 	}
 
 	auto id = this->rain.readString(L"DeviceID");
@@ -69,10 +69,12 @@ std::tuple<double, const wchar_t*> AudioParent::_update() {
 	// TODO make an option for this value?
 	constexpr index maxBuffers = 15;
 
+	bool changed = deviceManager.actualizeDevice();
+
 	for (index i = 0; i < maxBuffers; ++i) {
 		const auto fetchResult = deviceManager.nextBuffer();
 		switch (fetchResult.getState()) {
-		case DeviceManager::BufferFetchState::OK:
+		case DeviceManager::BufferFetchState::eOK:
 		{
 			auto &bufferWrapper = fetchResult.getBuffer();
 
@@ -83,22 +85,22 @@ std::tuple<double, const wchar_t*> AudioParent::_update() {
 			break;
 		}
 
-		case DeviceManager::BufferFetchState::NO_DATA:
+		case DeviceManager::BufferFetchState::eNO_DATA:
 			goto loop_end;
 
-		case DeviceManager::BufferFetchState::DEVICE_ERROR:
+		case DeviceManager::BufferFetchState::eDEVICE_ERROR:
 			soundAnalyzer.resetValues();
 			goto loop_end;
 
-		case DeviceManager::BufferFetchState::INVALID_STATE:
+		case DeviceManager::BufferFetchState::eINVALID_STATE:
 			soundAnalyzer.resetValues();
 			log.error(L"Unrecoverable error");
-			setMeasureState(utils::MeasureState::BROKEN);
+			setMeasureState(utils::MeasureState::eBROKEN);
 			goto loop_end;
 
 		default:
 			log.error(L"Unexpected BufferFetchState {}", fetchResult.getState());
-			setMeasureState(utils::MeasureState::BROKEN);
+			setMeasureState(utils::MeasureState::eBROKEN);
 			goto loop_end;
 		}
 	}
@@ -143,11 +145,11 @@ const wchar_t* AudioParent::_resolve(int argc, const wchar_t* argv[]) {
 		if (propVariant.index() == 1) {
 			const auto error = std::get<1>(propVariant);
 			switch (error) {
-			case SoundAnalyzer::SearchError::CHANNEL_NOT_FOUND:
+			case SoundAnalyzer::SearchError::eCHANNEL_NOT_FOUND:
 				log.printer.print(L"Invalid section variable resolve: channel '{}' not found", argv[1]);
 				return log.printer.getBufferPtr();
 
-			case SoundAnalyzer::SearchError::HANDLER_NOT_FOUND:
+			case SoundAnalyzer::SearchError::eHANDLER_NOT_FOUND:
 				log.error(L"Invalid section variable resolve: handler '{}:{}' not found", argv[1], argv[2]);
 				return nullptr;
 

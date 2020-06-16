@@ -16,7 +16,7 @@ namespace rxtd::utils {
 			static constexpr index dibSize = 108;
 
 			struct {
-				uint16_t ID = 0x4d42; // == 'BM' (little-endian)
+				uint16_t id = 0x4d42; // == 'BM' (little-endian)
 				uint32_t fileSizeInBytes { };
 				uint16_t reserved1 = 0;
 				uint16_t reserved2 = 0;

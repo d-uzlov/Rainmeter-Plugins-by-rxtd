@@ -27,7 +27,7 @@ const IID IID_IAudioCaptureClient = __uuidof(IAudioCaptureClient);
 const IID IID_IAudioRenderClient = __uuidof(IAudioRenderClient);
 
 
-static constexpr long long REF_TIMES_PER_SEC = 1000'000'0; // 1 sec in ns
+static constexpr long long REF_TIMES_PER_SEC = 1000'000'0; // 1 sec in 100-ns units
 
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
@@ -186,10 +186,10 @@ DeviceManager::CaptureManager::create(IMMDevice& audioDeviceHandle, bool loopbac
 		nullptr);
 	if (hr != S_OK) {
 		if (hr == AUDCLNT_E_DEVICE_IN_USE) {
-			// If device is in inclusive mode, then call to Initialize above leads to commit leak
+			// If device is in exclusive mode, then call to Initialize above leads to leak in Commit memory area
 			// Tested on LTSB 1607, last updates as of 2019-01-10
 			// Google "WASAPI exclusive memory leak"
-			// I consider this error unrecoverable to prevent leak
+			// I consider this error unrecoverable to prevent further leaks
 			return Error { false, L"Device operates in exclusive mode", hr };
 		}
 		return Error { true, L"AudioClient.Initialize() fail", hr };
@@ -225,7 +225,7 @@ bool DeviceManager::CaptureManager::isEmpty() const {
 }
 
 bool DeviceManager::CaptureManager::isValid() const {
-	return !isEmpty() && waveFormat.format != Format::INVALID;
+	return !isEmpty() && waveFormat.format != Format::eINVALID;
 }
 
 utils::BufferWrapper DeviceManager::CaptureManager::readBuffer() {
@@ -272,14 +272,17 @@ void DeviceManager::deviceInit() {
 	}
 
 	if (!createSilentRenderer()) {
+		deviceRelease();
 		return;
 	}
 
 	if (!createCaptureManager()) {
+		deviceRelease();
 		return;
 	}
 
 	if (!captureManager.isValid()) {
+		deviceRelease();
 		return;
 	}
 
@@ -294,13 +297,13 @@ bool DeviceManager::acquireDeviceHandle() {
 	if (!deviceID.empty()) {
 		resultCode = audioEnumeratorHandle->GetDevice(deviceID.c_str(), &audioDeviceHandle);
 		if (resultCode != S_OK) {
-			logger.error(L"Audio {} device '{}' not found (error {error}).", port == Port::OUTPUT ? L"output" : L"input", deviceID, resultCode);
+			logger.error(L"Audio {} device '{}' not found (error {error}).", port == Port::eOUTPUT ? L"output" : L"input", deviceID, resultCode);
 			return false;
 		}
 	} else {
-		resultCode = audioEnumeratorHandle->GetDefaultAudioEndpoint(port == Port::OUTPUT ? eRender : eCapture, eConsole, &audioDeviceHandle);
+		resultCode = audioEnumeratorHandle->GetDefaultAudioEndpoint(port == Port::eOUTPUT ? eRender : eCapture, eConsole, &audioDeviceHandle);
 		if (resultCode != S_OK) {
-			logger.error(L"Can't get Default {} Audio device (error {error}).", port == Port::OUTPUT ? L"output" : L"input", resultCode);
+			logger.error(L"Can't get Default {} Audio device (error {error}).", port == Port::eOUTPUT ? L"output" : L"input", resultCode);
 			return false;
 		}
 	}
@@ -309,62 +312,55 @@ bool DeviceManager::acquireDeviceHandle() {
 }
 
 void DeviceManager::deviceRelease() {
-	silentRenderer = SilentRenderer();
-	captureManager = CaptureManager();
-
-	if (audioDeviceHandle != nullptr) {
-		audioDeviceHandle->Release();
-		audioDeviceHandle = nullptr;
-	}
+	silentRenderer = { };
+	captureManager = { };
+	audioDeviceHandle = { };
 
 	deviceInfo.reset();
 }
 
-void DeviceManager::readDeviceName() {
-	deviceInfo.name.clear();
-
-	if (audioDeviceHandle == nullptr) {
-		return;
+string DeviceManager::readDeviceName(utils::GenericComWrapper<IMMDevice>& deviceHandle) {
+	if (!deviceHandle.isValid()) {
+		return {};
 	}
 
-	utils::GenericComWrapper<IPropertyStore>	props;
-	if (audioDeviceHandle->OpenPropertyStore(STGM_READ, &props) != S_OK) {
-		return;
+	utils::GenericComWrapper<IPropertyStore> props;
+	if (deviceHandle->OpenPropertyStore(STGM_READ, &props) != S_OK) {
+		return {};
 	}
 
-	utils::PropVariantWrapper	prop;
+	utils::PropVariantWrapper prop;
 	if (props->GetValue(PKEY_Device_FriendlyName, &prop) != S_OK) {
-		return;
+		return {};
 	}
 
-	deviceInfo.name = prop.getCString();
+	return prop.getCString();
 }
 
-void DeviceManager::readDeviceId() {
-	deviceInfo.id.clear();
+string DeviceManager::readDeviceId(utils::GenericComWrapper<IMMDevice>& deviceHandle) {
+	string id { };
 
-	if (audioDeviceHandle == nullptr) {
-		return;
+	if (!deviceHandle.isValid()) {
+		return {};
 	}
 
 	wchar_t *resultCString = nullptr;
-	if (audioDeviceHandle->GetId(&resultCString) != S_OK) {
-		return;
+	if (deviceHandle->GetId(&resultCString) != S_OK) {
+		return {};
 	}
-	deviceInfo.id = resultCString;
+	id = resultCString;
 
 	CoTaskMemFree(resultCString);
+
+	return id;
 }
 
-void DeviceManager::readDeviceFormat() {
-	const auto& waveFormat = captureManager.getWaveFormat();
-	auto &format = deviceInfo.format;
-
-	if (waveFormat.format == Format::INVALID) {
-		format = waveFormat.format.toString();
-		return;
+string DeviceManager::makeFormatString(MyWaveFormat waveFormat) const {
+	if (waveFormat.format == Format::eINVALID) {
+		return waveFormat.format.toString();
 	}
 
+	string format;
 	format.clear();
 
 	format.reserve(64);
@@ -375,20 +371,22 @@ void DeviceManager::readDeviceFormat() {
 	format += std::to_wstring(waveFormat.samplesPerSec);
 	format += L"Hz, "sv;
 
-	if (waveFormat.channelLayout == nullptr) {
+	if (waveFormat.channelLayout.getName().empty()) {
 		format += L"unknown layout: "sv;
 		format += std::to_wstring(waveFormat.channelsCount);
 		format += L"ch"sv;
 	} else {
-		format += waveFormat.channelLayout->getName();
+		format += waveFormat.channelLayout.getName();
 	}
+
+	return format;
 }
 
 bool DeviceManager::createSilentRenderer() {
 	return true;
 	// TODO remove function or uncomment
-	if (port == Port::OUTPUT) {
-		silentRenderer = SilentRenderer { audioDeviceHandle };
+	if (port == Port::eOUTPUT) {
+		silentRenderer = SilentRenderer { audioDeviceHandle.getPointer() };
 		if (silentRenderer.isError()) {
 			logger.warning(L"Can't create silent render client");
 		}
@@ -396,7 +394,7 @@ bool DeviceManager::createSilentRenderer() {
 }
 
 bool DeviceManager::createCaptureManager() {
-	auto result = CaptureManager::create(*audioDeviceHandle, port == Port::OUTPUT);
+	auto result = CaptureManager::create(*audioDeviceHandle.getPointer(), port == Port::eOUTPUT);
 	
 	if (result.index() == 1) {
 		const auto error = std::get<CaptureManager::Error>(result);
@@ -437,30 +435,30 @@ std::optional<MyWaveFormat> DeviceManager::parseStreamFormat(WAVEFORMATEX *waveF
 		const auto formatExtensible = reinterpret_cast<WAVEFORMATEXTENSIBLE*>(waveFormatEx);
 
 		if (formatExtensible->SubFormat == KSDATAFORMAT_SUBTYPE_PCM && waveFormatEx->wBitsPerSample == 16) {
-			waveFormat.format = Format::PCM_S16;
+			waveFormat.format = Format::ePCM_S16;
 		} else if (formatExtensible->SubFormat == KSDATAFORMAT_SUBTYPE_IEEE_FLOAT) {
-			waveFormat.format = Format::PCM_F32;
+			waveFormat.format = Format::ePCM_F32;
 		} else {
 			return std::nullopt;
 		}
 
-		waveFormat.channelLayout = layoutKeeper.layoutFromChannelMask(formatExtensible->dwChannelMask);
+		waveFormat.channelLayout = ChannelLayouts::layoutFromChannelMask(formatExtensible->dwChannelMask, true); // TODO second param should be an option
 
 		return waveFormat;
 	}
 
 	if (waveFormatEx->wFormatTag == WAVE_FORMAT_PCM && waveFormatEx->wBitsPerSample == 16) {
-		waveFormat.format = Format::PCM_S16;
+		waveFormat.format = Format::ePCM_S16;
 	} else if (waveFormatEx->wFormatTag == WAVE_FORMAT_IEEE_FLOAT) {
-		waveFormat.format = Format::PCM_F32;
+		waveFormat.format = Format::ePCM_F32;
 	} else {
 		return std::nullopt;
 	}
 
 	if (waveFormatEx->nChannels == 1) {
-		waveFormat.channelLayout = layoutKeeper.getMono();
+		waveFormat.channelLayout = ChannelLayouts::getMono();
 	} else if (waveFormatEx->nChannels == 2) {
-		waveFormat.channelLayout = layoutKeeper.getStereo();
+		waveFormat.channelLayout = ChannelLayouts::getStereo();
 	} else {
 		return std::nullopt;
 	}
@@ -469,9 +467,10 @@ std::optional<MyWaveFormat> DeviceManager::parseStreamFormat(WAVEFORMATEX *waveF
 }
 
 void DeviceManager::readDeviceInfo() {
-	readDeviceName();
-	readDeviceId();
-	readDeviceFormat();
+	deviceInfo.name = readDeviceName(audioDeviceHandle);
+	deviceInfo.id = readDeviceId(audioDeviceHandle);
+	const auto& waveFormat = captureManager.getWaveFormat();
+	deviceInfo.format = makeFormatString(waveFormat);
 }
 
 bool DeviceManager::isObjectValid() const {
@@ -495,6 +494,29 @@ void DeviceManager::init() {
 	deviceInit();
 }
 
+bool DeviceManager::actualizeDevice() {
+	if (!deviceID.empty()) {
+		return false; // nothing to actualize, only default device can change
+	}
+
+	utils::GenericComWrapper<IMMDevice> defaultDeviceHandle;
+	const HRESULT resultCode = audioEnumeratorHandle->GetDefaultAudioEndpoint(port == Port::eOUTPUT ? eRender : eCapture, eConsole, &defaultDeviceHandle);
+	if (resultCode != S_OK) {
+		logger.error(L"Can't get Default {} Audio device (error {error}).", port == Port::eOUTPUT ? L"output" : L"input", resultCode);
+		return false;
+	}
+
+	const auto defaultDeviceId = readDeviceId(defaultDeviceHandle);
+
+	if (defaultDeviceId != deviceInfo.id) {
+		deviceRelease();
+		deviceInit();
+		return true;
+	}
+
+	return false;
+}
+
 DeviceManager::BufferFetchResult DeviceManager::nextBuffer() {
 	if (!objectIsValid) {
 		return BufferFetchResult::invalidState();
@@ -511,7 +533,6 @@ DeviceManager::BufferFetchResult DeviceManager::nextBuffer() {
 	const auto queryResult = bufferWrapper.getResult();
 	const auto now = clock::now();
 
-	// detect device disconnection
 	switch (queryResult) {
 	case S_OK:
 		lastBufferFillTime = now;
@@ -557,7 +578,7 @@ void DeviceManager::updateDeviceList() {
 	deviceList.clear();
 
 	utils::GenericComWrapper<IMMDeviceCollection> collection;
-	if (audioEnumeratorHandle->EnumAudioEndpoints(port == Port::OUTPUT ? eRender : eCapture,
+	if (audioEnumeratorHandle->EnumAudioEndpoints(port == Port::eOUTPUT ? eRender : eCapture,
 		DEVICE_STATE_ACTIVE | DEVICE_STATE_UNPLUGGED, &collection) != S_OK) {
 		return;
 	}
@@ -596,7 +617,7 @@ void DeviceManager::updateDeviceList() {
 }
 
 bool DeviceManager::getDeviceStatus() const {
-	if (audioDeviceHandle == nullptr) {
+	if (!audioDeviceHandle.isValid()) {
 		return false;
 	}
 	// static_assert(std::is_same<DWORD, uint32_t>::value); // ...
@@ -605,6 +626,7 @@ bool DeviceManager::getDeviceStatus() const {
 	if (result != S_OK) {
 		return false;
 	}
+
 	return state == DEVICE_STATE_ACTIVE;
 }
 

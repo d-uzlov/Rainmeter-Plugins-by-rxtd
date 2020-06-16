@@ -19,3 +19,7 @@
 
 #include "typedefs.h"
 #include "CaseInsensitiveString.h"
+
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif

@@ -11,7 +11,6 @@
 
 #include "BufferPrinter.h"
 
-#undef ERROR
 #undef min
 #undef max
 
@@ -35,31 +34,31 @@ namespace rxtd::utils {
 
 			template<typename... Args>
 			void error(const wchar_t *formatString, const Args&... args) {
-				log(LEVEL::ERROR, formatString, args...);
+				log(LogLevel::eERROR, formatString, args...);
 			}
 			template<typename... Args>
 			void warning(const wchar_t *formatString, const Args&... args) {
-				log(LEVEL::WARNING, formatString, args...);
+				log(LogLevel::eWARNING, formatString, args...);
 			}
 			template<typename... Args>
 			void notice(const wchar_t *formatString, const Args&... args) {
-				log(LEVEL::NOTICE, formatString, args...);
+				log(LogLevel::eNOTICE, formatString, args...);
 			}
 			template<typename... Args>
 			void debug(const wchar_t *formatString, const Args&... args) {
-				log(LEVEL::DEBUG, formatString, args...);
+				log(LogLevel::eDEBUG, formatString, args...);
 			}
 
 		private:
-			enum class LEVEL {
-				ERROR = 1,
-				WARNING = 2,
-				NOTICE = 3,
-				DEBUG = 4
+			enum class LogLevel {
+				eERROR = 1,
+				eWARNING = 2,
+				eNOTICE = 3,
+				eDEBUG = 4
 			};
 
 			template<typename... Args>
-			void log(LEVEL logLevel, const wchar_t *formatString, const Args&... args) {
+			void log(LogLevel logLevel, const wchar_t *formatString, const Args&... args) {
 				printer.append(formatString, args...);
 
 				log(logLevel, printer.getBufferPtr());
@@ -67,7 +66,7 @@ namespace rxtd::utils {
 				printer.reset();
 			}
 
-			void log(LEVEL logLevel, const wchar_t *string);
+			void log(LogLevel logLevel, const wchar_t *string);
 		};
 		class ContextLogger {
 			Logger& log;

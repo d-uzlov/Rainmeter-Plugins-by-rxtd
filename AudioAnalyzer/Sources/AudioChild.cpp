@@ -19,20 +19,20 @@ AudioChild::AudioChild(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rain)) 
 	const auto parentName = rain.readString(L"Parent") % ciView();
 	if (parentName == L"") {
 		log.error(L"Parent must be specified");
-		setMeasureState(utils::MeasureState::BROKEN);
+		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
 	}
 	parent = AudioParent::findInstance(rain.getSkin(), parentName);
 
 	if (parent == nullptr) {
 		log.error(L"Parent '{}' not found", parentName);
-		setMeasureState(utils::MeasureState::BROKEN);
+		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
 	}
 
-	if (parent->getState() == utils::MeasureState::BROKEN) {
+	if (parent->getState() == utils::MeasureState::eBROKEN) {
 		log.error(L"Parent '{}' is broken", parentName);
-		setMeasureState(utils::MeasureState::BROKEN);
+		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
 	}
 }
@@ -43,12 +43,12 @@ void AudioChild::_reload() {
 	const auto channelStr = rain.readString(L"Channel");
 
 	if (channelStr == L"") {
-		channel = Channel::AUTO;
+		channel = Channel::eAUTO;
 	} else {
 		auto channelOpt = Channel::channelParser.find(channelStr);
 		if (!channelOpt.has_value()) {
 			log.error(L"Invalid Channel '{}', set to Auto.", channelStr);
-			channel = Channel::AUTO;
+			channel = Channel::eAUTO;
 		} else {
 			channel = channelOpt.value();
 		}
@@ -63,9 +63,9 @@ void AudioChild::_reload() {
 
 	const auto stringValueStr = rain.readString(L"StringValue") % ciView();
 	if (stringValueStr == L"" || stringValueStr == L"Number") {
-		stringValueType = StringValue::NUMBER;
+		stringValueType = StringValue::eNUMBER;
 	} else if (stringValueStr == L"Info") {
-		stringValueType = StringValue::INFO;
+		stringValueType = StringValue::eINFO;
 		const auto infoStr = rain.readString(L"InfoRequest");
 
 		auto requestList = utils::OptionParser {}.asList(infoStr, L',');;
@@ -81,21 +81,21 @@ void AudioChild::_reload() {
 		}
 	} else {
 		log.error(L"Invalid StringValue '{}', set to Number.", stringValueStr);
-		stringValueType = StringValue::NUMBER;
+		stringValueType = StringValue::eNUMBER;
 	}
 
 	// TODO default number transform in handlers
 
 	const auto typeStr = rain.readString(L"NumberTransform") % ciView();
 	if (typeStr == L"" || typeStr == L"Linear") {
-		numberTransform = NumberTransform::LINEAR;
+		numberTransform = NumberTransform::eLINEAR;
 	} else if (typeStr == L"DB") {
-		numberTransform = NumberTransform::DB;
+		numberTransform = NumberTransform::eDB;
 	} else if (typeStr == L"None") {
-		numberTransform = NumberTransform::NONE;
+		numberTransform = NumberTransform::eNONE;
 	} else {
 		log.error(L"Invalid NumberTransform '{}', set to Linear.", typeStr);
-		numberTransform = NumberTransform::LINEAR;
+		numberTransform = NumberTransform::eLINEAR;
 	}
 
 	auto signedIndex = rain.readInt(L"Index");
@@ -111,11 +111,11 @@ std::tuple<double, const wchar_t*> AudioChild::_update() {
 	double result;
 
 	switch (numberTransform) {
-	case NumberTransform::LINEAR:
-	case NumberTransform::DB:
+	case NumberTransform::eLINEAR:
+	case NumberTransform::eDB:
 	{
 		result = parent->getValue(valueId, channel, valueIndex);
-		if (numberTransform == NumberTransform::LINEAR) {
+		if (numberTransform == NumberTransform::eLINEAR) {
 			result = result * correctingConstant;
 		} else { // NumberTransform::DB
 			result = 20.0 / correctingConstant * std::log10(result) + 1.0;
@@ -123,13 +123,13 @@ std::tuple<double, const wchar_t*> AudioChild::_update() {
 		break;
 	}
 
-	case NumberTransform::NONE:
+	case NumberTransform::eNONE:
 		result = 0.0;
 		break;
 
 	default:
 		log.error(L"Unexpected numberTransform: '{}'", numberTransform);
-		setMeasureState(utils::MeasureState::BROKEN);
+		setMeasureState(utils::MeasureState::eBROKEN);
 		result = 0.0;
 		break;
 	}
@@ -139,11 +139,11 @@ std::tuple<double, const wchar_t*> AudioChild::_update() {
 
 	const wchar_t *stringRes = stringValue.c_str();
 	switch (stringValueType) {
-	case StringValue::NUMBER:
+	case StringValue::eNUMBER:
 		stringRes = nullptr;
 		break;
 
-	case StringValue::INFO:
+	case StringValue::eINFO:
 		stringValue = parent->resolve(index(infoRequestC.size()), infoRequestC.data());
 		break;
 

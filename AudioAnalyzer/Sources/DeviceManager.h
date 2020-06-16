@@ -28,15 +28,15 @@ namespace rxtd::audio_analyzer {
 
 	public:
 		enum class Port {
-			OUTPUT,
-			INPUT,
+			eOUTPUT,
+			eINPUT,
 		};
 
 		enum class BufferFetchState {
-			OK,
-			NO_DATA,
-			DEVICE_ERROR,
-			INVALID_STATE,
+			eOK,
+			eNO_DATA,
+			eDEVICE_ERROR,
+			eINVALID_STATE,
 		};
 
 		class BufferFetchResult {
@@ -48,17 +48,17 @@ namespace rxtd::audio_analyzer {
 
 		public:
 			static BufferFetchResult noData() {
-				return BufferFetchResult(BufferFetchState::NO_DATA);
+				return BufferFetchResult(BufferFetchState::eNO_DATA);
 			}
 			static BufferFetchResult deviceError() {
-				return BufferFetchResult(BufferFetchState::DEVICE_ERROR);
+				return BufferFetchResult(BufferFetchState::eDEVICE_ERROR);
 			}
 			static BufferFetchResult invalidState() {
-				return BufferFetchResult(BufferFetchState::INVALID_STATE);
+				return BufferFetchResult(BufferFetchState::eINVALID_STATE);
 			}
 
 			BufferFetchResult(utils::BufferWrapper&& buffer)
-				: state(BufferFetchState::OK), buffer(std::move(buffer)) { }
+				: state(BufferFetchState::eOK), buffer(std::move(buffer)) { }
 
 			BufferFetchState getState() const {
 				return state;
@@ -104,8 +104,7 @@ namespace rxtd::audio_analyzer {
 				int32_t errorCode;
 
 				Error(bool temporary, string explanation, int32_t errorCode) :
-					temporary(temporary), explanation(std::move(explanation)), errorCode(errorCode) {
-				}
+					temporary(temporary), explanation(std::move(explanation)), errorCode(errorCode) { }
 			};
 		private:
 			utils::GenericComWrapper<IAudioClient> audioClient { };
@@ -118,8 +117,21 @@ namespace rxtd::audio_analyzer {
 			CaptureManager() = default;
 			~CaptureManager();
 
-			CaptureManager(CaptureManager&& other) noexcept = default;
-			CaptureManager& operator=(CaptureManager&& other) noexcept = default;
+
+			CaptureManager(CaptureManager&& other) noexcept
+				: audioClient(std::move(other.audioClient)),
+				  audioCaptureClient(std::move(other.audioCaptureClient)),
+				  waveFormat(std::move(other.waveFormat)) {
+			}
+
+			CaptureManager& operator=(CaptureManager&& other) noexcept {
+				if (this == &other)
+					return *this;
+				audioClient = std::move(other.audioClient);
+				audioCaptureClient = std::move(other.audioCaptureClient);
+				waveFormat = std::move(other.waveFormat);
+				return *this;
+			}
 
 			CaptureManager(const CaptureManager& other) = delete;
 			CaptureManager& operator=(const CaptureManager& other) = delete;
@@ -137,12 +149,12 @@ namespace rxtd::audio_analyzer {
 
 		utils::Rainmeter::Logger& logger;
 
-		Port port = Port::OUTPUT;
+		Port port = Port::eOUTPUT;
 		string deviceID;
 
 		utils::GenericComWrapper<IMMDeviceEnumerator> audioEnumeratorHandle;
 
-		IMMDevice *audioDeviceHandle { };
+		mutable utils::GenericComWrapper<IMMDevice> audioDeviceHandle { };
 
 		SilentRenderer silentRenderer;
 		CaptureManager captureManager;
@@ -182,6 +194,7 @@ namespace rxtd::audio_analyzer {
 
 		void setOptions(Port port, sview deviceID);
 		void init();
+		bool actualizeDevice(); // returns true if changed
 		BufferFetchResult nextBuffer();
 
 		const string& getDeviceName() const;
@@ -197,9 +210,9 @@ namespace rxtd::audio_analyzer {
 		static std::optional<MyWaveFormat> parseStreamFormat(WAVEFORMATEX* waveFormatEx);
 
 		void readDeviceInfo();
-		void readDeviceName();
-		void readDeviceId();
-		void readDeviceFormat();
+		static string readDeviceName(utils::GenericComWrapper<IMMDevice>& deviceHandle);
+		static string readDeviceId(utils::GenericComWrapper<IMMDevice>& deviceHandle);
+		string makeFormatString(MyWaveFormat waveFormat) const;
 
 		bool createSilentRenderer();
 		bool createCaptureManager();

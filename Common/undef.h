@@ -18,3 +18,6 @@
 #undef DEBUG
 
 #undef UNIQUE_NAME
+
+#undef min
+#undef max

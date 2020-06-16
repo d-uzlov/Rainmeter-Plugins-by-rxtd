@@ -472,7 +472,7 @@ void FftAnalyzer::updateParams() {
 
 	cascades.resize(params.cascadesCount);
 	for (layer_t i = 0; i < layer_t(cascades.size()); i++) {
-		const auto next = i + 1 < cascades.size() ? &cascades[i + 1] : nullptr;
+		const auto next = i + 1 < static_cast<index>(cascades.size()) ? &cascades[i + 1] : nullptr;
 		cascades[i].setParams(this, next, i);
 	}
 }

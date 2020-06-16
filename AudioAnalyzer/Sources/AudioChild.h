@@ -13,20 +13,20 @@
 namespace rxtd::audio_analyzer {
 	class AudioChild : public utils::TypeHolder {
 		enum class StringValue {
-			NUMBER,
-			INFO
+			eNUMBER,
+			eINFO
 		};
 
 		enum class NumberTransform {
-			LINEAR,
-			DB,
-			NONE,
+			eLINEAR,
+			eDB,
+			eNONE,
 		};
 
 		// Options
-		Channel channel = Channel::FRONT_LEFT;
-		NumberTransform numberTransform = NumberTransform::LINEAR;
-		StringValue stringValueType = StringValue::NUMBER;
+		Channel channel = Channel::eFRONT_LEFT;
+		NumberTransform numberTransform = NumberTransform::eLINEAR;
+		StringValue stringValueType = StringValue::eNUMBER;
 		index valueIndex = 0;
 		string valueId;
 		double correctingConstant = 0.0;

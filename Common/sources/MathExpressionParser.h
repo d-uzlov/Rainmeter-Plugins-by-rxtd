@@ -11,21 +11,21 @@
 
 namespace rxtd::utils {
 	enum class ExpressionType {
-		UNKNOWN,
-		NUMBER,
-		SUM,
-		DIFF,
-		INVERSE,
-		MULT,
-		DIV,
-		POWER,
-		TERNARY,
+		eUNKNOWN,
+		eNUMBER,
+		eSUM,
+		eDIFF,
+		eINVERSE,
+		eMULT,
+		eDIV,
+		ePOWER,
+		eTERNARY,
 	};
 
 	struct ExpressionTreeNode {
 		std::vector<ExpressionTreeNode> nodes;
 		double number = 0.0;
-		ExpressionType type = ExpressionType::UNKNOWN;
+		ExpressionType type = ExpressionType::eUNKNOWN;
 
 		void solve();
 	};
@@ -34,27 +34,27 @@ namespace rxtd::utils {
 		class Lexer {
 		public:
 			enum class LexemeType {
-				UNKNOWN,
-				END,
-				NUMBER,
-				DOT,
-				PLUS,
-				MINUS,
-				MULT,
-				DIV,
-				POWER,
-				PAR_OPEN,
-				PAR_CLOSE,
-				WORD,
-				BR_OPEN,
-				BR_CLOSE,
-				HASH,
-				QMARK,
-				COLON,
+				eUNKNOWN,
+				eEND,
+				eNUMBER,
+				eDOT,
+				ePLUS,
+				eMINUS,
+				eASTERISK,
+				eFORWARD_SLASH,
+				eCARET,
+				ePAR_OPEN,
+				ePAR_CLOSE,
+				eWORD,
+				eBRACKET_OPEN,
+				eBRACKET_CLOSE,
+				eHASH,
+				eQUESTION_MARK,
+				eCOLON,
 			};
 
 			struct Lexeme {
-				LexemeType type { LexemeType::UNKNOWN };
+				LexemeType type { LexemeType::eUNKNOWN };
 				sview value;
 
 				Lexeme() = default;
