@@ -27,6 +27,15 @@ namespace rxtd::audio_analyzer {
 			string prefix = { };
 			utils::Color baseColor { };
 			utils::Color maxColor { };
+
+			struct ColorDescription {
+				float widthInverted;
+				utils::Color color;
+			};
+			std::vector<float> colorLevels;
+			std::vector<ColorDescription> colors;
+			double colorMinValue { };
+			double colorMaxValue { };
 		};
 
 	private:
@@ -37,9 +46,10 @@ namespace rxtd::audio_analyzer {
 		index blockSize { };
 
 		index counter = 0;
-		index lastIndex = 0;
+		index lastLineIndex = 0;
 		index sourceSize = 0;
 		bool changed = false;
+		index lastNonZeroLine = 0;
 
 		mutable string propString { };
 
@@ -77,5 +87,6 @@ namespace rxtd::audio_analyzer {
 		void updateParams();
 		void writeFile(const DataSupplier& dataSupplier);
 		void fillLine(array_view<float> data);
+		void fillLineMulticolor(array_view<float> data);
 	};
 }

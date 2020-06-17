@@ -69,6 +69,61 @@ std::optional<Spectrogram::Params> Spectrogram::parseParams(const utils::OptionP
 
 	params.baseColor = optionMap.get(L"baseColor"sv).asColor({ 0, 0, 0, 1 });
 	params.maxColor = optionMap.get(L"maxColor"sv).asColor({ 1, 1, 1, 1 });
+	if (optionMap.has(L"colors"sv)) {
+		utils::OptionParser parser { };
+
+		auto colorsDescriptions = optionMap.get(L"colors"sv).asString();
+		auto colorsDescriptionList = parser.asList(colorsDescriptions, L';');
+
+		double prevValue = std::numeric_limits<double>::infinity();
+
+		bool colorsAreBroken = false;
+
+		params.colorMinValue = std::numeric_limits<double>::infinity();
+		params.colorMaxValue = -std::numeric_limits<double>::infinity();
+
+		for (index i = 0; i < colorsDescriptionList.size(); i++) {
+			auto colorDescription = colorsDescriptionList.get(i);
+
+			auto description = parser.asList(colorDescription, L' ');
+			if (description.size() != 2) {
+				cl.error(L"Can't parse color \"{}\"", colorDescription);
+				colorsAreBroken = true;
+				params.colors = { };
+				break;
+			}
+
+			float value = description.getOption(0).asFloat();
+			utils::Color color = description.getOption(1).asColor();
+
+			if (i > 0) {
+				if (value <= prevValue) {
+					cl.error(L"Colors: values {} and {}: values must be increasing", prevValue, value);
+					continue;
+				}
+				if (value / prevValue < 1.001 && value - prevValue < 0.001) {
+					cl.error(L"Colors: values {} and {} are too close, discarding second one", prevValue, value);
+					continue;
+				}
+			}
+
+			params.colorLevels.push_back(value);
+			params.colors.push_back(Params::ColorDescription { 0.0, color });
+			if (i > 0) {
+				params.colors[i - 1].widthInverted = 1.0 / (value - prevValue);
+			}
+
+			prevValue = value;
+			params.colorMinValue = std::min<double>(params.colorMinValue, value);
+			params.colorMaxValue = std::max<double>(params.colorMaxValue, value);
+		}
+
+		if (!colorsAreBroken && params.colors.size() < 2) {
+			cl.error(L"Not enough colors found: {}", params.colors.size());
+			params.colors = { };
+		}
+		// TODO optimize for 2 colors
+	}
 
 	return params;
 }
@@ -101,7 +156,7 @@ void Spectrogram::updateParams() {
 }
 
 void Spectrogram::writeFile(const DataSupplier& dataSupplier) {
-	auto index = lastIndex + 1;
+	auto index = lastLineIndex + 1;
 	if (index >= params.length) {
 		index = 0;
 	}
@@ -120,7 +175,33 @@ void Spectrogram::fillLine(array_view<float> data) {
 
 		auto color = params.baseColor * (1.0 - value) + params.maxColor * value;
 
-		buffer[lastIndex][i] = color.toInt();
+		buffer[lastLineIndex][i] = color.toInt();
+	}
+}
+
+void Spectrogram::fillLineMulticolor(array_view<float> data) {
+	for (index i = 0; i < sourceSize; ++i) {
+		const double value = std::clamp<double>(data[i], params.colorMinValue, params.colorMaxValue);
+
+		index lowColorIndex = 0;
+		for (index j = 1; j < params.colors.size(); j++) {
+			const double colorLowValue = params.colorLevels[j];
+			lowColorIndex = j - 1;
+			if (value <= colorLowValue) {
+				break;
+			}
+		}
+
+		const double lowColorValue = params.colorLevels[lowColorIndex];
+		const double intervalCoef = params.colors[lowColorIndex].widthInverted;
+		const auto lowColor = params.colors[lowColorIndex].color;
+		const auto highColor = params.colors[lowColorIndex + 1].color;
+
+		const double percentValue = (value - lowColorValue) * intervalCoef;
+
+		auto color = lowColor * (1.0 - percentValue) + highColor * percentValue;
+
+		buffer[lastLineIndex][i] = color.toInt();
 	}
 }
 
@@ -136,6 +217,18 @@ void Spectrogram::process(const DataSupplier& dataSupplier) {
 
 	const auto data = source->getData(0);
 	const auto dataSize = data.size();
+
+	const bool dataIsZero = std::all_of(data.data(), data.data() + dataSize, [=](auto x) { return x < params.colorMinValue; });
+	if (!dataIsZero) {
+		lastNonZeroLine = 0;
+	} else {
+		lastNonZeroLine++;
+	}
+	if (lastNonZeroLine > params.length) {
+		lastNonZeroLine = params.length;
+		counter = blockSize;
+		return;
+	}
 
 	if (dataSize != sourceSize) {
 		sourceSize = dataSize;
@@ -153,18 +246,32 @@ void Spectrogram::process(const DataSupplier& dataSupplier) {
 	const auto waveSize = dataSupplier.getWaveSize();
 	counter += waveSize;
 
+	if (params.colors.empty()) { // only use 2 colors
+		while (counter >= blockSize) {
+			changed = true;
 
-	while (counter >= blockSize) {
-		changed = true;
+			lastLineIndex++;
+			if (lastLineIndex >= params.length) {
+				lastLineIndex = 0;
+			}
 
-		lastIndex++;
-		if (lastIndex >= params.length) {
-			lastIndex = 0;
+			fillLine(data);
+
+			counter -= blockSize;
 		}
+	} else { // many colors, but slightly slower
+		while (counter >= blockSize) {
+			changed = true;
 
-		fillLine(data);
+			lastLineIndex++;
+			if (lastLineIndex >= params.length) {
+				lastLineIndex = 0;
+			}
 
-		counter -= blockSize;
+			fillLineMulticolor(data);
+
+			counter -= blockSize;
+		}
 	}
 }
 

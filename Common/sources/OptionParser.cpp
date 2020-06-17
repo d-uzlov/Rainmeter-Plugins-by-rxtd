@@ -311,11 +311,24 @@ OptionParser::Option OptionParser::OptionMap::get(const wchar_t* name) const {
 	return get(isview { name });
 }
 
+bool OptionParser::OptionMap::has(sview name) const {
+	return has(name % ciView());
+}
+
+bool OptionParser::OptionMap::has(isview name) const {
+	const auto optionInfoPtr = find(name);
+	return optionInfoPtr != nullptr;
+}
+
+bool OptionParser::OptionMap::has(const wchar_t* name) const {
+	return has(isview { name });
+}
+
 const std::map<isview, OptionParser::OptionMap::MapOptionInfo>& OptionParser::OptionMap::getParams() const {
 	return params;
 }
 
-std::vector<isview> OptionParser::OptionMap::getUntouched() const {
+std::vector<isview> OptionParser::OptionMap::getListOfUntouched() const {
 	std::vector<isview> result;
 
 	for (auto[name, valueInfo] : params) {

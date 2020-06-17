@@ -126,7 +126,7 @@ void ParamParser::cacheHandlers(const utils::OptionParser::OptionList& indices) 
 			cl.error(L"not a valid description", index);
 			continue;
 		}
-		const auto unusedOptions = optionMap.getUntouched();
+		const auto unusedOptions = optionMap.getListOfUntouched();
 		if (unusedOptionsWarning && !unusedOptions.empty()) {
 			cl.warning(L"unused options {}", unusedOptions);
 		}

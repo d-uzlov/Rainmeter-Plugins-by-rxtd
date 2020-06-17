@@ -68,6 +68,7 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionParser:
 		cl.error(L"height must be >= 2 but {} found", params.height);
 		return std::nullopt;
 	}
+	params.minDistinguishableValue = 1.0 / params.height / 2.0; // below half pixel
 
 	params.resolution = optionMap.get(L"resolution"sv).asFloat(50);
 	if (params.resolution <= 0) {
@@ -105,7 +106,7 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionParser:
 	} else if (ldpString == L"never") {
 		params.lineDrawingPolicy = LineDrawingPolicy::NEVER;
 	} else {
-		cl.warning(L"lineDrawingPolicy '{}' now recognized, assume 'always'", ldpString);
+		cl.warning(L"lineDrawingPolicy '{}' not recognized, assume 'always'", ldpString);
 		params.lineDrawingPolicy = LineDrawingPolicy::ALWAYS;
 	}
 
@@ -212,6 +213,18 @@ void WaveForm::process(const DataSupplier& dataSupplier) {
 
 	const auto wave = dataSupplier.getWave();
 	const auto waveSize = dataSupplier.getWaveSize();
+
+	const bool dataIsZero = std::all_of(wave, wave + waveSize, [=](auto x) { return x < params.minDistinguishableValue; });
+	if (!dataIsZero) {
+		lastNonZeroLine = 0;
+	} else {
+		lastNonZeroLine++;
+	}
+	if (lastNonZeroLine > params.width) {
+		lastNonZeroLine = params.width;
+		counter = 0;
+		return;
+	}
 
 	for (index frame = 0; frame < waveSize; ++frame) {
 		min = std::min<double>(min, wave[frame]);

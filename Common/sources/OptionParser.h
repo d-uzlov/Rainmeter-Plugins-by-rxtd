@@ -171,6 +171,7 @@ namespace rxtd::utils {
 			OptionMap& operator=(OptionMap&& other) noexcept;
 
 			//Returns named option, search is case-insensitive.
+			// Doesn't raise the "touched" flag on the option
 			Option getUntouched(sview name) const;
 
 			//Returns named option, search is case-insensitive.
@@ -180,12 +181,23 @@ namespace rxtd::utils {
 			Option get(isview name) const;
 
 			//Returns named option, search is case-insensitive.
+			// This overload disambiguates sview/isview call.
 			Option get(const wchar_t* name) const;
+
+			// returns true if option with such name exists.
+			bool has(sview name) const;
+
+			// returns true if option with such name exists.
+			bool has(isview name) const;
+
+			// returns true if option with such name exists.
+			// This overload disambiguates sview/isview call.
+			bool has(const wchar_t* name) const;
 
 			// Allows you to iterate over all available options.
 			const std::map<isview, MapOptionInfo>& getParams() const;
 
-			std::vector<isview> getUntouched() const;
+			std::vector<isview> getListOfUntouched() const;
 		private:
 			void fillParams();
 			MapOptionInfo* find(isview name) const;

@@ -37,6 +37,8 @@ namespace rxtd::audio_analyzer {
 			utils::Color lineColor { };
 			LineDrawingPolicy lineDrawingPolicy { };
 			double gain { };
+
+			double minDistinguishableValue { };
 		};
 
 	private:
@@ -48,6 +50,7 @@ namespace rxtd::audio_analyzer {
 		uint32_t backgroundInt { };
 		uint32_t waveInt { };
 		uint32_t lineInt { };
+		index lastNonZeroLine = 0;
 
 		index counter = 0;
 		index lastIndex = 0;

@@ -11,7 +11,10 @@
 
 namespace rxtd::utils {
 	class Color {
-		double red { }, green { }, blue { }, alpha = 1.0;
+		float red = 0.0;
+		float green = 0.0;
+		float blue = 0.0;
+		float alpha = 1.0;
 
 	public:
 		Color() = default;
@@ -30,10 +33,10 @@ namespace rxtd::utils {
 		}
 
 		uint32_t toInt() const {
-			const uint8_t r = uint8_t(std::clamp(red * 255, 0.0, 255.0));
-			const uint8_t g = uint8_t(std::clamp(green * 255, 0.0, 255.0));
-			const uint8_t b = uint8_t(std::clamp(blue * 255, 0.0, 255.0));
-			const uint8_t a = uint8_t(std::clamp(alpha * 255, 0.0, 255.0));
+			const uint8_t r = uint8_t(std::clamp<float>(red * 255, 0.0, 255.0));
+			const uint8_t g = uint8_t(std::clamp<float>(green * 255, 0.0, 255.0));
+			const uint8_t b = uint8_t(std::clamp<float>(blue * 255, 0.0, 255.0));
+			const uint8_t a = uint8_t(std::clamp<float>(alpha * 255, 0.0, 255.0));
 
 			return a << 24 | r << 16 | g << 8 | b;
 		}
