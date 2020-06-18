@@ -30,7 +30,17 @@ AudioParent::AudioParent(utils::Rainmeter&& rain) :
 		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
 	}
+}
 
+AudioParent::~AudioParent() {
+	parentManager.remove(*this);
+}
+
+AudioParent* AudioParent::findInstance(utils::Rainmeter::Skin skin, isview measureName) {
+	return parentManager.findParent(skin, measureName);
+}
+
+void AudioParent::_reload() {
 	const auto source = this->rain.readString(L"Source") % ciView();
 	string id = { };
 	DataSource sourceEnum;
@@ -62,31 +72,17 @@ AudioParent::AudioParent(utils::Rainmeter&& rain) :
 	}
 
 	deviceManager.setOptions(sourceEnum, id);
-	deviceManager.deviceInit();
-}
 
-AudioParent::~AudioParent() {
-	parentManager.remove(*this);
-}
-
-AudioParent* AudioParent::findInstance(utils::Rainmeter::Skin skin, isview measureName) {
-	return parentManager.findParent(skin, measureName);
-}
-
-void AudioParent::_reload() {
-	ParamParser paramParser(rain, rain.readBool(L"UnusedOptionsWarning", true));
-	paramParser.parse();
 
 	auto rateLimit = std::max<index>(rain.readInt(L"TargetRate"), 0);
 	if (rateLimit < 0) {
 		rateLimit = 0;
 	}
-	if (rateLimit > 0 && rateLimit < 8000) {
-		rateLimit = 8000;
-	}
 
 	soundAnalyzer.setTargetRate(rateLimit);
 
+	ParamParser paramParser(rain, rain.readBool(L"UnusedOptionsWarning", true));
+	paramParser.parse();
 	soundAnalyzer.setPatchHandlers(paramParser.getHandlers(), paramParser.getPatches());
 }
 

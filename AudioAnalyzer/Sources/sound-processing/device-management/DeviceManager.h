@@ -35,11 +35,11 @@ namespace rxtd::audio_analyzer {
 		using clock = std::chrono::high_resolution_clock;
 		static_assert(clock::is_steady);
 
-		State state = State::eERROR_AUTO;
+		State state = State::eERROR_MANUAL;
 
 		utils::Rainmeter::Logger& logger;
 
-		DataSource source = DataSource::eOUTPUT;
+		DataSource source = DataSource::eINVALID;
 		string deviceID;
 
 		mutable utils::MediaDeviceWrapper audioDeviceHandle { };

@@ -107,8 +107,8 @@ namespace rxtd::audio_analyzer {
 		uint32_t devicesCount;
 		collection->GetCount(&devicesCount);
 
-		deviceListLegacy.reserve(devicesCount * 120LL);
-		deviceListActive.reserve(devicesCount * 120LL);
+		deviceListLegacy.reserve(devicesCount * 120);
+		deviceListActive.reserve(devicesCount * 120);
 
 		for (index deviceIndex = 0; deviceIndex < index(devicesCount); ++deviceIndex) {
 			utils::MediaDeviceWrapper device;

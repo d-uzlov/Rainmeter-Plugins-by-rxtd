@@ -89,10 +89,23 @@ DeviceManager::State DeviceManager::getState() const {
 void DeviceManager::setOptions(DataSource source, sview deviceID) {
 	// TODO this depends on function call order with deviceInit()
 
+	if (this->deviceID == deviceID) {
+		if (!deviceID.empty()) {
+			return; // nothing has changed
+		}
+
+		// new ID is empty, new source is either input or output
+		if (this->source == source) {
+			return;
+		}
+	}
+
 	state = State::eERROR_AUTO;
 
 	this->deviceID = deviceID;
 	this->source = determineDeviceType(source);
+
+	deviceInit();
 }
 
 CaptureManager::BufferFetchResult DeviceManager::nextBuffer() {
