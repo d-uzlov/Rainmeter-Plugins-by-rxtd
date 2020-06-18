@@ -13,7 +13,6 @@
 #include "MyWaveFormat.h"
 #include "windows-wrappers/GenericComWrapper.h"
 #include <mmdeviceapi.h>
-// #include "SilentRenderer.h"
 #include "RainmeterWrappers.h"
 #include <chrono>
 
@@ -66,8 +65,6 @@ namespace rxtd::audio_analyzer {
 		utils::GenericComWrapper<IAudioCaptureClient> audioCaptureClient { };
 		MyWaveFormat waveFormat { };
 		string formatString { };
-
-		// SilentRenderer silentRenderer;
 
 		clock::time_point lastBufferFillTime { };
 		static constexpr clock::duration EMPTY_TIMEOUT = std::chrono::milliseconds(100);
