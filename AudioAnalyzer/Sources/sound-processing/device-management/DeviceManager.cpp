@@ -80,23 +80,7 @@ void DeviceManager::readDeviceInfo() {
 	deviceInfo = audioDeviceHandle.readDeviceInfo();
 }
 
-void DeviceManager::ensureDeviceAcquired() {
-	// if current state is invalid, then we must reacquire the handles, but only if enough time has passed since previous attempt
-
-	if (captureManager.isValid()) {
-		return;
-	}
-
-	if (clock::now() - lastDevicePollTime < DEVICE_POLL_TIMEOUT) {
-		return; // not enough time has passed
-	}
-
-	deviceInit();
-
-	// TODO this is incorrect: if there was an error, we will still proceed polling buffers
-}
-
-bool DeviceManager::isObjectValid() const {
+bool DeviceManager::isValid() const {
 	return valid;
 }
 
@@ -105,38 +89,13 @@ bool DeviceManager::isRecoverable() const {
 }
 
 void DeviceManager::setOptions(Port port, sview deviceID) {
-	if (!valid) {
-		return;
-	}
-
-	// TODO what about port in enumerator?
+	// TODO this depends on function call order with deviceInit()
 
 	this->port = port;
 	this->deviceID = deviceID;
 }
 
-bool DeviceManager::actualizeDevice() {
-	if (!deviceID.empty()) {
-		return false; // nothing to actualize, only default device can change
-	}
-
-	const auto defaultDeviceId = enumerator.getDefaultDeviceId(port);
-
-	if (defaultDeviceId != deviceInfo.id) {
-		deviceInit();
-		return true;
-	}
-
-	return false;
-}
-
 CaptureManager::BufferFetchResult DeviceManager::nextBuffer() {
-	if (!valid) {
-		return CaptureManager::BufferFetchResult::invalidState();
-	}
-
-	ensureDeviceAcquired();
-
 	return captureManager.nextBuffer();
 }
 
@@ -148,8 +107,34 @@ bool DeviceManager::getDeviceStatus() const {
 	return audioDeviceHandle.isDeviceActive();
 }
 
-Port DeviceManager::getPort() const {
-	return port;
+void DeviceManager::checkAndRepair() {
+	if (!isRecoverable()) {
+		return;
+	}
+
+	if (!captureManager.isRecoverable() || !enumerator.isValid()) {
+		recoverable = false;
+		deviceRelease();
+		return;
+	}
+
+	if (!captureManager.isValid()) {
+		valid = false;
+	}
+
+	if (isDeviceChanged()) {
+		valid = false;
+	}
+
+	if (isValid()) {
+		return;
+	}
+
+	if (clock::now() - lastDevicePollTime < DEVICE_POLL_TIMEOUT) {
+		return; // not enough time has passed since last attempt
+	}
+
+	deviceInit();
 }
 
 void DeviceManager::updateDeviceList() {
@@ -162,4 +147,14 @@ const CaptureManager& DeviceManager::getCaptureManager() const {
 
 const AudioEnumeratorWrapper& DeviceManager::getDeviceEnumerator() const {
 	return enumerator;
+}
+
+bool DeviceManager::isDeviceChanged() {
+	if (!deviceID.empty()) {
+		return false; // only default device can change
+	}
+
+	const auto defaultDeviceId = enumerator.getDefaultDeviceId(port);
+
+	return defaultDeviceId != deviceInfo.id;
 }

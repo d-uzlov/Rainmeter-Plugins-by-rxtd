@@ -78,7 +78,13 @@ std::tuple<double, const wchar_t*> AudioParent::_update() {
 	// TODO make an option for this value?
 	constexpr index maxBuffers = 15;
 
-	bool changed = deviceManager.actualizeDevice();
+	deviceManager.checkAndRepair();
+	if (!deviceManager.isValid()) {
+		if (!deviceManager.isRecoverable()) {
+			setMeasureState(utils::MeasureState::eBROKEN);
+		}
+		goto loop_end;
+	}
 
 	for (index i = 0; i < maxBuffers; ++i) {
 		const auto fetchResult = deviceManager.nextBuffer();

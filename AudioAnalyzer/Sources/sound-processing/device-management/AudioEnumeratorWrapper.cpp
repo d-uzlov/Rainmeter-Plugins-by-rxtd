@@ -61,6 +61,7 @@ namespace rxtd::audio_analyzer {
 		HRESULT resultCode = audioEnumeratorHandle->GetDefaultAudioEndpoint(port == Port::eOUTPUT ? eRender : eCapture, eConsole, &audioDeviceHandle);
 		if (resultCode != S_OK) {
 			logger.error(L"Can't get default {} audio device, error code {error}", port == Port::eOUTPUT ? L"output" : L"input", resultCode);
+			valid = false;
 			return std::nullopt;
 		}
 
@@ -73,6 +74,7 @@ namespace rxtd::audio_analyzer {
 		HRESULT resultCode = audioEnumeratorHandle->GetDefaultAudioEndpoint(port == Port::eOUTPUT ? eRender : eCapture, eConsole, &audioDeviceHandle);
 
 		if (resultCode != S_OK) {
+			valid = false;
 			return { };
 		}
 
@@ -95,6 +97,7 @@ namespace rxtd::audio_analyzer {
 		const auto collectionOpeningState = audioEnumeratorHandle->EnumAudioEndpoints(port == Port::eOUTPUT ? eRender : eCapture, DEVICE_STATE_ACTIVE, &collection);
 		if (collectionOpeningState != S_OK) {
 			logger.error(L"Can't update audio device list: EnumAudioEndpoints() failed, error code {}", collectionOpeningState);
+			valid = false;
 			return;
 		}
 

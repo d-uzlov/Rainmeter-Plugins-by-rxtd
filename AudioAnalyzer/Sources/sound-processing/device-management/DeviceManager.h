@@ -53,18 +53,17 @@ namespace rxtd::audio_analyzer {
 		DeviceManager& operator=(const DeviceManager& other) = delete;
 		DeviceManager& operator=(DeviceManager&& other) = delete;
 
-		bool isObjectValid() const;
+		bool isValid() const;
 		bool isRecoverable() const;
 
 		void setOptions(Port port, sview deviceID);
 		void deviceInit();
-		bool actualizeDevice(); // returns true if changed
 		CaptureManager::BufferFetchResult nextBuffer();
 
 		const utils::MediaDeviceWrapper::DeviceInfo& getDeviceInfo() const;
 		bool getDeviceStatus() const;
 
-		Port getPort() const;
+		void checkAndRepair();
 
 		void updateDeviceList();
 
@@ -72,10 +71,9 @@ namespace rxtd::audio_analyzer {
 		const AudioEnumeratorWrapper& getDeviceEnumerator() const;
 
 	private:
+		bool isDeviceChanged();
 
 		void readDeviceInfo();
-
-		void ensureDeviceAcquired();
 
 		void deviceRelease();
 	};
