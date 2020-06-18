@@ -14,7 +14,6 @@
 const CLSID CLSID_MMDeviceEnumerator = __uuidof(MMDeviceEnumerator);
 const IID IID_IMMDeviceEnumerator = __uuidof(IMMDeviceEnumerator);
 
-
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
 
@@ -37,30 +36,33 @@ namespace rxtd::audio_analyzer {
 			valid = false;
 			return;
 		}
+
+		inputDevices = readDeviceList(DataSource::eINPUT);
+		outputDevices = readDeviceList(DataSource::eOUTPUT);
 	}
 
 	bool AudioEnumeratorWrapper::isValid() const {
 		return valid;
 	}
 
-	std::optional<utils::MediaDeviceWrapper> AudioEnumeratorWrapper::getDevice(const string& deviceID, Port port) {
+	std::optional<utils::MediaDeviceWrapper> AudioEnumeratorWrapper::getDevice(const string& deviceID) {
 		utils::MediaDeviceWrapper audioDeviceHandle;
 
 		HRESULT resultCode = audioEnumeratorHandle->GetDevice(deviceID.c_str(), &audioDeviceHandle);
 		if (resultCode != S_OK) {
-			logger.error(L"Audio {} device '{}' not found, error code {error}", port == Port::eOUTPUT ? L"output" : L"input", deviceID, resultCode);
+			logger.error(L"Audio device '{}' not found, error code {error}", deviceID, resultCode);
 			return std::nullopt;
 		}
 
 		return audioDeviceHandle;
 	}
 
-	std::optional<utils::MediaDeviceWrapper> AudioEnumeratorWrapper::getDefaultDevice(Port port) {
+	std::optional<utils::MediaDeviceWrapper> AudioEnumeratorWrapper::getDefaultDevice(DataSource port) {
 		utils::MediaDeviceWrapper audioDeviceHandle;
 
-		HRESULT resultCode = audioEnumeratorHandle->GetDefaultAudioEndpoint(port == Port::eOUTPUT ? eRender : eCapture, eConsole, &audioDeviceHandle);
+		HRESULT resultCode = audioEnumeratorHandle->GetDefaultAudioEndpoint(port == DataSource::eOUTPUT ? eRender : eCapture, eConsole, &audioDeviceHandle);
 		if (resultCode != S_OK) {
-			logger.error(L"Can't get default {} audio device, error code {error}", port == Port::eOUTPUT ? L"output" : L"input", resultCode);
+			logger.error(L"Can't get default {} audio device, error code {error}", port == DataSource::eOUTPUT ? L"output" : L"input", resultCode);
 			valid = false;
 			return std::nullopt;
 		}
@@ -68,10 +70,10 @@ namespace rxtd::audio_analyzer {
 		return audioDeviceHandle;
 	}
 
-	string AudioEnumeratorWrapper::getDefaultDeviceId(Port port) {
+	string AudioEnumeratorWrapper::getDefaultDeviceId(DataSource port) {
 		utils::MediaDeviceWrapper audioDeviceHandle;
 
-		HRESULT resultCode = audioEnumeratorHandle->GetDefaultAudioEndpoint(port == Port::eOUTPUT ? eRender : eCapture, eConsole, &audioDeviceHandle);
+		HRESULT resultCode = audioEnumeratorHandle->GetDefaultAudioEndpoint(port == DataSource::eOUTPUT ? eRender : eCapture, eConsole, &audioDeviceHandle);
 
 		if (resultCode != S_OK) {
 			valid = false;
@@ -85,18 +87,18 @@ namespace rxtd::audio_analyzer {
 		return deviceListLegacy;
 	}
 
-	const string& AudioEnumeratorWrapper::getDeviceList2() const {
-		return deviceList2;
+	const string& AudioEnumeratorWrapper::getActiveDeviceList() const {
+		return deviceListActive;
 	}
 
-	void AudioEnumeratorWrapper::updateDeviceList(Port port) {
+	void AudioEnumeratorWrapper::updateActiveDeviceList(DataSource port) {
 		deviceListLegacy.clear();
-		deviceList2.clear();
+		deviceListActive.clear();
 
 		utils::GenericComWrapper<IMMDeviceCollection> collection;
-		const auto collectionOpeningState = audioEnumeratorHandle->EnumAudioEndpoints(port == Port::eOUTPUT ? eRender : eCapture, DEVICE_STATE_ACTIVE, &collection);
+		const auto collectionOpeningState = audioEnumeratorHandle->EnumAudioEndpoints(port == DataSource::eOUTPUT ? eRender : eCapture, DEVICE_STATE_ACTIVE, &collection);
 		if (collectionOpeningState != S_OK) {
-			logger.error(L"Can't update audio device list: EnumAudioEndpoints() failed, error code {}", collectionOpeningState);
+			logger.error(L"Can't read audio device list: EnumAudioEndpoints() failed, error code {}", collectionOpeningState);
 			valid = false;
 			return;
 		}
@@ -106,7 +108,7 @@ namespace rxtd::audio_analyzer {
 		collection->GetCount(&devicesCount);
 
 		deviceListLegacy.reserve(devicesCount * 120LL);
-		deviceList2.reserve(devicesCount * 120LL);
+		deviceListActive.reserve(devicesCount * 120LL);
 
 		for (index deviceIndex = 0; deviceIndex < index(devicesCount); ++deviceIndex) {
 			utils::MediaDeviceWrapper device;
@@ -121,15 +123,51 @@ namespace rxtd::audio_analyzer {
 			deviceListLegacy += deviceInfo.fullFriendlyName;
 			deviceListLegacy += L"\n"sv;
 
-			deviceList2 += deviceInfo.id;
-			deviceList2 += L";"sv;
-			deviceList2 += deviceInfo.desc;
-			deviceList2 += L";"sv;
-			deviceList2 += deviceInfo.name;
-			deviceList2 += L"\n"sv;
+			deviceListActive += deviceInfo.id;
+			deviceListActive += L";"sv;
+			deviceListActive += deviceInfo.desc;
+			deviceListActive += L";"sv;
+			deviceListActive += deviceInfo.name;
+			deviceListActive += L"\n"sv;
 		}
 
 		deviceListLegacy.resize(deviceListLegacy.size() - 1);
-		deviceList2.resize(deviceList2.size() - 1);
+		deviceListActive.resize(deviceListActive.size() - 1);
+	}
+
+	bool AudioEnumeratorWrapper::isInputDevice(const string& id) {
+		return inputDevices.find(id) != inputDevices.end();
+	}
+
+	bool AudioEnumeratorWrapper::isOutputDevice(const string& id) {
+		return outputDevices.find(id) != outputDevices.end();
+	}
+
+	std::set<string> AudioEnumeratorWrapper::readDeviceList(DataSource port) {
+		utils::GenericComWrapper<IMMDeviceCollection> collection;
+		const auto collectionOpeningState = audioEnumeratorHandle->EnumAudioEndpoints(port == DataSource::eOUTPUT ? eRender : eCapture, DEVICE_STATEMASK_ALL, &collection);
+		if (collectionOpeningState != S_OK) {
+			logger.error(L"Can't read audio device list: EnumAudioEndpoints() failed, error code {}", collectionOpeningState);
+			valid = false;
+			return { };
+		}
+
+		static_assert(std::is_same<UINT, uint32_t>::value);
+		uint32_t devicesCount;
+		collection->GetCount(&devicesCount);
+
+		std::set<string> list;
+
+		for (index deviceIndex = 0; deviceIndex < index(devicesCount); ++deviceIndex) {
+			utils::MediaDeviceWrapper device;
+			if (collection->Item(UINT(deviceIndex), &device) != S_OK) {
+				continue;
+			}
+
+			const auto id = device.readDeviceId();
+			list.insert(id);
+		}
+
+		return list;
 	}
 }

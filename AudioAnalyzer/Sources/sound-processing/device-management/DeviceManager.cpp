@@ -25,7 +25,7 @@ using namespace audio_analyzer;
 DeviceManager::DeviceManager(utils::Rainmeter::Logger& logger, std::function<void(MyWaveFormat waveFormat)> waveFormatUpdateCallback)
 	: logger(logger), enumerator(logger), waveFormatUpdateCallback(std::move(waveFormatUpdateCallback)) {
 	if (!enumerator.isValid()) {
-		recoverable = false;
+		state = State::eFATAL;
 		return;
 	}
 }
@@ -35,16 +35,18 @@ DeviceManager::~DeviceManager() {
 }
 
 void DeviceManager::deviceInit() {
-	if (!isRecoverable()) {
+	if (getState() != State::eERROR_AUTO) {
+		// eOK - init not needed
+		// eERROR_MANUAL - change settings before calling this function
 		return;
 	}
 
 	deviceRelease();
 
 	lastDevicePollTime = clock::now();
-	valid = true;
+	state = State::eOK;
 
-	auto deviceOpt = deviceID.empty() ? enumerator.getDefaultDevice(port) : enumerator.getDevice(deviceID, port);
+	auto deviceOpt = deviceID.empty() ? enumerator.getDefaultDevice(source) : enumerator.getDevice(deviceID);
 
 	if (!deviceOpt) {
 		deviceRelease();
@@ -53,11 +55,11 @@ void DeviceManager::deviceInit() {
 
 	audioDeviceHandle = std::move(deviceOpt.value());
 
-	captureManager = CaptureManager{ logger, *audioDeviceHandle.getPointer(), port == Port::eOUTPUT };
+	captureManager = CaptureManager{ logger, *audioDeviceHandle.getPointer(), source == DataSource::eOUTPUT };
 
 	if (!captureManager.isValid()) {
 		if (!captureManager.isRecoverable()) {
-			recoverable = false;
+			state = State::eFATAL;
 		}
 
 		deviceRelease();
@@ -73,26 +75,24 @@ void DeviceManager::deviceRelease() {
 	captureManager = { };
 	audioDeviceHandle = { };
 	deviceInfo = { };
-	valid = false;
+	state = State::eERROR_AUTO;
 }
 
 void DeviceManager::readDeviceInfo() {
 	deviceInfo = audioDeviceHandle.readDeviceInfo();
 }
 
-bool DeviceManager::isValid() const {
-	return valid;
+DeviceManager::State DeviceManager::getState() const {
+	return state;
 }
 
-bool DeviceManager::isRecoverable() const {
-	return recoverable;
-}
-
-void DeviceManager::setOptions(Port port, sview deviceID) {
+void DeviceManager::setOptions(DataSource source, sview deviceID) {
 	// TODO this depends on function call order with deviceInit()
 
-	this->port = port;
+	state = State::eERROR_AUTO;
+
 	this->deviceID = deviceID;
+	this->source = determineDeviceType(source);
 }
 
 CaptureManager::BufferFetchResult DeviceManager::nextBuffer() {
@@ -108,25 +108,25 @@ bool DeviceManager::getDeviceStatus() const {
 }
 
 void DeviceManager::checkAndRepair() {
-	if (!isRecoverable()) {
+	if (state == State::eFATAL) {
 		return;
 	}
 
 	if (!captureManager.isRecoverable() || !enumerator.isValid()) {
-		recoverable = false;
+		state = State::eFATAL;
 		deviceRelease();
 		return;
 	}
 
 	if (!captureManager.isValid()) {
-		valid = false;
+		state = State::eERROR_AUTO;
 	}
 
 	if (isDeviceChanged()) {
-		valid = false;
+		state = State::eERROR_AUTO;
 	}
 
-	if (isValid()) {
+	if (state == State::eOK) {
 		return;
 	}
 
@@ -138,7 +138,7 @@ void DeviceManager::checkAndRepair() {
 }
 
 void DeviceManager::updateDeviceList() {
-	enumerator.updateDeviceList(port);
+	enumerator.updateActiveDeviceList(source);
 }
 
 const CaptureManager& DeviceManager::getCaptureManager() const {
@@ -154,7 +154,28 @@ bool DeviceManager::isDeviceChanged() {
 		return false; // only default device can change
 	}
 
-	const auto defaultDeviceId = enumerator.getDefaultDeviceId(port);
+	const auto defaultDeviceId = enumerator.getDefaultDeviceId(source);
 
 	return defaultDeviceId != deviceInfo.id;
+}
+
+DataSource DeviceManager::determineDeviceType(DataSource source) {
+	if (source == DataSource::eINPUT || source == DataSource::eOUTPUT) {
+		return source;
+	}
+	// eID
+
+	const bool isOutputDevice = enumerator.isOutputDevice(deviceID);
+	if (isOutputDevice) {
+		return DataSource::eOUTPUT;
+	}
+
+	const bool isInputDevice = enumerator.isInputDevice(deviceID);
+	if (isInputDevice) {
+		return DataSource::eINPUT;
+	}
+
+	state = State::eERROR_MANUAL;
+	logger.error(L"Device with id '{}' not found", deviceID);
+	return DataSource::eINVALID;
 }

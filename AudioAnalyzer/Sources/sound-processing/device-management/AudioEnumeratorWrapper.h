@@ -12,18 +12,13 @@
 #include "windows-wrappers/GenericComWrapper.h"
 #include <mmdeviceapi.h>
 #include "RainmeterWrappers.h"
-#include "Port.h"
+#include "DataSource.h"
 #include "windows-wrappers/MediaDeviceWrapper.h"
+#include <set>
 
 
 namespace rxtd::audio_analyzer {
 	class AudioEnumeratorWrapper {
-	public:
-		struct DeviceInfo {
-			string name;
-			string id;
-		};
-
 	private:
 		bool valid = true;
 
@@ -31,22 +26,30 @@ namespace rxtd::audio_analyzer {
 
 		utils::GenericComWrapper<IMMDeviceEnumerator> audioEnumeratorHandle;
 
+		// IDs of all available devices
+		std::set<string> inputDevices;
+		std::set<string> outputDevices;
+
 		string deviceListLegacy;
-		string deviceList2;
+		string deviceListActive;
 
 	public:
-
 		AudioEnumeratorWrapper(utils::Rainmeter::Logger& logger);
+
 		bool isValid() const;
 
-		std::optional<utils::MediaDeviceWrapper> getDevice(const string& deviceID, Port port);
-		std::optional<utils::MediaDeviceWrapper> getDefaultDevice(Port port);
-		string getDefaultDeviceId(Port port);
+		std::optional<utils::MediaDeviceWrapper> getDevice(const string& deviceID);
+		std::optional<utils::MediaDeviceWrapper> getDefaultDevice(DataSource port);
+		string getDefaultDeviceId(DataSource port);
 
 		const string& getDeviceListLegacy() const;
-		const string& getDeviceList2() const;
-		void updateDeviceList(Port port);
+		const string& getActiveDeviceList() const;
+		void updateActiveDeviceList(DataSource port);
+
+		bool isInputDevice(const string& id); // yes, these need to be string& and not sview
+		bool isOutputDevice(const string& id);
 
 	private:
+		std::set<string> readDeviceList(DataSource port);
 	};
 }

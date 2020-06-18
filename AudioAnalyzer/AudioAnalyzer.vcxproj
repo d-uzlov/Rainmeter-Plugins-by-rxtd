@@ -156,7 +156,7 @@
     <ClInclude Include="Sources\sound-processing\device-management\CaptureManager.h" />
     <ClInclude Include="Sources\sound-processing\device-management\DeviceManager.h" />
     <ClInclude Include="Sources\sound-processing\device-management\MyWaveFormat.h" />
-    <ClInclude Include="Sources\sound-processing\device-management\Port.h" />
+    <ClInclude Include="Sources\sound-processing\device-management\DataSource.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\BandCascadeTransformer.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\BandResampler.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\BlockMean.h" />

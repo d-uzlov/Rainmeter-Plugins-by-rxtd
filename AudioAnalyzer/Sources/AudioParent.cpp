@@ -26,26 +26,42 @@ AudioParent::AudioParent(utils::Rainmeter&& rain) :
 
 	parentManager.add(*this);
 
-	if (!deviceManager.isRecoverable()) {
+	if (deviceManager.getState() == DeviceManager::State::eFATAL) {
 		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
 	}
 
-	// parse port specifier
-	const auto port = this->rain.readString(L"Port") % ciView();
-	Port portEnum;
-	if (port == L"" || port == L"Output") {
-		portEnum = Port::eOUTPUT;
-	} else if (port == L"Input") {
-		portEnum = Port::eINPUT;
+	const auto source = this->rain.readString(L"Source") % ciView();
+	string id = { };
+	DataSource sourceEnum;
+	if (source == L"" || source == L"Output") {
+		sourceEnum = DataSource::eOUTPUT;
+	} else if (source == L"Input") {
+		sourceEnum = DataSource::eINPUT;
 	} else {
-		log.error(L"Invalid Port '{}', must be one of: Output, Input. Set to Output.", port);
-		portEnum = Port::eOUTPUT;
+		log.debug(L"Using '{}' as source audio device ID.", source);
+		sourceEnum = DataSource::eID;
+		id = source % csView();
 	}
 
-	auto id = this->rain.readString(L"DeviceID");
+	// legacy
+	if (auto legacyID = this->rain.readString(L"DeviceID"); !legacyID.empty()) {
+		log.debug(L"Using '{}' as source audio device ID.", legacyID);
+		sourceEnum = DataSource::eID;
+		id = legacyID;
 
-	deviceManager.setOptions(portEnum, id);
+	} else if (const auto port = this->rain.readString(L"Port") % ciView(); !port.empty()) {
+		if (port == L"Output") {
+			sourceEnum = DataSource::eOUTPUT;
+		} else if (port == L"Input") {
+			sourceEnum = DataSource::eINPUT;
+		} else {
+			log.error(L"Invalid Port '{}', must be one of: Output, Input. Set to Output.", port);
+			sourceEnum = DataSource::eOUTPUT;
+		}
+	}
+
+	deviceManager.setOptions(sourceEnum, id);
 	deviceManager.deviceInit();
 }
 
@@ -79,8 +95,8 @@ std::tuple<double, const wchar_t*> AudioParent::_update() {
 	constexpr index maxBuffers = 15;
 
 	deviceManager.checkAndRepair();
-	if (!deviceManager.isValid()) {
-		if (!deviceManager.isRecoverable()) {
+	if (deviceManager.getState() != DeviceManager::State::eOK) {
+		if (deviceManager.getState() == DeviceManager::State::eFATAL) {
 			setMeasureState(utils::MeasureState::eBROKEN);
 		}
 		goto loop_end;
@@ -222,8 +238,8 @@ const wchar_t* AudioParent::_resolve(int argc, const wchar_t* argv[]) {
 	if (optionName == L"device list") {
 		return deviceManager.getDeviceEnumerator().getDeviceListLegacy().c_str();
 	}
-	if (optionName == L"device list new") {
-		return deviceManager.getDeviceEnumerator().getDeviceList2().c_str();
+	if (optionName == L"active device list") {
+		return deviceManager.getDeviceEnumerator().getActiveDeviceList().c_str();
 	}
 
 	log.error(L"Invalid section variable resolve: '{}' not supported", argv[0]);

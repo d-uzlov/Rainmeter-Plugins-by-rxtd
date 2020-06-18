@@ -14,21 +14,32 @@
 
 #include "CaptureManager.h"
 #include "AudioEnumeratorWrapper.h"
-#include "Port.h"
+#include "DataSource.h"
 
 namespace rxtd::audio_analyzer {
 	class DeviceManager {
+	public:
+		enum class State {
+			// usual operating mode
+			eOK,
+			// something went wrong, but we can fix it
+			eERROR_AUTO,
+			// something went wrong, and we can't fix it without changing parameters
+			// most likely specified device ID not found
+			eERROR_MANUAL,
+			// something wend wrong, and we can't fix it no matter what, stop trying fixing it
+			eFATAL,
+		};
+
+	private:
 		using clock = std::chrono::high_resolution_clock;
 		static_assert(clock::is_steady);
 
-	private:
-		
-		bool valid = true;
-		bool recoverable = true;
+		State state = State::eERROR_AUTO;
 
 		utils::Rainmeter::Logger& logger;
 
-		Port port = Port::eOUTPUT;
+		DataSource source = DataSource::eOUTPUT;
 		string deviceID;
 
 		mutable utils::MediaDeviceWrapper audioDeviceHandle { };
@@ -53,10 +64,9 @@ namespace rxtd::audio_analyzer {
 		DeviceManager& operator=(const DeviceManager& other) = delete;
 		DeviceManager& operator=(DeviceManager&& other) = delete;
 
-		bool isValid() const;
-		bool isRecoverable() const;
+		State getState() const;
 
-		void setOptions(Port port, sview deviceID);
+		void setOptions(DataSource port, sview deviceID);
 		void deviceInit();
 		CaptureManager::BufferFetchResult nextBuffer();
 
@@ -72,6 +82,8 @@ namespace rxtd::audio_analyzer {
 
 	private:
 		bool isDeviceChanged();
+
+		DataSource determineDeviceType(DataSource source);
 
 		void readDeviceInfo();
 

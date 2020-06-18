@@ -10,9 +10,11 @@
 #pragma once
 
 namespace rxtd::audio_analyzer {
-	enum class Port {
-		eOUTPUT,
+	enum class DataSource {
 		eINPUT,
+		eOUTPUT,
+		eID,
+		eINVALID,
 	};
 }
 

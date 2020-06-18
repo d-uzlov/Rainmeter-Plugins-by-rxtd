@@ -54,7 +54,7 @@ namespace rxtd::audio_analyzer {
 			nullptr);
 		if (hr != S_OK) {
 			if (hr == AUDCLNT_E_DEVICE_IN_USE) {
-				// If device is in exclusive mode, then call to Initialize above leads to leak in Commit memory area
+				// If device is in exclusive mode, then call to Initialize() above leads to leak in Commit memory area
 				// Tested on LTSB 1607, last updates as of 2019-01-10
 				// Google "WASAPI exclusive memory leak"
 				// I consider this error unrecoverable to prevent further leaks

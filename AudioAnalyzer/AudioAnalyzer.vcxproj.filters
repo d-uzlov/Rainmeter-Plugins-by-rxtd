@@ -102,7 +102,7 @@
     <ClInclude Include="Sources\sound-processing\device-management\AudioEnumeratorWrapper.h">
       <Filter>Source Files\sound-processing\device-management</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\device-management\Port.h">
+    <ClInclude Include="Sources\sound-processing\device-management\DataSource.h">
       <Filter>Source Files\sound-processing\device-management</Filter>
     </ClInclude>
   </ItemGroup>
