@@ -105,6 +105,18 @@
     <ClInclude Include="Sources\sound-processing\device-management\DataSource.h">
       <Filter>Source Files\sound-processing\device-management</Filter>
     </ClInclude>
+    <ClInclude Include="Sources\sound-processing\Resampler.h">
+      <Filter>Source Files\sound-processing</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\sound-processing\ChannelMixer.h">
+      <Filter>Source Files\sound-processing</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\sound-processing\AudioChildHelper.h">
+      <Filter>Source Files\sound-processing</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\sound-processing\HelperClasses.h">
+      <Filter>Source Files\sound-processing</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sources\AudioChild.cpp">
@@ -175,6 +187,18 @@
     </ClCompile>
     <ClCompile Include="Sources\sound-processing\device-management\AudioEnumeratorWrapper.cpp">
       <Filter>Source Files\sound-processing\device-management</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\sound-processing\Resampler.cpp">
+      <Filter>Source Files\sound-processing</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\sound-processing\ChannelMixer.cpp">
+      <Filter>Source Files\sound-processing</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\sound-processing\AudioChildHelper.cpp">
+      <Filter>Source Files\sound-processing</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\sound-processing\HelperClasses.cpp">
+      <Filter>Source Files\sound-processing</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

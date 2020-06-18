@@ -13,58 +13,28 @@
 #include <functional>
 #include "Channel.h"
 #include <Vector2D.h>
-#include <variant>
+#include "Resampler.h"
+#include "ChannelMixer.h"
+#include "AudioChildHelper.h"
+#include "HelperClasses.h"
 
 namespace rxtd::audio_analyzer {
 	class SoundAnalyzer {
 	public:
-		enum class SearchError {
-			eCHANNEL_NOT_FOUND,
-			eHANDLER_NOT_FOUND,
-		};
 	private:
 		MyWaveFormat waveFormat;
 
 		std::map<Channel, std::vector<istring>> orderOfHandlers;
 		std::map<istring, std::function<SoundHandler*(SoundHandler*)>, std::less<>> patchers;
 
-		index targetRate = 0;
-		index divide = 1;
+		Resampler resampler;
+		ChannelMixer channelMixer;
+		AudioChildHelper audioChildHelper;
 
 		utils::Vector2D<float> wave;
 
-		struct ChannelData {
-			std::vector<std::unique_ptr<SoundHandler>> handlers;
-			std::map<istring, index, std::less<>> indexMap;
-		};
-
 		std::map<Channel, ChannelData> channels;
 
-		class DataSupplierImpl : public DataSupplier {
-			SoundAnalyzer &parent;
-			const ChannelData *channelData = nullptr;
-			Channel channel { };
-			index channelIndex = 0;
-			index waveSize { };
-
-			mutable index nextBufferIndex = 0;
-			mutable std::vector<std::vector<std::byte>> buffers;
-
-		public:
-			explicit DataSupplierImpl(SoundAnalyzer& parent);
-			void setChannelData(const ChannelData*);
-			void setChannelIndex(index channelIndex);
-			void setChannel(Channel channel);
-
-			const float* getWave() const override;
-			index getWaveSize() const override;
-			const SoundHandler* getHandlerRaw(isview id) const override;
-			Channel getChannel() const override;
-			std::byte* getBufferRaw(index size) const override;
-
-			void resetBuffers();
-			void setWaveSize(index value);
-		};
 		mutable DataSupplierImpl dataSupplier;
 
 	public:
@@ -80,10 +50,7 @@ namespace rxtd::audio_analyzer {
 
 		void setTargetRate(index value) noexcept;
 
-		std::variant<SoundHandler*, SearchError> findHandler(Channel channel, isview handlerId) const noexcept;
-
-		double getValue(Channel channel, isview handlerId, index index) const noexcept;
-		std::variant<const wchar_t*, SearchError> getProp(Channel channel, sview handlerId, sview prop) const noexcept;
+		AudioChildHelper getAudioChildHelper() const;
 
 		void setPatchHandlers(std::map<Channel, std::vector<istring>> handlersOrder, std::map<istring, std::function<SoundHandler*(SoundHandler*)>, std::less<>> handlerPatchersMap) noexcept;
 
@@ -95,11 +62,7 @@ namespace rxtd::audio_analyzer {
 
 	private:
 		void decompose(const uint8_t* buffer, index framesCount) noexcept;
-		void resample(array_span<float> values, index framesCount) const noexcept;
 		void updateSampleRate() noexcept;
 		index createChannelAuto(index framesCount) noexcept;
-		void resampleToAuto(index first, index second, index framesCount) noexcept;
-		void copyToAuto(index channelIndex, index framesCount) noexcept;
 	};
-
 }

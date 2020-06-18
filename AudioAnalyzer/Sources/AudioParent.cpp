@@ -166,16 +166,16 @@ const wchar_t* AudioParent::_resolve(int argc, const wchar_t* argv[]) {
 			log.error(L"Invalid section variable resolve: channel '{}' not recognized", argv[1]);
 			return nullptr;
 		}
-		auto propVariant = soundAnalyzer.getProp(channelOpt.value(), argv[2], argv[3]);
+		auto propVariant = soundAnalyzer.getAudioChildHelper().getProp(channelOpt.value(), argv[2], argv[3]);
 
 		if (propVariant.index() == 1) {
 			const auto error = std::get<1>(propVariant);
 			switch (error) {
-			case SoundAnalyzer::SearchError::eCHANNEL_NOT_FOUND:
+			case AudioChildHelper::SearchError::eCHANNEL_NOT_FOUND:
 				log.printer.print(L"Invalid section variable resolve: channel '{}' not found", argv[1]);
 				return log.printer.getBufferPtr();
 
-			case SoundAnalyzer::SearchError::eHANDLER_NOT_FOUND:
+			case AudioChildHelper::SearchError::eHANDLER_NOT_FOUND:
 				log.error(L"Invalid section variable resolve: handler '{}:{}' not found", argv[1], argv[2]);
 				return nullptr;
 
@@ -243,5 +243,5 @@ const wchar_t* AudioParent::_resolve(int argc, const wchar_t* argv[]) {
 }
 
 double AudioParent::getValue(sview id, Channel channel, index index) const {
-	return soundAnalyzer.getValue(channel, id % ciView(), index);
+	return soundAnalyzer.getAudioChildHelper().getValue(channel, id % ciView(), index);
 }
