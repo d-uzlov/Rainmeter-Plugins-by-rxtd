@@ -31,7 +31,6 @@ namespace rxtd::audio_analyzer {
 		Port port = Port::eOUTPUT;
 		string deviceID;
 
-		AudioEnumeratorWrapper enumerator;
 		mutable utils::MediaDeviceWrapper audioDeviceHandle { };
 
 		CaptureManager captureManager;
@@ -56,26 +55,24 @@ namespace rxtd::audio_analyzer {
 		bool isObjectValid() const;
 
 		void setOptions(Port port, sview deviceID);
-		void init();
-		bool actualizeDevice(); // returns true if changed
-		CaptureManager::BufferFetchResult nextBuffer();
+		void init(AudioEnumeratorWrapper& enumerator);
+		bool actualizeDevice(AudioEnumeratorWrapper& enumerator); // returns true if changed
+		CaptureManager::BufferFetchResult nextBuffer(AudioEnumeratorWrapper& enumerator);
 
 		const string& getDeviceName() const;
 		const string& getDeviceId() const;
-		const string& getDeviceListLegacy() const;
-		const string& getDeviceList2() const;
 		bool getDeviceStatus() const;
 		const string& getDeviceFormat() const;
 
-		void updateDeviceList();
+		Port getPort() const;
 
 	private:
-		void deviceInit();
-		bool acquireDeviceHandle();
+		void deviceInit(AudioEnumeratorWrapper& enumerator);
+		bool acquireDeviceHandle(AudioEnumeratorWrapper& enumerator);
 
 		void readDeviceInfo();
 
-		void ensureDeviceAcquired();
+		void ensureDeviceAcquired(AudioEnumeratorWrapper& enumerator);
 
 		void deviceRelease();
 	};

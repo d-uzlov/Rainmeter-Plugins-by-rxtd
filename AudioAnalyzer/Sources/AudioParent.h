@@ -22,6 +22,7 @@ namespace rxtd::audio_analyzer {
 		static utils::ParentManager<AudioParent> parentManager;
 
 		SoundAnalyzer soundAnalyzer;
+		AudioEnumeratorWrapper enumerator;
 		DeviceManager deviceManager;
 
 	public:

@@ -18,10 +18,19 @@
 
 using namespace audio_analyzer;
 
-utils::ParentManager<AudioParent> AudioParent::parentManager { };
+utils::ParentManager<AudioParent> AudioParent::parentManager{ };
 
-AudioParent::AudioParent(utils::Rainmeter&& rain) : TypeHolder(std::move(rain)), deviceManager(log, [this](auto format) { soundAnalyzer.setWaveFormat(format); }) {
+AudioParent::AudioParent(utils::Rainmeter&& rain) :
+	TypeHolder(std::move(rain)),
+	enumerator(log),
+	deviceManager(log, [this](auto format) { soundAnalyzer.setWaveFormat(format); }) {
+
 	parentManager.add(*this);
+
+	if (!enumerator.isValid()) {
+		setMeasureState(utils::MeasureState::eBROKEN);
+		return;
+	}
 
 	if (!deviceManager.isObjectValid()) {
 		setMeasureState(utils::MeasureState::eBROKEN);
@@ -43,7 +52,7 @@ AudioParent::AudioParent(utils::Rainmeter&& rain) : TypeHolder(std::move(rain)),
 	auto id = this->rain.readString(L"DeviceID");
 
 	deviceManager.setOptions(portEnum, id);
-	deviceManager.init();
+	deviceManager.init(enumerator);
 }
 
 AudioParent::~AudioParent() {
@@ -75,16 +84,15 @@ std::tuple<double, const wchar_t*> AudioParent::_update() {
 	// TODO make an option for this value?
 	constexpr index maxBuffers = 15;
 
-	bool changed = deviceManager.actualizeDevice();
+	bool changed = deviceManager.actualizeDevice(enumerator);
 
 	for (index i = 0; i < maxBuffers; ++i) {
-		const auto fetchResult = deviceManager.nextBuffer();
+		const auto fetchResult = deviceManager.nextBuffer(enumerator);
 		switch (fetchResult.getState()) {
-		case CaptureManager::BufferFetchState::eOK:
-		{
-			auto &bufferWrapper = fetchResult.getBuffer();
+		case CaptureManager::BufferFetchState::eOK: {
+			auto& bufferWrapper = fetchResult.getBuffer();
 
-			const uint8_t *const buffer = bufferWrapper.getBuffer();
+			const uint8_t*const buffer = bufferWrapper.getBuffer();
 			const uint32_t framesCount = bufferWrapper.getFramesCount();
 
 			soundAnalyzer.process(buffer, bufferWrapper.isSilent(), framesCount);
@@ -120,7 +128,7 @@ loop_end:
 void AudioParent::_command(const wchar_t* bangArgs) {
 	const isview command = bangArgs;
 	if (command == L"updateDevList") {
-		deviceManager.updateDeviceList();
+		enumerator.updateDeviceList(deviceManager.getPort());
 		return;
 	}
 
@@ -206,10 +214,10 @@ const wchar_t* AudioParent::_resolve(int argc, const wchar_t* argv[]) {
 
 
 	if (optionName == L"device list") {
-		return deviceManager.getDeviceListLegacy().c_str();
+		return enumerator.getDeviceListLegacy().c_str();
 	}
 	if (optionName == L"device list new") {
-		return deviceManager.getDeviceList2().c_str();
+		return enumerator.getDeviceList2().c_str();
 	}
 
 	log.error(L"Invalid section variable resolve: '{}' not supported", argv[0]);

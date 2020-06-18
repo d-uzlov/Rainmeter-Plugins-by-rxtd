@@ -10,10 +10,7 @@
 #include "DeviceManager.h"
 
 #include <utility>
-#include <Audioclient.h>
-#include <functiondiscoverykeys_devpkey.h>
 
-#include "windows-wrappers/WaveFormatWrapper.h"
 #include "windows-wrappers/GenericComWrapper.h"
 
 #include "undef.h"
@@ -27,22 +24,17 @@ using namespace audio_analyzer;
 
 
 DeviceManager::DeviceManager(utils::Rainmeter::Logger& logger, std::function<void(MyWaveFormat waveFormat)> waveFormatUpdateCallback)
-	: logger(logger), waveFormatUpdateCallback(std::move(waveFormatUpdateCallback)), enumerator(logger) {
-
-	if (!enumerator.isValid()) {
-		objectIsValid = false;
-		return;
-	}
+	: logger(logger), waveFormatUpdateCallback(std::move(waveFormatUpdateCallback)) {
 }
 
 DeviceManager::~DeviceManager() {
 	deviceRelease();
 }
 
-void DeviceManager::deviceInit() {
+void DeviceManager::deviceInit(AudioEnumeratorWrapper &enumerator) {
 	lastDevicePollTime = clock::now();
 
-	const bool handleAcquired = acquireDeviceHandle();
+	const bool handleAcquired = acquireDeviceHandle(enumerator);
 	if (!handleAcquired) {
 		deviceRelease();
 		return;
@@ -69,7 +61,7 @@ void DeviceManager::deviceInit() {
 	waveFormatUpdateCallback(captureManager.getWaveFormat());
 }
 
-bool DeviceManager::acquireDeviceHandle() {
+bool DeviceManager::acquireDeviceHandle(AudioEnumeratorWrapper &enumerator) {
 	// if no ID specified, get default audio device
 	if (deviceID.empty()) {
 		auto deviceOpt = enumerator.getDefaultDevice(port);
@@ -104,7 +96,7 @@ void DeviceManager::readDeviceInfo() {
 	deviceInfo = audioDeviceHandle.readDeviceInfo();
 }
 
-void DeviceManager::ensureDeviceAcquired() {
+void DeviceManager::ensureDeviceAcquired(AudioEnumeratorWrapper &enumerator) {
 	// if current state is invalid, then we must reacquire the handles, but only if enough time has passed since previous attempt
 
 	if (captureManager.isValid()) {
@@ -115,7 +107,7 @@ void DeviceManager::ensureDeviceAcquired() {
 		return; // not enough time has passed
 	}
 
-	deviceInit();
+	deviceInit(enumerator);
 
 	// TODO this is incorrect: if there was an error, we will still proceed polling buffers
 }
@@ -133,17 +125,16 @@ void DeviceManager::setOptions(Port port, sview deviceID) {
 	this->deviceID = deviceID;
 }
 
-void DeviceManager::init() {
+void DeviceManager::init(AudioEnumeratorWrapper &enumerator) {
 	if (!objectIsValid) {
 		return;
 	}
 
 	deviceRelease();
-	deviceInit();
-	updateDeviceList();
+	deviceInit(enumerator);
 }
 
-bool DeviceManager::actualizeDevice() {
+bool DeviceManager::actualizeDevice(AudioEnumeratorWrapper &enumerator) {
 	if (!deviceID.empty()) {
 		return false; // nothing to actualize, only default device can change
 	}
@@ -152,19 +143,19 @@ bool DeviceManager::actualizeDevice() {
 
 	if (defaultDeviceId != deviceInfo.id) {
 		deviceRelease();
-		deviceInit();
+		deviceInit(enumerator);
 		return true;
 	}
 
 	return false;
 }
 
-CaptureManager::BufferFetchResult DeviceManager::nextBuffer() {
+CaptureManager::BufferFetchResult DeviceManager::nextBuffer(AudioEnumeratorWrapper &enumerator) {
 	if (!objectIsValid) {
 		return CaptureManager::BufferFetchResult::invalidState();
 	}
 
-	ensureDeviceAcquired();
+	ensureDeviceAcquired(enumerator);
 
 	return captureManager.nextBuffer();
 }
@@ -178,14 +169,6 @@ const string& DeviceManager::getDeviceId() const {
 	return deviceInfo.id;
 }
 
-const string& DeviceManager::getDeviceListLegacy() const {
-	return enumerator.getDeviceListLegacy();
-}
-
-const string& DeviceManager::getDeviceList2() const {
-	return enumerator.getDeviceList2();
-}
-
 bool DeviceManager::getDeviceStatus() const {
 	return audioDeviceHandle.isDeviceActive();
 }
@@ -194,6 +177,6 @@ const string& DeviceManager::getDeviceFormat() const {
 	return captureManager.getFormatString();
 }
 
-void DeviceManager::updateDeviceList() {
-	enumerator.updateDeviceList(port);
+Port DeviceManager::getPort() const {
+	return port;
 }
