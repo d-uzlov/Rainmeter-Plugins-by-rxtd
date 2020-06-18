@@ -9,9 +9,9 @@
 
 #pragma once
 #include "TypeHolder.h"
-#include "Channel.h"
-#include "SoundAnalyzer.h"
-#include "DeviceManager.h"
+#include "sound-processing/Channel.h"
+#include "sound-processing/SoundAnalyzer.h"
+#include "sound-processing/device-management/DeviceManager.h"
 
 namespace rxtd::audio_analyzer {
 	using namespace std::string_literals;

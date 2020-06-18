@@ -8,16 +8,16 @@
  */
 
 #include "ParamParser.h"
-#include "sound-handlers/BlockMean.h"
-#include "sound-handlers/FftAnalyzer.h"
-#include "sound-handlers/Spectrogram.h"
-#include "sound-handlers/WaveForm.h"
-#include "sound-handlers/BandResampler.h"
-#include "sound-handlers/BandCascadeTransformer.h"
-#include "sound-handlers/FiniteTimeFilter.h"
-#include "sound-handlers/LogarithmicValueMapper.h"
-#include "sound-handlers/WeightedBlur.h"
-#include "sound-handlers/UniformBlur.h"
+#include "sound-processing/sound-handlers/BlockMean.h"
+#include "sound-processing/sound-handlers/FftAnalyzer.h"
+#include "sound-processing/sound-handlers/Spectrogram.h"
+#include "sound-processing/sound-handlers/WaveForm.h"
+#include "sound-processing/sound-handlers/BandResampler.h"
+#include "sound-processing/sound-handlers/BandCascadeTransformer.h"
+#include "sound-processing/sound-handlers/FiniteTimeFilter.h"
+#include "sound-processing/sound-handlers/LogarithmicValueMapper.h"
+#include "sound-processing/sound-handlers/WeightedBlur.h"
+#include "sound-processing/sound-handlers/UniformBlur.h"
 
 #include "undef.h"
 
@@ -142,6 +142,7 @@ std::function<SoundHandler*(SoundHandler*)> ParamParser::parseHandler(const util
 		return nullptr;
 	}
 
+	// source must be checked to prevent loops
 	const auto source = optionMap.getUntouched(L"source").asIString();
 	if (!source.empty() && handlerPatchersMap.find(source) == handlerPatchersMap.end()) {
 		cl.error(L"reverse or unknown dependency {}", source);

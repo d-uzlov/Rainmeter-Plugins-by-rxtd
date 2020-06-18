@@ -8,7 +8,7 @@
  */
 
 #pragma once
-#include "MyWaveFormat.h"
+#include "device-management/MyWaveFormat.h"
 #include "sound-handlers/SoundHandler.h"
 #include <functional>
 #include "Channel.h"

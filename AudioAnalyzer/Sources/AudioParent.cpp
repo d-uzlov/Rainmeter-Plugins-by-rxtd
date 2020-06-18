@@ -30,14 +30,14 @@ AudioParent::AudioParent(utils::Rainmeter&& rain) : TypeHolder(std::move(rain)),
 
 	// parse port specifier
 	const auto port = this->rain.readString(L"Port") % ciView();
-	DeviceManager::Port portEnum;
+	Port portEnum;
 	if (port == L"" || port == L"Output") {
-		portEnum = DeviceManager::Port::eOUTPUT;
+		portEnum = Port::eOUTPUT;
 	} else if (port == L"Input") {
-		portEnum = DeviceManager::Port::eINPUT;
+		portEnum = Port::eINPUT;
 	} else {
 		log.error(L"Invalid Port '{}', must be one of: Output, Input. Set to Output.", port);
-		portEnum = DeviceManager::Port::eOUTPUT;
+		portEnum = Port::eOUTPUT;
 	}
 
 	auto id = this->rain.readString(L"DeviceID");
@@ -58,8 +58,14 @@ void AudioParent::_reload() {
 	ParamParser paramParser(rain, rain.readBool(L"UnusedOptionsWarning", true));
 	paramParser.parse();
 
-	// TODO add min target
-	const auto rateLimit = std::max<index>(rain.readInt(L"TargetRate"), 0);
+	auto rateLimit = std::max<index>(rain.readInt(L"TargetRate"), 0);
+	if (rateLimit < 0) {
+		rateLimit = 0;
+	}
+	if (rateLimit > 0 && rateLimit < 8000) {
+		rateLimit = 8000;
+	}
+
 	soundAnalyzer.setTargetRate(rateLimit);
 
 	soundAnalyzer.setPatchHandlers(paramParser.getHandlers(), paramParser.getPatches());
@@ -74,7 +80,7 @@ std::tuple<double, const wchar_t*> AudioParent::_update() {
 	for (index i = 0; i < maxBuffers; ++i) {
 		const auto fetchResult = deviceManager.nextBuffer();
 		switch (fetchResult.getState()) {
-		case DeviceManager::BufferFetchState::eOK:
+		case CaptureManager::BufferFetchState::eOK:
 		{
 			auto &bufferWrapper = fetchResult.getBuffer();
 
@@ -85,14 +91,14 @@ std::tuple<double, const wchar_t*> AudioParent::_update() {
 			break;
 		}
 
-		case DeviceManager::BufferFetchState::eNO_DATA:
+		case CaptureManager::BufferFetchState::eNO_DATA:
 			goto loop_end;
 
-		case DeviceManager::BufferFetchState::eDEVICE_ERROR:
+		case CaptureManager::BufferFetchState::eDEVICE_ERROR:
 			soundAnalyzer.resetValues();
 			goto loop_end;
 
-		case DeviceManager::BufferFetchState::eINVALID_STATE:
+		case CaptureManager::BufferFetchState::eINVALID_STATE:
 			soundAnalyzer.resetValues();
 			log.error(L"Unrecoverable error");
 			setMeasureState(utils::MeasureState::eBROKEN);
@@ -111,8 +117,8 @@ loop_end:
 	return std::make_tuple(deviceManager.getDeviceStatus(), nullptr);
 }
 
-void AudioParent::_command(const wchar_t* args) {
-	const isview command = args;
+void AudioParent::_command(const wchar_t* bangArgs) {
+	const isview command = bangArgs;
 	if (command == L"updateDevList") {
 		deviceManager.updateDeviceList();
 		return;
@@ -200,7 +206,10 @@ const wchar_t* AudioParent::_resolve(int argc, const wchar_t* argv[]) {
 
 
 	if (optionName == L"device list") {
-		return deviceManager.getDeviceList().c_str();
+		return deviceManager.getDeviceListLegacy().c_str();
+	}
+	if (optionName == L"device list new") {
+		return deviceManager.getDeviceList2().c_str();
 	}
 
 	log.error(L"Invalid section variable resolve: '{}' not supported", argv[0]);

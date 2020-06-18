@@ -58,7 +58,6 @@ std::optional<UniformBlur::Params> UniformBlur::parseParams(const utils::OptionP
 		return std::nullopt;
 	}
 
-	// TODO 35 Hz make strange figure on spectrum
 	//                                                        ?? ↓↓ looks best ?? at 0.25 ↓↓ ?? // TODO
 	params.blurRadius = std::max<double>(optionMap.get(L"Radius"sv).asFloat(1.0) * 0.25, 0.0);
 	params.blurRadiusAdaptation = std::max<double>(optionMap.get(L"RadiusAdaptation"sv).asFloat(2.0), 0.0);

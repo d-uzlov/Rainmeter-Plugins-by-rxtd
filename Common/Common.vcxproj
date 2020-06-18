@@ -162,6 +162,8 @@
     <ClCompile Include="sources\StringUtils.cpp" />
     <ClCompile Include="sources\TypeHolder.cpp" />
     <ClCompile Include="sources\windows-wrappers\FileWrapper.cpp" />
+    <ClCompile Include="sources\windows-wrappers\MediaDeviceWrapper.cpp" />
+    <ClCompile Include="sources\windows-wrappers\PropertyStoreWrapper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="precompiled.h" />
@@ -181,7 +183,8 @@
     <ClInclude Include="sources\windows-wrappers\BufferWrapper.h" />
     <ClInclude Include="sources\windows-wrappers\FileWrapper.h" />
     <ClInclude Include="sources\windows-wrappers\GenericComWrapper.h" />
-    <ClInclude Include="sources\windows-wrappers\PropVariantWrapper.h" />
+    <ClInclude Include="sources\windows-wrappers\MediaDeviceWrapper.h" />
+    <ClInclude Include="sources\windows-wrappers\PropertyStoreWrapper.h" />
     <ClInclude Include="sources\windows-wrappers\WaveFormatWrapper.h" />
     <ClInclude Include="typedefs.h" />
     <ClInclude Include="undef.h" />

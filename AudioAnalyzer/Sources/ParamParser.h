@@ -8,9 +8,9 @@
  */
 
 #pragma once
-#include "Channel.h"
+#include "sound-processing/Channel.h"
 #include <functional>
-#include "sound-handlers/SoundHandler.h"
+#include "sound-processing/sound-handlers/SoundHandler.h"
 #include <set>
 #include "RainmeterWrappers.h"
 #include "OptionParser.h"

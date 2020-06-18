@@ -8,7 +8,7 @@
  */
 
 #pragma once
-#include "Channel.h"
+#include "../Channel.h"
 
 namespace rxtd::audio_analyzer {
 	class Format {
@@ -36,7 +36,7 @@ namespace rxtd::audio_analyzer {
 		index samplesPerSec = 0;
 		index channelsCount = 0;
 		Format format = Format::eINVALID;
-		ChannelLayout channelLayout;
+		ChannelLayout channelLayout { };
 	};
 
 }

@@ -8,7 +8,7 @@
  */
 
 #pragma once
-#include "../kiss_fft/KissFft.hh"
+#include "../../kiss_fft/KissFft.hh"
 
 namespace rxtd::audio_analyzer {
 	class FftImpl {

@@ -44,6 +44,12 @@
     <ClCompile Include="sources\array_view.h">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="sources\windows-wrappers\MediaDeviceWrapper.cpp">
+      <Filter>Source Files\windows-wrappers</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\windows-wrappers\PropertyStoreWrapper.cpp">
+      <Filter>Source Files\windows-wrappers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sources\BmpWriter.h">
@@ -79,9 +85,6 @@
     <ClInclude Include="sources\windows-wrappers\GenericComWrapper.h">
       <Filter>Source Files\windows-wrappers</Filter>
     </ClInclude>
-    <ClInclude Include="sources\windows-wrappers\PropVariantWrapper.h">
-      <Filter>Source Files\windows-wrappers</Filter>
-    </ClInclude>
     <ClInclude Include="sources\windows-wrappers\WaveFormatWrapper.h">
       <Filter>Source Files\windows-wrappers</Filter>
     </ClInclude>
@@ -105,6 +108,13 @@
     </ClInclude>
     <ClInclude Include="sources\Vector2D.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\MutableLinearInterpolator.h" />
+    <ClInclude Include="sources\windows-wrappers\MediaDeviceWrapper.h">
+      <Filter>Source Files\windows-wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\windows-wrappers\PropertyStoreWrapper.h">
+      <Filter>Source Files\windows-wrappers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

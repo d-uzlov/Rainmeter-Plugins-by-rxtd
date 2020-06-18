@@ -42,7 +42,7 @@ const SoundHandler* SoundAnalyzer::DataSupplierImpl::getHandlerRaw(isview id) co
 		return nullptr;
 	}
 	auto handler = channelData->handlers[iter->second].get();
-	handler->finish(*this); // TODO check for endless loop
+	handler->finish(*this); // endless loop is impossible because of "source" checking in ParamParser
 
 	if (!handler->isValid()) {
 		return nullptr;
@@ -98,7 +98,7 @@ void SoundAnalyzer::decompose(const uint8_t* buffer, index framesCount) noexcept
 			}
 		}
 	} else {
-		std::terminate();
+		std::terminate(); // TODO this is dumb
 	}
 }
 
@@ -213,7 +213,7 @@ void SoundAnalyzer::setPatchHandlers(std::map<Channel, std::vector<istring>> han
 	for (const auto &channelOrder : handlersOrder) {
 		auto channelIter = channels.find(channelOrder.first);
 		if (channelIter == channels.end()) {
-			// channel specified in options but don't exist in the layout
+			// channel is specified in options but doesn't exist in the layout
 			continue;
 		}
 

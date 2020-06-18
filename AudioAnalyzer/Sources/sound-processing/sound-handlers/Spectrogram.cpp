@@ -122,7 +122,7 @@ std::optional<Spectrogram::Params> Spectrogram::parseParams(const utils::OptionP
 			cl.error(L"Not enough colors found: {}", params.colors.size());
 			params.colors = { };
 		}
-		// TODO optimize for 2 colors
+		// TODO optimize for 2 colors - like, do all as usual 2 colors but shift bound from [0, 1] to [min, max]
 	}
 
 	return params;
