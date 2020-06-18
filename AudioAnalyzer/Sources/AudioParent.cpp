@@ -22,17 +22,11 @@ utils::ParentManager<AudioParent> AudioParent::parentManager{ };
 
 AudioParent::AudioParent(utils::Rainmeter&& rain) :
 	TypeHolder(std::move(rain)),
-	enumerator(log),
 	deviceManager(log, [this](auto format) { soundAnalyzer.setWaveFormat(format); }) {
 
 	parentManager.add(*this);
 
-	if (!enumerator.isValid()) {
-		setMeasureState(utils::MeasureState::eBROKEN);
-		return;
-	}
-
-	if (!deviceManager.isObjectValid()) {
+	if (!deviceManager.isRecoverable()) {
 		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
 	}
@@ -52,7 +46,7 @@ AudioParent::AudioParent(utils::Rainmeter&& rain) :
 	auto id = this->rain.readString(L"DeviceID");
 
 	deviceManager.setOptions(portEnum, id);
-	deviceManager.init(enumerator);
+	deviceManager.deviceInit();
 }
 
 AudioParent::~AudioParent() {
@@ -84,10 +78,10 @@ std::tuple<double, const wchar_t*> AudioParent::_update() {
 	// TODO make an option for this value?
 	constexpr index maxBuffers = 15;
 
-	bool changed = deviceManager.actualizeDevice(enumerator);
+	bool changed = deviceManager.actualizeDevice();
 
 	for (index i = 0; i < maxBuffers; ++i) {
-		const auto fetchResult = deviceManager.nextBuffer(enumerator);
+		const auto fetchResult = deviceManager.nextBuffer();
 		switch (fetchResult.getState()) {
 		case CaptureManager::BufferFetchState::eOK: {
 			auto& bufferWrapper = fetchResult.getBuffer();
@@ -128,7 +122,7 @@ loop_end:
 void AudioParent::_command(const wchar_t* bangArgs) {
 	const isview command = bangArgs;
 	if (command == L"updateDevList") {
-		enumerator.updateDeviceList(deviceManager.getPort());
+		deviceManager.updateDeviceList();
 		return;
 	}
 
@@ -200,13 +194,19 @@ const wchar_t* AudioParent::_resolve(int argc, const wchar_t* argv[]) {
 			return deviceManager.getDeviceStatus() ? L"active" : L"down";
 		}
 		if (deviceProperty == L"name") {
-			return deviceManager.getDeviceName().c_str();
+			return deviceManager.getDeviceInfo().fullFriendlyName.c_str();
+		}
+		if (deviceProperty == L"nameOnly") {
+			return deviceManager.getDeviceInfo().name.c_str();
+		}
+		if (deviceProperty == L"description") {
+			return deviceManager.getDeviceInfo().desc.c_str();
 		}
 		if (deviceProperty == L"id") {
-			return deviceManager.getDeviceId().c_str();
+			return deviceManager.getDeviceInfo().id.c_str();
 		}
 		if (deviceProperty == L"format") {
-			return deviceManager.getDeviceFormat().c_str();
+			return deviceManager.getCaptureManager().getFormatString().c_str();
 		}
 
 		return nullptr;
@@ -214,10 +214,10 @@ const wchar_t* AudioParent::_resolve(int argc, const wchar_t* argv[]) {
 
 
 	if (optionName == L"device list") {
-		return enumerator.getDeviceListLegacy().c_str();
+		return deviceManager.getDeviceEnumerator().getDeviceListLegacy().c_str();
 	}
 	if (optionName == L"device list new") {
-		return enumerator.getDeviceList2().c_str();
+		return deviceManager.getDeviceEnumerator().getDeviceList2().c_str();
 	}
 
 	log.error(L"Invalid section variable resolve: '{}' not supported", argv[0]);

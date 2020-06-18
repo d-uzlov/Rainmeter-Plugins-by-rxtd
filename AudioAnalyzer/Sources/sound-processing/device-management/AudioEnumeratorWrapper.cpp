@@ -34,13 +34,13 @@ namespace rxtd::audio_analyzer {
 		if (res != S_OK) {
 			audioEnumeratorHandle.release();
 			logger.error(L"Can't create device enumerator, error {error}", res);
-			objectIsValid = false;
+			valid = false;
 			return;
 		}
 	}
 
 	bool AudioEnumeratorWrapper::isValid() const {
-		return objectIsValid;
+		return valid;
 	}
 
 	std::optional<utils::MediaDeviceWrapper> AudioEnumeratorWrapper::getDevice(const string& deviceID, Port port) {

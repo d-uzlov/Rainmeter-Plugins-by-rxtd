@@ -22,36 +22,44 @@ using namespace std::literals::string_view_literals;
 using namespace audio_analyzer;
 
 
-
 DeviceManager::DeviceManager(utils::Rainmeter::Logger& logger, std::function<void(MyWaveFormat waveFormat)> waveFormatUpdateCallback)
-	: logger(logger), waveFormatUpdateCallback(std::move(waveFormatUpdateCallback)) {
+	: logger(logger), enumerator(logger), waveFormatUpdateCallback(std::move(waveFormatUpdateCallback)) {
+	if (!enumerator.isValid()) {
+		recoverable = false;
+		return;
+	}
 }
 
 DeviceManager::~DeviceManager() {
 	deviceRelease();
 }
 
-void DeviceManager::deviceInit(AudioEnumeratorWrapper &enumerator) {
-	lastDevicePollTime = clock::now();
+void DeviceManager::deviceInit() {
+	if (!isRecoverable()) {
+		return;
+	}
 
-	const bool handleAcquired = acquireDeviceHandle(enumerator);
-	if (!handleAcquired) {
+	deviceRelease();
+
+	lastDevicePollTime = clock::now();
+	valid = true;
+
+	auto deviceOpt = deviceID.empty() ? enumerator.getDefaultDevice(port) : enumerator.getDevice(deviceID, port);
+
+	if (!deviceOpt) {
 		deviceRelease();
 		return;
 	}
+
+	audioDeviceHandle = std::move(deviceOpt.value());
 
 	captureManager = CaptureManager{ logger, *audioDeviceHandle.getPointer(), port == Port::eOUTPUT };
 
 	if (!captureManager.isValid()) {
 		if (!captureManager.isRecoverable()) {
-			objectIsValid = false;
+			recoverable = false;
 		}
-		deviceRelease();
-		return;
-	}
 
-	if (!captureManager.isValid()) {
-		logger.error(L"Can't create capture client");
 		deviceRelease();
 		return;
 	}
@@ -61,42 +69,18 @@ void DeviceManager::deviceInit(AudioEnumeratorWrapper &enumerator) {
 	waveFormatUpdateCallback(captureManager.getWaveFormat());
 }
 
-bool DeviceManager::acquireDeviceHandle(AudioEnumeratorWrapper &enumerator) {
-	// if no ID specified, get default audio device
-	if (deviceID.empty()) {
-		auto deviceOpt = enumerator.getDefaultDevice(port);
-	
-		if (!deviceOpt) {
-			return false;
-		}
-
-		audioDeviceHandle = std::move(deviceOpt.value());
-
-		return true;
-	}
-
-	auto deviceOpt = enumerator.getDevice(deviceID, port);
-	
-	if (!deviceOpt) {
-		return false;
-	}
-
-	audioDeviceHandle = std::move(deviceOpt.value());
-
-	return true;
-}
-
 void DeviceManager::deviceRelease() {
 	captureManager = { };
 	audioDeviceHandle = { };
 	deviceInfo = { };
+	valid = false;
 }
 
 void DeviceManager::readDeviceInfo() {
 	deviceInfo = audioDeviceHandle.readDeviceInfo();
 }
 
-void DeviceManager::ensureDeviceAcquired(AudioEnumeratorWrapper &enumerator) {
+void DeviceManager::ensureDeviceAcquired() {
 	// if current state is invalid, then we must reacquire the handles, but only if enough time has passed since previous attempt
 
 	if (captureManager.isValid()) {
@@ -107,34 +91,31 @@ void DeviceManager::ensureDeviceAcquired(AudioEnumeratorWrapper &enumerator) {
 		return; // not enough time has passed
 	}
 
-	deviceInit(enumerator);
+	deviceInit();
 
 	// TODO this is incorrect: if there was an error, we will still proceed polling buffers
 }
 
 bool DeviceManager::isObjectValid() const {
-	return objectIsValid;
+	return valid;
+}
+
+bool DeviceManager::isRecoverable() const {
+	return recoverable;
 }
 
 void DeviceManager::setOptions(Port port, sview deviceID) {
-	if (!objectIsValid) {
+	if (!valid) {
 		return;
 	}
+
+	// TODO what about port in enumerator?
 
 	this->port = port;
 	this->deviceID = deviceID;
 }
 
-void DeviceManager::init(AudioEnumeratorWrapper &enumerator) {
-	if (!objectIsValid) {
-		return;
-	}
-
-	deviceRelease();
-	deviceInit(enumerator);
-}
-
-bool DeviceManager::actualizeDevice(AudioEnumeratorWrapper &enumerator) {
+bool DeviceManager::actualizeDevice() {
 	if (!deviceID.empty()) {
 		return false; // nothing to actualize, only default device can change
 	}
@@ -142,41 +123,43 @@ bool DeviceManager::actualizeDevice(AudioEnumeratorWrapper &enumerator) {
 	const auto defaultDeviceId = enumerator.getDefaultDeviceId(port);
 
 	if (defaultDeviceId != deviceInfo.id) {
-		deviceRelease();
-		deviceInit(enumerator);
+		deviceInit();
 		return true;
 	}
 
 	return false;
 }
 
-CaptureManager::BufferFetchResult DeviceManager::nextBuffer(AudioEnumeratorWrapper &enumerator) {
-	if (!objectIsValid) {
+CaptureManager::BufferFetchResult DeviceManager::nextBuffer() {
+	if (!valid) {
 		return CaptureManager::BufferFetchResult::invalidState();
 	}
 
-	ensureDeviceAcquired(enumerator);
+	ensureDeviceAcquired();
 
 	return captureManager.nextBuffer();
 }
 
-
-const string& DeviceManager::getDeviceName() const {
-	return deviceInfo.name;
-}
-
-const string& DeviceManager::getDeviceId() const {
-	return deviceInfo.id;
+const utils::MediaDeviceWrapper::DeviceInfo& DeviceManager::getDeviceInfo() const {
+	return deviceInfo;
 }
 
 bool DeviceManager::getDeviceStatus() const {
 	return audioDeviceHandle.isDeviceActive();
 }
 
-const string& DeviceManager::getDeviceFormat() const {
-	return captureManager.getFormatString();
-}
-
 Port DeviceManager::getPort() const {
 	return port;
+}
+
+void DeviceManager::updateDeviceList() {
+	enumerator.updateDeviceList(port);
+}
+
+const CaptureManager& DeviceManager::getCaptureManager() const {
+	return captureManager;
+}
+
+const AudioEnumeratorWrapper& DeviceManager::getDeviceEnumerator() const {
+	return enumerator;
 }

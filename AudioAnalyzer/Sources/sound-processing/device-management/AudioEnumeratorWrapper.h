@@ -25,7 +25,7 @@ namespace rxtd::audio_analyzer {
 		};
 
 	private:
-		bool objectIsValid = true;
+		bool valid = true;
 
 		utils::Rainmeter::Logger& logger;
 

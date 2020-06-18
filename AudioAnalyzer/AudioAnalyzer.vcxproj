@@ -157,7 +157,6 @@
     <ClInclude Include="Sources\sound-processing\device-management\DeviceManager.h" />
     <ClInclude Include="Sources\sound-processing\device-management\MyWaveFormat.h" />
     <ClInclude Include="Sources\sound-processing\device-management\Port.h" />
-    <ClInclude Include="Sources\sound-processing\device-management\SilentRenderer.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\BandCascadeTransformer.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\BandResampler.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\BlockMean.h" />
@@ -191,7 +190,6 @@
     <ClCompile Include="Sources\sound-processing\device-management\CaptureManager.cpp" />
     <ClCompile Include="Sources\sound-processing\device-management\DeviceManager.cpp" />
     <ClCompile Include="Sources\sound-processing\device-management\MyWaveFormat.cpp" />
-    <ClCompile Include="Sources\sound-processing\device-management\SilentRenderer.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\BandCascadeTransformer.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\BandResampler.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\BlockMean.cpp" />

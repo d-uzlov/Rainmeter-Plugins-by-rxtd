@@ -9,7 +9,6 @@
 
 #pragma once
 #include "MyWaveFormat.h"
-#include "windows-wrappers/BufferWrapper.h"
 #include <functional>
 #include "RainmeterWrappers.h"
 
@@ -24,7 +23,8 @@ namespace rxtd::audio_analyzer {
 
 	private:
 		
-		bool objectIsValid = true;
+		bool valid = true;
+		bool recoverable = true;
 
 		utils::Rainmeter::Logger& logger;
 
@@ -33,6 +33,7 @@ namespace rxtd::audio_analyzer {
 
 		mutable utils::MediaDeviceWrapper audioDeviceHandle { };
 
+		AudioEnumeratorWrapper enumerator;
 		CaptureManager captureManager;
 
 		utils::MediaDeviceWrapper::DeviceInfo deviceInfo;
@@ -53,26 +54,28 @@ namespace rxtd::audio_analyzer {
 		DeviceManager& operator=(DeviceManager&& other) = delete;
 
 		bool isObjectValid() const;
+		bool isRecoverable() const;
 
 		void setOptions(Port port, sview deviceID);
-		void init(AudioEnumeratorWrapper& enumerator);
-		bool actualizeDevice(AudioEnumeratorWrapper& enumerator); // returns true if changed
-		CaptureManager::BufferFetchResult nextBuffer(AudioEnumeratorWrapper& enumerator);
+		void deviceInit();
+		bool actualizeDevice(); // returns true if changed
+		CaptureManager::BufferFetchResult nextBuffer();
 
-		const string& getDeviceName() const;
-		const string& getDeviceId() const;
+		const utils::MediaDeviceWrapper::DeviceInfo& getDeviceInfo() const;
 		bool getDeviceStatus() const;
-		const string& getDeviceFormat() const;
 
 		Port getPort() const;
 
+		void updateDeviceList();
+
+		const CaptureManager& getCaptureManager() const;
+		const AudioEnumeratorWrapper& getDeviceEnumerator() const;
+
 	private:
-		void deviceInit(AudioEnumeratorWrapper& enumerator);
-		bool acquireDeviceHandle(AudioEnumeratorWrapper& enumerator);
 
 		void readDeviceInfo();
 
-		void ensureDeviceAcquired(AudioEnumeratorWrapper& enumerator);
+		void ensureDeviceAcquired();
 
 		void deviceRelease();
 	};
