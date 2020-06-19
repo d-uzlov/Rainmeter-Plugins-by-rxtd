@@ -74,13 +74,9 @@ std::optional<Spectrogram::Params> Spectrogram::parseParams(const utils::OptionM
 	params.baseColor = optionMap.get(L"baseColor"sv).asColor({ 0, 0, 0, 1 });
 	params.maxColor = optionMap.get(L"maxColor"sv).asColor({ 1, 1, 1, 1 });
 	if (optionMap.has(L"colors"sv)) {
-		utils::OptionParser parser { };
+		auto colorsDescriptionList = optionMap.get(L"colors"sv).asList(L';');
 
-		auto colorsDescriptions = optionMap.get(L"colors"sv).asString();
-		parser.setSource(colorsDescriptions);
-		auto colorsDescriptionList = parser.parse().asList(L';');
-
-		double prevValue = std::numeric_limits<double>::infinity();
+		double prevValue = -std::numeric_limits<double>::infinity();
 
 		bool colorsAreBroken = false;
 
@@ -93,15 +89,13 @@ std::optional<Spectrogram::Params> Spectrogram::parseParams(const utils::OptionM
 			float value = valueOpt.asFloat();
 			utils::Color color = colorOpt.asColor();
 
-			if (i > 0) {
-				if (value <= prevValue) {
-					cl.error(L"Colors: values {} and {}: values must be increasing", prevValue, value);
-					continue;
-				}
-				if (value / prevValue < 1.001 && value - prevValue < 0.001) {
-					cl.error(L"Colors: values {} and {} are too close, discarding second one", prevValue, value);
-					continue;
-				}
+			if (value <= prevValue) {
+				cl.error(L"Colors: values {} and {}: values must be increasing", prevValue, value);
+				continue;
+			}
+			if (value / prevValue < 1.001 && value - prevValue < 0.001) {
+				cl.error(L"Colors: values {} and {} are too close, discarding second one", prevValue, value);
+				continue;
 			}
 
 			params.colorLevels.push_back(value);

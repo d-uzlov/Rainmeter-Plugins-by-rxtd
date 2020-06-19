@@ -39,9 +39,7 @@ PerfmonParent::PerfmonParent(utils::Rainmeter&& _rain) : TypeHolder(std::move(_r
 		return;
 	}
 
-	utils::OptionParser optionParser;
-	optionParser.setSource(rain.readString(L"CounterList"));
-	auto counterTokens = optionParser.parse().asList(L'|');
+	auto counterTokens = utils::OptionParser::parse(rain.readString(L"CounterList")).asList(L'|').own();
 
 	if (counterTokens.empty()) {
 		logger.error(L"CounterList must have at least one entry");

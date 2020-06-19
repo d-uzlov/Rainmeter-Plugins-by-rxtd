@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (C) 2019 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
@@ -11,16 +11,33 @@
 #include "Color.h"
 #include "StringUtils.h"
 #include <optional>
+#include <utility>
 
 namespace rxtd::utils {
+	class Tokenizer {
+		std::vector<SubstringViewInfo> tempList { };
+
+	public:
+		std::vector<SubstringViewInfo> parse(sview string, wchar_t delimiter);
+
+	private:
+		void emitToken(index begin, index end);
+
+		void tokenize(sview string, wchar_t delimiter);
+
+		void trimSpaces(sview string);
+	};
+
 	class OptionList;
 	class OptionMap;
 	struct OptionSeparated;
 	// Class, that allows you to parse options.
 	class Option {
-		typedef StringUtils svu;
-		sview view;
-		string source; // may not be used, all operations are performed with view
+		// source may be not used, all operations are performed with view, which can point to other arrays
+		sview _view;
+		// ↓↓ yes, this must be a vector and not a string,
+		// ↓↓ because small string optimization kills string views
+		std::vector<wchar_t> source;
 
 	public:
 		Option() = default;
@@ -60,6 +77,7 @@ namespace rxtd::utils {
 
 	private:
 		static double parseNumber(sview source);
+		sview getView() const;
 	};
 
 	struct OptionSeparated {
@@ -67,15 +85,19 @@ namespace rxtd::utils {
 		Option rest;
 
 		OptionSeparated() = default;
-		OptionSeparated(const Option& first, const Option& rest)
-			: first(first),
-			rest(rest) { }
+		OptionSeparated(Option first, Option rest)
+			: first(std::move(first)),
+			rest(std::move(rest)) { }
 	};
 
 	// List of string.
 	class OptionList {
-		sview view;
-		string source; // may not be used, all operations are performed with view
+		// source may be not used, all operations are performed with view, which can point to other arrays
+		sview _view;
+		// ↓↓ yes, this must be a vector and not a string,
+		// ↓↓ because small string optimization kills string views
+		std::vector<wchar_t> source;
+
 		std::vector<SubstringViewInfo> list;
 
 	public:
@@ -117,6 +139,9 @@ namespace rxtd::utils {
 		iterator end() const;
 
 		OptionList own();
+
+	private:
+		sview getView() const;
 	};
 
 	class OptionMap {
@@ -130,8 +155,11 @@ namespace rxtd::utils {
 		};
 
 	private:
-		sview view;
-		string source; // may not be used, all operations are performed with view
+		// source may be not used, all operations are performed with view, which can point to other arrays
+		sview _view;
+		// ↓↓ yes, this must be a vector and not a string,
+		// ↓↓ because small string optimization kills string views
+		std::vector<wchar_t> source;
 		// For move and copy operations.
 		std::map<SubstringViewInfo, SubstringViewInfo> paramsInfo { };
 
@@ -141,12 +169,6 @@ namespace rxtd::utils {
 	public:
 		OptionMap();
 		OptionMap(sview source, std::map<SubstringViewInfo, SubstringViewInfo>&& paramsInfo);
-		~OptionMap();
-
-		OptionMap(const OptionMap& other);
-		OptionMap(OptionMap&& other) noexcept;
-		OptionMap& operator=(const OptionMap& other);
-		OptionMap& operator=(OptionMap&& other) noexcept;
 
 		//Returns named option, search is case-insensitive.
 		// Doesn't raise the "touched" flag on the option
@@ -179,43 +201,15 @@ namespace rxtd::utils {
 
 		OptionMap own();
 	private:
-		void fillParams();
+		void fillParams() const;
 		MapOptionInfo* find(isview name) const;
+		sview getView() const;
 	};
 
 
 
 	class OptionParser {
-		typedef StringUtils svu;
-
 	public:
-		class Tokenizer {
-			std::vector<SubstringViewInfo> tempList { };
-
-		public:
-			std::vector<SubstringViewInfo> parse(sview string, wchar_t delimiter);
-
-		private:
-			void emitToken(index begin, index end);
-
-			void tokenize(sview string, wchar_t delimiter);
-
-			std::vector<SubstringViewInfo> trimSpaces(sview string);
-		};
-
-	private:
-		string source;
-
-		Tokenizer tokenizer;
-	public:
-		
-		void setSource(string&& string);
-		void setSource(istring&& string);
-		void setSource(sview string);
-		void setSource(isview string);
-		void setSource(const wchar_t *string);
-
-		Option parse() const;
 		static Option parse(sview string);
 	};
 }

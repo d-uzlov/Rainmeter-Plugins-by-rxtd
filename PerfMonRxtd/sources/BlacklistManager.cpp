@@ -31,10 +31,7 @@ bool MatchTestRecord::match(sview string) const {
 BlacklistManager::MatchList::MatchList() = default;
 
 BlacklistManager::MatchList::MatchList(string sourceString, bool upperCase) {
-	utils::OptionParser parser;
-	parser.setSource(sourceString);
-	
-	auto[_, optList] = parser.parse().asList(L'|').consume();
+	auto[_, optList] = utils::OptionParser::parse(sourceString).asList(L'|').consume();
 
 	source = std::move(sourceString);
 	if (upperCase) {

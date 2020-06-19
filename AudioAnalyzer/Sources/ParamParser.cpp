@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -34,9 +34,7 @@ ParamParser::ParamParser(utils::Rainmeter& rain, bool unusedOptionsWarning) :
 void ParamParser::parse() {
 	handlerPatchersMap.clear();
 
-	utils::OptionParser optionParser { };
-	optionParser.setSource(rain.readString(L"Processing"));
-	auto processingIndices = optionParser.parse().asList(L'|');
+	auto processingIndices = utils::OptionParser::parse(rain.readString(L"Processing")).asList(L'|').own();
 	for (auto processingNameOption : processingIndices) {
 		utils::Rainmeter::ContextLogger cl { rain.getLogger() };
 		cl.setPrefix(L"Processing {}:", processingNameOption.asString());
@@ -44,10 +42,13 @@ void ParamParser::parse() {
 		string processingOptionIndex = L"Processing"s;
 		processingOptionIndex += L"_";
 		processingOptionIndex += processingNameOption.asString();
+		auto processingDescription = rain.readString(processingOptionIndex);
+		if (processingDescription.empty()) {
+			cl.error(L"processing description for '{}' is now found", processingNameOption.asString());
+			continue;
+		}
 
-		utils::OptionParser processingParser;
-		processingParser.setSource(rain.readString(processingOptionIndex));
-		auto processingMap = processingParser.parse().asMap(L'|', L' ');
+		auto processingMap = utils::OptionParser::parse(processingDescription).asMap(L'|', L' ').own();
 		auto channelsOption = processingMap.get(L"channels"sv);
 		if (channelsOption.asString().empty()) {
 			cl.error(L"channels not found");
@@ -120,9 +121,7 @@ void ParamParser::cacheHandlers(const utils::OptionList& indices) {
 			continue;
 		}
 
-		utils::OptionParser optionParser;
-		optionParser.setSource(descriptionView);
-		auto optionMap = optionParser.parse().asMap(L'|', L' ');
+		auto optionMap = utils::OptionParser::parse(descriptionView).asMap(L'|', L' ').own();
 
 		utils::Rainmeter::ContextLogger cl { rain.getLogger() };
 		cl.setPrefix(L"Handler {}: ", indexOption.asString());

@@ -30,9 +30,7 @@ std::optional<BandResampler::Params> BandResampler::parseParams(const utils::Opt
 		return std::nullopt;
 	}
 
-	utils::OptionParser optionParser;
-	optionParser.setSource(rain.readString(L"FreqList_"s += freqListIndex));
-	const auto bounds = optionParser.parse().asList(L'|');
+	const auto bounds = utils::OptionParser::parse(rain.readString(L"FreqList_"s += freqListIndex)).asList(L'|').own();
 	utils::Rainmeter::ContextLogger freqListLogger { rain.getLogger() };
 	auto freqsOpt = parseFreqList(bounds, freqListLogger, rain);
 	if (!freqsOpt.has_value()) {
@@ -191,19 +189,20 @@ void BandResampler::updateValues(const DataSupplier& dataSupplier) {
 	beginCascade = 1;
 	endCascade = cascadesCount + 1;
 	if (params.minCascade > 0) {
-		if (cascadesCount >= params.minCascade) {
-			beginCascade = params.minCascade;
-
-			if (params.maxCascade >= params.minCascade && cascadesCount >= params.maxCascade) {
-				endCascade = params.maxCascade + 1;
-			}
-		} else {
+		if (cascadesCount < params.minCascade) {
 			return;
+		}
+
+		beginCascade = params.minCascade;
+
+		if (params.maxCascade >= params.minCascade && cascadesCount >= params.maxCascade) {
+			endCascade = params.maxCascade + 1;
 		}
 	}
 	beginCascade--;
 	endCascade--;
 
+	// TODO only do this on reload?
 	computeBandInfo(*source, beginCascade, endCascade);
 
 	sampleData(*source, beginCascade, endCascade);

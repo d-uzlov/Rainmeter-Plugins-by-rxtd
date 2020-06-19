@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -9,13 +9,14 @@
 
 #include "OptionParser.h"
 #include "MathExpressionParser.h"
-#include <cwctype>
 
 #include "undef.h"
 
 using namespace utils;
 
-std::vector<SubstringViewInfo> OptionParser::Tokenizer::parse(sview string, wchar_t delimiter) {
+std::vector<SubstringViewInfo> Tokenizer::parse(sview string, wchar_t delimiter) {
+	// this method is guarantied to return non - empty views
+
 	if (string.empty()) {
 		return { };
 	}
@@ -24,19 +25,19 @@ std::vector<SubstringViewInfo> OptionParser::Tokenizer::parse(sview string, wcha
 
 	tokenize(string, delimiter);
 
-	auto list = trimSpaces(string);
+	trimSpaces(string);
 
-	return list;
+	return tempList;
 }
 
-void OptionParser::Tokenizer::emitToken(const index begin, const index end) {
+void Tokenizer::emitToken(const index begin, const index end) {
 	if (end <= begin) {
 		return;
 	}
 	tempList.emplace_back(begin, end - begin);
 }
 
-void OptionParser::Tokenizer::tokenize(sview string, wchar_t delimiter) {
+void Tokenizer::tokenize(sview string, wchar_t delimiter) {
 	index begin = 0;
 
 	for (index i = 0; i < index(string.length()); ++i) {
@@ -50,29 +51,25 @@ void OptionParser::Tokenizer::tokenize(sview string, wchar_t delimiter) {
 	emitToken(begin, string.length());
 }
 
-std::vector<SubstringViewInfo> OptionParser::Tokenizer::trimSpaces(sview string) {
-	std::vector<SubstringViewInfo> list{ };
-
+void Tokenizer::trimSpaces(sview string) {
 	for (auto& view : tempList) {
-		auto trimmed = svu::trimInfo(string, view);
-		if (trimmed.empty()) {
-			continue;
-		}
-
-		list.emplace_back(trimmed);
+		view = StringUtils::trimInfo(string, view);
 	}
 
-	return list;
+	tempList.erase(
+		std::remove_if(tempList.begin(), tempList.end(), [](SubstringViewInfo svi) {return svi.empty(); }),
+		tempList.end()
+	);
 }
 
 
 OptionList::OptionList(sview view, std::vector<SubstringViewInfo>&& list) :
-	view(view),
+	_view(view),
 	list(std::move(list)) {
 }
 
 std::pair<sview, std::vector<SubstringViewInfo>> OptionList::consume() && {
-	return { view, std::move(list) };
+	return { getView(), std::move(list) };
 }
 
 index OptionList::size() const {
@@ -84,7 +81,7 @@ bool OptionList::empty() const {
 }
 
 sview OptionList::get(index ind) const {
-	return list[ind].makeView(view);
+	return list[ind].makeView(getView());
 }
 
 isview OptionList::getCI(index ind) const {
@@ -92,7 +89,7 @@ isview OptionList::getCI(index ind) const {
 }
 
 Option OptionList::getOption(index ind) const {
-	return Option{ list[ind].makeView(view) };
+	return Option{ list[ind].makeView(getView()) };
 }
 
 OptionList::iterator::iterator(const OptionList& container, index _index):
@@ -122,16 +119,24 @@ OptionList::iterator OptionList::end() const {
 }
 
 OptionList OptionList::own() {
-	source = view;
-	view = source;
+	source.resize(_view.size());
+	std::copy(_view.begin(), _view.end(), source.begin());
 
 	return *this;
 }
 
-Option::Option(sview view) : view(view) {
+sview OptionList::getView() const {
+	if (source.empty()) {
+		return _view;
+	}
+	return sview { source.data(), source.size() };
+}
+
+Option::Option(sview view) : _view(view) {
 }
 
 sview Option::asString(sview defaultValue) const {
+	sview view = getView();
 	if (view.empty()) {
 		return defaultValue;
 	}
@@ -139,6 +144,7 @@ sview Option::asString(sview defaultValue) const {
 }
 
 isview Option::asIString(isview defaultValue) const {
+	sview view = getView();
 	if (view.empty()) {
 		return defaultValue;
 	}
@@ -147,6 +153,7 @@ isview Option::asIString(isview defaultValue) const {
 }
 
 double Option::asFloat(double defaultValue) const {
+	sview view = getView();
 	if (view.empty()) {
 		return defaultValue;
 	}
@@ -155,28 +162,31 @@ double Option::asFloat(double defaultValue) const {
 }
 
 Color Option::asColor(Color defaultValue) const {
+	sview view = getView();
+
 	if (view.empty()) {
 		return defaultValue;
 	}
 
-	OptionParser::Tokenizer tokenizer;
+	Tokenizer tokenizer;
 	auto numbers = tokenizer.parse(view, L',');
 	const auto count = index(numbers.size());
 	if (count != 3 && count != 4) {
-		return { };
+		return defaultValue;
 	}
+
 	float values[4];
+	values[3] = 1.0;
 	for (index i = 0; i < count; ++i) {
 		values[i] = parseNumber(numbers[i].makeView(view));
 	}
 
-	if (count == 3) {
-		return { values[0], values[1], values[2], 1.0 };
-	}
 	return { values[0], values[1], values[2], values[3] };
 }
 
 OptionSeparated Option::breakFirst(wchar_t separator) const {
+	sview view = getView();
+
 	for (int i = 0; i < view.size(); ++i) {
 		if (view[i] == separator) {
 			auto first = Option{ sview(view.data(), i) };
@@ -191,7 +201,9 @@ OptionSeparated Option::breakFirst(wchar_t separator) const {
 }
 
 OptionMap Option::asMap(wchar_t optionDelimiter, wchar_t nameDelimiter) const {
-	OptionParser::Tokenizer tokenizer;
+	Tokenizer tokenizer;
+
+	sview view = getView();
 
 	auto list = tokenizer.parse(view, optionDelimiter);
 
@@ -204,12 +216,12 @@ OptionMap Option::asMap(wchar_t optionDelimiter, wchar_t nameDelimiter) const {
 			continue;
 		}
 
-		auto name = svu::trimInfo(view, viewInfo.substr(0, delimiterPlace));
+		auto name = StringUtils::trimInfo(view, viewInfo.substr(0, delimiterPlace));
 		if (name.empty()) {
 			continue;
 		}
 
-		auto value = svu::trimInfo(view, viewInfo.substr(delimiterPlace + 1));
+		auto value = StringUtils::trimInfo(view, viewInfo.substr(delimiterPlace + 1));
 
 		paramsInfo[name] = value;
 	}
@@ -218,15 +230,15 @@ OptionMap Option::asMap(wchar_t optionDelimiter, wchar_t nameDelimiter) const {
 }
 
 OptionList Option::asList(wchar_t delimiter) const {
-	OptionParser::Tokenizer tokenizer;
+	Tokenizer tokenizer;
 
-	auto list = tokenizer.parse(view, delimiter);
-	return { view, std::move(list) };
+	auto list = tokenizer.parse(getView(), delimiter);
+	return { getView(), std::move(list) };
 }
 
 Option Option::own() {
-	source = view;
-	view = source;
+	source.resize(_view.size());
+	std::copy(_view.begin(), _view.end(), source.begin());
 
 	return *this;
 }
@@ -250,55 +262,21 @@ double Option::parseNumber(sview source) {
 	return exp.number;
 }
 
+sview Option::getView() const {
+	if (source.empty()) {
+		return _view;
+	}
+	return sview { source.data(), source.size() };
+}
+
 
 OptionMap::OptionMap() = default;
 
 OptionMap::OptionMap(sview source, std::map<SubstringViewInfo, SubstringViewInfo>&& paramsInfo) :
-	view(source),
+	_view(source),
 	paramsInfo(std::move(paramsInfo)) {
 
 	fillParams();
-}
-
-OptionMap::~OptionMap() = default;
-
-OptionMap::OptionMap(const OptionMap& other) :
-	view(other.view),
-	paramsInfo(other.paramsInfo) {
-	fillParams();
-}
-
-OptionMap::OptionMap(OptionMap&& other) noexcept : 
-	view(other.view) , paramsInfo(std::move(other.paramsInfo)) {
-	other.params.clear();
-
-	fillParams();
-}
-
-OptionMap& OptionMap::operator=(const OptionMap& other) {
-	if (this == &other)
-		return *this;
-
-	view = other.view;
-	paramsInfo = other.paramsInfo;
-
-	fillParams();
-
-	return *this;
-}
-
-OptionMap& OptionMap::operator=(OptionMap&& other)
-noexcept {
-	if (this == &other)
-		return *this;
-
-	view = other.view;
-	paramsInfo = std::move(other.paramsInfo);
-	other.params.clear();
-
-	fillParams();
-
-	return *this;
 }
 
 Option OptionMap::getUntouched(sview name) const {
@@ -307,7 +285,7 @@ Option OptionMap::getUntouched(sview name) const {
 		return { };
 	}
 
-	return Option{ optionInfoPtr->substringInfo.makeView(view) };
+	return Option{ optionInfoPtr->substringInfo.makeView(getView()) };
 }
 
 Option OptionMap::get(sview name) const {
@@ -321,7 +299,7 @@ Option OptionMap::get(isview name) const {
 	}
 
 	optionInfoPtr->touched = true;
-	return Option{ optionInfoPtr->substringInfo.makeView(view) };
+	return Option{ optionInfoPtr->substringInfo.makeView(getView()) };
 }
 
 Option OptionMap::get(const wchar_t* name) const {
@@ -360,20 +338,23 @@ std::vector<isview> OptionMap::getListOfUntouched() const {
 }
 
 OptionMap OptionMap::own() {
-	source = view;
-	view = source;
+	source.resize(_view.size());
+	std::copy(_view.begin(), _view.end(), source.begin());
 
 	return *this;
 }
 
-void OptionMap::fillParams() {
+void OptionMap::fillParams() const {
 	params.clear();
 	for (auto [nameInfo, valueInfo] : paramsInfo) {
-		params[nameInfo.makeView(view) % ciView()] = valueInfo;
+		params[nameInfo.makeView(getView()) % ciView()] = valueInfo;
 	}
 }
 
 OptionMap::MapOptionInfo* OptionMap::find(isview name) const {
+	if (params.empty() && !paramsInfo.empty()) {
+		fillParams();
+	}
 	const auto iter = params.find(name);
 	if (iter == params.end()) {
 		return nullptr;
@@ -381,34 +362,13 @@ OptionMap::MapOptionInfo* OptionMap::find(isview name) const {
 	return &iter->second;
 }
 
-void OptionParser::setSource(string&& string) {
-	if (!source.empty()) {
-		throw std::exception("Can't reinitialize option parser");
+sview OptionMap::getView() const {
+	if (source.empty()) {
+		return _view;
 	}
-
-	source = std::move(string);
-}
-
-void OptionParser::setSource(istring&& string) {
-	setSource(string % csView());
-}
-
-void OptionParser::setSource(sview string) {
-	setSource(string % own());
-}
-
-void OptionParser::setSource(isview string) {
-	setSource(string % csView());
-}
-
-void OptionParser::setSource(const wchar_t* string) {
-	setSource(sview{ string });
-}
-
-Option OptionParser::parse() const {
-	return Option{ sview{ source } };
+	return sview { source.data(), source.size() };
 }
 
 Option OptionParser::parse(sview string) {
-	return Option { string }.own();
+	return Option { string };
 }

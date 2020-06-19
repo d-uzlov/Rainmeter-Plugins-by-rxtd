@@ -93,7 +93,6 @@ void UniformBlur::finish(const DataSupplier& dataSupplier) {
 
 	valid = false;
 
-	// TODO returns nullptr
 	const auto source = dataSupplier.getHandler(params.resamplerId);
 	if (source == nullptr) {
 		return;
