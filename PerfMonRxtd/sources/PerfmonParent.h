@@ -81,9 +81,9 @@ namespace rxtd::perfmon {
 
 		BlacklistManager blacklistManager;
 
-		InstanceManager instanceManager { log, pdhWrapper, idSnapshot, snapshotCurrent, snapshotPrevious, blacklistManager };
+		InstanceManager instanceManager { logger, pdhWrapper, idSnapshot, snapshotCurrent, snapshotPrevious, blacklistManager };
 
-		ExpressionResolver expressionResolver { log, instanceManager };
+		ExpressionResolver expressionResolver { logger, instanceManager };
 
 		string bufferString;
 		utils::OptionParser optionParser;

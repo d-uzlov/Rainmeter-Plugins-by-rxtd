@@ -13,6 +13,12 @@
 
 using namespace perfmon;
 
+bool ExpressionResolver::CacheEntry::operator<(const CacheEntry& other) const {
+	return source < other.source
+		&& counterIndex < other.counterIndex
+		&& rollupFunction < other.rollupFunction;
+}
+
 ExpressionResolver::ExpressionResolver(utils::Rainmeter::Logger& log, const InstanceManager& instanceManager) :
 	log(log),
 	instanceManager(instanceManager) { }
@@ -57,7 +63,7 @@ double ExpressionResolver::getValue(const Reference& ref, const InstanceInfo* in
 			return 0.0;
 		}
 		if (ref.total) {
-			return calculateAndCacheTotal(TotalSource::RAW_COUNTER, ref.counter, ref.rollupFunction);
+			return calculateAndCacheTotal(TotalSource::eRAW_COUNTER, ref.counter, ref.rollupFunction);
 		}
 		if (instance == nullptr) {
 			return 0.0;
@@ -73,7 +79,7 @@ double ExpressionResolver::getValue(const Reference& ref, const InstanceInfo* in
 			return 0.0;
 		}
 		if (ref.total) {
-			return calculateAndCacheTotal(TotalSource::FORMATTED_COUNTER, ref.counter, ref.rollupFunction);
+			return calculateAndCacheTotal(TotalSource::eFORMATTED_COUNTER, ref.counter, ref.rollupFunction);
 		}
 		if (instance == nullptr) {
 			return 0.0;
@@ -89,7 +95,7 @@ double ExpressionResolver::getValue(const Reference& ref, const InstanceInfo* in
 			return 0.0;
 		}
 		if (ref.total) {
-			return calculateAndCacheTotal(TotalSource::EXPRESSION, ref.counter, ref.rollupFunction);
+			return calculateAndCacheTotal(TotalSource::eEXPRESSION, ref.counter, ref.rollupFunction);
 		}
 		if (instance == nullptr) {
 			return 0.0;
@@ -106,7 +112,7 @@ double ExpressionResolver::getValue(const Reference& ref, const InstanceInfo* in
 			return 0.0;
 		}
 		if (ref.total) {
-			return calculateAndCacheTotal(TotalSource::ROLLUP_EXPRESSION, ref.counter, ref.rollupFunction);
+			return calculateAndCacheTotal(TotalSource::eROLLUP_EXPRESSION, ref.counter, ref.rollupFunction);
 		}
 		if (rollup) {
 			if (instance == nullptr) {
@@ -252,12 +258,12 @@ double ExpressionResolver::getRollupExpression(counter_t expressionIndex,
 
 double ExpressionResolver::calculateTotal(const TotalSource source, counter_t counterIndex, const RollupFunction rollupFunction) const {
 	switch (source) {
-	case TotalSource::RAW_COUNTER: return calculateTotal<&ExpressionResolver::getRaw>(rollupFunction, counterIndex);
-	case TotalSource::FORMATTED_COUNTER: return calculateTotal<&ExpressionResolver::getFormatted>(
+	case TotalSource::eRAW_COUNTER: return calculateTotal<&ExpressionResolver::getRaw>(rollupFunction, counterIndex);
+	case TotalSource::eFORMATTED_COUNTER: return calculateTotal<&ExpressionResolver::getFormatted>(
 		rollupFunction, counterIndex);
-	case TotalSource::EXPRESSION: return calculateExpressionTotal<&ExpressionResolver::calculateExpression<&
+	case TotalSource::eEXPRESSION: return calculateExpressionTotal<&ExpressionResolver::calculateExpression<&
 		ExpressionResolver::resolveReference>>(rollupFunction, expressions[counterIndex], false);
-	case TotalSource::ROLLUP_EXPRESSION: return calculateExpressionTotal<&ExpressionResolver::calculateExpression<&
+	case TotalSource::eROLLUP_EXPRESSION: return calculateExpressionTotal<&ExpressionResolver::calculateExpression<&
 		ExpressionResolver::resolveRollupReference>>(rollupFunction, expressions[counterIndex], true);
 	default:
 		log.error(L"unexpected TotalSource {}", source);
@@ -297,9 +303,9 @@ double ExpressionResolver::resolveReference(const Reference& ref) const {
 		}
 		if (ref.total) {
 			if (ref.type == ReferenceType::COUNTER_RAW) {
-				return calculateAndCacheTotal(TotalSource::RAW_COUNTER, ref.counter, ref.rollupFunction);
+				return calculateAndCacheTotal(TotalSource::eRAW_COUNTER, ref.counter, ref.rollupFunction);
 			} else {
-				return calculateAndCacheTotal(TotalSource::FORMATTED_COUNTER, ref.counter, ref.rollupFunction);
+				return calculateAndCacheTotal(TotalSource::eFORMATTED_COUNTER, ref.counter, ref.rollupFunction);
 			}
 		}
 		if (!ref.named) {
@@ -321,7 +327,7 @@ double ExpressionResolver::resolveReference(const Reference& ref) const {
 	}
 	if (ref.type == ReferenceType::EXPRESSION) {
 		if (ref.total) {
-			return calculateAndCacheTotal(TotalSource::EXPRESSION, ref.counter, ref.rollupFunction);
+			return calculateAndCacheTotal(TotalSource::eEXPRESSION, ref.counter, ref.rollupFunction);
 		}
 		if (!ref.named) {
 			return calculateExpression<&ExpressionResolver::resolveReference>(expressions[ref.counter]);
@@ -350,7 +356,7 @@ double ExpressionResolver::calculateExpressionRollup(const ExpressionTreeNode& e
 	double value = calculateExpression<&ExpressionResolver::resolveReference>(expression);
 
 	switch (rollupFunction) {
-	case RollupFunction::SUM:
+	case RollupFunction::eSUM:
 	{
 		for (const auto& item : instance.vectorIndices) {
 			tmp.indices = item;
@@ -358,7 +364,7 @@ double ExpressionResolver::calculateExpressionRollup(const ExpressionTreeNode& e
 		}
 		break;
 	}
-	case RollupFunction::AVERAGE:
+	case RollupFunction::eAVERAGE:
 	{
 		for (const auto& item : instance.vectorIndices) {
 			tmp.indices = item;
@@ -367,7 +373,7 @@ double ExpressionResolver::calculateExpressionRollup(const ExpressionTreeNode& e
 		value /= (instance.vectorIndices.size() + 1);
 		break;
 	}
-	case RollupFunction::MINIMUM:
+	case RollupFunction::eMINIMUM:
 	{
 		for (const auto& indexes : instance.vectorIndices) {
 			tmp.indices = indexes;
@@ -375,7 +381,7 @@ double ExpressionResolver::calculateExpressionRollup(const ExpressionTreeNode& e
 		}
 		break;
 	}
-	case RollupFunction::MAXIMUM:
+	case RollupFunction::eMAXIMUM:
 	{
 		for (const auto& indexes : instance.vectorIndices) {
 			tmp.indices = indexes;
@@ -383,7 +389,7 @@ double ExpressionResolver::calculateExpressionRollup(const ExpressionTreeNode& e
 		}
 		break;
 	}
-	case RollupFunction::FIRST:
+	case RollupFunction::eFIRST:
 		break;
 	default:
 		log.error(L"unknown expression type: {}", expression.type);
@@ -396,11 +402,11 @@ double ExpressionResolver::calculateExpressionRollup(const ExpressionTreeNode& e
 
 double ExpressionResolver::calculateCountTotal(const RollupFunction rollupFunction) const {
 	switch (rollupFunction) {
-	case RollupFunction::SUM: return static_cast<double>(instanceManager.getInstances().size());
-	case RollupFunction::AVERAGE:
-	case RollupFunction::MINIMUM:
-	case RollupFunction::MAXIMUM:
-	case RollupFunction::FIRST: return 1.0;
+	case RollupFunction::eSUM: return static_cast<double>(instanceManager.getInstances().size());
+	case RollupFunction::eAVERAGE:
+	case RollupFunction::eMINIMUM:
+	case RollupFunction::eMAXIMUM:
+	case RollupFunction::eFIRST: return 1.0;
 	default:
 		log.error(L"unknown rollup function: {}", rollupFunction);
 		return 0.0;
@@ -409,11 +415,11 @@ double ExpressionResolver::calculateCountTotal(const RollupFunction rollupFuncti
 
 double ExpressionResolver::calculateRollupCountTotal(const RollupFunction rollupFunction) const {
 	switch (rollupFunction) {
-	case RollupFunction::SUM: return static_cast<double>(instanceManager.getRollupInstances().size());
-	case RollupFunction::AVERAGE: return static_cast<double>(instanceManager.getInstances().size()) / instanceManager
+	case RollupFunction::eSUM: return static_cast<double>(instanceManager.getRollupInstances().size());
+	case RollupFunction::eAVERAGE: return static_cast<double>(instanceManager.getInstances().size()) / instanceManager
 		.getRollupInstances()
 		.size();
-	case RollupFunction::MINIMUM:
+	case RollupFunction::eMINIMUM:
 	{
 		index min = std::numeric_limits<index>::max();
 		for (const auto& item : instanceManager.getRollupInstances()) {
@@ -422,7 +428,7 @@ double ExpressionResolver::calculateRollupCountTotal(const RollupFunction rollup
 		}
 		return static_cast<double>(min);
 	}
-	case RollupFunction::MAXIMUM:
+	case RollupFunction::eMAXIMUM:
 	{
 		index max = 0;
 		for (const auto& item : instanceManager.getRollupInstances()) {
@@ -431,7 +437,7 @@ double ExpressionResolver::calculateRollupCountTotal(const RollupFunction rollup
 		}
 		return static_cast<double>(max);
 	}
-	case RollupFunction::FIRST:
+	case RollupFunction::eFIRST:
 		if (!instanceManager.getRollupInstances().empty()) {
 			return static_cast<double>(instanceManager.getRollupInstances()[0].vectorIndices.size() + 1);
 		}
@@ -463,9 +469,9 @@ double ExpressionResolver::resolveRollupReference(const Reference& ref) const {
 		}
 		if (ref.total) {
 			if (ref.type == ReferenceType::COUNTER_RAW) {
-				return calculateAndCacheTotal(TotalSource::RAW_COUNTER, ref.counter, ref.rollupFunction);
+				return calculateAndCacheTotal(TotalSource::eRAW_COUNTER, ref.counter, ref.rollupFunction);
 			} else {
-				return calculateAndCacheTotal(TotalSource::FORMATTED_COUNTER, ref.counter, ref.rollupFunction);
+				return calculateAndCacheTotal(TotalSource::eFORMATTED_COUNTER, ref.counter, ref.rollupFunction);
 			}
 		}
 		if (!ref.named) {
@@ -490,9 +496,9 @@ double ExpressionResolver::resolveRollupReference(const Reference& ref) const {
 	if (ref.type == ReferenceType::EXPRESSION || ref.type == ReferenceType::ROLLUP_EXPRESSION) {
 		if (ref.total) {
 			if (ref.type == ReferenceType::EXPRESSION) {
-				return calculateAndCacheTotal(TotalSource::EXPRESSION, ref.counter, ref.rollupFunction);
+				return calculateAndCacheTotal(TotalSource::eEXPRESSION, ref.counter, ref.rollupFunction);
 			} else {
-				return calculateAndCacheTotal(TotalSource::ROLLUP_EXPRESSION, ref.counter, ref.rollupFunction);
+				return calculateAndCacheTotal(TotalSource::eROLLUP_EXPRESSION, ref.counter, ref.rollupFunction);
 			}
 		}
 		if (!ref.named) {
@@ -528,14 +534,14 @@ double ExpressionResolver::calculateRollup(RollupFunction rollupType, counter_t 
 	const auto& indexes = instance.vectorIndices;
 
 	switch (rollupType) {
-	case RollupFunction::SUM:
-	case RollupFunction::AVERAGE:
+	case RollupFunction::eSUM:
+	case RollupFunction::eAVERAGE:
 	{
 		auto sum = firstValue;
 		for (const auto& item : indexes) {
 			sum += (this->*calculateValueFunction)(counterIndex, item);
 		}
-		if (rollupType == RollupFunction::SUM) {
+		if (rollupType == RollupFunction::eSUM) {
 			return static_cast<double>(sum);
 		}
 		if (indexes.empty()) {
@@ -543,7 +549,7 @@ double ExpressionResolver::calculateRollup(RollupFunction rollupType, counter_t 
 		}
 		return static_cast<double>(sum) / (indexes.size() + 1);
 	}
-	case RollupFunction::MINIMUM:
+	case RollupFunction::eMINIMUM:
 	{
 		auto min = firstValue;
 		for (const auto& item : indexes) {
@@ -551,7 +557,7 @@ double ExpressionResolver::calculateRollup(RollupFunction rollupType, counter_t 
 		}
 		return static_cast<double>(min);
 	}
-	case RollupFunction::MAXIMUM:
+	case RollupFunction::eMAXIMUM:
 	{
 		auto max = firstValue;
 		for (const auto& item : indexes) {
@@ -559,7 +565,7 @@ double ExpressionResolver::calculateRollup(RollupFunction rollupType, counter_t 
 		}
 		return static_cast<double>(max);
 	}
-	case RollupFunction::FIRST:
+	case RollupFunction::eFIRST:
 		return static_cast<double>(firstValue);
 	default:
 		log.error(L"unexpected rollupType {}", rollupType);
@@ -572,8 +578,8 @@ double ExpressionResolver::calculateTotal(RollupFunction rollupType, counter_t c
 	auto& vectorInstanceKeys = instanceManager.getInstances();
 
 	switch (rollupType) {
-	case RollupFunction::SUM:
-	case RollupFunction::AVERAGE:
+	case RollupFunction::eSUM:
+	case RollupFunction::eAVERAGE:
 	{
 		if (vectorInstanceKeys.empty()) {
 			return 0.0;
@@ -582,12 +588,12 @@ double ExpressionResolver::calculateTotal(RollupFunction rollupType, counter_t c
 		for (const auto& item : vectorInstanceKeys) {
 			sum += (this->*calculateValueFunction)(counterIndex, item.indices);
 		}
-		if (rollupType == RollupFunction::SUM) {
+		if (rollupType == RollupFunction::eSUM) {
 			return sum;
 		}
 		return sum / vectorInstanceKeys.size();
 	}
-	case RollupFunction::MINIMUM:
+	case RollupFunction::eMINIMUM:
 	{
 		double min = std::numeric_limits<double>::max();
 		for (const auto& item : vectorInstanceKeys) {
@@ -595,7 +601,7 @@ double ExpressionResolver::calculateTotal(RollupFunction rollupType, counter_t c
 		}
 		return min;
 	}
-	case RollupFunction::MAXIMUM:
+	case RollupFunction::eMAXIMUM:
 	{
 		double max = -std::numeric_limits<double>::max();
 		for (const auto& item : vectorInstanceKeys) {
@@ -603,7 +609,7 @@ double ExpressionResolver::calculateTotal(RollupFunction rollupType, counter_t c
 		}
 		return max;
 	}
-	case RollupFunction::FIRST:
+	case RollupFunction::eFIRST:
 		return vectorInstanceKeys.empty()
 			? 0.0
 			: (this->*calculateValueFunction)(counterIndex, vectorInstanceKeys[0].indices);
@@ -619,15 +625,15 @@ double ExpressionResolver::calculateExpressionTotal(const RollupFunction rollupT
 	auto& vectorInstanceKeys = rollup ? instanceManager.getRollupInstances() : instanceManager.getInstances();
 
 	switch (rollupType) {
-	case RollupFunction::SUM:
-	case RollupFunction::AVERAGE:
+	case RollupFunction::eSUM:
+	case RollupFunction::eAVERAGE:
 	{
 		double sum = 0.0;
 		for (const auto& item : vectorInstanceKeys) {
 			expressionCurrentItem = &item;
 			sum += (this->*calculateExpressionFunction)(expression);
 		}
-		if (rollupType == RollupFunction::AVERAGE) {
+		if (rollupType == RollupFunction::eAVERAGE) {
 			if (vectorInstanceKeys.empty()) {
 				return 0.0;
 			}
@@ -635,7 +641,7 @@ double ExpressionResolver::calculateExpressionTotal(const RollupFunction rollupT
 		}
 		return sum;
 	}
-	case RollupFunction::MINIMUM:
+	case RollupFunction::eMINIMUM:
 	{
 		double min = std::numeric_limits<double>::max();
 		for (const auto& item : vectorInstanceKeys) {
@@ -644,7 +650,7 @@ double ExpressionResolver::calculateExpressionTotal(const RollupFunction rollupT
 		}
 		return min;
 	}
-	case RollupFunction::MAXIMUM:
+	case RollupFunction::eMAXIMUM:
 	{
 		double max = -std::numeric_limits<double>::max();
 		for (const auto& item : vectorInstanceKeys) {
@@ -653,7 +659,7 @@ double ExpressionResolver::calculateExpressionTotal(const RollupFunction rollupT
 		}
 		return max;
 	}
-	case RollupFunction::FIRST:
+	case RollupFunction::eFIRST:
 		if (vectorInstanceKeys.empty()) {
 			return 0.0;
 		}

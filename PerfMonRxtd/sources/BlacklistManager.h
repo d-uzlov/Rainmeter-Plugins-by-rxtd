@@ -31,7 +31,7 @@ namespace rxtd::perfmon {
 
 			MatchList(utils::OptionParser::OptionList optionList, bool upperCase);
 
-			bool match(sview string) const;
+			bool match(sview view) const;
 
 			bool empty() const;
 		};

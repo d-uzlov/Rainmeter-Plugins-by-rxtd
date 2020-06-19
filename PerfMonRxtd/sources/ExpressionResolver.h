@@ -14,27 +14,12 @@
 
 namespace rxtd::perfmon {
 	class ExpressionResolver {
-	public:
-		enum class SortBy {
-			NONE,
-			INSTANCE_NAME,
-			RAW_COUNTER,
-			FORMATTED_COUNTER,
-			EXPRESSION,
-			ROLLUP_EXPRESSION,
-			COUNT,
-		};
-		enum class SortOrder {
-			ASCENDING,
-			DESCENDING,
-		};
-
 	private:
 		enum class TotalSource {
-			RAW_COUNTER,
-			FORMATTED_COUNTER,
-			EXPRESSION,
-			ROLLUP_EXPRESSION,
+			eRAW_COUNTER,
+			eFORMATTED_COUNTER,
+			eEXPRESSION,
+			eROLLUP_EXPRESSION,
 		};
 
 		utils::Rainmeter::Logger &log;
@@ -46,8 +31,14 @@ namespace rxtd::perfmon {
 
 		mutable const InstanceInfo* expressionCurrentItem = nullptr;
 
-		// (source, counterIndex, rollupFunction) -> value
-		mutable std::map<std::tuple<TotalSource, counter_t, RollupFunction>, std::optional<double>> totalsCache;
+		struct CacheEntry {
+			TotalSource source;
+			counter_t counterIndex;
+			RollupFunction rollupFunction;
+
+			bool operator<(const CacheEntry& other) const;
+		};
+		mutable std::map<CacheEntry, std::optional<double>> totalsCache;
 
 	public:
 		ExpressionResolver(utils::Rainmeter::Logger& log, const InstanceManager& instanceManager);

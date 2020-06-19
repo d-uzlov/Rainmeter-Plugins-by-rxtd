@@ -34,8 +34,8 @@ PerfmonParent::PerfmonParent(utils::Rainmeter&& _rain) : TypeHolder(std::move(_r
 
 
 	if (objectName.empty()) {
-		log.error(L"ObjectName must be specified");
-		setMeasureState(utils::MeasureState::BROKEN);
+		logger.error(L"ObjectName must be specified");
+		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
 	}
 
@@ -43,14 +43,14 @@ PerfmonParent::PerfmonParent(utils::Rainmeter&& _rain) : TypeHolder(std::move(_r
 	auto counterTokens = optionParser.asList(rain.readString(L"CounterList"), L'|');
 
 	if (counterTokens.empty()) {
-		log.error(L"CounterList must have at least one entry");
-		setMeasureState(utils::MeasureState::BROKEN);
+		logger.error(L"CounterList must have at least one entry");
+		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
 	}
 
-	pdhWrapper = pdh::PdhWrapper { log, objectName, counterTokens };
+	pdhWrapper = pdh::PdhWrapper { logger, objectName, counterTokens };
 	if (!pdhWrapper.isValid()) {
-		setMeasureState(utils::MeasureState::BROKEN);
+		setMeasureState(utils::MeasureState::eBROKEN);
 	}
 
 }
@@ -60,7 +60,7 @@ PerfmonParent* PerfmonParent::findInstance(utils::Rainmeter::Skin skin, isview m
 }
 
 void PerfmonParent::_reload() {
-	if (getState() == utils::MeasureState::BROKEN) {
+	if (getState() == utils::MeasureState::eBROKEN) {
 		return;
 	}
 
@@ -78,22 +78,22 @@ void PerfmonParent::_reload() {
 	typedef InstanceManager::SortBy SortBy;
 	SortBy sortBy;
 	if (str.empty() || str== L"None")
-		sortBy = SortBy::NONE;
+		sortBy = SortBy::eNONE;
 	else if (str==L"InstanceName")
-		sortBy = SortBy::INSTANCE_NAME;
+		sortBy = SortBy::eINSTANCE_NAME;
 	else if (str==L"RawCounter")
-		sortBy = SortBy::RAW_COUNTER;
+		sortBy = SortBy::eRAW_COUNTER;
 	else if (str==L"FormattedCounter")
-		sortBy = SortBy::FORMATTED_COUNTER;
+		sortBy = SortBy::eFORMATTED_COUNTER;
 	else if (str==L"Expression")
-		sortBy = SortBy::EXPRESSION;
+		sortBy = SortBy::eEXPRESSION;
 	else if (str==L"RollupExpression")
-		sortBy = SortBy::ROLLUP_EXPRESSION;
+		sortBy = SortBy::eROLLUP_EXPRESSION;
 	else if (str==L"Count")
-		sortBy = SortBy::COUNT;
+		sortBy = SortBy::eCOUNT;
 	else {
-		log.error(L"SortBy '{}' is invalid, set to 'None'", str);
-		sortBy = SortBy::NONE;
+		logger.error(L"SortBy '{}' is invalid, set to 'None'", str);
+		sortBy = SortBy::eNONE;
 	}
 	instanceManager.setSortBy(sortBy);
 
@@ -101,32 +101,32 @@ void PerfmonParent::_reload() {
 	typedef InstanceManager::SortOrder SortOrder;
 	SortOrder sortOrder;
 	if (str==L"" || str==L"Descending")
-		sortOrder = SortOrder::DESCENDING;
+		sortOrder = SortOrder::eDESCENDING;
 	else if (str==L"Ascending")
-		sortOrder = SortOrder::ASCENDING;
+		sortOrder = SortOrder::eASCENDING;
 	else {
-		log.error(L"SortOrder '{}' is invalid, set to 'Descending'", str);
-		sortOrder = SortOrder::DESCENDING;
+		logger.error(L"SortOrder '{}' is invalid, set to 'Descending'", str);
+		sortOrder = SortOrder::eDESCENDING;
 	}
 	instanceManager.setSortOrder(sortOrder);
 
 	str = rain.readString(L"SortRollupFunction") % ciView();
 	RollupFunction sortRollupFunction;
 	if (str==L"" || str==L"Sum")
-		sortRollupFunction = RollupFunction::SUM;
+		sortRollupFunction = RollupFunction::eSUM;
 	else if (str==L"Average")
-		sortRollupFunction = RollupFunction::AVERAGE;
+		sortRollupFunction = RollupFunction::eAVERAGE;
 	else if (str==L"Minimum")
-		sortRollupFunction = RollupFunction::MINIMUM;
+		sortRollupFunction = RollupFunction::eMINIMUM;
 	else if (str==L"Maximum")
-		sortRollupFunction = RollupFunction::MAXIMUM;
+		sortRollupFunction = RollupFunction::eMAXIMUM;
 	else if (str==L"Count") {
-		log.warning(L"SortRollupFunction 'Count' is deprecated, SortBy set to 'Count'");
-		instanceManager.setSortBy(SortBy::COUNT);
-		sortRollupFunction = RollupFunction::SUM;
+		logger.warning(L"SortRollupFunction 'Count' is deprecated, SortBy set to 'Count'");
+		instanceManager.setSortBy(SortBy::eCOUNT);
+		sortRollupFunction = RollupFunction::eSUM;
 	} else {
-		log.error(L"SortRollupFunction '{}' is invalid, set to 'Sum'", str);
-		sortRollupFunction = RollupFunction::SUM;
+		logger.error(L"SortRollupFunction '{}' is invalid, set to 'Sum'", str);
+		sortRollupFunction = RollupFunction::eSUM;
 	}
 	instanceManager.setSortRollupFunction(sortRollupFunction);
 
@@ -162,7 +162,7 @@ void PerfmonParent::_reload() {
 		} else if (displayName==L"EngType" || displayName==L"GpuEngType") {
 			nameModificationType = NMT::GPU_ENGTYPE;
 		} else {
-			log.error(L"Object '{}' don't support DisplayName '{}', set to 'Original'", objectName, displayName);
+			logger.error(L"Object '{}' don't support DisplayName '{}', set to 'Original'", objectName, displayName);
 			nameModificationType = NMT::NONE;
 		}
 
@@ -176,7 +176,7 @@ void PerfmonParent::_reload() {
 		} else if (displayName==L"MountFolder") {
 			nameModificationType = NMT::LOGICAL_DISK_MOUNT_PATH;
 		} else {
-			log.error(L"Object '{}' don't support DisplayName '{}', set to 'Original'", objectName, displayName);
+			logger.error(L"Object '{}' don't support DisplayName '{}', set to 'Original'", objectName, displayName);
 			nameModificationType = NMT::NONE;
 		}
 
@@ -196,7 +196,7 @@ const InstanceInfo* PerfmonParent::findInstance(const Reference& ref, item_t sor
 }
 
 sview PerfmonParent::getInstanceName(const InstanceInfo& instance, ResultString stringType) const {
-	if (stringType == ResultString::NUMBER) {
+	if (stringType == ResultString::eNUMBER) {
 		return L"";
 	}
 	const auto& item = instanceManager.getNames(instance.indices.current);
@@ -204,14 +204,14 @@ sview PerfmonParent::getInstanceName(const InstanceInfo& instance, ResultString 
 		return item.displayName;
 	}
 	switch (stringType) {
-	case ResultString::ORIGINAL_NAME:
+	case ResultString::eORIGINAL_NAME:
 		return item.originalName;
-	case ResultString::UNIQUE_NAME:
+	case ResultString::eUNIQUE_NAME:
 		return item.uniqueName;
-	case ResultString::DISPLAY_NAME:
+	case ResultString::eDISPLAY_NAME:
 		return item.displayName;
 	default:
-		log.error(L"unexpected result string type {}", stringType);
+		logger.error(L"unexpected result string type {}", stringType);
 		return L"";
 	}
 }

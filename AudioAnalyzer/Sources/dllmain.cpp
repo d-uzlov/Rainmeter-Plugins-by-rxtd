@@ -19,6 +19,7 @@
 #include "undef.h"
 
 static_assert(std::is_same<WCHAR, wchar_t>::value);
+static_assert(std::is_same<LPCWSTR, const wchar_t*>::value);
 
 
 PLUGIN_EXPORT void Initialize(void** data, void* rm) {
@@ -45,7 +46,7 @@ PLUGIN_EXPORT double Update(void* data) {
 	return static_cast<utils::TypeHolder*>(data)->update();
 }
 
-PLUGIN_EXPORT LPCWSTR GetString(void* data) {
+PLUGIN_EXPORT const wchar_t* GetString(void* data) {
 	if (data == nullptr) {
 		return nullptr;
 	}
@@ -59,14 +60,14 @@ PLUGIN_EXPORT void Finalize(void* data) {
 	delete static_cast<utils::TypeHolder*>(data);
 }
 
-PLUGIN_EXPORT void ExecuteBang(void* data, LPCWSTR args) {
+PLUGIN_EXPORT void ExecuteBang(void* data, const wchar_t* args) {
 	if (data == nullptr) {
 		return;
 	}
 	static_cast<utils::TypeHolder*>(data)->command(args);
 }
 
-PLUGIN_EXPORT LPCWSTR resolve(void* data, const int argc, const WCHAR* argv[]) {
+PLUGIN_EXPORT const wchar_t* resolve(void* data, const int argc, const wchar_t* argv[]) {
 	return static_cast<utils::TypeHolder*>(data)->resolve(argc, argv);
 }
 

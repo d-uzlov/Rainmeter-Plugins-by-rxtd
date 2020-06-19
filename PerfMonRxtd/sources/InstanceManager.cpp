@@ -92,41 +92,41 @@ void InstanceManager::setSortRollupFunction(RollupFunction value) {
 }
 
 void InstanceManager::checkIndices(counter_t counters, counter_t expressions, counter_t rollupExpressions) {
-	if (sortBy == SortBy::EXPRESSION) {
+	if (sortBy == SortBy::eEXPRESSION) {
 		if (expressions <= 0) {
 			log.error(L"Sort by Expression requires at least 1 Expression specified. Set to None.");
-			sortBy = SortBy::NONE;
+			sortBy = SortBy::eNONE;
 			return;
 		}
 	}
-	if (sortBy == SortBy::ROLLUP_EXPRESSION) {
+	if (sortBy == SortBy::eROLLUP_EXPRESSION) {
 		if (!rollupExpressions) {
 			log.error(L"RollupExpressions can't be used for sort if rollup is disabled. Set to None.");
-			sortBy = SortBy::NONE;
+			sortBy = SortBy::eNONE;
 			return;
 		}
 		if (rollupExpressions <= 0) {
 			log.error(L"Sort by RollupExpression requires at least 1 RollupExpression specified. Set to None.");
-			sortBy = SortBy::NONE;
+			sortBy = SortBy::eNONE;
 			return;
 		}
 	}
 
 	counter_t checkCount;
 	switch (sortBy) {
-	case SortBy::NONE: return;
-	case SortBy::INSTANCE_NAME: return;
-	case SortBy::RAW_COUNTER: [[fallthrough]];
-	case SortBy::FORMATTED_COUNTER:
+	case SortBy::eNONE: return;
+	case SortBy::eINSTANCE_NAME: return;
+	case SortBy::eRAW_COUNTER: [[fallthrough]];
+	case SortBy::eFORMATTED_COUNTER:
 		checkCount = counters;
 		break;
-	case SortBy::EXPRESSION:
+	case SortBy::eEXPRESSION:
 		checkCount = expressions;
 		break;
-	case SortBy::ROLLUP_EXPRESSION:
+	case SortBy::eROLLUP_EXPRESSION:
 		checkCount = rollupExpressions;
 		break;
-	case SortBy::COUNT: return;
+	case SortBy::eCOUNT: return;
 	default: std::terminate();
 	}
 
@@ -275,19 +275,19 @@ void InstanceManager::buildInstanceKeys() {
 
 void InstanceManager::sort(const ExpressionResolver& expressionResolver) {
 	std::vector<InstanceInfo>& instances = rollup ? instancesRolledUp : this->instances;
-	if (sortBy == SortBy::NONE || instances.empty()) {
+	if (sortBy == SortBy::eNONE || instances.empty()) {
 		return;
 	}
 
-	if (sortBy == SortBy::INSTANCE_NAME) {
+	if (sortBy == SortBy::eINSTANCE_NAME) {
 		switch (sortOrder) {
-		case SortOrder::ASCENDING:
+		case SortOrder::eASCENDING:
 			std::sort(instances.begin(), instances.end(),
 				[](const InstanceInfo& lhs, const InstanceInfo& rhs) {
 				return lhs.sortName > rhs.sortName;
 			});
 			break;
-		case SortOrder::DESCENDING:
+		case SortOrder::eDESCENDING:
 			std::sort(instances.begin(), instances.end(),
 				[](const InstanceInfo& lhs, const InstanceInfo& rhs) {
 				return lhs.sortName < rhs.sortName;
@@ -301,7 +301,7 @@ void InstanceManager::sort(const ExpressionResolver& expressionResolver) {
 	}
 
 	switch (sortBy) {
-	case SortBy::RAW_COUNTER:
+	case SortBy::eRAW_COUNTER:
 	{
 		if (rollup) {
 			for (auto& instance : instances) {
@@ -314,7 +314,7 @@ void InstanceManager::sort(const ExpressionResolver& expressionResolver) {
 		}
 		break;
 	}
-	case SortBy::FORMATTED_COUNTER:
+	case SortBy::eFORMATTED_COUNTER:
 	{
 		if (!canGetFormatted()) {
 			for (auto& instance : instances) {
@@ -333,7 +333,7 @@ void InstanceManager::sort(const ExpressionResolver& expressionResolver) {
 		}
 		break;
 	}
-	case SortBy::EXPRESSION:
+	case SortBy::eEXPRESSION:
 	{
 		if (rollup) {
 			for (auto& instance : instances) {
@@ -347,7 +347,7 @@ void InstanceManager::sort(const ExpressionResolver& expressionResolver) {
 		}
 		break;
 	}
-	case SortBy::ROLLUP_EXPRESSION:
+	case SortBy::eROLLUP_EXPRESSION:
 	{
 		if (!rollup) {
 			log.error(L"Resolving RollupExpression without rollup");
@@ -358,7 +358,7 @@ void InstanceManager::sort(const ExpressionResolver& expressionResolver) {
 		}
 		break;
 	}
-	case SortBy::COUNT:
+	case SortBy::eCOUNT:
 	{
 		if (!rollup) {
 			return;
@@ -374,12 +374,12 @@ void InstanceManager::sort(const ExpressionResolver& expressionResolver) {
 	}
 
 	switch (sortOrder) {
-	case SortOrder::ASCENDING:
+	case SortOrder::eASCENDING:
 		std::sort(instances.begin(), instances.end(), [](const InstanceInfo& lhs, const InstanceInfo& rhs) {
 			return lhs.sortValue < rhs.sortValue;
 		});
 		break;
-	case SortOrder::DESCENDING:
+	case SortOrder::eDESCENDING:
 		std::sort(instances.begin(), instances.end(), [](const InstanceInfo& lhs, const InstanceInfo& rhs) {
 			return lhs.sortValue > rhs.sortValue;
 		});

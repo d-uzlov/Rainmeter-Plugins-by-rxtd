@@ -19,8 +19,8 @@
 PLUGIN_EXPORT void Initialize(void** data, void* rm) {
 	utils::Rainmeter rain(rm);
 
-	auto str = rain.readString(L"Type") % ciView();
-	if (str == L"Parent") {
+	auto type = rain.readString(L"Type") % ciView();
+	if (type == L"Parent") {
 		*data = new perfmon::PerfmonParent(std::move(rain));
 	} else {
 		*data = new perfmon::PerfmonChild(std::move(rain));

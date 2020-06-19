@@ -22,7 +22,7 @@ utils::ParentManager<AudioParent> AudioParent::parentManager{ };
 
 AudioParent::AudioParent(utils::Rainmeter&& rain) :
 	TypeHolder(std::move(rain)),
-	deviceManager(log, [this](auto format) { soundAnalyzer.setWaveFormat(format); }) {
+	deviceManager(logger, [this](auto format) { soundAnalyzer.setWaveFormat(format); }) {
 
 	parentManager.add(*this);
 
@@ -49,14 +49,14 @@ void AudioParent::_reload() {
 	} else if (source == L"Input") {
 		sourceEnum = DataSource::eINPUT;
 	} else {
-		log.debug(L"Using '{}' as source audio device ID.", source);
+		logger.debug(L"Using '{}' as source audio device ID.", source);
 		sourceEnum = DataSource::eID;
 		id = source % csView();
 	}
 
 	// legacy
 	if (auto legacyID = this->rain.readString(L"DeviceID"); !legacyID.empty()) {
-		log.debug(L"Using '{}' as source audio device ID.", legacyID);
+		logger.debug(L"Using '{}' as source audio device ID.", legacyID);
 		sourceEnum = DataSource::eID;
 		id = legacyID;
 
@@ -66,7 +66,7 @@ void AudioParent::_reload() {
 		} else if (port == L"Input") {
 			sourceEnum = DataSource::eINPUT;
 		} else {
-			log.error(L"Invalid Port '{}', must be one of: Output, Input. Set to Output.", port);
+			logger.error(L"Invalid Port '{}', must be one of: Output, Input. Set to Output.", port);
 			sourceEnum = DataSource::eOUTPUT;
 		}
 	}
@@ -94,7 +94,7 @@ std::tuple<double, const wchar_t*> AudioParent::_update() {
 	if (deviceManager.getState() != DeviceManager::State::eOK) {
 		if (deviceManager.getState() == DeviceManager::State::eFATAL) {
 			setMeasureState(utils::MeasureState::eBROKEN);
-			log.error(L"Unrecoverable error");
+			logger.error(L"Unrecoverable error");
 		}
 		goto loop_end;
 	}
@@ -121,12 +121,12 @@ std::tuple<double, const wchar_t*> AudioParent::_update() {
 
 		case CaptureManager::BufferFetchState::eINVALID_STATE:
 			soundAnalyzer.resetValues();
-			log.error(L"Unrecoverable error");
+			logger.error(L"Unrecoverable error");
 			setMeasureState(utils::MeasureState::eBROKEN);
 			goto loop_end;
 
 		default:
-			log.error(L"Unexpected BufferFetchState {}", fetchResult.getState());
+			logger.error(L"Unexpected BufferFetchState {}", fetchResult.getState());
 			setMeasureState(utils::MeasureState::eBROKEN);
 			goto loop_end;
 		}
@@ -145,12 +145,12 @@ void AudioParent::_command(const wchar_t* bangArgs) {
 		return;
 	}
 
-	log.error(L"unknown command '{}'", command);
+	logger.error(L"unknown command '{}'", command);
 }
 
 const wchar_t* AudioParent::_resolve(int argc, const wchar_t* argv[]) {
 	if (argc < 1) {
-		log.error(L"Invalid section variable resolve: args needed", argc);
+		logger.error(L"Invalid section variable resolve: args needed", argc);
 		return nullptr;
 	}
 
@@ -158,13 +158,13 @@ const wchar_t* AudioParent::_resolve(int argc, const wchar_t* argv[]) {
 
 	if (optionName == L"prop") {
 		if (argc < 4) {
-			log.error(L"Invalid section variable resolve: need >= 4 argc, but only {} found", argc);
+			logger.error(L"Invalid section variable resolve: need >= 4 argc, but only {} found", argc);
 			return nullptr;
 		}
 
 		auto channelOpt = Channel::channelParser.find(argv[1]);
 		if (!channelOpt.has_value()) {
-			log.error(L"Invalid section variable resolve: channel '{}' not recognized", argv[1]);
+			logger.error(L"Invalid section variable resolve: channel '{}' not recognized", argv[1]);
 			return nullptr;
 		}
 		auto propVariant = soundAnalyzer.getAudioChildHelper().getProp(channelOpt.value(), argv[2], argv[3]);
@@ -173,34 +173,34 @@ const wchar_t* AudioParent::_resolve(int argc, const wchar_t* argv[]) {
 			const auto error = std::get<1>(propVariant);
 			switch (error) {
 			case AudioChildHelper::SearchError::eCHANNEL_NOT_FOUND:
-				log.printer.print(L"Invalid section variable resolve: channel '{}' not found", argv[1]);
-				return log.printer.getBufferPtr();
+				logger.printer.print(L"Invalid section variable resolve: channel '{}' not found", argv[1]);
+				return logger.printer.getBufferPtr();
 
 			case AudioChildHelper::SearchError::eHANDLER_NOT_FOUND:
-				log.error(L"Invalid section variable resolve: handler '{}:{}' not found", argv[1], argv[2]);
+				logger.error(L"Invalid section variable resolve: handler '{}:{}' not found", argv[1], argv[2]);
 				return nullptr;
 
 			default:
-				log.error(L"Unexpected SearchError {}", error);
+				logger.error(L"Unexpected SearchError {}", error);
 				return nullptr;
 			}
 		}
 		if (propVariant.index() == 0) {
 			const auto result = std::get<0>(propVariant);
 			if (result == nullptr) {
-				log.error(L"Invalid section variable resolve: prop '{}:{}' not found", argv[2], argv[3]);
+				logger.error(L"Invalid section variable resolve: prop '{}:{}' not found", argv[2], argv[3]);
 			}
 
 			return result;
 		}
 
-		log.error(L"Unexpected propVariant index {}", propVariant.index());
+		logger.error(L"Unexpected propVariant index {}", propVariant.index());
 		return nullptr;
 	}
 
 	if (optionName == L"current device") {
 		if (argc < 2) {
-			log.error(L"Invalid section variable resolve: need >= 2 argc, but only {} found", argc);
+			logger.error(L"Invalid section variable resolve: need >= 2 argc, but only {} found", argc);
 			return nullptr;
 		}
 
@@ -239,7 +239,7 @@ const wchar_t* AudioParent::_resolve(int argc, const wchar_t* argv[]) {
 		return deviceManager.getDeviceEnumerator().getActiveDeviceList().c_str();
 	}
 
-	log.error(L"Invalid section variable resolve: '{}' not supported", argv[0]);
+	logger.error(L"Invalid section variable resolve: '{}' not supported", argv[0]);
 	return nullptr;
 }
 

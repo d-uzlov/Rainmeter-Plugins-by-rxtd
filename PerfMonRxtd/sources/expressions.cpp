@@ -576,18 +576,18 @@ Reference ExpressionParser::parseReference() {
 	if (next.type == Lexer::LexemeType::WORD) {
 		const isview suffix = next.value % ciView();
 		if (suffix == L"SUM" || suffix == L"S") {
-			ref.rollupFunction = RollupFunction::SUM;
+			ref.rollupFunction = RollupFunction::eSUM;
 		} else if (suffix == L"AVG" || suffix == L"A") {
-			ref.rollupFunction = RollupFunction::AVERAGE;
+			ref.rollupFunction = RollupFunction::eAVERAGE;
 		} else if (suffix == L"MIN" || next.value == L"m") {
-			ref.rollupFunction = RollupFunction::MINIMUM;
+			ref.rollupFunction = RollupFunction::eMINIMUM;
 		} else if (suffix == L"MAX" || next.value == L"M") {
-			ref.rollupFunction = RollupFunction::MAXIMUM;
+			ref.rollupFunction = RollupFunction::eMAXIMUM;
 		} else if (suffix == L"COUNT" || suffix == L"C") {
 			// handling deprecated rollup function
 			ref.type = ReferenceType::COUNT;
 		} else if (suffix == L"FIRST" || suffix == L"F") {
-			ref.rollupFunction = RollupFunction::FIRST;
+			ref.rollupFunction = RollupFunction::eFIRST;
 		}
 		readNext();
 		if (error) {

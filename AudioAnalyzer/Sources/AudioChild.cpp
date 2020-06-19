@@ -18,20 +18,20 @@ using namespace audio_analyzer;
 AudioChild::AudioChild(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rain)) {
 	const auto parentName = rain.readString(L"Parent") % ciView();
 	if (parentName == L"") {
-		log.error(L"Parent must be specified");
+		logger.error(L"Parent must be specified");
 		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
 	}
 	parent = AudioParent::findInstance(rain.getSkin(), parentName);
 
 	if (parent == nullptr) {
-		log.error(L"Parent '{}' not found", parentName);
+		logger.error(L"Parent '{}' not found", parentName);
 		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
 	}
 
 	if (parent->getState() == utils::MeasureState::eBROKEN) {
-		log.error(L"Parent '{}' is broken", parentName);
+		logger.error(L"Parent '{}' is broken", parentName);
 		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
 	}
@@ -47,7 +47,7 @@ void AudioChild::_reload() {
 	} else {
 		auto channelOpt = Channel::channelParser.find(channelStr);
 		if (!channelOpt.has_value()) {
-			log.error(L"Invalid Channel '{}', set to Auto.", channelStr);
+			logger.error(L"Invalid Channel '{}', set to Auto.", channelStr);
 			channel = Channel::eAUTO;
 		} else {
 			channel = channelOpt.value();
@@ -80,7 +80,7 @@ void AudioChild::_reload() {
 			infoRequestC.push_back(str.c_str());
 		}
 	} else {
-		log.error(L"Invalid StringValue '{}', set to Number.", stringValueStr);
+		logger.error(L"Invalid StringValue '{}', set to Number.", stringValueStr);
 		stringValueType = StringValue::eNUMBER;
 	}
 
@@ -94,13 +94,13 @@ void AudioChild::_reload() {
 	} else if (typeStr == L"None") {
 		numberTransform = NumberTransform::eNONE;
 	} else {
-		log.error(L"Invalid NumberTransform '{}', set to Linear.", typeStr);
+		logger.error(L"Invalid NumberTransform '{}', set to Linear.", typeStr);
 		numberTransform = NumberTransform::eLINEAR;
 	}
 
 	auto signedIndex = rain.readInt(L"Index");
 	if (signedIndex < 0) {
-		log.error(L"Invalid Index {}. Index should be > 0. Set to 0.", signedIndex);
+		logger.error(L"Invalid Index {}. Index should be > 0. Set to 0.", signedIndex);
 		signedIndex = 0;
 	}
 	valueIndex = static_cast<decltype(valueIndex)>(signedIndex);
@@ -128,7 +128,7 @@ std::tuple<double, const wchar_t*> AudioChild::_update() {
 		break;
 
 	default:
-		log.error(L"Unexpected numberTransform: '{}'", numberTransform);
+		logger.error(L"Unexpected numberTransform: '{}'", numberTransform);
 		setMeasureState(utils::MeasureState::eBROKEN);
 		result = 0.0;
 		break;
@@ -148,7 +148,7 @@ std::tuple<double, const wchar_t*> AudioChild::_update() {
 		break;
 
 	default:
-		log.error(L"Unexpected stringValueType: '{}'", stringValueType);
+		logger.error(L"Unexpected stringValueType: '{}'", stringValueType);
 		stringRes = nullptr;
 		break;
 	}

@@ -185,7 +185,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="Sources\AudioChild.cpp" />
-    <ClCompile Include="Sources\AudioAnalyzer.cpp" />
+    <ClCompile Include="Sources\dllmain.cpp" />
     <ClCompile Include="Sources\AudioParent.cpp" />
     <ClCompile Include="Sources\iso226\iso226.cpp" />
     <ClCompile Include="Sources\ParamParser.cpp" />

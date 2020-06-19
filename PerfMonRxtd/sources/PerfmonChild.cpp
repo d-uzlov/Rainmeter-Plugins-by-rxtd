@@ -17,27 +17,27 @@ using namespace perfmon;
 PerfmonChild::PerfmonChild(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rain)) {
 	auto parentName = rain.readString(L"Parent") % ciView() % own();
 	if (parentName.empty()) {
-		log.error(L"Parent must be specified");
-		setMeasureState(utils::MeasureState::BROKEN);
+		logger.error(L"Parent must be specified");
+		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
 	}
 	parent = PerfmonParent::findInstance(rain.getSkin(), parentName);
 
 	if (parent == nullptr) {
-		log.error(L"Parent '{}' not found", parentName);
-		setMeasureState(utils::MeasureState::BROKEN);
+		logger.error(L"Parent '{}' not found", parentName);
+		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
 	}
 
-	if (parent->getState() == utils::MeasureState::BROKEN) {
-		log.error(L"Parent '{}' is broken", parentName);
-		setMeasureState(utils::MeasureState::BROKEN);
+	if (parent->getState() == utils::MeasureState::eBROKEN) {
+		logger.error(L"Parent '{}' is broken", parentName);
+		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
 	}
 }
 
 void PerfmonChild::_reload() {
-	setMeasureState(utils::MeasureState::WORKING);
+	setMeasureState(utils::MeasureState::eWORKING);
 
 	instanceIndex = rain.readInt<item_t>(L"InstanceIndex");
 	ref.counter = rain.readInt<counter_t>(L"CounterIndex");
@@ -61,19 +61,19 @@ void PerfmonChild::_reload() {
 	bool forceUseName = false;
 	const auto type = rain.readString(L"Type") % ciView();
 	if (type == L"GetInstanceCount") {
-		log.warning(L"Type 'GetInstanceCount' is deprecated, set to 'GetCount' with Total=1 and RollupFunction=Sum");
+		logger.warning(L"Type 'GetInstanceCount' is deprecated, set to 'GetCount' with Total=1 and RollupFunction=Sum");
 		ref.type = ReferenceType::COUNT;
 		ref.total = true;
-		ref.rollupFunction = RollupFunction::SUM;
+		ref.rollupFunction = RollupFunction::eSUM;
 		needReadRollupFunction = false;
 	} else if (type == L"GetCount")
 		ref.type = ReferenceType::COUNT;
 	else if (type == L"GetInstanceName") {
-		log.warning(L"Type 'GetInstanceName' is deprecated, set to 'GetCount' with Total=0 and ResultString not Number");
+		logger.warning(L"Type 'GetInstanceName' is deprecated, set to 'GetCount' with Total=0 and ResultString not Number");
 		ref.type = ReferenceType::COUNT;
 		ref.total = false;
-		ref.rollupFunction = RollupFunction::FIRST;
-		resultStringType = ResultString::DISPLAY_NAME;
+		ref.rollupFunction = RollupFunction::eFIRST;
+		resultStringType = ResultString::eDISPLAY_NAME;
 		forceUseName = true;
 	} else if (type == L"GetRawCounter") {
 		ref.type = ReferenceType::COUNTER_RAW;
@@ -84,56 +84,56 @@ void PerfmonChild::_reload() {
 	} else if (type == L"GetRollupExpression") {
 		ref.type = ReferenceType::ROLLUP_EXPRESSION;
 	} else {
-		log.error(L"Type '{}' is invalid for child measure", type);
-		setMeasureState(utils::MeasureState::TEMP_BROKEN);
+		logger.error(L"Type '{}' is invalid for child measure", type);
+		setMeasureState(utils::MeasureState::eTEMP_BROKEN);
 		return;
 	}
 
 	if (needReadRollupFunction) {
 		auto rollupFunctionStr = rain.readString(L"RollupFunction") % ciView();
 		if (rollupFunctionStr.empty() || rollupFunctionStr == L"Sum") {
-			ref.rollupFunction = RollupFunction::SUM;
+			ref.rollupFunction = RollupFunction::eSUM;
 		} else if (rollupFunctionStr == L"Average") {
-			ref.rollupFunction = RollupFunction::AVERAGE;
+			ref.rollupFunction = RollupFunction::eAVERAGE;
 		} else if (rollupFunctionStr == L"Minimum") {
-			ref.rollupFunction = RollupFunction::MINIMUM;
+			ref.rollupFunction = RollupFunction::eMINIMUM;
 		} else if (rollupFunctionStr == L"Maximum") {
-			ref.rollupFunction = RollupFunction::MAXIMUM;
+			ref.rollupFunction = RollupFunction::eMAXIMUM;
 		} else if (rollupFunctionStr == L"Count") {
-			log.warning(L"RollupFunction 'Count' is deprecated, measure type set to 'GetCount'");
+			logger.warning(L"RollupFunction 'Count' is deprecated, measure type set to 'GetCount'");
 			ref.type = ReferenceType::COUNT;
 		} else if (rollupFunctionStr == L"First") {
-			ref.rollupFunction = RollupFunction::FIRST;
+			ref.rollupFunction = RollupFunction::eFIRST;
 		} else {
-			log.error(L"RollupFunction '{}' is invalid, set to 'Sum'", rollupFunctionStr);
-			ref.rollupFunction = RollupFunction::SUM;
+			logger.error(L"RollupFunction '{}' is invalid, set to 'Sum'", rollupFunctionStr);
+			ref.rollupFunction = RollupFunction::eSUM;
 		}
 	}
 
 	const auto resultStringStr = rain.readString(L"ResultString") % ciView();
 	if (!forceUseName && (resultStringStr.empty() || resultStringStr == L"Number")) {
-		resultStringType = ResultString::NUMBER;
+		resultStringType = ResultString::eNUMBER;
 	} else if (resultStringStr == L"OriginalName" || resultStringStr == L"OriginalInstanceName") {
-		resultStringType = ResultString::ORIGINAL_NAME;
+		resultStringType = ResultString::eORIGINAL_NAME;
 	} else if (resultStringStr == L"UniqueName" || resultStringStr == L"UniqueInstanceName") {
-		resultStringType = ResultString::UNIQUE_NAME;
+		resultStringType = ResultString::eUNIQUE_NAME;
 	} else if (resultStringStr == L"DisplayName" || resultStringStr == L"DisplayInstanceName") {
-		resultStringType = ResultString::DISPLAY_NAME;
+		resultStringType = ResultString::eDISPLAY_NAME;
 	} else if (resultStringStr == L"RollupInstanceName") {
-		log.warning(L"ResultString 'RollupInstanceName' is deprecated, set to 'DisplayName'");
-		resultStringType = ResultString::DISPLAY_NAME;
+		logger.warning(L"ResultString 'RollupInstanceName' is deprecated, set to 'DisplayName'");
+		resultStringType = ResultString::eDISPLAY_NAME;
 	} else if (forceUseName) {
-		resultStringType = ResultString::DISPLAY_NAME;
+		resultStringType = ResultString::eDISPLAY_NAME;
 	} else {
-		log.error(L"ResultString '{}' is invalid, set to 'Number'", resultStringStr);
-		resultStringType = ResultString::NUMBER;
+		logger.error(L"ResultString '{}' is invalid, set to 'Number'", resultStringStr);
+		resultStringType = ResultString::eNUMBER;
 	}
 
 	ref.named = ref.useOrigName || !ref.name.empty();
 }
 
 const wchar_t*  PerfmonChild::makeRetString() const {
-	return resultStringType == ResultString::NUMBER ? nullptr : resultString.c_str();
+	return resultStringType == ResultString::eNUMBER ? nullptr : resultString.c_str();
 }
 
 std::tuple<double, const wchar_t*>  PerfmonChild::_update() {
@@ -145,7 +145,7 @@ std::tuple<double, const wchar_t*>  PerfmonChild::_update() {
 
 	if (ref.total) {
 		resultString = L"Total";
-		return std::make_tuple(parent->getValue(ref, nullptr, log), makeRetString());
+		return std::make_tuple(parent->getValue(ref, nullptr, logger), makeRetString());
 	}
 
 	const auto instance = parent->findInstance(ref, instanceIndex);
@@ -154,5 +154,5 @@ std::tuple<double, const wchar_t*>  PerfmonChild::_update() {
 	}
 
 	resultString = parent->getInstanceName(*instance, resultStringType);
-	return std::make_tuple(parent->getValue(ref, instance, log), makeRetString());
+	return std::make_tuple(parent->getValue(ref, instance, logger), makeRetString());
 }

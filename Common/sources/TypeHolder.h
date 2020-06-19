@@ -22,7 +22,7 @@ namespace rxtd::utils {
 		friend class ParentManager;
 
 		Rainmeter rain;
-		Rainmeter::Logger& log;
+		Rainmeter::Logger& logger;
 
 	private:
 		MeasureState measureState = MeasureState::eWORKING;
@@ -76,35 +76,35 @@ namespace rxtd::utils {
 
 	template<typename T>
 	void ParentManager<T>::remove(T& parent) {
-		const auto iterMap = skinMap.find(parent.rain.getSkin().getRawPointer());
-		if (iterMap == skinMap.end()) {
+		const auto skinIter = skinMap.find(parent.rain.getSkin().getRawPointer());
+		if (skinIter == skinMap.end()) {
 			std::terminate();
 		}
-		auto& measuresMap = iterMap->second;
+		auto& measuresMap = skinIter->second;
 
-		const auto iterMeasure = measuresMap.find(parent.rain.getMeasureName() % ciView());
-		if (iterMeasure == measuresMap.end()) {
+		const auto measureIter = measuresMap.find(parent.rain.getMeasureName() % ciView());
+		if (measureIter == measuresMap.end()) {
 			std::terminate();
 		}
-		measuresMap.erase(iterMeasure);
+		measuresMap.erase(measureIter);
 
 		if (measuresMap.empty()) {
-			skinMap.erase(iterMap);
+			skinMap.erase(skinIter);
 		}
 	}
 
 	template<typename T>
 	T* ParentManager<T>::findParent(Rainmeter::Skin skin, isview measureName) {
-		const auto iterMap = skinMap.find(skin.getRawPointer());
-		if (iterMap == skinMap.end()) {
+		const auto skinIter = skinMap.find(skin.getRawPointer());
+		if (skinIter == skinMap.end()) {
 			return nullptr;
 		}
-		const auto& measuresMap = iterMap->second;
+		const auto& measuresMap = skinIter->second;
 
-		const auto iterMeasure = measuresMap.find(measureName);
-		if (iterMeasure == measuresMap.end()) {
+		const auto measureIter = measuresMap.find(measureName);
+		if (measureIter == measuresMap.end()) {
 			return nullptr;
 		}
-		return iterMeasure->second;
+		return measureIter->second;
 	}
 }

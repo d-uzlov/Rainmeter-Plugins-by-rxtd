@@ -13,14 +13,14 @@
 
 using namespace utils;
 
-TypeHolder::TypeHolder(Rainmeter&& rain) : rain(std::move(rain)), log(this->rain.getLogger()) {
+TypeHolder::TypeHolder(Rainmeter&& rain) : rain(std::move(rain)), logger(this->rain.getLogger()) {
 
 }
 
 TypeHolder::~TypeHolder() { }
 
 void TypeHolder::_command(const wchar_t* bangArgs) {
-	log.warning(L"Measure does not have commands");
+	logger.warning(L"Measure does not have commands");
 }
 
 const wchar_t* TypeHolder::_resolve(int argc, const wchar_t* argv[]) {
@@ -50,7 +50,7 @@ void TypeHolder::reload() {
 
 void TypeHolder::command(const wchar_t *bangArgs) {
 	if (measureState != MeasureState::eWORKING) {
-		log.warning(L"Skipping bang on the broken measure");
+		logger.warning(L"Skipping bang on the broken measure");
 		return;
 	}
 	_command(bangArgs);
@@ -58,8 +58,8 @@ void TypeHolder::command(const wchar_t *bangArgs) {
 
 const wchar_t* TypeHolder::resolve(int argc, const wchar_t* argv[]) {
 	if (measureState != MeasureState::eWORKING) {
-		log.printer.print(L"Measure {} is broken", rain.getMeasureName());
-		return log.printer.getBufferPtr();
+		logger.printer.print(L"Measure {} is broken", rain.getMeasureName());
+		return logger.printer.getBufferPtr();
 	}
 	const auto result = _resolve(argc, argv);
 	if (result == nullptr) {

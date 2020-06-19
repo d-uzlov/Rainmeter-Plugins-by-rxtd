@@ -39,7 +39,7 @@ namespace rxtd::perfmon {
 	struct Reference {
 		string name;
 		counter_t counter = 0;
-		RollupFunction rollupFunction = RollupFunction::SUM;
+		RollupFunction rollupFunction = RollupFunction::eSUM;
 		ReferenceType type = ReferenceType::UNKNOWN;
 		bool discarded = false;
 		bool named = false;

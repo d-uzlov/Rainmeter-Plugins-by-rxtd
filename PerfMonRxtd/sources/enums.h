@@ -13,17 +13,17 @@
 
 namespace rxtd::perfmon {
 	enum class RollupFunction {
-		SUM,
-		AVERAGE,
-		MINIMUM,
-		MAXIMUM,
-		FIRST,
+		eSUM,
+		eAVERAGE,
+		eMINIMUM,
+		eMAXIMUM,
+		eFIRST,
 	};
 
 	enum class ResultString {
-		NUMBER,
-		ORIGINAL_NAME,
-		UNIQUE_NAME,
-		DISPLAY_NAME,
+		eNUMBER,
+		eORIGINAL_NAME,
+		eUNIQUE_NAME,
+		eDISPLAY_NAME,
 	};
 }

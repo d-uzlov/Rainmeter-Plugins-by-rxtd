@@ -35,17 +35,17 @@ namespace rxtd::perfmon {
 	class InstanceManager {
 	public:
 		enum class SortBy {
-			NONE,
-			INSTANCE_NAME,
-			RAW_COUNTER,
-			FORMATTED_COUNTER,
-			EXPRESSION,
-			ROLLUP_EXPRESSION,
-			COUNT,
+			eNONE,
+			eINSTANCE_NAME,
+			eRAW_COUNTER,
+			eFORMATTED_COUNTER,
+			eEXPRESSION,
+			eROLLUP_EXPRESSION,
+			eCOUNT,
 		};
 		enum class SortOrder {
-			ASCENDING,
-			DESCENDING,
+			eASCENDING,
+			eDESCENDING,
 		};
 
 	private:
@@ -57,10 +57,10 @@ namespace rxtd::perfmon {
 		index indexOffset = 0;
 		bool limitIndexOffset = false;
 
-		SortBy sortBy = SortBy::NONE;
+		SortBy sortBy = SortBy::eNONE;
 		index sortIndex = 0;
-		SortOrder sortOrder = SortOrder::DESCENDING;
-		RollupFunction sortRollupFunction = RollupFunction::SUM;
+		SortOrder sortOrder = SortOrder::eDESCENDING;
+		RollupFunction sortRollupFunction = RollupFunction::eSUM;
 
 		const pdh::PdhWrapper &pdhWrapper;
 

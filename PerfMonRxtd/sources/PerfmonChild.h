@@ -18,7 +18,7 @@ namespace rxtd::perfmon {
 		// options
 		Reference ref;
 		item_t instanceIndex = 0;
-		ResultString resultStringType = ResultString::NUMBER;
+		ResultString resultStringType = ResultString::eNUMBER;
 
 		// data
 		const PerfmonParent* parent = nullptr;
