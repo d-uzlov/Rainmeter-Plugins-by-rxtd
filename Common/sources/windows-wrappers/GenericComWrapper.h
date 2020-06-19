@@ -21,7 +21,10 @@ namespace rxtd::utils {
 
 		GenericComWrapper() = default;
 
-		GenericComWrapper(GenericComWrapper&& other) noexcept : ptr(other.ptr) {
+		GenericComWrapper(GenericComWrapper&& other) noexcept {
+			release();
+
+			ptr = other.ptr;
 			other.ptr = nullptr;
 		}
 		GenericComWrapper& operator=(GenericComWrapper&& other) noexcept {
