@@ -19,13 +19,13 @@ namespace rxtd::utils {
 	public:
 		Color() = default;
 
-		Color(double red, double green, double blue, double alpha) :
+		Color(float red, float green, float blue, float alpha) :
 			red(red),
 			green(green),
 			blue(blue),
 			alpha(alpha) { }
 
-		Color operator*(double value) const {
+		Color operator*(float value) const {
 			return { red * value, green * value, blue * value, alpha * value };
 		}
 		Color operator+(const Color &other) const {

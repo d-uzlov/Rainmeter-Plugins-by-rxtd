@@ -51,7 +51,7 @@ void OptionParser::Tokenizer::tokenize(sview string, wchar_t delimiter) {
 }
 
 std::vector<SubstringViewInfo> OptionParser::Tokenizer::trimSpaces(sview string) {
-	std::vector<SubstringViewInfo> list { };
+	std::vector<SubstringViewInfo> list{ };
 
 	for (auto& view : tempList) {
 		auto trimmed = svu::trimInfo(string, view);
@@ -64,7 +64,6 @@ std::vector<SubstringViewInfo> OptionParser::Tokenizer::trimSpaces(sview string)
 
 	return list;
 }
-
 
 
 OptionParser::OptionList::OptionList() = default;
@@ -96,7 +95,7 @@ isview OptionParser::OptionList::getCI(index ind) const {
 }
 
 OptionParser::Option OptionParser::OptionList::getOption(index ind) const {
-	return Option { list[ind].makeView(source) };
+	return Option{ list[ind].makeView(source) };
 }
 
 OptionParser::OptionList::iterator::iterator(const OptionList& container, index _index):
@@ -162,10 +161,8 @@ OptionParser::OptionList::CaseInsensitiveView OptionParser::OptionList::viewCI()
 	return CaseInsensitiveView{ *this };
 }
 
-
-OptionParser::Option::Option() = default;
-
-OptionParser::Option::Option(sview view) : view(view) { }
+OptionParser::Option::Option(sview view) : view(view) {
+}
 
 sview OptionParser::Option::asString(sview defaultValue) const {
 	if (view.empty()) {
@@ -201,7 +198,7 @@ Color OptionParser::Option::asColor(Color defaultValue) const {
 	if (count != 3 && count != 4) {
 		return { };
 	}
-	double values[4];
+	float values[4];
 	for (index i = 0; i < count; ++i) {
 		values[i] = parseNumber(numbers[i].makeView(view));
 	}
@@ -210,6 +207,20 @@ Color OptionParser::Option::asColor(Color defaultValue) const {
 		return { values[0], values[1], values[2], 1.0 };
 	}
 	return { values[0], values[1], values[2], values[3] };
+}
+
+OptionParser::OptionSeparated OptionParser::Option::breakFirst(wchar_t separator) const {
+	for (int i = 0; i < view.size(); ++i) {
+		if (view[i] == separator) {
+			auto first = Option{ sview(view.data(), i) };
+			auto rest = Option{ sview(view.data() + i + 1, view.size() - i - 1) };
+			return OptionSeparated{ first, rest };
+		}
+	}
+	return {
+		*this,
+		{ }
+	};
 }
 
 double OptionParser::Option::parseNumber(sview source) {
@@ -232,11 +243,10 @@ double OptionParser::Option::parseNumber(sview source) {
 }
 
 
-
 OptionParser::OptionMap::OptionMap() = default;
 
 OptionParser::OptionMap::OptionMap(string&& string,
-	std::map<SubstringViewInfo, SubstringViewInfo>&& paramsInfo) :
+                                   std::map<SubstringViewInfo, SubstringViewInfo>&& paramsInfo) :
 	source(std::move(string)),
 	paramsInfo(std::move(paramsInfo)) {
 
@@ -290,7 +300,7 @@ OptionParser::Option OptionParser::OptionMap::getUntouched(sview name) const {
 		return { };
 	}
 
-	return Option { optionInfoPtr->substringInfo.makeView(source) };
+	return Option{ optionInfoPtr->substringInfo.makeView(source) };
 }
 
 OptionParser::Option OptionParser::OptionMap::get(sview name) const {
@@ -304,11 +314,11 @@ OptionParser::Option OptionParser::OptionMap::get(isview name) const {
 	}
 
 	optionInfoPtr->touched = true;
-	return Option { optionInfoPtr->substringInfo.makeView(source)};
+	return Option{ optionInfoPtr->substringInfo.makeView(source) };
 }
 
 OptionParser::Option OptionParser::OptionMap::get(const wchar_t* name) const {
-	return get(isview { name });
+	return get(isview{ name });
 }
 
 bool OptionParser::OptionMap::has(sview name) const {
@@ -321,7 +331,7 @@ bool OptionParser::OptionMap::has(isview name) const {
 }
 
 bool OptionParser::OptionMap::has(const wchar_t* name) const {
-	return has(isview { name });
+	return has(isview{ name });
 }
 
 const std::map<isview, OptionParser::OptionMap::MapOptionInfo>& OptionParser::OptionMap::getParams() const {
@@ -331,7 +341,7 @@ const std::map<isview, OptionParser::OptionMap::MapOptionInfo>& OptionParser::Op
 std::vector<isview> OptionParser::OptionMap::getListOfUntouched() const {
 	std::vector<isview> result;
 
-	for (auto[name, valueInfo] : params) {
+	for (auto [name, valueInfo] : params) {
 		if (valueInfo.touched) {
 			continue;
 		}
@@ -367,14 +377,14 @@ OptionParser::OptionList OptionParser::asList(isview view, wchar_t delimiter) {
 }
 
 OptionParser::OptionList OptionParser::asList(const wchar_t* str, wchar_t delimiter) {
-	return asList(sview { str }, delimiter);
+	return asList(sview{ str }, delimiter);
 }
 
 OptionParser::OptionMap OptionParser::asMap(string&& string, wchar_t optionDelimiter, wchar_t nameDelimiter) {
 	auto list = tokenizer.parse(string, optionDelimiter);
 
-	std::map<SubstringViewInfo, SubstringViewInfo> paramsInfo { };
-	for (const auto &viewInfo : list) {
+	std::map<SubstringViewInfo, SubstringViewInfo> paramsInfo{ };
+	for (const auto& viewInfo : list) {
 		const auto delimiterPlace = viewInfo.makeView(string).find_first_of(nameDelimiter);
 		if (delimiterPlace == sview::npos) {
 			// tokenizer.parse is guarantied to return non-empty views
@@ -400,7 +410,7 @@ OptionParser::OptionMap OptionParser::asMap(istring&& str, wchar_t optionDelimit
 }
 
 OptionParser::OptionMap OptionParser::asMap(sview view, wchar_t optionDelimiter, wchar_t nameDelimiter) {
-	return asMap(string { view }, optionDelimiter, nameDelimiter);
+	return asMap(string{ view }, optionDelimiter, nameDelimiter);
 }
 
 OptionParser::OptionMap OptionParser::asMap(isview str, wchar_t optionDelimiter, wchar_t nameDelimiter) {
@@ -408,5 +418,5 @@ OptionParser::OptionMap OptionParser::asMap(isview str, wchar_t optionDelimiter,
 }
 
 OptionParser::OptionMap OptionParser::asMap(const wchar_t* str, wchar_t optionDelimiter, wchar_t nameDelimiter) {
-	return asMap(string { str }, optionDelimiter, nameDelimiter);
+	return asMap(string{ str }, optionDelimiter, nameDelimiter);
 }

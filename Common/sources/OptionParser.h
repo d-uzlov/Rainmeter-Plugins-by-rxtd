@@ -31,11 +31,12 @@ namespace rxtd::utils {
 		};
 
 		// Class, that allows you to parse options.
+		struct OptionSeparated;
 		class Option {
 			sview view;
 
 		public:
-			Option();
+			Option() = default;
 			explicit Option(sview view);
 
 			// Raw view of option.
@@ -63,8 +64,21 @@ namespace rxtd::utils {
 			// Parse Color, support math operations per color component.
 			Color asColor(Color defaultValue = { }) const;
 
+			OptionSeparated breakFirst(wchar_t separator) const;
+
 		private:
 			static double parseNumber(sview source);
+		};
+
+		struct OptionSeparated {
+			Option first;
+			Option rest;
+
+			OptionSeparated() = default;
+			OptionSeparated(const Option& first, const Option& rest)
+				: first(first),
+				  rest(rest) {
+			}
 		};
 
 		Tokenizer tokenizer;

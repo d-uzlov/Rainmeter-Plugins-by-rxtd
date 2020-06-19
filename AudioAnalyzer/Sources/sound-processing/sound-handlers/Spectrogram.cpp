@@ -87,18 +87,10 @@ std::optional<Spectrogram::Params> Spectrogram::parseParams(const utils::OptionP
 		params.colorMaxValue = -std::numeric_limits<double>::infinity();
 
 		for (index i = 0; i < colorsDescriptionList.size(); i++) {
-			auto colorDescription = colorsDescriptionList.get(i);
+			auto [valueOpt, colorOpt] = colorsDescriptionList.getOption(i).breakFirst(L' ');
 
-			auto description = parser.asList(colorDescription, L' ');
-			if (description.size() != 2) {
-				cl.error(L"Can't parse color \"{}\"", colorDescription);
-				colorsAreBroken = true;
-				params.colors = { };
-				break;
-			}
-
-			float value = description.getOption(0).asFloat();
-			utils::Color color = description.getOption(1).asColor();
+			float value = valueOpt.asFloat();
+			utils::Color color = colorOpt.asColor();
 
 			if (i > 0) {
 				if (value <= prevValue) {

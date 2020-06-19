@@ -49,7 +49,7 @@ namespace rxtd::audio_analyzer {
 			}
 
 			BufferFetchResult(utils::AudioBuffer&& buffer)
-				: state(BufferFetchState::eOK), buffer(std::move(buffer)) { }
+				: state(BufferFetchState::eOK), buffer(buffer) { }
 
 			BufferFetchState getState() const {
 				return state;
@@ -60,7 +60,7 @@ namespace rxtd::audio_analyzer {
 		};
 
 	private:
-		utils::Rainmeter::Logger *logger;
+		utils::Rainmeter::Logger *logger = nullptr;
 
 		utils::IAudioClientWrapper audioClient { };
 		utils::IAudioCaptureClientWrapper audioCaptureClient { };
