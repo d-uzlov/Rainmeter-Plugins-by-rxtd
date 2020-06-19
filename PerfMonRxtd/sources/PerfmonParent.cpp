@@ -40,7 +40,8 @@ PerfmonParent::PerfmonParent(utils::Rainmeter&& _rain) : TypeHolder(std::move(_r
 	}
 
 	utils::OptionParser optionParser;
-	auto counterTokens = optionParser.asList(rain.readString(L"CounterList"), L'|');
+	optionParser.setSource(rain.readString(L"CounterList"));
+	auto counterTokens = optionParser.parse().asList(L'|');
 
 	if (counterTokens.empty()) {
 		logger.error(L"CounterList must have at least one entry");
@@ -131,16 +132,14 @@ void PerfmonParent::_reload() {
 	instanceManager.setSortRollupFunction(sortRollupFunction);
 
 	blacklistManager.setLists(
-		optionParser.asList(rain.readString(L"Blacklist"), L'|'),
-		optionParser.asList(rain.readString(L"BlacklistOrig"), L'|'),
-		optionParser.asList(rain.readString(L"Whitelist"), L'|'),
-		optionParser.asList(rain.readString(L"WhitelistOrig"), L'|')
+		rain.readString(L"Blacklist") % own(),
+		rain.readString(L"BlacklistOrig") % own(),
+		rain.readString(L"Whitelist") % own(),
+		rain.readString(L"WhitelistOrig") % own()
 	);
 
-	utils::OptionParser optionParser;
-
-	const auto expressionTokens = optionParser.asList(rain.readString(L"ExpressionList"), L'|');
-	const auto rollupExpressionTokens = optionParser.asList(rain.readString(L"RollupExpressionList"), L'|');
+	const auto expressionTokens = utils::OptionParser::parse(rain.readString(L"ExpressionList")).asList(L'|');
+	const auto rollupExpressionTokens = utils::OptionParser::parse(rain.readString(L"RollupExpressionList")).asList(L'|');
 	expressionResolver.setExpressions(expressionTokens, rollupExpressionTokens);
 
 	instanceManager.checkIndices(

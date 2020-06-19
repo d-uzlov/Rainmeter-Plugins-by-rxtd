@@ -40,12 +40,12 @@ namespace rxtd::audio_analyzer {
 		const std::map<istring, std::function<SoundHandler*(SoundHandler*)>, std::less<>>& getPatches() const;
 
 	private:
-		std::set<Channel> parseChannels(utils::OptionParser::OptionList channelsStringList) const;
-		void cacheHandlers(const utils::OptionParser::OptionList& indices);
-		std::function<SoundHandler*(SoundHandler*)> parseHandler(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger &cl);
+		std::set<Channel> parseChannels(utils::OptionList channelsStringList) const;
+		void cacheHandlers(const utils::OptionList& indices);
+		std::function<SoundHandler*(SoundHandler*)> parseHandler(const utils::OptionMap& optionMap, utils::Rainmeter::ContextLogger &cl);
 
 		template<typename T>
-		std::function<SoundHandler*(SoundHandler*)> parseHandlerT(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger &cl) {
+		std::function<SoundHandler*(SoundHandler*)> parseHandlerT(const utils::OptionMap& optionMap, utils::Rainmeter::ContextLogger &cl) {
 			auto paramsOpt = T::parseParams(optionMap, cl);
 			if (!paramsOpt.has_value()) {
 				return nullptr;
@@ -63,7 +63,7 @@ namespace rxtd::audio_analyzer {
 			};
 		}
 		template<typename T>
-		std::function<SoundHandler*(SoundHandler*)> parseHandlerT2(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger &cl) {
+		std::function<SoundHandler*(SoundHandler*)> parseHandlerT2(const utils::OptionMap& optionMap, utils::Rainmeter::ContextLogger &cl) {
 			auto paramsOpt = T::parseParams(optionMap, cl, rain);
 			if (!paramsOpt.has_value()) {
 				return nullptr;

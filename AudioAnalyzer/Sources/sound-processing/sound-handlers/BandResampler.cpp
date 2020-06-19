@@ -16,7 +16,7 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-std::optional<BandResampler::Params> BandResampler::parseParams(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl, utils::Rainmeter &rain) {
+std::optional<BandResampler::Params> BandResampler::parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl, utils::Rainmeter &rain) {
 	Params params;
 	params.fftId = optionMap.get(L"source"sv).asIString();
 	if (params.fftId.empty()) {
@@ -31,7 +31,8 @@ std::optional<BandResampler::Params> BandResampler::parseParams(const utils::Opt
 	}
 
 	utils::OptionParser optionParser;
-	const auto bounds = optionParser.asList(rain.readString(L"FreqList_"s += freqListIndex), L'|');
+	optionParser.setSource(rain.readString(L"FreqList_"s += freqListIndex));
+	const auto bounds = optionParser.parse().asList(L'|');
 	utils::Rainmeter::ContextLogger freqListLogger { rain.getLogger() };
 	auto freqsOpt = parseFreqList(bounds, freqListLogger, rain);
 	if (!freqsOpt.has_value()) {
@@ -338,14 +339,16 @@ void BandResampler::sampleData(const FftAnalyzer& source, layer_t startCascade, 
 
 }
 
-std::optional<std::vector<double>> BandResampler::parseFreqList(const utils::OptionParser::OptionList& bounds, utils::Rainmeter::ContextLogger& cl, const utils::Rainmeter &rain) {
+std::optional<std::vector<double>> BandResampler::parseFreqList(const utils::OptionList& bounds, utils::Rainmeter::ContextLogger& cl, const utils::Rainmeter &rain) {
 	std::vector<double> freqs;
 
 	utils::OptionParser optionParser;
-	for (auto bound : bounds.viewCI()) {
+	for (auto boundOption : bounds) {
+		auto bound = boundOption.asIString();
+		auto options = boundOption.asList(L' ');
+
 		if (bound.find(L"linear ") == 0 || bound.find(L"log ") == 0) {
 
-			auto options = optionParser.asList(bound, L' ');
 			if (options.size() != 4) {
 				cl.error(L"linear/log must have 3 options (count, min, max)");
 				return std::nullopt;
@@ -384,7 +387,6 @@ std::optional<std::vector<double>> BandResampler::parseFreqList(const utils::Opt
 			continue;
 		}
 		if (bound.find(L"custom ") == 0) {
-			auto options = optionParser.asList(bound, L' ');
 			if (options.size() < 2) {
 				cl.error(L"custom must have at least two frequencies specified but {} found", options.size());
 				return std::nullopt;

@@ -65,7 +65,7 @@ namespace rxtd::audio_analyzer {
 
 	public:
 
-		static std::optional<Params> parseParams(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl);
+		static std::optional<Params> parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl);
 
 		void setParams(Params _params);
 

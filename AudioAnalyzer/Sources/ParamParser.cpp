@@ -35,38 +35,42 @@ void ParamParser::parse() {
 	handlerPatchersMap.clear();
 
 	utils::OptionParser optionParser { };
-	auto processingIndices = optionParser.asList(rain.readString(L"Processing"), L'|');
-	for (auto processingName : processingIndices) {
+	optionParser.setSource(rain.readString(L"Processing"));
+	auto processingIndices = optionParser.parse().asList(L'|');
+	for (auto processingNameOption : processingIndices) {
 		utils::Rainmeter::ContextLogger cl { rain.getLogger() };
-		cl.setPrefix(L"Processing {}:", processingName);
+		cl.setPrefix(L"Processing {}:", processingNameOption.asString());
 
 		string processingOptionIndex = L"Processing"s;
 		processingOptionIndex += L"_";
-		processingOptionIndex += processingName;
-		auto processingMap = optionParser.asMap(rain.readString(processingOptionIndex), L'|', L' ');
-		auto channelsString = processingMap.get(L"channels"sv).asString();
-		if (channelsString.empty()) {
+		processingOptionIndex += processingNameOption.asString();
+
+		utils::OptionParser processingParser;
+		processingParser.setSource(rain.readString(processingOptionIndex));
+		auto processingMap = processingParser.parse().asMap(L'|', L' ');
+		auto channelsOption = processingMap.get(L"channels"sv);
+		if (channelsOption.asString().empty()) {
 			cl.error(L"channels not found");
 			continue;
 		}
-		auto handlersString = processingMap.get(L"handlers"sv).asString();
-		if (handlersString.empty()) {
+		auto handlersOption = processingMap.get(L"handlers"sv);
+		if (handlersOption.asString().empty()) {
 			cl.error(L"handlers not found");
 			continue;
 		}
 
-		auto channels = parseChannels(optionParser.asList(channelsString, L','));
+		auto channels = parseChannels(channelsOption.asList(L','));
 		if (channels.empty()) {
 			cl.error(L"no valid channels found");
 			continue;
 		}
-		auto handlersList = optionParser.asList(handlersString, L',');
+		auto handlersList = handlersOption.asList(L',');
 
 		cacheHandlers(handlersList);
 
 		for (auto channel : channels) {
-			for (auto handlerName : handlersList.viewCI()) {
-				handlers[channel].emplace_back(handlerName);
+			for (auto handlerNameOption : handlersList) {
+				handlers[channel].emplace_back(handlerNameOption.asIString());
 			}
 		}
 	}
@@ -81,13 +85,13 @@ ParamParser::getPatches() const {
 	return handlerPatchersMap;
 }
 
-std::set<Channel> ParamParser::parseChannels(utils::OptionParser::OptionList channelsStringList) const {
+std::set<Channel> ParamParser::parseChannels(utils::OptionList channelsStringList) const {
 	std::set<Channel> set;
 
-	for (auto channel : channelsStringList) {
-		auto opt = Channel::channelParser.find(channel);
+	for (auto channelOption : channelsStringList) {
+		auto opt = Channel::channelParser.find(channelOption.asString());
 		if (!opt.has_value()) {
-			log.error(L"Can't parse '{}' as channel", channel);
+			log.error(L"Can't parse '{}' as channel", channelOption.asString());
 			continue;
 		}
 		set.insert(opt.value());
@@ -96,34 +100,35 @@ std::set<Channel> ParamParser::parseChannels(utils::OptionParser::OptionList cha
 	return set;
 }
 
-void ParamParser::cacheHandlers(const utils::OptionParser::OptionList& indices) {
-	utils::OptionParser optionParser;
+void ParamParser::cacheHandlers(const utils::OptionList& indices) {
 
-	for (auto index : indices.viewCI()) {
+	for (auto indexOption : indices) {
 
-		auto iter = handlerPatchersMap.lower_bound(index);
-		if (iter != handlerPatchersMap.end() && !(handlerPatchersMap.key_comp()(index, iter->first))) {
+		auto iter = handlerPatchersMap.lower_bound(indexOption.asIString());
+		if (iter != handlerPatchersMap.end() && !(handlerPatchersMap.key_comp()(indexOption.asIString(), iter->first))) {
 			//key found
 			continue;
 		}
 
-		istring optionName = L"Handler";
+		string optionName = L"Handler";
 		optionName += L"_";
-		optionName += index;
+		optionName += indexOption.asString();
 
-		const auto descriptionView = rain.readString(optionName % csView());
+		const auto descriptionView = rain.readString(optionName);
 		if (descriptionView.empty()) {
-			log.error(L"Description of '{}' not found", index);
+			log.error(L"Description of '{}' not found", indexOption.asString());
 			continue;
 		}
 
-		auto optionMap = optionParser.asMap(descriptionView, L'|', L' ');
+		utils::OptionParser optionParser;
+		optionParser.setSource(descriptionView);
+		auto optionMap = optionParser.parse().asMap(L'|', L' ');
 
 		utils::Rainmeter::ContextLogger cl { rain.getLogger() };
-		cl.setPrefix(L"Handler {}: ", index);
+		cl.setPrefix(L"Handler {}: ", indexOption.asString());
 		auto patcher = parseHandler(optionMap, cl);
 		if (patcher == nullptr) {
-			cl.error(L"not a valid description", index);
+			cl.error(L"not a valid description");
 			continue;
 		}
 		const auto unusedOptions = optionMap.getListOfUntouched();
@@ -131,11 +136,11 @@ void ParamParser::cacheHandlers(const utils::OptionParser::OptionList& indices) 
 			cl.warning(L"unused options {}", unusedOptions);
 		}
 
-		handlerPatchersMap.insert(iter, decltype(handlerPatchersMap)::value_type(index, patcher));
+		handlerPatchersMap.insert(iter, decltype(handlerPatchersMap)::value_type(indexOption.asIString(), patcher));
 	}
 }
 
-std::function<SoundHandler*(SoundHandler*)> ParamParser::parseHandler(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger &cl) {
+std::function<SoundHandler*(SoundHandler*)> ParamParser::parseHandler(const utils::OptionMap& optionMap, utils::Rainmeter::ContextLogger &cl) {
 	const auto type = optionMap.get(L"type"sv).asIString();
 
 	if (type.empty()) {

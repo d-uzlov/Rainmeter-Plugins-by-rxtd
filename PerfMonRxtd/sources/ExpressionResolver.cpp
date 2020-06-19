@@ -133,8 +133,8 @@ double ExpressionResolver::getValue(const Reference& ref, const InstanceInfo* in
 	}
 }
 
-void ExpressionResolver::setExpressions(utils::OptionParser::OptionList expressionsList,
-	utils::OptionParser::OptionList rollupExpressionsList) { // TODO check count of expressions
+void ExpressionResolver::setExpressions(utils::OptionList expressionsList,
+	utils::OptionList rollupExpressionsList) { // TODO check count of expressions
 	expressions.resize(expressionsList.size());
 	for (index i = 0; i < expressionsList.size(); ++i) {
 		ExpressionParser parser(expressionsList.get(i));

@@ -33,7 +33,7 @@ void Spectrogram::setParams(const Params& _params) {
 	updateParams();
 }
 
-std::optional<Spectrogram::Params> Spectrogram::parseParams(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl, const utils::Rainmeter& rain) {
+std::optional<Spectrogram::Params> Spectrogram::parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl, const utils::Rainmeter& rain) {
 	Params params;
 	
 	params.sourceName = optionMap.get(L"source"sv).asIString();
@@ -77,7 +77,8 @@ std::optional<Spectrogram::Params> Spectrogram::parseParams(const utils::OptionP
 		utils::OptionParser parser { };
 
 		auto colorsDescriptions = optionMap.get(L"colors"sv).asString();
-		auto colorsDescriptionList = parser.asList(colorsDescriptions, L';');
+		parser.setSource(colorsDescriptions);
+		auto colorsDescriptionList = parser.parse().asList(L';');
 
 		double prevValue = std::numeric_limits<double>::infinity();
 

@@ -96,8 +96,7 @@ namespace rxtd::perfmon::pdh {
 		PdhWrapper() = default;
 		~PdhWrapper() = default;
 
-		explicit PdhWrapper(utils::Rainmeter::Logger _log, const string& objectName, const utils::OptionParser::OptionList
-		                    & counterTokens);
+		explicit PdhWrapper(utils::Rainmeter::Logger _log, const string& objectName, const utils::OptionList& counterTokens);
 
 		PdhWrapper(PdhWrapper&& other) noexcept = default;
 		PdhWrapper& operator=(PdhWrapper&& other) noexcept = default;

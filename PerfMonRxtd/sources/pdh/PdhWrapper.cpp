@@ -114,11 +114,11 @@ bool PdhWrapper::QueryWrapper::isValid() const {
 	return handler != nullptr;
 }
 
-PdhWrapper::PdhWrapper(utils::Rainmeter::Logger _log, const string& objectName, const utils::OptionParser::OptionList&counterList) :
+PdhWrapper::PdhWrapper(utils::Rainmeter::Logger _log, const string& objectName, const utils::OptionList& counterList) :
 	log(std::move(_log)) {
 	QueryWrapper query;
 
-	if (index(counterList.size()) > std::numeric_limits<counter_t>::max()) {
+	if (counterList.size() > std::numeric_limits<counter_t>::max()) {
 		log.error(L"too many counters"); // TODO add validity check in parent
 		return;
 	}
@@ -141,7 +141,7 @@ PdhWrapper::PdhWrapper(utils::Rainmeter::Logger _log, const string& objectName, 
 	counterHandlers.resize(counterList.size());
 	string counterPath;
 	for (index counter = 0; counter < index(counterHandlers.size()); ++counter) {
-		counterPath = L"\\" + objectName + L"(*)" + L"\\" + string { counterList.get(counter) };
+		counterPath = L"\\" + objectName + L"(*)" + L"\\" + string{ counterList.get(counter) };
 		pdhStatus = PdhAddEnglishCounterW(query.get(), counterPath.c_str(), 0, &counterHandlers[counter]);
 		if (pdhStatus != ERROR_SUCCESS) {
 			if (pdhStatus == PDH_CSTATUS_NO_OBJECT) {
@@ -259,7 +259,8 @@ counter_t PdhWrapper::getCountersCount() const {
 	return counterHandlers.size();
 }
 
-double PdhWrapper::extractFormattedValue(counter_t counter, const PDH_RAW_COUNTER& current, const PDH_RAW_COUNTER& previous) const {
+double PdhWrapper::extractFormattedValue(counter_t counter, const PDH_RAW_COUNTER& current,
+                                         const PDH_RAW_COUNTER& previous) const {
 
 	// PdhCalculateCounterFromRawValue sometimes fails with the status PDH_CALC_NEGATIVE_VALUE, PDH_CALC_NEGATIVE_DENOMINATOR, or
 	// PDH_CALC_NEGATIVE_TIMEBASE.  This has mainly been observed for "_Total" instances, and occurs when an instance has dropped out
@@ -287,4 +288,3 @@ double PdhWrapper::extractFormattedValue(counter_t counter, const PDH_RAW_COUNTE
 	// something strange, TODO handle this
 	return 0.0;
 }
-

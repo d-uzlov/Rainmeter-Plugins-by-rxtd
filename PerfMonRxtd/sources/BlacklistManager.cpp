@@ -9,6 +9,7 @@
 
 #include "BlacklistManager.h"
 #include "Windows.h"
+#include "OptionParser.h"
 
 #include "undef.h"
 
@@ -29,11 +30,14 @@ bool MatchTestRecord::match(sview string) const {
 
 BlacklistManager::MatchList::MatchList() = default;
 
-BlacklistManager::MatchList::MatchList(utils::OptionParser::OptionList optionList, bool upperCase) {
-	auto[optVec, optList] = std::move(optionList).consume();
-	source = std::move(optVec);
+BlacklistManager::MatchList::MatchList(string sourceString, bool upperCase) {
+	utils::OptionParser parser;
+	parser.setSource(sourceString);
+	
+	auto[_, optList] = parser.parse().asList(L'|').consume();
+
+	source = std::move(sourceString);
 	if (upperCase) {
-		source.push_back(L'\0');
 		CharUpperW(source.data());
 	}
 
@@ -70,8 +74,7 @@ bool BlacklistManager::MatchList::empty() const {
 	return list.empty();
 }
 
-void BlacklistManager::setLists(utils::OptionParser::OptionList black, utils::OptionParser::OptionList blackOrig,
-	utils::OptionParser::OptionList white, utils::OptionParser::OptionList whiteOrig) {
+void BlacklistManager::setLists(string black, string blackOrig, string white, string whiteOrig) {
 	blacklist = { std::move(black), true };
 	blacklistOrig = { std::move(blackOrig), false };
 	whitelist = { std::move(white), true };

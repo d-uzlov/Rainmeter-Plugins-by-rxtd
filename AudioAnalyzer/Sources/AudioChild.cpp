@@ -68,11 +68,13 @@ void AudioChild::_reload() {
 		stringValueType = StringValue::eINFO;
 		const auto infoStr = rain.readString(L"InfoRequest");
 
-		auto requestList = utils::OptionParser {}.asList(infoStr, L',');
+		utils::OptionParser requestParser;
+		requestParser.setSource(infoStr);
+		auto requestList = requestParser.parse().asList(L',');
 
 		infoRequest.clear();
 		for (auto view : requestList) {
-			infoRequest.emplace_back(view);
+			infoRequest.emplace_back(view.asString());
 		}
 
 		infoRequestC.clear();

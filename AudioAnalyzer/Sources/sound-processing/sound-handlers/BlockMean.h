@@ -69,7 +69,7 @@ namespace rxtd::audio_analyzer {
 
 		const wchar_t* getProp(const isview& prop) const override;
 
-		static std::optional<Params> parseParams(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger &cl);
+		static std::optional<Params> parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::ContextLogger &cl);
 
 	private:
 		void recalculateConstants();

@@ -67,7 +67,7 @@ std::vector<double> WeightedBlur::GaussianCoefficientsManager::generateGaussianK
 	return kernel;
 }
 
-std::optional<WeightedBlur::Params> WeightedBlur::parseParams(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl) {
+std::optional<WeightedBlur::Params> WeightedBlur::parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl) {
 	Params params;
 	params.sourceId = optionMap.get(L"source"sv).asIString();
 	if (params.sourceId.empty()) {

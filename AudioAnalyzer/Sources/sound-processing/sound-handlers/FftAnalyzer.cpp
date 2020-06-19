@@ -259,7 +259,7 @@ FftAnalyzer::~FftAnalyzer() {
 	fftImpl = FftImpl::change(fftImpl, 0);
 }
 
-std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(const utils::OptionParser::OptionMap &optionMap, utils::Rainmeter::ContextLogger& cl) {
+std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(const utils::OptionMap &optionMap, utils::Rainmeter::ContextLogger& cl) {
 	Params params;
 	params.attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.1) * 0.001;
 	params.decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.attackTime), 0.1) * 0.001;

@@ -51,7 +51,7 @@ namespace rxtd::perfmon {
 
 		double getValue(const Reference& ref, const InstanceInfo* instance, utils::Rainmeter::Logger& logger) const;
 
-		void setExpressions(utils::OptionParser::OptionList expressionsList, utils::OptionParser::OptionList rollupExpressionsList);
+		void setExpressions(utils::OptionList expressionsList, utils::OptionList rollupExpressionsList);
 
 		double getRaw(counter_t counterIndex, Indices originalIndexes) const;
 

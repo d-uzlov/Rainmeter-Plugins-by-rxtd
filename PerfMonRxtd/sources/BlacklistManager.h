@@ -8,7 +8,6 @@
  */
 
 #pragma once
-#include "OptionParser.h"
 
 namespace rxtd::perfmon {
 	struct MatchTestRecord {
@@ -23,13 +22,13 @@ namespace rxtd::perfmon {
 
 	class BlacklistManager {
 		class MatchList {
-			std::vector<wchar_t> source;
+			string source;
 			std::vector<MatchTestRecord> list;
 
 		public:
 			MatchList();
 
-			MatchList(utils::OptionParser::OptionList optionList, bool upperCase);
+			MatchList(string sourceString, bool upperCase);
 
 			bool match(sview view) const;
 
@@ -42,12 +41,7 @@ namespace rxtd::perfmon {
 		MatchList whitelistOrig;
 
 	public:
-		void setLists(
-			utils::OptionParser::OptionList black,
-			utils::OptionParser::OptionList blackOrig,
-			utils::OptionParser::OptionList white,
-			utils::OptionParser::OptionList whiteOrig
-		);
+		void setLists( string black, string blackOrig, string white, string whiteOrig);
 
 		bool isAllowed(sview searchName, sview originalName) const;
 	};
