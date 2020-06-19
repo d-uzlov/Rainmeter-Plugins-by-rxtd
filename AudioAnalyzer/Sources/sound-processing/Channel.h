@@ -123,7 +123,7 @@ namespace rxtd::audio_analyzer {
 			return const_iterator { channelMap.cend() };
 		}
 
-		const std::unordered_map<Channel, index>& getChannelsView() const;
+		const std::unordered_map<Channel, index>& getChannelsMapView() const;
 	};
 
 	class LayoutBuilder {

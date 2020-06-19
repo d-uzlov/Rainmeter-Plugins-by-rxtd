@@ -59,9 +59,9 @@ namespace rxtd::audio_analyzer {
 		 * This new handler may be completely new if it didn't exist before or if class of handler with this name changed,
 		 * but usually this is the same handler with updated parameters.
 		 */
-		void patchHandlers(std::map<Channel, std::vector<istring>> handlersOrder, std::map<istring, std::function<SoundHandler*(SoundHandler*)>, std::less<>> handlerPatchersMap) noexcept;
+		void patchHandlers(std::map<Channel, std::vector<istring>> handlersOrder, std::map<istring, std::function<SoundHandler*(SoundHandler*)>, std::less<>> patchers);
 
-		void setWaveFormat(MyWaveFormat waveFormat) noexcept;
+		void setWaveFormat(MyWaveFormat waveFormat);
 
 		void process(const uint8_t* buffer, bool isSilent, index framesCount) noexcept;
 		void resetValues() noexcept;
@@ -70,5 +70,8 @@ namespace rxtd::audio_analyzer {
 	private:
 		void updateSampleRate() noexcept;
 		index createChannelAuto(index framesCount) noexcept;
+
+		void removeNonexistentChannelsFromMap();
+		void patchChannelHandlers();
 	};
 }

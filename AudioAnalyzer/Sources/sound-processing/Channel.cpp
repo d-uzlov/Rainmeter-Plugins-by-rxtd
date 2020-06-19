@@ -167,7 +167,7 @@ bool ChannelLayout::contains(Channel channel) const {
 	return channelMap.find(channel) != channelMap.end();
 }
 
-const std::unordered_map<Channel, index>& ChannelLayout::getChannelsView() const {
+const std::unordered_map<Channel, index>& ChannelLayout::getChannelsMapView() const {
 	return channelMap;
 }
 
