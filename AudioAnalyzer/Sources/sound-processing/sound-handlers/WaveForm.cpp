@@ -20,36 +20,41 @@ using namespace std::literals::string_view_literals;
 using namespace audio_analyzer;
 
 void WaveForm::setParams(const Params &_params) {
-	this->params = _params;
-
-	if (params.width <= 0 || params.height <= 0) {
+	if (params == _params) {
 		return;
 	}
 
-	interpolator = { -1.0, 1.0, 0.0, params.height - 1.0 };
+	this->params = _params;
 
-	backgroundInt = params.backgroundColor.toInt();
-	waveInt = params.waveColor.toInt();
-	lineInt = params.lineColor.toInt();
+	if (_params.width <= 0 || _params.height <= 0) {
+		return;
+	}
 
-	imageBuffer.setBuffersCount(params.width);
-	imageBuffer.setBufferSize(params.height);
-	std::fill_n(imageBuffer[0].data(), params.width* params.height, backgroundInt);
+	interpolator = { -1.0, 1.0, 0.0, _params.height - 1.0 };
+
+	backgroundInt = _params.backgroundColor.toInt();
+	waveInt = _params.waveColor.toInt();
+	lineInt = _params.lineColor.toInt();
+
+	imageBuffer.setBuffersCount(_params.width);
+	imageBuffer.setBufferSize(_params.height);
+	std::fill_n(imageBuffer[0].data(), _params.width * _params.height, backgroundInt);
 
 	uint32_t color;
-	if (params.lineDrawingPolicy == LineDrawingPolicy::ALWAYS) {
+	if (_params.lineDrawingPolicy == LineDrawingPolicy::ALWAYS) {
 		color = lineInt;
 	} else {
 		color = waveInt;
 	}
 	const index centerPixel = std::lround(interpolator.toValue(0.0));
-	for (index i = 0; i < this->params.width; ++i) {
+	for (index i = 0; i < _params.width; ++i) {
 		imageBuffer[i][centerPixel] = color;
 	}
 
 	filepath.clear();
 
-	utils::FileWrapper::createDirectories(params.prefix);
+	utils::FileWrapper::createDirectories(_params.prefix);
+
 
 	updateParams();
 }

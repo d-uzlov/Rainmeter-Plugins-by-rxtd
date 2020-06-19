@@ -39,6 +39,24 @@ namespace rxtd::audio_analyzer {
 			double gain { };
 
 			double minDistinguishableValue { };
+
+			// generated
+			friend bool operator==(const Params& lhs, const Params& rhs) {
+				return lhs.resolution == rhs.resolution
+					&& lhs.width == rhs.width
+					&& lhs.height == rhs.height
+					&& lhs.prefix == rhs.prefix
+					&& lhs.backgroundColor == rhs.backgroundColor
+					&& lhs.waveColor == rhs.waveColor
+					&& lhs.lineColor == rhs.lineColor
+					&& lhs.lineDrawingPolicy == rhs.lineDrawingPolicy
+					&& lhs.gain == rhs.gain
+					&& lhs.minDistinguishableValue == rhs.minDistinguishableValue;
+			}
+
+			friend bool operator!=(const Params& lhs, const Params& rhs) {
+				return !(lhs == rhs);
+			}
 		};
 
 	private:

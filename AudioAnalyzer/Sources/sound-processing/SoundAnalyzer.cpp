@@ -132,11 +132,17 @@ void SoundAnalyzer::updateSampleRate() noexcept {
 	}
 
 	const auto sampleRate = resampler.getSampleRate();
+	if (sampleRate == prevSampleRate) {
+		return;
+	}
+
 	for (auto & [channel, channelData] : channels) {
 		for (auto &handler : channelData.handlers) {
 			handler->setSamplesPerSec(sampleRate);
 		}
 	}
+
+	prevSampleRate = sampleRate;
 }
 
 void SoundAnalyzer::removeNonexistentChannelsFromMap() {
@@ -164,7 +170,7 @@ void SoundAnalyzer::patchHandlers() {
 		auto orderListIter = orderOfHandlers.find(channel);
 		if (orderListIter == orderOfHandlers.end()) {
 			// this channel doesn't have any handlers
-			// remove all handlers that it could had earlier
+			// remove all handlers that it could have had earlier
 			channelData = { };
 			continue;
 		}
