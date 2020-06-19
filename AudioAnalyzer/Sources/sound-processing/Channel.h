@@ -93,7 +93,7 @@ namespace rxtd::audio_analyzer {
 	public:
 	
 		sview getName() const;
-		std::optional<index> fromChannel(Channel channel) const;
+		std::optional<index> indexOf(Channel channel) const;
 		bool contains(Channel channel) const;
 
 		static ChannelLayout create(string name, std::vector<Channel::Value> channels);

@@ -83,7 +83,7 @@ void AudioParent::_reload() {
 
 	ParamParser paramParser(rain, rain.readBool(L"UnusedOptionsWarning", true));
 	paramParser.parse();
-	soundAnalyzer.patchHandlers(paramParser.getHandlers(), paramParser.getPatches());
+	soundAnalyzer.setHandlerPatchers(paramParser.getHandlers(), paramParser.getPatches());
 }
 
 std::tuple<double, const wchar_t*> AudioParent::_update() {
@@ -94,6 +94,7 @@ std::tuple<double, const wchar_t*> AudioParent::_update() {
 	if (deviceManager.getState() != DeviceManager::State::eOK) {
 		if (deviceManager.getState() == DeviceManager::State::eFATAL) {
 			setMeasureState(utils::MeasureState::eBROKEN);
+			log.error(L"Unrecoverable error");
 		}
 		goto loop_end;
 	}
@@ -132,7 +133,7 @@ std::tuple<double, const wchar_t*> AudioParent::_update() {
 	}
 loop_end:
 
-	soundAnalyzer.finish();
+	soundAnalyzer.finishStandalone();
 
 	return std::make_tuple(deviceManager.getDeviceStatus(), nullptr);
 }

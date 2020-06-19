@@ -51,8 +51,8 @@ void ChannelMixer::decomposeFramesIntoChannels(const uint8_t* buffer, index fram
 
 index ChannelMixer::createChannelAuto(index framesCount, index destinationChannel) {
 
-	auto left = waveFormat.channelLayout.fromChannel(Channel::eFRONT_LEFT);
-	auto right = waveFormat.channelLayout.fromChannel(Channel::eFRONT_RIGHT);
+	auto left = waveFormat.channelLayout.indexOf(Channel::eFRONT_LEFT);
+	auto right = waveFormat.channelLayout.indexOf(Channel::eFRONT_RIGHT);
 
 	if (left.has_value() && right.has_value()) {
 		resampleToAuto(left.value(), right.value(), framesCount, destinationChannel);
@@ -67,7 +67,7 @@ index ChannelMixer::createChannelAuto(index framesCount, index destinationChanne
 		return destinationChannel;
 	}
 
-	auto center = waveFormat.channelLayout.fromChannel(Channel::eCENTER);
+	auto center = waveFormat.channelLayout.indexOf(Channel::eCENTER);
 	if (center.has_value()) {
 		copyToAuto(center.value(), framesCount, destinationChannel);
 		return destinationChannel;

@@ -89,8 +89,10 @@ namespace {
 
 Channel::ChannelParser::ChannelParser() {
 	addElement(L"Auto", eAUTO);
+	addElement(L"Left", eFRONT_LEFT);
 	addElement(L"FrontLeft", eFRONT_LEFT);
 	addElement(L"FL", eFRONT_LEFT);
+	addElement(L"Right", eFRONT_RIGHT);
 	addElement(L"FrontRight", eFRONT_RIGHT);
 	addElement(L"FR", eFRONT_RIGHT);
 	addElement(L"Center", eCENTER);
@@ -155,7 +157,7 @@ sview ChannelLayout::getName() const {
 	return name;
 }
 
-std::optional<index> ChannelLayout::fromChannel(Channel channel) const {
+std::optional<index> ChannelLayout::indexOf(Channel channel) const {
 	const auto iter = channelMap.find(channel);
 	if (iter == channelMap.end()) {
 		return std::nullopt;

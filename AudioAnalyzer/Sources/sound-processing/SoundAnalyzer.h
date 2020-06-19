@@ -31,7 +31,7 @@ namespace rxtd::audio_analyzer {
 		ChannelMixer channelMixer;
 		AudioChildHelper audioChildHelper;
 
-		utils::Vector2D<float> wave;
+		utils::Vector2D<float> waveBuffer;
 
 		std::map<Channel, ChannelData> channels;
 
@@ -59,19 +59,18 @@ namespace rxtd::audio_analyzer {
 		 * This new handler may be completely new if it didn't exist before or if class of handler with this name changed,
 		 * but usually this is the same handler with updated parameters.
 		 */
-		void patchHandlers(std::map<Channel, std::vector<istring>> handlersOrder, std::map<istring, std::function<SoundHandler*(SoundHandler*)>, std::less<>> patchers);
+		void setHandlerPatchers(std::map<Channel, std::vector<istring>> handlersOrder, std::map<istring, std::function<SoundHandler*(SoundHandler*)>, std::less<>> patchers);
 
 		void setWaveFormat(MyWaveFormat waveFormat);
 
 		void process(const uint8_t* buffer, bool isSilent, index framesCount) noexcept;
 		void resetValues() noexcept;
-		void finish() noexcept;
+		void finishStandalone() noexcept;
 
 	private:
 		void updateSampleRate() noexcept;
-		index createChannelAuto(index framesCount) noexcept;
 
 		void removeNonexistentChannelsFromMap();
-		void patchChannelHandlers();
+		void patchHandlers();
 	};
 }

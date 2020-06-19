@@ -18,10 +18,8 @@ namespace rxtd::audio_analyzer {
 		std::map<istring, index, std::less<>> indexMap;
 	};
 
-	class SoundAnalyzer;
 	class DataSupplierImpl : public DataSupplier {
 		utils::Vector2D<float> *wave = nullptr;
-		// SoundAnalyzer &parent;
 		const ChannelData *channelData = nullptr;
 		Channel channel { };
 		index channelIndex = 0;
