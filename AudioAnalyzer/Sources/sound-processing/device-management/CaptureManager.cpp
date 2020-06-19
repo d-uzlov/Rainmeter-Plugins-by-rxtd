@@ -10,6 +10,7 @@
 #include "CaptureManager.h"
 
 #include "windows-wrappers/WaveFormatWrapper.h"
+#include <cassert>
 
 static constexpr long long REF_TIMES_PER_SEC = 1000'000'0; // 1 sec in 100-ns units
 
@@ -87,34 +88,6 @@ namespace rxtd::audio_analyzer {
 
 	CaptureManager::~CaptureManager() {
 		invalidate();
-	}
-
-	CaptureManager::CaptureManager(CaptureManager&& other) noexcept :
-		audioClient(std::move(other.audioClient)),
-		audioCaptureClient(std::move(other.audioCaptureClient)),
-		waveFormat(std::move(other.waveFormat)) {
-		valid = other.valid;
-		other.valid = false;
-
-		recoverable = other.recoverable;
-		other.recoverable = false;
-	}
-
-	CaptureManager& CaptureManager::operator=(CaptureManager&& other) noexcept {
-		if (this == &other)
-			return *this;
-
-		audioClient = std::move(other.audioClient);
-		audioCaptureClient = std::move(other.audioCaptureClient);
-		waveFormat = std::move(other.waveFormat);
-
-		valid = other.valid;
-		other.valid = false;
-
-		recoverable = other.recoverable;
-		other.recoverable = false;
-
-		return *this;
 	}
 
 	MyWaveFormat CaptureManager::getWaveFormat() const {
