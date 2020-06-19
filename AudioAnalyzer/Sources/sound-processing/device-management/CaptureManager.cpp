@@ -84,6 +84,8 @@ namespace rxtd::audio_analyzer {
 		}
 
 		formatString = makeFormatString(waveFormat);
+
+		lastBufferFillTime = clock::now();
 	}
 
 	CaptureManager::~CaptureManager() {
@@ -135,7 +137,9 @@ namespace rxtd::audio_analyzer {
 			// Windows bug: sometimes when shutting down a playback application, it doesn't zero
 			// out the buffer.  Detect this by checking the time since the last successful fill
 			// and resetting the volumes if past the threshold.
+			// rxtd: I don't really understand this. I can't reproduce this and I don't know if this workaround do anything useful
 			if (now - lastBufferFillTime >= EMPTY_TIMEOUT) {
+				logger->error(L"timeout {}", (now - lastBufferFillTime).count());
 				return BufferFetchResult::deviceError();
 			}
 			return BufferFetchResult::noData();

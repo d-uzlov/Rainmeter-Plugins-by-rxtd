@@ -22,10 +22,11 @@ static std::map<index, CountPair> cache;
 static FftImpl zeroFft(0);
 
 FftImpl* FftImpl::change(FftImpl* old, index newSize) {
-	if (old != nullptr && old->fftSize == newSize) {
-		return old;
-	}
 	if (old != nullptr) {
+		if (old->fftSize == newSize) {
+			return old;
+		}
+
 		const auto iter = cache.find(old->fftSize);
 		if (iter != cache.end()) {
 			iter->second.count--;

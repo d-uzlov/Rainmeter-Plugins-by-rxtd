@@ -74,7 +74,7 @@ void AudioParent::_reload() {
 	deviceManager.setOptions(sourceEnum, id);
 
 
-	auto rateLimit = std::max<index>(rain.readInt(L"TargetRate"), 0);
+	auto rateLimit = std::max<index>(rain.readInt(L"TargetRate"), 44100);
 	if (rateLimit < 0) {
 		rateLimit = 0;
 	}

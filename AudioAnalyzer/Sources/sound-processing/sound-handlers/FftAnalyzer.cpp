@@ -22,8 +22,34 @@ void FftAnalyzer::CascadeData::setParams(FftAnalyzer* parent, CascadeData *succe
 	filledElements = 0;
 	transferredElements = 0;
 	ringBuffer.resize(parent->fftSize);
-	values.resize(parent->fftSize / 2);
-	std::fill(values.begin(), values.end(), 0.0f);
+
+	const index newValuesSize = parent->fftSize / 2;
+	if (values.empty()) {
+		values.resize(newValuesSize);
+	} else if (index(values.size()) != newValuesSize) {
+		double coef = double(values.size()) / newValuesSize;
+
+		if (index(values.size()) < newValuesSize) {
+			values.resize(newValuesSize);
+
+			for (int i = newValuesSize - 1; i >= 1; i--) {
+				index oldIndex = std::clamp<index>(i * coef, 0, values.size() - 1);
+				values[i] = values[oldIndex];
+			}
+		}
+
+		if (index(values.size()) > newValuesSize) {
+			for (int i = 1; i < newValuesSize; i++) {
+				index oldIndex = std::clamp<index>(i * coef, 0, values.size() - 1);
+				values[i] = values[oldIndex];
+			}
+			
+			values.resize(newValuesSize);
+		}
+
+		values[0] = 0.0;
+		// std::fill(values.begin(), values.end(), 0.0f);
+	}
 
 	auto samplesPerSec = parent->samplesPerSec;
 	samplesPerSec = index(samplesPerSec / std::pow(2, cascadeIndex));

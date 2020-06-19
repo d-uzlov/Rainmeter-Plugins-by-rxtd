@@ -77,6 +77,12 @@ namespace rxtd::audio_analyzer {
 		CaptureManager(utils::Rainmeter::Logger& logger, IMMDevice& audioDeviceHandle, bool loopback);
 		~CaptureManager();
 
+		CaptureManager(CaptureManager&& other) noexcept = default;
+		CaptureManager& operator=(CaptureManager&& other) noexcept = default;
+
+		CaptureManager(const CaptureManager& other) = delete;
+		CaptureManager& operator=(const CaptureManager& other) = delete;
+
 		MyWaveFormat getWaveFormat() const;
 		const string& getFormatString() const;
 		bool isEmpty() const;
