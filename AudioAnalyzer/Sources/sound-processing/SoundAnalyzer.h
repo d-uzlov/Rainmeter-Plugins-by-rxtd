@@ -52,7 +52,14 @@ namespace rxtd::audio_analyzer {
 
 		AudioChildHelper getAudioChildHelper() const;
 
-		void setPatchHandlers(std::map<Channel, std::vector<istring>> handlersOrder, std::map<istring, std::function<SoundHandler*(SoundHandler*)>, std::less<>> handlerPatchersMap) noexcept;
+		/**
+		 * Handlers aren't completely recreated when measure is reloaded.
+		 * Instead, they are patched. Patches are created in ParamParser class.
+		 * Patch is a function that takes old handler as a parameter and returns new handler.
+		 * This new handler may be completely new if it didn't exist before or if class of handler with this name changed,
+		 * but usually this is the same handler with updated parameters.
+		 */
+		void patchHandlers(std::map<Channel, std::vector<istring>> handlersOrder, std::map<istring, std::function<SoundHandler*(SoundHandler*)>, std::less<>> handlerPatchersMap) noexcept;
 
 		void setWaveFormat(MyWaveFormat waveFormat) noexcept;
 
@@ -61,7 +68,6 @@ namespace rxtd::audio_analyzer {
 		void finish() noexcept;
 
 	private:
-		void decompose(const uint8_t* buffer, index framesCount) noexcept;
 		void updateSampleRate() noexcept;
 		index createChannelAuto(index framesCount) noexcept;
 	};

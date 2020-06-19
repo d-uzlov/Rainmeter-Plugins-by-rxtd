@@ -14,18 +14,45 @@
 
 using namespace audio_analyzer;
 
-void ChannelMixer::setLayout(ChannelLayout layout) {
-	this->layout = layout;
+void ChannelMixer::setFormat(MyWaveFormat waveFormat) {
+	this->waveFormat = waveFormat;
 }
 
 void ChannelMixer::setBuffer(utils::Vector2D<float> &buffer) {
 	this->bufferPtr = &buffer;
 }
 
+void ChannelMixer::decomposeFramesIntoChannels(const uint8_t* buffer, index framesCount) {
+	auto& waveBuffer = *bufferPtr;
+
+	waveBuffer.setBufferSize(framesCount);
+
+	const auto channelsCount = waveFormat.channelsCount;
+	if (waveFormat.format == Format::ePCM_F32) {
+		auto s = reinterpret_cast<const float*>(buffer);
+		for (index frame = 0; frame < framesCount; ++frame) {
+			for (index channel = 0; channel < channelsCount; ++channel) {
+				waveBuffer[channel][frame] = *s;
+				++s;
+			}
+		}
+	} else if (waveFormat.format == Format::ePCM_S16) {
+		auto s = reinterpret_cast<const int16_t*>(buffer);
+		for (index frame = 0; frame < framesCount; ++frame) {
+			for (index channel = 0; channel < channelsCount; ++channel) {
+				waveBuffer[channel][frame] = *s * (1.0f / std::numeric_limits<int16_t>::max());
+				++s;
+			}
+		}
+	} else {
+		std::terminate(); // TODO this is dumb
+	}
+}
+
 index ChannelMixer::createChannelAuto(index framesCount, index destinationChannel) {
 
-	auto left = layout.fromChannel(Channel::eFRONT_LEFT);
-	auto right = layout.fromChannel(Channel::eFRONT_RIGHT);
+	auto left = waveFormat.channelLayout.fromChannel(Channel::eFRONT_LEFT);
+	auto right = waveFormat.channelLayout.fromChannel(Channel::eFRONT_RIGHT);
 
 	if (left.has_value() && right.has_value()) {
 		resampleToAuto(left.value(), right.value(), framesCount, destinationChannel);
@@ -40,7 +67,7 @@ index ChannelMixer::createChannelAuto(index framesCount, index destinationChanne
 		return destinationChannel;
 	}
 
-	auto center = layout.fromChannel(Channel::eCENTER);
+	auto center = waveFormat.channelLayout.fromChannel(Channel::eCENTER);
 	if (center.has_value()) {
 		copyToAuto(center.value(), framesCount, destinationChannel);
 		return destinationChannel;

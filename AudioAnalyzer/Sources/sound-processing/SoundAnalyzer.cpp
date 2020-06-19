@@ -8,39 +8,13 @@
  */
 
 #include "SoundAnalyzer.h"
-#include <limits>
 
 #include "undef.h"
 
 using namespace audio_analyzer;
 
-SoundAnalyzer::SoundAnalyzer() noexcept : dataSupplier(wave), audioChildHelper(channels, dataSupplier) {
+SoundAnalyzer::SoundAnalyzer() noexcept : audioChildHelper(channels, dataSupplier), dataSupplier(wave) {
 	channelMixer.setBuffer(wave);
-}
-
-void SoundAnalyzer::decompose(const uint8_t* buffer, index framesCount) noexcept {
-	wave.setBufferSize(framesCount);
-
-	const auto channelsCount = waveFormat.channelsCount;
-	if (waveFormat.format == Format::ePCM_F32) {
-		auto s = reinterpret_cast<const float*>(buffer);
-		for (index frame = 0; frame < framesCount; ++frame) {
-			for (index channel = 0; channel < channelsCount; ++channel) {
-				wave[channel][frame] = *s;
-				++s;
-			}
-		}
-	} else if (waveFormat.format == Format::ePCM_S16) {
-		auto s = reinterpret_cast<const int16_t*>(buffer);
-		for (index frame = 0; frame < framesCount; ++frame) {
-			for (index channel = 0; channel < channelsCount; ++channel) {
-				wave[channel][frame] = *s * (1.0f / std::numeric_limits<int16_t>::max());
-				++s;
-			}
-		}
-	} else {
-		std::terminate(); // TODO this is dumb
-	}
 }
 
 void SoundAnalyzer::setTargetRate(index value) noexcept {
@@ -52,7 +26,7 @@ AudioChildHelper SoundAnalyzer::getAudioChildHelper() const {
 	return audioChildHelper;
 }
 
-void SoundAnalyzer::setPatchHandlers(std::map<Channel, std::vector<istring>> handlersOrder,
+void SoundAnalyzer::patchHandlers(std::map<Channel, std::vector<istring>> handlersOrder,
 	std::map<istring, std::function<SoundHandler*(SoundHandler*)>, std::less<>> handlerPatchersMap) noexcept {
 
 	for (const auto &channelOrder : handlersOrder) {
@@ -166,7 +140,7 @@ void SoundAnalyzer::setWaveFormat(MyWaveFormat waveFormat) noexcept {
 	}
 
 	this->waveFormat = waveFormat;
-	channelMixer.setLayout(waveFormat.channelLayout);
+	channelMixer.setFormat(waveFormat);
 	resampler.setSourceRate(waveFormat.samplesPerSec);
 	updateSampleRate();
 }
@@ -177,7 +151,7 @@ void SoundAnalyzer::process(const uint8_t* buffer, bool isSilent, index framesCo
 	}
 
 	if (!isSilent) {
-		decompose(buffer, framesCount);
+		channelMixer.decomposeFramesIntoChannels(buffer, framesCount);
 	}
 
 	dataSupplier.setWaveSize(resampler.calculateFinalWaveSize(framesCount));

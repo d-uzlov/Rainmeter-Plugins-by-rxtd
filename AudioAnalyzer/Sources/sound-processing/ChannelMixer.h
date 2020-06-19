@@ -10,16 +10,18 @@
 #pragma once
 #include "Channel.h"
 #include "Vector2D.h"
+#include "device-management/MyWaveFormat.h"
 
 namespace rxtd::audio_analyzer {
 	class ChannelMixer {
 	private:
-		ChannelLayout layout;
+		MyWaveFormat waveFormat;
 		utils::Vector2D<float> *bufferPtr = nullptr;
 
 	public:
-		void setLayout(ChannelLayout layout);
+		void setFormat(MyWaveFormat waveFormat);
 		void setBuffer(utils::Vector2D<float> &buffer);
+		void decomposeFramesIntoChannels(const uint8_t* buffer, index framesCount);
 
 		index createChannelAuto(index framesCount, index destinationChannel);
 

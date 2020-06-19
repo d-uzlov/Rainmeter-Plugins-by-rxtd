@@ -83,7 +83,7 @@ void AudioParent::_reload() {
 
 	ParamParser paramParser(rain, rain.readBool(L"UnusedOptionsWarning", true));
 	paramParser.parse();
-	soundAnalyzer.setPatchHandlers(paramParser.getHandlers(), paramParser.getPatches());
+	soundAnalyzer.patchHandlers(paramParser.getHandlers(), paramParser.getPatches());
 }
 
 std::tuple<double, const wchar_t*> AudioParent::_update() {

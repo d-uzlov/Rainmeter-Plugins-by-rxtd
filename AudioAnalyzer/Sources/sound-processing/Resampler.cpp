@@ -8,7 +8,6 @@
  */
 
 #include "Resampler.h"
-#include <limits>
 
 #include "undef.h"
 
