@@ -50,6 +50,10 @@ std::optional<BandCascadeTransformer::Params> BandCascadeTransformer::parseParam
 }
 
 void BandCascadeTransformer::setParams(Params _params) {
+	if (this->params == _params) {
+		return;
+	}
+
 	this->params = std::move(_params);
 
 	analysisComputed = false;
@@ -104,6 +108,10 @@ void BandCascadeTransformer::finish(const DataSupplier& dataSupplier) {
 }
 
 void BandCascadeTransformer::setSamplesPerSec(index samplesPerSec) {
+	if (this->samplesPerSec == samplesPerSec) {
+		return;
+	}
+
 	this->samplesPerSec = samplesPerSec;
 	analysisComputed = false;
 }

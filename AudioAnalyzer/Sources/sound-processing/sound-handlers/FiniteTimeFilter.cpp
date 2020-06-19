@@ -51,6 +51,10 @@ std::optional<FiniteTimeFilter::Params> FiniteTimeFilter::parseParams(const util
 }
 
 void FiniteTimeFilter::setParams(Params _params) {
+	if (this->params == _params) {
+		return;
+	}
+
 	this->params = std::move(_params);
 	valid = false;
 	source = nullptr;

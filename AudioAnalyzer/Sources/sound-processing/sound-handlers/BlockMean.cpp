@@ -17,13 +17,36 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
+std::optional<BlockMean::Params> BlockMean::parseParams(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl) {
+	Params params;
+	params.attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.0) * 0.001;
+	params.decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.attackTime), 0.0) * 0.001;
+
+	params.resolution = optionMap.get(L"resolution"sv).asFloat(10);
+	if (params.resolution <= 0) {
+		cl.warning(L"block must be > 0 but {} found. Assume 10", params.resolution);
+		params.resolution = 10;
+	}
+	params.resolution *= 0.001;
+
+	return params;
+}
+
 void BlockMean::setParams(Params params) {
+	if (this->params == params) {
+		return;
+	}
+
 	this->params = params;
 
 	recalculateConstants();
 }
 
 void BlockMean::setSamplesPerSec(index samplesPerSec) {
+	if (this->samplesPerSec == samplesPerSec) {
+		return;
+	}
+
 	this->samplesPerSec = samplesPerSec;
 
 	recalculateConstants();
@@ -84,21 +107,6 @@ void BlockMean::processSilence(const DataSupplier& dataSupplier) {
 			break;
 		}
 	}
-}
-
-std::optional<BlockMean::Params> BlockMean::parseParams(const utils::OptionParser::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl) {
-	Params params;
-	params.attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.0) * 0.001;
-	params.decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.attackTime), 0.0) * 0.001;
-
-	params.resolution = optionMap.get(L"resolution"sv).asFloat(10);
-	if (params.resolution <= 0) {
-		cl.warning(L"block must be > 0 but {} found. Assume 10", params.resolution);
-		params.resolution = 10;
-	}
-	params.resolution *= 0.001;
-
-	return params;
 }
 
 void BlockRms::finishBlock() {

@@ -54,6 +54,10 @@ std::optional<BandResampler::Params> BandResampler::parseParams(const utils::Opt
 }
 
 void BandResampler::setParams(Params _params) {
+	if (this->params == _params) {
+		return;
+	}
+
 	this->params = std::move(_params);
 
 	valid = false;

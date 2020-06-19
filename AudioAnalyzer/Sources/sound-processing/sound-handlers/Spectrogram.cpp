@@ -20,6 +20,10 @@ using namespace std::literals::string_view_literals;
 using namespace audio_analyzer;
 
 void Spectrogram::setParams(const Params& _params) {
+	if (this->params == _params) {
+		return;
+	}
+
 	this->params = _params;
 
 	filepath.clear();
@@ -129,6 +133,10 @@ std::optional<Spectrogram::Params> Spectrogram::parseParams(const utils::OptionP
 }
 
 void Spectrogram::setSamplesPerSec(index samplesPerSec) {
+	if (this->samplesPerSec == samplesPerSec) {
+		return;
+	}
+
 	this->samplesPerSec = samplesPerSec;
 
 	updateParams();

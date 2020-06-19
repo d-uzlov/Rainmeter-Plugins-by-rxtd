@@ -370,6 +370,10 @@ void FftAnalyzer::processRandom(index waveSize) {
 }
 
 void FftAnalyzer::setSamplesPerSec(index samplesPerSec) {
+	if (this->samplesPerSec == samplesPerSec) {
+		return;
+	}
+
 	this->samplesPerSec = samplesPerSec;
 	updateParams();
 }
@@ -438,6 +442,10 @@ void FftAnalyzer::reset() {
 }
 
 void FftAnalyzer::setParams(Params params) {
+	if (this->params == params) {
+		return;
+	}
+
 	this->params = params;
 
 	updateParams();
@@ -463,6 +471,7 @@ void FftAnalyzer::updateParams() {
 	}
 	fftImpl = FftImpl::change(fftImpl, fftSize);
 
+	// TODO check if there is a way to save state at least partially
 
 	inputStride = static_cast<index>(fftSize * (1 - params.overlap));
 	inputStride = std::clamp<index>(inputStride, std::min<index>(16, fftSize), fftSize);
