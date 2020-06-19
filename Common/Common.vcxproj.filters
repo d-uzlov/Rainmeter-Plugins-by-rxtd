@@ -50,6 +50,12 @@
     <ClCompile Include="sources\windows-wrappers\PropertyStoreWrapper.cpp">
       <Filter>Source Files\windows-wrappers</Filter>
     </ClCompile>
+    <ClCompile Include="sources\windows-wrappers\IAudioClientWrapper.cpp">
+      <Filter>Source Files\windows-wrappers</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\windows-wrappers\IAudioCaptureClientWrapper.cpp">
+      <Filter>Source Files\windows-wrappers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sources\BmpWriter.h">
@@ -76,16 +82,10 @@
     <ClInclude Include="sources\TypeHolder.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="sources\windows-wrappers\BufferWrapper.h">
-      <Filter>Source Files\windows-wrappers</Filter>
-    </ClInclude>
     <ClInclude Include="sources\windows-wrappers\FileWrapper.h">
       <Filter>Source Files\windows-wrappers</Filter>
     </ClInclude>
     <ClInclude Include="sources\windows-wrappers\GenericComWrapper.h">
-      <Filter>Source Files\windows-wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\windows-wrappers\WaveFormatWrapper.h">
       <Filter>Source Files\windows-wrappers</Filter>
     </ClInclude>
     <ClInclude Include="sources\MathExpressionParser.h">
@@ -114,6 +114,18 @@
       <Filter>Source Files\windows-wrappers</Filter>
     </ClInclude>
     <ClInclude Include="sources\windows-wrappers\PropertyStoreWrapper.h">
+      <Filter>Source Files\windows-wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\windows-wrappers\IAudioClientWrapper.h">
+      <Filter>Source Files\windows-wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\windows-wrappers\IAudioCaptureClientWrapper.h">
+      <Filter>Source Files\windows-wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\windows-wrappers\AudioBuffer.h">
+      <Filter>Source Files\windows-wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\windows-wrappers\WaveFormat.h">
       <Filter>Source Files\windows-wrappers</Filter>
     </ClInclude>
   </ItemGroup>

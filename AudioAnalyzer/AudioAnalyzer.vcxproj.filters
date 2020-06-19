@@ -176,9 +176,6 @@
     <ClCompile Include="Sources\sound-processing\device-management\DeviceManager.cpp">
       <Filter>Source Files\sound-processing\device-management</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\sound-processing\device-management\MyWaveFormat.cpp">
-      <Filter>Source Files\sound-processing\device-management</Filter>
-    </ClCompile>
     <ClCompile Include="Sources\sound-processing\device-management\CaptureManager.cpp">
       <Filter>Source Files\sound-processing\device-management</Filter>
     </ClCompile>

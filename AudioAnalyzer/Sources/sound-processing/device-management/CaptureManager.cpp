@@ -9,52 +9,23 @@
 
 #include "CaptureManager.h"
 
-#include "windows-wrappers/WaveFormatWrapper.h"
 #include <cassert>
-
-static constexpr long long REF_TIMES_PER_SEC = 1000'000'0; // 1 sec in 100-ns units
-
-const IID IID_IAudioCaptureClient = __uuidof(IAudioCaptureClient);
-const IID IID_IAudioClient = __uuidof(IAudioClient);
 
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
 
 namespace rxtd::audio_analyzer {
-	CaptureManager::CaptureManager(utils::Rainmeter::Logger& logger, IMMDevice& audioDeviceHandle, bool loopback) : logger(&logger) {
-		HRESULT hr = audioDeviceHandle.Activate(IID_IAudioClient, CLSCTX_ALL, nullptr,
-			reinterpret_cast<void**>(&audioClient));
-		if (hr != S_OK) {
+	CaptureManager::CaptureManager(utils::Rainmeter::Logger& logger, utils::MediaDeviceWrapper& audioDeviceHandle, bool loopback) : logger(&logger) {
+		audioClient = audioDeviceHandle.openAudioClient();
+		if (audioDeviceHandle.getLastResult() != S_OK) {
 			valid = false;
-			logger.error(L"Can't create AudioClient, error code {}", hr);
+			logger.error(L"Can't create AudioClient, error code {}", audioDeviceHandle.getLastResult());
 			return;
 		}
 
-		utils::WaveFormatWrapper waveFormatWrapper;
-		hr = audioClient->GetMixFormat(&waveFormatWrapper);
-		if (hr != S_OK) {
-			valid = false;
-			logger.error(L"GetMixFormat() failed, error code {}", hr);
-			return;
-		}
-
-		auto formatOpt = parseStreamFormat(waveFormatWrapper.getPointer());
-		if (!formatOpt.has_value()) {
-			valid = false;
-			logger.error(L"Invalid sample format, error code {}", waveFormatWrapper.getPointer()->wFormatTag);
-			return;
-		}
-		waveFormat = formatOpt.value();
-
-		hr = audioClient->Initialize(
-			AUDCLNT_SHAREMODE_SHARED,
-			loopback ? AUDCLNT_STREAMFLAGS_LOOPBACK : 0,
-			REF_TIMES_PER_SEC,
-			0,
-			waveFormatWrapper.getPointer(),
-			nullptr);
-		if (hr != S_OK) {
-			if (hr == AUDCLNT_E_DEVICE_IN_USE) {
+		audioClient.initShared(loopback);
+		if (audioClient.getLastResult() != S_OK) {
+			if (audioClient.getLastResult() == AUDCLNT_E_DEVICE_IN_USE) {
 				// If device is in exclusive mode, then call to Initialize() above leads to leak in Commit memory area
 				// Tested on LTSB 1607, last updates as of 2019-01-10
 				// Google "WASAPI exclusive memory leak"
@@ -65,17 +36,29 @@ namespace rxtd::audio_analyzer {
 				return;
 			}
 			valid = false;
-			logger.error(L"AudioClient.Initialize() fail, error code {}", hr);
+			logger.error(L"AudioClient.Initialize() fail, error code {}", audioClient.getLastResult());
 			return;
 		}
 
-		hr = audioClient->GetService(IID_IAudioCaptureClient, reinterpret_cast<void**>(&audioCaptureClient));
-		if (hr != S_OK) {
+		const auto format = audioClient.getFormat();
+		waveFormat.channelsCount = format.channelsCount;
+		waveFormat.samplesPerSec = format.samplesPerSec;
+		waveFormat.channelLayout = ChannelLayouts::layoutFromChannelMask(format.channelMask, true);
+		waveFormat.format = format.format;
+		if (waveFormat.format == utils::WaveDataFormat::eINVALID) {
+			logger.error(L"Invalid sample format");
 			valid = false;
-			logger.error(L"Can't create AudioCaptureClient, error code {}", hr);
 			return;
 		}
 
+		audioCaptureClient = audioClient.openCapture();
+		if (audioClient.getLastResult() != S_OK) {
+			valid = false;
+			logger.error(L"Can't create AudioCaptureClient, error code {}", audioClient.getLastResult());
+			return;
+		}
+
+		HRESULT hr;
 		hr = audioClient->Start();
 		if (hr != S_OK) {
 			valid = false;
@@ -113,25 +96,21 @@ namespace rxtd::audio_analyzer {
 		return recoverable;
 	}
 
-	utils::BufferWrapper CaptureManager::readBuffer() {
-		return utils::BufferWrapper(audioCaptureClient.getPointer());
-	}
-
 	CaptureManager::BufferFetchResult CaptureManager::nextBuffer() {
 		if (!isValid()) {
 			return BufferFetchResult::deviceError();
 		}
 
-		auto bufferWrapper = readBuffer();
+		auto buffer = audioCaptureClient.readBuffer();
 
-		const auto queryResult = bufferWrapper.getResult();
+		const auto queryResult = audioCaptureClient.getLastResult();
 		const auto now = clock::now();
 
 		switch (queryResult) {
 		case S_OK:
 			lastBufferFillTime = now;
 
-			return bufferWrapper;
+			return buffer;
 
 		case AUDCLNT_S_BUFFER_EMPTY:
 			// Windows bug: sometimes when shutting down a playback application, it doesn't zero
@@ -166,50 +145,11 @@ namespace rxtd::audio_analyzer {
 		valid = false;
 	}
 
-	std::optional<MyWaveFormat> CaptureManager::parseStreamFormat(WAVEFORMATEX* waveFormatEx) {
-		MyWaveFormat waveFormat;
-		waveFormat.channelsCount = waveFormatEx->nChannels;
-		waveFormat.samplesPerSec = waveFormatEx->nSamplesPerSec;
-
-		if (waveFormatEx->wFormatTag == WAVE_FORMAT_EXTENSIBLE) {
-			const auto formatExtensible = reinterpret_cast<WAVEFORMATEXTENSIBLE*>(waveFormatEx);
-
-			if (formatExtensible->SubFormat == KSDATAFORMAT_SUBTYPE_PCM && waveFormatEx->wBitsPerSample == 16) {
-				waveFormat.format = Format::ePCM_S16;
-			} else if (formatExtensible->SubFormat == KSDATAFORMAT_SUBTYPE_IEEE_FLOAT) {
-				waveFormat.format = Format::ePCM_F32;
-			} else {
-				return std::nullopt;
-			}
-
-			waveFormat.channelLayout = ChannelLayouts::layoutFromChannelMask(formatExtensible->dwChannelMask, true);
-			// TODO second param should be an option
-
-			return waveFormat;
-		}
-
-		if (waveFormatEx->wFormatTag == WAVE_FORMAT_PCM && waveFormatEx->wBitsPerSample == 16) {
-			waveFormat.format = Format::ePCM_S16;
-		} else if (waveFormatEx->wFormatTag == WAVE_FORMAT_IEEE_FLOAT) {
-			waveFormat.format = Format::ePCM_F32;
-		} else {
-			return std::nullopt;
-		}
-
-		if (waveFormatEx->nChannels == 1) {
-			waveFormat.channelLayout = ChannelLayouts::getMono();
-		} else if (waveFormatEx->nChannels == 2) {
-			waveFormat.channelLayout = ChannelLayouts::getStereo();
-		} else {
-			return std::nullopt;
-		}
-
-		return waveFormat;
-	}
-
 	string CaptureManager::makeFormatString(MyWaveFormat waveFormat) {
+		using Format = utils::WaveDataFormat;
+
 		if (waveFormat.format == Format::eINVALID) {
-			return waveFormat.format.toString();
+			return L"<invalid>";
 		}
 
 		string format;
@@ -217,7 +157,17 @@ namespace rxtd::audio_analyzer {
 
 		format.reserve(64);
 
-		format += waveFormat.format.toString();
+		switch (waveFormat.format) {
+		case Format::ePCM_S16: 
+			format += L"PCM 16b";
+			break;
+		case Format::ePCM_F32: 
+			format += L"PCM 32b";
+			break;
+		case Format::eINVALID:;
+		default: std::terminate();
+		}
+
 		format += L", "sv;
 
 		format += std::to_wstring(waveFormat.samplesPerSec);

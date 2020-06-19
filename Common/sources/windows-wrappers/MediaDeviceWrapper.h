@@ -2,9 +2,13 @@
 
 #include "GenericComWrapper.h"
 #include <mmdeviceapi.h>
+#include "IAudioClientWrapper.h"
 
 namespace rxtd::utils {
 	class MediaDeviceWrapper : public GenericComWrapper<IMMDevice> {
+	private:
+		index lastResult = { };
+
 	public:
 		struct DeviceInfo {
 			string id;
@@ -15,6 +19,10 @@ namespace rxtd::utils {
 
 		DeviceInfo readDeviceInfo();
 		string readDeviceId();
+
+		IAudioClientWrapper openAudioClient();
+
+		index getLastResult() const;
 
 		bool isDeviceActive();
 	};

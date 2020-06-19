@@ -9,12 +9,13 @@
 
 #pragma once
 
-#include "windows-wrappers/BufferWrapper.h"
+#include "windows-wrappers/AudioBuffer.h"
 #include "MyWaveFormat.h"
 #include "windows-wrappers/GenericComWrapper.h"
-#include <mmdeviceapi.h>
+#include "windows-wrappers/MediaDeviceWrapper.h"
 #include "RainmeterWrappers.h"
 #include <chrono>
+#include "windows-wrappers/IAudioCaptureClientWrapper.h"
 
 namespace rxtd::audio_analyzer {
 	class CaptureManager {
@@ -31,10 +32,10 @@ namespace rxtd::audio_analyzer {
 
 		class BufferFetchResult {
 			const BufferFetchState state;
-			const utils::BufferWrapper buffer;
+			const utils::AudioBuffer buffer;
 
 			explicit BufferFetchResult(BufferFetchState state)
-				: state(state), buffer(utils::BufferWrapper()) { }
+				: state(state), buffer(utils::AudioBuffer()) { }
 
 		public:
 			static BufferFetchResult noData() {
@@ -47,13 +48,13 @@ namespace rxtd::audio_analyzer {
 				return BufferFetchResult(BufferFetchState::eINVALID_STATE);
 			}
 
-			BufferFetchResult(utils::BufferWrapper&& buffer)
+			BufferFetchResult(utils::AudioBuffer&& buffer)
 				: state(BufferFetchState::eOK), buffer(std::move(buffer)) { }
 
 			BufferFetchState getState() const {
 				return state;
 			}
-			const utils::BufferWrapper& getBuffer() const {
+			const utils::AudioBuffer& getBuffer() const {
 				return buffer;
 			}
 		};
@@ -61,8 +62,8 @@ namespace rxtd::audio_analyzer {
 	private:
 		utils::Rainmeter::Logger *logger;
 
-		utils::GenericComWrapper<IAudioClient> audioClient { };
-		utils::GenericComWrapper<IAudioCaptureClient> audioCaptureClient { };
+		utils::IAudioClientWrapper audioClient { };
+		utils::IAudioCaptureClientWrapper audioCaptureClient { };
 		MyWaveFormat waveFormat { };
 		string formatString { };
 
@@ -74,7 +75,7 @@ namespace rxtd::audio_analyzer {
 
 	public:
 		CaptureManager() = default;
-		CaptureManager(utils::Rainmeter::Logger& logger, IMMDevice& audioDeviceHandle, bool loopback);
+		CaptureManager(utils::Rainmeter::Logger& logger, utils::MediaDeviceWrapper& audioDeviceHandle, bool loopback);
 		~CaptureManager();
 
 		CaptureManager(CaptureManager&& other) noexcept = default;
@@ -88,13 +89,11 @@ namespace rxtd::audio_analyzer {
 		bool isEmpty() const;
 		bool isValid() const;
 		bool isRecoverable() const;
-		utils::BufferWrapper readBuffer();
 		BufferFetchResult nextBuffer();
 
 	private:
 		void invalidate();
 
-		static std::optional<MyWaveFormat> parseStreamFormat(WAVEFORMATEX* waveFormatEx);
 		static string makeFormatString(MyWaveFormat waveFormat);
 	};
 }

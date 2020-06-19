@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -8,16 +8,11 @@
  */
 
 #pragma once
-#include "../Channel.h"
-#include "windows-wrappers/WaveFormat.h"
 
-namespace rxtd::audio_analyzer {
-	struct MyWaveFormat {
-		index samplesPerSec = 0;
-		index channelsCount = 0;
-		utils::WaveDataFormat format = utils::WaveDataFormat::eINVALID;
-		ChannelLayout channelLayout { };
+namespace rxtd::utils {
+	struct AudioBuffer {
+		uint8_t* buffer = nullptr;
+		uint32_t framesCount{ };
+		bool silent{ };
 	};
-
 }
-

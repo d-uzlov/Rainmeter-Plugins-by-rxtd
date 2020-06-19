@@ -28,7 +28,7 @@ void ChannelMixer::decomposeFramesIntoChannels(const uint8_t* buffer, index fram
 	waveBuffer.setBufferSize(framesCount);
 
 	const auto channelsCount = waveFormat.channelsCount;
-	if (waveFormat.format == Format::ePCM_F32) {
+	if (waveFormat.format == utils::WaveDataFormat::ePCM_F32) {
 		auto s = reinterpret_cast<const float*>(buffer);
 		for (index frame = 0; frame < framesCount; ++frame) {
 			for (index channel = 0; channel < channelsCount; ++channel) {
@@ -36,7 +36,7 @@ void ChannelMixer::decomposeFramesIntoChannels(const uint8_t* buffer, index fram
 				++s;
 			}
 		}
-	} else if (waveFormat.format == Format::ePCM_S16) {
+	} else if (waveFormat.format == utils::WaveDataFormat::ePCM_S16) {
 		auto s = reinterpret_cast<const int16_t*>(buffer);
 		for (index frame = 0; frame < framesCount; ++frame) {
 			for (index channel = 0; channel < channelsCount; ++channel) {

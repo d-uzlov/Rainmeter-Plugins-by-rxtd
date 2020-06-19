@@ -9,7 +9,7 @@
 
 #include "AudioParent.h"
 
-#include "windows-wrappers/BufferWrapper.h"
+#include "windows-wrappers/AudioBuffer.h"
 
 #include "ParamParser.h"
 
@@ -105,10 +105,7 @@ std::tuple<double, const wchar_t*> AudioParent::_update() {
 		case CaptureManager::BufferFetchState::eOK: {
 			auto& bufferWrapper = fetchResult.getBuffer();
 
-			const uint8_t*const buffer = bufferWrapper.getBuffer();
-			const uint32_t framesCount = bufferWrapper.getFramesCount();
-
-			soundAnalyzer.process(buffer, bufferWrapper.isSilent(), framesCount);
+			soundAnalyzer.process(bufferWrapper.buffer, bufferWrapper.silent, bufferWrapper.framesCount);
 			break;
 		}
 

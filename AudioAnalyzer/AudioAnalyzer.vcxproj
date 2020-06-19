@@ -195,7 +195,6 @@
     <ClCompile Include="Sources\sound-processing\device-management\AudioEnumeratorWrapper.cpp" />
     <ClCompile Include="Sources\sound-processing\device-management\CaptureManager.cpp" />
     <ClCompile Include="Sources\sound-processing\device-management\DeviceManager.cpp" />
-    <ClCompile Include="Sources\sound-processing\device-management\MyWaveFormat.cpp" />
     <ClCompile Include="Sources\sound-processing\HelperClasses.cpp" />
     <ClCompile Include="Sources\sound-processing\Resampler.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\BandCascadeTransformer.cpp" />

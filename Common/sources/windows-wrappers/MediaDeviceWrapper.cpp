@@ -3,15 +3,18 @@
 #include <functiondiscoverykeys_devpkey.h>
 #include "PropertyStoreWrapper.h"
 
+const IID IID_IAudioClient = __uuidof(IAudioClient);
+
 namespace rxtd::utils {
 	MediaDeviceWrapper::DeviceInfo MediaDeviceWrapper::readDeviceInfo() {
 		if (!isValid()) {
-			return {};
+			return { };
 		}
 
 		PropertyStoreWrapper props;
-		if ((*this)->OpenPropertyStore(STGM_READ, &props) != S_OK) {
-			return {};
+		lastResult = (*this)->OpenPropertyStore(STGM_READ, &props);
+		if (lastResult != S_OK) {
+			return { };
 		}
 
 		DeviceInfo deviceInfo;
@@ -25,18 +28,34 @@ namespace rxtd::utils {
 
 	string MediaDeviceWrapper::readDeviceId() {
 		if (!isValid()) {
-			return {};
+			return { };
 		}
 
-		wchar_t *resultCString = nullptr;
-		if ((*this)->GetId(&resultCString) != S_OK) {
-			return {};
+		wchar_t* resultCString = nullptr;
+		lastResult = (*this)->GetId(&resultCString);
+		if (lastResult != S_OK) {
+			return { };
 		}
 		string id = resultCString;
 
 		CoTaskMemFree(resultCString);
 
 		return id;
+	}
+
+	IAudioClientWrapper MediaDeviceWrapper::openAudioClient() {
+		IAudioClientWrapper audioClient;
+		lastResult = (*this)->Activate(
+			IID_IAudioClient,
+			CLSCTX_ALL,
+			nullptr,
+			reinterpret_cast<void**>(&audioClient)
+		);
+		return audioClient;
+	}
+
+	index MediaDeviceWrapper::getLastResult() const {
+		return lastResult;
 	}
 
 	bool MediaDeviceWrapper::isDeviceActive() {
@@ -58,4 +77,3 @@ namespace rxtd::utils {
 		return state == DEVICE_STATE_ACTIVE;
 	}
 }
-

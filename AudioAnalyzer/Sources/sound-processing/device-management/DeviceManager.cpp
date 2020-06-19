@@ -55,7 +55,7 @@ void DeviceManager::deviceInit() {
 
 	audioDeviceHandle = std::move(deviceOpt.value());
 
-	captureManager = CaptureManager{ logger, *audioDeviceHandle.getPointer(), source == DataSource::eOUTPUT };
+	captureManager = CaptureManager{ logger, audioDeviceHandle, source == DataSource::eOUTPUT };
 
 	if (!captureManager.isValid()) {
 		if (!captureManager.isRecoverable()) {

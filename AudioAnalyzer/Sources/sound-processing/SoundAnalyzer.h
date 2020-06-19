@@ -31,8 +31,6 @@ namespace rxtd::audio_analyzer {
 		ChannelMixer channelMixer;
 		AudioChildHelper audioChildHelper;
 
-		index prevSampleRate = 0;
-
 		utils::Vector2D<float> waveBuffer;
 
 		std::map<Channel, ChannelData> channels;

@@ -39,7 +39,7 @@ namespace rxtd::utils {
 		GenericComWrapper(const GenericComWrapper& other) = delete;
 		GenericComWrapper& operator=(const GenericComWrapper& other) = delete;
 
-		~GenericComWrapper() {
+		virtual ~GenericComWrapper() {
 			release();
 		}
 
