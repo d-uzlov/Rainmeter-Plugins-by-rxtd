@@ -80,16 +80,8 @@ bool OptionList::empty() const {
 	return list.empty();
 }
 
-sview OptionList::get(index ind) const {
-	return list[ind].makeView(getView());
-}
-
-isview OptionList::getCI(index ind) const {
-	return get(ind) % ciView();
-}
-
-Option OptionList::getOption(index ind) const {
-	return Option{ list[ind].makeView(getView()) };
+Option OptionList::get(index ind) const {
+	return Option { list[ind].makeView(getView()) };
 }
 
 OptionList::iterator::iterator(const OptionList& container, index _index):
@@ -107,7 +99,7 @@ bool OptionList::iterator::operator!=(const iterator& other) const {
 }
 
 Option OptionList::iterator::operator*() const {
-	return container.getOption(ind);
+	return container.get(ind);
 }
 
 OptionList::iterator OptionList::begin() const {

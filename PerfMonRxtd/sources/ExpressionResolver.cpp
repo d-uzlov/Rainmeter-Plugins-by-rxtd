@@ -137,7 +137,7 @@ void ExpressionResolver::setExpressions(utils::OptionList expressionsList,
 	utils::OptionList rollupExpressionsList) { // TODO check count of expressions
 	expressions.resize(expressionsList.size());
 	for (index i = 0; i < expressionsList.size(); ++i) {
-		ExpressionParser parser(expressionsList.get(i));
+		ExpressionParser parser(expressionsList.get(i).asString());
 		parser.parse();
 		if (parser.isError()) {
 			log.error(L"Expression {} can't be parsed", i);
@@ -180,7 +180,7 @@ void ExpressionResolver::setExpressions(utils::OptionList expressionsList,
 
 	rollupExpressions.resize(rollupExpressionsList.size());
 	for (index i = 0; i < rollupExpressionsList.size(); ++i) {
-		ExpressionParser parser(rollupExpressionsList.get(i));
+		ExpressionParser parser(rollupExpressionsList.get(i).asString());
 		parser.parse();
 		if (parser.isError()) {
 			log.error(L"RollupExpression {} can't be parsed", i);

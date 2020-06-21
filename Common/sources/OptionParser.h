@@ -113,12 +113,8 @@ namespace rxtd::utils {
 		// Alias to "size() == 0".
 		bool empty() const;
 
-		// View of Nth option.
-		sview get(index ind) const;
-		// Case-insensitive view of Nth option.
-		isview getCI(index ind) const;
 		// Parseable view of Nth option.
-		Option getOption(index ind) const;
+		Option get(index ind) const;
 
 		class iterator {
 			const OptionList& container;

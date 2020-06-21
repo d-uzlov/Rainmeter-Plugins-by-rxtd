@@ -353,14 +353,14 @@ std::optional<std::vector<double>> BandResampler::parseFreqList(const utils::Opt
 				return std::nullopt;
 			}
 
-			const index count = options.getOption(1).asInt(0);
+			const index count = options.get(1).asInt(0);
 			if (count < 1) {
 				cl.error(L"count must be >= 1");
 				return std::nullopt;
 			}
 
-			const double min = options.getOption(2).asFloat();
-			const double max = options.getOption(3).asFloat();
+			const double min = options.get(2).asFloat();
+			const double max = options.get(3).asFloat();
 			if (min >= max) {
 				cl.error(L"min must be < max");
 				return std::nullopt;
@@ -391,7 +391,7 @@ std::optional<std::vector<double>> BandResampler::parseFreqList(const utils::Opt
 				return std::nullopt;
 			}
 			for (index i = 1; i < options.size(); ++i) {
-				freqs.push_back(options.getOption(i).asFloat());
+				freqs.push_back(options.get(i).asFloat());
 			}
 		}
 

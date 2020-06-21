@@ -141,13 +141,13 @@ PdhWrapper::PdhWrapper(utils::Rainmeter::Logger _log, const string& objectName, 
 	counterHandlers.resize(counterList.size());
 	string counterPath;
 	for (index counter = 0; counter < index(counterHandlers.size()); ++counter) {
-		counterPath = L"\\" + objectName + L"(*)" + L"\\" + string{ counterList.get(counter) };
+		counterPath = L"\\" + objectName + L"(*)" + L"\\" + string{ counterList.get(counter).asString() };
 		pdhStatus = PdhAddEnglishCounterW(query.get(), counterPath.c_str(), 0, &counterHandlers[counter]);
 		if (pdhStatus != ERROR_SUCCESS) {
 			if (pdhStatus == PDH_CSTATUS_NO_OBJECT) {
 				log.error(L"ObjectName '{}' does not exist", objectName);
 			} else if (pdhStatus == PDH_CSTATUS_NO_COUNTER) {
-				log.error(L"Counter '{}' does not exist", counterList.get(counter));
+				log.error(L"Counter '{}' does not exist", counterList.get(counter).asString());
 			} else {
 				log.error(L"PdhAddEnglishCounter failed, path='{}' status {error}", counterPath, pdhStatus);
 			}
