@@ -32,7 +32,7 @@ namespace rxtd::utils {
 
 	public:
 		TypeHolder(Rainmeter&& rain);
-		virtual ~TypeHolder();
+		virtual ~TypeHolder() = default;
 		TypeHolder(const TypeHolder& other) = delete;
 		TypeHolder(TypeHolder&& other) = delete;
 		TypeHolder& operator=(const TypeHolder& other) = delete;
@@ -61,7 +61,7 @@ namespace rxtd::utils {
 		static_assert(std::is_base_of<TypeHolder, T>::value);
 
 		// skin -> { name -> parent }
-		std::map<void*, std::map<istring, T*, std::less<>>> skinMap;
+		std::map<Rainmeter::Skin, std::map<istring, T*, std::less<>>> skinMap;
 
 	public:
 		void add(T& parent);
@@ -71,12 +71,12 @@ namespace rxtd::utils {
 
 	template <typename T>
 	void ParentManager<T>::add(T& parent) {
-		skinMap[parent.rain.getSkin().getRawPointer()][parent.rain.getMeasureName() % ciView() % own()] = &parent;
+		skinMap[parent.rain.getSkin()][parent.rain.getMeasureName() % ciView() % own()] = &parent;
 	}
 
 	template<typename T>
 	void ParentManager<T>::remove(T& parent) {
-		const auto skinIter = skinMap.find(parent.rain.getSkin().getRawPointer());
+		const auto skinIter = skinMap.find(parent.rain.getSkin());
 		if (skinIter == skinMap.end()) {
 			std::terminate();
 		}
@@ -95,7 +95,7 @@ namespace rxtd::utils {
 
 	template<typename T>
 	T* ParentManager<T>::findParent(Rainmeter::Skin skin, isview measureName) {
-		const auto skinIter = skinMap.find(skin.getRawPointer());
+		const auto skinIter = skinMap.find(skin);
 		if (skinIter == skinMap.end()) {
 			return nullptr;
 		}

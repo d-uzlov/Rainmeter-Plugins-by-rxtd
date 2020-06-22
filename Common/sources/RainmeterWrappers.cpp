@@ -59,7 +59,9 @@ void* Rainmeter::Skin::getRawPointer() const {
 	return skin;
 }
 
-Rainmeter::Rainmeter() = default;
+bool Rainmeter::Skin::operator<(Skin other) const {
+	return skin < other.skin;
+}
 
 Rainmeter::Rainmeter(void* rm) :
 	rm(rm),
@@ -67,49 +69,6 @@ Rainmeter::Rainmeter(void* rm) :
 	measureName(RmGetMeasureName(rm)),
 	logger(rm) {
 
-}
-
-Rainmeter::Rainmeter(Rainmeter&& other) noexcept :
-	rm(other.rm),
-	skin(other.skin),
-	measureName(std::move(other.measureName)),
-	logger(std::move(other.logger)) {
-	other.rm = { };
-	other.skin = { };
-}
-
-Rainmeter::Rainmeter(const Rainmeter& other) :
-	rm(other.rm),
-	skin(other.skin),
-	measureName(other.measureName),
-	logger(other.logger),
-	optionNameBuffer(other.optionNameBuffer) { }
-
-Rainmeter& Rainmeter::operator=(const Rainmeter& other) {
-	if (this == &other)
-		return *this;
-	rm = other.rm;
-	skin = other.skin;
-	measureName = other.measureName;
-	logger = other.logger;
-	optionNameBuffer = other.optionNameBuffer;
-	return *this;
-}
-
-Rainmeter& Rainmeter::operator=(Rainmeter&& other) noexcept {
-	if (this == &other)
-		return *this;
-
-	rm = other.rm;
-	other.rm = { };
-	skin = other.skin;
-	other.skin = { };
-	
-	measureName = std::move(other.measureName);
-	logger = std::move(other.logger);
-	optionNameBuffer = std::move(other.optionNameBuffer);
-
-	return *this;
 }
 
 Option Rainmeter::readOption(sview optionName) const {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -11,9 +11,6 @@
 
 #include "BufferPrinter.h"
 #include "OptionParser.h"
-
-#undef min
-#undef max
 
 namespace rxtd::utils {
 	class Rainmeter {
@@ -115,10 +112,16 @@ namespace rxtd::utils {
 		 * Used for type safety only.
 		 */
 		class Skin {
+			friend Rainmeter;
+
 			void *skin { };
 
 		public:
 			Skin() = default;
+
+			bool operator<(Skin other) const;
+
+		private:
 			explicit Skin(void* skin);
 
 			void* getRawPointer() const;
@@ -132,14 +135,14 @@ namespace rxtd::utils {
 		mutable string optionNameBuffer;
 
 	public:
-		Rainmeter();
+		Rainmeter() = default;
 		explicit Rainmeter(void *rm);
 		~Rainmeter() = default;
 
-		Rainmeter(Rainmeter&& other) noexcept;
-		Rainmeter(const Rainmeter& other);
-		Rainmeter& operator=(const Rainmeter& other);
-		Rainmeter& operator=(Rainmeter&& other) noexcept;
+		Rainmeter(const Rainmeter& other) = default;
+		Rainmeter(Rainmeter&& other) noexcept = default;
+		Rainmeter& operator=(const Rainmeter& other) = default;
+		Rainmeter& operator=(Rainmeter&& other) noexcept = default;
 
 		Option readOption(sview optionName) const;
 		sview readString(sview optionName, const wchar_t* defaultValue = L"") const;
