@@ -58,10 +58,6 @@ PerfmonParent* PerfmonParent::findInstance(utils::Rainmeter::Skin skin, isview m
 }
 
 void PerfmonParent::_reload() {
-	if (getState() == utils::MeasureState::eBROKEN) {
-		return;
-	}
-
 	needUpdate = true;
 
 	instanceManager.setSortIndex(rain.read(L"SortIndex").asInt<counter_t>());

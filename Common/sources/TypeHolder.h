@@ -105,6 +105,12 @@ namespace rxtd::utils {
 		if (measureIter == measuresMap.end()) {
 			return nullptr;
 		}
-		return measureIter->second;
+
+		auto result = measureIter->second;
+		if (result->getState() == MeasureState::eBROKEN) {
+			return nullptr;
+		}
+
+		return result;
 	}
 }

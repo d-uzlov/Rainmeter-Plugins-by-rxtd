@@ -25,13 +25,7 @@ AudioChild::AudioChild(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rain)) 
 	parent = AudioParent::findInstance(rain.getSkin(), parentName);
 
 	if (parent == nullptr) {
-		logger.error(L"Parent '{}' not found", parentName);
-		setMeasureState(utils::MeasureState::eBROKEN);
-		return;
-	}
-
-	if (parent->getState() == utils::MeasureState::eBROKEN) {
-		logger.error(L"Parent '{}' is broken", parentName);
+		logger.error(L"Parent '{}' is not found or broken", parentName);
 		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
 	}

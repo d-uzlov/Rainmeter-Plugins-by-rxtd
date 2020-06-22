@@ -28,17 +28,9 @@ PerfmonChild::PerfmonChild(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rai
 		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
 	}
-
-	if (parent->getState() == utils::MeasureState::eBROKEN) {
-		logger.error(L"Parent '{}' is broken", parentName);
-		setMeasureState(utils::MeasureState::eBROKEN);
-		return;
-	}
 }
 
 void PerfmonChild::_reload() {
-	setMeasureState(utils::MeasureState::eWORKING);
-
 	instanceIndex = rain.read(L"InstanceIndex").asInt<item_t>();
 	ref.counter = rain.read(L"CounterIndex").asInt<counter_t>();
 	ref.useOrigName = rain.read(L"SearchOriginalName").asBool();
