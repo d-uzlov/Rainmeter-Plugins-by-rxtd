@@ -65,6 +65,7 @@ namespace rxtd::audio_analyzer {
 		DeviceManager& operator=(const DeviceManager& other) = delete;
 		DeviceManager& operator=(DeviceManager&& other) = delete;
 
+		utils::MediaDeviceType getCurrentDeviceType() const;
 		State getState() const;
 
 		void setOptions(DataSource port, sview deviceID);
@@ -75,10 +76,9 @@ namespace rxtd::audio_analyzer {
 
 		void checkAndRepair();
 
-		void updateDeviceList();
-
 		CaptureManager& getCaptureManager();
 		const CaptureManager& getCaptureManager() const;
+		AudioEnumeratorHelper& getDeviceEnumerator();
 		const AudioEnumeratorHelper& getDeviceEnumerator() const;
 
 	private:

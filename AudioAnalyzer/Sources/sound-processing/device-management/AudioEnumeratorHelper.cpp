@@ -91,16 +91,19 @@ namespace rxtd::audio_analyzer {
 	}
 
 	const string& AudioEnumeratorHelper::getDeviceListLegacy() const {
-		return deviceListLegacy;
+		return deviceStringLegacy;
 	}
 
-	const string& AudioEnumeratorHelper::getActiveDeviceList() const {
-		return deviceListActive;
+	const string& AudioEnumeratorHelper::getDeviceListInput() const {
+		return deviceStringInput;
 	}
 
-	void AudioEnumeratorHelper::updateActiveDeviceList(utils::MediaDeviceType type) {
-		deviceListLegacy.clear();
-		deviceListActive.clear();
+	const string& AudioEnumeratorHelper::getDeviceListOutput() const {
+		return deviceStringOutput;
+	}
+
+	void AudioEnumeratorHelper::updateDeviceStringLegacy(utils::MediaDeviceType type) {
+		deviceStringLegacy.clear();
 
 		auto collection = enumeratorWrapper.enumerateActiveDevices(type);
 		if (collection.getLastResult() != S_OK) {
@@ -111,29 +114,56 @@ namespace rxtd::audio_analyzer {
 
 		const auto devicesCount = collection.getDevicesCount();
 
-		deviceListLegacy.reserve(devicesCount * 120);
-		deviceListActive.reserve(devicesCount * 120);
+		deviceStringLegacy.reserve(devicesCount * 120);
 
 		for (index deviceIndex = 0; deviceIndex < devicesCount; ++deviceIndex) {
 			utils::MediaDeviceWrapper device  = collection.get(deviceIndex);
 
 			const auto deviceInfo = device.readDeviceInfo();
 
-			deviceListLegacy += deviceInfo.id;
-			deviceListLegacy += L" "sv;
-			deviceListLegacy += deviceInfo.fullFriendlyName;
-			deviceListLegacy += L"\n"sv;
-
-			deviceListActive += deviceInfo.id;
-			deviceListActive += L";"sv;
-			deviceListActive += deviceInfo.desc;
-			deviceListActive += L";"sv;
-			deviceListActive += deviceInfo.name;
-			deviceListActive += L"\n"sv;
+			deviceStringLegacy += deviceInfo.id;
+			deviceStringLegacy += L" "sv;
+			deviceStringLegacy += deviceInfo.fullFriendlyName;
+			deviceStringLegacy += L"\n"sv;
 		}
 
-		deviceListLegacy.resize(deviceListLegacy.size() - 1);
-		deviceListActive.resize(deviceListActive.size() - 1);
+		deviceStringLegacy.resize(deviceStringLegacy.size() - 1);
+	}
+
+	void AudioEnumeratorHelper::updateDeviceStrings() {
+		deviceStringInput = makeDeviceString(utils::MediaDeviceType::eINPUT);
+		deviceStringOutput = makeDeviceString(utils::MediaDeviceType::eOUTPUT);
+	}
+
+	string AudioEnumeratorHelper::makeDeviceString(utils::MediaDeviceType type) {
+		auto collection = enumeratorWrapper.enumerateActiveDevices(type);
+		if (collection.getLastResult() != S_OK) {
+			logger.error(L"Can't read audio device list: EnumAudioEndpoints() failed, error code {}", collection.getLastResult());
+			valid = false;
+			return { };
+		}
+
+		const auto devicesCount = collection.getDevicesCount();
+
+		string result;
+		result.reserve(devicesCount * 120);
+
+		for (index deviceIndex = 0; deviceIndex < devicesCount; ++deviceIndex) {
+			utils::MediaDeviceWrapper device = collection.get(deviceIndex);
+
+			const auto deviceInfo = device.readDeviceInfo();
+
+			result += deviceInfo.id;
+			result += L";"sv;
+			result += deviceInfo.desc;
+			result += L";"sv;
+			result += deviceInfo.name;
+			result += L"\n"sv;
+		}
+
+		result.resize(result.size() - 1);
+
+		return result;
 	}
 
 	void AudioEnumeratorHelper::updateDeviceLists() {
@@ -157,6 +187,7 @@ namespace rxtd::audio_analyzer {
 			utils::MediaDeviceWrapper device = collection.get(deviceIndex);
 
 			const auto id = device.readDeviceId();
+
 			list.insert(id);
 		}
 

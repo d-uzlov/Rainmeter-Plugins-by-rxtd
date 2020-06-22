@@ -28,8 +28,9 @@ namespace rxtd::audio_analyzer {
 		std::set<string> inputDevices;
 		std::set<string> outputDevices;
 
-		string deviceListLegacy;
-		string deviceListActive;
+		string deviceStringLegacy;
+		string deviceStringInput;
+		string deviceStringOutput;
 
 	public:
 		AudioEnumeratorHelper(utils::Rainmeter::Logger& logger);
@@ -42,9 +43,11 @@ namespace rxtd::audio_analyzer {
 
 		std::optional<utils::MediaDeviceType> getDeviceType(const string& deviceID);
 		const string& getDeviceListLegacy() const;
-		const string& getActiveDeviceList() const;
-		// TODO make 2 lists for input and output devices
-		void updateActiveDeviceList(utils::MediaDeviceType type);
+		const string& getDeviceListInput() const;
+		const string& getDeviceListOutput() const;
+		void updateDeviceStringLegacy(utils::MediaDeviceType type);
+		void updateDeviceStrings();
+		string makeDeviceString(utils::MediaDeviceType type);
 
 	private:
 		void updateDeviceLists();

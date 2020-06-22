@@ -111,7 +111,8 @@ std::tuple<double, const wchar_t*> AudioParent::_update() {
 void AudioParent::_command(const wchar_t* bangArgs) {
 	const isview command = bangArgs;
 	if (command == L"updateDevList") {
-		deviceManager.updateDeviceList();
+		deviceManager.getDeviceEnumerator().updateDeviceStringLegacy(deviceManager.getCurrentDeviceType());
+		deviceManager.getDeviceEnumerator().updateDeviceStrings();
 		return;
 	}
 
@@ -182,6 +183,15 @@ const wchar_t* AudioParent::_resolve(int argc, const wchar_t* argv[]) {
 		if (deviceProperty == L"status string") {
 			return deviceManager.getDeviceStatus() ? L"active" : L"down";
 		}
+		if (deviceProperty == L"type") {
+			switch(deviceManager.getCurrentDeviceType()) {
+			case utils::MediaDeviceType::eINPUT:
+				return L"input";
+			case utils::MediaDeviceType::eOUTPUT:
+				return L"output";
+			default: ;
+			}
+		}
 		if (deviceProperty == L"name") {
 			return deviceManager.getDeviceInfo().fullFriendlyName.c_str();
 		}
@@ -205,8 +215,11 @@ const wchar_t* AudioParent::_resolve(int argc, const wchar_t* argv[]) {
 	if (optionName == L"device list") {
 		return deviceManager.getDeviceEnumerator().getDeviceListLegacy().c_str();
 	}
-	if (optionName == L"active device list") {
-		return deviceManager.getDeviceEnumerator().getActiveDeviceList().c_str();
+	if (optionName == L"device list input") {
+		return deviceManager.getDeviceEnumerator().getDeviceListInput().c_str();
+	}
+	if (optionName == L"device list output") {
+		return deviceManager.getDeviceEnumerator().getDeviceListOutput().c_str();
 	}
 
 	logger.error(L"Invalid section variable resolve: '{}' not supported", argv[0]);

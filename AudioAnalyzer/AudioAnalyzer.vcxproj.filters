@@ -99,9 +99,6 @@
     <ClInclude Include="Sources\sound-processing\device-management\CaptureManager.h">
       <Filter>Source Files\sound-processing\device-management</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\device-management\AudioEnumeratorWrapper.h">
-      <Filter>Source Files\sound-processing\device-management</Filter>
-    </ClInclude>
     <ClInclude Include="Sources\sound-processing\device-management\DataSource.h">
       <Filter>Source Files\sound-processing\device-management</Filter>
     </ClInclude>
@@ -116,6 +113,9 @@
     </ClInclude>
     <ClInclude Include="Sources\sound-processing\HelperClasses.h">
       <Filter>Source Files\sound-processing</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\sound-processing\device-management\AudioEnumeratorHelper.h">
+      <Filter>Source Files\sound-processing\device-management</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -179,9 +179,6 @@
     <ClCompile Include="Sources\sound-processing\device-management\CaptureManager.cpp">
       <Filter>Source Files\sound-processing\device-management</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\sound-processing\device-management\AudioEnumeratorWrapper.cpp">
-      <Filter>Source Files\sound-processing\device-management</Filter>
-    </ClCompile>
     <ClCompile Include="Sources\sound-processing\Resampler.cpp">
       <Filter>Source Files\sound-processing</Filter>
     </ClCompile>
@@ -196,6 +193,9 @@
     </ClCompile>
     <ClCompile Include="Sources\dllmain.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\sound-processing\device-management\AudioEnumeratorHelper.cpp">
+      <Filter>Source Files\sound-processing\device-management</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

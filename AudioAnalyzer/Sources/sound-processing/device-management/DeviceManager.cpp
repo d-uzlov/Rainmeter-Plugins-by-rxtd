@@ -94,6 +94,10 @@ void DeviceManager::readDeviceInfo() {
 	deviceInfo = audioDeviceHandle.readDeviceInfo();
 }
 
+utils::MediaDeviceType DeviceManager::getCurrentDeviceType() const {
+	return sourceType;
+}
+
 DeviceManager::State DeviceManager::getState() const {
 	return state;
 }
@@ -152,16 +156,16 @@ void DeviceManager::checkAndRepair() {
 	deviceInit();
 }
 
-void DeviceManager::updateDeviceList() {
-	enumerator.updateActiveDeviceList(sourceType);
-}
-
 CaptureManager& DeviceManager::getCaptureManager() {
 	return captureManager;
 }
 
 const CaptureManager& DeviceManager::getCaptureManager() const {
 	return captureManager;
+}
+
+AudioEnumeratorHelper& DeviceManager::getDeviceEnumerator() {
+	return enumerator;
 }
 
 const AudioEnumeratorHelper& DeviceManager::getDeviceEnumerator() const {
