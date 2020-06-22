@@ -4,6 +4,7 @@
 #include <Audioclient.h>
 #include "IAudioCaptureClientWrapper.h"
 #include "WaveFormat.h"
+#include "MediaDeviceType.h"
 
 namespace rxtd::utils {
 
@@ -11,12 +12,16 @@ namespace rxtd::utils {
 	private:
 		index lastResult = { };
 		WaveFormat format;
+		MediaDeviceType type { };
 
 	public:
+		IAudioClientWrapper() = default;
+		explicit IAudioClientWrapper(MediaDeviceType type);
+
 		IAudioCaptureClientWrapper openCapture();
 
 		WaveFormat getFormat() const;
-		void initShared(bool loopback);
+		void initShared();
 
 		index getLastResult() const;
 	};

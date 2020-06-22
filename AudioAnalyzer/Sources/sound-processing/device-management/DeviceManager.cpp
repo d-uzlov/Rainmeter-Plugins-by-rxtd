@@ -11,8 +11,6 @@
 
 #include <utility>
 
-#include "windows-wrappers/GenericComWrapper.h"
-
 #include "undef.h"
 
 
@@ -46,7 +44,21 @@ void DeviceManager::deviceInit() {
 	lastDevicePollTime = clock::now();
 	state = State::eOK;
 
-	auto deviceOpt = deviceID.empty() ? enumerator.getDefaultDevice(source) : enumerator.getDevice(deviceID);
+	std::optional<utils::MediaDeviceWrapper> deviceOpt;
+	switch(source) {
+	case DataSource::eDEFAULT_INPUT:
+		deviceOpt = enumerator.getDefaultDevice(utils::MediaDeviceType::eINPUT);
+		break;
+
+	case DataSource::eDEFAULT_OUTPUT: 
+		deviceOpt = enumerator.getDefaultDevice(utils::MediaDeviceType::eOUTPUT);
+		break;
+
+	case DataSource::eID:
+		deviceOpt = enumerator.getDevice(deviceID);
+		break;
+	default: ;
+	}
 
 	if (!deviceOpt) {
 		deviceRelease();
@@ -55,7 +67,7 @@ void DeviceManager::deviceInit() {
 
 	audioDeviceHandle = std::move(deviceOpt.value());
 
-	captureManager = CaptureManager{ logger, audioDeviceHandle, source == DataSource::eOUTPUT };
+	captureManager = CaptureManager{ logger, audioDeviceHandle };
 
 	if (!captureManager.isValid()) {
 		if (!captureManager.isRecoverable()) {
@@ -89,27 +101,17 @@ DeviceManager::State DeviceManager::getState() const {
 void DeviceManager::setOptions(DataSource source, sview deviceID) {
 	// TODO this depends on function call order with deviceInit()
 
-	if (this->deviceID == deviceID) {
-		if (!deviceID.empty()) {
-			return; // nothing has changed
-		}
-
-		// new ID is empty, new source is either input or output
-		if (this->source == source) {
-			return;
-		}
+	if (this->deviceID == deviceID && this->source == source) {
+		return;
 	}
 
 	state = State::eERROR_AUTO;
 
 	this->deviceID = deviceID;
-	this->source = determineDeviceType(source);
+	this->source = source;
+	sourceType = determineDeviceType(source, this->deviceID);
 
 	deviceInit();
-}
-
-CaptureManager::BufferFetchResult DeviceManager::nextBuffer() {
-	return captureManager.nextBuffer();
 }
 
 const utils::MediaDeviceWrapper::DeviceInfo& DeviceManager::getDeviceInfo() const {
@@ -151,7 +153,11 @@ void DeviceManager::checkAndRepair() {
 }
 
 void DeviceManager::updateDeviceList() {
-	enumerator.updateActiveDeviceList(source);
+	enumerator.updateActiveDeviceList(sourceType);
+}
+
+CaptureManager& DeviceManager::getCaptureManager() {
+	return captureManager;
 }
 
 const CaptureManager& DeviceManager::getCaptureManager() const {
@@ -163,32 +169,29 @@ const AudioEnumeratorWrapper& DeviceManager::getDeviceEnumerator() const {
 }
 
 bool DeviceManager::isDeviceChanged() {
-	if (!deviceID.empty()) {
+	if (source == DataSource::eID) {
 		return false; // only default device can change
 	}
 
-	const auto defaultDeviceId = enumerator.getDefaultDeviceId(source);
+	const auto defaultDeviceId = enumerator.getDefaultDeviceId(sourceType);
 
 	return defaultDeviceId != deviceInfo.id;
 }
 
-DataSource DeviceManager::determineDeviceType(DataSource source) {
-	if (source == DataSource::eINPUT || source == DataSource::eOUTPUT) {
-		return source;
+utils::MediaDeviceType DeviceManager::determineDeviceType(DataSource source, const string& deviceID) {
+	if (source == DataSource::eDEFAULT_INPUT) {
+		return utils::MediaDeviceType::eINPUT;
 	}
-	// eID
-
-	const bool isOutputDevice = enumerator.isOutputDevice(deviceID);
-	if (isOutputDevice) {
-		return DataSource::eOUTPUT;
+	if (source == DataSource::eDEFAULT_OUTPUT) {
+		return utils::MediaDeviceType::eOUTPUT;
 	}
 
-	const bool isInputDevice = enumerator.isInputDevice(deviceID);
-	if (isInputDevice) {
-		return DataSource::eINPUT;
+	auto typeOpt = enumerator.getDeviceType(deviceID);
+	if (!typeOpt.has_value()) {
+		state = State::eERROR_MANUAL;
+		logger.error(L"Device with id '{}' not found", deviceID);
+		return { };
 	}
 
-	state = State::eERROR_MANUAL;
-	logger.error(L"Device with id '{}' not found", deviceID);
-	return DataSource::eINVALID;
+	return typeOpt.value();
 }

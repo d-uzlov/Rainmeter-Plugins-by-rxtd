@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -9,13 +9,11 @@
 
 #include "CaptureManager.h"
 
-#include <cassert>
-
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
 
 namespace rxtd::audio_analyzer {
-	CaptureManager::CaptureManager(utils::Rainmeter::Logger& logger, utils::MediaDeviceWrapper& audioDeviceHandle, bool loopback) : logger(&logger) {
+	CaptureManager::CaptureManager(utils::Rainmeter::Logger& logger, utils::MediaDeviceWrapper& audioDeviceHandle) : logger(&logger) {
 		audioClient = audioDeviceHandle.openAudioClient();
 		if (audioDeviceHandle.getLastResult() != S_OK) {
 			valid = false;
@@ -23,7 +21,7 @@ namespace rxtd::audio_analyzer {
 			return;
 		}
 
-		audioClient.initShared(loopback);
+		audioClient.initShared();
 		if (audioClient.getLastResult() != S_OK) {
 			if (audioClient.getLastResult() == AUDCLNT_E_DEVICE_IN_USE) {
 				// If device is in exclusive mode, then call to Initialize() above leads to leak in Commit memory area
@@ -96,44 +94,45 @@ namespace rxtd::audio_analyzer {
 		return recoverable;
 	}
 
-	CaptureManager::BufferFetchResult CaptureManager::nextBuffer() {
+	void CaptureManager::capture(const std::function<void(bool silent, const uint8_t* buffer, uint32_t size)>& processingCallback, index maxLoop) {
 		if (!isValid()) {
-			return BufferFetchResult::deviceError();
+			return;
 		}
 
-		auto buffer = audioCaptureClient.readBuffer();
+		for (int i = 0; i < maxLoop; ++i) {
+			const auto buffer = audioCaptureClient.readBuffer();
 
-		const auto queryResult = audioCaptureClient.getLastResult();
-		const auto now = clock::now();
+			const auto queryResult = audioCaptureClient.getLastResult();
+			const auto now = clock::now();
 
-		switch (queryResult) {
-		case S_OK:
-			lastBufferFillTime = now;
+			switch (queryResult) {
+			case S_OK:
+				lastBufferFillTime = now;
 
-			return buffer;
+				processingCallback(buffer.isSilent(), buffer.getBuffer(), buffer.getSize());
+				break;
 
-		case AUDCLNT_S_BUFFER_EMPTY:
-			// Windows bug: sometimes when shutting down a playback application, it doesn't zero
-			// out the buffer.  Detect this by checking the time since the last successful fill
-			// and resetting the volumes if past the threshold.
-			// rxtd: I don't really understand this. I can't reproduce this and I don't know if this workaround do anything useful
-			if (now - lastBufferFillTime >= EMPTY_TIMEOUT) {
-				logger->error(L"timeout {}", (now - lastBufferFillTime).count());
-				return BufferFetchResult::deviceError();
+			case AUDCLNT_S_BUFFER_EMPTY:
+				// Windows bug: sometimes when shutting down a playback application, it doesn't zero out the buffer.
+				// rxtd: I don't really understand this. I can't reproduce this and I don't know if this workaround do anything useful
+				if (now - lastBufferFillTime >= EMPTY_TIMEOUT) {
+					logger->error(L"timeout {}", (now - lastBufferFillTime).count());
+					invalidate();
+				}
+				return;
+
+			case AUDCLNT_E_BUFFER_ERROR:
+			case AUDCLNT_E_DEVICE_INVALIDATED:
+			case AUDCLNT_E_SERVICE_NOT_RUNNING:
+				logger->debug(L"Audio device disconnected");
+				invalidate();
+				return;
+
+			default:
+				logger->warning(L"Unexpected buffer query error code {error}", queryResult);
+				invalidate();
+				return;
 			}
-			return BufferFetchResult::noData();
-
-		case AUDCLNT_E_BUFFER_ERROR:
-		case AUDCLNT_E_DEVICE_INVALIDATED:
-		case AUDCLNT_E_SERVICE_NOT_RUNNING:
-			logger->debug(L"Audio device disconnected");
-			invalidate();
-			return BufferFetchResult::deviceError();
-
-		default:
-			logger->warning(L"Unexpected buffer query error code {error}", queryResult);
-			invalidate();
-			return BufferFetchResult::deviceError();
 		}
 	}
 

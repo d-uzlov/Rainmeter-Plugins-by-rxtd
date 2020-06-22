@@ -45,9 +45,9 @@ void AudioParent::_reload() {
 	string id = { };
 	DataSource sourceEnum;
 	if (source == L"" || source == L"Output") {
-		sourceEnum = DataSource::eOUTPUT;
+		sourceEnum = DataSource::eDEFAULT_OUTPUT;
 	} else if (source == L"Input") {
-		sourceEnum = DataSource::eINPUT;
+		sourceEnum = DataSource::eDEFAULT_INPUT;
 	} else {
 		logger.debug(L"Using '{}' as source audio device ID.", source);
 		sourceEnum = DataSource::eID;
@@ -62,12 +62,12 @@ void AudioParent::_reload() {
 
 	} else if (const auto port = this->rain.readString(L"Port") % ciView(); !port.empty()) {
 		if (port == L"Output") {
-			sourceEnum = DataSource::eOUTPUT;
+			sourceEnum = DataSource::eDEFAULT_OUTPUT;
 		} else if (port == L"Input") {
-			sourceEnum = DataSource::eINPUT;
+			sourceEnum = DataSource::eDEFAULT_INPUT;
 		} else {
 			logger.error(L"Invalid Port '{}', must be one of: Output, Input. Set to Output.", port);
-			sourceEnum = DataSource::eOUTPUT;
+			sourceEnum = DataSource::eDEFAULT_OUTPUT;
 		}
 	}
 
@@ -88,7 +88,7 @@ void AudioParent::_reload() {
 
 std::tuple<double, const wchar_t*> AudioParent::_update() {
 	// TODO make an option for this value?
-	constexpr index maxBuffers = 15;
+	constexpr index maxLoop = 15;
 
 	deviceManager.checkAndRepair();
 	if (deviceManager.getState() != DeviceManager::State::eOK) {
@@ -96,39 +96,12 @@ std::tuple<double, const wchar_t*> AudioParent::_update() {
 			setMeasureState(utils::MeasureState::eBROKEN);
 			logger.error(L"Unrecoverable error");
 		}
-		goto loop_end;
+		soundAnalyzer.resetValues();
+	} else {
+		deviceManager.getCaptureManager().capture([&](bool silent, const uint8_t* buffer, uint32_t size) {
+			soundAnalyzer.process(buffer, silent, size);
+		}, maxLoop);
 	}
-
-	for (index i = 0; i < maxBuffers; ++i) {
-		const auto fetchResult = deviceManager.nextBuffer();
-		switch (fetchResult.getState()) {
-		case CaptureManager::BufferFetchState::eOK: {
-			auto& bufferWrapper = fetchResult.getBuffer();
-
-			soundAnalyzer.process(bufferWrapper.buffer, bufferWrapper.silent, bufferWrapper.framesCount);
-			break;
-		}
-
-		case CaptureManager::BufferFetchState::eNO_DATA:
-			goto loop_end;
-
-		case CaptureManager::BufferFetchState::eDEVICE_ERROR:
-			soundAnalyzer.resetValues();
-			goto loop_end;
-
-		case CaptureManager::BufferFetchState::eINVALID_STATE:
-			soundAnalyzer.resetValues();
-			logger.error(L"Unrecoverable error");
-			setMeasureState(utils::MeasureState::eBROKEN);
-			goto loop_end;
-
-		default:
-			logger.error(L"Unexpected BufferFetchState {}", fetchResult.getState());
-			setMeasureState(utils::MeasureState::eBROKEN);
-			goto loop_end;
-		}
-	}
-loop_end:
 
 	soundAnalyzer.finishStandalone();
 

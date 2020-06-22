@@ -7,38 +7,30 @@ namespace rxtd::utils {
 
 	// static_assert(std::is_same<DWORD, uint32_t>::value); // ...
 
-
-	IAudioCaptureClientWrapper::~IAudioCaptureClientWrapper() {
-		releaseBuffer();
-	}
-
 	AudioBuffer IAudioCaptureClientWrapper::readBuffer() {
-
-		releaseBuffer();
+		releaseBuffer(lastBufferID);
+		lastBufferID++;
 
 		uint8_t* buffer = nullptr;
-		uint32_t framesCount { };
 
 		DWORD flags { };
-		lastResult = (*this)->GetBuffer(&buffer, &framesCount, &flags, nullptr, nullptr);
+		lastResult = (*this)->GetBuffer(&buffer, &lastBufferSize, &flags, nullptr, nullptr);
 		const bool silent = (flags & AUDCLNT_BUFFERFLAGS_SILENT) != 0;
 
-		lastBuffer = { buffer, framesCount, silent };
-
-		return lastBuffer;
+		return AudioBuffer { *this, lastBufferID, silent, buffer, lastBufferSize };
 	}
 
 	index IAudioCaptureClientWrapper::getLastResult() const {
 		return lastResult;
 	}
 
-	void IAudioCaptureClientWrapper::releaseBuffer() {
-		if (!isValid()) {
+	void IAudioCaptureClientWrapper::releaseBuffer(const index id) {
+		if (id != lastBufferID || lastBufferSize == 0 || !isValid()) {
 			return;
 		}
 
-		(*this)->ReleaseBuffer(lastBuffer.framesCount);
-		lastBuffer = { };
+		(*this)->ReleaseBuffer(lastBufferSize);
+		lastBufferSize = 0;
 	}
 }
 

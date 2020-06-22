@@ -12,7 +12,6 @@
 #include "windows-wrappers/GenericComWrapper.h"
 #include <mmdeviceapi.h>
 #include "RainmeterWrappers.h"
-#include "DataSource.h"
 #include "windows-wrappers/MediaDeviceWrapper.h"
 #include <set>
 
@@ -39,17 +38,17 @@ namespace rxtd::audio_analyzer {
 		bool isValid() const;
 
 		std::optional<utils::MediaDeviceWrapper> getDevice(const string& deviceID);
-		std::optional<utils::MediaDeviceWrapper> getDefaultDevice(DataSource port);
-		string getDefaultDeviceId(DataSource port);
+		std::optional<utils::MediaDeviceWrapper> getDefaultDevice(utils::MediaDeviceType port);
+		string getDefaultDeviceId(utils::MediaDeviceType port);
 
+		std::optional<utils::MediaDeviceType> getDeviceType(const string& deviceID);
 		const string& getDeviceListLegacy() const;
 		const string& getActiveDeviceList() const;
-		void updateActiveDeviceList(DataSource port);
-
-		bool isInputDevice(const string& id); // yes, these need to be string& and not sview
-		bool isOutputDevice(const string& id);
+		// TODO make 2 lists for input and output devices
+		void updateActiveDeviceList(utils::MediaDeviceType port);
 
 	private:
-		std::set<string> readDeviceList(DataSource port);
+		void updateDeviceLists();
+		std::set<string> readDeviceList(utils::MediaDeviceType port);
 	};
 }

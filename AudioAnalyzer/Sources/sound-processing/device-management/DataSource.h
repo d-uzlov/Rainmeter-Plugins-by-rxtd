@@ -11,10 +11,9 @@
 
 namespace rxtd::audio_analyzer {
 	enum class DataSource {
-		eINPUT,
-		eOUTPUT,
+		eDEFAULT_INPUT,
+		eDEFAULT_OUTPUT,
 		eID,
-		eINVALID,
 	};
 }
 

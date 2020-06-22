@@ -6,6 +6,8 @@ static constexpr long long REF_TIMES_PER_SEC = 1000'000'0; // 1 sec in 100-ns un
 
 namespace rxtd::utils {
 
+	IAudioClientWrapper::IAudioClientWrapper(MediaDeviceType type): type(type) { }
+
 	IAudioCaptureClientWrapper IAudioClientWrapper::openCapture() {
 		IAudioCaptureClientWrapper audioCaptureClient;
 		lastResult = (*this)->GetService(IID_IAudioCaptureClient, reinterpret_cast<void**>(&audioCaptureClient));;
@@ -16,7 +18,7 @@ namespace rxtd::utils {
 		return format;
 	}
 
-	void IAudioClientWrapper::initShared(bool loopback) {
+	void IAudioClientWrapper::initShared() {
 		WAVEFORMATEX* waveFormat;
 		lastResult = (*this)->GetMixFormat(&waveFormat);
 		switch (lastResult) {
@@ -27,6 +29,7 @@ namespace rxtd::utils {
 		default:;
 		}
 
+		const bool loopback = type == MediaDeviceType::eOUTPUT;
 		lastResult = (*this)->Initialize(
 			AUDCLNT_SHAREMODE_SHARED,
 			loopback ? AUDCLNT_STREAMFLAGS_LOOPBACK : 0,

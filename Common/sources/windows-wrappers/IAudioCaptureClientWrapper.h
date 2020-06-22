@@ -6,22 +6,20 @@
 
 namespace rxtd::utils {
 	class IAudioCaptureClientWrapper : public GenericComWrapper<IAudioCaptureClient> {
-	private:
-		AudioBuffer lastBuffer { };
-		index lastResult = { };
+		friend AudioBuffer;
+
+		index lastBufferID = 0;
+		uint32_t lastBufferSize { };
+		index lastResult { };
+
 
 	public:
-		IAudioCaptureClientWrapper() = default;
-		IAudioCaptureClientWrapper(IAudioCaptureClientWrapper&& other) noexcept = default;
-		IAudioCaptureClientWrapper& operator=(IAudioCaptureClientWrapper&& other) noexcept = default;
-		IAudioCaptureClientWrapper(const IAudioCaptureClientWrapper& other) = delete;
-		IAudioCaptureClientWrapper& operator=(const IAudioCaptureClientWrapper& other) = delete;
-		~IAudioCaptureClientWrapper();
-
+		// Be careful, call to this function invalidates all previous buffers
 		AudioBuffer readBuffer();
 
 		index getLastResult() const;
 
-		void releaseBuffer();
+	private:
+		void releaseBuffer(index id);
 	};
 }

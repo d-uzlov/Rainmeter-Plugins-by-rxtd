@@ -39,7 +39,8 @@ namespace rxtd::audio_analyzer {
 
 		utils::Rainmeter::Logger& logger;
 
-		DataSource source = DataSource::eINVALID;
+		DataSource source { };
+		utils::MediaDeviceType sourceType { };
 		string deviceID;
 
 		mutable utils::MediaDeviceWrapper audioDeviceHandle { };
@@ -68,7 +69,6 @@ namespace rxtd::audio_analyzer {
 
 		void setOptions(DataSource port, sview deviceID);
 		void deviceInit();
-		CaptureManager::BufferFetchResult nextBuffer();
 
 		const utils::MediaDeviceWrapper::DeviceInfo& getDeviceInfo() const;
 		bool getDeviceStatus() const;
@@ -77,13 +77,14 @@ namespace rxtd::audio_analyzer {
 
 		void updateDeviceList();
 
+		CaptureManager& getCaptureManager();
 		const CaptureManager& getCaptureManager() const;
 		const AudioEnumeratorWrapper& getDeviceEnumerator() const;
 
 	private:
 		bool isDeviceChanged();
 
-		DataSource determineDeviceType(DataSource source);
+		utils::MediaDeviceType determineDeviceType(DataSource source, const string& deviceID);
 
 		void readDeviceInfo();
 

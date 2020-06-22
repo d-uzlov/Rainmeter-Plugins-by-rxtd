@@ -6,6 +6,9 @@
 const IID IID_IAudioClient = __uuidof(IAudioClient);
 
 namespace rxtd::utils {
+	MediaDeviceWrapper::MediaDeviceWrapper(MediaDeviceType type): type(type) {
+	}
+
 	MediaDeviceWrapper::DeviceInfo MediaDeviceWrapper::readDeviceInfo() {
 		if (!isValid()) {
 			return { };
@@ -44,7 +47,7 @@ namespace rxtd::utils {
 	}
 
 	IAudioClientWrapper MediaDeviceWrapper::openAudioClient() {
-		IAudioClientWrapper audioClient;
+		IAudioClientWrapper audioClient { type };
 		lastResult = (*this)->Activate(
 			IID_IAudioClient,
 			CLSCTX_ALL,
@@ -56,6 +59,10 @@ namespace rxtd::utils {
 
 	index MediaDeviceWrapper::getLastResult() const {
 		return lastResult;
+	}
+
+	MediaDeviceType MediaDeviceWrapper::getType() const {
+		return type;
 	}
 
 	bool MediaDeviceWrapper::isDeviceActive() {
