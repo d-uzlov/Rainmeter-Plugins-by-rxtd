@@ -159,7 +159,7 @@
     <ClCompile Include="sources\PerfmonParent.cpp" />
     <ClCompile Include="sources\pdh\PdhWrapper.cpp" />
     <ClCompile Include="sources\pdh\NamesManager.cpp" />
-    <ClCompile Include="sources\PerfMonRXTD.cpp" />
+    <ClCompile Include="sources\dllmain.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="local-version.h" />

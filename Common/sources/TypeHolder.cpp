@@ -17,7 +17,7 @@ TypeHolder::TypeHolder(Rainmeter&& rain) : rain(std::move(rain)), logger(this->r
 
 }
 
-void TypeHolder::_command(const wchar_t* bangArgs) {
+void TypeHolder::_command(isview  bangArgs) {
 	logger.warning(L"Measure does not have commands");
 }
 

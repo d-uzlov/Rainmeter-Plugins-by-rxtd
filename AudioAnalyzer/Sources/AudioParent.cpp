@@ -109,15 +109,14 @@ std::tuple<double, const wchar_t*> AudioParent::_update() {
 	return std::make_tuple(deviceManager.getDeviceStatus(), nullptr);
 }
 
-void AudioParent::_command(const wchar_t* bangArgs) {
-	const isview command = bangArgs;
-	if (command == L"updateDevList") {
+void AudioParent::_command(isview bangArgs) {
+	if (bangArgs == L"updateDevList") {
 		deviceManager.getDeviceEnumerator().updateDeviceStringLegacy(deviceManager.getCurrentDeviceType());
 		deviceManager.getDeviceEnumerator().updateDeviceStrings();
 		return;
 	}
 
-	logger.error(L"unknown command '{}'", command);
+	logger.error(L"unknown command '{}'", bangArgs);
 }
 
 const wchar_t* AudioParent::_resolve(int argc, const wchar_t* argv[]) {

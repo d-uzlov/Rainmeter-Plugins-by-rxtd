@@ -7,43 +7,17 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include "RainmeterAPI.h"
-
 #include "LocalPluginLoader.h"
 #include "StringUtils.h"
 
 #include "undef.h"
 
-PLUGIN_EXPORT void Initialize(void** data, void* rm) {
-	*data = new LocalPluginLoader(rm);
-}
-PLUGIN_EXPORT void Reload(void* data, void* rm, double* maxValue) {
-	static_cast<LocalPluginLoader*>(data)->reload(maxValue);
-}
-PLUGIN_EXPORT double Update(void* data) {
-	return static_cast<LocalPluginLoader*>(data)->update();
-}
-PLUGIN_EXPORT LPCWSTR GetString(void* data) {
-	return static_cast<LocalPluginLoader*>(data)->getStringValue();
-}
-PLUGIN_EXPORT void Finalize(void* data) {
-	delete static_cast<LocalPluginLoader*>(data);
-}
-PLUGIN_EXPORT void ExecuteBang(void* data, LPCWSTR args) {
-	static_cast<LocalPluginLoader*>(data)->executeBang(args);
-}
-PLUGIN_EXPORT LPCWSTR sv(void* data, const int argc, const WCHAR* argv[]) {
-	return static_cast<LocalPluginLoader*>(data)->solveSectionVariable(argc, argv);
-}
-PLUGIN_EXPORT void* LocalPluginLoaderRecursionPrevention_123_() {
-	return nullptr;
-}
-
 LocalPluginLoader::LocalPluginLoader(void* rm) {
-	this->rm = rm;
-	string pluginPath = RmReadPath(rm, L"PluginPath", L"");
+	rain = utils::Rainmeter { rm };
+
+	string pluginPath = rain.readPath(L"PluginPath") % own();
 	if (pluginPath.empty()) {
-		RmLogF(rm, LOG_ERROR, L"Plugin path must be specified");
+		rain.getLogger().error(L"Plugin path must be specified");
 		return;
 	}
 	const wchar_t lastSymbol = pluginPath[pluginPath.length() - 1];
@@ -60,11 +34,11 @@ LocalPluginLoader::LocalPluginLoader(void* rm) {
 	
 	hLib = LoadLibraryW(pluginPath.c_str());
 	if (hLib == nullptr) {
-		RmLogF(rm, LOG_ERROR, L"Can't load library in path '%s' (error %ld)", pluginPath.c_str(), GetLastError());
+		rain.getLogger().error(L"Can't load library in path '{}' (error {})", pluginPath, GetLastError());
 		return;
 	}
 	if (GetProcAddress(hLib, "LocalPluginLoaderRecursionPrevention_123_") != nullptr) {
-		RmLogF(rm, LOG_ERROR, L"Loaded plugin must not be LocalPluginLoader");
+		rain.getLogger().error(L"Loaded plugin must not be LocalPluginLoader");
 		return;
 	}
 
@@ -105,10 +79,11 @@ double LocalPluginLoader::update() const {
 	return updateFunc(pluginData);
 }
 
-void LocalPluginLoader::reload(double* maxValue) const {
+void LocalPluginLoader::reload(double* maxValue, void* rm) const {
 	if (reloadFunc == nullptr) {
 		return;
 	}
+
 	reloadFunc(pluginData, rm, maxValue);
 }
 
@@ -126,12 +101,12 @@ void LocalPluginLoader::executeBang(const wchar_t* args) const {
 	executeBangFunc(pluginData, args);
 }
 
-const wchar_t* LocalPluginLoader::solveSectionVariable(const int count, const wchar_t* args[]) const {
+const wchar_t* LocalPluginLoader::solveSectionVariable(const int count, const wchar_t* args[]) {
 	if (hLib == nullptr) {
 		return nullptr;
 	}
 	if (count < 1) {
-		RmLogF(rm, LOG_ERROR, L"Function name must be specified");
+		rain.getLogger().error(L"Function name must be specified");
 		return nullptr;
 	}
 
@@ -156,7 +131,7 @@ const wchar_t* LocalPluginLoader::solveSectionVariable(const int count, const wc
 		const wchar_t wc = funcName[i];
 		const char c = static_cast<char>(wc);
 		if (c != wc) {
-			RmLogF(rm, LOG_ERROR, L"Can not find function '%s'", funcName.c_str());
+			rain.getLogger().error(L"Can not find function '{}'", funcName);
 			return nullptr;
 		}
 		byteFuncName[i] = c;
@@ -164,7 +139,7 @@ const wchar_t* LocalPluginLoader::solveSectionVariable(const int count, const wc
 
 	const auto funcPtr = reinterpret_cast<const wchar_t* (*)(void* data, int argc, const wchar_t* argv[])>(GetProcAddress(hLib, byteFuncName.c_str()));
 	if (funcPtr == nullptr) {
-		RmLogF(rm, LOG_ERROR, L"Can not find function '%s'", funcName.c_str());
+		rain.getLogger().error(L"Can not find function '{}'", funcName);
 		return nullptr;
 	}
 	return funcPtr(pluginData, count - 1, args + 1);

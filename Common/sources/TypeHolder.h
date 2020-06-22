@@ -41,7 +41,7 @@ namespace rxtd::utils {
 	protected:
 		virtual void _reload() = 0;
 		virtual std::tuple<double, const wchar_t*> _update() = 0;
-		virtual void _command(const wchar_t *bangArgs);
+		virtual void _command(isview bangArgs);
 		virtual const wchar_t* _resolve(int argc, const wchar_t* argv[]);
 
 		void setMeasureState(MeasureState brokenState);

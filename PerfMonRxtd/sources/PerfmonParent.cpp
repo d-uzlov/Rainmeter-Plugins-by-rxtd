@@ -243,8 +243,7 @@ std::tuple<double, const wchar_t*> PerfmonParent::_update() {
 	return std::make_tuple(1, L"ok");
 }
 
-void PerfmonParent::_command(const wchar_t* bangArgsC) {
-	isview bangArgs = bangArgsC;
+void PerfmonParent::_command(isview bangArgs) {
 	if (bangArgs== L"Stop") {
 		setStopped(true);
 		return;
