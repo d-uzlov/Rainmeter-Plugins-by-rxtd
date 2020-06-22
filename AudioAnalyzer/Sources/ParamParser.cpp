@@ -35,7 +35,7 @@ ParamParser::ParamParser(utils::Rainmeter& rain, bool unusedOptionsWarning) :
 void ParamParser::parse() {
 	handlerPatchersMap.clear();
 
-	auto processingIndices = rain.readOption(L"Processing").asList(L'|').own();
+	auto processingIndices = rain.read(L"Processing").asList(L'|').own();
 	for (auto processingNameOption : processingIndices) {
 		utils::Rainmeter::ContextLogger cl { rain.getLogger() };
 		cl.setPrefix(L"Processing {}:", processingNameOption.asString());
@@ -43,7 +43,7 @@ void ParamParser::parse() {
 		string processingOptionIndex = L"Processing"s;
 		processingOptionIndex += L"_";
 		processingOptionIndex += processingNameOption.asString();
-		auto processingDescriptionOption = rain.readOption(processingOptionIndex);
+		auto processingDescriptionOption = rain.read(processingOptionIndex);
 		if (processingDescriptionOption.empty()) {
 			cl.error(L"processing description for '{}' is now found", processingNameOption.asString());
 			continue;
@@ -116,7 +116,7 @@ void ParamParser::cacheHandlers(const utils::OptionList& indices) {
 		optionName += L"_";
 		optionName += indexOption.asString();
 
-		const auto descriptionOption = rain.readOption(optionName);
+		const auto descriptionOption = rain.read(optionName);
 		if (descriptionOption.empty()) {
 			log.error(L"Description of '{}' not found", indexOption.asString());
 			continue;

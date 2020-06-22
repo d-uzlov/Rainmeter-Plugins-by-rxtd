@@ -23,12 +23,6 @@ namespace rxtd::utils {
 
 			Logger() = default;
 			explicit Logger(void* rm);
-			~Logger() = default;
-
-			Logger(Logger&& other) noexcept;
-			Logger(const Logger& other);
-			Logger& operator=(const Logger& other);
-			Logger& operator=(Logger&& other) noexcept;
 
 			template<typename... Args>
 			void error(const wchar_t *formatString, const Args&... args) {
@@ -137,32 +131,11 @@ namespace rxtd::utils {
 	public:
 		Rainmeter() = default;
 		explicit Rainmeter(void *rm);
-		~Rainmeter() = default;
-
-		Rainmeter(const Rainmeter& other) = default;
-		Rainmeter(Rainmeter&& other) noexcept = default;
-		Rainmeter& operator=(const Rainmeter& other) = default;
-		Rainmeter& operator=(Rainmeter&& other) noexcept = default;
 
 		Option read(sview optionName) const;
 		sview readString(sview optionName, const wchar_t* defaultValue = L"") const;
 		sview readPath(sview optionName, const wchar_t* defaultValue = L"") const;
 		double readDouble(sview optionName, double defaultValue = 0.0) const;
-
-		template<typename I = int32_t>
-		typename std::enable_if<std::is_integral<I>::value, I>::type
-		readInt(sview optionName, I defaultValue = 0) const {
-			const auto dVal = readDouble(optionName, static_cast<double>(defaultValue));
-			if (dVal > static_cast<double>(std::numeric_limits<I>::max()) ||
-				dVal < static_cast<double>(std::numeric_limits<I>::lowest())) {
-				return defaultValue;
-			}
-			return static_cast<I>(dVal);
-		}
-
-		bool readBool(sview optionName, bool defaultValue = false) const {
-			return readInt(optionName, defaultValue ? 1 : 0) != 0;
-		}
 
 		sview replaceVariables(sview string) const;
 		sview transformPathToAbsolute(sview path) const;
@@ -175,7 +148,6 @@ namespace rxtd::utils {
 
 		Logger& getLogger();
 
-		void* getRawPointer();
 		Skin getSkin() const;
 		const string& getMeasureName() const;
 		void* getWindowHandle();

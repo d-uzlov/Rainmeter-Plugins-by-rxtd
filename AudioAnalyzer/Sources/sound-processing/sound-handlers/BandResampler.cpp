@@ -30,7 +30,7 @@ std::optional<BandResampler::Params> BandResampler::parseParams(const utils::Opt
 		return std::nullopt;
 	}
 
-	const auto bounds = utils::OptionParser::parse(rain.readString(L"FreqList_"s += freqListIndex)).asList(L'|').own();
+	const auto bounds = rain.read(L"FreqList_"s += freqListIndex).asList(L'|').own();
 	utils::Rainmeter::ContextLogger freqListLogger { rain.getLogger() };
 	auto freqsOpt = parseFreqList(bounds, freqListLogger, rain);
 	if (!freqsOpt.has_value()) {
@@ -341,15 +341,14 @@ void BandResampler::sampleData(const FftAnalyzer& source, layer_t startCascade, 
 std::optional<std::vector<double>> BandResampler::parseFreqList(const utils::OptionList& bounds, utils::Rainmeter::ContextLogger& cl, const utils::Rainmeter &rain) {
 	std::vector<double> freqs;
 
-	utils::OptionParser optionParser;
 	for (auto boundOption : bounds) {
-		auto bound = boundOption.asIString();
 		auto options = boundOption.asList(L' ');
+		auto type = options.get(0).asIString();
 
-		if (bound.find(L"linear ") == 0 || bound.find(L"log ") == 0) {
+		if (type == L"linear" || type == L"log") {
 
 			if (options.size() != 4) {
-				cl.error(L"linear/log must have 3 options (count, min, max)");
+				cl.error(L"{} must have 3 options (count, min, max)", type);
 				return std::nullopt;
 			}
 
@@ -366,7 +365,7 @@ std::optional<std::vector<double>> BandResampler::parseFreqList(const utils::Opt
 				return std::nullopt;
 			}
 
-			if (bound.find(L"linear ") == 0) {
+			if (type == L"linear") {
 				const double delta = max - min;
 
 				for (index i = 0; i <= count; ++i) {
@@ -385,7 +384,7 @@ std::optional<std::vector<double>> BandResampler::parseFreqList(const utils::Opt
 			}
 			continue;
 		}
-		if (bound.find(L"custom ") == 0) {
+		if (type == L"custom") {
 			if (options.size() < 2) {
 				cl.error(L"custom must have at least two frequencies specified but {} found", options.size());
 				return std::nullopt;
@@ -393,9 +392,10 @@ std::optional<std::vector<double>> BandResampler::parseFreqList(const utils::Opt
 			for (index i = 1; i < options.size(); ++i) {
 				freqs.push_back(options.get(i).asFloat());
 			}
+			continue;
 		}
 
-		cl.error(L"unknown list type '{}'", bound);
+		cl.error(L"unknown list type '{}'", type);
 		return std::nullopt;
 	}
 
@@ -411,8 +411,7 @@ std::optional<std::vector<double>> BandResampler::parseFreqList(const utils::Opt
 			cl.error(L"frequency must be > 0 ({} found)", value);
 			return std::nullopt;
 		}
-		if (std::abs(value - lastValue) < threshold) {
-			lastValue = value;
+		if (value - lastValue < threshold) {
 			continue;
 		}
 		result.push_back(value);

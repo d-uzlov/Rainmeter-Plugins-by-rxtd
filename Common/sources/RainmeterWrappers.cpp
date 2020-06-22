@@ -18,37 +18,6 @@ using namespace utils;
 
 Rainmeter::Logger::Logger(void* rm) : rm(rm) { }
 
-Rainmeter::Logger::Logger(const Logger& other) :
-	rm(other.rm),
-	printer(other.printer) { }
-
-Rainmeter::Logger::Logger(Logger&& other) noexcept :
-	rm(other.rm),
-	printer(std::move(other.printer)) {
-	other.rm = { };
-}
-
-Rainmeter::Logger& Rainmeter::Logger::operator=(const Logger& other) {
-	if (this == &other)
-		return *this;
-
-	rm = other.rm;
-	printer = other.printer;
-
-	return *this;
-}
-
-Rainmeter::Logger& Rainmeter::Logger::operator=(Logger&& other) noexcept {
-	if (this == &other)
-		return *this;
-
-	rm = other.rm;
-	other.rm = { };
-	printer = std::move(other.printer);
-
-	return *this;
-}
-
 void Rainmeter::Logger::log(LogLevel logLevel, const wchar_t* string) {
 	RmLog(rm, static_cast<int>(logLevel), string);
 }
@@ -67,11 +36,9 @@ Rainmeter::Rainmeter(void* rm) :
 	rm(rm),
 	skin(RmGetSkin(rm)),
 	measureName(RmGetMeasureName(rm)),
-	logger(rm) {
+	logger(rm) { }
 
-}
-
-Option Rainmeter::readOption(sview optionName) const {
+Option Rainmeter::read(sview optionName) const {
 	return OptionParser::parse(readString(optionName)).own();
 }
 
@@ -103,10 +70,6 @@ Rainmeter::Logger& Rainmeter::getLogger() {
 	return logger;
 }
 
-void* Rainmeter::getRawPointer() {
-	return rm;
-}
-
 Rainmeter::Skin Rainmeter::getSkin() const {
 	return skin;
 }
@@ -120,7 +83,7 @@ void* Rainmeter::getWindowHandle() {
 }
 
 const wchar_t* Rainmeter::makeNullTerminated(sview view) const {
-	if (view.data()[view.length()] == L'\0') {
+	if (view[view.length()] == L'\0') {
 		return view.data();
 	}
 

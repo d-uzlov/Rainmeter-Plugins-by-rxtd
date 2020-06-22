@@ -59,7 +59,7 @@ void AudioChild::_reload() {
 	if (correctingConstant <= 0) {
 		correctingConstant = 1.0;
 	}
-	clamp = rain.readBool(L"Clamp01", true);
+	clamp = rain.read(L"Clamp01").asBool(true);
 
 	const auto stringValueStr = rain.readString(L"StringValue") % ciView();
 	if (stringValueStr == L"" || stringValueStr == L"Number") {

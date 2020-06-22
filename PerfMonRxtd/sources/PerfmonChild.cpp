@@ -39,11 +39,11 @@ PerfmonChild::PerfmonChild(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rai
 void PerfmonChild::_reload() {
 	setMeasureState(utils::MeasureState::eWORKING);
 
-	instanceIndex = rain.readInt<item_t>(L"InstanceIndex");
-	ref.counter = rain.readInt<counter_t>(L"CounterIndex");
-	ref.useOrigName = rain.readBool(L"SearchOriginalName");
-	ref.total = rain.readBool(L"Total");
-	ref.discarded = rain.readBool(L"Discarded");
+	instanceIndex = rain.read(L"InstanceIndex").asInt<item_t>();
+	ref.counter = rain.read(L"CounterIndex").asInt<counter_t>();
+	ref.useOrigName = rain.read(L"SearchOriginalName").asBool();
+	ref.total = rain.read(L"Total").asBool();
+	ref.discarded = rain.read(L"Discarded").asBool();
 
 	ref.name = rain.readString(L"InstanceName");
 	if (!ref.useOrigName) {

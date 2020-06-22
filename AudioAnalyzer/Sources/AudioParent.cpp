@@ -82,7 +82,7 @@ void AudioParent::_reload() {
 
 	soundAnalyzer.setTargetRate(targetRate);
 
-	ParamParser paramParser(rain, rain.readBool(L"UnusedOptionsWarning", true));
+	ParamParser paramParser(rain, rain.read(L"UnusedOptionsWarning").asBool(true));
 	paramParser.parse();
 	soundAnalyzer.setHandlerPatchers(paramParser.getHandlers(), paramParser.getPatches());
 }

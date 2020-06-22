@@ -30,7 +30,7 @@ PerfmonParent::PerfmonParent(utils::Rainmeter&& _rain) : TypeHolder(std::move(_r
 	parentManager.add(*this);
 
 	objectName = rain.readString(L"ObjectName");
-	instanceManager.setIndexOffset(rain.readInt(L"InstanceIndexOffset"));
+	instanceManager.setIndexOffset(rain.read(L"InstanceIndexOffset").asInt());
 
 
 	if (objectName.empty()) {
@@ -65,12 +65,12 @@ void PerfmonParent::_reload() {
 
 	needUpdate = true;
 
-	instanceManager.setSortIndex(rain.readInt<counter_t>(L"SortIndex"));
-	instanceManager.setSyncRawFormatted(rain.readBool(L"SyncRawFormatted"));
-	instanceManager.setKeepDiscarded(rain.readBool(L"KeepDiscarded"));
+	instanceManager.setSortIndex(rain.read(L"SortIndex").asInt<counter_t>());
+	instanceManager.setSyncRawFormatted(rain.read(L"SyncRawFormatted").asBool());
+	instanceManager.setKeepDiscarded(rain.read(L"KeepDiscarded").asBool());
 
-	instanceManager.setRollup(rain.readBool(L"Rollup"));
-	instanceManager.setLimitIndexOffset(rain.readBool(L"LimitIndexOffset"));
+	instanceManager.setRollup(rain.read(L"Rollup").asBool());
+	instanceManager.setLimitIndexOffset(rain.read(L"LimitIndexOffset").asBool());
 
 
 	auto str = rain.readString(L"SortBy") % ciView();
