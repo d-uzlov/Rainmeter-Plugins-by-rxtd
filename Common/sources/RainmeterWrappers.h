@@ -144,7 +144,7 @@ namespace rxtd::utils {
 		Rainmeter& operator=(const Rainmeter& other) = default;
 		Rainmeter& operator=(Rainmeter&& other) noexcept = default;
 
-		Option readOption(sview optionName) const;
+		Option read(sview optionName) const;
 		sview readString(sview optionName, const wchar_t* defaultValue = L"") const;
 		sview readPath(sview optionName, const wchar_t* defaultValue = L"") const;
 		double readDouble(sview optionName, double defaultValue = 0.0) const;

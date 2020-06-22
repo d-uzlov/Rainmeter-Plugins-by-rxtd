@@ -39,7 +39,7 @@ PerfmonParent::PerfmonParent(utils::Rainmeter&& _rain) : TypeHolder(std::move(_r
 		return;
 	}
 
-	auto counterTokens = rain.readOption(L"CounterList").asList(L'|').own();
+	auto counterTokens = rain.read(L"CounterList").asList(L'|').own();
 
 	if (counterTokens.empty()) {
 		logger.error(L"CounterList must have at least one entry");
@@ -136,8 +136,8 @@ void PerfmonParent::_reload() {
 		rain.readString(L"WhitelistOrig") % own()
 	);
 
-	const auto expressionTokens = rain.readOption(L"ExpressionList").asList(L'|');
-	const auto rollupExpressionTokens = rain.readOption(L"RollupExpressionList").asList(L'|');
+	const auto expressionTokens = rain.read(L"ExpressionList").asList(L'|');
+	const auto rollupExpressionTokens = rain.read(L"RollupExpressionList").asList(L'|');
 	expressionResolver.setExpressions(expressionTokens, rollupExpressionTokens);
 
 	instanceManager.checkIndices(

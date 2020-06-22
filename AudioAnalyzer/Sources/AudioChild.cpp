@@ -67,7 +67,7 @@ void AudioChild::_reload() {
 	} else if (stringValueStr == L"Info") {
 		stringValueType = StringValue::eINFO;
 
-		auto requestList = rain.readOption(L"InfoRequest").asList(L',').own();
+		auto requestList = rain.read(L"InfoRequest").asList(L',').own();
 
 		infoRequest.clear();
 		for (auto view : requestList) {
@@ -97,7 +97,7 @@ void AudioChild::_reload() {
 		numberTransform = NumberTransform::eLINEAR;
 	}
 
-	auto signedIndex = rain.readInt(L"Index");
+	auto signedIndex = rain.read(L"Index").asInt();
 	if (signedIndex < 0) {
 		logger.error(L"Invalid Index {}. Index should be > 0. Set to 0.", signedIndex);
 		signedIndex = 0;

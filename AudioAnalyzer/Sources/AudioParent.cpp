@@ -74,12 +74,13 @@ void AudioParent::_reload() {
 	deviceManager.setOptions(sourceEnum, id);
 
 
-	auto rateLimit = std::max<index>(rain.readInt(L"TargetRate"), 44100);
-	if (rateLimit < 0) {
-		rateLimit = 0;
+	auto targetRate = rain.read(L"TargetRate").asInt(44100);
+	if (targetRate < 0) {
+		logger.warning(L"Invalid TargetRate {}, must be > 0, assume 0.", targetRate);
+		targetRate = 0;
 	}
 
-	soundAnalyzer.setTargetRate(rateLimit);
+	soundAnalyzer.setTargetRate(targetRate);
 
 	ParamParser paramParser(rain, rain.readBool(L"UnusedOptionsWarning", true));
 	paramParser.parse();
