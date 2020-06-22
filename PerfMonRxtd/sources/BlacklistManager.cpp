@@ -15,8 +15,6 @@
 
 using namespace perfmon;
 
-MatchTestRecord::MatchTestRecord() = default;
-
 MatchTestRecord::MatchTestRecord(sview pattern, bool substring) :
 	pattern(pattern),
 	matchSubstring(substring) { }
@@ -27,8 +25,6 @@ bool MatchTestRecord::match(sview string) const {
 	}
 	return string.find(pattern) != sview::npos;
 }
-
-BlacklistManager::MatchList::MatchList() = default;
 
 BlacklistManager::MatchList::MatchList(string sourceString, bool upperCase) {
 	auto[_, optList] = utils::OptionParser::parse(sourceString).asList(L'|').consume();

@@ -11,6 +11,7 @@
 #include <unordered_map>
 
 #include "undef.h"
+#include "BufferPrinter.h"
 
 using namespace perfmon::pdh;
 
@@ -24,7 +25,7 @@ void NamesManager::setModificationType(ModificationType value) {
 	modificationType = value;
 }
 
-void NamesManager::createModifiedNames(const Snapshot& snapshot, const Snapshot& idSnapshot) {
+void NamesManager::createModifiedNames(const PdhSnapshot& snapshot, const PdhSnapshot& idSnapshot) {
 	resetBuffers();
 
 	originalNamesSize = snapshot.getNamesSize();
@@ -60,7 +61,7 @@ void NamesManager::createModifiedNames(const Snapshot& snapshot, const Snapshot&
 	generateSearchNames();
 }
 
-void NamesManager::copyOriginalNames(const Snapshot& snapshot) {
+void NamesManager::copyOriginalNames(const PdhSnapshot& snapshot) {
 	wchar_t* namesBuffer = getBuffer(originalNamesSize);
 
 	for (item_t instanceIndex = 0; instanceIndex < snapshot.getItemsCount(); ++instanceIndex) {
@@ -113,7 +114,7 @@ sview NamesManager::copyString(sview source, wchar_t* dest) {
 	return { dest, source.length() };
 }
 
-void NamesManager::modifyNameProcess(const Snapshot& idSnapshot) {
+void NamesManager::modifyNameProcess(const PdhSnapshot& idSnapshot) {
 	// process name is name of the process file, which is not unique
 	// set unique name to <name>#<pid>
 	// assume that string representation of pid is no more than 20 symbols
@@ -144,7 +145,7 @@ void NamesManager::modifyNameProcess(const Snapshot& idSnapshot) {
 	}
 }
 
-void NamesManager::modifyNameThread(const Snapshot& idSnapshot) {
+void NamesManager::modifyNameThread(const PdhSnapshot& idSnapshot) {
 	// instance names are "<processName>/<threadIndex>"
 	// process names are not unique
 	// thread indices enumerate threads inside one process, starting from 0
@@ -226,7 +227,7 @@ void NamesManager::modifyNameLogicalDiskMountPath() {
 	}
 }
 
-void NamesManager::modifyNameGPUProcessName(const Snapshot& idSnapshot) {
+void NamesManager::modifyNameGPUProcessName(const PdhSnapshot& idSnapshot) {
 	// display name is process name (found by PID)
 
 	wchar_t* processNamesBuffer = getBuffer(idSnapshot.getNamesSize());

@@ -13,8 +13,6 @@
 
 using namespace utils;
 
-SubstringViewInfo::SubstringViewInfo() = default;
-
 SubstringViewInfo::SubstringViewInfo(index offset, index length) :
 	offset(offset),
 	length(length) { }

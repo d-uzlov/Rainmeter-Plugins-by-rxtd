@@ -9,12 +9,9 @@
 
 #include "AudioParent.h"
 
-#include "windows-wrappers/AudioBuffer.h"
-
 #include "ParamParser.h"
 
 #include "undef.h"
-#include "CaseInsensitiveString.h"
 
 using namespace audio_analyzer;
 
@@ -121,21 +118,22 @@ void AudioParent::_command(isview bangArgs) {
 
 const wchar_t* AudioParent::_resolve(int argc, const wchar_t* argv[]) {
 	if (argc < 1) {
-		logger.error(L"Invalid section variable resolve: args needed", argc);
+		logger.error(L"Invalid section variable: args needed", argc);
 		return nullptr;
 	}
 
 	const isview optionName = argv[0];
+	auto cl = logger.context(L"Invalid section variable '{}': ", optionName);
 
 	if (optionName == L"prop") {
 		if (argc < 4) {
-			logger.error(L"Invalid section variable resolve: need >= 4 argc, but only {} found", argc);
+			cl.error(L"need >= 4 argc, but only {} found", argc);
 			return nullptr;
 		}
 
 		auto channelOpt = Channel::channelParser.find(argv[1]);
 		if (!channelOpt.has_value()) {
-			logger.error(L"Invalid section variable resolve: channel '{}' not recognized", argv[1]);
+			cl.error(L"channel '{}' not recognized", argv[1]);
 			return nullptr;
 		}
 		auto propVariant = soundAnalyzer.getAudioChildHelper().getProp(channelOpt.value(), argv[2], argv[3]);
@@ -144,34 +142,34 @@ const wchar_t* AudioParent::_resolve(int argc, const wchar_t* argv[]) {
 			const auto error = std::get<1>(propVariant);
 			switch (error) {
 			case AudioChildHelper::SearchError::eCHANNEL_NOT_FOUND:
-				logger.printer.print(L"Invalid section variable resolve: channel '{}' not found", argv[1]);
-				return logger.printer.getBufferPtr();
+				cl.printer.print(L"channel '{}' not found", argv[1]);
+				return cl.printer.getBufferPtr();
 
 			case AudioChildHelper::SearchError::eHANDLER_NOT_FOUND:
-				logger.error(L"Invalid section variable resolve: handler '{}:{}' not found", argv[1], argv[2]);
+				cl.error(L"handler '{}:{}' not found", argv[1], argv[2]);
 				return nullptr;
 
 			default:
-				logger.error(L"Unexpected SearchError {}", error);
+				cl.error(L"unexpected SearchError value '{}'", error);
 				return nullptr;
 			}
 		}
 		if (propVariant.index() == 0) {
 			const auto result = std::get<0>(propVariant);
 			if (result == nullptr) {
-				logger.error(L"Invalid section variable resolve: prop '{}:{}' not found", argv[2], argv[3]);
+				cl.error(L"prop '{}:{}' not found", argv[2], argv[3]);
 			}
 
 			return result;
 		}
 
-		logger.error(L"Unexpected propVariant index {}", propVariant.index());
+		cl.error(L"unexpected propVariant index '{}'", propVariant.index());
 		return nullptr;
 	}
 
 	if (optionName == L"current device") {
 		if (argc < 2) {
-			logger.error(L"Invalid section variable resolve: need >= 2 argc, but only {} found", argc);
+			cl.error(L"need >= 2 argc, but only {} found", argc);
 			return nullptr;
 		}
 
@@ -222,7 +220,7 @@ const wchar_t* AudioParent::_resolve(int argc, const wchar_t* argv[]) {
 		return deviceManager.getDeviceEnumerator().getDeviceListOutput().c_str();
 	}
 
-	logger.error(L"Invalid section variable resolve: '{}' not supported", argv[0]);
+	cl.error(L"option not supported");
 	return nullptr;
 }
 

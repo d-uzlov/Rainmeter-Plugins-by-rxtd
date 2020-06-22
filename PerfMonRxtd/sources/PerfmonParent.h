@@ -75,9 +75,9 @@ namespace rxtd::perfmon {
 
 		pdh::PdhWrapper pdhWrapper;
 
-		pdh::Snapshot idSnapshot;
-		pdh::Snapshot snapshotCurrent;
-		pdh::Snapshot snapshotPrevious;
+		pdh::PdhSnapshot idSnapshot;
+		pdh::PdhSnapshot snapshotCurrent;
+		pdh::PdhSnapshot snapshotPrevious;
 
 		BlacklistManager blacklistManager;
 

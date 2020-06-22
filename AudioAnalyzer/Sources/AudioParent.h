@@ -9,7 +9,6 @@
 
 #pragma once
 #include "TypeHolder.h"
-#include "sound-processing/Channel.h"
 #include "sound-processing/SoundAnalyzer.h"
 #include "sound-processing/device-management/DeviceManager.h"
 

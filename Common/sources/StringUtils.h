@@ -23,7 +23,7 @@ namespace rxtd::utils {
 		index length { };
 
 	public:
-		SubstringViewInfo();
+		SubstringViewInfo() = default;
 		SubstringViewInfo(index offset, index length);
 
 		bool empty() const;

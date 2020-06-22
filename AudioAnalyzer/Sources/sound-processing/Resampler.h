@@ -26,7 +26,6 @@ namespace rxtd::audio_analyzer {
 		index getSampleRate() const;
 		index calculateFinalWaveSize(index waveSize) const;
 		void resample(array_span<float> values, index framesCount) const;
-		void decomposeFramesIntoChannels(const uint8_t* buffer, index framesCount);
 
 	private:
 		void updateValues();

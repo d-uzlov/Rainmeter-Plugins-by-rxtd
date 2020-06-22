@@ -260,7 +260,7 @@ FftAnalyzer::~FftAnalyzer() {
 }
 
 std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(const utils::OptionMap &optionMap, utils::Rainmeter::Logger& cl) {
-	Params params;
+	Params params{ };
 	params.attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.1) * 0.001;
 	params.decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.attackTime), 0.1) * 0.001;
 
@@ -496,8 +496,6 @@ void FftAnalyzer::updateParams() {
 		return;
 	}
 	fftImpl = FftImpl::change(fftImpl, fftSize);
-
-	// TODO check if there is a way to save state at least partially
 
 	inputStride = static_cast<index>(fftSize * (1 - params.overlap));
 	inputStride = std::clamp<index>(inputStride, std::min<index>(16, fftSize), fftSize);

@@ -17,8 +17,8 @@ using namespace perfmon;
 InstanceManager::InstanceManager(
 	utils::Rainmeter::Logger& log,
 	const pdh::PdhWrapper& phWrapper,
-	const pdh::Snapshot& idSnapshot,
-	const pdh::Snapshot& snapshotCurrent, const pdh::Snapshot& snapshotPrevious,
+	const pdh::PdhSnapshot& idSnapshot,
+	const pdh::PdhSnapshot& snapshotCurrent, const pdh::PdhSnapshot& snapshotPrevious,
 	const BlacklistManager& blacklistManager) :
 	log(log),
 	pdhWrapper(phWrapper),

@@ -8,7 +8,6 @@
  */
 
 #pragma once
-#include "Channel.h"
 #include "Vector2D.h"
 #include "device-management/MyWaveFormat.h"
 

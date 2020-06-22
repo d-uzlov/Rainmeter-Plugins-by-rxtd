@@ -118,7 +118,6 @@
     <ClInclude Include="sources\Vector2D.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="sources\MutableLinearInterpolator.h" />
     <ClInclude Include="sources\windows-wrappers\MediaDeviceWrapper.h">
       <Filter>Source Files\windows-wrappers</Filter>
     </ClInclude>
@@ -145,6 +144,9 @@
     </ClInclude>
     <ClInclude Include="sources\windows-wrappers\IMMDeviceCollectionWrapper.h">
       <Filter>Source Files\windows-wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\MutableLinearInterpolator.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

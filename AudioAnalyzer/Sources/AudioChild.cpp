@@ -8,7 +8,6 @@
  */
 
 #include "AudioChild.h"
-#include <algorithm>
 #include "OptionParser.h"
 
 #include "undef.h"

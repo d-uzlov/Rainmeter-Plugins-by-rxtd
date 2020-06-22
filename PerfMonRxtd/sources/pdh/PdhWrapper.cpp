@@ -17,67 +17,6 @@
 
 using namespace perfmon::pdh;
 
-Snapshot::Snapshot() = default;
-Snapshot::~Snapshot() = default;
-Snapshot::Snapshot(Snapshot&& other) noexcept = default;
-Snapshot& Snapshot::operator=(Snapshot&& other) noexcept = default;
-
-item_t Snapshot::getItemsCount() const {
-	return itemsCount;
-}
-
-counter_t Snapshot::getCountersCount() const {
-	return countersCount;
-}
-
-void Snapshot::clear() {
-	setBufferSize(0, 0);
-}
-
-bool Snapshot::isEmpty() const {
-	return getCountersCount() == 0 || getItemsCount() == 0;
-}
-
-void Snapshot::setCountersCount(counter_t value) {
-	countersCount = value;
-
-	updateSize();
-}
-
-void Snapshot::setBufferSize(index size, item_t items) {
-	counterBufferSize = size;
-	itemsCount = items;
-
-	updateSize();
-}
-
-void Snapshot::updateSize() {
-	if (itemsCount < 1) {
-		return;
-	}
-	buffer.reserve(countersCount * (itemsCount - 1) * sizeof(PDH_RAW_COUNTER_ITEM_W) + counterBufferSize);
-}
-
-PDH_RAW_COUNTER_ITEM_W* Snapshot::getCounterPointer(counter_t counter) {
-	return reinterpret_cast<PDH_RAW_COUNTER_ITEM_W*>(buffer.data()) + itemsCount * counter;
-}
-
-const PDH_RAW_COUNTER_ITEM_W* Snapshot::getCounterPointer(counter_t counter) const {
-	return reinterpret_cast<const PDH_RAW_COUNTER_ITEM_W*>(buffer.data()) + itemsCount * counter;
-}
-
-const PDH_RAW_COUNTER& Snapshot::getItem(counter_t counter, item_t item) const {
-	return getCounterPointer(counter)[item].RawValue;
-}
-
-const wchar_t* Snapshot::getName(item_t item) const {
-	return getCounterPointer(countersCount - 1)[item].szName;
-}
-
-index Snapshot::getNamesSize() const {
-	return (counterBufferSize - itemsCount * sizeof(PDH_RAW_COUNTER_ITEM_W)) / sizeof(wchar_t);
-}
-
 PdhWrapper::QueryWrapper::~QueryWrapper() {
 	if (handler != nullptr) {
 		const PDH_STATUS pdhStatus = PdhCloseQuery(handler);
@@ -183,7 +122,7 @@ bool PdhWrapper::isValid() const {
 	return query.isValid();
 }
 
-bool PdhWrapper::fetch(Snapshot& snapshot, Snapshot& idSnapshot) {
+bool PdhWrapper::fetch(PdhSnapshot& snapshot, PdhSnapshot& idSnapshot) {
 	idSnapshot.setCountersCount(1);
 	snapshot.setCountersCount(counterHandlers.size());
 

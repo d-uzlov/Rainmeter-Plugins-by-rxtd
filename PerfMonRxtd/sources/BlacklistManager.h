@@ -14,7 +14,7 @@ namespace rxtd::perfmon {
 		sview pattern;
 		bool matchSubstring { };
 
-		MatchTestRecord();
+		MatchTestRecord() = default;
 		MatchTestRecord(sview pattern, bool substring);
 
 		bool match(sview string) const;
@@ -26,7 +26,7 @@ namespace rxtd::perfmon {
 			std::vector<MatchTestRecord> list;
 
 		public:
-			MatchList();
+			MatchList() = default;
 
 			MatchList(string sourceString, bool upperCase);
 

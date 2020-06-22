@@ -8,7 +8,7 @@
  */
 
 #pragma once
-#include "PdhWrapper.h"
+#include "PdhSnapshot.h"
 
 namespace rxtd::perfmon::pdh {
 	struct ModifiedNameItem {
@@ -43,10 +43,10 @@ namespace rxtd::perfmon::pdh {
 
 		void setModificationType(ModificationType value);
 
-		void createModifiedNames(const Snapshot& snapshot, const Snapshot& idSnapshot);
+		void createModifiedNames(const PdhSnapshot& snapshot, const PdhSnapshot& idSnapshot);
 
 	private:
-		void copyOriginalNames(const Snapshot& snapshot);
+		void copyOriginalNames(const PdhSnapshot& snapshot);
 
 		void generateSearchNames();
 
@@ -55,15 +55,15 @@ namespace rxtd::perfmon::pdh {
 		
 		static sview copyString(sview source, wchar_t* dest);
 
-		void modifyNameProcess(const Snapshot& idSnapshot);
+		void modifyNameProcess(const PdhSnapshot& idSnapshot);
 
-		void modifyNameThread(const Snapshot& idSnapshot);
+		void modifyNameThread(const PdhSnapshot& idSnapshot);
 
 		void modifyNameLogicalDiskDriveLetter();
 
 		void modifyNameLogicalDiskMountPath();
 
-		void modifyNameGPUProcessName(const Snapshot& idSnapshot);
+		void modifyNameGPUProcessName(const PdhSnapshot& idSnapshot);
 
 		void modifyNameGPUEngtype();
 	};
