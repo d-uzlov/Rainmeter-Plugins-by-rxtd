@@ -33,10 +33,12 @@ namespace rxtd::utils {
 	struct OptionSeparated;
 	// Class, that allows you to parse options.
 	class Option {
-		// source may be not used, all operations are performed with view, which can point to other arrays
+		// View of string containing data for this option
+		// There are a view and a source, because source may be empty and while view points to data in some other object
+		// It's a user's responsibility to manage memory for this
 		sview _view;
 		// ↓↓ yes, this must be a vector and not a string,
-		// ↓↓ because small string optimization kills string views
+		// ↓↓ because small string optimization kills string views on move
 		std::vector<wchar_t> source;
 
 	public:
@@ -94,10 +96,12 @@ namespace rxtd::utils {
 
 	// List of string.
 	class OptionList {
-		// source may be not used, all operations are performed with view, which can point to other arrays
+		// View of string containing data for this option
+		// There are a view and a source, because source may be empty and while view points to data in some other object
+		// It's a user's responsibility to manage memory for this
 		sview _view;
 		// ↓↓ yes, this must be a vector and not a string,
-		// ↓↓ because small string optimization kills string views
+		// ↓↓ because small string optimization kills string views on move
 		std::vector<wchar_t> source;
 
 		std::vector<SubstringViewInfo> list;
@@ -153,10 +157,12 @@ namespace rxtd::utils {
 		};
 
 	private:
-		// source may be not used, all operations are performed with view, which can point to other arrays
+		// View of string containing data for this option
+		// There are a view and a source, because source may be empty and while view points to data in some other object
+		// It's a user's responsibility to manage memory for this
 		sview _view;
 		// ↓↓ yes, this must be a vector and not a string,
-		// ↓↓ because small string optimization kills string views
+		// ↓↓ because small string optimization kills string views on move
 		std::vector<wchar_t> source;
 		// For move and copy operations.
 		std::map<SubstringViewInfo, SubstringViewInfo> paramsInfo { };
@@ -191,9 +197,6 @@ namespace rxtd::utils {
 		// returns true if option with such name exists.
 		// This overload disambiguates sview/isview call.
 		bool has(const wchar_t* name) const;
-
-		// Allows you to iterate over all available options.
-		const std::map<isview, MapOptionInfo>& getParams() const;
 
 		std::vector<isview> getListOfUntouched() const;
 

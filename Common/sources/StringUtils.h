@@ -14,6 +14,10 @@
 #undef max
 
 namespace rxtd::utils {
+	using namespace std::string_view_literals;
+
+	// This class allows you to seamlessly replace source of a string view.
+	// Very helpful when you have an array of string views that you don't want to update on source change.
 	class SubstringViewInfo {
 		index offset { };
 		index length { };
@@ -139,14 +143,13 @@ namespace rxtd::utils {
 		}
 
 		static index parseInt(sview view) {
-			char buffer[80];
-
 			view = trim(view);
+
 			bool hex = false;
-			if ((startsWith(view, sview { L"0x" }) || startsWith(view, sview { L"0X" }))) {
+			if (startsWith(view, L"0x"sv) || startsWith(view, L"0X"sv)) {
 				hex = true;
 				view = view.substr(2);
-			} else if (startsWith(view, sview { L"+" })) {
+			} else if (view[0] == L'+') {
 				view = view.substr(1);
 			}
 
@@ -154,9 +157,11 @@ namespace rxtd::utils {
 				return 0;
 			}
 
-			index size = std::min(view.length(), sizeof(buffer));
+			char buffer[80];
+			index size = std::min(view.length(), sizeof(buffer) / sizeof(*buffer));
 			for (index i = 0; i < size; ++i) {
 				const auto wc = view[i];
+				// check that all symbols fit into 1 byte
 				if (wc > std::numeric_limits<uint8_t>::max()) {
 					buffer[i] = '\0';
 					size = i;
@@ -172,10 +177,9 @@ namespace rxtd::utils {
 		}
 
 		static double parseFloat(sview view) {
-			char buffer[80];
-
 			view = trim(view);
-			if (startsWith(view, sview { L"+" })) {
+
+			if (view[0] == L'+') {
 				view = view.substr(1);
 			}
 
@@ -183,9 +187,11 @@ namespace rxtd::utils {
 				return 0;
 			}
 
-			index size = std::min(view.length(), sizeof(buffer));
+			char buffer[80];
+			index size = std::min(view.length(), sizeof(buffer) / sizeof(*buffer));
 			for (index i = 0; i < size; ++i) {
 				const auto wc = view[i];
+				// check that all symbols fit into 1 byte
 				if (wc > std::numeric_limits<uint8_t>::max()) {
 					buffer[i] = '\0';
 					size = i;
@@ -200,19 +206,20 @@ namespace rxtd::utils {
 		}
 
 		static double parseFractional(sview view) { // TODO remove this mess
-			char buffer[80];
-
 			view = trim(view);
+
 			if (view.empty() || !iswdigit(view.front())) {
 				return 0;
 			}
 
+			char buffer[80];
 			buffer[0] = '0';
 			buffer[1] = '.';
 
-			index size = std::min(view.length(), sizeof(buffer));
+			index size = std::min(view.length(), sizeof(buffer) / sizeof(*buffer));
 			for (index i = 0; i < size; ++i) {
 				const auto wc = view[i];
+				// check that all symbols fit into 1 byte
 				if (wc > std::numeric_limits<uint8_t>::max()) {
 					buffer[i + 2] = '\0';
 					size = i;

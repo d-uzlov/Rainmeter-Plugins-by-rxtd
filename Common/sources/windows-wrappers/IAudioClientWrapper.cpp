@@ -1,6 +1,6 @@
 #include "IAudioClientWrapper.h"
 
-const IID IID_IAudioCaptureClient = __uuidof(IAudioCaptureClient);
+static const IID IID_IAudioCaptureClient = __uuidof(IAudioCaptureClient);
 
 static constexpr long long REF_TIMES_PER_SEC = 1000'000'0; // 1 sec in 100-ns units
 

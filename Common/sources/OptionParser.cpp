@@ -179,17 +179,14 @@ Color Option::asColor(Color defaultValue) const {
 OptionSeparated Option::breakFirst(wchar_t separator) const {
 	sview view = getView();
 
-	for (int i = 0; i < view.size(); ++i) {
-		if (view[i] == separator) {
-			auto first = Option{ sview(view.data(), i) };
-			auto rest = Option{ sview(view.data() + i + 1, view.size() - i - 1) };
-			return OptionSeparated{ first, rest };
-		}
+	const auto delimiterPlace = view.find_first_of(separator);
+	if (delimiterPlace == sview::npos) {
+		return { *this, { } };
 	}
-	return {
-		*this,
-		{ }
-	};
+
+	auto first = Option { sview(view.data(), delimiterPlace) };
+	auto rest = Option { sview(view.data() + delimiterPlace + 1, view.size() - delimiterPlace - 1) };
+	return OptionSeparated { first, rest };
 }
 
 OptionMap Option::asMap(wchar_t optionDelimiter, wchar_t nameDelimiter) const {
@@ -313,10 +310,6 @@ bool OptionMap::has(isview name) const {
 
 bool OptionMap::has(const wchar_t* name) const {
 	return has(isview{ name });
-}
-
-const std::map<isview, OptionMap::MapOptionInfo>& OptionMap::getParams() const {
-	return params;
 }
 
 std::vector<isview> OptionMap::getListOfUntouched() const {

@@ -10,7 +10,7 @@
 #pragma once
 #include <optional>
 #include <iomanip>
-#include <iterator>
+#include "OptionParser.h"
 
 namespace rxtd::utils {
 	using namespace std::literals::string_view_literals;
@@ -74,6 +74,8 @@ namespace rxtd::utils {
 		}
 		stream << L']';
 	}
+
+	void writeObject(std::wostream& stream, const Option& t, sview options);
 
 	/**
 	 * Type-safe analogue of printf.

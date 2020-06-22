@@ -11,9 +11,6 @@
 
 #include <string_view>
 
-const CLSID CLSID_MMDeviceEnumerator = __uuidof(MMDeviceEnumerator);
-const IID IID_IMMDeviceEnumerator = __uuidof(IMMDeviceEnumerator);
-
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
 

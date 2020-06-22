@@ -3,7 +3,7 @@
 #include <functiondiscoverykeys_devpkey.h>
 #include "PropertyStoreWrapper.h"
 
-const IID IID_IAudioClient = __uuidof(IAudioClient);
+static const IID IID_IAudioClient = __uuidof(IAudioClient);
 
 namespace rxtd::utils {
 	MediaDeviceWrapper::MediaDeviceWrapper(MediaDeviceType type): type(type) {

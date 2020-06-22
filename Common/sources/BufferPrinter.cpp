@@ -13,6 +13,10 @@
 
 using namespace utils;
 
+void utils::writeObject(std::wostream& stream, const Option& t, sview options) {
+	stream << t.asString();
+}
+
 BufferPrinter::ReadableOutputBuffer::ReadableOutputBuffer() {
 	buffer.resize(16);
 	resetPointers();

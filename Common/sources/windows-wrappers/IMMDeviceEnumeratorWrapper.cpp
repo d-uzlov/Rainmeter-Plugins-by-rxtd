@@ -1,5 +1,8 @@
 #include "IMMDeviceEnumeratorWrapper.h"
 
+static const CLSID CLSID_MMDeviceEnumerator = __uuidof(MMDeviceEnumerator);
+static const IID IID_IMMDeviceEnumerator = __uuidof(IMMDeviceEnumerator);
+
 namespace rxtd::utils {
 
 	IMMDeviceEnumeratorWrapper::IMMDeviceEnumeratorWrapper() {
