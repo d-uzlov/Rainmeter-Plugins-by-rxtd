@@ -33,7 +33,7 @@ void Spectrogram::setParams(const Params& _params) {
 	updateParams();
 }
 
-std::optional<Spectrogram::Params> Spectrogram::parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl, const utils::Rainmeter& rain) {
+std::optional<Spectrogram::Params> Spectrogram::parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl, const utils::Rainmeter& rain) {
 	Params params;
 	
 	params.sourceName = optionMap.get(L"source"sv).asIString();

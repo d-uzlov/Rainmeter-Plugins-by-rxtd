@@ -17,7 +17,7 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-std::optional<BlockMean::Params> BlockMean::parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl) {
+std::optional<BlockMean::Params> BlockMean::parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl) {
 	Params params;
 	params.attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.0) * 0.001;
 	params.decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.attackTime), 0.0) * 0.001;

@@ -56,8 +56,7 @@ void TypeHolder::command(const wchar_t *bangArgs) {
 
 const wchar_t* TypeHolder::resolve(int argc, const wchar_t* argv[]) {
 	if (measureState != MeasureState::eWORKING) {
-		logger.printer.print(L"Measure {} is broken", rain.getMeasureName());
-		return logger.printer.getBufferPtr();
+		return L"";
 	}
 	const auto result = _resolve(argc, argv);
 	if (result == nullptr) {

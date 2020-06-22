@@ -59,7 +59,7 @@ void WaveForm::setParams(const Params &_params) {
 	updateParams();
 }
 
-std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl, const utils::Rainmeter& rain) {
+std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl, const utils::Rainmeter& rain) {
 	Params params;
 
 	params.width = optionMap.get(L"width"sv).asInt(100);

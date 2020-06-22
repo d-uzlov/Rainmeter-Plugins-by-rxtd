@@ -16,14 +16,26 @@ namespace rxtd::utils {
 	class Rainmeter {
 	public:
 		class Logger {
-			void *rm { };
+			friend Rainmeter;
 
-		public:
+			enum class LogLevel {
+				eERROR = 1,
+				eWARNING = 2,
+				eNOTICE = 3,
+				eDEBUG = 4
+			};
+
+			void *rm { };
+			string prefix { };
 			BufferPrinter printer;
 
+		public:
 			Logger() = default;
-			explicit Logger(void* rm);
 
+		private:
+			Logger(void* rm, string prefix);
+
+		public:
 			template<typename... Args>
 			void error(const wchar_t *formatString, const Args&... args) {
 				log(LogLevel::eERROR, formatString, args...);
@@ -41,64 +53,28 @@ namespace rxtd::utils {
 				log(LogLevel::eDEBUG, formatString, args...);
 			}
 
-		private:
-			enum class LogLevel {
-				eERROR = 1,
-				eWARNING = 2,
-				eNOTICE = 3,
-				eDEBUG = 4
-			};
+			template<typename... Args>
+			Logger context(const wchar_t *formatString, const Args&... args) {
+				printer.print(formatString, args...);
+				string newPrefix = prefix + printer.getBufferPtr();
+				printer.reset();
 
+				return { rm, std::move(newPrefix) };
+			}
+
+		private:
 			template<typename... Args>
 			void log(LogLevel logLevel, const wchar_t *formatString, const Args&... args) {
+				printer.print(prefix.c_str());
+
 				printer.append(formatString, args...);
 
-				log(logLevel, printer.getBufferPtr());
+				logRainmeter(logLevel, printer.getBufferPtr());
 
 				printer.reset();
 			}
 
-			void log(LogLevel logLevel, const wchar_t *string);
-		};
-		class ContextLogger {
-			Logger& log;
-			string prefix { };
-
-		public:
-			ContextLogger(Logger &logger) : log(logger) { }
-
-			template<typename... Args>
-			void setPrefix(const wchar_t *formatString, const Args&... args) {
-				log.printer.print(formatString, args...);
-				prefix = log.printer.getBufferPtr();
-				log.printer.reset();
-			}
-
-			template<typename... Args>
-			void error(const wchar_t *formatString, const Args&... args) const {
-				printInfo();
-				log.error(formatString, args...);
-			}
-			template<typename... Args>
-			void warning(const wchar_t *formatString, const Args&... args) const {
-				printInfo();
-				log.warning(formatString, args...);
-			}
-			template<typename... Args>
-			void notice(const wchar_t *formatString, const Args&... args) const {
-				printInfo();
-				log.notice(formatString, args...);
-			}
-			template<typename... Args>
-			void debug(const wchar_t *formatString, const Args&... args) const {
-				printInfo();
-				log.debug(formatString, args...);
-			}
-
-		private:
-			void printInfo() const {
-				log.printer.print(prefix.c_str());
-			}
+			void logRainmeter(LogLevel logLevel, const wchar_t *string);
 		};
 
 		/**

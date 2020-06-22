@@ -16,7 +16,7 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-std::optional<BandResampler::Params> BandResampler::parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl, utils::Rainmeter &rain) {
+std::optional<BandResampler::Params> BandResampler::parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl, utils::Rainmeter &rain) {
 	Params params;
 	params.fftId = optionMap.get(L"source"sv).asIString();
 	if (params.fftId.empty()) {
@@ -30,8 +30,9 @@ std::optional<BandResampler::Params> BandResampler::parseParams(const utils::Opt
 		return std::nullopt;
 	}
 
-	const auto bounds = rain.read(L"FreqList_"s += freqListIndex).asList(L'|').own();
-	utils::Rainmeter::ContextLogger freqListLogger { rain.getLogger() };
+	const auto freqListOptionName = L"FreqList_"s += freqListIndex;
+	const auto bounds = rain.read(freqListOptionName).asList(L'|').own();
+	utils::Rainmeter::Logger freqListLogger = rain.getLogger().context(L"{}: ", freqListOptionName);
 	auto freqsOpt = parseFreqList(bounds, freqListLogger, rain);
 	if (!freqsOpt.has_value()) {
 		cl.error(L"freqList '{}' can't be parsed", freqListIndex);
@@ -338,7 +339,7 @@ void BandResampler::sampleData(const FftAnalyzer& source, layer_t startCascade, 
 
 }
 
-std::optional<std::vector<double>> BandResampler::parseFreqList(const utils::OptionList& bounds, utils::Rainmeter::ContextLogger& cl, const utils::Rainmeter &rain) {
+std::optional<std::vector<double>> BandResampler::parseFreqList(const utils::OptionList& bounds, utils::Rainmeter::Logger& cl, const utils::Rainmeter &rain) {
 	std::vector<double> freqs;
 
 	for (auto boundOption : bounds) {

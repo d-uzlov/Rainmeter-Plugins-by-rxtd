@@ -16,9 +16,10 @@
 
 using namespace utils;
 
-Rainmeter::Logger::Logger(void* rm) : rm(rm) { }
+Rainmeter::Logger::Logger(void* rm, string prefix): rm(rm), prefix(prefix) {
+}
 
-void Rainmeter::Logger::log(LogLevel logLevel, const wchar_t* string) {
+void Rainmeter::Logger::logRainmeter(LogLevel logLevel, const wchar_t* string) {
 	RmLog(rm, static_cast<int>(logLevel), string);
 }
 
@@ -36,7 +37,7 @@ Rainmeter::Rainmeter(void* rm) :
 	rm(rm),
 	skin(RmGetSkin(rm)),
 	measureName(RmGetMeasureName(rm)),
-	logger(rm) { }
+	logger(rm, { }) { }
 
 Option Rainmeter::read(sview optionName) const {
 	return OptionParser::parse(readString(optionName)).own();
@@ -83,7 +84,8 @@ void* Rainmeter::getWindowHandle() {
 }
 
 const wchar_t* Rainmeter::makeNullTerminated(sview view) const {
-	if (view[view.length()] == L'\0') {
+	// can't use view[view.length()] because it's out of view's range
+	if (view.data()[view.length()] == L'\0') {
 		return view.data();
 	}
 

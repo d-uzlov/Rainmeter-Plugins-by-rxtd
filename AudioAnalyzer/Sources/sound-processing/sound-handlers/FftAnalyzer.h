@@ -122,7 +122,7 @@ namespace rxtd::audio_analyzer {
 		FftAnalyzer& operator=(const FftAnalyzer& other) = delete;
 		FftAnalyzer& operator=(FftAnalyzer&& other) = delete;
 
-		static std::optional<Params> parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl);
+		static std::optional<Params> parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl);
 
 		double getFftFreq(index fft) const;
 

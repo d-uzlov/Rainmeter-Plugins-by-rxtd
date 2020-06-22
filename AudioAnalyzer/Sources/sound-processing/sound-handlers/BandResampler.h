@@ -77,7 +77,7 @@ namespace rxtd::audio_analyzer {
 
 
 	public:
-		static std::optional<Params> parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl, utils::Rainmeter& rain);
+		static std::optional<Params> parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl, utils::Rainmeter& rain);
 
 		void setParams(Params _params);
 
@@ -114,6 +114,6 @@ namespace rxtd::audio_analyzer {
 		void computeBandInfo(const FftAnalyzer& source, layer_t startCascade, layer_t endCascade);
 		void sampleData(const FftAnalyzer& source, layer_t startCascade, layer_t endCascade);
 
-		static std::optional<std::vector<double>> parseFreqList(const utils::OptionList& bounds, utils::Rainmeter::ContextLogger& cl, const utils::Rainmeter& rain);
+		static std::optional<std::vector<double>> parseFreqList(const utils::OptionList& bounds, utils::Rainmeter::Logger& cl, const utils::Rainmeter& rain);
 	};
 }

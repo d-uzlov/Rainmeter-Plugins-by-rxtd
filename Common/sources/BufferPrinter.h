@@ -183,18 +183,6 @@ namespace rxtd::utils {
 		}
 	};
 
-	/**
-	 * Wrapper over a rainmeter skin handler.
-	 * Used for type safety only.
-	 */
-	class Skin {
-		void *const skin;
-
-	public:
-		explicit Skin(void* skin);
-		void* getRawPointer() const;
-	};
-
 	template <typename T, typename ... Args>
 	void BufferPrinter::writeToStream(const T& t, const Args&... args) {
 

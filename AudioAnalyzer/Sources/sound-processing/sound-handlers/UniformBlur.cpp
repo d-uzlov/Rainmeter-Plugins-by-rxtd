@@ -50,7 +50,7 @@ std::vector<double> UniformBlur::GaussianCoefficientsManager::generateGaussianKe
 	return kernel;
 }
 
-std::optional<UniformBlur::Params> UniformBlur::parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl) {
+std::optional<UniformBlur::Params> UniformBlur::parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl) {
 	Params params;
 	params.resamplerId = optionMap.get(L"source"sv).asIString();
 	if (params.resamplerId.empty()) {

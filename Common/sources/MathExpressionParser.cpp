@@ -102,10 +102,10 @@ void ExpressionTreeNode::solve() {
 	default:;
 	}
 }
+
 MathExpressionParser::Lexer::Lexer(sview source) :
 	source(source),
 	sourceLength(static_cast<index>(source.length())) {
-
 }
 
 MathExpressionParser::Lexer::Lexeme MathExpressionParser::Lexer::next() {

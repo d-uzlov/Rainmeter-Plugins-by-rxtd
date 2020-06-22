@@ -36,9 +36,8 @@ void ParamParser::parse() {
 	handlerPatchersMap.clear();
 
 	auto processingIndices = rain.read(L"Processing").asList(L'|').own();
-	for (auto processingNameOption : processingIndices) {
-		utils::Rainmeter::ContextLogger cl { rain.getLogger() };
-		cl.setPrefix(L"Processing {}:", processingNameOption.asString());
+	for (const auto& processingNameOption : processingIndices) {
+		auto cl = rain.getLogger().context(L"Processing {}:", processingNameOption.asString());
 
 		string processingOptionIndex = L"Processing"s;
 		processingOptionIndex += L"_";
@@ -124,8 +123,7 @@ void ParamParser::cacheHandlers(const utils::OptionList& indices) {
 
 		auto optionMap = descriptionOption.asMap(L'|', L' ').own();
 
-		utils::Rainmeter::ContextLogger cl { rain.getLogger() };
-		cl.setPrefix(L"Handler {}: ", indexOption.asString());
+		auto cl = rain.getLogger().context(L"Handler '{}': ", indexOption.asString());
 		auto patcher = parseHandler(optionMap, cl);
 		if (patcher == nullptr) {
 			cl.error(L"not a valid description");
@@ -133,14 +131,14 @@ void ParamParser::cacheHandlers(const utils::OptionList& indices) {
 		}
 		const auto unusedOptions = optionMap.getListOfUntouched();
 		if (unusedOptionsWarning && !unusedOptions.empty()) {
-			cl.warning(L"unused options {}", unusedOptions);
+			cl.warning(L"unused option: '{}'", unusedOptions);
 		}
 
 		handlerPatchersMap.insert(iter, decltype(handlerPatchersMap)::value_type(indexOption.asIString(), patcher));
 	}
 }
 
-std::function<SoundHandler*(SoundHandler*)> ParamParser::parseHandler(const utils::OptionMap& optionMap, utils::Rainmeter::ContextLogger &cl) {
+std::function<SoundHandler*(SoundHandler*)> ParamParser::parseHandler(const utils::OptionMap& optionMap, utils::Rainmeter::Logger &cl) {
 	const auto type = optionMap.get(L"type"sv).asIString();
 
 	if (type.empty()) {
@@ -150,7 +148,7 @@ std::function<SoundHandler*(SoundHandler*)> ParamParser::parseHandler(const util
 	// source must be checked to prevent loops
 	const auto source = optionMap.getUntouched(L"source").asIString();
 	if (!source.empty() && handlerPatchersMap.find(source) == handlerPatchersMap.end()) {
-		cl.error(L"reverse or unknown dependency {}", source);
+		cl.error(L"reverse or unknown dependency '{}'", source);
 		return nullptr;
 	}
 

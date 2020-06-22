@@ -18,7 +18,7 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-std::optional<BandCascadeTransformer::Params> BandCascadeTransformer::parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::ContextLogger& cl) {
+std::optional<BandCascadeTransformer::Params> BandCascadeTransformer::parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl) {
 	Params params;
 	params.sourceId = optionMap.get(L"source"sv).asIString();
 	if (params.sourceId.empty()) {
