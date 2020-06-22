@@ -27,9 +27,10 @@ namespace rxtd::utils {
 
 			void *rm { };
 			string prefix { };
-			BufferPrinter printer;
 
 		public:
+			BufferPrinter printer;
+
 			Logger() = default;
 
 		private:

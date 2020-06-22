@@ -1,4 +1,4 @@
-/*
+ï»¿/*
  * Copyright (C) 2019 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
@@ -82,36 +82,37 @@ namespace rxtd::utils {
 	 * Use format string and a list of arguments.
 	 *
 	 * Format string format: "smth1{options}smth2{}smth3"
-	 *		smth1, smth2, smth3	— will be printed as is
-	 *		{options}			— first argument will be written using "options" as argument to writeObject function
-	 *		{}					— second argument will be written using "" as argument to writeObject function
+	 *		smth1, smth2, smth3	â€” will be printed as is
+	 *		{options}			â€” first argument will be written using "options" as argument to writeObject function
+	 *		{}					â€” second argument will be written using "" as argument to writeObject function
 	 *
 	 * By default writeObject function calls operator<< on object. Specialize template to change this for your class.
 	 * writeObject is specialized for few cases:
 	 *	1. Integral types:
-	 *		"error"		— print zero-padded value with "0x" prefix
-	 *		""			— print number as is
+	 *		"error"		â€” print zero-padded value with "0x" prefix
+	 *		""			â€” print number as is
 	 *	2. Enums:
-	 *		"name"		— use user-provided function "sview getEnumName(Enum value)"
-	 *		""			— cast enum to number
+	 *		"name"		â€” use user-provided function "sview getEnumName(Enum value)"
+	 *		""			â€” cast enum to number
 	 *	3. Bool:
-	 *		"number"	— cast bool to int
-	 *		""			— print "true" or "false"
+	 *		"number"	â€” cast bool to int
+	 *		""			â€” print "true" or "false"
 	 */
 	class BufferPrinter {
 		class ReadableOutputBuffer : public std::basic_streambuf<wchar_t> {
-		private:
 			std::vector<char_type> buffer;
 
 		public:
-			ReadableOutputBuffer();
+			ReadableOutputBuffer() = default;
 			~ReadableOutputBuffer() = default;
 
+			// these constructors must be implemented explicitly because std::basic_streambuf is not movable,
+			// so no default functions can be generated
 			ReadableOutputBuffer(ReadableOutputBuffer&& other) noexcept;
 			ReadableOutputBuffer& operator=(ReadableOutputBuffer&& other) noexcept;
 
-			ReadableOutputBuffer(const ReadableOutputBuffer& other);
-			ReadableOutputBuffer& operator=(const ReadableOutputBuffer& other);
+			ReadableOutputBuffer(const ReadableOutputBuffer& other) = default;
+			ReadableOutputBuffer& operator=(const ReadableOutputBuffer& other) = default;
 
 			const char_type* getBuffer();
 			void resetPointers();
@@ -126,14 +127,6 @@ namespace rxtd::utils {
 		bool skipUnlistedArgs = true;
 
 	public:
-		explicit BufferPrinter() = default;
-		~BufferPrinter() = default;
-
-		BufferPrinter(BufferPrinter&& other) noexcept;
-		BufferPrinter(const BufferPrinter& other) noexcept;
-		BufferPrinter& operator=(const BufferPrinter& other) noexcept;
-		BufferPrinter& operator=(BufferPrinter&& other) noexcept;
-
 		void setSkipUnlistedArgs(bool value);
 
 		template<typename... Args>

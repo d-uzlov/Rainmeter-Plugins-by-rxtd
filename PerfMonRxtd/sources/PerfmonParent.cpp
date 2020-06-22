@@ -17,7 +17,6 @@
 
 #include "undef.h"
 
-
 using namespace perfmon;
 
 utils::ParentManager<PerfmonParent> PerfmonParent::parentManager { };

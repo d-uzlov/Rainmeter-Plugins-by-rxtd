@@ -17,37 +17,17 @@ void utils::writeObject(std::wostream& stream, const Option& t, sview options) {
 	stream << t.asString();
 }
 
-BufferPrinter::ReadableOutputBuffer::ReadableOutputBuffer() {
-	buffer.resize(16);
-	resetPointers();
-}
-
-BufferPrinter::ReadableOutputBuffer::ReadableOutputBuffer(ReadableOutputBuffer&& other) noexcept :
+BufferPrinter::ReadableOutputBuffer::ReadableOutputBuffer(ReadableOutputBuffer&& other) noexcept:
 	std::basic_streambuf<wchar_t>(other),
-	buffer(std::move(other.buffer)) { }
-
-BufferPrinter::ReadableOutputBuffer& BufferPrinter::ReadableOutputBuffer::operator=(ReadableOutputBuffer&& other) noexcept {
-	if (this == &other)
-		return *this;
-
-	buffer = std::move(other.buffer);
-	std::basic_streambuf<wchar_t>::operator =(std::move(other));
-
-	return *this;
+	buffer(std::move(other.buffer)) {
 }
-
-BufferPrinter::ReadableOutputBuffer::ReadableOutputBuffer(const ReadableOutputBuffer& other) :
-	std::basic_streambuf<wchar_t>(other),
-	buffer(other.buffer) { }
 
 BufferPrinter::ReadableOutputBuffer& BufferPrinter::ReadableOutputBuffer::operator=(
-	const ReadableOutputBuffer& other) {
+	ReadableOutputBuffer&& other) noexcept {
 	if (this == &other)
 		return *this;
-
 	std::basic_streambuf<wchar_t>::operator =(other);
-	buffer = other.buffer;
-
+	buffer = std::move(other.buffer);
 	return *this;
 }
 
@@ -57,6 +37,7 @@ const std::basic_streambuf<wchar_t>::char_type* BufferPrinter::ReadableOutputBuf
 
 void BufferPrinter::ReadableOutputBuffer::resetPointers() {
 	char_type* buf = buffer.data();
+	// buffer.size() - 1 because we need size for '\0' symbol at the end
 	setp(buf, buf + buffer.size() - 1);
 }
 
@@ -65,47 +46,19 @@ void BufferPrinter::ReadableOutputBuffer::appendEOL() {
 }
 
 std::basic_streambuf<wchar_t>::int_type BufferPrinter::ReadableOutputBuffer::overflow(int_type c) {
-	const auto oldSize = pptr() - pbase();
-	buffer.resize(oldSize * 2);
+	// https://stackoverflow.com/a/51571896
 
-	buffer[oldSize] = static_cast<char_type>(c);
+	const index size = pptr() - pbase();
+	const index newCapacity = std::max<index>(32, size * 2); // initial size will be 32
+	buffer.resize(newCapacity);
 
 	resetPointers();
-	pbump(int(oldSize) + 1);
-
+	pbump(size);
+	if (c != int_type(EOF)) {
+		buffer[size] = c;
+		pbump(1);
+	}
 	return c;
-}
-
-BufferPrinter::BufferPrinter(BufferPrinter&& other) noexcept :
-	buffer(std::move(other.buffer)),
-	formatString(other.formatString),
-	skipUnlistedArgs(other.skipUnlistedArgs) { }
-
-BufferPrinter::BufferPrinter(const BufferPrinter& other) noexcept :
-	buffer(other.buffer),
-	formatString(other.formatString),
-	skipUnlistedArgs(other.skipUnlistedArgs) { }
-
-BufferPrinter& BufferPrinter::operator=(const BufferPrinter& other) noexcept {
-	if (this == &other)
-		return *this;
-
-	buffer = other.buffer;
-	formatString = other.formatString;
-	skipUnlistedArgs = other.skipUnlistedArgs;
-
-	return *this;
-}
-
-BufferPrinter& BufferPrinter::operator=(BufferPrinter&& other) noexcept {
-	if (this == &other)
-		return *this;
-
-	buffer = std::move(other.buffer);
-	formatString = other.formatString;
-	skipUnlistedArgs = other.skipUnlistedArgs;
-
-	return *this;
 }
 
 void BufferPrinter::setSkipUnlistedArgs(bool value) {
