@@ -235,6 +235,10 @@ Option Option::own() {
 	return *this;
 }
 
+bool Option::empty() const {
+	return getView().empty();
+}
+
 double Option::parseNumber(sview source) {
 	MathExpressionParser parser(source);
 

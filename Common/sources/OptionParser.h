@@ -75,6 +75,8 @@ namespace rxtd::utils {
 
 		Option own();
 
+		bool empty() const;
+
 	private:
 		static double parseNumber(sview source);
 		sview getView() const;

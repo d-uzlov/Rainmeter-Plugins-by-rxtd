@@ -67,7 +67,7 @@ void AudioChild::_reload() {
 	} else if (stringValueStr == L"Info") {
 		stringValueType = StringValue::eINFO;
 
-		auto requestList = utils::OptionParser::parse(rain.readString(L"InfoRequest")).asList(L',').own();
+		auto requestList = rain.readOption(L"InfoRequest").asList(L',').own();
 
 		infoRequest.clear();
 		for (auto view : requestList) {

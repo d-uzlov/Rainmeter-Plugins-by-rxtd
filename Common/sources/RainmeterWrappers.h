@@ -10,6 +10,7 @@
 #pragma once
 
 #include "BufferPrinter.h"
+#include "OptionParser.h"
 
 #undef min
 #undef max
@@ -140,6 +141,7 @@ namespace rxtd::utils {
 		Rainmeter& operator=(const Rainmeter& other);
 		Rainmeter& operator=(Rainmeter&& other) noexcept;
 
+		Option readOption(sview optionName) const;
 		sview readString(sview optionName, const wchar_t* defaultValue = L"") const;
 		sview readPath(sview optionName, const wchar_t* defaultValue = L"") const;
 		double readDouble(sview optionName, double defaultValue = 0.0) const;

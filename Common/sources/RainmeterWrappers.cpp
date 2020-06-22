@@ -112,6 +112,10 @@ Rainmeter& Rainmeter::operator=(Rainmeter&& other) noexcept {
 	return *this;
 }
 
+Option Rainmeter::readOption(sview optionName) const {
+	return OptionParser::parse(readString(optionName)).own();
+}
+
 sview Rainmeter::readString(sview optionName, const wchar_t* defaultValue) const {
 	return RmReadString(rm, makeNullTerminated(optionName), defaultValue);
 }

@@ -20,6 +20,7 @@
 #include "sound-processing/sound-handlers/UniformBlur.h"
 
 #include "undef.h"
+#include "sound-processing/sound-handlers/Loudness.h"
 
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
@@ -34,7 +35,7 @@ ParamParser::ParamParser(utils::Rainmeter& rain, bool unusedOptionsWarning) :
 void ParamParser::parse() {
 	handlerPatchersMap.clear();
 
-	auto processingIndices = utils::OptionParser::parse(rain.readString(L"Processing")).asList(L'|').own();
+	auto processingIndices = rain.readOption(L"Processing").asList(L'|').own();
 	for (auto processingNameOption : processingIndices) {
 		utils::Rainmeter::ContextLogger cl { rain.getLogger() };
 		cl.setPrefix(L"Processing {}:", processingNameOption.asString());
@@ -42,20 +43,20 @@ void ParamParser::parse() {
 		string processingOptionIndex = L"Processing"s;
 		processingOptionIndex += L"_";
 		processingOptionIndex += processingNameOption.asString();
-		auto processingDescription = rain.readString(processingOptionIndex);
-		if (processingDescription.empty()) {
+		auto processingDescriptionOption = rain.readOption(processingOptionIndex);
+		if (processingDescriptionOption.empty()) {
 			cl.error(L"processing description for '{}' is now found", processingNameOption.asString());
 			continue;
 		}
 
-		auto processingMap = utils::OptionParser::parse(processingDescription).asMap(L'|', L' ').own();
+		auto processingMap = processingDescriptionOption.asMap(L'|', L' ').own();
 		auto channelsOption = processingMap.get(L"channels"sv);
-		if (channelsOption.asString().empty()) {
+		if (channelsOption.empty()) {
 			cl.error(L"channels not found");
 			continue;
 		}
 		auto handlersOption = processingMap.get(L"handlers"sv);
-		if (handlersOption.asString().empty()) {
+		if (handlersOption.empty()) {
 			cl.error(L"handlers not found");
 			continue;
 		}
@@ -115,13 +116,13 @@ void ParamParser::cacheHandlers(const utils::OptionList& indices) {
 		optionName += L"_";
 		optionName += indexOption.asString();
 
-		const auto descriptionView = rain.readString(optionName);
-		if (descriptionView.empty()) {
+		const auto descriptionOption = rain.readOption(optionName);
+		if (descriptionOption.empty()) {
 			log.error(L"Description of '{}' not found", indexOption.asString());
 			continue;
 		}
 
-		auto optionMap = utils::OptionParser::parse(descriptionView).asMap(L'|', L' ').own();
+		auto optionMap = descriptionOption.asMap(L'|', L' ').own();
 
 		utils::Rainmeter::ContextLogger cl { rain.getLogger() };
 		cl.setPrefix(L"Handler {}: ", indexOption.asString());
@@ -185,6 +186,9 @@ std::function<SoundHandler*(SoundHandler*)> ParamParser::parseHandler(const util
 	}
 	if (type == L"waveform") {
 		return parseHandlerT2<WaveForm>(optionMap, cl);
+	}
+	if (type == L"loudness") {
+		return parseHandlerT<Loudness>(optionMap, cl);
 	}
 
 	cl.error(L"unknown type '{}'", type);
