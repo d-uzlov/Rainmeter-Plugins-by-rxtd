@@ -1,4 +1,5 @@
 #include "PropertyStoreWrapper.h"
+#include "MediaDeviceWrapper.h"
 
 namespace rxtd::utils {
 	namespace {
@@ -29,12 +30,23 @@ namespace rxtd::utils {
 		};
 	}
 
+	PropertyStoreWrapper::PropertyStoreWrapper(MediaDeviceWrapper& device) {
+		const auto result = device->OpenPropertyStore(STGM_READ, getMetaPointer());
+
+		if (result != S_OK) {
+			release();
+			return;
+		}
+	}
+
 	string PropertyStoreWrapper::readProperty(const PROPERTYKEY& key) {
 		PropVariantWrapper prop;
 
 		if ((*this)->GetValue(key, &prop) != S_OK) {
 			return {};
 		}
+
+		GenericComWrapper<IUnknown> test;
 
 		return prop.getCString();
 	}

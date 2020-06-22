@@ -14,9 +14,8 @@ namespace rxtd::utils {
 			return { };
 		}
 
-		PropertyStoreWrapper props;
-		lastResult = (*this)->OpenPropertyStore(STGM_READ, &props);
-		if (lastResult != S_OK) {
+		PropertyStoreWrapper props { *this };
+		if (!props.isValid()) {
 			return { };
 		}
 
@@ -52,7 +51,7 @@ namespace rxtd::utils {
 			IID_IAudioClient,
 			CLSCTX_ALL,
 			nullptr,
-			reinterpret_cast<void**>(&audioClient)
+			reinterpret_cast<void**>(audioClient.getMetaPointer())
 		);
 		return audioClient;
 	}

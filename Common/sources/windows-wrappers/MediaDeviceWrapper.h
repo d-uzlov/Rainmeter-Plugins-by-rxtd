@@ -6,7 +6,7 @@
 #include "MediaDeviceType.h"
 
 namespace rxtd::utils {
-
+	class IMMDeviceEnumeratorWrapper;
 	class MediaDeviceWrapper : public GenericComWrapper<IMMDevice> {
 	public:
 		struct DeviceInfo {

@@ -164,7 +164,7 @@ const CaptureManager& DeviceManager::getCaptureManager() const {
 	return captureManager;
 }
 
-const AudioEnumeratorWrapper& DeviceManager::getDeviceEnumerator() const {
+const AudioEnumeratorHelper& DeviceManager::getDeviceEnumerator() const {
 	return enumerator;
 }
 

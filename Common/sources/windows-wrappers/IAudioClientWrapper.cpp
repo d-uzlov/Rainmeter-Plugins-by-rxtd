@@ -10,7 +10,7 @@ namespace rxtd::utils {
 
 	IAudioCaptureClientWrapper IAudioClientWrapper::openCapture() {
 		IAudioCaptureClientWrapper audioCaptureClient;
-		lastResult = (*this)->GetService(IID_IAudioCaptureClient, reinterpret_cast<void**>(&audioCaptureClient));;
+		lastResult = (*this)->GetService(IID_IAudioCaptureClient, reinterpret_cast<void**>(audioCaptureClient.getMetaPointer()));;
 		return audioCaptureClient;
 	}
 

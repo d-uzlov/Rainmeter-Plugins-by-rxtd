@@ -13,7 +13,7 @@
 #include "RainmeterWrappers.h"
 
 #include "CaptureManager.h"
-#include "AudioEnumeratorWrapper.h"
+#include "AudioEnumeratorHelper.h"
 #include "DataSource.h"
 
 namespace rxtd::audio_analyzer {
@@ -45,7 +45,7 @@ namespace rxtd::audio_analyzer {
 
 		mutable utils::MediaDeviceWrapper audioDeviceHandle { };
 
-		AudioEnumeratorWrapper enumerator;
+		AudioEnumeratorHelper enumerator;
 		CaptureManager captureManager;
 
 		utils::MediaDeviceWrapper::DeviceInfo deviceInfo;
@@ -79,7 +79,7 @@ namespace rxtd::audio_analyzer {
 
 		CaptureManager& getCaptureManager();
 		const CaptureManager& getCaptureManager() const;
-		const AudioEnumeratorWrapper& getDeviceEnumerator() const;
+		const AudioEnumeratorHelper& getDeviceEnumerator() const;
 
 	private:
 		bool isDeviceChanged();

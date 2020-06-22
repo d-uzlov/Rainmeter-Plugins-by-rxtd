@@ -161,9 +161,12 @@
     <ClCompile Include="sources\RainmeterWrappers.cpp" />
     <ClCompile Include="sources\StringUtils.cpp" />
     <ClCompile Include="sources\TypeHolder.cpp" />
+    <ClCompile Include="sources\windows-wrappers\AudioBuffer.cpp" />
     <ClCompile Include="sources\windows-wrappers\FileWrapper.cpp" />
     <ClCompile Include="sources\windows-wrappers\IAudioCaptureClientWrapper.cpp" />
     <ClCompile Include="sources\windows-wrappers\IAudioClientWrapper.cpp" />
+    <ClCompile Include="sources\windows-wrappers\IMMDeviceCollectionWrapper.cpp" />
+    <ClCompile Include="sources\windows-wrappers\IMMDeviceEnumeratorWrapper.cpp" />
     <ClCompile Include="sources\windows-wrappers\MediaDeviceWrapper.cpp" />
     <ClCompile Include="sources\windows-wrappers\PropertyStoreWrapper.cpp" />
   </ItemGroup>
@@ -187,6 +190,9 @@
     <ClInclude Include="sources\windows-wrappers\GenericComWrapper.h" />
     <ClInclude Include="sources\windows-wrappers\IAudioCaptureClientWrapper.h" />
     <ClInclude Include="sources\windows-wrappers\IAudioClientWrapper.h" />
+    <ClInclude Include="sources\windows-wrappers\IMMDeviceCollectionWrapper.h" />
+    <ClInclude Include="sources\windows-wrappers\IMMDeviceEnumeratorWrapper.h" />
+    <ClInclude Include="sources\windows-wrappers\MediaDeviceType.h" />
     <ClInclude Include="sources\windows-wrappers\MediaDeviceWrapper.h" />
     <ClInclude Include="sources\windows-wrappers\PropertyStoreWrapper.h" />
     <ClInclude Include="sources\windows-wrappers\WaveFormat.h" />

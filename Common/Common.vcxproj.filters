@@ -56,6 +56,15 @@
     <ClCompile Include="sources\windows-wrappers\IAudioCaptureClientWrapper.cpp">
       <Filter>Source Files\windows-wrappers</Filter>
     </ClCompile>
+    <ClCompile Include="sources\windows-wrappers\AudioBuffer.cpp">
+      <Filter>Source Files\windows-wrappers</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\windows-wrappers\IMMDeviceEnumeratorWrapper.cpp">
+      <Filter>Source Files\windows-wrappers</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\windows-wrappers\IMMDeviceCollectionWrapper.cpp">
+      <Filter>Source Files\windows-wrappers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sources\BmpWriter.h">
@@ -122,10 +131,19 @@
     <ClInclude Include="sources\windows-wrappers\IAudioCaptureClientWrapper.h">
       <Filter>Source Files\windows-wrappers</Filter>
     </ClInclude>
+    <ClInclude Include="sources\windows-wrappers\WaveFormat.h">
+      <Filter>Source Files\windows-wrappers</Filter>
+    </ClInclude>
     <ClInclude Include="sources\windows-wrappers\AudioBuffer.h">
       <Filter>Source Files\windows-wrappers</Filter>
     </ClInclude>
-    <ClInclude Include="sources\windows-wrappers\WaveFormat.h">
+    <ClInclude Include="sources\windows-wrappers\MediaDeviceType.h">
+      <Filter>Source Files\windows-wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\windows-wrappers\IMMDeviceEnumeratorWrapper.h">
+      <Filter>Source Files\windows-wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\windows-wrappers\IMMDeviceCollectionWrapper.h">
       <Filter>Source Files\windows-wrappers</Filter>
     </ClInclude>
   </ItemGroup>

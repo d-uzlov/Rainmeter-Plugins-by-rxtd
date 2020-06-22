@@ -58,14 +58,18 @@ namespace rxtd::utils {
 			return ptr;
 		}
 
-		T** operator &() {
-			return &ptr;
-		}
+		// T** operator &() {
+		// 	return &ptr;
+		// }
 		T* operator->() {
 			return ptr;
 		}
 		const T* operator->() const {
 			return ptr;
+		}
+
+		T** getMetaPointer() {
+			return &ptr;
 		}
 	};
 }
