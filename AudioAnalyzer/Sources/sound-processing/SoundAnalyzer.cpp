@@ -65,13 +65,13 @@ void SoundAnalyzer::process(const uint8_t* buffer, bool isSilent, index framesCo
 
 	if (!isSilent) {
 		channelMixer.decomposeFramesIntoChannels(buffer, framesCount);
+
+		if (!channels[Channel::eAUTO].handlers.empty()) {
+			channelMixer.createChannelAuto(framesCount, waveBuffer.getBuffersCount() - 1);
+		}
 	}
 
 	dataSupplier.setWaveSize(resampler.calculateFinalWaveSize(framesCount));
-
-	if (!channels[Channel::eAUTO].handlers.empty()) {
-		channelMixer.createChannelAuto(framesCount, waveBuffer.getBuffersCount() - 1);
-	}
 
 	for (auto &[channel, channelData] : channels) {
 		if (channelData.handlers.empty()) {
