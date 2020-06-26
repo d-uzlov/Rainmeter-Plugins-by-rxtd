@@ -144,11 +144,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="local-version.h" />
+    <ClInclude Include="Sources\audio-utils\FFT.h" />
+    <ClInclude Include="Sources\audio-utils\InfiniteResponseFilter.h" />
+    <ClInclude Include="Sources\audio-utils\kiss_fft\KissFft.hh" />
     <ClInclude Include="Sources\AudioChild.h" />
     <ClInclude Include="Sources\AudioParent.h" />
-    <ClInclude Include="Sources\iso226\iso226.h" />
-    <ClInclude Include="Sources\iso226\iso226_data.h" />
-    <ClInclude Include="Sources\kiss_fft\KissFft.hh" />
     <ClInclude Include="Sources\ParamParser.h" />
     <ClInclude Include="Sources\sound-processing\AudioChildHelper.h" />
     <ClInclude Include="Sources\sound-processing\Channel.h" />
@@ -165,9 +165,9 @@
     <ClInclude Include="Sources\sound-processing\sound-handlers\BandResampler.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\BlockMean.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\FftAnalyzer.h" />
-    <ClInclude Include="Sources\sound-processing\sound-handlers\FftImpl.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\FiniteTimeFilter.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\LogarithmicValueMapper.h" />
+    <ClInclude Include="Sources\sound-processing\sound-handlers\Loudness.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\SoundHandler.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\Spectrogram.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\UniformBlur.h" />
@@ -184,10 +184,11 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Test|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Sources\audio-utils\FFT.cpp" />
+    <ClCompile Include="Sources\audio-utils\InfiniteResponseFilter.cpp" />
     <ClCompile Include="Sources\AudioChild.cpp" />
     <ClCompile Include="Sources\dllmain.cpp" />
     <ClCompile Include="Sources\AudioParent.cpp" />
-    <ClCompile Include="Sources\iso226\iso226.cpp" />
     <ClCompile Include="Sources\ParamParser.cpp" />
     <ClCompile Include="Sources\sound-processing\AudioChildHelper.cpp" />
     <ClCompile Include="Sources\sound-processing\Channel.cpp" />
@@ -201,9 +202,9 @@
     <ClCompile Include="Sources\sound-processing\sound-handlers\BandResampler.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\BlockMean.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\FftAnalyzer.cpp" />
-    <ClCompile Include="Sources\sound-processing\sound-handlers\FftImpl.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\FiniteTimeFilter.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\LogarithmicValueMapper.cpp" />
+    <ClCompile Include="Sources\sound-processing\sound-handlers\Loudness.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\Spectrogram.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\UniformBlur.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\WaveForm.cpp" />

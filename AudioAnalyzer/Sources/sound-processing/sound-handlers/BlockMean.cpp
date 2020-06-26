@@ -8,7 +8,6 @@
  */
 
 #include "BlockMean.h"
-#include <cmath>
 
 #include "undef.h"
 

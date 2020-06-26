@@ -7,21 +7,20 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include "FftImpl.h"
-#include <cmath>
+#include "FFT.h"
 
 #include "undef.h"
 
-using namespace audio_analyzer;
+using namespace audio_utils;
 
 struct CountPair {
 	index count = 0;
-	std::unique_ptr<FftImpl> ptr;
+	std::unique_ptr<FFT> ptr;
 };
 static std::map<index, CountPair> cache;
-static FftImpl zeroFft(0);
+static FFT zeroFft(0);
 
-FftImpl* FftImpl::change(FftImpl* old, index newSize) {
+FFT* FFT::change(FFT* old, index newSize) {
 	if (old != nullptr) {
 		if (old->fftSize == newSize) {
 			return old;
@@ -42,12 +41,12 @@ FftImpl* FftImpl::change(FftImpl* old, index newSize) {
 	CountPair &pair = cache[newSize];
 	pair.count++;
 	if (pair.ptr == nullptr) {
-		pair.ptr = std::make_unique<FftImpl>(newSize);
+		pair.ptr = std::make_unique<FFT>(newSize);
 	}
 	return pair.ptr.get();
 }
 
-FftImpl::FftImpl(index fftSize) :
+FFT::FFT(index fftSize) :
 	fftSize(fftSize),
 	scalar(1.0 / std::sqrt(fftSize)),
 	windowFunction(createWindowFunction(fftSize)),
@@ -57,23 +56,23 @@ FftImpl::FftImpl(index fftSize) :
 	outputBufferSize = fftSize / 2;
 }
 
-double FftImpl::getDC() const {
+double FFT::getDC() const {
 	return outputBuffer[0].real() * scalar;
 }
 
-double FftImpl::getBinMagnitude(index binIndex) const {
+double FFT::getBinMagnitude(index binIndex) const {
 	const auto &v = outputBuffer[binIndex];
 	const auto square = v.real() * v.real() + v.imag() * v.imag();
 	// return fastSqrt(square); // doesn't seem to improve performance
 	return std::sqrt(square) * scalar;
 }
 
-void FftImpl::setBuffers(input_buffer_type* inputBuffer, output_buffer_type* outputBuffer) {
+void FFT::setBuffers(input_buffer_type* inputBuffer, output_buffer_type* outputBuffer) {
 	this->inputBuffer = inputBuffer;
 	this->outputBuffer = outputBuffer;
 }
 
-void FftImpl::process(const float* wave) {
+void FFT::process(const float* wave) {
 	for (index iBin = 0; iBin < fftSize; ++iBin) {
 		inputBuffer[iBin] = wave[iBin] * windowFunction[iBin];
 	}
@@ -81,15 +80,15 @@ void FftImpl::process(const float* wave) {
 	kiss.transform_real(inputBuffer, outputBuffer);
 }
 
-index FftImpl::getInputBufferSize() const {
+index FFT::getInputBufferSize() const {
 	return inputBufferSize;
 }
 
-index FftImpl::getOutputBufferSize() const {
+index FFT::getOutputBufferSize() const {
 	return outputBufferSize;
 }
 
-std::vector<float> FftImpl::createWindowFunction(index fftSize) {
+std::vector<float> FFT::createWindowFunction(index fftSize) {
 	std::vector<float> windowFunction;
 	windowFunction.resize(fftSize);
 	constexpr double _2pi = 2 * 3.14159265358979323846;

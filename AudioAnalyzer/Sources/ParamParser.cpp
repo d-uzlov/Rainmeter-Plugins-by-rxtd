@@ -18,9 +18,9 @@
 #include "sound-processing/sound-handlers/LogarithmicValueMapper.h"
 #include "sound-processing/sound-handlers/WeightedBlur.h"
 #include "sound-processing/sound-handlers/UniformBlur.h"
+#include "sound-processing/sound-handlers/Loudness.h"
 
 #include "undef.h"
-#include "sound-processing/sound-handlers/Loudness.h"
 
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;

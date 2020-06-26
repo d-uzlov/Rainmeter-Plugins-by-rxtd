@@ -8,10 +8,10 @@
  */
 
 #pragma once
-#include "../../kiss_fft/KissFft.hh"
+#include "kiss_fft/KissFft.hh"
 
-namespace rxtd::audio_analyzer {
-	class FftImpl {
+namespace rxtd::audio_utils {
+	class FFT {
 	private:
 		index fftSize;
 		double scalar;
@@ -34,9 +34,9 @@ namespace rxtd::audio_analyzer {
 		output_buffer_type* outputBuffer { };
 
 	public:
-		static FftImpl* change(FftImpl* old, index newSize);
+		static FFT* change(FFT* old, index newSize);
 
-		FftImpl(index fftSize);
+		FFT(index fftSize);
 
 		double getDC() const;
 		double getBinMagnitude(index binIndex) const;
