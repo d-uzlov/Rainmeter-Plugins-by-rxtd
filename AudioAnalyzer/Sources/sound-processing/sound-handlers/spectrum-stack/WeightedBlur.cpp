@@ -8,7 +8,6 @@
  */
 
 #include "WeightedBlur.h"
-#include <cmath>
 
 #include "undef.h"
 

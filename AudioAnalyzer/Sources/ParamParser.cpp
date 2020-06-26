@@ -8,17 +8,19 @@
  */
 
 #include "ParamParser.h"
-#include "sound-processing/sound-handlers/BlockMean.h"
-#include "sound-processing/sound-handlers/FftAnalyzer.h"
-#include "sound-processing/sound-handlers/Spectrogram.h"
+
+#include "sound-processing/sound-handlers/BlockHandler.h"
 #include "sound-processing/sound-handlers/WaveForm.h"
-#include "sound-processing/sound-handlers/BandResampler.h"
-#include "sound-processing/sound-handlers/BandCascadeTransformer.h"
 #include "sound-processing/sound-handlers/FiniteTimeFilter.h"
 #include "sound-processing/sound-handlers/LogarithmicValueMapper.h"
-#include "sound-processing/sound-handlers/WeightedBlur.h"
 #include "sound-processing/sound-handlers/UniformBlur.h"
 #include "sound-processing/sound-handlers/Loudness.h"
+
+#include "sound-processing/sound-handlers/spectrum-stack/FftAnalyzer.h"
+#include "sound-processing/sound-handlers/spectrum-stack/BandResampler.h"
+#include "sound-processing/sound-handlers/spectrum-stack/BandCascadeTransformer.h"
+#include "sound-processing/sound-handlers/spectrum-stack/WeightedBlur.h"
+#include "sound-processing/sound-handlers/spectrum-stack/Spectrogram.h"
 
 #include "undef.h"
 

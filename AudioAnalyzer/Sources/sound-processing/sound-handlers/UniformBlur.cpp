@@ -8,7 +8,6 @@
  */
 
 #include "UniformBlur.h"
-#include <cmath>
 
 #include "undef.h"
 

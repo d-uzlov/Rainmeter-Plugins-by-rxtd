@@ -161,18 +161,18 @@
     <ClInclude Include="Sources\sound-processing\device-management\DataSource.h" />
     <ClInclude Include="Sources\sound-processing\HelperClasses.h" />
     <ClInclude Include="Sources\sound-processing\Resampler.h" />
-    <ClInclude Include="Sources\sound-processing\sound-handlers\BandCascadeTransformer.h" />
-    <ClInclude Include="Sources\sound-processing\sound-handlers\BandResampler.h" />
-    <ClInclude Include="Sources\sound-processing\sound-handlers\BlockMean.h" />
-    <ClInclude Include="Sources\sound-processing\sound-handlers\FftAnalyzer.h" />
+    <ClInclude Include="Sources\sound-processing\sound-handlers\BlockHandler.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\FiniteTimeFilter.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\LogarithmicValueMapper.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\Loudness.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\SoundHandler.h" />
-    <ClInclude Include="Sources\sound-processing\sound-handlers\Spectrogram.h" />
+    <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\BandCascadeTransformer.h" />
+    <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\BandResampler.h" />
+    <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\FftAnalyzer.h" />
+    <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\Spectrogram.h" />
+    <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\WeightedBlur.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\UniformBlur.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\WaveForm.h" />
-    <ClInclude Include="Sources\sound-processing\sound-handlers\WeightedBlur.h" />
     <ClInclude Include="Sources\sound-processing\SoundAnalyzer.h" />
   </ItemGroup>
   <ItemGroup>
@@ -198,17 +198,17 @@
     <ClCompile Include="Sources\sound-processing\device-management\DeviceManager.cpp" />
     <ClCompile Include="Sources\sound-processing\HelperClasses.cpp" />
     <ClCompile Include="Sources\sound-processing\Resampler.cpp" />
-    <ClCompile Include="Sources\sound-processing\sound-handlers\BandCascadeTransformer.cpp" />
-    <ClCompile Include="Sources\sound-processing\sound-handlers\BandResampler.cpp" />
-    <ClCompile Include="Sources\sound-processing\sound-handlers\BlockMean.cpp" />
-    <ClCompile Include="Sources\sound-processing\sound-handlers\FftAnalyzer.cpp" />
+    <ClCompile Include="Sources\sound-processing\sound-handlers\BlockHandler.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\FiniteTimeFilter.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\LogarithmicValueMapper.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\Loudness.cpp" />
-    <ClCompile Include="Sources\sound-processing\sound-handlers\Spectrogram.cpp" />
+    <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\BandCascadeTransformer.cpp" />
+    <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\BandResampler.cpp" />
+    <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\FftAnalyzer.cpp" />
+    <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\Spectrogram.cpp" />
+    <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\WeightedBlur.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\UniformBlur.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\WaveForm.cpp" />
-    <ClCompile Include="Sources\sound-processing\sound-handlers\WeightedBlur.cpp" />
     <ClCompile Include="Sources\sound-processing\SoundAnalyzer.cpp" />
   </ItemGroup>
   <ItemGroup>

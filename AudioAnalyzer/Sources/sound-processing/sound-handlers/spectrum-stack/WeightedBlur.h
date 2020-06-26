@@ -8,7 +8,7 @@
  */
 
 #pragma once
-#include "SoundHandler.h"
+#include "../SoundHandler.h"
 #include "BandResampler.h"
 
 namespace rxtd::audio_analyzer {

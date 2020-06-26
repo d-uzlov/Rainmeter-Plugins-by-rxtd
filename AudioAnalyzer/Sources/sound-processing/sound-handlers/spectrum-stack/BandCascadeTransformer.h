@@ -8,7 +8,7 @@
  */
 
 #pragma once
-#include "SoundHandler.h"
+#include "../SoundHandler.h"
 #include "BandResampler.h"
 
 namespace rxtd::audio_analyzer {
@@ -56,7 +56,7 @@ namespace rxtd::audio_analyzer {
 
 		index samplesPerSec { };
 
-		std::vector<float> resultValues;
+		std::vector<float> resultValues { };
 
 		bool changed = true;
 		bool valid = false;
@@ -68,7 +68,7 @@ namespace rxtd::audio_analyzer {
 			string analysisString { };
 			layer_t minCascadeUsed = -1;
 			layer_t maxCascadeUsed = -1;
-			std::vector<layer_t> bandEndCascades;
+			std::vector<layer_t> bandEndCascades { };
 			bool weightError = false;
 		} analysis;
 

@@ -8,8 +8,8 @@
  */
 
 #pragma once
-#include "SoundHandler.h"
 #include "FftAnalyzer.h"
+#include "../SoundHandler.h"
 
 namespace rxtd::audio_analyzer {
 	class BandResampler;
@@ -63,12 +63,12 @@ namespace rxtd::audio_analyzer {
 
 		index samplesPerSec { };
 
-		std::vector<double> bandFreqMultipliers;
+		std::vector<double> bandFreqMultipliers { };
 		layer_t beginCascade = 0;
 		layer_t endCascade = 0;
 		index bandsCount = 0;
 
-		std::vector<CascadeInfo> cascadesInfo;
+		std::vector<CascadeInfo> cascadesInfo { };
 
 		bool changed = true;
 		bool valid = false;

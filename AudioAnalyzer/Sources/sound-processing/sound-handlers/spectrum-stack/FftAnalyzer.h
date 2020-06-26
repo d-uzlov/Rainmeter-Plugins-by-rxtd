@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -8,11 +8,11 @@
  */
 
 #pragma once
-#include "FftImpl.h"
-#include "SoundHandler.h"
+#include "../SoundHandler.h"
 #include <random>
 #include "RainmeterWrappers.h"
 #include "OptionParser.h"
+#include "../../../audio-utils/FFT.h"
 
 namespace rxtd::audio_analyzer {
 	class FftAnalyzer : public SoundHandler {
@@ -96,9 +96,9 @@ namespace rxtd::audio_analyzer {
 		index randomCurrentOffset = 0;
 		enum class RandomState { ON, OFF } randomState { RandomState::ON };
 
-		std::vector<CascadeData> cascades;
+		std::vector<CascadeData> cascades { };
 
-		FftImpl *fftImpl = nullptr;
+		audio_utils::FFT *fftImpl = nullptr;
 
 		mutable string propString { };
 

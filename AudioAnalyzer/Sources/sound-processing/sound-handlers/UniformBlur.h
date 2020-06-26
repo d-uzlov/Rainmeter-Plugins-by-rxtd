@@ -9,7 +9,7 @@
 
 #pragma once
 #include "SoundHandler.h"
-#include "BandResampler.h"
+#include "spectrum-stack/BandResampler.h"
 
 namespace rxtd::audio_analyzer {
 	class UniformBlur : public ResamplerProvider {

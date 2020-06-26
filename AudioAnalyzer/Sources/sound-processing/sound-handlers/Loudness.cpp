@@ -10,7 +10,6 @@
 #include "Loudness.h"
 
 #include "undef.h"
-#include <numeric>
 
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
@@ -112,7 +111,8 @@ void Loudness::process(const DataSupplier& dataSupplier) {
 	intermediateWave.resize(wave.size());
 	std::copy(wave.begin(), wave.end(), intermediateWave.begin());
 	preprocessWave();
-	result = calculateLoudness();
+	const double rawLoudness = calculateLoudness();
+	result = rawLoudness;
 
 	changed = true;
 

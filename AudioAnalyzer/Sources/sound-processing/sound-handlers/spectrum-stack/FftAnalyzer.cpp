@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -256,7 +256,7 @@ double FftAnalyzer::Random::next() {
 }
 
 FftAnalyzer::~FftAnalyzer() {
-	fftImpl = FftImpl::change(fftImpl, 0);
+	fftImpl = audio_utils::FFT::change(fftImpl, 0);
 }
 
 std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(const utils::OptionMap &optionMap, utils::Rainmeter::Logger& cl) {
@@ -329,8 +329,8 @@ void FftAnalyzer::process(const DataSupplier& dataSupplier) {
 
 	const auto wave = dataSupplier.getWave();
 
-	auto fftInputBuffer = dataSupplier.getBuffer<FftImpl::input_buffer_type>(fftImpl->getInputBufferSize());
-	auto fftOutputBuffer = dataSupplier.getBuffer<FftImpl::output_buffer_type>(fftImpl->getOutputBufferSize());
+	auto fftInputBuffer = dataSupplier.getBuffer<audio_utils::FFT::input_buffer_type>(fftImpl->getInputBufferSize());
+	auto fftOutputBuffer = dataSupplier.getBuffer<audio_utils::FFT::output_buffer_type>(fftImpl->getOutputBufferSize());
 	fftImpl->setBuffers(fftInputBuffer.data(), fftOutputBuffer.data());
 
 	if (params.randomTest != 0.0) {
@@ -350,8 +350,8 @@ void FftAnalyzer::processSilence(const DataSupplier& dataSupplier) {
 
 	const auto waveSize = dataSupplier.getWave().size();
 
-	auto fftInputBuffer = dataSupplier.getBuffer<FftImpl::input_buffer_type>(fftImpl->getInputBufferSize());
-	auto fftOutputBuffer = dataSupplier.getBuffer<FftImpl::output_buffer_type>(fftImpl->getOutputBufferSize());
+	auto fftInputBuffer = dataSupplier.getBuffer<audio_utils::FFT::input_buffer_type>(fftImpl->getInputBufferSize());
+	auto fftOutputBuffer = dataSupplier.getBuffer<audio_utils::FFT::output_buffer_type>(fftImpl->getOutputBufferSize());
 	fftImpl->setBuffers(fftInputBuffer.data(), fftOutputBuffer.data());
 
 	if (params.randomTest != 0.0) {
@@ -494,7 +494,7 @@ void FftAnalyzer::updateParams() {
 		fftSize = 0;
 		return;
 	}
-	fftImpl = FftImpl::change(fftImpl, fftSize);
+	fftImpl = audio_utils::FFT::change(fftImpl, fftSize);
 
 	inputStride = static_cast<index>(fftSize * (1 - params.overlap));
 	inputStride = std::clamp<index>(inputStride, std::min<index>(16, fftSize), fftSize);
