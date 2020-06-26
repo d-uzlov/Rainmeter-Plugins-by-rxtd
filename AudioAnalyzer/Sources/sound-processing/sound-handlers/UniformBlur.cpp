@@ -142,9 +142,7 @@ void UniformBlur::blurData(const SoundHandler& source) {
 
 		const index radius = std::llround(theoreticalRadius);
 		if (radius < 1) {
-			for (index band = 0; band < bandsCount; ++band) { // TODO rewrite
-				cascadeValues[band] = cascadeMagnitudes[band];
-			}
+			std::copy(cascadeMagnitudes.begin(), cascadeMagnitudes.end(), cascadeValues.begin());
 		} else {
 			auto &kernel = gcm.forRadius(radius);
 

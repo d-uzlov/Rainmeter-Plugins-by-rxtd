@@ -35,9 +35,13 @@ namespace rxtd::audio_analyzer {
 		// Method can be called several times in a row, handler should check for changes to optimize performance
 		virtual void finish(const DataSupplier &dataSupplier) = 0;
 
-		virtual bool isValid() const = 0;
+		virtual bool isValid() const {
+			return true;
+		}
 		virtual array_view<float> getData(layer_t layer) const = 0;
-		virtual layer_t getLayersCount() const = 0;
+		virtual layer_t getLayersCount() const { 
+			return 1;
+		}
 		virtual layer_t getStartingLayer() const {
 			return 0;
 		}

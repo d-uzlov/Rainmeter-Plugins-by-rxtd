@@ -101,12 +101,6 @@ void Loudness::reset() {
 }
 
 void Loudness::process(const DataSupplier& dataSupplier) {
-	if (!valid) {
-		return;
-	}
-
-	valid = false;
-
 	auto wave = dataSupplier.getWave();
 	intermediateWave.resize(wave.size());
 	std::copy(wave.begin(), wave.end(), intermediateWave.begin());
@@ -115,8 +109,6 @@ void Loudness::process(const DataSupplier& dataSupplier) {
 	result = rawLoudness;
 
 	changed = true;
-
-	valid = true;
 }
 
 void Loudness::processSilence(const DataSupplier& dataSupplier) {

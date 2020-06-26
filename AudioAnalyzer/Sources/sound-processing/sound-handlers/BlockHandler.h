@@ -54,16 +54,10 @@ namespace rxtd::audio_analyzer {
 		void reset() override;
 
 		void processSilence(const DataSupplier& dataSupplier) override;
-		void finish(const DataSupplier& dataSupplier) override { };
+		void finish(const DataSupplier& dataSupplier) override { }
 
-		bool isValid() const override {
-			return true;
-		}
 		array_view<float> getData(layer_t layer) const override {
 			return { &result, 1 };
-		}
-		layer_t getLayersCount() const override {
-			return 1;
 		}
 
 		const wchar_t* getProp(const isview& prop) const override;

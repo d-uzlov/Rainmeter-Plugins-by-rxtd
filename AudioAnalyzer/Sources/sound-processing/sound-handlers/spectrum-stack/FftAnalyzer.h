@@ -135,9 +135,6 @@ namespace rxtd::audio_analyzer {
 		void processSilence(const DataSupplier& dataSupplier) override;
 		void finish(const DataSupplier& dataSupplier) override { }
 
-		bool isValid() const override {
-			return true; // TODO
-		}
 		layer_t getLayersCount() const override;
 		array_view<float> getData(layer_t layer) const override;
 
