@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -12,11 +12,11 @@
 #include "RainmeterWrappers.h"
 
 namespace rxtd::audio_analyzer {
-	class BlockMean : public SoundHandler {
+	class BlockHandler : public SoundHandler {
 	public:
 		struct Params {
 		private:
-			friend BlockMean;
+			friend BlockHandler;
 
 			double attackTime { };
 			double decayTime { };
@@ -75,7 +75,7 @@ namespace rxtd::audio_analyzer {
 		virtual void finishBlock() = 0;
 	};
 
-	class BlockRms : public BlockMean {
+	class BlockRms : public BlockHandler {
 	public:
 		void process(const DataSupplier& dataSupplier) override;
 
@@ -83,7 +83,7 @@ namespace rxtd::audio_analyzer {
 		void finishBlock() override;
 	};
 
-	class BlockPeak : public BlockMean {
+	class BlockPeak : public BlockHandler {
 	public:
 		void process(const DataSupplier& dataSupplier) override;
 

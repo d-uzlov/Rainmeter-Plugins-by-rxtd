@@ -7,7 +7,7 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include "BlockMean.h"
+#include "BlockHandler.h"
 
 #include "undef.h"
 
@@ -16,7 +16,7 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-std::optional<BlockMean::Params> BlockMean::parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl) {
+std::optional<BlockHandler::Params> BlockHandler::parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl) {
 	Params params;
 	params.attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.0) * 0.001;
 	params.decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.attackTime), 0.0) * 0.001;
@@ -31,7 +31,7 @@ std::optional<BlockMean::Params> BlockMean::parseParams(const utils::OptionMap& 
 	return params;
 }
 
-void BlockMean::setParams(Params params) {
+void BlockHandler::setParams(Params params) {
 	if (this->params == params) {
 		return;
 	}
@@ -41,7 +41,7 @@ void BlockMean::setParams(Params params) {
 	recalculateConstants();
 }
 
-void BlockMean::setSamplesPerSec(index samplesPerSec) {
+void BlockHandler::setSamplesPerSec(index samplesPerSec) {
 	if (this->samplesPerSec == samplesPerSec) {
 		return;
 	}
@@ -51,7 +51,7 @@ void BlockMean::setSamplesPerSec(index samplesPerSec) {
 	recalculateConstants();
 }
 
-const wchar_t* BlockMean::getProp(const isview& prop) const {
+const wchar_t* BlockHandler::getProp(const isview& prop) const {
 	if (prop == L"block size") {
 		propString = std::to_wstring(blockSize);
 	} else if (prop == L"attack") {
@@ -64,13 +64,13 @@ const wchar_t* BlockMean::getProp(const isview& prop) const {
 	return propString.c_str();
 }
 
-void BlockMean::reset() {
+void BlockHandler::reset() {
 	counter = 0;
 	intermediateResult = 0.0;
 	result = 0.0;
 }
 
-void BlockMean::recalculateConstants() {
+void BlockHandler::recalculateConstants() {
 	blockSize = static_cast<decltype(blockSize)>(samplesPerSec * params.resolution);
 
 	attackDecayConstants[0] = calculateAttackDecayConstant(params.attackTime, samplesPerSec, blockSize);
@@ -91,7 +91,7 @@ void BlockRms::process(const DataSupplier& dataSupplier) {
 	}
 }
 
-void BlockMean::processSilence(const DataSupplier& dataSupplier) {
+void BlockHandler::processSilence(const DataSupplier& dataSupplier) {
 	const auto waveSize = dataSupplier.getWave().size();
 	index waveProcessed = 0;
 
