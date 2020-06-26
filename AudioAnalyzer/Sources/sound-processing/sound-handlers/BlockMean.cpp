@@ -82,7 +82,7 @@ void BlockMean::recalculateConstants() {
 
 void BlockRms::process(const DataSupplier& dataSupplier) {
 	const auto wave = dataSupplier.getWave();
-	for (index frame = 0; frame < dataSupplier.getWaveSize(); ++frame) {
+	for (index frame = 0; frame < wave.size(); ++frame) {
 		const double x = wave[frame];
 		intermediateResult += x * x;
 		counter++;
@@ -93,7 +93,7 @@ void BlockRms::process(const DataSupplier& dataSupplier) {
 }
 
 void BlockMean::processSilence(const DataSupplier& dataSupplier) {
-	const auto waveSize = dataSupplier.getWaveSize();
+	const auto waveSize = dataSupplier.getWave().size();
 	index waveProcessed = 0;
 
 	while (waveProcessed != waveSize) {
@@ -118,9 +118,9 @@ void BlockRms::finishBlock() {
 
 void BlockPeak::process(const DataSupplier& dataSupplier) {
 	const auto wave = dataSupplier.getWave();
-	const auto waveSize = dataSupplier.getWaveSize();
+	const auto waveSize = dataSupplier.getWave().size();
 	for (index frame = 0; frame < waveSize; ++frame) {
-		intermediateResult = std::max(intermediateResult, static_cast<double>(std::abs(wave[frame])));
+		intermediateResult = std::max<double>(intermediateResult, std::abs(wave[frame]));
 		counter++;
 		if (counter >= blockSize) {
 			finishBlock();

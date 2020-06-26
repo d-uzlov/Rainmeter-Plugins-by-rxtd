@@ -217,9 +217,9 @@ void WaveForm::process(const DataSupplier& dataSupplier) {
 	}
 
 	const auto wave = dataSupplier.getWave();
-	const auto waveSize = dataSupplier.getWaveSize();
+	const auto waveSize = wave.size();
 
-	const bool dataIsZero = std::all_of(wave, wave + waveSize, [=](auto x) { return x < params.minDistinguishableValue; });
+	const bool dataIsZero = std::all_of(wave.data(), wave.data() + waveSize, [=](auto x) { return x < params.minDistinguishableValue; });
 	if (!dataIsZero) {
 		lastNonZeroLine = 0;
 	} else {
@@ -257,7 +257,7 @@ void WaveForm::processSilence(const DataSupplier& dataSupplier) {
 		filepath += L".bmp"sv;
 	}
 
-	const auto waveSize = dataSupplier.getWaveSize();
+	const auto waveSize = dataSupplier.getWave().size();
 	
 	index waveProcessed = 0;
 

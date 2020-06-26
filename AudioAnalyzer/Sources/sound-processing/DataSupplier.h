@@ -17,8 +17,7 @@ namespace rxtd::audio_analyzer {
 	class DataSupplier {
 	public:
 		virtual ~DataSupplier() = default;
-		virtual const float* getWave() const = 0;
-		virtual index getWaveSize()  const = 0;
+		virtual array_view<float> getWave() const = 0;
 
 		template<typename T = SoundHandler>
 		const T* getHandler(isview id) const {

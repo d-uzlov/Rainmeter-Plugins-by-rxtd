@@ -34,8 +34,7 @@ namespace rxtd::audio_analyzer {
 		void setChannelIndex(index channelIndex);
 		void setChannel(Channel channel);
 
-		const float* getWave() const override;
-		index getWaveSize() const override;
+		array_view<float> getWave() const override;
 		const SoundHandler* getHandlerRaw(isview id) const override;
 		Channel getChannel() const override;
 		std::byte* getBufferRaw(index size) const override;

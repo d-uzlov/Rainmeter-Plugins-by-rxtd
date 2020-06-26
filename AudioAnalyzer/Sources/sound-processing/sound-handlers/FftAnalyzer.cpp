@@ -327,17 +327,16 @@ void FftAnalyzer::process(const DataSupplier& dataSupplier) {
 		return;
 	}
 
-	const auto waveSize = dataSupplier.getWaveSize();
+	const auto wave = dataSupplier.getWave();
 
 	auto fftInputBuffer = dataSupplier.getBuffer<FftImpl::input_buffer_type>(fftImpl->getInputBufferSize());
 	auto fftOutputBuffer = dataSupplier.getBuffer<FftImpl::output_buffer_type>(fftImpl->getOutputBufferSize());
 	fftImpl->setBuffers(fftInputBuffer.data(), fftOutputBuffer.data());
 
 	if (params.randomTest != 0.0) {
-		processRandom(waveSize);
+		processRandom(wave.size());
 	} else {
-		const auto wave = dataSupplier.getWave();
-		cascades[0].process(wave, waveSize);
+		cascades[0].process(wave.data(), wave.size());
 	}
 
 	// TODO that's ugly and error prone
@@ -349,7 +348,7 @@ void FftAnalyzer::processSilence(const DataSupplier& dataSupplier) {
 		return;
 	}
 
-	const auto waveSize = dataSupplier.getWaveSize();
+	const auto waveSize = dataSupplier.getWave().size();
 
 	auto fftInputBuffer = dataSupplier.getBuffer<FftImpl::input_buffer_type>(fftImpl->getInputBufferSize());
 	auto fftOutputBuffer = dataSupplier.getBuffer<FftImpl::output_buffer_type>(fftImpl->getOutputBufferSize());

@@ -30,12 +30,9 @@ void DataSupplierImpl::setChannel(Channel channel) {
 	this->channel = channel;
 }
 
-const float* DataSupplierImpl::getWave() const {
-	return (*wave)[channelIndex].data();
-}
-
-index DataSupplierImpl::getWaveSize() const {
-	return waveSize;
+array_view<float> DataSupplierImpl::getWave() const {
+	// TODO can I return (*wave)[channelIndex] ?
+	return { (*wave)[channelIndex].data(), waveSize };
 }
 
 const SoundHandler* DataSupplierImpl::getHandlerRaw(isview id) const {

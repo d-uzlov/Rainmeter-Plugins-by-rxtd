@@ -238,7 +238,7 @@ void Spectrogram::process(const DataSupplier& dataSupplier) {
 		filepath += L".bmp"sv;
 	}
 
-	const auto waveSize = dataSupplier.getWaveSize();
+	const auto waveSize = dataSupplier.getWave().size();
 	counter += waveSize;
 
 	if (params.colors.empty()) { // only use 2 colors

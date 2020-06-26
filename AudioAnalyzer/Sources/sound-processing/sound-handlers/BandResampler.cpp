@@ -177,6 +177,10 @@ array_view<float> BandResampler::getBandWeights(layer_t cascade) const {
 	return cascadesInfo[cascade].weights;
 }
 
+array_view<double> BandResampler::getBaseFreqs() const {
+	return params.bandFreqs;
+}
+
 void BandResampler::updateValues(const DataSupplier& dataSupplier) {
 	valid = false;
 

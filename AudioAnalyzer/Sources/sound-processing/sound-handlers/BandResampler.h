@@ -108,6 +108,7 @@ namespace rxtd::audio_analyzer {
 		}
 
 		array_view<float> getBandWeights(layer_t cascade) const;
+		array_view<double> getBaseFreqs() const;
 
 	private:
 		void updateValues(const DataSupplier& dataSupplier);
