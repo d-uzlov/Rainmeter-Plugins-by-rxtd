@@ -43,6 +43,8 @@ namespace kiss_fft {
 	public:
 		using cpx_t = std::complex<scalar_t>;
 
+		KissFft() : KissFft(0, false) { }
+
 		KissFft(const std::size_t nfft, const bool inverse);
 
 
@@ -161,7 +163,7 @@ void kiss_fft::KissFft<scalar_t>::assign(const std::size_t nfft, const bool inve
 	} else if (inverse != _inverse) {
 		// conjugate the twiddle factors.
 		for (auto& it : _twiddles) {
-			it->imag(-it->imag());
+			it.imag(-it.imag());
 		}
 	}
 }

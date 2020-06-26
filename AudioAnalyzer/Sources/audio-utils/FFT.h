@@ -13,15 +13,15 @@
 namespace rxtd::audio_utils {
 	class FFT {
 	private:
-		index fftSize;
-		double scalar;
+		index fftSize{ };
+		double scalar{ };
 
 		std::vector<float> windowFunction;
 
 		kiss_fft::KissFft<float> kiss;
 
-		index inputBufferSize { };
-		index outputBufferSize { };
+		index inputBufferSize{ };
+		index outputBufferSize{ };
 		// std::vector<float> inputBuffer;
 		// std::vector<decltype(kiss)::cpx_t> outputBuffer;
 
@@ -30,13 +30,14 @@ namespace rxtd::audio_utils {
 		using output_buffer_type = decltype(kiss)::cpx_t;
 
 	private:
-		input_buffer_type* inputBuffer { };
-		output_buffer_type* outputBuffer { };
+		input_buffer_type* inputBuffer{ };
+		output_buffer_type* outputBuffer{ };
 
 	public:
-		static FFT* change(FFT* old, index newSize);
-
+		FFT() = default;
 		FFT(index fftSize);
+
+		void setSize(index newSize);
 
 		double getDC() const;
 		double getBinMagnitude(index binIndex) const;

@@ -91,7 +91,8 @@ void Loudness::setParams(Params params) {
 }
 
 void Loudness::setSamplesPerSec(index samplesPerSec) {
-	// this->samplesPerSec = samplesPerSec;
+	this->samplesPerSec = samplesPerSec;
+
 	filter1 = KWeightingFilterBuilder::create1(samplesPerSec);
 	filter2 = KWeightingFilterBuilder::create2(samplesPerSec);
 }

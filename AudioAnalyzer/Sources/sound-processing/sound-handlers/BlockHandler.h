@@ -10,6 +10,7 @@
 #pragma once
 #include "SoundHandler.h"
 #include "RainmeterWrappers.h"
+#include "../../audio-utils/LogarithmicIRF.h"
 
 namespace rxtd::audio_analyzer {
 	class BlockHandler : public SoundHandler {
@@ -38,7 +39,7 @@ namespace rxtd::audio_analyzer {
 
 		index samplesPerSec { };
 
-		double attackDecayConstants[2] { };
+		audio_utils::LogarithmicIRF filter { };
 		index blockSize { };
 
 		index counter = 0;

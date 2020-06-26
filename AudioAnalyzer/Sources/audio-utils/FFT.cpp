@@ -13,44 +13,15 @@
 
 using namespace audio_utils;
 
-struct CountPair {
-	index count = 0;
-	std::unique_ptr<FFT> ptr;
-};
-static std::map<index, CountPair> cache;
-static FFT zeroFft(0);
-
-FFT* FFT::change(FFT* old, index newSize) {
-	if (old != nullptr) {
-		if (old->fftSize == newSize) {
-			return old;
-		}
-
-		const auto iter = cache.find(old->fftSize);
-		if (iter != cache.end()) {
-			iter->second.count--;
-			if (iter->second.count == 0) {
-				cache.erase(iter);
-			}
-		}
-	}
-	if (newSize == 0) {
-		return &zeroFft;
-	}
-
-	CountPair &pair = cache[newSize];
-	pair.count++;
-	if (pair.ptr == nullptr) {
-		pair.ptr = std::make_unique<FFT>(newSize);
-	}
-	return pair.ptr.get();
+FFT::FFT(index fftSize) {
+	setSize(fftSize);
 }
 
-FFT::FFT(index fftSize) :
-	fftSize(fftSize),
-	scalar(1.0 / std::sqrt(fftSize)),
-	windowFunction(createWindowFunction(fftSize)),
-	kiss(fftSize / 2, false) {
+void FFT::setSize(index newSize) {
+	fftSize = newSize;
+	scalar = 1.0 / std::sqrt(fftSize);
+	windowFunction = createWindowFunction(fftSize);
+	kiss.assign(fftSize / 2, false);
 
 	inputBufferSize = fftSize;
 	outputBufferSize = fftSize / 2;

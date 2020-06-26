@@ -54,14 +54,7 @@ namespace rxtd::audio_analyzer {
 		}
 
 	protected:
-		static double calculateAttackDecayConstant(double time, index samplesPerSec, index stride) {
-			return std::exp(-2.0 * stride / (samplesPerSec * time));
-		}
-
-		static double calculateAttackDecayConstant(double time, index samplesPerSec) {
-			return calculateAttackDecayConstant(time, samplesPerSec, 1);
-		}
-
+		
 		static index parseIndexProp(const isview& request, const isview& propName, index endBound) {
 			return parseIndexProp(request, propName, 0, endBound);
 		}

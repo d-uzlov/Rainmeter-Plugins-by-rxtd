@@ -13,6 +13,7 @@
 #include "RainmeterWrappers.h"
 #include "OptionParser.h"
 #include "../../../audio-utils/FFT.h"
+#include "../../../audio-utils/LogarithmicIRF.h"
 
 namespace rxtd::audio_analyzer {
 	class FftAnalyzer : public SoundHandler {
@@ -64,7 +65,8 @@ namespace rxtd::audio_analyzer {
 			FftAnalyzer *parent { };
 			CascadeData *successor { };
 
-			double attackDecay[2] { 0.0, 0.0 };
+			// double attackDecay[2] { 0.0, 0.0 };
+			audio_utils::LogarithmicIRF filter { };
 			std::vector<float> ringBuffer;
 			std::vector<float> values;
 			index filledElements { };
@@ -98,7 +100,7 @@ namespace rxtd::audio_analyzer {
 
 		std::vector<CascadeData> cascades { };
 
-		audio_utils::FFT *fftImpl = nullptr;
+		audio_utils::FFT fft { };
 
 		mutable string propString { };
 
@@ -115,7 +117,6 @@ namespace rxtd::audio_analyzer {
 	public:
 		FftAnalyzer() = default;
 
-		~FftAnalyzer();
 		/** This class is non copyable */
 		FftAnalyzer(const FftAnalyzer& other) = delete;
 		FftAnalyzer(FftAnalyzer&& other) = delete;

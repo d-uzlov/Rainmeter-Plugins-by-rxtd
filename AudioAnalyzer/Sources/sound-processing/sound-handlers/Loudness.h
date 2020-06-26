@@ -31,7 +31,7 @@ namespace rxtd::audio_analyzer {
 	private:
 		Params params { };
 
-		// index samplesPerSec { };
+		index samplesPerSec { };
 
 		audio_utils::InfiniteResponseFilter filter1 { };
 		audio_utils::InfiniteResponseFilter filter2 { };

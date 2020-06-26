@@ -68,27 +68,15 @@ void BlockHandler::reset() {
 	counter = 0;
 	intermediateResult = 0.0;
 	result = 0.0;
+	filter.reset();
 }
 
 void BlockHandler::recalculateConstants() {
 	blockSize = static_cast<decltype(blockSize)>(samplesPerSec * params.resolution);
 
-	attackDecayConstants[0] = calculateAttackDecayConstant(params.attackTime, samplesPerSec, blockSize);
-	attackDecayConstants[1] = calculateAttackDecayConstant(params.decayTime, samplesPerSec, blockSize);
+	filter.setParams(params.attackTime, params.decayTime, samplesPerSec, blockSize);
 
 	reset();
-}
-
-void BlockRms::process(const DataSupplier& dataSupplier) {
-	const auto wave = dataSupplier.getWave();
-	for (index frame = 0; frame < wave.size(); ++frame) {
-		const double x = wave[frame];
-		intermediateResult += x * x;
-		counter++;
-		if (counter >= blockSize) {
-			finishBlock();
-		}
-	}
 }
 
 void BlockHandler::processSilence(const DataSupplier& dataSupplier) {
@@ -108,9 +96,21 @@ void BlockHandler::processSilence(const DataSupplier& dataSupplier) {
 	}
 }
 
+void BlockRms::process(const DataSupplier& dataSupplier) {
+	const auto wave = dataSupplier.getWave();
+	for (index frame = 0; frame < wave.size(); ++frame) {
+		const double x = wave[frame];
+		intermediateResult += x * x;
+		counter++;
+		if (counter >= blockSize) {
+			finishBlock();
+		}
+	}
+}
+
 void BlockRms::finishBlock() {
 	const double value = std::sqrt(intermediateResult / blockSize);
-	result = value + attackDecayConstants[(value < result)] * (result - value);
+	result = filter.next(value);
 	counter = 0;
 	intermediateResult = 0.0;
 }
@@ -128,7 +128,7 @@ void BlockPeak::process(const DataSupplier& dataSupplier) {
 }
 
 void BlockPeak::finishBlock() {
-	result = intermediateResult + attackDecayConstants[(intermediateResult < result)] * (result - intermediateResult);
+	result = filter.next(intermediateResult);
 	counter = 0;
 	intermediateResult = 0.0;
 }

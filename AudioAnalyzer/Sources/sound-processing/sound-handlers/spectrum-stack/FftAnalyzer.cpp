@@ -54,8 +54,7 @@ void FftAnalyzer::CascadeData::setParams(FftAnalyzer* parent, CascadeData *succe
 	auto samplesPerSec = parent->samplesPerSec;
 	samplesPerSec = index(samplesPerSec / std::pow(2, cascadeIndex));
 
-	attackDecay[0] = calculateAttackDecayConstant(parent->params.attackTime, samplesPerSec, parent->inputStride);
-	attackDecay[1] = calculateAttackDecayConstant(parent->params.decayTime, samplesPerSec, parent->inputStride);
+	filter.setParams(parent->params.attackTime, parent->params.decayTime, samplesPerSec, parent->inputStride);
 
 	downsampleGain = std::pow(2, cascadeIndex * 0.5);
 }
@@ -220,14 +219,14 @@ void FftAnalyzer::CascadeData::processSilence(index waveSize) {
 }
 
 void FftAnalyzer::CascadeData::doFft() {
-	parent->fftImpl->process(ringBuffer.data());
+	parent->fft.process(ringBuffer.data());
 
 	const auto binsCount = parent->fftSize / 2;
-	const auto fftImpl = parent->fftImpl;
+	const auto fftImpl = parent->fft;
 	const auto correctZero = parent->params.correctZero;
 
-	const auto newDC = fftImpl->getDC();
-	dc = newDC + attackDecay[(newDC < dc)] * (dc - newDC);
+	const auto newDC = fftImpl.getDC();
+	dc = filter.apply(dc, newDC);
 
 	auto zerothBin = std::abs(newDC);
 	if (correctZero) {
@@ -236,12 +235,12 @@ void FftAnalyzer::CascadeData::doFft() {
 	}
 	zerothBin = zerothBin * downsampleGain;
 
-	values[0] = zerothBin + attackDecay[(zerothBin < values[0])] * (values[0] - zerothBin);
+	values[0] = filter.apply(values[0], zerothBin);
 
 	for (index bin = 1; bin < binsCount; ++bin) {
 		const double oldValue = values[bin];
-		const double newValue = fftImpl->getBinMagnitude(bin) * downsampleGain;
-		values[bin] = newValue + attackDecay[(newValue < oldValue)] * (oldValue - newValue);
+		const double newValue = fftImpl.getBinMagnitude(bin) * downsampleGain;
+		values[bin] = filter.apply(oldValue, newValue);
 	}
 }
 
@@ -253,10 +252,6 @@ FftAnalyzer::Random::Random() : e2(rd()), dist(-1.0, 1.0) { }
 
 double FftAnalyzer::Random::next() {
 	return dist(e2);
-}
-
-FftAnalyzer::~FftAnalyzer() {
-	fftImpl = audio_utils::FFT::change(fftImpl, 0);
 }
 
 std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(const utils::OptionMap &optionMap, utils::Rainmeter::Logger& cl) {
@@ -329,9 +324,9 @@ void FftAnalyzer::process(const DataSupplier& dataSupplier) {
 
 	const auto wave = dataSupplier.getWave();
 
-	auto fftInputBuffer = dataSupplier.getBuffer<audio_utils::FFT::input_buffer_type>(fftImpl->getInputBufferSize());
-	auto fftOutputBuffer = dataSupplier.getBuffer<audio_utils::FFT::output_buffer_type>(fftImpl->getOutputBufferSize());
-	fftImpl->setBuffers(fftInputBuffer.data(), fftOutputBuffer.data());
+	auto fftInputBuffer = dataSupplier.getBuffer<audio_utils::FFT::input_buffer_type>(fft.getInputBufferSize());
+	auto fftOutputBuffer = dataSupplier.getBuffer<audio_utils::FFT::output_buffer_type>(fft.getOutputBufferSize());
+	fft.setBuffers(fftInputBuffer.data(), fftOutputBuffer.data());
 
 	if (params.randomTest != 0.0) {
 		processRandom(wave.size());
@@ -340,7 +335,7 @@ void FftAnalyzer::process(const DataSupplier& dataSupplier) {
 	}
 
 	// TODO that's ugly and error prone
-	fftImpl->setBuffers(nullptr, nullptr);
+	fft.setBuffers(nullptr, nullptr);
 }
 
 void FftAnalyzer::processSilence(const DataSupplier& dataSupplier) {
@@ -350,9 +345,9 @@ void FftAnalyzer::processSilence(const DataSupplier& dataSupplier) {
 
 	const auto waveSize = dataSupplier.getWave().size();
 
-	auto fftInputBuffer = dataSupplier.getBuffer<audio_utils::FFT::input_buffer_type>(fftImpl->getInputBufferSize());
-	auto fftOutputBuffer = dataSupplier.getBuffer<audio_utils::FFT::output_buffer_type>(fftImpl->getOutputBufferSize());
-	fftImpl->setBuffers(fftInputBuffer.data(), fftOutputBuffer.data());
+	auto fftInputBuffer = dataSupplier.getBuffer<audio_utils::FFT::input_buffer_type>(fft.getInputBufferSize());
+	auto fftOutputBuffer = dataSupplier.getBuffer<audio_utils::FFT::output_buffer_type>(fft.getOutputBufferSize());
+	fft.setBuffers(fftInputBuffer.data(), fftOutputBuffer.data());
 
 	if (params.randomTest != 0.0) {
 		processRandom(waveSize);
@@ -361,7 +356,7 @@ void FftAnalyzer::processSilence(const DataSupplier& dataSupplier) {
 	}
 
 	// TODO that's ugly and error prone
-	fftImpl->setBuffers(nullptr, nullptr);
+	fft.setBuffers(nullptr, nullptr);
 }
 
 SoundHandler::layer_t FftAnalyzer::getLayersCount() const {
@@ -494,7 +489,7 @@ void FftAnalyzer::updateParams() {
 		fftSize = 0;
 		return;
 	}
-	fftImpl = audio_utils::FFT::change(fftImpl, fftSize);
+	fft.setSize(fftSize);
 
 	inputStride = static_cast<index>(fftSize * (1 - params.overlap));
 	inputStride = std::clamp<index>(inputStride, std::min<index>(16, fftSize), fftSize);
