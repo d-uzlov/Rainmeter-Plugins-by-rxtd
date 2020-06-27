@@ -12,7 +12,7 @@
 
 namespace rxtd::audio_utils {
 	class InfiniteResponseFilter {
-		// inspired by https://github.com/BrechtDeMan/loudness.py/blob/master/loudness.py
+		// inspired by https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.lfilter.html
 
 		std::vector<double> a;
 		std::vector<double> b;

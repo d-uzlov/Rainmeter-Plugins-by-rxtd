@@ -13,24 +13,33 @@
 
 using namespace audio_utils;
 
-InfiniteResponseFilter::InfiniteResponseFilter(std::vector<double> a, std::vector<double> b) :
-	a(std::move(a)),
-	b(std::move(b)) {
-	state.resize(std::max(this->a.size(), this->b.size()) - 1);
+InfiniteResponseFilter::InfiniteResponseFilter(std::vector<double> a, std::vector<double> b) {
+	const double a0 = a[0];
+	for (auto& value : a) {
+		value /= a0;
+	}
+	for (auto& value : b) {
+		value /= a0;
+	}
+
+	const index maxSize = std::max(a.size(), b.size());
+	a.resize(maxSize);
+	b.resize(maxSize);
+
+	state.resize(maxSize - 1);
+
+	this->a = std::move(a);
+	this->b = std::move(b);
 }
 
 void InfiniteResponseFilter::apply(array_span<float> signal) {
-	if (a.size() != b.size()) {
-		std::terminate(); // TODO
-	}
-
 	if (a.empty()) {
 		return;
 	}
 
 	for (float& value : signal) {
 		const double next = value;
-		const double nextFiltered = (b[0] * next + state[0]) / a[0];
+		const double nextFiltered = b[0] * next + state[0];
 		value = nextFiltered;
 		updateState(next, nextFiltered);
 	}
