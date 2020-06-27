@@ -34,7 +34,6 @@ namespace rxtd::audio_analyzer {
 
 			double attackTime { };
 			double decayTime { };
-
 		};
 	private:
 		Params params { };
@@ -52,9 +51,6 @@ namespace rxtd::audio_analyzer {
 
 		mutable string propString { };
 
-		// todo
-		bool changed = true;
-
 	public:
 		void setParams(Params params);
 
@@ -63,7 +59,7 @@ namespace rxtd::audio_analyzer {
 
 		void process(const DataSupplier& dataSupplier) override;
 		void processSilence(const DataSupplier& dataSupplier) override;
-		void finish(const DataSupplier& dataSupplier) override { };
+		void finish(const DataSupplier& dataSupplier) override { }
 
 		array_view<float> getData(layer_t layer) const override {
 			return { &result, 1 };

@@ -119,10 +119,8 @@ void Loudness::process(const DataSupplier& dataSupplier) {
 	std::copy(wave.begin(), wave.end(), intermediateWave.begin());
 	preprocessWave();
 	const double loudness = calculateLoudness();
-	const double lufs = std::max(loudness, -70.0) * (1.0 / 70.0) + 1;;
+	const double lufs = std::max(loudness, -70.0) * (1.0 / 70.0) + 1;
 	result = filter.next(lufs);
-
-	changed = true;
 }
 
 void Loudness::processSilence(const DataSupplier& dataSupplier) {
@@ -132,7 +130,14 @@ void Loudness::processSilence(const DataSupplier& dataSupplier) {
 }
 
 const wchar_t* Loudness::getProp(const isview& prop) const {
-	return nullptr;
+	if (prop == L"attack") {
+		propString = std::to_wstring(params.attackTime * 1000.0);
+	} else if (prop == L"decay") {
+		propString = std::to_wstring(params.decayTime * 1000.0);
+	} else {
+		return nullptr;
+	}
+	return propString.c_str();
 }
 
 void Loudness::preprocessWave() {
