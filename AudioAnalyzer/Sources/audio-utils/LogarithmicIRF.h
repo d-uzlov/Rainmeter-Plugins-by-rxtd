@@ -21,7 +21,7 @@ namespace rxtd::audio_utils {
 
 		double next(double value);
 		double apply(double prev, double value);
-		const double& getLastResult() const;
+		double getLastResult() const;
 
 		void reset();
 

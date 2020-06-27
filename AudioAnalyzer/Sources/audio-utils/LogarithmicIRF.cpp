@@ -31,7 +31,7 @@ double LogarithmicIRF::apply(double prev, double value) {
 	return value + attackDecayConstants[(value < prev)] * (prev - value);
 }
 
-const double& LogarithmicIRF::getLastResult() const {
+double LogarithmicIRF::getLastResult() const {
 	return result;
 }
 

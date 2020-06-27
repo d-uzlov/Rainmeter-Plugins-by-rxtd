@@ -11,21 +11,29 @@
 #include "SoundHandler.h"
 #include "RainmeterWrappers.h"
 #include "../../audio-utils/InfiniteResponseFilter.h"
+#include "../../audio-utils/LogarithmicIRF.h"
 
 namespace rxtd::audio_analyzer {
 	class KWeightingFilterBuilder {
 	public:
-		static audio_utils::InfiniteResponseFilter create1(double samplingFrequency);
-		static audio_utils::InfiniteResponseFilter create2(double samplingFrequency);
+		static audio_utils::InfiniteResponseFilter createHighShelf(double samplingFrequency);
+		static audio_utils::InfiniteResponseFilter createHighPass(double samplingFrequency);
 	};
 
 	class Loudness : public SoundHandler {
+		// based on EBU R 128
+		// see:
+		//   https://books.google.ru/books?id=wYNiDwAAQBAJ&pg=PT402&lpg=PT402&source=bl&ots=b_IYgSnzH_&sig=ACfU3U24oCdbQZLqFmaH7sFO39CpaoRZVQ&hl=en&sa=X&ved=2ahUKEwjMobfksaDqAhVxx4sKHaRSBToQ6AEwAnoECAoQAQ#v=onepage&f=false
+		//   https://github.com/BrechtDeMan/loudness.py/blob/master/loudness.py
+		//   https://hydrogenaud.io/index.php?topic=86116.25
+
 	public:
 		struct Params {
 		private:
 			friend Loudness;
 
-			istring resamplerId;
+			double attackTime { };
+			double decayTime { };
 
 		};
 	private:
@@ -33,8 +41,11 @@ namespace rxtd::audio_analyzer {
 
 		index samplesPerSec { };
 
-		audio_utils::InfiniteResponseFilter filter1 { };
-		audio_utils::InfiniteResponseFilter filter2 { };
+		audio_utils::LogarithmicIRF filter { };
+		index blockSize = 0;
+
+		audio_utils::InfiniteResponseFilter highShelfFilter { };
+		audio_utils::InfiniteResponseFilter highPassFilter { };
 
 		std::vector<float> intermediateWave { };
 		float result = 0.0;
@@ -63,6 +74,7 @@ namespace rxtd::audio_analyzer {
 		static std::optional<Params> parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger &cl);
 
 	private:
+		void updateFilter(index blockSize);
 		void preprocessWave();
 		double calculateLoudness();
 	};

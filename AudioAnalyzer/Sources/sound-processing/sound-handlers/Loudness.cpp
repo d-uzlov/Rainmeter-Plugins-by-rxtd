@@ -17,22 +17,31 @@ using namespace std::literals::string_view_literals;
 using namespace audio_analyzer;
 
 
-std::optional<Loudness::Params> Loudness::parseParams(const utils::OptionMap& optionMap,
-                                                      utils::Rainmeter::Logger& cl) {
+std::optional<Loudness::Params> Loudness::parseParams(
+	const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl) {
 	Params params;
-	params.resamplerId = optionMap.get(L"source").asIString();
+	params.attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.0) * 0.001;
+	params.decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.attackTime), 0.0) * 0.001;
+
 	return params;
 }
 
-audio_utils::InfiniteResponseFilter KWeightingFilterBuilder::create1(double samplingFrequency) {
+void Loudness::updateFilter(index blockSize) {
+	if (blockSize == this->blockSize) {
+		return;
+	}
+	this->blockSize = blockSize;
+
+	filter.setParams(params.attackTime, params.decayTime, samplesPerSec, blockSize);
+}
+
+audio_utils::InfiniteResponseFilter KWeightingFilterBuilder::createHighShelf(double samplingFrequency) {
 	if (samplingFrequency == 0.0) {
 		return { };
 	}
 
-	// https://github.com/BrechtDeMan/loudness.py/blob/master/loudness.py
 	const static double pi = std::acos(-1.0);
 
-	// https://hydrogenaud.io/index.php?topic=86116.25
 	// V are gain values
 	// Q is a "magic number" that effects the shape of the filter
 	// Fc is the nominal cutoff frequency.
@@ -48,7 +57,7 @@ audio_utils::InfiniteResponseFilter KWeightingFilterBuilder::create1(double samp
 	const double Vb = std::pow(Vh, 0.499666774155);
 	const double a0_ = 1.0 + K / Q + K * K;
 
-	std::vector<double> b = { 
+	std::vector<double> b = {
 		(Vh + Vb * K / Q + K * K) / a0_,
 		2.0 * (K * K - Vh) / a0_,
 		(Vh - Vb * K / Q + K * K) / a0_
@@ -63,8 +72,7 @@ audio_utils::InfiniteResponseFilter KWeightingFilterBuilder::create1(double samp
 	return { std::move(a), std::move(b) };
 }
 
-audio_utils::InfiniteResponseFilter KWeightingFilterBuilder::create2(double samplingFrequency) {
-	// https://github.com/BrechtDeMan/loudness.py/blob/master/loudness.py
+audio_utils::InfiniteResponseFilter KWeightingFilterBuilder::createHighPass(double samplingFrequency) {
 	const static double pi = std::acos(-1.0);
 
 	const double fc = 38.13547087613982;
@@ -76,7 +84,7 @@ audio_utils::InfiniteResponseFilter KWeightingFilterBuilder::create2(double samp
 		2.0 * (K * K - 1.0) / (1.0 + K / Q + K * K),
 		(1.0 - K / Q + K * K) / (1.0 + K / Q + K * K)
 	};
-	std::vector<double> b = { 
+	std::vector<double> b = {
 		1.0,
 		-2.0,
 		1.0
@@ -88,32 +96,39 @@ audio_utils::InfiniteResponseFilter KWeightingFilterBuilder::create2(double samp
 
 void Loudness::setParams(Params params) {
 	this->params = params;
+	blockSize = 0; // this must cause filter to update for new attack/decay
 }
 
 void Loudness::setSamplesPerSec(index samplesPerSec) {
 	this->samplesPerSec = samplesPerSec;
+	blockSize = 0; // this must cause filter to update for new attack/decay
 
-	filter1 = KWeightingFilterBuilder::create1(samplesPerSec);
-	filter2 = KWeightingFilterBuilder::create2(samplesPerSec);
+	highShelfFilter = KWeightingFilterBuilder::createHighShelf(samplesPerSec);
+	highPassFilter = KWeightingFilterBuilder::createHighPass(samplesPerSec);
 }
 
 void Loudness::reset() {
 	result = 0.0;
+	filter.reset();
 }
 
 void Loudness::process(const DataSupplier& dataSupplier) {
 	auto wave = dataSupplier.getWave();
+	updateFilter(wave.size());
 	intermediateWave.resize(wave.size());
 	std::copy(wave.begin(), wave.end(), intermediateWave.begin());
 	preprocessWave();
-	const double rawLoudness = calculateLoudness();
-	result = rawLoudness;
+	const double loudness = calculateLoudness();
+	const double lufs = std::max(loudness, -70.0) * (1.0 / 70.0) + 1;;
+	result = filter.next(lufs);
 
 	changed = true;
 }
 
 void Loudness::processSilence(const DataSupplier& dataSupplier) {
-	process(dataSupplier);
+	auto wave = dataSupplier.getWave();
+	updateFilter(wave.size());
+	result = filter.next(0.0);
 }
 
 const wchar_t* Loudness::getProp(const isview& prop) const {
@@ -121,21 +136,18 @@ const wchar_t* Loudness::getProp(const isview& prop) const {
 }
 
 void Loudness::preprocessWave() {
-	filter1.apply(intermediateWave);
-	filter2.apply(intermediateWave);
+	highShelfFilter.apply(intermediateWave);
+	highPassFilter.apply(intermediateWave);
 }
 
 double Loudness::calculateLoudness() {
-	const double minThreshold = -70.0;
-
 	double rms = 0.0;
 	for (auto value : intermediateWave) {
 		rms += value * value;
 	}
 	rms /= intermediateWave.size();
 
-	double loudness = -0.691 + 10.0 * std::log10(rms);
-	loudness = std::max(loudness, minThreshold);
+	const double loudness = -0.691 + 10.0 * std::log10(rms);
 
 	return loudness;
 }
