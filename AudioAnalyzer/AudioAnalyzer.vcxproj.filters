@@ -220,4 +220,7 @@
   <ItemGroup>
     <Natvis Include="..\Common\array_view.natvis" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="readme.txt" />
+  </ItemGroup>
 </Project>
