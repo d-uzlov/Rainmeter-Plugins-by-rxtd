@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -228,7 +228,8 @@ void Spectrogram::process(const DataSupplier& dataSupplier) {
 	if (dataSize != sourceSize) {
 		sourceSize = dataSize;
 		buffer.setBufferSize(dataSize);
-		std::fill_n(buffer[0].data(), dataSize * params.length, params.baseColor.toInt());
+		utils::Color backgroundColor = params.colors.empty() ? params.baseColor : params.colors[0].color;
+		std::fill_n(buffer[0].data(), dataSize * params.length, backgroundColor.toInt());
 	}
 
 	if (filepath.empty()) {
