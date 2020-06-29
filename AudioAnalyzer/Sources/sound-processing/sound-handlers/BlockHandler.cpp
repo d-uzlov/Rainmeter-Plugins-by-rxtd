@@ -66,13 +66,14 @@ const wchar_t* BlockHandler::getProp(const isview& prop) const {
 
 void BlockHandler::reset() {
 	counter = 0;
-	intermediateResult = 0.0;
 	result = 0.0;
 	filter.reset();
+	_reset();
 }
 
 void BlockHandler::recalculateConstants() {
-	blockSize = static_cast<decltype(blockSize)>(samplesPerSec * params.resolution);
+	auto test = samplesPerSec * params.resolution;
+	blockSize = static_cast<decltype(blockSize)>(test);
 
 	filter.setParams(params.attackTime, params.decayTime, samplesPerSec, blockSize);
 
@@ -82,6 +83,11 @@ void BlockHandler::recalculateConstants() {
 void BlockHandler::processSilence(const DataSupplier& dataSupplier) {
 	const auto waveSize = dataSupplier.getWave().size();
 	index waveProcessed = 0;
+
+	if (blockSize == 0) {
+		int a = 0;
+		a++;
+	}
 
 	while (waveProcessed != waveSize) {
 		const index missingPoints = blockSize - counter;
@@ -96,6 +102,10 @@ void BlockHandler::processSilence(const DataSupplier& dataSupplier) {
 	}
 }
 
+void BlockHandler::finish(const DataSupplier& dataSupplier) {
+	result = filter.getLastResult();
+}
+
 void BlockRms::process(const DataSupplier& dataSupplier) {
 	processRms(dataSupplier.getWave());
 }
@@ -104,16 +114,20 @@ void BlockRms::processRms(array_view<float> wave) {
 	for (double x : wave) {
 		intermediateResult += x * x;
 		counter++;
-		if (counter >= blockSize) {
+		if (counter >= getBlockSize()) {
 			finishBlock();
 		}
 	}
 }
 
 void BlockRms::finishBlock() {
-	const double value = std::sqrt(intermediateResult / blockSize);
-	result = filter.next(value);
+	const double value = std::sqrt(intermediateResult / getBlockSize());
+	getFilter().next(value);
 	counter = 0;
+	intermediateResult = 0.0;
+}
+
+void BlockRms::_reset() {
 	intermediateResult = 0.0;
 }
 
@@ -121,14 +135,18 @@ void BlockPeak::process(const DataSupplier& dataSupplier) {
 	for (double x : dataSupplier.getWave()) {
 		intermediateResult = std::max<double>(intermediateResult, std::abs(x));
 		counter++;
-		if (counter >= blockSize) {
+		if (counter >= getBlockSize()) {
 			finishBlock();
 		}
 	}
 }
 
 void BlockPeak::finishBlock() {
-	result = filter.next(intermediateResult);
+	getFilter().next(intermediateResult);
 	counter = 0;
+	intermediateResult = 0.0;
+}
+
+void BlockPeak::_reset() {
 	intermediateResult = 0.0;
 }

@@ -17,49 +17,41 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-void Loudness::updateFilter(index blockSize) {
-	if (blockSize == this->blockSize) {
-		return;
-	}
-	this->blockSize = blockSize;
-}
-
-
-void Loudness::setParams(Params params) {
-	BlockHandler::setParams(params);
-	blockSize = 0; // this must cause filter to update for new attack/decay
-}
-
 void Loudness::setSamplesPerSec(index samplesPerSec) {
-	this->samplesPerSec = samplesPerSec;
-	blockSize = 0; // this must cause filter to update for new attack/decay
+	BlockHandler::setSamplesPerSec(samplesPerSec);
 
 	highShelfFilter = audio_utils::KWeightingFilterBuilder::createHighShelf(samplesPerSec);
 	highPassFilter = audio_utils::KWeightingFilterBuilder::createHighPass(samplesPerSec);
 }
 
-void Loudness::reset() {
-	result = 0.0;
-	filter.reset();
+void Loudness::_reset() {
+	intermediateRmsResult = 0.0;
 }
 
 void Loudness::process(const DataSupplier& dataSupplier) {
 	auto wave = dataSupplier.getWave();
-	updateFilter(wave.size());
 	intermediateWave.resize(wave.size());
 	std::copy(wave.begin(), wave.end(), intermediateWave.begin());
 	preprocessWave();
-	processRms(intermediateWave);
+
+	for (double x : intermediateWave) {
+		intermediateRmsResult += x * x;
+		counter++;
+		if (counter >= getBlockSize()) {
+			finishBlock();
+		}
+	}
+
 	// const double loudness = calculateLoudness();
 	// const double lufs = std::max(loudness, -70.0) * (1.0 / 70.0) + 1;
 	// result = filter.next(lufs);
 }
 
 void Loudness::finishBlock() {
-	const double value = std::sqrt(intermediateResult / blockSize);
-	result = filter.next(value);
+	const double value = std::sqrt(intermediateRmsResult / getBlockSize());
+	getFilter().next(value);
 	counter = 0;
-	intermediateResult = 0.0;
+	intermediateRmsResult = 0.0;
 }
 
 void Loudness::preprocessWave() {

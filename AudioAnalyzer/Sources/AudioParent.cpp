@@ -99,9 +99,9 @@ std::tuple<double, const wchar_t*> AudioParent::_update() {
 		deviceManager.getCaptureManager().capture([&](bool silent, array_view<std::byte> buffer) {
 			soundAnalyzer.process(buffer, silent);
 		}, maxLoop);
-	}
 
-	soundAnalyzer.finishStandalone();
+		soundAnalyzer.finishStandalone();
+	}
 
 	return std::make_tuple(deviceManager.getDeviceStatus(), nullptr);
 }
