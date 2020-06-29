@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -18,7 +18,7 @@ using namespace audio_analyzer;
 Channel::ChannelParser Channel::channelParser { };
 
 
-ChannelLayout ChannelLayout::create(string name, std::vector<Channel::Value> channels) {
+ChannelLayout ChannelLayout::create(sview name, const std::vector<Channel::Value>& channels) {
 	ChannelLayout result;
 
 	result.name = name;

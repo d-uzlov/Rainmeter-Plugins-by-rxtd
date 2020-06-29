@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -96,7 +96,7 @@ namespace rxtd::audio_analyzer {
 		std::optional<index> indexOf(Channel channel) const;
 		bool contains(Channel channel) const;
 
-		static ChannelLayout create(string name, std::vector<Channel::Value> channels);
+		static ChannelLayout create(sview name, const std::vector<Channel::Value>& channels);
 	
 		class const_iterator {
 			decltype(channelMap)::const_iterator iter;
