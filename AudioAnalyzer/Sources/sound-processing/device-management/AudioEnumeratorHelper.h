@@ -28,7 +28,6 @@ namespace rxtd::audio_analyzer {
 		std::set<string> inputDevices;
 		std::set<string> outputDevices;
 
-		string deviceStringLegacy;
 		string deviceStringInput;
 		string deviceStringOutput;
 
@@ -42,10 +41,8 @@ namespace rxtd::audio_analyzer {
 		string getDefaultDeviceId(utils::MediaDeviceType type);
 
 		std::optional<utils::MediaDeviceType> getDeviceType(const string& deviceID);
-		const string& getDeviceListLegacy() const;
 		const string& getDeviceListInput() const;
 		const string& getDeviceListOutput() const;
-		void updateDeviceStringLegacy(utils::MediaDeviceType type);
 		void updateDeviceStrings();
 		string makeDeviceString(utils::MediaDeviceType type);
 

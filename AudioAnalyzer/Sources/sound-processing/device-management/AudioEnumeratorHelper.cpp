@@ -87,44 +87,12 @@ namespace rxtd::audio_analyzer {
 		return std::nullopt;
 	}
 
-	const string& AudioEnumeratorHelper::getDeviceListLegacy() const {
-		return deviceStringLegacy;
-	}
-
 	const string& AudioEnumeratorHelper::getDeviceListInput() const {
 		return deviceStringInput;
 	}
 
 	const string& AudioEnumeratorHelper::getDeviceListOutput() const {
 		return deviceStringOutput;
-	}
-
-	void AudioEnumeratorHelper::updateDeviceStringLegacy(utils::MediaDeviceType type) {
-		deviceStringLegacy.clear();
-
-		auto collection = enumeratorWrapper.enumerateActiveDevices(type);
-		if (collection.getLastResult() != S_OK) {
-			logger.error(L"Can't read audio device list: EnumAudioEndpoints() failed, error code {}", collection.getLastResult());
-			valid = false;
-			return;
-		}
-
-		const auto devicesCount = collection.getDevicesCount();
-
-		deviceStringLegacy.reserve(devicesCount * 120);
-
-		for (index deviceIndex = 0; deviceIndex < devicesCount; ++deviceIndex) {
-			utils::MediaDeviceWrapper device  = collection.get(deviceIndex);
-
-			const auto deviceInfo = device.readDeviceInfo();
-
-			deviceStringLegacy += deviceInfo.id;
-			deviceStringLegacy += L" "sv;
-			deviceStringLegacy += deviceInfo.fullFriendlyName;
-			deviceStringLegacy += L"\n"sv;
-		}
-
-		deviceStringLegacy.resize(deviceStringLegacy.size() - 1);
 	}
 
 	void AudioEnumeratorHelper::updateDeviceStrings() {

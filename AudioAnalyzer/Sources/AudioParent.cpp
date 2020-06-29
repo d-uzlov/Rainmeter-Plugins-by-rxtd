@@ -51,25 +51,7 @@ void AudioParent::_reload() {
 		id = source % csView();
 	}
 
-	// legacy
-	if (auto legacyID = this->rain.readString(L"DeviceID"); !legacyID.empty()) {
-		logger.debug(L"Using '{}' as source audio device ID.", legacyID);
-		sourceEnum = DataSource::eID;
-		id = legacyID;
-
-	} else if (const auto port = this->rain.readString(L"Port") % ciView(); !port.empty()) {
-		if (port == L"Output") {
-			sourceEnum = DataSource::eDEFAULT_OUTPUT;
-		} else if (port == L"Input") {
-			sourceEnum = DataSource::eDEFAULT_INPUT;
-		} else {
-			logger.error(L"Invalid Port '{}', must be one of: Output, Input. Set to Output.", port);
-			sourceEnum = DataSource::eDEFAULT_OUTPUT;
-		}
-	}
-
 	deviceManager.setOptions(sourceEnum, id);
-
 
 	auto targetRate = rain.read(L"TargetRate").asInt(44100);
 	if (targetRate < 0) {
@@ -108,7 +90,6 @@ std::tuple<double, const wchar_t*> AudioParent::_update() {
 
 void AudioParent::_command(isview bangArgs) {
 	if (bangArgs == L"updateDevList") {
-		deviceManager.getDeviceEnumerator().updateDeviceStringLegacy(deviceManager.getCurrentDeviceType());
 		deviceManager.getDeviceEnumerator().updateDeviceStrings();
 		return;
 	}
@@ -209,10 +190,6 @@ const wchar_t* AudioParent::_resolve(int argc, const wchar_t* argv[]) {
 		return nullptr;
 	}
 
-
-	if (optionName == L"device list") {
-		return deviceManager.getDeviceEnumerator().getDeviceListLegacy().c_str();
-	}
 	if (optionName == L"device list input") {
 		return deviceManager.getDeviceEnumerator().getDeviceListInput().c_str();
 	}
