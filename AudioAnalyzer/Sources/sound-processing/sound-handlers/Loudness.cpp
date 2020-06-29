@@ -26,13 +26,10 @@ void Loudness::_reset() {
 	intermediateRmsResult = 0.0;
 }
 
-void Loudness::process(const DataSupplier& dataSupplier) {
-	auto wave = dataSupplier.getWave();
-	intermediateWave.resize(wave.size());
-	std::copy(wave.begin(), wave.end(), intermediateWave.begin());
-	preprocessWave();
+void Loudness::_process(array_span<float> wave) {
+	preprocessWave(wave);
 
-	for (double x : intermediateWave) {
+	for (double x : wave) {
 		intermediateRmsResult += x * x;
 		counter++;
 		if (counter >= getBlockSize()) {
@@ -47,24 +44,24 @@ void Loudness::process(const DataSupplier& dataSupplier) {
 
 void Loudness::finishBlock() {
 	const double value = std::sqrt(intermediateRmsResult / getBlockSize());
-	getFilter().next(value);
+	setNextValue(value);
 	counter = 0;
 	intermediateRmsResult = 0.0;
 }
 
-void Loudness::preprocessWave() {
-	highShelfFilter.apply(intermediateWave);
-	highPassFilter.apply(intermediateWave);
+void Loudness::preprocessWave(array_span<float> wave) {
+	highShelfFilter.apply(wave);
+	highPassFilter.apply(wave);
 }
 
 double Loudness::calculateLoudness() {
-	double rms = 0.0;
-	for (auto value : intermediateWave) {
-		rms += value * value;
-	}
-	rms /= intermediateWave.size();
+	// double rms = 0.0;
+	// for (auto value : intermediateWave) {
+	// 	rms += value * value;
+	// }
+	// rms /= intermediateWave.size();
 
-	const double loudness = -0.691 + 10.0 * std::log10(rms);
+	// const double loudness = -0.691 + 10.0 * std::log10(rms);
 
-	return loudness;
+	// return loudness;
 }

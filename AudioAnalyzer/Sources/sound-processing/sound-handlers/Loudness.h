@@ -23,10 +23,9 @@ namespace rxtd::audio_analyzer {
 		audio_utils::InfiniteResponseFilter highPassFilter { };
 
 		double intermediateRmsResult = 0.0;
-		std::vector<float> intermediateWave { };
 
 	public:
-		void process(const DataSupplier& dataSupplier) override;
+		void _process(array_span<float> wave) override;
 		void _setSamplesPerSec(index samplesPerSec) override;
 
 	protected:
@@ -34,7 +33,7 @@ namespace rxtd::audio_analyzer {
 		void finishBlock() override;
 
 	private:
-		void preprocessWave();
+		void preprocessWave(array_span<float> wave);
 		double calculateLoudness();
 	};
 

@@ -10,6 +10,7 @@
 #include "BlockHandler.h"
 
 #include "undef.h"
+#include <numeric>
 
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
@@ -28,7 +29,13 @@ std::optional<BlockHandler::Params> BlockHandler::parseParams(const utils::Optio
 	}
 	params.resolution *= 0.001;
 
+	params.subtractMean = optionMap.get(L"subtractMean").asBool(true);
+
 	return params;
+}
+
+void BlockHandler::setNextValue(double value) {
+	filter.next(value);
 }
 
 void BlockHandler::setParams(Params params) {
@@ -73,6 +80,22 @@ void BlockHandler::reset() {
 	_reset();
 }
 
+void BlockHandler::process(const DataSupplier& dataSupplier) {
+	auto wave = dataSupplier.getWave();
+	intermediateWave.resize(wave.size());
+
+	if (params.subtractMean) {
+		const float mean = std::accumulate(wave.begin(), wave.end(), 0.0f) / wave.size();
+		for (int i = 0; i < wave.size(); ++i) {
+			intermediateWave[i] = wave[i] - mean;
+		}
+	} else {
+		std::copy(wave.begin(), wave.end(), intermediateWave.begin());
+	}
+
+	_process(intermediateWave);
+}
+
 void BlockHandler::recalculateConstants() {
 	auto test = samplesPerSec * params.resolution;
 	blockSize = static_cast<decltype(blockSize)>(test);
@@ -108,11 +131,7 @@ void BlockHandler::finish(const DataSupplier& dataSupplier) {
 	result = filter.getLastResult();
 }
 
-void BlockRms::process(const DataSupplier& dataSupplier) {
-	processRms(dataSupplier.getWave());
-}
-
-void BlockRms::processRms(array_view<float> wave) {
+void BlockRms::_process(array_span<float> wave) {
 	for (double x : wave) {
 		intermediateResult += x * x;
 		counter++;
@@ -124,7 +143,7 @@ void BlockRms::processRms(array_view<float> wave) {
 
 void BlockRms::finishBlock() {
 	const double value = std::sqrt(intermediateResult / getBlockSize());
-	getFilter().next(value);
+	setNextValue(value);
 	counter = 0;
 	intermediateResult = 0.0;
 }
@@ -133,8 +152,8 @@ void BlockRms::_reset() {
 	intermediateResult = 0.0;
 }
 
-void BlockPeak::process(const DataSupplier& dataSupplier) {
-	for (double x : dataSupplier.getWave()) {
+void BlockPeak::_process(array_span<float> wave) {
+	for (double x : wave) {
 		intermediateResult = std::max<double>(intermediateResult, std::abs(x));
 		counter++;
 		if (counter >= getBlockSize()) {
@@ -144,7 +163,7 @@ void BlockPeak::process(const DataSupplier& dataSupplier) {
 }
 
 void BlockPeak::finishBlock() {
-	getFilter().next(intermediateResult);
+	setNextValue(intermediateResult);
 	counter = 0;
 	intermediateResult = 0.0;
 }
