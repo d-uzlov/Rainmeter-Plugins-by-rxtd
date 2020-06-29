@@ -97,9 +97,11 @@ void BlockHandler::processSilence(const DataSupplier& dataSupplier) {
 }
 
 void BlockRms::process(const DataSupplier& dataSupplier) {
-	const auto wave = dataSupplier.getWave();
-	for (index frame = 0; frame < wave.size(); ++frame) {
-		const double x = wave[frame];
+	processRms(dataSupplier.getWave());
+}
+
+void BlockRms::processRms(array_view<float> wave) {
+	for (double x : wave) {
 		intermediateResult += x * x;
 		counter++;
 		if (counter >= blockSize) {
@@ -116,10 +118,8 @@ void BlockRms::finishBlock() {
 }
 
 void BlockPeak::process(const DataSupplier& dataSupplier) {
-	const auto wave = dataSupplier.getWave();
-	const auto waveSize = dataSupplier.getWave().size();
-	for (index frame = 0; frame < waveSize; ++frame) {
-		intermediateResult = std::max<double>(intermediateResult, std::abs(wave[frame]));
+	for (double x : dataSupplier.getWave()) {
+		intermediateResult = std::max<double>(intermediateResult, std::abs(x));
 		counter++;
 		if (counter >= blockSize) {
 			finishBlock();

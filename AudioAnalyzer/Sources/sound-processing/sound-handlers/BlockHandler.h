@@ -34,6 +34,7 @@ namespace rxtd::audio_analyzer {
 				return !(lhs == rhs);
 			}
 		};
+
 	protected:
 		Params params { };
 
@@ -49,7 +50,7 @@ namespace rxtd::audio_analyzer {
 		mutable string propString { };
 
 	public:
-		void setParams(Params params);
+		virtual void setParams(Params params);
 
 		void setSamplesPerSec(index samplesPerSec) override;
 		void reset() override;
@@ -74,7 +75,8 @@ namespace rxtd::audio_analyzer {
 	public:
 		void process(const DataSupplier& dataSupplier) override;
 
-	private:
+	protected:
+		void processRms(array_view<float> wave);
 		void finishBlock() override;
 	};
 
@@ -82,7 +84,7 @@ namespace rxtd::audio_analyzer {
 	public:
 		void process(const DataSupplier& dataSupplier) override;
 
-	private:
+	protected:
 		void finishBlock() override;
 	};
 }

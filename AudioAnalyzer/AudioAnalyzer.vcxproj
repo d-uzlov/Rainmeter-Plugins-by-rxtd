@@ -147,6 +147,7 @@
     <ClInclude Include="Sources\audio-utils\FFT.h" />
     <ClInclude Include="Sources\audio-utils\InfiniteResponseFilter.h" />
     <ClInclude Include="Sources\audio-utils\kiss_fft\KissFft.hh" />
+    <ClInclude Include="Sources\audio-utils\KWeightingFilterBuilder.h" />
     <ClInclude Include="Sources\audio-utils\LogarithmicIRF.h" />
     <ClInclude Include="Sources\AudioChild.h" />
     <ClInclude Include="Sources\AudioParent.h" />
@@ -187,6 +188,7 @@
     </ClCompile>
     <ClCompile Include="Sources\audio-utils\FFT.cpp" />
     <ClCompile Include="Sources\audio-utils\InfiniteResponseFilter.cpp" />
+    <ClCompile Include="Sources\audio-utils\KWeightingFilterBuilder.cpp" />
     <ClCompile Include="Sources\audio-utils\LogarithmicIRF.cpp" />
     <ClCompile Include="Sources\AudioChild.cpp" />
     <ClCompile Include="Sources\dllmain.cpp" />
