@@ -94,7 +94,7 @@ namespace rxtd::audio_analyzer {
 		return recoverable;
 	}
 
-	void CaptureManager::capture(const std::function<void(bool silent, const uint8_t* buffer, uint32_t size)>& processingCallback, index maxLoop) {
+	void CaptureManager::capture(const std::function<void(bool silent, array_view<std::byte> frameBuffer)>& processingCallback, index maxLoop) {
 		if (!isValid()) {
 			return;
 		}
@@ -109,7 +109,7 @@ namespace rxtd::audio_analyzer {
 			case S_OK:
 				lastBufferFillTime = now;
 
-				processingCallback(buffer.isSilent(), buffer.getBuffer(), buffer.getSize());
+				processingCallback(buffer.isSilent(), buffer.getBuffer());
 				break;
 
 			case AUDCLNT_S_BUFFER_EMPTY:

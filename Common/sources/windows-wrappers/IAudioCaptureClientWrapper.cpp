@@ -17,7 +17,7 @@ namespace rxtd::utils {
 		lastResult = (*this)->GetBuffer(&buffer, &lastBufferSize, &flags, nullptr, nullptr);
 		const bool silent = (flags & AUDCLNT_BUFFERFLAGS_SILENT) != 0;
 
-		return AudioBuffer { *this, lastBufferID, silent, buffer, lastBufferSize };
+		return AudioBuffer { *this, lastBufferID, silent, reinterpret_cast<const std::byte*>(buffer), lastBufferSize };
 	}
 
 	index IAudioCaptureClientWrapper::getLastResult() const {

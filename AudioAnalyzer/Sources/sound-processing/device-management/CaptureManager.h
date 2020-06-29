@@ -15,6 +15,7 @@
 #include <chrono>
 #include "windows-wrappers/IAudioCaptureClientWrapper.h"
 #include <functional>
+#include "array_view.h"
 
 namespace rxtd::audio_analyzer {
 	class CaptureManager {
@@ -50,7 +51,7 @@ namespace rxtd::audio_analyzer {
 		bool isEmpty() const;
 		bool isValid() const;
 		bool isRecoverable() const;
-		void capture(const std::function<void(bool silent, const uint8_t* buffer, uint32_t size)>& processingCallback, index maxLoop);
+		void capture(const std::function<void(bool silent, array_view<std::byte> frameBuffer)>& processingCallback, index maxLoop);
 
 	private:
 		void invalidate();

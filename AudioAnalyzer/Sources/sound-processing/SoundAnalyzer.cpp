@@ -54,17 +54,17 @@ void SoundAnalyzer::setWaveFormat(MyWaveFormat waveFormat) {
 	patchHandlers();
 }
 
-void SoundAnalyzer::process(const uint8_t* buffer, bool isSilent, index framesCount) noexcept {
+void SoundAnalyzer::process(array_view<std::byte> frameBuffer, bool isSilent) {
 	if (waveFormat.format == utils::WaveDataFormat::eINVALID || waveFormat.channelsCount <= 0) {
 		return;
 	}
 
 	if (!isSilent) {
 		const bool needAuto = !channels[Channel::eAUTO].handlers.empty();
-		channelMixer.decomposeFramesIntoChannels(buffer, framesCount, needAuto);
+		channelMixer.decomposeFramesIntoChannels(frameBuffer, needAuto);
 	}
 
-	dataSupplier.setWaveSize(channelMixer.getResampler().calculateFinalWaveSize(framesCount));
+	dataSupplier.setWaveSize(channelMixer.getResampler().calculateFinalWaveSize(frameBuffer.size()));
 
 	for (auto &[channel, channelData] : channels) {
 		if (channelData.handlers.empty()) {

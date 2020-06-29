@@ -1,4 +1,5 @@
 #pragma once
+#include "array_view.h"
 
 namespace rxtd::utils {
 
@@ -10,10 +11,9 @@ namespace rxtd::utils {
 		IAudioCaptureClientWrapper& parent;
 		const index id;
 		const bool silent{ };
-		const uint8_t* const buffer = nullptr;
-		const uint32_t size{ };
+		const array_view<std::byte> buffer;
 
-		AudioBuffer(IAudioCaptureClientWrapper& parent, index id, bool silent, const uint8_t* buffer, uint32_t size);
+		AudioBuffer(IAudioCaptureClientWrapper& parent, index id, bool silent, const std::byte* buffer, uint32_t size);
 
 	public:
 		// I want lifetime of this object to be very limited
@@ -30,12 +30,8 @@ namespace rxtd::utils {
 			return silent;
 		}
 
-		const uint8_t* getBuffer() const {
+		array_view<std::byte> getBuffer() const {
 			return buffer;
-		}
-
-		uint32_t getSize() const {
-			return size;
 		}
 	};
 }

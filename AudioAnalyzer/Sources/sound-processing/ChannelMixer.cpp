@@ -36,11 +36,12 @@ void ChannelMixer::setFormat(MyWaveFormat waveFormat) {
 	}
 }
 
-void ChannelMixer::decomposeFramesIntoChannels(const uint8_t* buffer, index framesCount, bool withAuto) {
+void ChannelMixer::decomposeFramesIntoChannels(array_view<std::byte> frameBuffer, bool withAuto) {
 	const auto channelsCount = waveFormat.channelsCount;
+	const auto framesCount = frameBuffer.size();
 
 	if (waveFormat.format == utils::WaveDataFormat::ePCM_F32) {
-		const auto bufferFloat = reinterpret_cast<const float*>(buffer);
+		const auto bufferFloat = reinterpret_cast<const float*>(frameBuffer.data());
 		
 		for (auto channel : waveFormat.channelLayout) {
 			channels[channel].resampled = false;
@@ -54,7 +55,7 @@ void ChannelMixer::decomposeFramesIntoChannels(const uint8_t* buffer, index fram
 			}
 		}
 	} else if (waveFormat.format == utils::WaveDataFormat::ePCM_S16) {
-		const auto bufferInt = reinterpret_cast<const int16_t*>(buffer);
+		const auto bufferInt = reinterpret_cast<const int16_t*>(frameBuffer.data());
 
 		for (auto channel : waveFormat.channelLayout) {
 			channels[channel].resampled = false;

@@ -58,7 +58,7 @@ namespace rxtd::audio_analyzer {
 
 		void setWaveFormat(MyWaveFormat waveFormat);
 
-		void process(const uint8_t* buffer, bool isSilent, index framesCount) noexcept;
+		void process(array_view<std::byte> frameBuffer, bool isSilent);
 		void resetValues() noexcept;
 		void finishStandalone() noexcept;
 

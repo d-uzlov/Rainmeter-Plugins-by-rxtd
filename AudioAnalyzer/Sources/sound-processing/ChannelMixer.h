@@ -26,7 +26,7 @@ namespace rxtd::audio_analyzer {
 
 	public:
 		void setFormat(MyWaveFormat waveFormat);
-		void decomposeFramesIntoChannels(const uint8_t* buffer, index framesCount, bool withAuto);
+		void decomposeFramesIntoChannels(array_view<std::byte> frameBuffer, bool withAuto);
 
 		array_view<float> getChannelPCM(Channel channel);
 

@@ -96,8 +96,8 @@ std::tuple<double, const wchar_t*> AudioParent::_update() {
 		}
 		soundAnalyzer.resetValues();
 	} else {
-		deviceManager.getCaptureManager().capture([&](bool silent, const uint8_t* buffer, uint32_t size) {
-			soundAnalyzer.process(buffer, silent, size);
+		deviceManager.getCaptureManager().capture([&](bool silent, array_view<std::byte> buffer) {
+			soundAnalyzer.process(buffer, silent);
 		}, maxLoop);
 	}
 
