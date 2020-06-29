@@ -40,7 +40,7 @@ namespace rxtd::audio_analyzer {
 
 	public:
 		explicit AudioChild(utils::Rainmeter&& _rain);
-		~AudioChild();
+		~AudioChild() = default;
 		/** This class is non copyable */
 		AudioChild(const AudioChild& other) = delete;
 		AudioChild(AudioChild&& other) = delete;

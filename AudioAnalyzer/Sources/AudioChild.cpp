@@ -30,8 +30,6 @@ AudioChild::AudioChild(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rain)) 
 	}
 }
 
-AudioChild::~AudioChild() { }
-
 void AudioChild::_reload() {
 	const auto channelStr = rain.readString(L"Channel");
 
@@ -129,7 +127,7 @@ std::tuple<double, const wchar_t*> AudioChild::_update() {
 		result = std::clamp(result, 0.0, 1.0);
 	}
 
-	const wchar_t *stringRes = stringValue.c_str();
+	const wchar_t *stringRes;
 	switch (stringValueType) {
 	case StringValue::eNUMBER:
 		stringRes = nullptr;
@@ -137,6 +135,7 @@ std::tuple<double, const wchar_t*> AudioChild::_update() {
 
 	case StringValue::eINFO:
 		stringValue = parent->resolve(index(infoRequestC.size()), infoRequestC.data());
+		stringRes = stringValue.c_str();
 		break;
 
 	default:
