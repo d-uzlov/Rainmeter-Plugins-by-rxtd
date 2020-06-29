@@ -140,7 +140,7 @@ void SoundAnalyzer::updateSampleRate() noexcept {
 	}
 }
 
-void SoundAnalyzer::removeNonexistentChannelsFromMap() {
+void SoundAnalyzer::removeNonexistentChannelsFromMap(MyWaveFormat waveFormat) {
 	std::vector<Channel> toDelete;
 
 	for (const auto &channelIter : channels) {

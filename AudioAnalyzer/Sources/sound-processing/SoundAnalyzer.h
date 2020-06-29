@@ -70,7 +70,7 @@ namespace rxtd::audio_analyzer {
 	private:
 		void updateSampleRate() noexcept;
 
-		void removeNonexistentChannelsFromMap();
+		void removeNonexistentChannelsFromMap(MyWaveFormat waveFormat);
 		void patchHandlers();
 	};
 }
