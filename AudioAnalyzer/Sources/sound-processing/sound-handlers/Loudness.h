@@ -27,7 +27,7 @@ namespace rxtd::audio_analyzer {
 
 	public:
 		void process(const DataSupplier& dataSupplier) override;
-		void setSamplesPerSec(index samplesPerSec) override;
+		void _setSamplesPerSec(index samplesPerSec) override;
 
 	protected:
 		void _reset() override;

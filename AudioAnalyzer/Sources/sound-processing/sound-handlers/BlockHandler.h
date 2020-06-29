@@ -52,15 +52,15 @@ namespace rxtd::audio_analyzer {
 		mutable string propString { };
 
 	public:
-		virtual void setParams(Params params);
+		void setParams(Params params);
 
-		void setSamplesPerSec(index samplesPerSec) override;
-		void reset() override;
+		void setSamplesPerSec(index samplesPerSec) final;
+		void reset() final;
 
-		void processSilence(const DataSupplier& dataSupplier) override;
-		void finish(const DataSupplier& dataSupplier) override;
+		void processSilence(const DataSupplier& dataSupplier) final;
+		void finish(const DataSupplier& dataSupplier) final;
 
-		array_view<float> getData(layer_t layer) const override {
+		array_view<float> getData(layer_t layer) const final {
 			return { &result, 1 };
 		}
 
@@ -69,14 +69,6 @@ namespace rxtd::audio_analyzer {
 		static std::optional<Params> parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger &cl);
 
 	protected:
-		Params getParams() const {
-			return params;
-		}
-
-		index getSamplesPerSec() const {
-			return samplesPerSec;
-		}
-
 		audio_utils::LogarithmicIRF& getFilter() {
 			return filter;
 		}
@@ -84,15 +76,11 @@ namespace rxtd::audio_analyzer {
 		index getBlockSize() const {
 			return blockSize;
 		}
-
-		index getCounter() const {
-			return counter;
-		}
-
 	private:
 		void recalculateConstants();
 		virtual void finishBlock() = 0;
 		virtual void _reset() = 0;
+		virtual void _setSamplesPerSec(index samplesPerSec) { }
 	};
 
 	class BlockRms : public BlockHandler {

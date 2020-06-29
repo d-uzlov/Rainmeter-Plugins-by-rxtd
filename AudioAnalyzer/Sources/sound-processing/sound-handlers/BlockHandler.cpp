@@ -49,6 +49,8 @@ void BlockHandler::setSamplesPerSec(index samplesPerSec) {
 	this->samplesPerSec = samplesPerSec;
 
 	recalculateConstants();
+
+	_setSamplesPerSec(samplesPerSec);
 }
 
 const wchar_t* BlockHandler::getProp(const isview& prop) const {

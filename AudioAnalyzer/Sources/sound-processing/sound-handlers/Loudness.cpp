@@ -17,9 +17,7 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-void Loudness::setSamplesPerSec(index samplesPerSec) {
-	BlockHandler::setSamplesPerSec(samplesPerSec);
-
+void Loudness::_setSamplesPerSec(index samplesPerSec) {
 	highShelfFilter = audio_utils::KWeightingFilterBuilder::createHighShelf(samplesPerSec);
 	highPassFilter = audio_utils::KWeightingFilterBuilder::createHighPass(samplesPerSec);
 }
