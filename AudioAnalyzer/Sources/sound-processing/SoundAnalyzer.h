@@ -18,8 +18,6 @@
 
 namespace rxtd::audio_analyzer {
 	class SoundAnalyzer {
-		MyWaveFormat waveFormat;
-
 		// Following two fields are used for updating .channels field.
 		// They can contain info about handlers that doesn't exist because of channel layout
 		std::map<Channel, std::vector<istring>> orderOfHandlers;

@@ -35,11 +35,6 @@ void SoundAnalyzer::setHandlerPatchers(std::map<Channel, std::vector<istring>> h
 }
 
 void SoundAnalyzer::setWaveFormat(MyWaveFormat waveFormat) {
-	if (waveFormat.format == utils::WaveDataFormat::eINVALID) {
-		this->waveFormat = waveFormat;
-		return;
-	}
-
 	removeNonexistentChannelsFromMap(waveFormat);
 
 	// add channels that didn't exist
@@ -48,14 +43,13 @@ void SoundAnalyzer::setWaveFormat(MyWaveFormat waveFormat) {
 	}
 	channels[Channel::eAUTO];
 
-	this->waveFormat = waveFormat;
 	channelMixer.setFormat(waveFormat);
 
 	patchHandlers();
 }
 
 void SoundAnalyzer::process(array_view<std::byte> frameBuffer, bool isSilent) {
-	if (waveFormat.format == utils::WaveDataFormat::eINVALID || waveFormat.channelsCount <= 0) {
+	if (channels.empty()) {
 		return;
 	}
 
@@ -106,10 +100,6 @@ void SoundAnalyzer::finishStandalone() noexcept {
 }
 
 void SoundAnalyzer::updateSampleRate() noexcept {
-	if (waveFormat.format == utils::WaveDataFormat::eINVALID) {
-		return;
-	}
-
 	const auto sampleRate = channelMixer.getResampler().getSampleRate();
 
 	for (auto & [channel, channelData] : channels) {
