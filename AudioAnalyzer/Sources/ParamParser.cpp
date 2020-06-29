@@ -38,36 +38,46 @@ void ParamParser::parse() {
 	handlerPatchersMap.clear();
 
 	auto processingIndices = rain.read(L"Processing").asList(L'|').own();
-	for (const auto& processingNameOption : processingIndices) {
-		auto cl = rain.getLogger().context(L"Processing {}:", processingNameOption.asString());
+	if (!checkListUnique(processingIndices)) {
+		rain.getLogger().error(L"Found repeating processings, aborting");
+		return;
+	}
 
-		string processingOptionIndex = L"Processing"s;
-		processingOptionIndex += L"_";
-		processingOptionIndex += processingNameOption.asString();
-		auto processingDescriptionOption = rain.read(processingOptionIndex);
+	for (const auto& processingNameOption : processingIndices) {
+		auto processingName = processingNameOption.asIString();
+		auto cl = rain.getLogger().context(L"Processing {}: ", processingName);
+
+		string processingOptionIndex = L"Processing_"s;
+		processingOptionIndex += processingName % csView();
+		auto processingDescriptionOption = rain.read(processingOptionIndex).own();
 		if (processingDescriptionOption.empty()) {
-			cl.error(L"processing description for '{}' is now found", processingNameOption.asString());
+			cl.error(L"processing description not found");
 			continue;
 		}
 
-		auto processingMap = processingDescriptionOption.asMap(L'|', L' ').own();
-		auto channelsOption = processingMap.get(L"channels"sv);
-		if (channelsOption.empty()) {
+		auto processingMap = processingDescriptionOption.asMap(L'|', L' ');
+		auto channelsList = processingMap.get(L"channels"sv).asList(L',');
+		if (channelsList.empty()) {
 			cl.error(L"channels not found");
 			continue;
 		}
+		auto channels = parseChannels(channelsList);
+		if (channels.empty()) {
+			cl.error(L"no valid channels found");
+			continue;
+		}
+
 		auto handlersOption = processingMap.get(L"handlers"sv);
 		if (handlersOption.empty()) {
 			cl.error(L"handlers not found");
 			continue;
 		}
 
-		auto channels = parseChannels(channelsOption.asList(L','));
-		if (channels.empty()) {
-			cl.error(L"no valid channels found");
-			continue;
-		}
 		auto handlersList = handlersOption.asList(L',');
+		if (!checkListUnique(handlersList)) {
+			cl.error(L"found repeating handlers, aborting");
+			return;
+		}
 
 		cacheHandlers(handlersList);
 
@@ -86,6 +96,18 @@ const std::map<Channel, std::vector<istring>>& ParamParser::getHandlers() const 
 const std::map<istring, std::function<SoundHandler*(SoundHandler*)>, std::less<>>&
 ParamParser::getPatches() const {
 	return handlerPatchersMap;
+}
+
+bool ParamParser::checkListUnique(const utils::OptionList& list) {
+	std::set<isview> set;
+	for (auto option : list) {
+		auto view = option.asIString();
+		if (set.find(view) != set.end()) {
+			return false;
+		}
+		set.insert(view);
+	}
+	return true;
 }
 
 std::set<Channel> ParamParser::parseChannels(utils::OptionList channelsStringList) const {
@@ -113,8 +135,7 @@ void ParamParser::cacheHandlers(const utils::OptionList& indices) {
 			continue;
 		}
 
-		string optionName = L"Handler";
-		optionName += L"_";
+		string optionName = L"Handler_";
 		optionName += indexOption.asString();
 
 		const auto descriptionOption = rain.read(optionName);

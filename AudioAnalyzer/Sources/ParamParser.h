@@ -40,6 +40,7 @@ namespace rxtd::audio_analyzer {
 		const std::map<istring, std::function<SoundHandler*(SoundHandler*)>, std::less<>>& getPatches() const;
 
 	private:
+		static bool checkListUnique(const utils::OptionList& list);
 		std::set<Channel> parseChannels(utils::OptionList channelsStringList) const;
 		void cacheHandlers(const utils::OptionList& indices);
 		std::function<SoundHandler*(SoundHandler*)> parseHandler(const utils::OptionMap& optionMap, utils::Rainmeter::Logger &cl);
