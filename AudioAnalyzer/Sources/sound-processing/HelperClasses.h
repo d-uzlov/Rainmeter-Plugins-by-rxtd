@@ -10,7 +10,6 @@
 #pragma once
 #include "Channel.h"
 #include "sound-handlers/SoundHandler.h"
-#include "Vector2D.h"
 
 namespace rxtd::audio_analyzer {
 	struct ChannelData {
@@ -19,27 +18,26 @@ namespace rxtd::audio_analyzer {
 	};
 
 	class DataSupplierImpl : public DataSupplier {
-		utils::Vector2D<float> *wave = nullptr;
+		array_view<float> wave { };
 		const ChannelData *channelData = nullptr;
 		Channel channel { };
-		index channelIndex = 0;
 		index waveSize { };
 
 		mutable index nextBufferIndex = 0;
 		mutable std::vector<std::vector<std::byte>> buffers;
 
 	public:
-		explicit DataSupplierImpl(utils::Vector2D<float> &wave);
-		void setChannelData(const ChannelData*);
-		void setChannelIndex(index channelIndex);
-		void setChannel(Channel channel);
+		void setWave(array_view<float> wave);
+		void setChannelData(const ChannelData* channelData, Channel channel);
 
 		array_view<float> getWave() const override;
-		const SoundHandler* getHandlerRaw(isview id) const override;
 		Channel getChannel() const override;
 		std::byte* getBufferRaw(index size) const override;
 
 		void resetBuffers();
 		void setWaveSize(index value);
+
+	protected:
+		const SoundHandler* getHandlerRaw(isview id) const override;
 	};
 }

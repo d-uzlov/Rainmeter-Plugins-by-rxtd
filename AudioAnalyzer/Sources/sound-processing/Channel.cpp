@@ -169,6 +169,10 @@ bool ChannelLayout::contains(Channel channel) const {
 	return channelMap.find(channel) != channelMap.end();
 }
 
+const std::vector<Channel>& ChannelLayout::getChannelsOrderView() const {
+	return channelOrder;
+}
+
 const std::unordered_map<Channel, index>& ChannelLayout::getChannelsMapView() const {
 	return channelMap;
 }

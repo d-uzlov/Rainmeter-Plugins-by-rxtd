@@ -31,11 +31,11 @@ index Resampler::calculateFinalWaveSize(index waveSize) const {
 	return waveSize / divide;
 }
 
-void Resampler::resample(array_span<float> values, index framesCount) const {
+void Resampler::resample(array_span<float> values) const {
 	if (divide <= 1) {
 		return;
 	}
-	const auto newCount = framesCount / divide;
+	const auto newCount = values.size() / divide;
 	for (index i = 0; i < newCount; ++i) {
 		double value = 0.0;
 		for (index j = 0; j < divide; ++j) {

@@ -12,8 +12,6 @@
 #include "sound-handlers/SoundHandler.h"
 #include <functional>
 #include "Channel.h"
-#include <Vector2D.h>
-#include "Resampler.h"
 #include "ChannelMixer.h"
 #include "AudioChildHelper.h"
 #include "HelperClasses.h"
@@ -27,11 +25,8 @@ namespace rxtd::audio_analyzer {
 		std::map<Channel, std::vector<istring>> orderOfHandlers;
 		std::map<istring, std::function<SoundHandler*(SoundHandler*)>, std::less<>> patchers;
 
-		Resampler resampler;
 		ChannelMixer channelMixer;
 		AudioChildHelper audioChildHelper;
-
-		utils::Vector2D<float> waveBuffer;
 
 		std::map<Channel, ChannelData> channels;
 

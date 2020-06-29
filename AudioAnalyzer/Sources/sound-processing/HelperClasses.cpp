@@ -13,26 +13,17 @@
 
 using namespace audio_analyzer;
 
-
-DataSupplierImpl::DataSupplierImpl(utils::Vector2D<float> &wave) {
-	this->wave = &wave;
+void DataSupplierImpl::setWave(array_view<float> wave) {
+	this->wave = wave;
 }
 
-void DataSupplierImpl::setChannelData(const ChannelData *value) {
-	channelData = value;
-}
-
-void DataSupplierImpl::setChannelIndex(index channelIndex) {
-	this->channelIndex = channelIndex;
-}
-
-void DataSupplierImpl::setChannel(Channel channel) {
+void DataSupplierImpl::setChannelData(const ChannelData *channelData, Channel channel) {
+	this->channelData = channelData;
 	this->channel = channel;
 }
 
 array_view<float> DataSupplierImpl::getWave() const {
-	// TODO can I return (*wave)[channelIndex] ?
-	return { (*wave)[channelIndex].data(), waveSize };
+	return wave;
 }
 
 const SoundHandler* DataSupplierImpl::getHandlerRaw(isview id) const {

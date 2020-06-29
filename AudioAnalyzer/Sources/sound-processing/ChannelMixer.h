@@ -8,25 +8,31 @@
  */
 
 #pragma once
-#include "Vector2D.h"
 #include "device-management/MyWaveFormat.h"
+#include "Resampler.h"
+#include "array_view.h"
 
 namespace rxtd::audio_analyzer {
 	class ChannelMixer {
-	private:
+		struct ChannelData {
+			std::vector<float> wave;
+			bool resampled = false;
+		};
+
 		MyWaveFormat waveFormat;
-		utils::Vector2D<float> *bufferPtr = nullptr;
+		std::map<Channel, ChannelData> channels;
+		Channel aliasOfAuto = Channel::eAUTO;
+		Resampler resampler;
 
 	public:
 		void setFormat(MyWaveFormat waveFormat);
-		void setBuffer(utils::Vector2D<float> &buffer);
-		void decomposeFramesIntoChannels(const uint8_t* buffer, index framesCount);
+		void decomposeFramesIntoChannels(const uint8_t* buffer, index framesCount, bool withAuto);
 
-		index createChannelAuto(index framesCount, index destinationChannel);
+		array_view<float> getChannelPCM(Channel channel);
+
+		Resampler& getResampler();
 
 	private:
-		void resampleToAuto(index first, index second, index framesCount, index destinationChannel);
-		void copyToAuto(index channelIndex, index framesCount, index destinationChannel);
+		void resampleToAuto();
 	};
-
 }

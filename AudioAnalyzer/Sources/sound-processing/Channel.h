@@ -89,6 +89,7 @@ namespace rxtd::audio_analyzer {
 	
 		sview name = { };
 		std::unordered_map<Channel, index> channelMap;
+		std::vector<Channel> channelOrder;
 	
 	public:
 	
@@ -123,6 +124,7 @@ namespace rxtd::audio_analyzer {
 			return const_iterator { channelMap.cend() };
 		}
 
+		const std::vector<Channel>& getChannelsOrderView() const;
 		const std::unordered_map<Channel, index>& getChannelsMapView() const;
 	};
 

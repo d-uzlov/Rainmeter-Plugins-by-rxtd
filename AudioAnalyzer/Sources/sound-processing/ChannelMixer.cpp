@@ -16,86 +16,97 @@ using namespace audio_analyzer;
 
 void ChannelMixer::setFormat(MyWaveFormat waveFormat) {
 	this->waveFormat = waveFormat;
+
+	resampler.setSourceRate(waveFormat.samplesPerSec);
+
+	auto left = waveFormat.channelLayout.indexOf(Channel::eFRONT_LEFT);
+	auto right = waveFormat.channelLayout.indexOf(Channel::eFRONT_RIGHT);
+	auto center = waveFormat.channelLayout.indexOf(Channel::eCENTER);
+
+	if (left.has_value() && right.has_value()) {
+		aliasOfAuto = Channel::eAUTO;
+	} else if (left.has_value()) {
+		aliasOfAuto = Channel::eFRONT_LEFT;
+	} else if (right.has_value()) {
+		aliasOfAuto = Channel::eFRONT_RIGHT;
+	} else if (center.has_value()) {
+		aliasOfAuto = Channel::eCENTER;
+	} else {
+		aliasOfAuto = waveFormat.channelLayout.getChannelsOrderView()[0];
+	}
 }
 
-void ChannelMixer::setBuffer(utils::Vector2D<float> &buffer) {
-	this->bufferPtr = &buffer;
-}
-
-void ChannelMixer::decomposeFramesIntoChannels(const uint8_t* buffer, index framesCount) {
-	auto& waveBuffer = *bufferPtr;
-
-	waveBuffer.setBufferSize(framesCount);
-
+void ChannelMixer::decomposeFramesIntoChannels(const uint8_t* buffer, index framesCount, bool withAuto) {
 	const auto channelsCount = waveFormat.channelsCount;
+
 	if (waveFormat.format == utils::WaveDataFormat::ePCM_F32) {
-		auto s = reinterpret_cast<const float*>(buffer);
-		for (index frame = 0; frame < framesCount; ++frame) {
-			for (index channel = 0; channel < channelsCount; ++channel) {
-				waveBuffer[channel][frame] = *s;
-				++s;
+		const auto bufferFloat = reinterpret_cast<const float*>(buffer);
+		
+		for (auto channel : waveFormat.channelLayout) {
+			channels[channel].resampled = false;
+			auto &waveBuffer = channels[channel].wave;
+			waveBuffer.resize(framesCount);
+			auto bufferTemp = bufferFloat + waveFormat.channelLayout.indexOf(channel).value();
+
+			for (index frame = 0; frame < framesCount; ++frame) {
+				waveBuffer[frame] = *bufferTemp;
+				bufferTemp += channelsCount;
 			}
 		}
 	} else if (waveFormat.format == utils::WaveDataFormat::ePCM_S16) {
-		auto s = reinterpret_cast<const int16_t*>(buffer);
-		for (index frame = 0; frame < framesCount; ++frame) {
-			for (index channel = 0; channel < channelsCount; ++channel) {
-				waveBuffer[channel][frame] = *s * (1.0f / std::numeric_limits<int16_t>::max());
-				++s;
+		const auto bufferInt = reinterpret_cast<const int16_t*>(buffer);
+
+		for (auto channel : waveFormat.channelLayout) {
+			channels[channel].resampled = false;
+			auto &waveBuffer = channels[channel].wave;
+			waveBuffer.resize(framesCount);
+			auto bufferTemp = bufferInt + waveFormat.channelLayout.indexOf(channel).value();
+
+			for (index frame = 0; frame < framesCount; ++frame) {
+				waveBuffer[frame] = *bufferTemp * (1.0f / std::numeric_limits<int16_t>::max());
+				bufferTemp += channelsCount;
 			}
 		}
 	} else {
 		std::terminate(); // TODO this is dumb
 	}
+
+	if (withAuto && aliasOfAuto == Channel::eAUTO) {
+		resampleToAuto();
+	}
 }
 
-index ChannelMixer::createChannelAuto(index framesCount, index destinationChannel) {
-
-	auto left = waveFormat.channelLayout.indexOf(Channel::eFRONT_LEFT);
-	auto right = waveFormat.channelLayout.indexOf(Channel::eFRONT_RIGHT);
-
-	if (left.has_value() && right.has_value()) {
-		resampleToAuto(left.value(), right.value(), framesCount, destinationChannel);
-		return destinationChannel;
-	}
-	if (left.has_value()) {
-		copyToAuto(left.value(), framesCount, destinationChannel);
-		return destinationChannel;
-	}
-	if (right.has_value()) {
-		copyToAuto(right.value(), framesCount, destinationChannel);
-		return destinationChannel;
+array_view<float> ChannelMixer::getChannelPCM(Channel channel) {
+	if (channel == Channel::eAUTO) {
+		channel = aliasOfAuto;
 	}
 
-	auto center = waveFormat.channelLayout.indexOf(Channel::eCENTER);
-	if (center.has_value()) {
-		copyToAuto(center.value(), framesCount, destinationChannel);
-		return destinationChannel;
+	const auto dataIter = channels.find(channel);
+	if (dataIter == channels.end()) {
+		return { };
 	}
 
-	copyToAuto(0, framesCount, destinationChannel);
-	return destinationChannel;
+	auto& data = channels[channel];
+	if (!data.resampled) {
+		resampler.resample(data.wave);
+		data.wave.resize(resampler.calculateFinalWaveSize(data.wave.size()));
+	}
+
+	return data.wave;
 }
 
-void ChannelMixer::resampleToAuto(index first, index second, index framesCount, index destinationChannel) {
-	auto& buffer = *bufferPtr;
+Resampler& ChannelMixer::getResampler() {
+	return resampler;
+}
 
-	auto bufferAuto = buffer[destinationChannel];
-	const auto bufferFirst = buffer[first];
-	const auto bufferSecond = buffer[second];
+void ChannelMixer::resampleToAuto() {
+	auto& bufferAuto = channels[Channel::eAUTO].wave;
+	const auto& bufferFirst = channels[Channel::eFRONT_LEFT].wave;
+	const auto& bufferSecond = channels[Channel::eFRONT_RIGHT].wave;
 
-	for (index i = 0; i < framesCount; ++i) {
+	const index size = bufferFirst.size();
+	bufferAuto.resize(size);
+	for (index i = 0; i < size; ++i) {
 		bufferAuto[i] = (bufferFirst[i] + bufferSecond[i]) * 0.5f;
-	}
-}
-
-void ChannelMixer::copyToAuto(index channelIndex, index framesCount, index destinationChannel) {
-	auto& buffer = *bufferPtr;
-
-	auto bufferAuto = buffer[destinationChannel];
-	const auto bufferSource = buffer[channelIndex];
-
-	for (index i = 0; i < framesCount; ++i) {
-		bufferAuto[i] = bufferSource[i];
 	}
 }

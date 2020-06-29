@@ -13,12 +13,11 @@
 
 using namespace audio_analyzer;
 
-SoundAnalyzer::SoundAnalyzer() noexcept : audioChildHelper(channels, dataSupplier), dataSupplier(waveBuffer) {
-	channelMixer.setBuffer(waveBuffer);
+SoundAnalyzer::SoundAnalyzer() noexcept : audioChildHelper(channels, dataSupplier) {
 }
 
 void SoundAnalyzer::setTargetRate(index value) noexcept {
-	resampler.setTargetRate(value);
+	channelMixer.getResampler().setTargetRate(value);
 	updateSampleRate();
 }
 
@@ -41,19 +40,16 @@ void SoundAnalyzer::setWaveFormat(MyWaveFormat waveFormat) {
 		return;
 	}
 
-	removeNonexistentChannelsFromMap();
+	removeNonexistentChannelsFromMap(waveFormat);
 
-	auto channelLayoutMap = waveFormat.channelLayout.getChannelsMapView();
-	channelLayoutMap[Channel::eAUTO] = -1;
-
-	for (auto [newChannel, _] : channelLayoutMap) {
-		channels[newChannel]; // add channels that didn't exist
+	// add channels that didn't exist
+	for (auto [newChannel, _] : waveFormat.channelLayout.getChannelsMapView()) {
+		channels[newChannel];
 	}
+	channels[Channel::eAUTO];
 
 	this->waveFormat = waveFormat;
 	channelMixer.setFormat(waveFormat);
-	resampler.setSourceRate(waveFormat.samplesPerSec);
-	waveBuffer.setBuffersCount(waveFormat.channelsCount + 1);
 
 	patchHandlers();
 }
@@ -64,48 +60,31 @@ void SoundAnalyzer::process(const uint8_t* buffer, bool isSilent, index framesCo
 	}
 
 	if (!isSilent) {
-		channelMixer.decomposeFramesIntoChannels(buffer, framesCount);
-
-		if (!channels[Channel::eAUTO].handlers.empty()) {
-			channelMixer.createChannelAuto(framesCount, waveBuffer.getBuffersCount() - 1);
-		}
+		const bool needAuto = !channels[Channel::eAUTO].handlers.empty();
+		channelMixer.decomposeFramesIntoChannels(buffer, framesCount, needAuto);
 	}
 
-	dataSupplier.setWaveSize(resampler.calculateFinalWaveSize(framesCount));
+	dataSupplier.setWaveSize(channelMixer.getResampler().calculateFinalWaveSize(framesCount));
 
 	for (auto &[channel, channelData] : channels) {
 		if (channelData.handlers.empty()) {
 			continue;
 		}
 
-		dataSupplier.setChannelData(&channelData);
-		dataSupplier.setChannel(channel);
-
-		auto channelIndexOpt = waveFormat.channelLayout.indexOf(channel);
-		index waveIndex;
-		if (channelIndexOpt.has_value()) {
-			waveIndex = channelIndexOpt.value();
-		} else {
-			waveIndex = waveBuffer.getBuffersCount() - 1;
-		}
-
-		dataSupplier.setChannelIndex(waveIndex);
+		dataSupplier.setChannelData(&channelData, channel);
 
 		if (isSilent) {
 			for (auto& handler : channelData.handlers) {
 				handler->processSilence(dataSupplier);
 			}
 		} else {
-			resampler.resample(waveBuffer[waveIndex], framesCount);
-
+			dataSupplier.setWave(channelMixer.getChannelPCM(channel));
 			for (auto& handler : channelData.handlers) {
 				handler->process(dataSupplier);
 			}
 		}
 		dataSupplier.resetBuffers();
 	}
-
-	dataSupplier.setChannelData(nullptr);
 }
 
 void SoundAnalyzer::resetValues() noexcept {
@@ -131,7 +110,7 @@ void SoundAnalyzer::updateSampleRate() noexcept {
 		return;
 	}
 
-	const auto sampleRate = resampler.getSampleRate();
+	const auto sampleRate = channelMixer.getResampler().getSampleRate();
 
 	for (auto & [channel, channelData] : channels) {
 		for (auto &handler : channelData.handlers) {

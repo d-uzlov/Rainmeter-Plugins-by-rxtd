@@ -37,6 +37,10 @@ AudioChildHelper::findHandler(Channel channel, isview handlerId) const {
 }
 
 double AudioChildHelper::getValue(Channel channel, isview handlerId, index index) const {
+	if (channel == Channel::eBACK_LEFT) {
+		int a = 0;
+		a++;
+	}
 	const auto handlerVariant = findHandler(channel, handlerId);
 	if (handlerVariant.index() != 0) {
 		return 0.0;
@@ -48,8 +52,7 @@ double AudioChildHelper::getValue(Channel channel, isview handlerId, index index
 	if (channelDataIter == channels->end()) {
 		return 0.0;
 	}
-	dataSupplier->setChannelData(&channelDataIter->second);
-	dataSupplier->setChannel(channel);
+	dataSupplier->setChannelData(&channelDataIter->second, channel);
 
 	handler->finish(*dataSupplier);
 	if (!handler->isValid()) {
