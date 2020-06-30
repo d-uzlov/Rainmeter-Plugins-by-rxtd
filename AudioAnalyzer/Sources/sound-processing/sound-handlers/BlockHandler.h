@@ -49,8 +49,6 @@ namespace rxtd::audio_analyzer {
 		index counter = 0;
 
 	private:
-		std::vector<float> intermediateWave { };
-
 		float result = 0.0;
 
 		mutable string propString { };
@@ -81,19 +79,25 @@ namespace rxtd::audio_analyzer {
 		}
 	private:
 		void recalculateConstants();
-		virtual void _process(array_span<float> wave) = 0;
+		virtual void _process(array_view<float> wave, float average) = 0;
 		virtual void finishBlock() = 0;
 		virtual void _reset() = 0;
 		virtual void _setSamplesPerSec(index samplesPerSec) { }
+		virtual bool isAverageNeeded() const {
+			return false;
+		}
 	};
 
 	class BlockRms : public BlockHandler {
 		double intermediateResult = 0.0;
 
 	public:
-		void _process(array_span<float> wave) override;
+		void _process(array_view<float> wave, float average) override;
 
 	protected:
+		bool isAverageNeeded() const override {
+			return true;
+		}
 		void finishBlock() override;
 		void _reset() override;
 	};
@@ -102,7 +106,7 @@ namespace rxtd::audio_analyzer {
 		double intermediateResult = 0.0;
 
 	public:
-		void _process(array_span<float> wave) override;
+		void _process(array_view<float> wave, float average) override;
 
 	protected:
 		void finishBlock() override;

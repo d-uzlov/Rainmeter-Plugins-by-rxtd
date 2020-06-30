@@ -85,18 +85,13 @@ void BlockHandler::reset() {
 
 void BlockHandler::process(const DataSupplier& dataSupplier) {
 	auto wave = dataSupplier.getWave();
-	intermediateWave.resize(wave.size());
 
-	if (params.subtractMean) {
-		const float mean = std::accumulate(wave.begin(), wave.end(), 0.0f) / wave.size();
-		for (int i = 0; i < wave.size(); ++i) {
-			intermediateWave[i] = wave[i] - mean;
-		}
-	} else {
-		std::copy(wave.begin(), wave.end(), intermediateWave.begin());
+	float mean = 0.0;
+	if (isAverageNeeded()) {
+		mean = std::accumulate(wave.begin(), wave.end(), 0.0f) / wave.size();
 	}
 
-	_process(intermediateWave);
+	_process(wave, mean);
 }
 
 void BlockHandler::recalculateConstants() {
@@ -107,18 +102,11 @@ void BlockHandler::recalculateConstants() {
 	}
 
 	filter.setParams(params.attackTime, params.decayTime, samplesPerSec, blockSize);
-
-	reset();
 }
 
 void BlockHandler::processSilence(const DataSupplier& dataSupplier) {
 	const auto waveSize = dataSupplier.getWave().size();
 	index waveProcessed = 0;
-
-	if (blockSize == 0) {
-		int a = 0;
-		a++;
-	}
 
 	while (waveProcessed != waveSize) {
 		const index missingPoints = blockSize - counter;
@@ -137,8 +125,9 @@ void BlockHandler::finish(const DataSupplier& dataSupplier) {
 	result = filter.getLastResult();
 }
 
-void BlockRms::_process(array_span<float> wave) {
+void BlockRms::_process(array_view<float> wave, float average) {
 	for (double x : wave) {
+		x -= average;
 		intermediateResult += x * x;
 		counter++;
 		if (counter >= getBlockSize()) {
@@ -158,8 +147,9 @@ void BlockRms::_reset() {
 	intermediateResult = 0.0;
 }
 
-void BlockPeak::_process(array_span<float> wave) {
+void BlockPeak::_process(array_view<float> wave, float average) {
 	for (double x : wave) {
+		x -= average;
 		intermediateResult = std::max<double>(intermediateResult, std::abs(x));
 		counter++;
 		if (counter >= getBlockSize()) {

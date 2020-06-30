@@ -26,8 +26,11 @@ void Loudness::_reset() {
 	intermediateRmsResult = 0.0;
 }
 
-void Loudness::_process(array_span<float> wave) {
-	preprocessWave(wave);
+void Loudness::_process(array_view<float> wave, float average) {
+	intermediateWave.resize(wave.size());
+	std::copy(wave.begin(), wave.end(), intermediateWave.begin());
+
+	preprocessWave(intermediateWave);
 
 	for (double x : wave) {
 		intermediateRmsResult += x * x;
