@@ -8,9 +8,9 @@
  */
 
 #pragma once
-#include "SoundHandler.h"
+#include "../SoundHandler.h"
 #include "Vector2D.h"
-#include "spectrum-stack/BandResampler.h"
+#include "BandResampler.h"
 
 namespace rxtd::audio_analyzer {
 	class FiniteTimeFilter : public ResamplerProvider {

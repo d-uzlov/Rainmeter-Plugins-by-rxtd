@@ -8,8 +8,8 @@
  */
 
 #pragma once
-#include "SoundHandler.h"
-#include "spectrum-stack/BandResampler.h"
+#include "../SoundHandler.h"
+#include "BandResampler.h"
 
 namespace rxtd::audio_analyzer {
 	class UniformBlur : public ResamplerProvider {

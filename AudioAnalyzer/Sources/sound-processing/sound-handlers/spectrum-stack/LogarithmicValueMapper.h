@@ -8,7 +8,7 @@
  */
 
 #pragma once
-#include "SoundHandler.h"
+#include "../SoundHandler.h"
 #include "OptionParser.h"
 #include "RainmeterWrappers.h"
 
