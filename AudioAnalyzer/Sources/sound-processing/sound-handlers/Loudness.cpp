@@ -39,10 +39,6 @@ void Loudness::_process(array_view<float> wave, float average) {
 			finishBlock();
 		}
 	}
-
-	// const double loudness = calculateLoudness();
-	// const double lufs = std::max(loudness, -70.0) * (1.0 / 70.0) + 1;
-	// result = filter.next(lufs);
 }
 
 void Loudness::finishBlock() {
@@ -52,19 +48,11 @@ void Loudness::finishBlock() {
 	intermediateRmsResult = 0.0;
 }
 
+sview Loudness::getDefaultTransform() {
+	return L"db map[-70 + 0.691, 0.691][0, 1] clamp[0, 1] filter[100, 500]"sv;
+}
+
 void Loudness::preprocessWave(array_span<float> wave) {
 	highShelfFilter.apply(wave);
 	highPassFilter.apply(wave);
-}
-
-double Loudness::calculateLoudness() {
-	// double rms = 0.0;
-	// for (auto value : intermediateWave) {
-	// 	rms += value * value;
-	// }
-	// rms /= intermediateWave.size();
-
-	// const double loudness = -0.691 + 10.0 * std::log10(rms);
-
-	// return loudness;
 }

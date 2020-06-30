@@ -32,10 +32,10 @@ namespace rxtd::audio_analyzer {
 	protected:
 		void _reset() override;
 		void finishBlock() override;
+		sview getDefaultTransform() override;
 
 	private:
 		void preprocessWave(array_span<float> wave);
-		double calculateLoudness();
 	};
 
 }

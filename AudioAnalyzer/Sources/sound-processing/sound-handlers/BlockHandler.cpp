@@ -11,21 +11,19 @@
 
 #include "undef.h"
 #include <numeric>
+#include "MutableLinearInterpolator.h"
+#include "../../audio-utils/LogarithmicIRF.h"
 
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-std::optional<BlockHandler::Params> BlockHandler::parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl) {
+std::optional<BlockHandler::Params> BlockHandler::parseParams(const utils::OptionMap& optionMap,
+                                                              utils::Rainmeter::Logger& cl) {
 	Params params;
-	params.attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.0);
-	params.decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.attackTime), 0.0);
 
-	params.attackTime *= 0.001;
-	params.decayTime *= 0.001;
-
-	params.resolution = optionMap.get(L"resolution"sv).asFloat(10);
+	params.resolution = optionMap.get(L"resolution"sv).asFloat(1000.0 / 60.0);
 	if (params.resolution <= 0) {
 		cl.warning(L"block must be > 0 but {} found. Assume 10", params.resolution);
 		params.resolution = 10;
@@ -34,11 +32,66 @@ std::optional<BlockHandler::Params> BlockHandler::parseParams(const utils::Optio
 
 	params.subtractMean = optionMap.get(L"subtractMean").asBool(true);
 
+	auto transform = optionMap.get(L"transform");
+	if (!transform.empty()) {
+		auto transformSequence = transform.asSequence();
+		for (auto list : transformSequence) {
+			const auto transformName = list.get(0).asIString();
+			auto transformOpt = parseTransformation(list, cl);
+			if (!transformOpt.has_value()) {
+				cl.error(L"transform '{}' is not recognized, using default transform sequence", transformName);
+				params.transformations = { };
+				break;
+			}
+			params.transformations.emplace_back(transformOpt.value());
+		}
+	}
+
 	return params;
 }
 
 void BlockHandler::setNextValue(double value) {
-	filter.next(value);
+	for (const auto& transform : params.transformations) {
+		switch (transform.type) {
+		case TransformType::eFILTER: {
+			auto& filter = *reinterpret_cast<audio_utils::LogarithmicIRF*>(transform.state);
+			value = filter.next(value);
+			break;
+		}
+		case TransformType::eDB: {
+			value = std::max<double>(value, std::numeric_limits<float>::min());
+			value = 10.0 * std::log10(value);
+			break;
+		}
+		case TransformType::eMAP: {
+			auto& interpolator = *reinterpret_cast<utils::MutableLinearInterpolator*>(transform.state);
+			value = interpolator.toValue(value);
+			break;
+		}
+		case TransformType::eCLAMP: {
+			value = std::clamp(value, transform.args[0], transform.args[1]);
+			break;
+		}
+		default: std::terminate();
+		}
+	}
+	result = value;
+}
+
+BlockHandler::Transformation::~Transformation() {
+	if (state != nullptr) {
+		switch (type) {
+		case TransformType::eFILTER:
+			delete reinterpret_cast<audio_utils::LogarithmicIRF*>(state);
+			break;
+		case TransformType::eDB: break;
+		case TransformType::eMAP:
+			delete reinterpret_cast<utils::MutableLinearInterpolator*>(state);
+			break;
+		case TransformType::eCLAMP: break;
+		default: ;
+		}
+	}
 }
 
 void BlockHandler::setParams(Params params) {
@@ -49,6 +102,16 @@ void BlockHandler::setParams(Params params) {
 	this->params = params;
 
 	recalculateConstants();
+
+	if (this->params.transformations.empty()) {
+		auto transform = utils::OptionParser::parse(getDefaultTransform());
+		auto transformSequence = transform.asSequence();
+		for (auto list : transformSequence) {
+			utils::Rainmeter::Logger dummyLogger;
+			auto transformOpt = parseTransformation(list, dummyLogger);
+			this->params.transformations.emplace_back(transformOpt.value());
+		}
+	}
 }
 
 void BlockHandler::setSamplesPerSec(index samplesPerSec) {
@@ -66,10 +129,6 @@ void BlockHandler::setSamplesPerSec(index samplesPerSec) {
 const wchar_t* BlockHandler::getProp(const isview& prop) const {
 	if (prop == L"block size") {
 		propString = std::to_wstring(blockSize);
-	} else if (prop == L"attack") {
-		propString = std::to_wstring(params.attackTime * 1000.0);
-	} else if (prop == L"decay") {
-		propString = std::to_wstring(params.decayTime * 1000.0);
 	} else {
 		return nullptr;
 	}
@@ -79,7 +138,7 @@ const wchar_t* BlockHandler::getProp(const isview& prop) const {
 void BlockHandler::reset() {
 	counter = 0;
 	result = 0.0;
-	filter.reset();
+	resetTransformationStates();
 	_reset();
 }
 
@@ -94,6 +153,37 @@ void BlockHandler::process(const DataSupplier& dataSupplier) {
 	_process(wave, mean);
 }
 
+std::optional<BlockHandler::Transformation> BlockHandler::parseTransformation(utils::OptionList list, utils::Rainmeter::Logger &cl) {
+	const auto transformName = list.get(0).asIString();
+	Transformation tr { };
+	index paramCount;
+	if (transformName == L"filter") {
+		tr.type = TransformType::eFILTER;
+		paramCount = 2;
+	} else if (transformName == L"db") {
+		tr.type = TransformType::eDB;
+		paramCount = 0;
+	} else if (transformName == L"map") {
+		tr.type = TransformType::eMAP;
+		paramCount = 4;
+	} else if (transformName == L"clamp") {
+		tr.type = TransformType::eCLAMP;
+		paramCount = 2;
+	} else {
+		return std::nullopt;
+	}
+
+	if (list.size() != paramCount + 1) {
+		cl.error(L"wrong params count for {}: {} instead of {}", transformName, list.size() - 1, paramCount);
+		return std::nullopt;
+	}
+
+	for (int i = 1; i < list.size(); ++i) {
+		tr.args[i - 1] = list.get(i).asFloat();
+	}
+	return tr;
+}
+
 void BlockHandler::recalculateConstants() {
 	auto test = samplesPerSec * params.resolution;
 	blockSize = static_cast<decltype(blockSize)>(test);
@@ -101,7 +191,50 @@ void BlockHandler::recalculateConstants() {
 		blockSize = 1;
 	}
 
-	filter.setParams(params.attackTime, params.decayTime, samplesPerSec, blockSize);
+	updateTransformations();
+}
+
+void BlockHandler::updateTransformations() {
+	for (const auto& transform : params.transformations) {
+		switch (transform.type) {
+		case TransformType::eFILTER: {
+			if (transform.state == nullptr) {
+				transform.state = new audio_utils::LogarithmicIRF { };
+			}
+			auto& filter = *reinterpret_cast<audio_utils::LogarithmicIRF*>(transform.state);
+			filter.setParams(transform.args[0] * 0.001, transform.args[1] * 0.001, samplesPerSec, blockSize);
+			break;
+		}
+		case TransformType::eDB: break;
+		case TransformType::eMAP: {
+			if (transform.state == nullptr) {
+				transform.state = new utils::MutableLinearInterpolator { };
+			}
+			auto& interpolator = *reinterpret_cast<utils::MutableLinearInterpolator*>(transform.state);
+
+			if (std::abs(transform.args[0] - transform.args[1]) < std::numeric_limits<float>::min()) {
+				interpolator.setParams(0.0, 1.0, transform.args[2], transform.args[3]);
+			} else {
+				interpolator.setParams(transform.args[0], transform.args[1], transform.args[2], transform.args[3]);
+			}
+
+			break;
+		}
+		case TransformType::eCLAMP: break;
+		default: std::terminate();
+		}
+	}
+}
+
+void BlockHandler::resetTransformationStates() {
+	for (const auto& transform : params.transformations) {
+		if (transform.type == TransformType::eFILTER) {
+			auto filter = reinterpret_cast<audio_utils::LogarithmicIRF*>(transform.state);
+			if (filter != nullptr) {
+				filter->reset();
+			}
+		}
+	}
 }
 
 void BlockHandler::processSilence(const DataSupplier& dataSupplier) {
@@ -119,10 +252,6 @@ void BlockHandler::processSilence(const DataSupplier& dataSupplier) {
 			break;
 		}
 	}
-}
-
-void BlockHandler::finish(const DataSupplier& dataSupplier) {
-	result = filter.getLastResult();
 }
 
 void BlockRms::_process(array_view<float> wave, float average) {
@@ -147,6 +276,10 @@ void BlockRms::_reset() {
 	intermediateResult = 0.0;
 }
 
+sview BlockRms::getDefaultTransform() {
+	return L"db map[-70, 0][0, 1] clamp[0, 1] filter[200, 200]"sv;
+}
+
 void BlockPeak::_process(array_view<float> wave, float average) {
 	for (double x : wave) {
 		x -= average;
@@ -166,4 +299,8 @@ void BlockPeak::finishBlock() {
 
 void BlockPeak::_reset() {
 	intermediateResult = 0.0;
+}
+
+sview BlockPeak::getDefaultTransform() {
+	return L"filter[0, 500]"sv;
 }

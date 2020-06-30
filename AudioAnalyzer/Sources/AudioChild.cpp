@@ -46,11 +46,6 @@ void AudioChild::_reload() {
 	}
 
 	valueId = rain.readString(L"ValueId");
-	correctingConstant = rain.readDouble(L"Gain");
-	if (correctingConstant <= 0) {
-		correctingConstant = 1.0;
-	}
-	clamp = rain.read(L"Clamp01").asBool(true);
 
 	const auto stringValueStr = rain.readString(L"StringValue") % ciView();
 	if (stringValueStr == L"" || stringValueStr == L"Number") {
@@ -74,20 +69,6 @@ void AudioChild::_reload() {
 		stringValueType = StringValue::eNUMBER;
 	}
 
-	// TODO default number transform in handlers
-
-	const auto typeStr = rain.readString(L"NumberTransform") % ciView();
-	if (typeStr == L"" || typeStr == L"Linear") {
-		numberTransform = NumberTransform::eLINEAR;
-	} else if (typeStr == L"DB") {
-		numberTransform = NumberTransform::eDB;
-	} else if (typeStr == L"None") {
-		numberTransform = NumberTransform::eNONE;
-	} else {
-		logger.error(L"Invalid NumberTransform '{}', set to Linear.", typeStr);
-		numberTransform = NumberTransform::eLINEAR;
-	}
-
 	auto signedIndex = rain.read(L"Index").asInt();
 	if (signedIndex < 0) {
 		logger.error(L"Invalid Index {}. Index should be > 0. Set to 0.", signedIndex);
@@ -98,34 +79,7 @@ void AudioChild::_reload() {
 
 std::tuple<double, const wchar_t*> AudioChild::_update() {
 
-	double result;
-
-	switch (numberTransform) {
-	case NumberTransform::eLINEAR:
-	case NumberTransform::eDB:
-	{
-		result = parent->getValue(valueId, channel, valueIndex);
-		if (numberTransform == NumberTransform::eLINEAR) {
-			result = result * correctingConstant;
-		} else { // NumberTransform::DB
-			result = 20.0 / correctingConstant * std::log10(result) + 1.0;
-		}
-		break;
-	}
-
-	case NumberTransform::eNONE:
-		result = 0.0;
-		break;
-
-	default:
-		logger.error(L"Unexpected numberTransform: '{}'", numberTransform);
-		setMeasureState(utils::MeasureState::eBROKEN);
-		result = 0.0;
-		break;
-	}
-	if (clamp) {
-		result = std::clamp(result, 0.0, 1.0);
-	}
+	double result = parent->getValue(valueId, channel, valueIndex);
 
 	const wchar_t *stringRes;
 	switch (stringValueType) {

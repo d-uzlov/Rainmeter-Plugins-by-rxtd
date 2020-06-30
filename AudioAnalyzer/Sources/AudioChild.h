@@ -17,20 +17,11 @@ namespace rxtd::audio_analyzer {
 			eINFO
 		};
 
-		enum class NumberTransform {
-			eLINEAR,
-			eDB,
-			eNONE,
-		};
-
 		// Options
 		Channel channel = Channel::eFRONT_LEFT;
-		NumberTransform numberTransform = NumberTransform::eLINEAR;
 		StringValue stringValueType = StringValue::eNUMBER;
 		index valueIndex = 0;
 		string valueId;
-		double correctingConstant = 0.0;
-		bool clamp = true;
 		std::vector<string> infoRequest;
 		std::vector<const wchar_t*> infoRequestC;
 
