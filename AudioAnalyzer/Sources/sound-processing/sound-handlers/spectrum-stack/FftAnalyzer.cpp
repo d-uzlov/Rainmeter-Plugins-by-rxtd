@@ -256,8 +256,12 @@ double FftAnalyzer::Random::next() {
 
 std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(const utils::OptionMap &optionMap, utils::Rainmeter::Logger& cl) {
 	Params params{ };
-	params.attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.1) * 0.001;
-	params.decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.attackTime), 0.1) * 0.001;
+	params.attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.0);
+	params.decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.attackTime), 0.0);
+
+	params.attackTime *= 0.001;
+	params.decayTime *= 0.001;
+
 
 	const auto sizeBy = optionMap.get(L"sizeBy"sv).asIString(L"binWidth");
 	if (sizeBy == L"binWidth") {
