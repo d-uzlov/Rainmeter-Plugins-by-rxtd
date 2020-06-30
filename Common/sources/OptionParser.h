@@ -15,31 +15,59 @@
 
 namespace rxtd::utils {
 	class Tokenizer {
-		std::vector<SubstringViewInfo> tempList { };
-
 	public:
-		std::vector<SubstringViewInfo> parse(sview string, wchar_t delimiter);
+		static std::vector<SubstringViewInfo> parse(sview view, wchar_t delimiter);
+		static std::vector<std::vector<SubstringViewInfo>> parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wchar_t paramDelimiter, wchar_t optionDelimiter);
 
 	private:
-		void emitToken(index begin, index end);
+		static void emitToken(std::vector<SubstringViewInfo>& list, index begin, index end);
 
-		void tokenize(sview string, wchar_t delimiter);
+		static void tokenize(std::vector<SubstringViewInfo>& list, sview string, wchar_t delimiter);
 
-		void trimSpaces(sview string);
+		static void trimSpaces(std::vector<SubstringViewInfo>& list, sview string);
 	};
 
-	class OptionList;
-	class OptionMap;
-	struct OptionSeparated;
-	// Class, that allows you to parse options.
-	class Option {
+	template<typename T>
+	class AbstractOption {
 		// View of string containing data for this option
-		// There are a view and a source, because source may be empty and while view points to data in some other object
+		// There are a view and a source, because source may be empty while view points to data in some other object
 		// It's a user's responsibility to manage memory for this
 		sview _view;
 		// ↓↓ yes, this must be a vector and not a string,
 		// ↓↓ because small string optimization kills string views on move
 		std::vector<wchar_t> source;
+
+	public:
+		explicit AbstractOption() = default;
+		AbstractOption(sview view) : _view(view) { }
+
+		T& own() {
+			source.resize(_view.size());
+			std::copy(_view.begin(), _view.end(), source.begin());
+
+			return *reinterpret_cast<T*>(this);
+		}
+
+	protected:
+		void setView(sview view) {
+			_view = view;
+			source.resize(0);
+		}
+
+		sview getView() const {
+			if (source.empty()) {
+				return _view;
+			}
+			return sview { source.data(), source.size() };
+		}
+	};
+
+	class OptionList;
+	class OptionMap;
+	class OptionSequence;
+	struct OptionSeparated;
+	// Class, that allows you to parse options.
+	class Option : public AbstractOption<Option> {
 
 	public:
 		Option() = default;
@@ -74,14 +102,12 @@ namespace rxtd::utils {
 
 		OptionMap asMap(wchar_t optionDelimiter, wchar_t nameDelimiter) const;
 		OptionList asList(wchar_t delimiter) const;
-
-		Option own();
+		OptionSequence asSequence(wchar_t optionBegin = L'[', wchar_t optionEnd = L']', wchar_t paramDelimiter = L',', wchar_t optionDelimiter = L' ') const;
 
 		bool empty() const;
 
 	private:
 		static double parseNumber(sview source);
-		sview getView() const;
 	};
 
 	struct OptionSeparated {
@@ -94,16 +120,38 @@ namespace rxtd::utils {
 			rest(std::move(rest)) { }
 	};
 
-	// List of string.
-	class OptionList {
-		// View of string containing data for this option
-		// There are a view and a source, because source may be empty and while view points to data in some other object
-		// It's a user's responsibility to manage memory for this
-		sview _view;
-		// ↓↓ yes, this must be a vector and not a string,
-		// ↓↓ because small string optimization kills string views on move
-		std::vector<wchar_t> source;
+	class OptionSequence : public AbstractOption<OptionSequence> {
+		std::vector<std::vector<SubstringViewInfo>> list;
 
+	public:
+		OptionSequence() = default;
+		OptionSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wchar_t paramDelimiter, wchar_t optionDelimiter);
+
+		class iterator {
+			sview view;
+			const std::vector<std::vector<SubstringViewInfo>> &list;
+			index ind;
+
+		public:
+			iterator(sview view, const std::vector<std::vector<SubstringViewInfo>> &list, index _index);
+
+			iterator& operator++();
+
+			bool operator !=(const iterator& other) const;
+
+			OptionList operator*() const;
+		};
+
+		iterator begin() const;
+
+		iterator end() const;
+
+	private:
+		static void emitToken(std::vector<SubstringViewInfo>& description, index begin, index end);
+	};
+
+	// List of string.
+	class OptionList : public AbstractOption<OptionList> {
 		std::vector<SubstringViewInfo> list;
 
 	public:
@@ -139,14 +187,9 @@ namespace rxtd::utils {
 		iterator begin() const;
 
 		iterator end() const;
-
-		OptionList own();
-
-	private:
-		sview getView() const;
 	};
 
-	class OptionMap {
+	class OptionMap : public AbstractOption<OptionMap> {
 	public:
 		struct MapOptionInfo {
 			SubstringViewInfo substringInfo { };
@@ -157,21 +200,15 @@ namespace rxtd::utils {
 		};
 
 	private:
-		// View of string containing data for this option
-		// There are a view and a source, because source may be empty and while view points to data in some other object
-		// It's a user's responsibility to manage memory for this
-		sview _view;
-		// ↓↓ yes, this must be a vector and not a string,
-		// ↓↓ because small string optimization kills string views on move
-		std::vector<wchar_t> source;
-		// For move and copy operations.
+		// For move and copy operations. 
+		// String view would require much more hustle when moved with source than SubstringViewInfo
 		std::map<SubstringViewInfo, SubstringViewInfo> paramsInfo { };
 
 		// For fast search.
 		mutable std::map<isview, MapOptionInfo> params { };
 
 	public:
-		OptionMap();
+		OptionMap() = default;
 		OptionMap(sview source, std::map<SubstringViewInfo, SubstringViewInfo>&& paramsInfo);
 
 		//Returns named option, search is case-insensitive.
@@ -199,12 +236,9 @@ namespace rxtd::utils {
 		bool has(const wchar_t* name) const;
 
 		std::vector<isview> getListOfUntouched() const;
-
-		OptionMap own();
 	private:
 		void fillParams() const;
 		MapOptionInfo* find(isview name) const;
-		sview getView() const;
 	};
 
 

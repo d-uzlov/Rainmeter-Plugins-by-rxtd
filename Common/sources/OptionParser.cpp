@@ -14,57 +14,132 @@
 
 using namespace utils;
 
-std::vector<SubstringViewInfo> Tokenizer::parse(sview string, wchar_t delimiter) {
+std::vector<SubstringViewInfo> Tokenizer::parse(sview view, wchar_t delimiter) {
 	// this method is guarantied to return non - empty views
 
-	if (string.empty()) {
+	if (view.empty()) {
 		return { };
 	}
 
-	tempList.clear();
+	std::vector<SubstringViewInfo> tempList { };
 
-	tokenize(string, delimiter);
+	tokenize(tempList, view, delimiter);
 
-	trimSpaces(string);
+	trimSpaces(tempList, view);
 
 	return tempList;
 }
 
-void Tokenizer::emitToken(const index begin, const index end) {
+std::vector<std::vector<SubstringViewInfo>> Tokenizer::parseSequence(sview view, wchar_t optionBegin,
+	wchar_t optionEnd, wchar_t paramDelimiter, wchar_t optionDelimiter) {
+	enum class State {
+		eSEARCH,
+		eOPTION,
+		eSWALLOW,
+	};
+	auto state = State::eSEARCH;
+
+	std::vector<std::vector<SubstringViewInfo>> result;
+	std::vector<SubstringViewInfo> description;
+	index begin = view.find_first_not_of(L" \t");
+	for (index i = begin; i < index(view.length()); ++i) {
+		const auto symbol = view[i];
+
+		if (symbol == optionBegin) {
+			if (state != State::eOPTION) {
+				return { };
+			}
+			state = State::eSWALLOW;
+
+			const index end = i;
+			emitToken(description, begin, end);
+			begin = end + 1;
+			continue;
+		}
+		if (symbol == optionEnd) {
+			if (state != State::eSWALLOW) {
+				return { };
+			}
+			state = State::eOPTION;
+
+			const index end = i;
+			emitToken(description, begin, end);
+			begin = end + 1;
+			continue;
+		}
+		if (symbol == paramDelimiter) {
+			if (state != State::eSWALLOW) {
+				return { };
+			}
+
+			const index end = i;
+			emitToken(description, begin, end);
+			begin = end + 1;
+			continue;
+		}
+		if (symbol == optionDelimiter) {
+			if (state != State::eOPTION) {
+				continue;
+			}
+			const index end = i;
+			emitToken(description, begin, end);
+			begin = end + 1;
+
+			trimSpaces(description, view);
+			result.emplace_back(std::move(description));
+			description = { };
+			state = State::eSEARCH;
+			continue;
+		}
+		if (state == State::eSEARCH) {
+			// beginning of option name
+			state = State::eOPTION;
+			begin = i;
+		}
+	}
+	if (!description.empty()) {
+		trimSpaces(description, view);
+		result.emplace_back(std::move(description));
+	}
+
+	return result;
+}
+
+void Tokenizer::emitToken(std::vector<SubstringViewInfo>& list, const index begin, const index end) {
 	if (end <= begin) {
 		return;
 	}
-	tempList.emplace_back(begin, end - begin);
+	list.emplace_back(begin, end - begin);
 }
 
-void Tokenizer::tokenize(sview string, wchar_t delimiter) {
+void Tokenizer::tokenize(std::vector<SubstringViewInfo>& list, sview string, wchar_t delimiter) {
 	index begin = 0;
 
 	for (index i = 0; i < index(string.length()); ++i) {
 		if (string[i] == delimiter) {
 			const index end = i;
-			emitToken(begin, end);
+			emitToken(list, begin, end);
 			begin = end + 1;
 		}
 	}
 
-	emitToken(begin, string.length());
+	emitToken(list, begin, string.length());
 }
 
-void Tokenizer::trimSpaces(sview string) {
-	for (auto& view : tempList) {
+void Tokenizer::trimSpaces(std::vector<SubstringViewInfo>& list, sview string) {
+	for (auto& view : list) {
 		view = StringUtils::trimInfo(string, view);
 	}
 
-	tempList.erase(
-		std::remove_if(tempList.begin(), tempList.end(), [](SubstringViewInfo svi) {return svi.empty(); }),
-		tempList.end()
+	list.erase(
+		std::remove_if(list.begin(), list.end(), [](SubstringViewInfo svi) {return svi.empty(); }),
+		list.end()
 	);
 }
 
 
 OptionList::OptionList(sview view, std::vector<SubstringViewInfo>&& list) :
-	_view(view),
+	AbstractOption(view),
 	list(std::move(list)) {
 }
 
@@ -110,21 +185,7 @@ OptionList::iterator OptionList::end() const {
 	return { *this, size() };
 }
 
-OptionList OptionList::own() {
-	source.resize(_view.size());
-	std::copy(_view.begin(), _view.end(), source.begin());
-
-	return *this;
-}
-
-sview OptionList::getView() const {
-	if (source.empty()) {
-		return _view;
-	}
-	return sview { source.data(), source.size() };
-}
-
-Option::Option(sview view) : _view(view) {
+Option::Option(sview view) : AbstractOption(view) {
 }
 
 sview Option::asString(sview defaultValue) const {
@@ -225,11 +286,8 @@ OptionList Option::asList(wchar_t delimiter) const {
 	return { getView(), std::move(list) };
 }
 
-Option Option::own() {
-	source.resize(_view.size());
-	std::copy(_view.begin(), _view.end(), source.begin());
-
-	return *this;
+OptionSequence Option::asSequence(wchar_t optionBegin, wchar_t optionEnd, wchar_t paramDelimiter, wchar_t delimiter) const {
+	return { getView(), optionBegin, optionEnd, paramDelimiter, delimiter };
 }
 
 bool Option::empty() const {
@@ -255,18 +313,45 @@ double Option::parseNumber(sview source) {
 	return exp.number;
 }
 
-sview Option::getView() const {
-	if (source.empty()) {
-		return _view;
-	}
-	return sview { source.data(), source.size() };
+OptionSequence::OptionSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wchar_t paramDelimiter, wchar_t optionDelimiter) : AbstractOption(view) {
+	list = Tokenizer::parseSequence(view, optionBegin, optionEnd, paramDelimiter, optionDelimiter);
 }
 
+OptionSequence::iterator::iterator(sview view, const std::vector<std::vector<SubstringViewInfo>>& list, index _index) : 
+	view(view), list(list), ind(_index) {
+}
 
-OptionMap::OptionMap() = default;
+OptionSequence::iterator& OptionSequence::iterator::operator++() {
+	ind++;
+	return *this;
+}
+
+bool OptionSequence::iterator::operator!=(const iterator& other) const {
+	return &list != &other.list || ind != other.ind;
+}
+
+OptionList OptionSequence::iterator::operator*() const {
+	auto list_ = list[ind];
+	return { view, std::move(list_) };
+}
+
+OptionSequence::iterator OptionSequence::begin() const {
+	return { getView(), list, 0 };
+}
+
+OptionSequence::iterator OptionSequence::end() const {
+	return { getView(), list, index(list.size()) };
+}
+
+void OptionSequence::emitToken(std::vector<SubstringViewInfo>& description, index begin, index end) {
+	if (end <= begin) {
+		return;
+	}
+	description.emplace_back(begin, end - begin);
+}
 
 OptionMap::OptionMap(sview source, std::map<SubstringViewInfo, SubstringViewInfo>&& paramsInfo) :
-	_view(source),
+	AbstractOption(source),
 	paramsInfo(std::move(paramsInfo)) {
 
 	fillParams();
@@ -326,13 +411,6 @@ std::vector<isview> OptionMap::getListOfUntouched() const {
 	return result;
 }
 
-OptionMap OptionMap::own() {
-	source.resize(_view.size());
-	std::copy(_view.begin(), _view.end(), source.begin());
-
-	return *this;
-}
-
 void OptionMap::fillParams() const {
 	params.clear();
 	for (auto [nameInfo, valueInfo] : paramsInfo) {
@@ -349,13 +427,6 @@ OptionMap::MapOptionInfo* OptionMap::find(isview name) const {
 		return nullptr;
 	}
 	return &iter->second;
-}
-
-sview OptionMap::getView() const {
-	if (source.empty()) {
-		return _view;
-	}
-	return sview { source.data(), source.size() };
 }
 
 Option OptionParser::parse(sview string) {
