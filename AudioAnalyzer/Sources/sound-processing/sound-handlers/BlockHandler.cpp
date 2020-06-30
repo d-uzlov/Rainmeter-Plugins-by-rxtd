@@ -102,6 +102,9 @@ void BlockHandler::process(const DataSupplier& dataSupplier) {
 void BlockHandler::recalculateConstants() {
 	auto test = samplesPerSec * params.resolution;
 	blockSize = static_cast<decltype(blockSize)>(test);
+	if (blockSize < 1) {
+		blockSize = 1;
+	}
 
 	filter.setParams(params.attackTime, params.decayTime, samplesPerSec, blockSize);
 
