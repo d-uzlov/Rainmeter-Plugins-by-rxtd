@@ -54,7 +54,7 @@ void BlockHandler::setNextValue(double value) {
 	for (const auto& transform : params.transformations) {
 		switch (transform.type) {
 		case TransformType::eFILTER: {
-			auto& filter = *reinterpret_cast<audio_utils::LogarithmicIRF*>(transform.state);
+			auto& filter = *static_cast<audio_utils::LogarithmicIRF*>(transform.state);
 			value = filter.next(value);
 			break;
 		}
@@ -64,7 +64,7 @@ void BlockHandler::setNextValue(double value) {
 			break;
 		}
 		case TransformType::eMAP: {
-			auto& interpolator = *reinterpret_cast<utils::MutableLinearInterpolator*>(transform.state);
+			auto& interpolator = *static_cast<utils::MutableLinearInterpolator*>(transform.state);
 			value = interpolator.toValue(value);
 			break;
 		}
@@ -82,11 +82,11 @@ BlockHandler::Transformation::~Transformation() {
 	if (state != nullptr) {
 		switch (type) {
 		case TransformType::eFILTER:
-			delete reinterpret_cast<audio_utils::LogarithmicIRF*>(state);
+			delete static_cast<audio_utils::LogarithmicIRF*>(state);
 			break;
 		case TransformType::eDB: break;
 		case TransformType::eMAP:
-			delete reinterpret_cast<utils::MutableLinearInterpolator*>(state);
+			delete static_cast<utils::MutableLinearInterpolator*>(state);
 			break;
 		case TransformType::eCLAMP: break;
 		default: ;
@@ -201,7 +201,7 @@ void BlockHandler::updateTransformations() {
 			if (transform.state == nullptr) {
 				transform.state = new audio_utils::LogarithmicIRF { };
 			}
-			auto& filter = *reinterpret_cast<audio_utils::LogarithmicIRF*>(transform.state);
+			auto& filter = *static_cast<audio_utils::LogarithmicIRF*>(transform.state);
 			filter.setParams(transform.args[0] * 0.001, transform.args[1] * 0.001, samplesPerSec, blockSize);
 			break;
 		}
@@ -210,7 +210,7 @@ void BlockHandler::updateTransformations() {
 			if (transform.state == nullptr) {
 				transform.state = new utils::MutableLinearInterpolator { };
 			}
-			auto& interpolator = *reinterpret_cast<utils::MutableLinearInterpolator*>(transform.state);
+			auto& interpolator = *static_cast<utils::MutableLinearInterpolator*>(transform.state);
 
 			if (std::abs(transform.args[0] - transform.args[1]) < std::numeric_limits<float>::min()) {
 				interpolator.setParams(0.0, 1.0, transform.args[2], transform.args[3]);
@@ -229,7 +229,7 @@ void BlockHandler::updateTransformations() {
 void BlockHandler::resetTransformationStates() {
 	for (const auto& transform : params.transformations) {
 		if (transform.type == TransformType::eFILTER) {
-			auto filter = reinterpret_cast<audio_utils::LogarithmicIRF*>(transform.state);
+			auto filter = static_cast<audio_utils::LogarithmicIRF*>(transform.state);
 			if (filter != nullptr) {
 				filter->reset();
 			}

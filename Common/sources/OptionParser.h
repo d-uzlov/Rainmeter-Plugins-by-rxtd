@@ -10,8 +10,6 @@
 #pragma once
 #include "Color.h"
 #include "StringUtils.h"
-#include <optional>
-#include <utility>
 
 namespace rxtd::utils {
 	class Tokenizer {
@@ -45,7 +43,7 @@ namespace rxtd::utils {
 			source.resize(_view.size());
 			std::copy(_view.begin(), _view.end(), source.begin());
 
-			return *reinterpret_cast<T*>(this);
+			return static_cast<T&>(*this);
 		}
 
 	protected:
