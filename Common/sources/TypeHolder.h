@@ -29,6 +29,7 @@ namespace rxtd::utils {
 
 		double resultDouble = 0.0;
 		string resultString { };
+		string resolveString { };
 		bool useResultString = false;
 
 	public:
@@ -44,7 +45,7 @@ namespace rxtd::utils {
 		virtual double _update() = 0;
 		virtual void _updateString(string& resultStringBuffer) { }
 		virtual void _command(isview bangArgs);
-		virtual const wchar_t* _resolve(int argc, const wchar_t* argv[]);
+		virtual void _resolve(int argc, const wchar_t* argv[], string& resolveBufferString);
 
 		void setMeasureState(MeasureState brokenState);
 		void setUseResultString(bool value);

@@ -285,23 +285,21 @@ void PerfmonParent::_command(isview bangArgs) {
 	}
 }
 
-const wchar_t* PerfmonParent::_resolve(int argc, const wchar_t* argv[]) {
+void PerfmonParent::_resolve(int argc, const wchar_t* argv[], string& resolveBufferString) {
 	if (argc < 1) {
-		return nullptr;
+		return;
 	}
 
-	bufferString = argv[0];
-	utils::StringUtils::trimInplace(bufferString);
-	utils::StringUtils::lowerInplace(bufferString);
-	if (bufferString == L"fetch size") {
-		bufferString = std::to_wstring(snapshotCurrent.getItemsCount());
-		return bufferString.c_str();
+	isview arg = argv[0];
+	// utils::StringUtils::trimInplace(bufferString);
+	if (arg == L"fetch size") {
+		resolveBufferString = std::to_wstring(snapshotCurrent.getItemsCount());
+		return;
 	}
-	if (bufferString == L"is stopped") {
-		return stopped ? L"1" : L"0";
+	if (arg == L"is stopped") {
+		resolveBufferString = stopped ? L"1" : L"0";
+		return;
 	}
-
-	return nullptr;
 }
 
 void PerfmonParent::setStopped(const bool value) {

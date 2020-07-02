@@ -92,8 +92,6 @@ namespace rxtd::perfmon {
 
 		ExpressionResolver expressionResolver { logger, instanceManager };
 
-		string bufferString;
-
 	public:
 		explicit PerfmonParent(utils::Rainmeter&& _rain);
 		~PerfmonParent();
@@ -110,7 +108,7 @@ namespace rxtd::perfmon {
 		double _update() override;
 		void _updateString(string& resultStringBuffer) override;
 		void _command(isview bangArgs) override;
-		const wchar_t* _resolve(int argc, const wchar_t* argv[]) override;
+		void _resolve(int argc, const wchar_t* argv[], string& resolveBufferString) override;
 
 	public:
 		/** Parent measure can be stopped.

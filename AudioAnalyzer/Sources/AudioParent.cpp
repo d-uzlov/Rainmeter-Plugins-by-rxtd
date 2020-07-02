@@ -98,10 +98,10 @@ void AudioParent::_command(isview bangArgs) {
 	logger.error(L"unknown command '{}'", bangArgs);
 }
 
-const wchar_t* AudioParent::_resolve(int argc, const wchar_t* argv[]) {
+void AudioParent::_resolve(int argc, const wchar_t* argv[], string& resolveBufferString) {
 	if (argc < 1) {
 		logger.error(L"Invalid section variable: args needed", argc);
-		return nullptr;
+		return;
 	}
 
 	const isview optionName = argv[0];
@@ -110,13 +110,13 @@ const wchar_t* AudioParent::_resolve(int argc, const wchar_t* argv[]) {
 	if (optionName == L"prop") {
 		if (argc < 4) {
 			cl.error(L"need >= 4 argc, but only {} found", argc);
-			return nullptr;
+			return;
 		}
 
 		auto channelOpt = Channel::channelParser.find(argv[1]);
 		if (!channelOpt.has_value()) {
 			cl.error(L"channel '{}' not recognized", argv[1]);
-			return nullptr;
+			return;
 		}
 		auto propVariant = soundAnalyzer.getAudioChildHelper().getProp(channelOpt.value(), argv[2], argv[3]);
 
@@ -125,81 +125,95 @@ const wchar_t* AudioParent::_resolve(int argc, const wchar_t* argv[]) {
 			switch (error) {
 			case AudioChildHelper::SearchError::eCHANNEL_NOT_FOUND:
 				cl.printer.print(L"channel '{}' not found", argv[1]);
-				return cl.printer.getBufferPtr();
+				resolveBufferString = cl.printer.getBufferPtr();
+				return;
 
 			case AudioChildHelper::SearchError::eHANDLER_NOT_FOUND:
 				cl.error(L"handler '{}:{}' not found", argv[1], argv[2]);
-				return nullptr;
+				return;
 
 			default:
 				cl.error(L"unexpected SearchError value '{}'", error);
-				return nullptr;
+				return;
 			}
 		}
 		if (propVariant.index() == 0) {
 			const auto result = std::get<0>(propVariant);
 			if (result == nullptr) {
 				cl.error(L"prop '{}:{}' not found", argv[2], argv[3]);
+				return;
 			}
 
-			return result;
+			resolveBufferString = result;
+			return;
 		}
 
 		cl.error(L"unexpected propVariant index '{}'", propVariant.index());
-		return nullptr;
+		return;
 	}
 
 	if (optionName == L"current device") {
 		if (argc < 2) {
 			cl.error(L"need >= 2 argc, but only {} found", argc);
-			return nullptr;
+			return;
 		}
 
 		const isview deviceProperty = argv[1];
 
 		if (deviceProperty == L"status") {
-			return deviceManager.getDeviceStatus() ? L"1" : L"0";
+			resolveBufferString = deviceManager.getDeviceStatus() ? L"1" : L"0";
+			return;
 		}
 		if (deviceProperty == L"status string") {
-			return deviceManager.getDeviceStatus() ? L"active" : L"down";
+			resolveBufferString = deviceManager.getDeviceStatus() ? L"active" : L"down";
+			return;
 		}
 		if (deviceProperty == L"type") {
 			switch(deviceManager.getCurrentDeviceType()) {
 			case utils::MediaDeviceType::eINPUT:
-				return L"input";
+				resolveBufferString = L"input";
+				return;
 			case utils::MediaDeviceType::eOUTPUT:
-				return L"output";
+				resolveBufferString = L"output";
+				return;
 			default: ;
 			}
 		}
 		if (deviceProperty == L"name") {
-			return deviceManager.getDeviceInfo().fullFriendlyName.c_str();
+			resolveBufferString = deviceManager.getDeviceInfo().fullFriendlyName;
+			return;
 		}
 		if (deviceProperty == L"nameOnly") {
-			return deviceManager.getDeviceInfo().name.c_str();
+			resolveBufferString = deviceManager.getDeviceInfo().name;
+			return;
 		}
 		if (deviceProperty == L"description") {
-			return deviceManager.getDeviceInfo().desc.c_str();
+			resolveBufferString = deviceManager.getDeviceInfo().desc;
+			return;
 		}
 		if (deviceProperty == L"id") {
-			return deviceManager.getDeviceInfo().id.c_str();
+			resolveBufferString = deviceManager.getDeviceInfo().id;
+			return;
 		}
 		if (deviceProperty == L"format") {
-			return deviceManager.getCaptureManager().getFormatString().c_str();
+			resolveBufferString = deviceManager.getCaptureManager().getFormatString();
+			return;
 		}
 
-		return nullptr;
+		return;
 	}
 
 	if (optionName == L"device list input") {
-		return deviceManager.getDeviceEnumerator().getDeviceListInput().c_str();
+		resolveBufferString = deviceManager.getDeviceEnumerator().getDeviceListInput();
+		return;
 	}
 	if (optionName == L"device list output") {
-		return deviceManager.getDeviceEnumerator().getDeviceListOutput().c_str();
+		resolveBufferString = deviceManager.getDeviceEnumerator().getDeviceListOutput();
+		return;
 	}
 
-	cl.error(L"option not supported");
-	return nullptr;
+	cl.error(L"option '{}' not supported", optionName);
+	return;
 }
 
 double AudioParent::getValue(sview id, Channel channel, index index) const {

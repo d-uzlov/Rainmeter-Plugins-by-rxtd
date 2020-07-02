@@ -20,9 +20,7 @@ TypeHolder::TypeHolder(Rainmeter&& rain) : rain(std::move(rain)), logger(this->r
 void TypeHolder::_command(isview  bangArgs) {
 	logger.warning(L"Measure does not have commands");
 }
-
-const wchar_t* TypeHolder::_resolve(int argc, const wchar_t* argv[]) {
-	return nullptr;
+void TypeHolder::_resolve(int argc, const wchar_t* argv[], string& resolveBufferString) {
 }
 
 void TypeHolder::setMeasureState(MeasureState brokenState) {
@@ -70,11 +68,10 @@ const wchar_t* TypeHolder::resolve(int argc, const wchar_t* argv[]) {
 		return L"";
 	}
 
-	const auto result = _resolve(argc, argv);
-	if (result == nullptr) {
-		return L"";
-	}
-	return result;
+	resolveString = { };
+	_resolve(argc, argv, resolveString);
+
+	return resolveString.c_str();
 }
 
 const wchar_t* TypeHolder::getString() const {
