@@ -33,7 +33,7 @@ std::optional<BandResampler::Params> BandResampler::parseParams(const utils::Opt
 	}
 
 	const auto freqListOptionName = L"FreqList_"s += freqListIndex;
-	const auto bounds = rain.read(freqListOptionName).asList(L'|').own();
+	const auto bounds = rain.read(freqListOptionName).asList(L'|');
 	utils::Rainmeter::Logger freqListLogger = rain.getLogger().context(L"{}: ", freqListOptionName);
 	auto freqsOpt = parseFreqList(bounds, freqListLogger, rain);
 	if (!freqsOpt.has_value()) {

@@ -16,8 +16,9 @@
 
 using namespace utils;
 
-OptionSequence::OptionSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wchar_t paramDelimiter, wchar_t optionDelimiter) : AbstractOption(view) {
-	list = Tokenizer::parseSequence(view, optionBegin, optionEnd, paramDelimiter, optionDelimiter);
+OptionSequence::OptionSequence(sview view, std::vector<wchar_t> &&source, wchar_t optionBegin, wchar_t optionEnd, wchar_t paramDelimiter, wchar_t optionDelimiter) :
+	AbstractOption(view, std::move(source)) {
+	list = Tokenizer::parseSequence(getView(), optionBegin, optionEnd, paramDelimiter, optionDelimiter);
 }
 
 OptionSequence::iterator::iterator(sview view, const std::vector<std::vector<SubstringViewInfo>>& list, index _index) : 
@@ -35,7 +36,7 @@ bool OptionSequence::iterator::operator!=(const iterator& other) const {
 
 OptionList OptionSequence::iterator::operator*() const {
 	auto list_ = list[ind];
-	return { view, std::move(list_) };
+	return { view, { }, std::move(list_) };
 }
 
 OptionSequence::iterator OptionSequence::begin() const {

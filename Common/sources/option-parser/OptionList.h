@@ -19,8 +19,7 @@ namespace rxtd::utils {
 
 	public:
 		OptionList() = default;
-
-		OptionList(sview view, std::vector<SubstringViewInfo>&& list);
+		OptionList(sview view, std::vector<wchar_t>&& source, std::vector<SubstringViewInfo>&& list);
 
 		// Allows you to steal inner resources.
 		std::pair<sview, std::vector<SubstringViewInfo>> consume() && ;

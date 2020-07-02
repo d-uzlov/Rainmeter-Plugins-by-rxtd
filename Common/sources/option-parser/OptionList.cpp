@@ -14,8 +14,8 @@
 
 using namespace utils;
 
-OptionList::OptionList(sview view, std::vector<SubstringViewInfo>&& list) :
-	AbstractOption(view),
+OptionList::OptionList(sview view, std::vector<wchar_t>&& source, std::vector<SubstringViewInfo>&& list) :
+	AbstractOption(view, std::move(source)),
 	list(std::move(list)) {
 }
 
@@ -32,7 +32,7 @@ bool OptionList::empty() const {
 }
 
 Option OptionList::get(index ind) const {
-	return Option { list[ind].makeView(getView()) };
+	return Option{ list[ind].makeView(getView()) };
 }
 
 OptionList::iterator::iterator(const OptionList& container, index _index):

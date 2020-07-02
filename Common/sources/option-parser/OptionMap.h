@@ -33,7 +33,7 @@ namespace rxtd::utils {
 
 	public:
 		OptionMap() = default;
-		OptionMap(sview source, std::map<SubstringViewInfo, SubstringViewInfo>&& paramsInfo);
+		OptionMap(sview view, std::vector<wchar_t> &&source, std::map<SubstringViewInfo, SubstringViewInfo>&& paramsInfo);
 
 		//Returns named option, search is case-insensitive.
 		// Doesn't raise the "touched" flag on the option

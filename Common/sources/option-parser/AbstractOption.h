@@ -8,7 +8,6 @@
  */
 
 #pragma once
-#include "StringUtils.h"
 
 namespace rxtd::utils {
 	template<typename T>
@@ -23,11 +22,14 @@ namespace rxtd::utils {
 
 	public:
 		explicit AbstractOption() = default;
-		AbstractOption(sview view) : _view(view) { }
+		AbstractOption(sview view, std::vector<wchar_t> &&source) : _view(view), source(std::move(source)) { }
 
 		T& own() {
-			source.resize(_view.size());
-			std::copy(_view.begin(), _view.end(), source.begin());
+			if (source.empty()) {
+				source.resize(_view.size());
+				std::copy(_view.begin(), _view.end(), source.begin());
+				_view = { };
+			}
 
 			return static_cast<T&>(*this);
 		}
@@ -42,7 +44,12 @@ namespace rxtd::utils {
 			if (source.empty()) {
 				return _view;
 			}
+
 			return sview { source.data(), source.size() };
+		}
+
+		std::vector<wchar_t>&& consumeSource() && {
+			return std::move(source);
 		}
 	};
 }

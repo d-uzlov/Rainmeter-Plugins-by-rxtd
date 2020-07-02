@@ -40,7 +40,7 @@ ParamParser::ParamParser(utils::Rainmeter& rain, bool unusedOptionsWarning) :
 void ParamParser::parse() {
 	handlerPatchersMap.clear();
 
-	auto processingIndices = rain.read(L"Processing").asList(L'|').own();
+	auto processingIndices = rain.read(L"Processing").asList(L'|');
 	if (!checkListUnique(processingIndices)) {
 		rain.getLogger().error(L"Found repeating processings, aborting");
 		return;
@@ -52,7 +52,7 @@ void ParamParser::parse() {
 
 		string processingOptionIndex = L"Processing_"s;
 		processingOptionIndex += processingName % csView();
-		auto processingDescriptionOption = rain.read(processingOptionIndex).own();
+		auto processingDescriptionOption = rain.read(processingOptionIndex);
 		if (processingDescriptionOption.empty()) {
 			cl.error(L"processing description not found");
 			continue;
@@ -147,7 +147,7 @@ void ParamParser::cacheHandlers(const utils::OptionList& indices) {
 			continue;
 		}
 
-		auto optionMap = descriptionOption.asMap(L'|', L' ').own();
+		auto optionMap = descriptionOption.asMap(L'|', L' ');
 
 		auto cl = rain.getLogger().context(L"Handler '{}': ", indexOption.asString());
 		auto patcher = parseHandler(optionMap, cl);

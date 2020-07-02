@@ -19,7 +19,11 @@
 
 using namespace utils;
 
-Option::Option(sview view) : AbstractOption(view) {
+Option::Option(sview view) : AbstractOption(view, { }) {
+}
+
+Option::Option(wchar_t* view) : Option(sview{view}) {
+	own();
 }
 
 sview Option::asString(sview defaultValue) const {
@@ -84,44 +88,36 @@ OptionSeparated Option::breakFirst(wchar_t separator) const {
 	return OptionSeparated { first, rest };
 }
 
-OptionMap Option::asMap(wchar_t optionDelimiter, wchar_t nameDelimiter) const {
-	Tokenizer tokenizer;
-
-	sview view = getView();
-
-	auto list = tokenizer.parse(view, optionDelimiter);
-
-	std::map<SubstringViewInfo, SubstringViewInfo> paramsInfo { };
-	for (const auto& viewInfo : list) {
-		const auto delimiterPlace = viewInfo.makeView(view).find_first_of(nameDelimiter);
-		if (delimiterPlace == sview::npos) {
-			// tokenizer.parse is guarantied to return non-empty views
-			paramsInfo[viewInfo] = { };
-			continue;
-		}
-
-		auto name = StringUtils::trimInfo(view, viewInfo.substr(0, delimiterPlace));
-		if (name.empty()) {
-			continue;
-		}
-
-		auto value = StringUtils::trimInfo(view, viewInfo.substr(delimiterPlace + 1));
-
-		paramsInfo[name] = value;
-	}
-
-	return { view, std::move(paramsInfo) };
+OptionMap Option::asMap(wchar_t optionDelimiter, wchar_t nameDelimiter) const & {
+	return { getView(), { }, parseMapParams(getView(), optionDelimiter, nameDelimiter) };
 }
 
-OptionList Option::asList(wchar_t delimiter) const {
-	Tokenizer tokenizer;
-
-	auto list = tokenizer.parse(getView(), delimiter);
-	return { getView(), std::move(list) };
+OptionMap Option::asMap(wchar_t optionDelimiter, wchar_t nameDelimiter) && {
+	// consumeSource() below may destroy view content so we need to do everything before it
+	const sview view = getView();
+	auto params = parseMapParams(view, optionDelimiter, nameDelimiter);
+	return { view, std::move(std::move(*this).consumeSource()), std::move(params) };
 }
 
-OptionSequence Option::asSequence(wchar_t optionBegin, wchar_t optionEnd, wchar_t paramDelimiter, wchar_t optionDelimiter) const {
-	return { getView(), optionBegin, optionEnd, paramDelimiter, optionDelimiter };
+OptionList Option::asList(wchar_t delimiter) const & {
+	return { getView(), { }, Tokenizer::parse(getView(), delimiter) };
+}
+
+OptionList Option::asList(wchar_t delimiter) && {
+	// consumeSource() below may destroy view content so we need to do everything before it
+	const sview view = getView();
+	auto list = Tokenizer::parse(view, delimiter);
+	return { view, std::move(std::move(*this).consumeSource()), std::move(list) };
+}
+
+OptionSequence Option::asSequence(wchar_t optionBegin, wchar_t optionEnd, wchar_t paramDelimiter, wchar_t optionDelimiter) const & {
+	return { getView(), { }, optionBegin, optionEnd, paramDelimiter, optionDelimiter };
+}
+
+OptionSequence Option::asSequence(wchar_t optionBegin, wchar_t optionEnd, wchar_t paramDelimiter, wchar_t optionDelimiter) && {
+	// consumeSource() below may destroy view content so we need to do everything before it
+	const sview view = getView();
+	return { view, std::move(std::move(*this).consumeSource()), optionBegin, optionEnd, paramDelimiter, optionDelimiter };
 }
 
 bool Option::empty() const {
@@ -145,4 +141,29 @@ double Option::parseNumber(sview source) {
 	}
 
 	return exp.number;
+}
+
+std::map<SubstringViewInfo, SubstringViewInfo> Option::parseMapParams(sview source, wchar_t optionDelimiter, wchar_t nameDelimiter) {
+	auto list = Tokenizer::parse(source, optionDelimiter);
+
+	std::map<SubstringViewInfo, SubstringViewInfo> paramsInfo { };
+	for (const auto& viewInfo : list) {
+		const auto delimiterPlace = viewInfo.makeView(source).find_first_of(nameDelimiter);
+		if (delimiterPlace == sview::npos) {
+			// tokenizer.parse is guarantied to return non-empty views
+			paramsInfo[viewInfo] = { };
+			continue;
+		}
+
+		auto name = StringUtils::trimInfo(source, viewInfo.substr(0, delimiterPlace));
+		if (name.empty()) {
+			continue;
+		}
+
+		auto value = StringUtils::trimInfo(source, viewInfo.substr(delimiterPlace + 1));
+
+		paramsInfo[name] = value;
+	}
+
+	return paramsInfo;
 }

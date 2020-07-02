@@ -14,10 +14,9 @@
 
 using namespace utils;
 
-OptionMap::OptionMap(sview source, std::map<SubstringViewInfo, SubstringViewInfo>&& paramsInfo) :
-	AbstractOption(source),
+OptionMap::OptionMap(sview view, std::vector<wchar_t> &&source, std::map<SubstringViewInfo, SubstringViewInfo>&& paramsInfo) :
+	AbstractOption(view, std::move(source)),
 	paramsInfo(std::move(paramsInfo)) {
-
 	fillParams();
 }
 
