@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -18,9 +18,6 @@ namespace rxtd::utils {
 	};
 	class TypeHolder {
 	protected:
-		template<typename T>
-		friend class ParentManager;
-
 		Rainmeter rain;
 		Rainmeter::Logger& logger;
 
@@ -60,61 +57,28 @@ namespace rxtd::utils {
 		MeasureState getState() const;
 	};
 
-	template<typename T>
-	class ParentManager {
-		static_assert(std::is_base_of<TypeHolder, T>::value);
-
+	class ParentBase : public TypeHolder {
 		// skin -> { name -> parent }
-		std::map<Rainmeter::Skin, std::map<istring, T*, std::less<>>> skinMap;
+		static std::map<Rainmeter::Skin, std::map<istring, ParentBase*, std::less<>>> skinMap;
 
 	public:
-		void add(T& parent);
-		void remove(T& parent);
-		T* findParent(Rainmeter::Skin skin, isview measureName);
+		explicit ParentBase(Rainmeter&& rain);
+
+		~ParentBase();
+
+		ParentBase(const ParentBase& other) = delete;
+		ParentBase(ParentBase&& other) noexcept = delete;
+		ParentBase& operator=(const ParentBase& other) = delete;
+		ParentBase& operator=(ParentBase&& other) noexcept = delete;
+
+		template<typename T>
+		static T* find(Rainmeter::Skin skin, isview measureName) {
+			static_assert(std::is_base_of<ParentBase, T>::value, "only parent measures can be searched for");
+
+			return dynamic_cast<T*>(findParent(skin, measureName));
+		}
+
+	private:
+		static ParentBase* findParent(Rainmeter::Skin skin, isview measureName);
 	};
-
-	template <typename T>
-	void ParentManager<T>::add(T& parent) {
-		skinMap[parent.rain.getSkin()][parent.rain.getMeasureName() % ciView() % own()] = &parent;
-	}
-
-	template<typename T>
-	void ParentManager<T>::remove(T& parent) {
-		const auto skinIter = skinMap.find(parent.rain.getSkin());
-		if (skinIter == skinMap.end()) {
-			std::terminate();
-		}
-		auto& measuresMap = skinIter->second;
-
-		const auto measureIter = measuresMap.find(parent.rain.getMeasureName() % ciView());
-		if (measureIter == measuresMap.end()) {
-			std::terminate();
-		}
-		measuresMap.erase(measureIter);
-
-		if (measuresMap.empty()) {
-			skinMap.erase(skinIter);
-		}
-	}
-
-	template<typename T>
-	T* ParentManager<T>::findParent(Rainmeter::Skin skin, isview measureName) {
-		const auto skinIter = skinMap.find(skin);
-		if (skinIter == skinMap.end()) {
-			return nullptr;
-		}
-		const auto& measuresMap = skinIter->second;
-
-		const auto measureIter = measuresMap.find(measureName);
-		if (measureIter == measuresMap.end()) {
-			return nullptr;
-		}
-
-		auto result = measureIter->second;
-		if (result->getState() == MeasureState::eBROKEN) {
-			return nullptr;
-		}
-
-		return result;
-	}
 }

@@ -15,27 +15,15 @@
 
 using namespace audio_analyzer;
 
-utils::ParentManager<AudioParent> AudioParent::parentManager{ };
-
 AudioParent::AudioParent(utils::Rainmeter&& rain) :
-	TypeHolder(std::move(rain)),
+	ParentBase(std::move(rain)),
 	deviceManager(logger, [this](auto format) { soundAnalyzer.setWaveFormat(format); }) {
 	setUseResultString(false);
-
-	parentManager.add(*this);
 
 	if (deviceManager.getState() == DeviceManager::State::eFATAL) {
 		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
 	}
-}
-
-AudioParent::~AudioParent() {
-	parentManager.remove(*this);
-}
-
-AudioParent* AudioParent::findInstance(utils::Rainmeter::Skin skin, isview measureName) {
-	return parentManager.findParent(skin, measureName);
 }
 
 void AudioParent::_reload() {

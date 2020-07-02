@@ -13,6 +13,8 @@
 
 using namespace utils;
 
+std::map<Rainmeter::Skin, std::map<istring, ParentBase*, std::less<>>> ParentBase::skinMap { };
+
 TypeHolder::TypeHolder(Rainmeter&& rain) : rain(std::move(rain)), logger(this->rain.getLogger()) {
 
 }
@@ -88,4 +90,45 @@ const wchar_t* TypeHolder::getString() const {
 
 MeasureState TypeHolder::getState() const {
 	return measureState;
+}
+
+ParentBase::ParentBase(Rainmeter&& rain): TypeHolder(std::move(rain)) {
+	skinMap[this->rain.getSkin()][this->rain.getMeasureName() % ciView() % own()] = this;
+}
+
+ParentBase::~ParentBase() {
+	const auto skinIter = skinMap.find(this->rain.getSkin());
+	if (skinIter == skinMap.end()) {
+		std::terminate();
+	}
+	auto& measuresMap = skinIter->second;
+
+	const auto measureIter = measuresMap.find(this->rain.getMeasureName() % ciView());
+	if (measureIter == measuresMap.end()) {
+		std::terminate();
+	}
+	measuresMap.erase(measureIter);
+
+	if (measuresMap.empty()) {
+		skinMap.erase(skinIter);
+	}
+}
+
+ParentBase* ParentBase::findParent(Rainmeter::Skin skin, isview measureName) {
+	const auto skinIter = skinMap.find(skin);
+	if (skinIter == skinMap.end()) {
+		return nullptr;
+	}
+	const auto& measuresMap = skinIter->second;
+
+	const auto measureIter = measuresMap.find(measureName);
+	if (measureIter == measuresMap.end()) {
+		return nullptr;
+	}
+
+	auto result = measureIter->second;
+	if (result->getState() == MeasureState::eBROKEN) {
+		return nullptr;
+	}
+	return result;
 }

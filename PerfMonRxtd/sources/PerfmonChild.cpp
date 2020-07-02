@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2019 rxtd
+ * Copyright (C) 2018-2020 rxtd
  * Copyright (C) 2018 buckb
  *
  * This Source Code Form is subject to the terms of the GNU General Public
@@ -21,7 +21,7 @@ PerfmonChild::PerfmonChild(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rai
 		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
 	}
-	parent = PerfmonParent::findInstance(rain.getSkin(), parentName);
+	parent = utils::ParentBase::find<PerfmonParent>(rain.getSkin(), parentName);
 
 	if (parent == nullptr) {
 		logger.error(L"Parent '{}' not found", parentName);

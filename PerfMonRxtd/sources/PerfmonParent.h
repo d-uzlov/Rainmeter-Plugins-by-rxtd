@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2018-2019 rxtd
+ * Copyright (C) 2018-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -64,14 +64,12 @@
 
 namespace rxtd::perfmon {
 
-	class PerfmonParent : public utils::TypeHolder {
+	class PerfmonParent : public utils::ParentBase {
 		enum class State {
 			eFETCH_ERROR,
 			eNO_DATA,
 			eOK,
 		};
-
-		static utils::ParentManager<PerfmonParent> parentManager;
 
 		State state = State::eOK;
 
@@ -94,14 +92,12 @@ namespace rxtd::perfmon {
 
 	public:
 		explicit PerfmonParent(utils::Rainmeter&& _rain);
-		~PerfmonParent();
+		~PerfmonParent() = default;
 		/** This class is non copyable */
 		PerfmonParent(const PerfmonParent& other) = delete;
 		PerfmonParent(PerfmonParent&& other) = delete;
 		PerfmonParent& operator=(const PerfmonParent& other) = delete;
 		PerfmonParent& operator=(PerfmonParent&& other) = delete;
-
-		static PerfmonParent* findInstance(utils::Rainmeter::Skin skin, isview measureName);
 
 	protected:
 		void _reload() override;
@@ -133,5 +129,4 @@ namespace rxtd::perfmon {
 		
 		sview getInstanceName(const InstanceInfo& instance, ResultString stringType) const;
 	};
-
 }

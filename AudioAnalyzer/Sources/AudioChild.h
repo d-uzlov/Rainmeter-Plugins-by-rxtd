@@ -12,14 +12,12 @@
 
 namespace rxtd::audio_analyzer {
 	class AudioChild : public utils::TypeHolder {
-		// Options
 		Channel channel = Channel::eFRONT_LEFT;
 		index valueIndex = 0;
 		string valueId;
 		std::vector<string> infoRequest;
 		std::vector<const wchar_t*> infoRequestC;
 
-		// data
 		AudioParent* parent = nullptr;
 
 	public:

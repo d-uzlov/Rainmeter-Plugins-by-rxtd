@@ -1,5 +1,5 @@
 ﻿/* 
- * Copyright (C) 2018-2019 rxtd
+ * Copyright (C) 2018-2020 rxtd
  * Copyright (C) 2018 buckb
  *
  * This Source Code Form is subject to the terms of the GNU General Public
@@ -19,15 +19,7 @@
 
 using namespace perfmon;
 
-utils::ParentManager<PerfmonParent> PerfmonParent::parentManager { };
-
-PerfmonParent::~PerfmonParent() {
-	parentManager.remove(*this);
-}
-
-PerfmonParent::PerfmonParent(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rain)) {
-	parentManager.add(*this);
-
+PerfmonParent::PerfmonParent(utils::Rainmeter&& _rain) : ParentBase(std::move(_rain)) {
 	setUseResultString(true);
 
 	objectName = rain.readString(L"ObjectName");
@@ -52,11 +44,6 @@ PerfmonParent::PerfmonParent(utils::Rainmeter&& _rain) : TypeHolder(std::move(_r
 	if (!pdhWrapper.isValid()) {
 		setMeasureState(utils::MeasureState::eBROKEN);
 	}
-
-}
-
-PerfmonParent* PerfmonParent::findInstance(utils::Rainmeter::Skin skin, isview measureName) {
-	return parentManager.findParent(skin, measureName);
 }
 
 void PerfmonParent::_reload() {

@@ -17,23 +17,19 @@ namespace rxtd::audio_analyzer {
 	using namespace std::string_literals;
 	using namespace std::literals::string_view_literals;
 
-	class AudioParent : public utils::TypeHolder {
-	private:
-		static utils::ParentManager<AudioParent> parentManager;
-
+	class AudioParent : public utils::ParentBase {
 		SoundAnalyzer soundAnalyzer;
 		DeviceManager deviceManager;
 
 	public:
 		explicit AudioParent(utils::Rainmeter&& rain);
-		~AudioParent();
+		AudioParent::~AudioParent() = default;
+
 		/** This class is non copyable */
 		AudioParent(const AudioParent& other) = delete;
 		AudioParent(AudioParent&& other) = delete;
 		AudioParent& operator=(const AudioParent& other) = delete;
 		AudioParent& operator=(AudioParent&& other) = delete;
-
-		static AudioParent* findInstance(::rxtd::utils::Rainmeter::Skin skin, isview measureName);
 
 	protected:
 		void _reload() override;
