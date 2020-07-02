@@ -29,14 +29,20 @@ void TypeHolder::setMeasureState(MeasureState brokenState) {
 	this->measureState = brokenState;
 }
 
+void TypeHolder::setUseResultString(bool value) {
+	useResultString = value;
+}
+
 double TypeHolder::update() {
 	if (measureState != MeasureState::eWORKING) {
 		return 0.0;
 	}
 
-	std::tuple<double, const wchar_t*> result = _update();
-	resultDouble = std::get<0>(result);
-	resultString = std::get<1>(result);
+	resultDouble = _update();
+	if (useResultString) {
+		resultString = { };
+		_updateString(resultString);
+	}
 	return resultDouble;
 }
 
@@ -76,7 +82,11 @@ const wchar_t* TypeHolder::getString() const {
 		return L"broken";
 	}
 
-	return resultString;
+	if (useResultString) {
+		return resultString.c_str();
+	} else {
+		return nullptr;
+	}
 }
 
 MeasureState TypeHolder::getState() const {

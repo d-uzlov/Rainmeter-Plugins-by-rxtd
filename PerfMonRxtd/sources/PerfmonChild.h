@@ -13,8 +13,6 @@
 
 namespace rxtd::perfmon {
 	class PerfmonChild : public utils::TypeHolder {
-		string resultString { };
-
 		// options
 		Reference ref;
 		item_t instanceIndex = 0;
@@ -22,15 +20,14 @@ namespace rxtd::perfmon {
 
 		// data
 		const PerfmonParent* parent = nullptr;
+		const InstanceInfo* instance = nullptr;
 
 	public:
 		explicit PerfmonChild(utils::Rainmeter&& _rain);
 
 	protected:
 		void _reload() override;
-		std::tuple<double, const wchar_t*> _update() override;
-
-	private:
-		const wchar_t* makeRetString() const;
+		double _update() override;
+		void _updateString(string& resultStringBuffer) override;
 	};
 }

@@ -28,6 +28,8 @@ PerfmonParent::~PerfmonParent() {
 PerfmonParent::PerfmonParent(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rain)) {
 	parentManager.add(*this);
 
+	setUseResultString(true);
+
 	objectName = rain.readString(L"ObjectName");
 	instanceManager.setIndexOffset(rain.read(L"InstanceIndexOffset").asInt());
 
@@ -208,7 +210,7 @@ sview PerfmonParent::getInstanceName(const InstanceInfo& instance, ResultString 
 	}
 }
 
-std::tuple<double, const wchar_t*> PerfmonParent::_update() {
+double PerfmonParent::_update() {
 
 	if (!stopped) {
 		std::swap(snapshotCurrent, snapshotPrevious);
@@ -217,14 +219,16 @@ std::tuple<double, const wchar_t*> PerfmonParent::_update() {
 		if (!success) {
 			snapshotCurrent.clear();
 			snapshotPrevious.clear();
-			return std::make_tuple(0, L"fetch error");
+			state = State::eFETCH_ERROR;
+			return 0;
 		}
 
 		needUpdate = true;
 	}
 
 	if (!canGetRaw()) {
-		return std::make_tuple(0, L"no data");
+		state = State::eNO_DATA;
+		return 0;
 	}
 
 	if (needUpdate) { // fetch or reload happened
@@ -236,7 +240,23 @@ std::tuple<double, const wchar_t*> PerfmonParent::_update() {
 		instanceManager.sort(expressionResolver);
 	}
 
-	return std::make_tuple(1, L"ok");
+	state = State::eOK;
+	return 1;
+}
+
+void PerfmonParent::_updateString(string& resultStringBuffer) {
+	switch (state) { 
+	case State::eFETCH_ERROR: 
+		resultStringBuffer = L"fetch error";
+		break;
+	case State::eNO_DATA:
+		resultStringBuffer = L"no data";
+		break;
+	case State::eOK:
+		resultStringBuffer = L"ok"; 
+		break;
+	default: std::terminate();
+	}
 }
 
 void PerfmonParent::_command(isview bangArgs) {

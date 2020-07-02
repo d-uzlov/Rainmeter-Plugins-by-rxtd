@@ -20,6 +20,7 @@ utils::ParentManager<AudioParent> AudioParent::parentManager{ };
 AudioParent::AudioParent(utils::Rainmeter&& rain) :
 	TypeHolder(std::move(rain)),
 	deviceManager(logger, [this](auto format) { soundAnalyzer.setWaveFormat(format); }) {
+	setUseResultString(false);
 
 	parentManager.add(*this);
 
@@ -66,7 +67,7 @@ void AudioParent::_reload() {
 	soundAnalyzer.setHandlerPatchers(paramParser.getHandlers(), paramParser.getPatches());
 }
 
-std::tuple<double, const wchar_t*> AudioParent::_update() {
+double AudioParent::_update() {
 	// TODO make an option for this value?
 	constexpr index maxLoop = 15;
 
@@ -85,7 +86,7 @@ std::tuple<double, const wchar_t*> AudioParent::_update() {
 		soundAnalyzer.finishStandalone();
 	}
 
-	return std::make_tuple(deviceManager.getDeviceStatus(), nullptr);
+	return deviceManager.getDeviceStatus();
 }
 
 void AudioParent::_command(isview bangArgs) {

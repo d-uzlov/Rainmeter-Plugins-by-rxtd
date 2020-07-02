@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2018 rxtd
+ * Copyright (C) 2018-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -14,17 +14,17 @@
 
 class LocalPluginLoader {
 	utils::Rainmeter rain;
-	void* rm = nullptr;
 	HMODULE hLib = {};
 	void* pluginData = nullptr;
-
 
 public:
 	LocalPluginLoader(void* rm);
 	~LocalPluginLoader();
 
 	LocalPluginLoader(const LocalPluginLoader& other) = delete;
-	LocalPluginLoader& operator=(LocalPluginLoader other) = delete;
+	LocalPluginLoader(LocalPluginLoader&& other) noexcept = delete;
+	LocalPluginLoader& operator=(const LocalPluginLoader& other) = delete;
+	LocalPluginLoader& operator=(LocalPluginLoader&& other) noexcept = delete;
 
 	void reload(double* maxValue, void* rm) const;
 	double update() const;

@@ -65,8 +65,15 @@
 namespace rxtd::perfmon {
 
 	class PerfmonParent : public utils::TypeHolder {
-	private:
+		enum class State {
+			eFETCH_ERROR,
+			eNO_DATA,
+			eOK,
+		};
+
 		static utils::ParentManager<PerfmonParent> parentManager;
+
+		State state = State::eOK;
 
 		string objectName;
 
@@ -100,7 +107,8 @@ namespace rxtd::perfmon {
 
 	protected:
 		void _reload() override;
-		std::tuple<double, const wchar_t*> _update() override;
+		double _update() override;
+		void _updateString(string& resultStringBuffer) override;
 		void _command(isview bangArgs) override;
 		const wchar_t* _resolve(int argc, const wchar_t* argv[]) override;
 

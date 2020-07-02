@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -12,14 +12,8 @@
 
 namespace rxtd::audio_analyzer {
 	class AudioChild : public utils::TypeHolder {
-		enum class StringValue {
-			eNUMBER,
-			eINFO
-		};
-
 		// Options
 		Channel channel = Channel::eFRONT_LEFT;
-		StringValue stringValueType = StringValue::eNUMBER;
 		index valueIndex = 0;
 		string valueId;
 		std::vector<string> infoRequest;
@@ -27,7 +21,6 @@ namespace rxtd::audio_analyzer {
 
 		// data
 		AudioParent* parent = nullptr;
-		string stringValue;
 
 	public:
 		explicit AudioChild(utils::Rainmeter&& _rain);
@@ -41,6 +34,7 @@ namespace rxtd::audio_analyzer {
 
 	protected:
 		void _reload() override;
-		std::tuple<double, const wchar_t*> _update() override;
+		double _update() override;
+		void _updateString(string& resultStringBuffer) override;
 	};
 }

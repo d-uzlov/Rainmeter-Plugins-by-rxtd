@@ -37,7 +37,7 @@ namespace rxtd::audio_analyzer {
 
 	protected:
 		void _reload() override;
-		std::tuple<double, const wchar_t*> _update() override;
+		double _update() override;
 		void _command(isview bangArgs) override;
 		const wchar_t* _resolve(int argc, const wchar_t* argv[]) override;
 

@@ -28,7 +28,8 @@ namespace rxtd::utils {
 		MeasureState measureState = MeasureState::eWORKING;
 
 		double resultDouble = 0.0;
-		const wchar_t *resultString = nullptr;
+		string resultString { };
+		bool useResultString = false;
 
 	public:
 		TypeHolder(Rainmeter&& rain);
@@ -40,11 +41,13 @@ namespace rxtd::utils {
 
 	protected:
 		virtual void _reload() = 0;
-		virtual std::tuple<double, const wchar_t*> _update() = 0;
+		virtual double _update() = 0;
+		virtual void _updateString(string& resultStringBuffer) { }
 		virtual void _command(isview bangArgs);
 		virtual const wchar_t* _resolve(int argc, const wchar_t* argv[]);
 
 		void setMeasureState(MeasureState brokenState);
+		void setUseResultString(bool value);
 
 	public:
 		double update();

@@ -105,46 +105,56 @@ void PerfmonChild::_reload() {
 	const auto resultStringStr = rain.readString(L"ResultString") % ciView();
 	if (!forceUseName && (resultStringStr.empty() || resultStringStr == L"Number")) {
 		resultStringType = ResultString::eNUMBER;
+		setUseResultString(false);
 	} else if (resultStringStr == L"OriginalName" || resultStringStr == L"OriginalInstanceName") {
 		resultStringType = ResultString::eORIGINAL_NAME;
+		setUseResultString(true);
 	} else if (resultStringStr == L"UniqueName" || resultStringStr == L"UniqueInstanceName") {
 		resultStringType = ResultString::eUNIQUE_NAME;
+		setUseResultString(true);
 	} else if (resultStringStr == L"DisplayName" || resultStringStr == L"DisplayInstanceName") {
 		resultStringType = ResultString::eDISPLAY_NAME;
+		setUseResultString(true);
 	} else if (resultStringStr == L"RollupInstanceName") {
 		logger.warning(L"ResultString 'RollupInstanceName' is deprecated, set to 'DisplayName'");
 		resultStringType = ResultString::eDISPLAY_NAME;
+		setUseResultString(true);
 	} else if (forceUseName) {
 		resultStringType = ResultString::eDISPLAY_NAME;
+		setUseResultString(true);
 	} else {
 		logger.error(L"ResultString '{}' is invalid, set to 'Number'", resultStringStr);
 		resultStringType = ResultString::eNUMBER;
+		setUseResultString(false);
 	}
 
 	ref.named = ref.useOrigName || !ref.name.empty();
 }
 
-const wchar_t*  PerfmonChild::makeRetString() const {
-	return resultStringType == ResultString::eNUMBER ? nullptr : resultString.c_str();
-}
-
-std::tuple<double, const wchar_t*>  PerfmonChild::_update() {
-	resultString.clear();
-
+double  PerfmonChild::_update() {
 	if (!parent->canGetRaw() || ref.type == ReferenceType::COUNTER_FORMATTED && !parent->canGetFormatted()) {
-		return std::make_tuple(0, makeRetString());
+		return 0;
 	}
 
 	if (ref.total) {
-		resultString = L"Total";
-		return std::make_tuple(parent->getValue(ref, nullptr, logger), makeRetString());
+		return parent->getValue(ref, nullptr, logger);
 	}
 
-	const auto instance = parent->findInstance(ref, instanceIndex);
+	const InstanceInfo* instance = parent->findInstance(ref, instanceIndex);
 	if (instance == nullptr) {
-		return std::make_tuple(0, makeRetString());
+		return 0;
 	}
 
-	resultString = parent->getInstanceName(*instance, resultStringType);
-	return std::make_tuple(parent->getValue(ref, instance, logger), makeRetString());
+	return parent->getValue(ref, instance, logger);
+}
+
+void PerfmonChild::_updateString(string& resultStringBuffer) {
+	if (ref.total) {
+		resultStringBuffer = L"Total";
+		return;
+	}
+	if (instance == nullptr) {
+		return;
+	}
+	resultStringBuffer = parent->getInstanceName(*instance, resultStringType);
 }

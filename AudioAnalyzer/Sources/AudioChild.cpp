@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -49,9 +49,9 @@ void AudioChild::_reload() {
 
 	const auto stringValueStr = rain.readString(L"StringValue") % ciView();
 	if (stringValueStr == L"" || stringValueStr == L"Number") {
-		stringValueType = StringValue::eNUMBER;
+		setUseResultString(false);
 	} else if (stringValueStr == L"Info") {
-		stringValueType = StringValue::eINFO;
+		setUseResultString(true);
 
 		auto requestList = rain.read(L"InfoRequest").asList(L',').own();
 
@@ -66,7 +66,7 @@ void AudioChild::_reload() {
 		}
 	} else {
 		logger.error(L"Invalid StringValue '{}', set to Number.", stringValueStr);
-		stringValueType = StringValue::eNUMBER;
+		setUseResultString(false);
 	}
 
 	auto signedIndex = rain.read(L"Index").asInt();
@@ -77,26 +77,10 @@ void AudioChild::_reload() {
 	valueIndex = static_cast<decltype(valueIndex)>(signedIndex);
 }
 
-std::tuple<double, const wchar_t*> AudioChild::_update() {
+double AudioChild::_update() {
+	return parent->getValue(valueId, channel, valueIndex);
+}
 
-	double result = parent->getValue(valueId, channel, valueIndex);
-
-	const wchar_t *stringRes;
-	switch (stringValueType) {
-	case StringValue::eNUMBER:
-		stringRes = nullptr;
-		break;
-
-	case StringValue::eINFO:
-		stringValue = parent->resolve(index(infoRequestC.size()), infoRequestC.data());
-		stringRes = stringValue.c_str();
-		break;
-
-	default:
-		logger.error(L"Unexpected stringValueType: '{}'", stringValueType);
-		stringRes = nullptr;
-		break;
-	}
-
-	return std::make_tuple(result, stringRes);
+void AudioChild::_updateString(string& resultStringBuffer) {
+	resultStringBuffer = parent->resolve(index(infoRequestC.size()), infoRequestC.data());
 }
