@@ -53,7 +53,7 @@ void AudioChild::_reload() {
 	} else if (stringValueStr == L"Info") {
 		setUseResultString(true);
 
-		auto requestList = rain.read(L"InfoRequest").asList(L',').own();
+		auto requestList = rain.read(L"InfoRequest").asList(L',');
 
 		infoRequest.clear();
 		for (auto view : requestList) {

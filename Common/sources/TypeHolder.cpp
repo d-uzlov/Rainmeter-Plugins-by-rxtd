@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -13,7 +13,7 @@
 
 using namespace utils;
 
-std::map<Rainmeter::Skin, std::map<istring, ParentBase*, std::less<>>> ParentBase::skinMap { };
+std::map<Rainmeter::Skin, std::map<istring, ParentBase*, std::less<>>> ParentBase::globalMeasuresMap { };
 
 TypeHolder::TypeHolder(Rainmeter&& rain) : rain(std::move(rain)), logger(this->rain.getLogger()) {
 
@@ -22,9 +22,6 @@ TypeHolder::TypeHolder(Rainmeter&& rain) : rain(std::move(rain)), logger(this->r
 void TypeHolder::_command(isview  bangArgs) {
 	logger.warning(L"Measure does not have commands");
 }
-void TypeHolder::_resolve(int argc, const wchar_t* argv[], string& resolveBufferString) {
-}
-
 void TypeHolder::setMeasureState(MeasureState brokenState) {
 	this->measureState = brokenState;
 }
@@ -93,12 +90,12 @@ MeasureState TypeHolder::getState() const {
 }
 
 ParentBase::ParentBase(Rainmeter&& rain): TypeHolder(std::move(rain)) {
-	skinMap[this->rain.getSkin()][this->rain.getMeasureName() % ciView() % own()] = this;
+	globalMeasuresMap[this->rain.getSkin()][this->rain.getMeasureName() % ciView() % own()] = this;
 }
 
 ParentBase::~ParentBase() {
-	const auto skinIter = skinMap.find(this->rain.getSkin());
-	if (skinIter == skinMap.end()) {
+	const auto skinIter = globalMeasuresMap.find(this->rain.getSkin());
+	if (skinIter == globalMeasuresMap.end()) {
 		std::terminate();
 	}
 	auto& measuresMap = skinIter->second;
@@ -110,13 +107,13 @@ ParentBase::~ParentBase() {
 	measuresMap.erase(measureIter);
 
 	if (measuresMap.empty()) {
-		skinMap.erase(skinIter);
+		globalMeasuresMap.erase(skinIter);
 	}
 }
 
 ParentBase* ParentBase::findParent(Rainmeter::Skin skin, isview measureName) {
-	const auto skinIter = skinMap.find(skin);
-	if (skinIter == skinMap.end()) {
+	const auto skinIter = globalMeasuresMap.find(skin);
+	if (skinIter == globalMeasuresMap.end()) {
 		return nullptr;
 	}
 	const auto& measuresMap = skinIter->second;

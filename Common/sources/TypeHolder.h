@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 rxtd
+ * Copyright (C) 2019-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -42,7 +42,7 @@ namespace rxtd::utils {
 		virtual double _update() = 0;
 		virtual void _updateString(string& resultStringBuffer) { }
 		virtual void _command(isview bangArgs);
-		virtual void _resolve(int argc, const wchar_t* argv[], string& resolveBufferString);
+		virtual void _resolve(int argc, const wchar_t* argv[], string& resolveBufferString) { }
 
 		void setMeasureState(MeasureState brokenState);
 		void setUseResultString(bool value);
@@ -58,8 +58,9 @@ namespace rxtd::utils {
 	};
 
 	class ParentBase : public TypeHolder {
-		// skin -> { name -> parent }
-		static std::map<Rainmeter::Skin, std::map<istring, ParentBase*, std::less<>>> skinMap;
+		using ParentMeasureName = istring;
+		using SkinMap = std::map<ParentMeasureName, ParentBase*, std::less<>>;
+		static std::map<Rainmeter::Skin, SkinMap> globalMeasuresMap;
 
 	public:
 		explicit ParentBase(Rainmeter&& rain);

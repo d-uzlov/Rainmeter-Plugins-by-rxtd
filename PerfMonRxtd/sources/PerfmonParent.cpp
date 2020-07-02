@@ -32,7 +32,7 @@ PerfmonParent::PerfmonParent(utils::Rainmeter&& _rain) : ParentBase(std::move(_r
 		return;
 	}
 
-	auto counterTokens = rain.read(L"CounterList").asList(L'|').own();
+	auto counterTokens = rain.read(L"CounterList").asList(L'|');
 
 	if (counterTokens.empty()) {
 		logger.error(L"CounterList must have at least one entry");

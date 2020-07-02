@@ -40,7 +40,7 @@ Rainmeter::Rainmeter(void* rm) :
 	logger(rm, { }) { }
 
 Option Rainmeter::read(sview optionName) const {
-	return Option{ readString(optionName) }.own();
+	return Option{ readString(optionName) };
 }
 
 sview Rainmeter::readString(sview optionName, const wchar_t* defaultValue) const {

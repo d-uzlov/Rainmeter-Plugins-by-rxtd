@@ -14,16 +14,13 @@
 #include "sound-processing/device-management/DeviceManager.h"
 
 namespace rxtd::audio_analyzer {
-	using namespace std::string_literals;
-	using namespace std::literals::string_view_literals;
-
 	class AudioParent : public utils::ParentBase {
 		SoundAnalyzer soundAnalyzer;
 		DeviceManager deviceManager;
 
 	public:
 		explicit AudioParent(utils::Rainmeter&& rain);
-		AudioParent::~AudioParent() = default;
+		~AudioParent() = default;
 
 		/** This class is non copyable */
 		AudioParent(const AudioParent& other) = delete;
@@ -39,7 +36,6 @@ namespace rxtd::audio_analyzer {
 
 	public:
 		double getValue(sview id, Channel channel, index index) const;
-	private:
 	};
 
 
