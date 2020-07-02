@@ -9,7 +9,8 @@
 
 #include "BlacklistManager.h"
 #include "Windows.h"
-#include "OptionParser.h"
+#include "option-parser/Option.h"
+#include "option-parser/OptionList.h"
 
 #include "undef.h"
 
@@ -27,7 +28,7 @@ bool MatchTestRecord::match(sview string) const {
 }
 
 BlacklistManager::MatchList::MatchList(string sourceString, bool upperCase) {
-	auto[_, optList] = utils::OptionParser::parse(sourceString).asList(L'|').consume();
+	auto[_, optList] = utils::Option { sourceString }.asList(L'|').consume();
 
 	source = std::move(sourceString);
 	if (upperCase) {

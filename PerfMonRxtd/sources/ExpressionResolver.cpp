@@ -8,6 +8,7 @@
  */
 
 #include "ExpressionResolver.h"
+#include "option-parser/OptionList.h"
 
 #include "undef.h"
 

@@ -8,6 +8,8 @@
  */
 
 #include "BandResampler.h"
+#include "option-parser/OptionMap.h"
+#include "option-parser/OptionList.h"
 
 #include "undef.h"
 

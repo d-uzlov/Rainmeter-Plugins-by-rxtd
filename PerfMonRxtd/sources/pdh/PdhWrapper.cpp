@@ -10,6 +10,7 @@
 
 #include "PdhWrapper.h"
 #include <PdhMsg.h>
+#include "option-parser/OptionList.h"
 
 #include "undef.h"
 

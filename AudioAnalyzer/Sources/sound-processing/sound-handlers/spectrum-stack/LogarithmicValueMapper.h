@@ -9,7 +9,6 @@
 
 #pragma once
 #include "../SoundHandler.h"
-#include "OptionParser.h"
 #include "RainmeterWrappers.h"
 
 namespace rxtd::audio_analyzer {

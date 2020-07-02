@@ -9,7 +9,6 @@
 
 #pragma once
 #include <Pdh.h>
-#include "OptionParser.h"
 
 namespace rxtd::perfmon::pdh {
 	using counter_t = int16_t; // because expressions?

@@ -10,7 +10,7 @@
 #pragma once
 
 #include "BufferPrinter.h"
-#include "OptionParser.h"
+#include "option-parser/Option.h"
 
 namespace rxtd::utils {
 	class Rainmeter {

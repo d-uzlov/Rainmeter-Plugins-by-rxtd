@@ -9,6 +9,7 @@
 
 #include "LogarithmicValueMapper.h"
 #include "FastMath.h"
+#include "option-parser/OptionMap.h"
 
 #include "undef.h"
 

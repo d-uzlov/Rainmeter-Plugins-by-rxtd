@@ -13,6 +13,9 @@
 #include <numeric>
 #include "MutableLinearInterpolator.h"
 #include "../../audio-utils/LogarithmicIRF.h"
+#include "option-parser/OptionMap.h"
+#include "option-parser/OptionSequence.h"
+#include "option-parser/OptionList.h"
 
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
@@ -104,8 +107,7 @@ void BlockHandler::setParams(Params params) {
 	recalculateConstants();
 
 	if (this->params.transformations.empty()) {
-		auto transform = utils::OptionParser::parse(getDefaultTransform());
-		auto transformSequence = transform.asSequence();
+		auto transformSequence = utils::Option { getDefaultTransform() }.asSequence();
 		for (auto list : transformSequence) {
 			utils::Rainmeter::Logger dummyLogger;
 			auto transformOpt = parseTransformation(list, dummyLogger);

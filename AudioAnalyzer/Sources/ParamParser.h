@@ -13,7 +13,7 @@
 #include "sound-processing/sound-handlers/SoundHandler.h"
 #include <set>
 #include "RainmeterWrappers.h"
-#include "OptionParser.h"
+#include "option-parser/OptionMap.h"
 
 namespace rxtd::audio_analyzer {
 	class ParamParser {

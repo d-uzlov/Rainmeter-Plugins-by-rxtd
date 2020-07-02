@@ -12,15 +12,15 @@
     <Filter Include="Source Files\windows-wrappers">
       <UniqueIdentifier>{cfe1b36f-90d4-4281-9bd6-dc9d34f62dfe}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\option-parser">
+      <UniqueIdentifier>{f56a22ca-0b8d-451f-8bdb-b5ebc4f1b7d7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\BmpWriter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="sources\BufferPrinter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\OptionParser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="sources\RainmeterWrappers.cpp">
@@ -65,6 +65,21 @@
     <ClCompile Include="sources\windows-wrappers\IMMDeviceCollectionWrapper.cpp">
       <Filter>Source Files\windows-wrappers</Filter>
     </ClCompile>
+    <ClCompile Include="sources\option-parser\Tokenizer.cpp">
+      <Filter>Source Files\option-parser</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\option-parser\Option.cpp">
+      <Filter>Source Files\option-parser</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\option-parser\OptionSequence.cpp">
+      <Filter>Source Files\option-parser</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\option-parser\OptionList.cpp">
+      <Filter>Source Files\option-parser</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\option-parser\OptionMap.cpp">
+      <Filter>Source Files\option-parser</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sources\BmpWriter.h">
@@ -77,9 +92,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="sources\FastMath.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\OptionParser.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="sources\RainmeterWrappers.h">
@@ -147,6 +159,24 @@
     </ClInclude>
     <ClInclude Include="sources\MutableLinearInterpolator.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\option-parser\AbstractOption.h">
+      <Filter>Source Files\option-parser</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\option-parser\Tokenizer.h">
+      <Filter>Source Files\option-parser</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\option-parser\Option.h">
+      <Filter>Source Files\option-parser</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\option-parser\OptionSequence.h">
+      <Filter>Source Files\option-parser</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\option-parser\OptionList.h">
+      <Filter>Source Files\option-parser</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\option-parser\OptionMap.h">
+      <Filter>Source Files\option-parser</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

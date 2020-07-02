@@ -12,7 +12,6 @@
 #include <Vector2D.h>
 #include "Color.h"
 #include "RainmeterWrappers.h"
-#include "OptionParser.h"
 
 namespace rxtd::audio_analyzer {
 	class Spectrogram : public SoundHandler {

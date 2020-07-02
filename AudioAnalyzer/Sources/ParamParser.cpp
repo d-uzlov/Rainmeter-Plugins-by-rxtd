@@ -22,6 +22,9 @@
 #include "sound-processing/sound-handlers/spectrum-stack/LogarithmicValueMapper.h"
 #include "sound-processing/sound-handlers/spectrum-stack/Spectrogram.h"
 
+#include "option-parser/OptionMap.h"
+#include "option-parser/OptionList.h"
+
 #include "undef.h"
 
 using namespace std::string_literals;

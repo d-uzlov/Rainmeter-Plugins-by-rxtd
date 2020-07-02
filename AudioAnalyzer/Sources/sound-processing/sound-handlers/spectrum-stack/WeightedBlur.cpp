@@ -8,6 +8,7 @@
  */
 
 #include "WeightedBlur.h"
+#include "option-parser/OptionMap.h"
 
 #include "undef.h"
 

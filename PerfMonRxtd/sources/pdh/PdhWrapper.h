@@ -8,10 +8,8 @@
  */
 
 #pragma once
-#include "my-windows.h"
 #include <Pdh.h>
 #include "RainmeterWrappers.h"
-#include "OptionParser.h"
 #include "PdhSnapshot.h"
 
 namespace rxtd::perfmon::pdh {

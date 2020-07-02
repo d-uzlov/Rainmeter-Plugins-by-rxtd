@@ -10,6 +10,7 @@
 #include "BandCascadeTransformer.h"
 #include "FastMath.h"
 #include "BandResampler.h"
+#include "option-parser/OptionMap.h"
 
 #include "undef.h"
 

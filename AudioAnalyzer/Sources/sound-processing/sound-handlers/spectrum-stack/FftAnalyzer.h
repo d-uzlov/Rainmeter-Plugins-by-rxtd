@@ -11,7 +11,6 @@
 #include "../SoundHandler.h"
 #include <random>
 #include "RainmeterWrappers.h"
-#include "OptionParser.h"
 #include "../../../audio-utils/FFT.h"
 #include "../../../audio-utils/LogarithmicIRF.h"
 

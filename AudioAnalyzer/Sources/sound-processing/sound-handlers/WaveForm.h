@@ -11,7 +11,7 @@
 #include "SoundHandler.h"
 #include "Color.h"
 #include <Vector2D.h>
-#include "OptionParser.h"
+#include "option-parser/OptionMap.h"
 #include "RainmeterWrappers.h"
 #include "MutableLinearInterpolator.h"
 
