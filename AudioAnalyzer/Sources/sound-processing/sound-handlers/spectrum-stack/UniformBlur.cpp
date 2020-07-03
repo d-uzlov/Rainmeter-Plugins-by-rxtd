@@ -65,7 +65,7 @@ std::optional<UniformBlur::Params> UniformBlur::parseParams(const utils::OptionM
 	return params;
 }
 
-void UniformBlur::setParams(Params _params) {
+void UniformBlur::setParams(Params _params, Channel channel) {
 	this->params = std::move(_params);
 	resampler = nullptr;
 	valid = true;

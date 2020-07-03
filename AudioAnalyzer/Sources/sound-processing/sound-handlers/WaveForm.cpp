@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -19,7 +19,7 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-void WaveForm::setParams(const Params &_params) {
+void WaveForm::setParams(const Params &_params, Channel channel) {
 	if (params == _params) {
 		return;
 	}
@@ -51,7 +51,10 @@ void WaveForm::setParams(const Params &_params) {
 		imageBuffer[i][centerPixel] = color;
 	}
 
-	filepath.clear();
+	filepath = params.prefix;
+	filepath += L"wave-";
+	filepath += channel.technicalName();
+	filepath += L".bmp"sv;
 
 	utils::FileWrapper::createDirectories(_params.prefix);
 
@@ -209,13 +212,6 @@ void WaveForm::process(const DataSupplier& dataSupplier) {
 		return;
 	}
 
-	if (filepath.empty()) {
-		filepath = params.prefix;
-		filepath += L"wave-";
-		filepath += dataSupplier.getChannel().technicalName();
-		filepath += L".bmp"sv;
-	}
-
 	const auto wave = dataSupplier.getWave();
 	const auto waveSize = wave.size();
 
@@ -248,13 +244,6 @@ void WaveForm::process(const DataSupplier& dataSupplier) {
 void WaveForm::processSilence(const DataSupplier& dataSupplier) {
 	if (blockSize <= 0 || params.width <= 0 || params.height <= 0) {
 		return;
-	}
-
-	if (filepath.empty()) {
-		filepath = params.prefix;
-		filepath += L"wave-";
-		filepath += dataSupplier.getChannel().technicalName();
-		filepath += L".bmp"sv;
 	}
 
 	const auto waveSize = dataSupplier.getWave().size();

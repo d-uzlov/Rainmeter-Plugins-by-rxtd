@@ -26,7 +26,7 @@ AudioChildHelper SoundAnalyzer::getAudioChildHelper() const {
 }
 
 void SoundAnalyzer::setHandlerPatchers(std::map<Channel, std::vector<istring>> handlersOrder,
-	std::map<istring, std::function<SoundHandler*(SoundHandler*)>, std::less<>> patchers) {
+	std::map<istring, std::function<SoundHandler*(SoundHandler*, Channel)>, std::less<>> patchers) {
 
 	this->patchers = std::move(patchers);
 	this->orderOfHandlers = std::move(handlersOrder);
@@ -65,7 +65,7 @@ void SoundAnalyzer::process(array_view<std::byte> frameBuffer, bool isSilent) {
 			continue;
 		}
 
-		dataSupplier.setChannelData(&channelData, channel);
+		dataSupplier.setChannelData(&channelData);
 
 		if (isSilent) {
 			for (auto& handler : channelData.handlers) {
@@ -156,10 +156,10 @@ void SoundAnalyzer::patchHandlers() {
 
 			auto handlerIndexIter = channelData.indexMap.find(handlerName);
 			if (handlerIndexIter == channelData.indexMap.end()) {
-				handler = std::unique_ptr<SoundHandler>(patcher(nullptr));
+				handler = std::unique_ptr<SoundHandler>(patcher(nullptr, channel));
 			} else {
 				std::unique_ptr<SoundHandler> &oldHandler = channelData.handlers[handlerIndexIter->second];
-				SoundHandler* res = patcher(oldHandler.get());
+				SoundHandler* res = patcher(oldHandler.get(), channel);
 				if (res != oldHandler.get()) {
 					oldHandler.reset();
 					handler = std::unique_ptr<SoundHandler>(res);

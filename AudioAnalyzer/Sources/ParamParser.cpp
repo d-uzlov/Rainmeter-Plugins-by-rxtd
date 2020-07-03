@@ -96,7 +96,7 @@ const std::map<Channel, std::vector<istring>>& ParamParser::getHandlers() const 
 	return handlers;
 }
 
-const std::map<istring, std::function<SoundHandler*(SoundHandler*)>, std::less<>>&
+const std::map<istring, std::function<SoundHandler*(SoundHandler*, Channel)>, std::less<>>&
 ParamParser::getPatches() const {
 	return handlerPatchersMap;
 }
@@ -164,7 +164,7 @@ void ParamParser::cacheHandlers(const utils::OptionList& indices) {
 	}
 }
 
-std::function<SoundHandler*(SoundHandler*)> ParamParser::parseHandler(const utils::OptionMap& optionMap, utils::Rainmeter::Logger &cl) {
+std::function<SoundHandler*(SoundHandler*, Channel)> ParamParser::parseHandler(const utils::OptionMap& optionMap, utils::Rainmeter::Logger &cl) {
 	const auto type = optionMap.get(L"type"sv).asIString();
 
 	if (type.empty()) {

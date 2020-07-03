@@ -83,7 +83,7 @@ namespace rxtd::audio_analyzer {
 		string filepath { };
 
 	public:
-		void setParams(const Params& _params);
+		void setParams(const Params& _params, Channel channel);
 
 		static std::optional<Params> parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger &cl, const utils::Rainmeter& rain);
 

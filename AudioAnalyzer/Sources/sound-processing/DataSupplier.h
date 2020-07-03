@@ -23,7 +23,6 @@ namespace rxtd::audio_analyzer {
 		const T* getHandler(isview id) const {
 			return dynamic_cast<const T*>(getHandlerRaw(id));
 		}
-		virtual Channel getChannel() const = 0;
 
 		/**
 		 * returns array of size @code size.

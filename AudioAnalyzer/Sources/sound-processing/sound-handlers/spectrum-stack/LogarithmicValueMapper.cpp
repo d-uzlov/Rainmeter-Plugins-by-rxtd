@@ -32,7 +32,7 @@ std::optional<LogarithmicValueMapper::Params> LogarithmicValueMapper::parseParam
 	return params;
 }
 
-void LogarithmicValueMapper::setParams(Params _params) {
+void LogarithmicValueMapper::setParams(Params _params, Channel channel) {
 	this->params = std::move(_params);
 
 	logNormalization = 20.0 / params.sensitivity;

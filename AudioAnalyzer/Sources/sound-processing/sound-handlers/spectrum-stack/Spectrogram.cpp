@@ -21,14 +21,17 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-void Spectrogram::setParams(const Params& _params) {
+void Spectrogram::setParams(const Params& _params, Channel channel) {
 	if (this->params == _params) {
 		return;
 	}
 
 	this->params = _params;
 
-	filepath.clear();
+	filepath = params.prefix;
+	filepath += L"spectrogram-";
+	filepath += channel.technicalName();
+	filepath += L".bmp"sv;
 
 	utils::FileWrapper::createDirectories(params.prefix);
 
@@ -232,13 +235,6 @@ void Spectrogram::process(const DataSupplier& dataSupplier) {
 		buffer.setBufferSize(dataSize);
 		utils::Color backgroundColor = params.colors.empty() ? params.baseColor : params.colors[0].color;
 		std::fill_n(buffer[0].data(), dataSize * params.length, backgroundColor.toInt());
-	}
-
-	if (filepath.empty()) {
-		filepath = params.prefix;
-		filepath += L"spectrogram-";
-		filepath += dataSupplier.getChannel().technicalName();
-		filepath += L".bmp"sv;
 	}
 
 	const auto waveSize = dataSupplier.getWave().size();

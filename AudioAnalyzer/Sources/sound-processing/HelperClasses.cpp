@@ -17,9 +17,8 @@ void DataSupplierImpl::setWave(array_view<float> wave) {
 	this->wave = wave;
 }
 
-void DataSupplierImpl::setChannelData(const ChannelData *channelData, Channel channel) {
+void DataSupplierImpl::setChannelData(const ChannelData *channelData) {
 	this->channelData = channelData;
-	this->channel = channel;
 }
 
 array_view<float> DataSupplierImpl::getWave() const {
@@ -39,10 +38,6 @@ const SoundHandler* DataSupplierImpl::getHandlerRaw(isview id) const {
 	}
 
 	return handler;
-}
-
-Channel DataSupplierImpl::getChannel() const {
-	return channel;
 }
 
 std::byte* DataSupplierImpl::getBufferRaw(index size) const {

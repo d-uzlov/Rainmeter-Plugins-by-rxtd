@@ -73,7 +73,7 @@ namespace rxtd::audio_analyzer {
 		mutable string propString { };
 
 	public:
-		void setParams(Params params);
+		void setParams(Params params, Channel channel);
 
 		void setSamplesPerSec(index samplesPerSec) final;
 		void reset() final;

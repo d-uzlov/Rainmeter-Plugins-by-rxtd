@@ -48,7 +48,7 @@ std::optional<FiniteTimeFilter::Params> FiniteTimeFilter::parseParams(const util
 	return params;
 }
 
-void FiniteTimeFilter::setParams(Params _params) {
+void FiniteTimeFilter::setParams(Params _params, Channel channel) {
 	if (this->params == _params) {
 		return;
 	}

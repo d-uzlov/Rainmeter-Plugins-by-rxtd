@@ -23,7 +23,7 @@ namespace rxtd::audio_analyzer {
 		bool unusedOptionsWarning;
 
 		std::map<Channel, std::vector<istring>> handlers;
-		std::map<istring, std::function<SoundHandler*(SoundHandler*)>, std::less<>> handlerPatchersMap;
+		std::map<istring, std::function<SoundHandler*(SoundHandler*, Channel)>, std::less<>> handlerPatchersMap;
 
 	public:
 		explicit ParamParser(utils::Rainmeter& rain, bool unusedOptionsWarning);
@@ -37,46 +37,46 @@ namespace rxtd::audio_analyzer {
 
 		void parse();
 		const std::map<Channel, std::vector<istring>>& getHandlers() const;
-		const std::map<istring, std::function<SoundHandler*(SoundHandler*)>, std::less<>>& getPatches() const;
+		const std::map<istring, std::function<SoundHandler*(SoundHandler*, Channel)>, std::less<>>& getPatches() const;
 
 	private:
 		static bool checkListUnique(const utils::OptionList& list);
 		std::set<Channel> parseChannels(utils::OptionList channelsStringList) const;
 		void cacheHandlers(const utils::OptionList& indices);
-		std::function<SoundHandler*(SoundHandler*)> parseHandler(const utils::OptionMap& optionMap, utils::Rainmeter::Logger &cl);
+		std::function<SoundHandler*(SoundHandler*, Channel)> parseHandler(const utils::OptionMap& optionMap, utils::Rainmeter::Logger &cl);
 
 		template<typename T>
-		std::function<SoundHandler*(SoundHandler*)> parseHandlerT(const utils::OptionMap& optionMap, utils::Rainmeter::Logger &cl) {
+		std::function<SoundHandler*(SoundHandler*, Channel)> parseHandlerT(const utils::OptionMap& optionMap, utils::Rainmeter::Logger &cl) {
 			auto paramsOpt = T::parseParams(optionMap, cl);
 			if (!paramsOpt.has_value()) {
 				return nullptr;
 			}
 
-			return[params = paramsOpt.value()](SoundHandler *old) {
+			return[params = paramsOpt.value()](SoundHandler *old, Channel channel) {
 				auto *handler = dynamic_cast<T*>(old);
 				if (handler == nullptr) {
 					handler = new T();
 				}
 
-				handler->setParams(params);
+				handler->setParams(params, channel);
 
 				return handler;
 			};
 		}
 		template<typename T>
-		std::function<SoundHandler*(SoundHandler*)> parseHandlerT2(const utils::OptionMap& optionMap, utils::Rainmeter::Logger &cl) {
+		std::function<SoundHandler*(SoundHandler*, Channel)> parseHandlerT2(const utils::OptionMap& optionMap, utils::Rainmeter::Logger &cl) {
 			auto paramsOpt = T::parseParams(optionMap, cl, rain);
 			if (!paramsOpt.has_value()) {
 				return nullptr;
 			}
 
-			return[params = paramsOpt.value()](SoundHandler *old) {
+			return[params = paramsOpt.value()](SoundHandler *old, Channel channel) {
 				auto *handler = dynamic_cast<T*>(old);
 				if (handler == nullptr) {
 					handler = new T();
 				}
 
-				handler->setParams(params);
+				handler->setParams(params, channel);
 
 				return handler;
 			};

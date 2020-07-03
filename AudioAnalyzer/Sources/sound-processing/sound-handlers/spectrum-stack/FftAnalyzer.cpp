@@ -466,7 +466,7 @@ void FftAnalyzer::reset() {
 	}
 }
 
-void FftAnalyzer::setParams(Params params) {
+void FftAnalyzer::setParams(Params params, Channel channel) {
 	if (this->params == params) {
 		return;
 	}

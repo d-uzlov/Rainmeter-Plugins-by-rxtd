@@ -48,7 +48,7 @@ double AudioChildHelper::getValue(Channel channel, isview handlerId, index index
 	if (channelDataIter == channels->end()) {
 		return 0.0;
 	}
-	dataSupplier->setChannelData(&channelDataIter->second, channel);
+	dataSupplier->setChannelData(&channelDataIter->second);
 
 	handler->finish(*dataSupplier);
 	if (!handler->isValid()) {

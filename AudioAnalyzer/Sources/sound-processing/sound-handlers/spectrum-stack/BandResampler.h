@@ -79,7 +79,7 @@ namespace rxtd::audio_analyzer {
 	public:
 		static std::optional<Params> parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl, utils::Rainmeter& rain);
 
-		void setParams(Params _params);
+		void setParams(Params _params, Channel channel);
 
 		void setSamplesPerSec(index samplesPerSec) override;
 		void reset() override;

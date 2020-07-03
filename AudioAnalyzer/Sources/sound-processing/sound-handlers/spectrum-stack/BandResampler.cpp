@@ -55,7 +55,7 @@ std::optional<BandResampler::Params> BandResampler::parseParams(const utils::Opt
 	return params;
 }
 
-void BandResampler::setParams(Params _params) {
+void BandResampler::setParams(Params _params, Channel channel) {
 	if (this->params == _params) {
 		return;
 	}

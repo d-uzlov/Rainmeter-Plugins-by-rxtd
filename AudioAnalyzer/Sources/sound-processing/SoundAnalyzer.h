@@ -21,7 +21,7 @@ namespace rxtd::audio_analyzer {
 		// Following two fields are used for updating .channels field.
 		// They can contain info about handlers that doesn't exist because of channel layout
 		std::map<Channel, std::vector<istring>> orderOfHandlers;
-		std::map<istring, std::function<SoundHandler*(SoundHandler*)>, std::less<>> patchers;
+		std::map<istring, std::function<SoundHandler*(SoundHandler*, Channel)>, std::less<>> patchers;
 
 		ChannelMixer channelMixer;
 		AudioChildHelper audioChildHelper;
@@ -52,7 +52,10 @@ namespace rxtd::audio_analyzer {
 		 * This new handler may be completely new if it didn't exist before or if class of handler with this name changed,
 		 * but usually this is the same handler with updated parameters.
 		 */
-		void setHandlerPatchers(std::map<Channel, std::vector<istring>> handlersOrder, std::map<istring, std::function<SoundHandler*(SoundHandler*)>, std::less<>> patchers);
+		void setHandlerPatchers(
+			std::map<Channel, std::vector<istring>> handlersOrder, 
+			std::map<istring, std::function<SoundHandler*(SoundHandler*, Channel)>, std::less<>> patchers
+		);
 
 		void setWaveFormat(MyWaveFormat waveFormat);
 

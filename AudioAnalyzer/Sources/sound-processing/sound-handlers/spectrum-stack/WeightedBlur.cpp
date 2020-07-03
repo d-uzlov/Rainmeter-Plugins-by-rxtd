@@ -90,7 +90,7 @@ std::optional<WeightedBlur::Params> WeightedBlur::parseParams(const utils::Optio
 	return params;
 }
 
-void WeightedBlur::setParams(Params _params) {
+void WeightedBlur::setParams(Params _params, Channel channel) {
 	this->params = std::move(_params);
 	valid = true;
 }

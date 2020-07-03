@@ -97,7 +97,7 @@ BlockHandler::Transformation::~Transformation() {
 	}
 }
 
-void BlockHandler::setParams(Params params) {
+void BlockHandler::setParams(Params params, Channel channel) {
 	if (this->params == params) {
 		return;
 	}

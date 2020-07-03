@@ -50,7 +50,7 @@ std::optional<BandCascadeTransformer::Params> BandCascadeTransformer::parseParam
 	return params;
 }
 
-void BandCascadeTransformer::setParams(Params _params) {
+void BandCascadeTransformer::setParams(Params _params, Channel channel) {
 	if (this->params == _params) {
 		return;
 	}

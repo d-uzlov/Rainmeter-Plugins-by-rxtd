@@ -140,7 +140,7 @@ namespace rxtd::audio_analyzer {
 
 		const wchar_t* getProp(const isview& prop) const override;
 
-		void setParams(Params params);
+		void setParams(Params params, Channel channel);
 
 	private:
 		void processRandom(index waveSize);
