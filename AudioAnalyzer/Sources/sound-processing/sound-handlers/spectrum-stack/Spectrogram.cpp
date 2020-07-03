@@ -161,11 +161,11 @@ void Spectrogram::writeFile(const DataSupplier& dataSupplier) {
 		index = 0;
 	}
 
-	auto width = sourceSize;
-	auto height = params.length;
-	auto writeBufferSize = width * height;
+	const auto width = sourceSize;
+	const auto height = params.length;
+	const auto writeBufferSize = width * height;
 	auto writeBuffer = dataSupplier.getBuffer<uint32_t>(writeBufferSize);
-	utils::BmpWriter::writeFile(filepath, buffer[0].data(), width, height, index, writeBuffer.data(), writeBufferSize); // TODO remove .data()
+	utils::BmpWriter::writeFile(filepath, buffer[0].data(), width, height, index, writeBuffer);
 }
 
 void Spectrogram::fillLine(array_view<float> data) {
@@ -185,9 +185,9 @@ void Spectrogram::fillLineMulticolor(array_view<float> data) {
 
 		index lowColorIndex = 0;
 		for (index j = 1; j < params.colors.size(); j++) {
-			const double colorLowValue = params.colorLevels[j];
-			lowColorIndex = j - 1;
-			if (value <= colorLowValue) {
+			const double colorHighValue = params.colorLevels[j];
+			if (value <= colorHighValue) {
+				lowColorIndex = j - 1;
 				break;
 			}
 		}
@@ -224,6 +224,7 @@ void Spectrogram::process(const DataSupplier& dataSupplier) {
 	} else {
 		lastNonZeroLine++;
 	}
+	// TODO this doesn't always match real picture emptiness
 	if (lastNonZeroLine > params.length) {
 		lastNonZeroLine = params.length;
 		counter = blockSize;
@@ -240,32 +241,21 @@ void Spectrogram::process(const DataSupplier& dataSupplier) {
 	const auto waveSize = dataSupplier.getWave().size();
 	counter += waveSize;
 
-	if (params.colors.empty()) { // only use 2 colors
-		while (counter >= blockSize) {
-			changed = true;
+	while (counter >= blockSize) {
+		changed = true;
 
-			lastLineIndex++;
-			if (lastLineIndex >= params.length) {
-				lastLineIndex = 0;
-			}
+		lastLineIndex++;
+		if (lastLineIndex >= params.length) {
+			lastLineIndex = 0;
+		}
 
+		if (params.colors.empty()) { // only use 2 colors
 			fillLine(data);
-
-			counter -= blockSize;
-		}
-	} else { // many colors, but slightly slower
-		while (counter >= blockSize) {
-			changed = true;
-
-			lastLineIndex++;
-			if (lastLineIndex >= params.length) {
-				lastLineIndex = 0;
-			}
-
+		} else { // many colors, but slightly slower
 			fillLineMulticolor(data);
-
-			counter -= blockSize;
 		}
+
+		counter -= blockSize;
 	}
 }
 

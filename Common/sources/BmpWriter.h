@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -8,6 +8,7 @@
  */
 
 #pragma once
+#include "array_view.h"
 
 namespace rxtd::utils {
 	class BmpWriter {
@@ -58,6 +59,6 @@ namespace rxtd::utils {
 #pragma pack( pop )
 
 	public:
-		static void writeFile(const string& filepath, const uint32_t* data, index width, index height, index offset, uint32_t* writeBuffer, index bufferSize);
+		static void writeFile(const string& filepath, const uint32_t* data, index width, index height, index offset, array_span<uint32_t> writeBuffer);
 	};
 }

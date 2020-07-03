@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -13,13 +13,13 @@
 #include "undef.h"
 
 void utils::BmpWriter::writeFile(const string& filepath, const uint32_t* data, index width, index height, index offset,
-	uint32_t* writeBuffer, index bufferSize) {
+	array_span<uint32_t> writeBuffer) {
 	const auto pixelsCount = width * height;
 	if (pixelsCount <= 0) {
 		return;
 	}
-	if (bufferSize < pixelsCount) {
-		std::terminate();
+	if (writeBuffer.size() < pixelsCount) {
+		throw std::exception { };
 	}
 
 	class TwoDimensionalArrayIndexer {
@@ -57,5 +57,5 @@ void utils::BmpWriter::writeFile(const string& filepath, const uint32_t* data, i
 	FileWrapper file(filepath.c_str());
 
 	file.write(reinterpret_cast<std::byte*>(&header), sizeof(header));
-	file.write(reinterpret_cast<std::byte*>(writeBuffer), header.dibHeader.bitmapSizeInBytes);
+	file.write(reinterpret_cast<std::byte*>(writeBuffer.data()), header.dibHeader.bitmapSizeInBytes);
 }

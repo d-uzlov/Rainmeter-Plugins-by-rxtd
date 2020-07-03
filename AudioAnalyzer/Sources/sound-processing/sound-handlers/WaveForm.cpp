@@ -152,9 +152,9 @@ void WaveForm::updateParams() {
 }
 
 void WaveForm::writeFile(const DataSupplier& dataSupplier) {
-	auto writeBufferSize = params.width * params.height;
+	const auto writeBufferSize = params.width * params.height;
 	auto writeBuffer = dataSupplier.getBuffer<uint32_t>(writeBufferSize);
-	utils::BmpWriter::writeFile(filepath, imageBuffer[0].data(), params.height, params.width, lastIndex, writeBuffer.data(), writeBufferSize); // TODO remove .data()
+	utils::BmpWriter::writeFile(filepath, imageBuffer[0].data(), params.height, params.width, lastIndex, writeBuffer);
 }
 
 void WaveForm::fillLine() {
