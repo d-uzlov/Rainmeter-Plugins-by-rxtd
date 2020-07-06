@@ -45,6 +45,10 @@ namespace rxtd::utils {
 				} bitMask;
 			} dibHeader { };
 
+		private:
+			std::byte padding[dibSize - sizeof(dibHeader)] { };
+
+		public:
 			BMPHeader(uint32_t width, uint32_t height) {
 				fileHeader.pixelArrayOffsetInBytes = sizeof(fileHeader) + dibHeader.headerSizeInBytes;
 				dibHeader.bitmapSizeInBytes = width * height * sizeof(uint32_t);
@@ -52,13 +56,10 @@ namespace rxtd::utils {
 				dibHeader.bitmapWidthInPixels = width;
 				dibHeader.bitmapHeightInPixels = height;
 			}
-
-		private:
-			std::byte pad[dibSize - sizeof(dibHeader)] { };
 		};
 #pragma pack( pop )
 
 	public:
-		static void writeFile(const string& filepath, const uint32_t* data, index width, index height, index offset, array_span<uint32_t> writeBuffer);
+		static void writeFile(const string& filepath, const uint32_t* data, index width, index height);
 	};
 }

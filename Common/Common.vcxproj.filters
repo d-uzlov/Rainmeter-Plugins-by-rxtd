@@ -83,6 +83,9 @@
     <ClCompile Include="sources\LinedImageHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="sources\ImageTransposer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sources\BmpWriter.h">
@@ -182,6 +185,9 @@
       <Filter>Source Files\option-parser</Filter>
     </ClInclude>
     <ClInclude Include="sources\LinedImageHelper.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\ImageTransposer.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

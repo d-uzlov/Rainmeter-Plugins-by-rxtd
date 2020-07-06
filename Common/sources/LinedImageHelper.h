@@ -9,12 +9,13 @@
 
 #pragma once
 #include "Vector2D.h"
+#include "ImageTransposer.h"
 
 namespace rxtd::utils {
 	class LinedImageHelper {
-		Vector2D<uint32_t> buffer;
+		Vector2D<uint32_t> imageLines;
 		index lastLineIndex = 0;
-		mutable std::vector<uint32_t> writeBuffer;
+		mutable ImageTransposer transposer;
 		uint32_t backgroundValue = { };
 		uint32_t lastFillValue = { };
 		index sameLinesCount = 0;

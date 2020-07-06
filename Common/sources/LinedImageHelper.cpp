@@ -17,27 +17,27 @@ void utils::LinedImageHelper::setBackground(uint32_t value) {
 }
 
 void utils::LinedImageHelper::setImageWidth(index width) {
-	if (buffer.getBufferSize() == width) {
+	if (imageLines.getBufferSize() == width) {
 		return;
 	}
 
-	buffer.setBufferSize(width);
-	buffer.init(backgroundValue);
+	imageLines.setBufferSize(width);
+	imageLines.init(backgroundValue);
 
 	lastFillValue = backgroundValue;
-	sameLinesCount = buffer.getBuffersCount();
+	sameLinesCount = imageLines.getBuffersCount();
 }
 
 void utils::LinedImageHelper::setImageHeight(index height) {
-	if (buffer.getBuffersCount() == height) {
+	if (imageLines.getBuffersCount() == height) {
 		return;
 	}
 
-	buffer.setBuffersCount(height);
-	buffer.init(backgroundValue);
+	imageLines.setBuffersCount(height);
+	imageLines.init(backgroundValue);
 
 	lastFillValue = backgroundValue;
-	sameLinesCount = buffer.getBuffersCount();
+	sameLinesCount = imageLines.getBuffersCount();
 }
 
 array_span<uint32_t> utils::LinedImageHelper::nextLine() {
@@ -50,7 +50,7 @@ void utils::LinedImageHelper::fillNextLineFlat(uint32_t value) {
 		lastFillValue = value;
 		sameLinesCount = 1;
 	} else {
-		if (sameLinesCount >= buffer.getBuffersCount()) {
+		if (sameLinesCount >= imageLines.getBuffersCount()) {
 			return;
 		}
 		sameLinesCount++;
@@ -61,7 +61,7 @@ void utils::LinedImageHelper::fillNextLineFlat(uint32_t value) {
 }
 
 array_span<uint32_t> utils::LinedImageHelper::fillNextLineManual() {
-	if (sameLinesCount < buffer.getBuffersCount()) {
+	if (sameLinesCount < imageLines.getBuffersCount()) {
 		sameLinesCount++;
 	}
 
@@ -69,26 +69,26 @@ array_span<uint32_t> utils::LinedImageHelper::fillNextLineManual() {
 }
 
 void utils::LinedImageHelper::writeTransposed(const string& filepath) const {
-	if (sameLinesCount >= buffer.getBuffersCount()) {
+	if (sameLinesCount >= imageLines.getBuffersCount()) {
 		return;
 	}
 
-	auto index = lastLineIndex + 1;
-	if (index >= buffer.getBuffersCount()) {
-		index = 0;
+	auto offset = lastLineIndex + 1;
+	if (offset >= imageLines.getBuffersCount()) {
+		offset = 0;
 	}
 
-	const auto width = buffer.getBufferSize();
-	const auto height = buffer.getBuffersCount();
-	const auto writeBufferSize = width * height;
-	writeBuffer.resize(writeBufferSize);
-	BmpWriter::writeFile(filepath, buffer[0].data(), width, height, index, writeBuffer);
+	const auto width = imageLines.getBufferSize();
+	const auto height = imageLines.getBuffersCount();
+	transposer.transposeToBuffer(imageLines, offset);
+	
+	BmpWriter::writeFile(filepath, transposer.getBuffer()[0].data(), width, height);
 }
 
 array_span<uint32_t> utils::LinedImageHelper::nextLineNonBreaking() {
 	lastLineIndex++;
-	if (lastLineIndex >= buffer.getBuffersCount()) {
+	if (lastLineIndex >= imageLines.getBuffersCount()) {
 		lastLineIndex = 0;
 	}
-	return buffer[lastLineIndex];
+	return imageLines[lastLineIndex];
 }
