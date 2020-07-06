@@ -11,45 +11,179 @@
 #include "Vector2D.h"
 #include "ImageTransposer.h"
 #include "Color.h"
+#include "BmpWriter.h"
 
 namespace rxtd::utils {
+	template<typename C>
 	class LinedImageHelper {
-		Vector2D<Color> imageLines;
+	protected:
+		Vector2D<C> imageLines;
 		index lastLineIndex = 0;
 		mutable ImageTransposer transposer;
-		Color backgroundValue = { };
-		Color lastFillValue = { };
+		C backgroundValue = { };
+		C lastFillValue = { };
 		index sameLinesCount = 0;
+		mutable bool emptinessWritten = false;
 
 	public:
-		void setBackground(Color value);
+		void setBackground(C value) {
+			backgroundValue = value;
+		}
 
-		void setImageWidth(index width);
+		void setImageWidth(index width) {
+			if (imageLines.getBufferSize() == width) {
+				return;
+			}
 
-		index getImageWidth() const;
+			imageLines.setBufferSize(width);
+			imageLines.init(backgroundValue);
 
-		void setImageHeight(index height);
+			lastFillValue = backgroundValue;
+			sameLinesCount = imageLines.getBuffersCount();
+			emptinessWritten = false;
+		}
 
-		index getImageHeight() const;
+		index getImageWidth() const {
+			return imageLines.getBufferSize();
+		}
 
-		array_span<Color> nextLine();
+		void setImageHeight(index height) {
+			if (imageLines.getBuffersCount() == height) {
+				return;
+			}
 
-		void fillNextLineFlat(Color value);
+			imageLines.setBuffersCount(height);
+			imageLines.init(backgroundValue);
 
-		array_span<Color> fillNextLineManual();
+			lastFillValue = backgroundValue;
+			sameLinesCount = imageLines.getBuffersCount();
+			emptinessWritten = false;
+		}
 
-		void writeTransposed(const string& filepath, bool withOffset, bool withFading) const;
+		index getImageHeight() const {
+			return imageLines.getBuffersCount();
+		}
 
-		bool isEmpty() const;
+		array_span<C> nextLine() {
+			sameLinesCount = 0;
+			emptinessWritten = false;
+			return nextLineNonBreaking();
+		}
 
-		void collapseInto(array_span<Color> result) const;
+		void fillNextLineFlat(C value) {
+			if (sameLinesCount == 0 || lastFillValue != value) {
+				lastFillValue = value;
+				sameLinesCount = 1;
+			} else {
+				if (sameLinesCount >= imageLines.getBuffersCount()) {
+					return;
+				}
+				sameLinesCount++;
+			}
+			emptinessWritten = false;
+
+			auto line = nextLineNonBreaking();
+			std::fill(line.begin(), line.end(), value);
+		}
+
+		array_span<C> fillNextLineManual() {
+			if (sameLinesCount < imageLines.getBuffersCount()) {
+				sameLinesCount++;
+				emptinessWritten = false;
+			}
+
+			return nextLineNonBreaking();
+		}
+
+		bool isEmpty() const {
+			return sameLinesCount >= imageLines.getBuffersCount();
+		}
+
 	private:
-		array_span<Color> nextLineNonBreaking();
+		array_span<C> nextLineNonBreaking() {
+			lastLineIndex++;
+			if (lastLineIndex >= imageLines.getBuffersCount()) {
+				lastLineIndex = 0;
+			}
+			return imageLines[lastLineIndex];
+		}
+	};
+
+	class LinedImageHelperFixed : public LinedImageHelper<uint32_t> {
+	public:
+		void writeTransposed(const string& filepath, bool withOffset) const {
+			if (emptinessWritten) {
+				return;
+			}
+
+			index offset = lastLineIndex + 1;
+			if (offset >= imageLines.getBuffersCount()) {
+				offset = 0;
+			}
+			index gradientOffset = 0;
+			if (!withOffset) {
+				std::swap(offset, gradientOffset);
+			}
+
+			const auto width = imageLines.getBufferSize();
+			const auto height = imageLines.getBuffersCount();
+			transposer.transposeToBufferSimple(imageLines, offset);
+
+			BmpWriter::writeFile(filepath, transposer.getBuffer()[0].data(), width, height);
+
+			if (isEmpty()) {
+				emptinessWritten = true;
+			}
+		}
+	};
+
+	class LinedImageHelperDynamic : public LinedImageHelper<Color> {
+	public:
+		void writeTransposed(const string& filepath, bool withOffset, bool withFading) const {
+			if (emptinessWritten) {
+				return;
+			}
+
+			index offset = lastLineIndex + 1;
+			if (offset >= imageLines.getBuffersCount()) {
+				offset = 0;
+			}
+			index gradientOffset = 0;
+			if (!withOffset) {
+				std::swap(offset, gradientOffset);
+			}
+
+			const auto width = imageLines.getBufferSize();
+			const auto height = imageLines.getBuffersCount();
+			transposer.transposeToBuffer(imageLines, offset, withFading, gradientOffset);
+
+			BmpWriter::writeFile(filepath, transposer.getBuffer()[0].data(), width, height);
+
+			if (isEmpty()) {
+				emptinessWritten = true;
+			}
+		}
+
+		void collapseInto(array_span<Color> result) const {
+			std::fill(result.begin(), result.end(), Color { 0.0, 0.0, 0.0, 0.0 });
+
+			for (int lineIndex = 0; lineIndex < imageLines.getBuffersCount(); lineIndex++) {
+				const auto line = imageLines[lineIndex];
+				for (int i = 0; i < line.size(); ++i) {
+					result[i] = result[i] + line[i];
+				}
+			}
+
+			const float coef = 1.0 / imageLines.getBuffersCount();
+			for (int i = 0; i < imageLines.getBufferSize(); ++i) {
+				result[i] = result[i] * coef;
+			}
+		}
 	};
 
 	class SupersamplingHelper {
-		LinedImageHelper mainImage;
-		LinedImageHelper supersamplingBuffer;
+		LinedImageHelperDynamic mainImage;
+		LinedImageHelperDynamic supersamplingBuffer;
 		index supersamplingSize = 0;
 		index counter = 0;
 	

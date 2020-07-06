@@ -76,7 +76,7 @@ namespace rxtd::audio_analyzer {
 
 		mutable string propString { };
 
-		utils::LinedImageHelper image { };
+		utils::LinedImageHelperFixed image { };
 
 		string filepath { };
 

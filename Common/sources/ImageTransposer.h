@@ -19,11 +19,15 @@ namespace rxtd::utils {
 	public:
 		void setBackground(Color value);
 
+		void transposeToBufferSimple(const Vector2D<uint32_t>& imageData, index lineOffset);
+
 		void transposeToBuffer(const Vector2D<Color>& imageData, index lineOffset, bool withFading, index gradientOffset);
 
 		const Vector2D<uint32_t>& getBuffer() const;
 
 	private:
+		void transposeLineSimple(index lineIndex, array_view<uint32_t> lineData);
+
 		void transposeLine(index lineIndex, array_view<Color> lineData, float amplification);
 	};
 }

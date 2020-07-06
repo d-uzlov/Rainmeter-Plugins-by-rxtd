@@ -16,6 +16,21 @@ void utils::ImageTransposer::setBackground(Color value) {
 	backgroundColor = value;
 }
 
+void utils::ImageTransposer::transposeToBufferSimple(const Vector2D<uint32_t>& imageData, index lineOffset) {
+	const auto sourceWidth = imageData.getBufferSize();
+	const auto sourceHeight = imageData.getBuffersCount();
+	buffer.setBufferSize(sourceHeight);
+	buffer.setBuffersCount(sourceWidth);
+
+	for (index sourceY = lineOffset; sourceY < sourceHeight; sourceY++) {
+		transposeLineSimple(sourceY - lineOffset, imageData[sourceY]);
+	}
+
+	for (index sourceY = 0; sourceY < lineOffset; sourceY++) {
+		transposeLineSimple(sourceY + sourceHeight - lineOffset, imageData[sourceY]);
+	}
+}
+
 void utils::ImageTransposer::transposeToBuffer(const Vector2D<Color>& imageData, index lineOffset, bool withFading, index gradientOffset) {
 	const auto sourceWidth = imageData.getBufferSize();
 	const auto sourceHeight = imageData.getBuffersCount();
@@ -47,6 +62,12 @@ void utils::ImageTransposer::transposeToBuffer(const Vector2D<Color>& imageData,
 
 const utils::Vector2D<unsigned>& utils::ImageTransposer::getBuffer() const {
 	return buffer;
+}
+
+void utils::ImageTransposer::transposeLineSimple(index lineIndex, array_view<uint32_t> lineData) {
+	for (index x = 0; x < lineData.size(); x++) {
+		buffer[x][lineIndex] = lineData[x];
+	}
 }
 
 void utils::ImageTransposer::transposeLine(index lineIndex, array_view<Color> lineData, float amplification) {
