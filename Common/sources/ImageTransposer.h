@@ -14,13 +14,16 @@
 namespace rxtd::utils {
 	class ImageTransposer {
 		Vector2D<uint32_t> buffer;
+		Color backgroundColor { };
 
 	public:
-		void transposeToBuffer(const Vector2D<Color>& imageData, index lineOffset);
+		void setBackground(Color value);
+
+		void transposeToBuffer(const Vector2D<Color>& imageData, index lineOffset, bool withFading, index gradientOffset);
 
 		const Vector2D<uint32_t>& getBuffer() const;
 
 	private:
-		void transposeLine(index lineIndex, array_view<Color> lineData);
+		void transposeLine(index lineIndex, array_view<Color> lineData, float amplification);
 	};
 }

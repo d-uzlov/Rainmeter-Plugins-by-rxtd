@@ -84,6 +84,7 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& op
 	}
 
 	params.moving = optionMap.get(L"moving").asBool(true);
+	params.fading = optionMap.get(L"fading").asBool(false);
 
 	return params;
 }
@@ -309,7 +310,7 @@ void WaveForm::processSilence(const DataSupplier& dataSupplier) {
 
 void WaveForm::finish(const DataSupplier& dataSupplier) {
 	if (changed) {
-		image.writeTransposed(filepath, params.moving);
+		image.writeTransposed(filepath, params.moving, params.fading);
 		changed = false;
 	}
 }

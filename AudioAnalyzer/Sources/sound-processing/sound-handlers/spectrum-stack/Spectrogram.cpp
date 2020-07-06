@@ -259,7 +259,7 @@ void Spectrogram::processSilence(const DataSupplier& dataSupplier) {
 
 void Spectrogram::finish(const DataSupplier& dataSupplier) {
 	if (changed) {
-		image.writeTransposed(filepath, true);
+		image.writeTransposed(filepath, true, false);
 		changed = false;
 	}
 }

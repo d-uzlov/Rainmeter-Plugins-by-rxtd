@@ -38,7 +38,7 @@ namespace rxtd::utils {
 
 		array_span<Color> fillNextLineManual();
 
-		void writeTransposed(const string& filepath, bool withOffset) const;
+		void writeTransposed(const string& filepath, bool withOffset, bool withFading) const;
 
 		bool isEmpty() const;
 
@@ -100,8 +100,8 @@ namespace rxtd::utils {
 			return supersamplingBuffer.fillNextLineManual();
 		}
 	
-		void writeTransposed(const string& filepath, bool withOffset) const {
-			mainImage.writeTransposed(filepath, withOffset);
+		void writeTransposed(const string& filepath, bool withOffset, bool withFading) const {
+			mainImage.writeTransposed(filepath, withOffset, withFading);
 		}
 
 	private:

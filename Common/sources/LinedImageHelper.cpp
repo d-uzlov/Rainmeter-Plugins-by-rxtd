@@ -16,6 +16,7 @@ using namespace utils;
 
 void LinedImageHelper::setBackground(Color value) {
 	backgroundValue = value;
+	transposer.setBackground(value);
 }
 
 void LinedImageHelper::setImageWidth(index width) {
@@ -78,22 +79,23 @@ array_span<Color> LinedImageHelper::fillNextLineManual() {
 	return nextLineNonBreaking();
 }
 
-void LinedImageHelper::writeTransposed(const string& filepath, bool withOffset) const {
+void LinedImageHelper::writeTransposed(const string& filepath, bool withOffset, bool withFading) const {
 	if (isEmpty()) {
 		return;
 	}
 
-	auto offset = 0;
-	if (withOffset) {
-		offset = lastLineIndex + 1;
-		if (offset >= imageLines.getBuffersCount()) {
-			offset = 0;
-		}
+	index offset = lastLineIndex + 1;
+	if (offset >= imageLines.getBuffersCount()) {
+		offset = 0;
+	}
+	index gradientOffset = 0;
+	if (!withOffset) {
+		std::swap(offset, gradientOffset);
 	}
 
 	const auto width = imageLines.getBufferSize();
 	const auto height = imageLines.getBuffersCount();
-	transposer.transposeToBuffer(imageLines, offset);
+	transposer.transposeToBuffer(imageLines, offset, withFading, gradientOffset);
 	
 	BmpWriter::writeFile(filepath, transposer.getBuffer()[0].data(), width, height);
 }
@@ -103,7 +105,7 @@ bool LinedImageHelper::isEmpty() const {
 }
 
 void LinedImageHelper::collapseInto(array_span<Color> result) const {
-	std::fill(result.begin(), result.end(), Color{ });
+	std::fill(result.begin(), result.end(), Color{ 0.0, 0.0, 0.0, 0.0 });
 
 	for (int lineIndex = 0; lineIndex < imageLines.getBuffersCount(); lineIndex++) {
 		const auto line = imageLines[lineIndex];
@@ -114,7 +116,7 @@ void LinedImageHelper::collapseInto(array_span<Color> result) const {
 
 	const float coef = 1.0 / imageLines.getBuffersCount();
 	for (int i = 0; i < imageLines.getBufferSize(); ++i) {
-		result[i] = result[i].amplify(coef);
+		result[i] = result[i] * coef;
 	}
 }
 

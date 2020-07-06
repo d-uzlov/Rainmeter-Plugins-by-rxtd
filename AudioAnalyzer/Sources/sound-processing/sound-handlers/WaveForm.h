@@ -39,6 +39,7 @@ namespace rxtd::audio_analyzer {
 			double gain { };
 			bool peakAntialiasing { };
 			bool moving { };
+			bool fading { };
 			index supersamplingSize { };
 
 			double minDistinguishableValue { };
