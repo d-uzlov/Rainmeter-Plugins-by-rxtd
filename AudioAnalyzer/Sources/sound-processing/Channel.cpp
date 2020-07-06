@@ -25,6 +25,7 @@ ChannelLayout ChannelLayout::create(sview name, const std::vector<Channel::Value
 
 	for (index i = 0; i < static_cast<index>(channels.size()); i++) {
 		result.channelMap[channels[i]] = i;
+		result.channelOrder.emplace_back(channels[i]);
 	}
 
 	return result;
