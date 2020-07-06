@@ -77,7 +77,7 @@ array_span<uint32_t> utils::LinedImageHelper::fillNextLineManual() {
 }
 
 void utils::LinedImageHelper::writeTransposed(const string& filepath) const {
-	if (sameLinesCount >= imageLines.getBuffersCount()) {
+	if (isEmpty()) {
 		return;
 	}
 
@@ -94,7 +94,7 @@ void utils::LinedImageHelper::writeTransposed(const string& filepath) const {
 }
 
 bool utils::LinedImageHelper::isEmpty() const {
-	return sameLinesCount >= imageLines.getBuffersCount();
+	return sameLinesCount > imageLines.getBuffersCount();
 }
 
 void utils::LinedImageHelper::collapseInto(array_span<Color> result) const {
