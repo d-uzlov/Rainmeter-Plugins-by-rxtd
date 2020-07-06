@@ -37,7 +37,7 @@ namespace rxtd::audio_analyzer {
 			utils::Color lineColor { };
 			LineDrawingPolicy lineDrawingPolicy { };
 			double gain { };
-			bool lineAntialiasing { };
+			bool peakAntialiasing { };
 
 			double minDistinguishableValue { };
 
