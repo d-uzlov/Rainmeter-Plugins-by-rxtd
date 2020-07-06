@@ -38,6 +38,7 @@ namespace rxtd::audio_analyzer {
 			LineDrawingPolicy lineDrawingPolicy { };
 			double gain { };
 			bool peakAntialiasing { };
+			bool moving { };
 			index supersamplingSize { };
 
 			double minDistinguishableValue { };
@@ -112,6 +113,6 @@ namespace rxtd::audio_analyzer {
 	private:
 		void updateParams();
 		// void fillLine(array_span<uint32_t> buffer);
-		void fillLineAntialiased(array_span<uint32_t> buffer);
+		void fillLine(array_span<uint32_t> buffer);
 	};
 }

@@ -83,6 +83,8 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& op
 		params.supersamplingSize = 1;
 	}
 
+	params.moving = optionMap.get(L"moving").asBool(true);
+
 	return params;
 }
 
@@ -161,7 +163,7 @@ void WaveForm::updateParams() {
 	reset();
 }
 
-void WaveForm::fillLineAntialiased(array_span<uint32_t> buffer) {
+void WaveForm::fillLine(array_span<uint32_t> buffer) {
 	min *= params.gain;
 	max *= params.gain;
 
@@ -271,8 +273,7 @@ void WaveForm::process(const DataSupplier& dataSupplier) {
 		max = std::max<double>(max, value);
 		counter++;
 		if (counter >= blockSize) {
-			// fillLine(dataIsZero ? image.fillNextLineManual() : image.nextLine());
-			fillLineAntialiased(dataIsZero ? image.fillNextLineManual() : image.nextLine());
+			fillLine(dataIsZero ? image.fillNextLineManual() : image.nextLine());
 			counter = 0;
 			min = 10.0;
 			max = -10.0;
@@ -297,8 +298,7 @@ void WaveForm::processSilence(const DataSupplier& dataSupplier) {
 		changed = true;
 
 		if (waveProcessed + blockRemaining <= waveSize) {
-			// fillLine(image.fillNextLineManual());
-			fillLineAntialiased(image.fillNextLineManual());
+			fillLine(image.fillNextLineManual());
 			waveProcessed += blockRemaining;
 			counter = 0;
 			min = 10.0;
@@ -312,7 +312,7 @@ void WaveForm::processSilence(const DataSupplier& dataSupplier) {
 
 void WaveForm::finish(const DataSupplier& dataSupplier) {
 	if (changed) {
-		image.writeTransposed(filepath);
+		image.writeTransposed(filepath, params.moving);
 		changed = false;
 	}
 }

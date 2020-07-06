@@ -76,14 +76,17 @@ array_span<uint32_t> utils::LinedImageHelper::fillNextLineManual() {
 	return nextLineNonBreaking();
 }
 
-void utils::LinedImageHelper::writeTransposed(const string& filepath) const {
+void utils::LinedImageHelper::writeTransposed(const string& filepath, bool withOffset) const {
 	if (isEmpty()) {
 		return;
 	}
 
-	auto offset = lastLineIndex + 1;
-	if (offset >= imageLines.getBuffersCount()) {
-		offset = 0;
+	auto offset = 0;
+	if (withOffset) {
+		offset = lastLineIndex + 1;
+		if (offset >= imageLines.getBuffersCount()) {
+			offset = 0;
+		}
 	}
 
 	const auto width = imageLines.getBufferSize();
