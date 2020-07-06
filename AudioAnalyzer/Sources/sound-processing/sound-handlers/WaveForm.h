@@ -70,9 +70,6 @@ namespace rxtd::audio_analyzer {
 		Params params;
 
 		index blockSize { };
-		uint32_t backgroundInt { };
-		uint32_t waveInt { };
-		uint32_t lineInt { };
 
 		index counter = 0;
 		double min { };
@@ -113,6 +110,6 @@ namespace rxtd::audio_analyzer {
 	private:
 		void updateParams();
 		// void fillLine(array_span<uint32_t> buffer);
-		void fillLine(array_span<uint32_t> buffer);
+		void fillLine(array_span<utils::Color> buffer);
 	};
 }

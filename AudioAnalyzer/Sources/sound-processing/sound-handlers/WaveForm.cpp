@@ -101,11 +101,7 @@ void WaveForm::setParams(const Params &_params, Channel channel) {
 
 	interpolator = { -1.0, 1.0, 0, _params.height - 1 };
 
-	backgroundInt = _params.backgroundColor.toInt();
-	waveInt = _params.waveColor.toInt();
-	lineInt = _params.lineColor.toInt();
-
-	image.setBackground(backgroundInt);
+	image.setBackground(params.backgroundColor);
 	// yes, width to height, and vice versa — there is no error
 	// image will be transposed later
 	image.setImageWidth(_params.height);
@@ -113,11 +109,11 @@ void WaveForm::setParams(const Params &_params, Channel channel) {
 
 	image.setSupersamplingSize(params.supersamplingSize);
 
-	uint32_t color;
+	utils::Color color;
 	if (_params.lineDrawingPolicy == LineDrawingPolicy::ALWAYS) {
-		color = lineInt;
+		color = params.lineColor;
 	} else {
-		color = waveInt;
+		color = params.waveColor;
 	}
 	const index centerPixel = interpolator.toValueD(0.0);
 	for (index i = 0; i < _params.width * params.supersamplingSize; ++i) {
@@ -160,10 +156,11 @@ void WaveForm::reset() {
 
 void WaveForm::updateParams() {
 	blockSize = index(samplesPerSec * params.resolution / params.supersamplingSize);
+	blockSize = std::max<index>(blockSize, 1);
 	reset();
 }
 
-void WaveForm::fillLine(array_span<uint32_t> buffer) {
+void WaveForm::fillLine(array_span<utils::Color> buffer) {
 	min *= params.gain;
 	max *= params.gain;
 
@@ -213,49 +210,49 @@ void WaveForm::fillLine(array_span<uint32_t> buffer) {
 	const auto highLineBound = highBackgroundBound;
 
 	for (index i = 0; i < lowBackgroundBound; ++i) {
-		buffer[i] = backgroundInt;
+		buffer[i] = params.backgroundColor;
 	}
 	for (index i = highBackgroundBound + 1; i < params.height; ++i) {
-		buffer[i] = backgroundInt;
+		buffer[i] = params.backgroundColor;
 	}
 
 	if (params.lineDrawingPolicy == LineDrawingPolicy::BELOW_WAVE) {
 		const index centerPixel = interpolator.toValueD(0.0);
-		buffer[centerPixel] = lineInt;
+		buffer[centerPixel] = params.lineColor;
 	}
 
 	const double lowPercent = interpolator.percentRelativeToNext(minPixel);
 	if (params.peakAntialiasing) {
 		const auto lowTransitionColor = params.backgroundColor * lowPercent + params.waveColor * (1.0 - lowPercent);
-		buffer[lowBackgroundBound] = lowTransitionColor.toInt();
+		buffer[lowBackgroundBound] = lowTransitionColor;
 	} else {
 		if (lowPercent < 0.5) {
-			buffer[lowBackgroundBound] = waveInt;
+			buffer[lowBackgroundBound] = params.waveColor;
 		} else {
-			buffer[lowBackgroundBound] = backgroundInt;
+			buffer[lowBackgroundBound] = params.backgroundColor;
 		}
 	}
 
 	for (index i = lowLineBound; i < highLineBound; i++) {
-		buffer[i] = waveInt;
+		buffer[i] = params.waveColor;
 	}
 
 	const double highPercent = interpolator.percentRelativeToNext(maxPixel);
 
 	if (params.peakAntialiasing) {
 		const auto highTransitionColor = params.backgroundColor * (1.0 - highPercent) + params.waveColor * highPercent;
-		buffer[highBackgroundBound] = highTransitionColor.toInt();
+		buffer[highBackgroundBound] = highTransitionColor;
 	} else {
 		if (highPercent > 0.5) {
-			buffer[highBackgroundBound] = waveInt;
+			buffer[highBackgroundBound] = params.waveColor;
 		} else {
-			buffer[highBackgroundBound] = backgroundInt;
+			buffer[highBackgroundBound] = params.backgroundColor;
 		}
 	}
 
 	if (params.lineDrawingPolicy == LineDrawingPolicy::ALWAYS) {
 		const index centerPixel = interpolator.toValueD(0.0);
-		buffer[centerPixel] = lineInt;
+		buffer[centerPixel] = params.lineColor;
 	}
 }
 

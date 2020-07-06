@@ -11,7 +11,7 @@
 
 #include "undef.h"
 
-void utils::ImageTransposer::transposeToBuffer(const Vector2D<uint32_t>& imageData, index lineOffset) {
+void utils::ImageTransposer::transposeToBuffer(const Vector2D<Color>& imageData, index lineOffset) {
 	const auto sourceWidth = imageData.getBufferSize();
 	const auto sourceHeight = imageData.getBuffersCount();
 	buffer.setBufferSize(sourceHeight);
@@ -30,8 +30,8 @@ const utils::Vector2D<unsigned>& utils::ImageTransposer::getBuffer() const {
 	return buffer;
 }
 
-void utils::ImageTransposer::transposeLine(index lineIndex, array_view<uint32_t> lineData) {
+void utils::ImageTransposer::transposeLine(index lineIndex, array_view<Color> lineData) {
 	for (index x = 0; x < lineData.size(); x++) {
-		buffer[x][lineIndex] = lineData[x];
+		buffer[x][lineIndex] = lineData[x].toInt();
 	}
 }

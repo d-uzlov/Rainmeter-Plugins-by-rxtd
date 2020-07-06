@@ -42,7 +42,7 @@ void Spectrogram::setParams(const Params& _params, Channel channel) {
 
 	utils::FileWrapper::createDirectories(params.prefix);
 
-	image.setBackground(params.baseColor.toInt());
+	image.setBackground(params.baseColor);
 	image.setImageHeight(params.length);
 
 	updateParams();
@@ -182,7 +182,7 @@ void Spectrogram::fillLine(array_view<float> data) {
 
 		auto color = params.baseColor * (1.0 - value) + params.maxColor * value;
 
-		line[i] = color.toInt();
+		line[i] = color;
 	}
 }
 
@@ -208,9 +208,9 @@ void Spectrogram::fillLineMulticolor(array_view<float> data) {
 
 		const double percentValue = (value - lowColorValue) * intervalCoef;
 
-		auto color = lowColor * (1.0 - percentValue) + highColor * percentValue;
+		const auto color = lowColor * (1.0 - percentValue) + highColor * percentValue;
 
-		line[i] = color.toInt();
+		line[i] = color;
 	}
 }
 
@@ -241,7 +241,7 @@ void Spectrogram::process(const DataSupplier& dataSupplier) {
 		changed = true;
 
 		if (dataIsZero) {
-			image.fillNextLineFlat(params.baseColor.toInt());
+			image.fillNextLineFlat(params.baseColor);
 		} else if (params.colors.empty()) { // only use 2 colors
 			fillLine(data);
 		} else { // many colors, but slightly slower

@@ -14,15 +14,15 @@
 
 namespace rxtd::utils {
 	class LinedImageHelper {
-		Vector2D<uint32_t> imageLines;
+		Vector2D<Color> imageLines;
 		index lastLineIndex = 0;
 		mutable ImageTransposer transposer;
-		uint32_t backgroundValue = { };
-		uint32_t lastFillValue = { };
+		Color backgroundValue = { };
+		Color lastFillValue = { };
 		index sameLinesCount = 0;
 
 	public:
-		void setBackground(uint32_t value);
+		void setBackground(Color value);
 
 		void setImageWidth(index width);
 
@@ -32,11 +32,11 @@ namespace rxtd::utils {
 
 		index getImageHeight() const;
 
-		array_span<uint32_t> nextLine();
+		array_span<Color> nextLine();
 
-		void fillNextLineFlat(uint32_t value);
+		void fillNextLineFlat(Color value);
 
-		array_span<uint32_t> fillNextLineManual();
+		array_span<Color> fillNextLineManual();
 
 		void writeTransposed(const string& filepath, bool withOffset) const;
 
@@ -44,7 +44,7 @@ namespace rxtd::utils {
 
 		void collapseInto(array_span<Color> result) const;
 	private:
-		array_span<uint32_t> nextLineNonBreaking();
+		array_span<Color> nextLineNonBreaking();
 	};
 
 	class SupersamplingHelper {
@@ -54,7 +54,7 @@ namespace rxtd::utils {
 		index counter = 0;
 	
 	public:
-		void setBackground(uint32_t value) {
+		void setBackground(Color value) {
 			mainImage.setBackground(value);
 			supersamplingBuffer.setBackground(value);
 		}
@@ -73,7 +73,7 @@ namespace rxtd::utils {
 			supersamplingBuffer.setImageHeight(value);
 		}
 	
-		array_span<uint32_t> nextLine() {
+		array_span<Color> nextLine() {
 			if (counter == supersamplingSize) {
 				emitLine();
 				counter = 0;
@@ -82,7 +82,7 @@ namespace rxtd::utils {
 			return supersamplingBuffer.nextLine();
 		}
 	
-		void fillNextLineFlat(uint32_t value) {
+		void fillNextLineFlat(Color value) {
 			if (counter == supersamplingSize) {
 				emitLine();
 				counter = 0;
@@ -91,7 +91,7 @@ namespace rxtd::utils {
 			supersamplingBuffer.fillNextLineFlat(value);
 		}
 	
-		array_span<uint32_t> fillNextLineManual() {
+		array_span<Color> fillNextLineManual() {
 			if (counter == supersamplingSize) {
 				emitLine();
 				counter = 0;
@@ -113,12 +113,12 @@ namespace rxtd::utils {
 			if (supersamplingBuffer.isEmpty()) {
 				auto line = mainImage.fillNextLineManual();
 				for (int i = 0; i < mainImage.getImageWidth(); ++i) {
-					line[i] = colorLine[i].toInt();
+					line[i] = colorLine[i];
 				}
 			} else {
 				auto line = mainImage.nextLine();
 				for (int i = 0; i < mainImage.getImageWidth(); ++i) {
-					line[i] = colorLine[i].toInt();
+					line[i] = colorLine[i];
 				}
 			}
 		}
