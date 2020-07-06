@@ -214,6 +214,8 @@ decay : float >= 0 : attack
 	Time in milliseconds of signal decrease from max to min.
 resolution : float > 0 : 10
 	Time in milliseconds of block in which signal is averaged before calculating RMS.
+subtractMean : boolean : 1
+    If true then subtracts average value of a block before calculating RMS.
 Example: type rms | resolution 5 | attack 1000
 Props:
 "block size" : size of the block in which values are averaged, in audio points.
@@ -230,6 +232,9 @@ decay : float >= 0 : attack
 	Time in milliseconds of signal decrease from max to min.
 resolution : float > 0 : 10
 	Time in milliseconds of block in which maximum is found.
+subtractMean : boolean : 0
+    If true then subtracts average value of a block before searching for maximum.
+    Don't use this option if you want to detect the presence audio output or possible clipping. You can use it when you want to detect presence of actual sound.
 Example: type peak | resolution 1 | attack 10 |  decay 1000
 Props:
 "block size" : size of the block in which maximum if found, in audio points.
