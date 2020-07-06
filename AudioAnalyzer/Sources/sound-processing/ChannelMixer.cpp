@@ -50,7 +50,9 @@ void ChannelMixer::decomposeFramesIntoChannels(array_view<std::byte> frameBuffer
 			auto bufferTemp = bufferFloat + waveFormat.channelLayout.indexOf(channel).value();
 
 			for (index frame = 0; frame < framesCount; ++frame) {
-				waveBuffer[frame] = *bufferTemp;
+				const auto value = *bufferTemp;
+				constexpr float correctingCoef = 1.0 / 0.985047; // I just can't get absolute values of a wave above 0.985047
+				waveBuffer[frame] = value * correctingCoef;
 				bufferTemp += channelsCount;
 			}
 		}
@@ -64,12 +66,17 @@ void ChannelMixer::decomposeFramesIntoChannels(array_view<std::byte> frameBuffer
 			auto bufferTemp = bufferInt + waveFormat.channelLayout.indexOf(channel).value();
 
 			for (index frame = 0; frame < framesCount; ++frame) {
-				waveBuffer[frame] = *bufferTemp * (1.0f / std::numeric_limits<int16_t>::max());
+				// I don't own anything that produces ePCM_S16 format, so I can't test if it needs same correcting coefficient as ePCM_F32
+				const float value = *bufferTemp * (1.0f / std::numeric_limits<int16_t>::max());
+				waveBuffer[frame] = value;
 				bufferTemp += channelsCount;
 			}
 		}
 	} else {
-		std::terminate(); // TODO this is dumb
+		// If a format is unknown then there should be
+		// no wave data in the first place
+		// so this function should never be called
+		std::terminate();
 	}
 
 	if (withAuto && aliasOfAuto == Channel::eAUTO) {
