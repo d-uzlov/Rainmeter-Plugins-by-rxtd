@@ -8,9 +8,8 @@
  */
 
 #include "WaveForm.h"
-#include "BmpWriter.h"
-#include "windows-wrappers/FileWrapper.h"
 #include <filesystem>
+#include "windows-wrappers/FileWrapper.h"
 
 #include "undef.h"
 
@@ -48,7 +47,7 @@ void WaveForm::setParams(const Params &_params, Channel channel) {
 	} else {
 		color = waveInt;
 	}
-	const index centerPixel = std::lround(interpolator.toValue(0.0));
+	const index centerPixel = interpolator.toValueDiscrete(0.0);
 	for (index i = 0; i < _params.width; ++i) {
 		auto line = image.fillNextLineManual();
 		line[centerPixel] = color;
@@ -60,7 +59,6 @@ void WaveForm::setParams(const Params &_params, Channel channel) {
 	filepath += L".bmp"sv;
 
 	utils::FileWrapper::createDirectories(_params.prefix);
-
 
 	updateParams();
 }
@@ -165,8 +163,8 @@ void WaveForm::fillLine(array_span<uint32_t> buffer) {
 		max = 0.0;
 	}
 
-	index minPixel = std::clamp<index>(std::lround(interpolator.toValue(min)), 0, params.height - 1);
-	index maxPixel = std::clamp<index>(std::lround(interpolator.toValue(max)), 0, params.height - 1);
+	index minPixel = interpolator.toValueDiscrete(min);
+	index maxPixel = interpolator.toValueDiscrete(max);
 	if (minPixel == maxPixel) {
 		if (maxPixel < params.height - 1) {
 			maxPixel++;
@@ -183,7 +181,7 @@ void WaveForm::fillLine(array_span<uint32_t> buffer) {
 	}
 
 	if (params.lineDrawingPolicy == LineDrawingPolicy::BELOW_WAVE) {
-		const index centerPixel = std::lround(interpolator.toValue(0.0));
+		const index centerPixel = interpolator.toValueDiscrete(0.0);
 		buffer[centerPixel] = lineInt;
 	}
 
@@ -192,7 +190,7 @@ void WaveForm::fillLine(array_span<uint32_t> buffer) {
 	}
 
 	if (params.lineDrawingPolicy == LineDrawingPolicy::ALWAYS) {
-		const index centerPixel = std::lround(interpolator.toValue(0.0));
+		const index centerPixel = interpolator.toValueDiscrete(0.0);
 		buffer[centerPixel] = lineInt;
 	}
 
@@ -208,13 +206,12 @@ void WaveForm::process(const DataSupplier& dataSupplier) {
 	}
 
 	const auto wave = dataSupplier.getWave();
-	const auto waveSize = wave.size();
 
-	const bool dataIsZero = std::all_of(wave.data(), wave.data() + waveSize, [=](auto x) { return std::abs(x) < params.minDistinguishableValue; });
+	const bool dataIsZero = std::all_of(wave.begin(), wave.end(), [=](auto x) { return std::abs(x) < params.minDistinguishableValue; });
 
-	for (index frame = 0; frame < waveSize; ++frame) {
-		min = std::min<double>(min, wave[frame]);
-		max = std::max<double>(max, wave[frame]);
+	for (const auto value : wave) {
+		min = std::min<double>(min, value);
+		max = std::max<double>(max, value);
 		counter++;
 		if (counter >= blockSize) {
 			fillLine(dataIsZero ? image.fillNextLineManual() : image.nextLine());
