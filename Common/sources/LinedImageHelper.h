@@ -28,7 +28,9 @@ namespace rxtd::utils {
 
 		array_span<uint32_t> nextLine();
 
-		void fillNextLine(uint32_t value);
+		void fillNextLineFlat(uint32_t value);
+
+		array_span<uint32_t> fillNextLineManual();
 
 		void writeTransposed(const string& filepath) const;
 

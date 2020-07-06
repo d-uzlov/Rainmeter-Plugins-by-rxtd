@@ -32,11 +32,12 @@ void utils::LinedImageHelper::setImageHeight(index height) {
 	if (buffer.getBuffersCount() == height) {
 		return;
 	}
-	// TODO also do something else?
+
 	buffer.setBuffersCount(height);
+	buffer.init(backgroundValue);
 
 	lastFillValue = backgroundValue;
-	sameLinesCount = 0;
+	sameLinesCount = buffer.getBuffersCount();
 }
 
 array_span<uint32_t> utils::LinedImageHelper::nextLine() {
@@ -44,7 +45,7 @@ array_span<uint32_t> utils::LinedImageHelper::nextLine() {
 	return nextLineNonBreaking();
 }
 
-void utils::LinedImageHelper::fillNextLine(uint32_t value) {
+void utils::LinedImageHelper::fillNextLineFlat(uint32_t value) {
 	if (sameLinesCount == 0 || lastFillValue != value) {
 		lastFillValue = value;
 		sameLinesCount = 1;
@@ -57,6 +58,14 @@ void utils::LinedImageHelper::fillNextLine(uint32_t value) {
 
 	auto line = nextLineNonBreaking();
 	std::fill(line.begin(), line.end(), value);
+}
+
+array_span<uint32_t> utils::LinedImageHelper::fillNextLineManual() {
+	if (sameLinesCount < buffer.getBuffersCount()) {
+		sameLinesCount++;
+	}
+
+	return nextLineNonBreaking();
 }
 
 void utils::LinedImageHelper::writeTransposed(const string& filepath) const {

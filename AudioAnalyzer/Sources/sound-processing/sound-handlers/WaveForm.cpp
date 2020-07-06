@@ -36,9 +36,11 @@ void WaveForm::setParams(const Params &_params, Channel channel) {
 	waveInt = _params.waveColor.toInt();
 	lineInt = _params.lineColor.toInt();
 
-	imageBuffer.setBuffersCount(_params.width);
-	imageBuffer.setBufferSize(_params.height);
-	std::fill_n(imageBuffer[0].data(), _params.width * _params.height, backgroundInt);
+	image.setBackground(backgroundInt);
+	// yes, width to height, and vice versa — there is no error
+	// image will be transposed later
+	image.setImageWidth(_params.height);
+	image.setImageHeight(_params.width);
 
 	uint32_t color;
 	if (_params.lineDrawingPolicy == LineDrawingPolicy::ALWAYS) {
@@ -48,7 +50,8 @@ void WaveForm::setParams(const Params &_params, Channel channel) {
 	}
 	const index centerPixel = std::lround(interpolator.toValue(0.0));
 	for (index i = 0; i < _params.width; ++i) {
-		imageBuffer[i][centerPixel] = color;
+		auto line = image.fillNextLineManual();
+		line[centerPixel] = color;
 	}
 
 	filepath = params.prefix;
@@ -151,13 +154,7 @@ void WaveForm::updateParams() {
 	reset();
 }
 
-void WaveForm::writeFile(const DataSupplier& dataSupplier) {
-	const auto writeBufferSize = params.width * params.height;
-	auto writeBuffer = dataSupplier.getBuffer<uint32_t>(writeBufferSize);
-	utils::BmpWriter::writeFile(filepath, imageBuffer[0].data(), params.height, params.width, lastIndex, writeBuffer);
-}
-
-void WaveForm::fillLine() {
+void WaveForm::fillLine(array_span<uint32_t> buffer) {
 	min *= params.gain;
 	max *= params.gain;
 
@@ -177,8 +174,6 @@ void WaveForm::fillLine() {
 			minPixel--;
 		}
 	}
-
-	auto buffer = imageBuffer[lastIndex];
 
 	for (index i = 0; i < minPixel; ++i) {
 		buffer[i] = backgroundInt;
@@ -216,23 +211,13 @@ void WaveForm::process(const DataSupplier& dataSupplier) {
 	const auto waveSize = wave.size();
 
 	const bool dataIsZero = std::all_of(wave.data(), wave.data() + waveSize, [=](auto x) { return std::abs(x) < params.minDistinguishableValue; });
-	if (!dataIsZero) {
-		lastNonZeroLine = 0;
-	} else {
-		lastNonZeroLine++;
-	}
-	if (lastNonZeroLine > params.width) {
-		lastNonZeroLine = params.width;
-		counter = 0;
-		return;
-	}
 
 	for (index frame = 0; frame < waveSize; ++frame) {
 		min = std::min<double>(min, wave[frame]);
 		max = std::max<double>(max, wave[frame]);
 		counter++;
 		if (counter >= blockSize) {
-			fillLine();
+			fillLine(dataIsZero ? image.fillNextLineManual() : image.nextLine());
 			counter = 0;
 			min = 10.0;
 			max = -10.0;
@@ -257,7 +242,7 @@ void WaveForm::processSilence(const DataSupplier& dataSupplier) {
 		changed = true;
 
 		if (waveProcessed + blockRemaining <= waveSize) {
-			fillLine();
+			fillLine(image.fillNextLineManual());
 			waveProcessed += blockRemaining;
 			counter = 0;
 			min = 10.0;
@@ -271,7 +256,7 @@ void WaveForm::processSilence(const DataSupplier& dataSupplier) {
 
 void WaveForm::finish(const DataSupplier& dataSupplier) {
 	if (changed) {
-		writeFile(dataSupplier);
+		image.writeTransposed(filepath);
 		changed = false;
 	}
 }

@@ -14,6 +14,7 @@
 #include "option-parser/OptionMap.h"
 #include "RainmeterWrappers.h"
 #include "MutableLinearInterpolator.h"
+#include "LinedImageHelper.h"
 
 namespace rxtd::audio_analyzer {
 	class WaveForm : public SoundHandler {
@@ -68,7 +69,6 @@ namespace rxtd::audio_analyzer {
 		uint32_t backgroundInt { };
 		uint32_t waveInt { };
 		uint32_t lineInt { };
-		index lastNonZeroLine = 0;
 
 		index counter = 0;
 		index lastIndex = 0;
@@ -78,7 +78,7 @@ namespace rxtd::audio_analyzer {
 
 		mutable string propString { };
 
-		utils::Vector2D<uint32_t> imageBuffer;
+		utils::LinedImageHelper image { };
 		string filepath { };
 
 		utils::MutableLinearInterpolator interpolator;
@@ -109,7 +109,6 @@ namespace rxtd::audio_analyzer {
 
 	private:
 		void updateParams();
-		void writeFile(const DataSupplier& dataSupplier);
-		void fillLine();
+		void fillLine(array_span<uint32_t> buffer);
 	};
 }
