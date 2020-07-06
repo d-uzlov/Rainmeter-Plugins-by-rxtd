@@ -12,7 +12,7 @@
 #include "Color.h"
 #include "option-parser/OptionMap.h"
 #include "RainmeterWrappers.h"
-#include "MutableLinearInterpolator.h"
+#include "DiscreetInterpolator.h"
 #include "LinedImageHelper.h"
 
 namespace rxtd::audio_analyzer {
@@ -37,6 +37,7 @@ namespace rxtd::audio_analyzer {
 			utils::Color lineColor { };
 			LineDrawingPolicy lineDrawingPolicy { };
 			double gain { };
+			bool lineAntialiasing { };
 
 			double minDistinguishableValue { };
 
@@ -80,7 +81,7 @@ namespace rxtd::audio_analyzer {
 		utils::LinedImageHelper image { };
 		string filepath { };
 
-		utils::MutableLinearInterpolator interpolator;
+		utils::DiscreetInterpolator interpolator;
 
 	public:
 		void setParams(const Params& _params, Channel channel);
@@ -108,6 +109,7 @@ namespace rxtd::audio_analyzer {
 
 	private:
 		void updateParams();
-		void fillLine(array_span<uint32_t> buffer);
+		// void fillLine(array_span<uint32_t> buffer);
+		void fillLineAntialiased(array_span<uint32_t> buffer);
 	};
 }

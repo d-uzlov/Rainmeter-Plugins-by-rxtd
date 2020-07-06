@@ -182,9 +182,10 @@
     <ClInclude Include="sources\BufferPrinter.h" />
     <ClInclude Include="sources\CaseInsensitiveString.h" />
     <ClInclude Include="sources\Color.h" />
+    <ClInclude Include="sources\DiscreetInterpolator.h" />
     <ClInclude Include="sources\ImageTransposer.h" />
     <ClInclude Include="sources\LinedImageHelper.h" />
-    <ClInclude Include="sources\MutableLinearInterpolator.h" />
+    <ClInclude Include="sources\LinearInterpolator.h" />
     <ClInclude Include="sources\option-parser\AbstractOption.h" />
     <ClInclude Include="sources\option-parser\Option.h" />
     <ClInclude Include="sources\option-parser\OptionList.h" />

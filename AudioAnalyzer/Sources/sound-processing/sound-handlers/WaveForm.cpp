@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (C) 2019-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
@@ -17,51 +17,6 @@ using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
-
-void WaveForm::setParams(const Params &_params, Channel channel) {
-	if (params == _params) {
-		return;
-	}
-
-	this->params = _params;
-
-	if (_params.width <= 0 || _params.height <= 0) {
-		return;
-	}
-
-	interpolator = { -1.0, 1.0, 0.0, _params.height - 1.0 };
-
-	backgroundInt = _params.backgroundColor.toInt();
-	waveInt = _params.waveColor.toInt();
-	lineInt = _params.lineColor.toInt();
-
-	image.setBackground(backgroundInt);
-	// yes, width to height, and vice versa � there is no error
-	// image will be transposed later
-	image.setImageWidth(_params.height);
-	image.setImageHeight(_params.width);
-
-	uint32_t color;
-	if (_params.lineDrawingPolicy == LineDrawingPolicy::ALWAYS) {
-		color = lineInt;
-	} else {
-		color = waveInt;
-	}
-	const index centerPixel = interpolator.toValueDiscrete(0.0);
-	for (index i = 0; i < _params.width; ++i) {
-		auto line = image.fillNextLineManual();
-		line[centerPixel] = color;
-	}
-
-	filepath = params.prefix;
-	filepath += L"wave-";
-	filepath += channel.technicalName();
-	filepath += L".bmp"sv;
-
-	utils::FileWrapper::createDirectories(_params.prefix);
-
-	updateParams();
-}
 
 std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl, const utils::Rainmeter& rain) {
 	Params params;
@@ -92,7 +47,7 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& op
 	}
 	std::filesystem::path path { folder };
 	if (!path.is_absolute()) {
-		folder = rain.replaceVariables(L"[#CURRENTPATH]") %own() + folder;
+		folder = rain.replaceVariables(L"[#CURRENTPATH]") % own() + folder;
 	}
 	folder = std::filesystem::absolute(folder).wstring();
 	folder = LR"(\\?\)"s + folder;
@@ -121,7 +76,54 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& op
 
 	params.gain = optionMap.get(L"gain"sv).asFloat(1.0);
 
+	params.lineAntialiasing = optionMap.get(L"lineAntialiasing").asBool(true);
+
 	return params;
+}
+
+void WaveForm::setParams(const Params &_params, Channel channel) {
+	if (params == _params) {
+		return;
+	}
+
+	this->params = _params;
+
+	if (_params.width <= 0 || _params.height <= 0) {
+		return;
+	}
+
+	interpolator = { -1.0, 1.0, 0, _params.height - 1 };
+
+	backgroundInt = _params.backgroundColor.toInt();
+	waveInt = _params.waveColor.toInt();
+	lineInt = _params.lineColor.toInt();
+
+	image.setBackground(backgroundInt);
+	// yes, width to height, and vice versa — there is no error
+	// image will be transposed later
+	image.setImageWidth(_params.height);
+	image.setImageHeight(_params.width);
+
+	uint32_t color;
+	if (_params.lineDrawingPolicy == LineDrawingPolicy::ALWAYS) {
+		color = lineInt;
+	} else {
+		color = waveInt;
+	}
+	const index centerPixel = interpolator.toValueD(0.0);
+	for (index i = 0; i < _params.width; ++i) {
+		auto line = image.fillNextLineManual();
+		line[centerPixel] = color;
+	}
+
+	filepath = params.prefix;
+	filepath += L"wave-";
+	filepath += channel.technicalName();
+	filepath += L".bmp"sv;
+
+	utils::FileWrapper::createDirectories(_params.prefix);
+
+	updateParams();
 }
 
 void WaveForm::setSamplesPerSec(index samplesPerSec) {
@@ -152,45 +154,128 @@ void WaveForm::updateParams() {
 	reset();
 }
 
-void WaveForm::fillLine(array_span<uint32_t> buffer) {
+// void WaveForm::fillLine(array_span<uint32_t> buffer) {
+// 	min *= params.gain;
+// 	max *= params.gain;
+//
+// 	if (std::abs(min) < std::numeric_limits<float>::epsilon()) {
+// 		min = 0.0;
+// 	}
+// 	if (std::abs(max) < std::numeric_limits<float>::epsilon()) {
+// 		max = 0.0;
+// 	}
+//
+// 	index minPixel = interpolator.toValueDiscrete(min);
+// 	index maxPixel = interpolator.toValueDiscrete(max);
+// 	if (minPixel == maxPixel) {
+// 		if (maxPixel < params.height - 1) {
+// 			maxPixel++;
+// 		} else {
+// 			minPixel--;
+// 		}
+// 	}
+//
+// 	for (index i = 0; i < minPixel; ++i) {
+// 		buffer[i] = backgroundInt;
+// 	}
+// 	for (index i = maxPixel; i < params.height; ++i) {
+// 		buffer[i] = backgroundInt;
+// 	}
+//
+// 	if (params.lineDrawingPolicy == LineDrawingPolicy::BELOW_WAVE) {
+// 		const index centerPixel = interpolator.toValueDiscrete(0.0);
+// 		buffer[centerPixel] = lineInt;
+// 	}
+//
+// 	for (index i = minPixel; i < maxPixel; ++i) {
+// 		buffer[i] = waveInt;
+// 	}
+//
+// 	if (params.lineDrawingPolicy == LineDrawingPolicy::ALWAYS) {
+// 		const index centerPixel = interpolator.toValueDiscrete(0.0);
+// 		buffer[centerPixel] = lineInt;
+// 	}
+//
+// 	lastIndex++;
+// 	if (lastIndex >= params.width) {
+// 		lastIndex = 0;
+// 	}
+// }
+
+void WaveForm::fillLineAntialiased(array_span<uint32_t> buffer) {
 	min *= params.gain;
 	max *= params.gain;
 
-	if (std::abs(min) < std::numeric_limits<float>::epsilon()) {
-		min = 0.0;
-	}
-	if (std::abs(max) < std::numeric_limits<float>::epsilon()) {
-		max = 0.0;
-	}
+	min = std::clamp(min, -1.0, 1.0);
+	max = std::clamp(max, -1.0, 1.0);
+	min = std::min(min, max);
+	max = std::max(min, max);
 
-	index minPixel = interpolator.toValueDiscrete(min);
-	index maxPixel = interpolator.toValueDiscrete(max);
-	if (minPixel == maxPixel) {
-		if (maxPixel < params.height - 1) {
-			maxPixel++;
-		} else {
-			minPixel--;
+	auto minPixel = interpolator.toValue(min);
+	auto maxPixel = interpolator.toValue(max);
+	const auto minMaxDelta = maxPixel - minPixel;
+	if (minMaxDelta < 1) {
+		const auto average = (minPixel + maxPixel) * 0.5;
+		minPixel = average - 0.5;
+		maxPixel = minPixel + 1.0; // max should always be >= min + 1
+
+		const auto minD = interpolator.makeDiscreet(minPixel);
+		const auto minDC = interpolator.makeDiscreetClamped(minPixel);
+		if (minD != minDC) {
+			const double shift = 1.0 - interpolator.percentRelativeToNext(minPixel);
+			minPixel += shift;
+			maxPixel += shift;
+		}
+
+		const auto maxD = interpolator.makeDiscreet(maxPixel);
+		const auto maxDC = interpolator.makeDiscreetClamped(maxPixel);
+		if (maxD != maxDC) {
+			const double shift = -interpolator.percentRelativeToNext(maxPixel);
+			minPixel += shift;
+			maxPixel += shift;
 		}
 	}
 
-	for (index i = 0; i < minPixel; ++i) {
+	const auto lowBackgroundBound = interpolator.makeDiscreetClamped(minPixel);
+	const auto highBackgroundBound = interpolator.makeDiscreetClamped(maxPixel);
+
+	// [0, lowBackgroundBound) ← background
+	// [lowBackgroundBound, lowBackgroundBound] ← transition
+	// [lowBackgroundBound + 1, highBackgroundBound) ← line
+	// [highBackgroundBound, highBackgroundBound] ← transition
+	// [highBackgroundBound + 1, MAX] ← background
+
+	// Should never really clamp due to minPixel <= maxPixel - 1
+	// Because discreet(maxPixel) and discreet(minPixel) shouldn't clamp after shift above
+	// If (max - min) was already >= 1.0, then also no clamp because discreet(toValue([-1.0, 1.0])) should be within clamp range
+	const auto lowLineBound = interpolator.clamp(lowBackgroundBound + 1);
+	const auto highLineBound = highBackgroundBound;
+
+	for (index i = 0; i < lowBackgroundBound; ++i) {
 		buffer[i] = backgroundInt;
 	}
-	for (index i = maxPixel; i < params.height; ++i) {
+	for (index i = highBackgroundBound + 1; i < params.height; ++i) {
 		buffer[i] = backgroundInt;
 	}
 
 	if (params.lineDrawingPolicy == LineDrawingPolicy::BELOW_WAVE) {
-		const index centerPixel = interpolator.toValueDiscrete(0.0);
+		const index centerPixel = interpolator.toValueD(0.0);
 		buffer[centerPixel] = lineInt;
 	}
 
-	for (index i = minPixel; i < maxPixel; ++i) {
+	const double lowPercent = interpolator.percentRelativeToNext(minPixel);
+	const auto lowTransitionColor = params.backgroundColor * lowPercent + params.waveColor * (1.0 - lowPercent);
+	buffer[lowBackgroundBound] = lowTransitionColor.toInt();
+
+	for (index i = lowLineBound; i < highLineBound; i++) {
 		buffer[i] = waveInt;
 	}
+	const double highPercent = interpolator.percentRelativeToNext(maxPixel);
+	const auto highTransitionColor = params.backgroundColor * (1.0 - highPercent) + params.waveColor * highPercent;
+	buffer[highBackgroundBound] = highTransitionColor.toInt();
 
 	if (params.lineDrawingPolicy == LineDrawingPolicy::ALWAYS) {
-		const index centerPixel = interpolator.toValueDiscrete(0.0);
+		const index centerPixel = interpolator.toValueD(0.0);
 		buffer[centerPixel] = lineInt;
 	}
 
@@ -214,7 +299,8 @@ void WaveForm::process(const DataSupplier& dataSupplier) {
 		max = std::max<double>(max, value);
 		counter++;
 		if (counter >= blockSize) {
-			fillLine(dataIsZero ? image.fillNextLineManual() : image.nextLine());
+			// fillLine(dataIsZero ? image.fillNextLineManual() : image.nextLine());
+			fillLineAntialiased(dataIsZero ? image.fillNextLineManual() : image.nextLine());
 			counter = 0;
 			min = 10.0;
 			max = -10.0;
@@ -239,7 +325,8 @@ void WaveForm::processSilence(const DataSupplier& dataSupplier) {
 		changed = true;
 
 		if (waveProcessed + blockRemaining <= waveSize) {
-			fillLine(image.fillNextLineManual());
+			// fillLine(image.fillNextLineManual());
+			fillLineAntialiased(image.fillNextLineManual());
 			waveProcessed += blockRemaining;
 			counter = 0;
 			min = 10.0;

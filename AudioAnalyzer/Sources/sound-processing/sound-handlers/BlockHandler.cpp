@@ -11,7 +11,7 @@
 
 #include "undef.h"
 #include <numeric>
-#include "MutableLinearInterpolator.h"
+#include "LinearInterpolator.h"
 #include "../../audio-utils/LogarithmicIRF.h"
 #include "option-parser/OptionMap.h"
 #include "option-parser/OptionSequence.h"
@@ -67,7 +67,7 @@ void BlockHandler::setNextValue(double value) {
 			break;
 		}
 		case TransformType::eMAP: {
-			auto& interpolator = *static_cast<utils::MutableLinearInterpolator*>(transform.state);
+			auto& interpolator = *static_cast<utils::LinearInterpolator*>(transform.state);
 			value = interpolator.toValue(value);
 			break;
 		}
@@ -89,7 +89,7 @@ BlockHandler::Transformation::~Transformation() {
 			break;
 		case TransformType::eDB: break;
 		case TransformType::eMAP:
-			delete static_cast<utils::MutableLinearInterpolator*>(state);
+			delete static_cast<utils::LinearInterpolator*>(state);
 			break;
 		case TransformType::eCLAMP: break;
 		default: ;
@@ -210,9 +210,9 @@ void BlockHandler::updateTransformations() {
 		case TransformType::eDB: break;
 		case TransformType::eMAP: {
 			if (transform.state == nullptr) {
-				transform.state = new utils::MutableLinearInterpolator { };
+				transform.state = new utils::LinearInterpolator { };
 			}
-			auto& interpolator = *static_cast<utils::MutableLinearInterpolator*>(transform.state);
+			auto& interpolator = *static_cast<utils::LinearInterpolator*>(transform.state);
 
 			if (std::abs(transform.args[0] - transform.args[1]) < std::numeric_limits<float>::min()) {
 				interpolator.setParams(0.0, 1.0, transform.args[2], transform.args[3]);

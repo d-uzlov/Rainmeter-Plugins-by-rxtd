@@ -163,9 +163,6 @@
     <ClInclude Include="sources\windows-wrappers\IMMDeviceCollectionWrapper.h">
       <Filter>Source Files\windows-wrappers</Filter>
     </ClInclude>
-    <ClInclude Include="sources\MutableLinearInterpolator.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="sources\option-parser\AbstractOption.h">
       <Filter>Source Files\option-parser</Filter>
     </ClInclude>
@@ -188,6 +185,12 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="sources\ImageTransposer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\LinearInterpolator.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\DiscreetInterpolator.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

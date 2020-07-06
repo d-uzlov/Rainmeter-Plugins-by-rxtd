@@ -14,7 +14,7 @@
 #include "option-parser/OptionList.h"
 
 #include "undef.h"
-#include "MutableLinearInterpolator.h"
+#include "LinearInterpolator.h"
 
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
@@ -173,7 +173,7 @@ void Spectrogram::updateParams() {
 
 void Spectrogram::fillLine(array_view<float> data) {
 	auto line = image.nextLine();
-	utils::MutableLinearInterpolator interpolator { params.colorMinValue, params.colorMaxValue, 0.0, 1.0 };
+	utils::LinearInterpolator interpolator { params.colorMinValue, params.colorMaxValue, 0.0, 1.0 };
 
 	for (index i = 0; i < line.size(); ++i) {
 		double value = data[i];
