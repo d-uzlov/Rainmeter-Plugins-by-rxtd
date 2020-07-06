@@ -80,6 +80,9 @@
     <ClCompile Include="sources\option-parser\OptionMap.cpp">
       <Filter>Source Files\option-parser</Filter>
     </ClCompile>
+    <ClCompile Include="sources\LinedImageHelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sources\BmpWriter.h">
@@ -177,6 +180,9 @@
     </ClInclude>
     <ClInclude Include="sources\option-parser\OptionMap.h">
       <Filter>Source Files\option-parser</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\LinedImageHelper.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

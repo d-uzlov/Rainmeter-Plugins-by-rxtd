@@ -8,13 +8,13 @@
  */
 
 #include "Spectrogram.h"
-#include "BmpWriter.h"
 #include <filesystem>
 #include "windows-wrappers/FileWrapper.h"
 #include "option-parser/OptionMap.h"
 #include "option-parser/OptionList.h"
 
 #include "undef.h"
+#include "MutableLinearInterpolator.h"
 
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
@@ -26,6 +26,13 @@ void Spectrogram::setParams(const Params& _params, Channel channel) {
 		return;
 	}
 
+	// if (params.prefix != _params.prefix) {
+	// 	// this ensures that if there is a silence
+	// 	// and there is already an image in the .prefix folder
+	// 	// then we will properly show empty image instead of that old image
+	// 	buffer.init(params.baseColor.toInt());
+	// }
+
 	this->params = _params;
 
 	filepath = params.prefix;
@@ -34,6 +41,9 @@ void Spectrogram::setParams(const Params& _params, Channel channel) {
 	filepath += L".bmp"sv;
 
 	utils::FileWrapper::createDirectories(params.prefix);
+
+	image.setBackground(params.baseColor.toInt());
+	image.setImageHeight(params.length);
 
 	updateParams();
 }
@@ -76,8 +86,6 @@ std::optional<Spectrogram::Params> Spectrogram::parseParams(const utils::OptionM
 
 	params.prefix = folder;
 
-	params.baseColor = optionMap.get(L"baseColor"sv).asColor({ 0, 0, 0, 1 });
-	params.maxColor = optionMap.get(L"maxColor"sv).asColor({ 1, 1, 1, 1 });
 	if (optionMap.has(L"colors"sv)) {
 		auto colorsDescriptionList = optionMap.get(L"colors"sv).asList(L';');
 
@@ -92,11 +100,11 @@ std::optional<Spectrogram::Params> Spectrogram::parseParams(const utils::OptionM
 			auto [valueOpt, colorOpt] = colorsDescriptionList.get(i).breakFirst(L' ');
 
 			float value = valueOpt.asFloat();
-			utils::Color color = colorOpt.asColor();
 
 			if (value <= prevValue) {
 				cl.error(L"Colors: values {} and {}: values must be increasing", prevValue, value);
-				continue;
+				colorsAreBroken = true;
+				break;
 			}
 			if (value / prevValue < 1.001 && value - prevValue < 0.001) {
 				cl.error(L"Colors: values {} and {} are too close, discarding second one", prevValue, value);
@@ -104,7 +112,7 @@ std::optional<Spectrogram::Params> Spectrogram::parseParams(const utils::OptionM
 			}
 
 			params.colorLevels.push_back(value);
-			params.colors.push_back(Params::ColorDescription { 0.0, color });
+			params.colors.push_back(Params::ColorDescription { 0.0, colorOpt.asColor() });
 			if (i > 0) {
 				params.colors[i - 1].widthInverted = 1.0 / (value - prevValue);
 			}
@@ -118,7 +126,21 @@ std::optional<Spectrogram::Params> Spectrogram::parseParams(const utils::OptionM
 			cl.error(L"Not enough colors found: {}", params.colors.size());
 			params.colors = { };
 		}
-		// TODO optimize for 2 colors - like, do all as usual 2 colors but shift bound from [0, 1] to [min, max]
+
+		if (params.colors.size() == 2) {
+			// optimize for 2-colors case
+			params.baseColor = params.colors[0].color;
+			params.maxColor = params.colors[1].color;
+			params.colors = { };
+		} else {
+			// base color is used for background
+			params.baseColor = params.colors[0].color;
+		}
+	} else {
+		params.baseColor = optionMap.get(L"baseColor"sv).asColor({ 0, 0, 0, 1 });
+		params.maxColor = optionMap.get(L"maxColor"sv).asColor({ 1, 1, 1, 1 });
+		params.colorMinValue = 0.0;
+		params.colorMaxValue = 1.0;
 	}
 
 	return params;
@@ -145,46 +167,33 @@ const wchar_t* Spectrogram::getProp(const isview& prop) const {
 	return propString.c_str();
 }
 
-void Spectrogram::reset() {
-}
-
 void Spectrogram::updateParams() {
 	blockSize = index(samplesPerSec * params.resolution);
-	buffer.setBuffersCount(params.length);
-
-	reset();
-}
-
-void Spectrogram::writeFile(const DataSupplier& dataSupplier) {
-	auto index = lastLineIndex + 1;
-	if (index >= params.length) {
-		index = 0;
-	}
-
-	const auto width = sourceSize;
-	const auto height = params.length;
-	const auto writeBufferSize = width * height;
-	auto writeBuffer = dataSupplier.getBuffer<uint32_t>(writeBufferSize);
-	utils::BmpWriter::writeFile(filepath, buffer[0].data(), width, height, index, writeBuffer);
 }
 
 void Spectrogram::fillLine(array_view<float> data) {
-	for (index i = 0; i < sourceSize; ++i) {
+	auto line = image.nextLine();
+	utils::MutableLinearInterpolator interpolator { params.colorMinValue, params.colorMaxValue, 0.0, 1.0 };
+
+	for (index i = 0; i < line.size(); ++i) {
 		double value = data[i];
+		value = interpolator.toValue(value);
 		value = std::clamp(value, 0.0, 1.0);
 
 		auto color = params.baseColor * (1.0 - value) + params.maxColor * value;
 
-		buffer[lastLineIndex][i] = color.toInt();
+		line[i] = color.toInt();
 	}
 }
 
 void Spectrogram::fillLineMulticolor(array_view<float> data) {
-	for (index i = 0; i < sourceSize; ++i) {
+	auto line = image.nextLine();
+
+	for (index i = 0; i < line.size(); ++i) {
 		const double value = std::clamp<double>(data[i], params.colorMinValue, params.colorMaxValue);
 
 		index lowColorIndex = 0;
-		for (index j = 1; j < params.colors.size(); j++) {
+		for (index j = 1; j < index(params.colors.size()); j++) {
 			const double colorHighValue = params.colorLevels[j];
 			if (value <= colorHighValue) {
 				lowColorIndex = j - 1;
@@ -201,12 +210,19 @@ void Spectrogram::fillLineMulticolor(array_view<float> data) {
 
 		auto color = lowColor * (1.0 - percentValue) + highColor * percentValue;
 
-		buffer[lastLineIndex][i] = color.toInt();
+		line[i] = color.toInt();
 	}
 }
 
 void Spectrogram::process(const DataSupplier& dataSupplier) {
 	if (blockSize <= 0) {
+		return;
+	}
+
+	const auto waveSize = dataSupplier.getWave().size();
+	counter += waveSize;
+
+	if (counter < blockSize) {
 		return;
 	}
 
@@ -217,39 +233,16 @@ void Spectrogram::process(const DataSupplier& dataSupplier) {
 
 	const auto data = source->getData(0);
 	const auto dataSize = data.size();
+	image.setImageWidth(dataSize);
 
 	const bool dataIsZero = std::all_of(data.data(), data.data() + dataSize, [=](auto x) { return x < params.colorMinValue; });
-	if (!dataIsZero) {
-		lastNonZeroLine = 0;
-	} else {
-		lastNonZeroLine++;
-	}
-	// TODO this doesn't always match real picture emptiness
-	if (lastNonZeroLine > params.length) {
-		lastNonZeroLine = params.length;
-		counter = blockSize;
-		return;
-	}
-
-	if (dataSize != sourceSize) {
-		sourceSize = dataSize;
-		buffer.setBufferSize(dataSize);
-		utils::Color backgroundColor = params.colors.empty() ? params.baseColor : params.colors[0].color;
-		std::fill_n(buffer[0].data(), dataSize * params.length, backgroundColor.toInt());
-	}
-
-	const auto waveSize = dataSupplier.getWave().size();
-	counter += waveSize;
 
 	while (counter >= blockSize) {
 		changed = true;
 
-		lastLineIndex++;
-		if (lastLineIndex >= params.length) {
-			lastLineIndex = 0;
-		}
-
-		if (params.colors.empty()) { // only use 2 colors
+		if (dataIsZero) {
+			image.fillNextLine(params.baseColor.toInt());
+		} else if (params.colors.empty()) { // only use 2 colors
 			fillLine(data);
 		} else { // many colors, but slightly slower
 			fillLineMulticolor(data);
@@ -257,6 +250,7 @@ void Spectrogram::process(const DataSupplier& dataSupplier) {
 
 		counter -= blockSize;
 	}
+
 }
 
 void Spectrogram::processSilence(const DataSupplier& dataSupplier) {
@@ -265,7 +259,7 @@ void Spectrogram::processSilence(const DataSupplier& dataSupplier) {
 
 void Spectrogram::finish(const DataSupplier& dataSupplier) {
 	if (changed) {
-		writeFile(dataSupplier);
+		image.writeTransposed(filepath);
 		changed = false;
 	}
 }

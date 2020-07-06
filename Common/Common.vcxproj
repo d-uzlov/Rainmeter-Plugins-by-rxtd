@@ -156,6 +156,7 @@
     <ClCompile Include="sources\array_view.h" />
     <ClCompile Include="sources\BmpWriter.cpp" />
     <ClCompile Include="sources\BufferPrinter.cpp" />
+    <ClCompile Include="sources\LinedImageHelper.cpp" />
     <ClCompile Include="sources\MathExpressionParser.cpp" />
     <ClCompile Include="sources\option-parser\Option.cpp" />
     <ClCompile Include="sources\option-parser\OptionList.cpp" />
@@ -180,6 +181,7 @@
     <ClInclude Include="sources\BufferPrinter.h" />
     <ClInclude Include="sources\CaseInsensitiveString.h" />
     <ClInclude Include="sources\Color.h" />
+    <ClInclude Include="sources\LinedImageHelper.h" />
     <ClInclude Include="sources\MutableLinearInterpolator.h" />
     <ClInclude Include="sources\option-parser\AbstractOption.h" />
     <ClInclude Include="sources\option-parser\Option.h" />

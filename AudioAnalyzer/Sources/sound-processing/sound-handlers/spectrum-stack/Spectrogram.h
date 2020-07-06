@@ -9,9 +9,9 @@
 
 #pragma once
 #include "../SoundHandler.h"
-#include <Vector2D.h>
 #include "Color.h"
 #include "RainmeterWrappers.h"
+#include "LinedImageHelper.h"
 
 namespace rxtd::audio_analyzer {
 	class Spectrogram : public SoundHandler {
@@ -72,14 +72,12 @@ namespace rxtd::audio_analyzer {
 		index blockSize { };
 
 		index counter = 0;
-		index lastLineIndex = 0;
-		index sourceSize = 0;
 		bool changed = false;
-		index lastNonZeroLine = 0;
 
 		mutable string propString { };
 
-		utils::Vector2D<uint32_t> buffer;
+		utils::LinedImageHelper image { };
+
 		string filepath { };
 
 	public:
@@ -88,7 +86,7 @@ namespace rxtd::audio_analyzer {
 		static std::optional<Params> parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger &cl, const utils::Rainmeter& rain);
 
 		void setSamplesPerSec(index samplesPerSec) override;
-		void reset() override;
+		void reset() override { }
 
 		void process(const DataSupplier& dataSupplier) override;
 		void processSilence(const DataSupplier& dataSupplier) override;
@@ -108,7 +106,6 @@ namespace rxtd::audio_analyzer {
 
 	private:
 		void updateParams();
-		void writeFile(const DataSupplier& dataSupplier);
 		void fillLine(array_view<float> data);
 		void fillLineMulticolor(array_view<float> data);
 	};
