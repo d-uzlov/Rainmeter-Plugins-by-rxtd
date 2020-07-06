@@ -28,6 +28,10 @@ void utils::LinedImageHelper::setImageWidth(index width) {
 	sameLinesCount = imageLines.getBuffersCount();
 }
 
+index utils::LinedImageHelper::getImageWidth() const {
+	return imageLines.getBufferSize();
+}
+
 void utils::LinedImageHelper::setImageHeight(index height) {
 	if (imageLines.getBuffersCount() == height) {
 		return;
@@ -38,6 +42,10 @@ void utils::LinedImageHelper::setImageHeight(index height) {
 
 	lastFillValue = backgroundValue;
 	sameLinesCount = imageLines.getBuffersCount();
+}
+
+index utils::LinedImageHelper::getImageHeight() const {
+	return imageLines.getBuffersCount();
 }
 
 array_span<uint32_t> utils::LinedImageHelper::nextLine() {
@@ -83,6 +91,27 @@ void utils::LinedImageHelper::writeTransposed(const string& filepath) const {
 	transposer.transposeToBuffer(imageLines, offset);
 	
 	BmpWriter::writeFile(filepath, transposer.getBuffer()[0].data(), width, height);
+}
+
+bool utils::LinedImageHelper::isEmpty() const {
+	return sameLinesCount >= imageLines.getBuffersCount();
+}
+
+void utils::LinedImageHelper::collapseInto(array_span<Color> result) const {
+	std::fill(result.begin(), result.end(), Color{ });
+
+	for (int lineIndex = 0; lineIndex < imageLines.getBuffersCount(); lineIndex++) {
+		const auto line = imageLines[lineIndex];
+		for (int i = 0; i < line.size(); ++i) {
+			Color color{ line[i] };
+			result[i] = result[i] + color;
+		}
+	}
+
+	const float coef = 1.0 / imageLines.getBuffersCount();
+	for (int i = 0; i < imageLines.getBufferSize(); ++i) {
+		result[i] = result[i].amplify(coef);
+	}
 }
 
 array_span<uint32_t> utils::LinedImageHelper::nextLineNonBreaking() {

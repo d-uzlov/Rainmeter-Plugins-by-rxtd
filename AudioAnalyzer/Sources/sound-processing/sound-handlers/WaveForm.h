@@ -38,6 +38,7 @@ namespace rxtd::audio_analyzer {
 			LineDrawingPolicy lineDrawingPolicy { };
 			double gain { };
 			bool peakAntialiasing { };
+			index supersamplingSize { };
 
 			double minDistinguishableValue { };
 
@@ -52,6 +53,8 @@ namespace rxtd::audio_analyzer {
 					&& lhs.lineColor == rhs.lineColor
 					&& lhs.lineDrawingPolicy == rhs.lineDrawingPolicy
 					&& lhs.gain == rhs.gain
+					&& lhs.peakAntialiasing == rhs.peakAntialiasing
+					&& lhs.supersamplingSize == rhs.supersamplingSize
 					&& lhs.minDistinguishableValue == rhs.minDistinguishableValue;
 			}
 
@@ -71,14 +74,13 @@ namespace rxtd::audio_analyzer {
 		uint32_t lineInt { };
 
 		index counter = 0;
-		index lastIndex = 0;
 		double min { };
 		double max { };
 		bool changed = false;
 
 		mutable string propString { };
 
-		utils::LinedImageHelper image { };
+		utils::SupersamplingHelper image { };
 		string filepath { };
 
 		utils::DiscreetInterpolator interpolator;

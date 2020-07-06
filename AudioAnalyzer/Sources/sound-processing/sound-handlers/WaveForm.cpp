@@ -76,7 +76,12 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& op
 
 	params.gain = optionMap.get(L"gain"sv).asFloat(1.0);
 
-	params.peakAntialiasing = optionMap.get(L"peakAntialiasing").asBool(true);
+	params.peakAntialiasing = optionMap.get(L"peakAntialiasing").asBool(false);
+	params.supersamplingSize = optionMap.get(L"supersamplingSize").asInt(1);
+	if (params.supersamplingSize < 1) {
+		cl.error(L"supersamplingSize must be > 1 but {} found. Assume 1", params.supersamplingSize);
+		params.supersamplingSize = 1;
+	}
 
 	return params;
 }
@@ -104,6 +109,8 @@ void WaveForm::setParams(const Params &_params, Channel channel) {
 	image.setImageWidth(_params.height);
 	image.setImageHeight(_params.width);
 
+	image.setSupersamplingSize(params.supersamplingSize);
+
 	uint32_t color;
 	if (_params.lineDrawingPolicy == LineDrawingPolicy::ALWAYS) {
 		color = lineInt;
@@ -111,7 +118,7 @@ void WaveForm::setParams(const Params &_params, Channel channel) {
 		color = waveInt;
 	}
 	const index centerPixel = interpolator.toValueD(0.0);
-	for (index i = 0; i < _params.width; ++i) {
+	for (index i = 0; i < _params.width * params.supersamplingSize; ++i) {
 		auto line = image.fillNextLineManual();
 		line[centerPixel] = color;
 	}
@@ -150,7 +157,7 @@ void WaveForm::reset() {
 }
 
 void WaveForm::updateParams() {
-	blockSize = index(samplesPerSec * params.resolution);
+	blockSize = index(samplesPerSec * params.resolution / params.supersamplingSize);
 	reset();
 }
 
@@ -247,11 +254,6 @@ void WaveForm::fillLineAntialiased(array_span<uint32_t> buffer) {
 	if (params.lineDrawingPolicy == LineDrawingPolicy::ALWAYS) {
 		const index centerPixel = interpolator.toValueD(0.0);
 		buffer[centerPixel] = lineInt;
-	}
-
-	lastIndex++;
-	if (lastIndex >= params.width) {
-		lastIndex = 0;
 	}
 }
 
