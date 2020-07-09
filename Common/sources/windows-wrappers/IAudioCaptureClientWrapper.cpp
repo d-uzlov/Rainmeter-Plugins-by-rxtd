@@ -1,3 +1,12 @@
+/*
+ * Copyright (C) 2020 rxtd
+ *
+ * This Source Code Form is subject to the terms of the GNU General Public
+ * License; either version 2 of the License, or (at your option) any later
+ * version. If a copy of the GPL was not distributed with this file, You can
+ * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
+ */
+
 #include "IAudioCaptureClientWrapper.h"
 #include <type_traits>
 
@@ -6,6 +15,10 @@ namespace rxtd::utils {
 	static_assert(std::is_same<UINT32, uint32_t>::value);
 
 	// static_assert(std::is_same<DWORD, uint32_t>::value); // ...
+
+	IAudioCaptureClientWrapper::IAudioCaptureClientWrapper(InitFunction initFunction) :
+		GenericComWrapper(std::move(initFunction)) {
+	}
 
 	AudioBuffer IAudioCaptureClientWrapper::readBuffer() {
 		releaseBuffer(lastBufferID);

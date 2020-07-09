@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -10,6 +10,7 @@
 #pragma once
 #include <type_traits>
 #include <Unknwn.h>
+#include <functional>
 
 namespace rxtd::utils {
 	template <typename T>
@@ -18,8 +19,18 @@ namespace rxtd::utils {
 		T *ptr = nullptr;
 
 	public:
+		using InitFunctionType = bool (T** ptr);
+		using InitFunction = std::function<InitFunctionType>;
+		using ObjectType = T;
 
 		GenericComWrapper() = default;
+
+		GenericComWrapper(InitFunction initFunction) {
+			const bool success = initFunction(&ptr);
+			if (!success) {
+				release();
+			}
+		}
 
 		GenericComWrapper(GenericComWrapper&& other) noexcept {
 			release();
@@ -27,6 +38,7 @@ namespace rxtd::utils {
 			ptr = other.ptr;
 			other.ptr = nullptr;
 		}
+
 		GenericComWrapper& operator=(GenericComWrapper&& other) noexcept {
 			release();
 
@@ -58,18 +70,12 @@ namespace rxtd::utils {
 			return ptr;
 		}
 
-		// T** operator &() {
-		// 	return &ptr;
-		// }
 		T* operator->() {
 			return ptr;
 		}
+
 		const T* operator->() const {
 			return ptr;
-		}
-
-		T** getMetaPointer() {
-			return &ptr;
 		}
 	};
 }

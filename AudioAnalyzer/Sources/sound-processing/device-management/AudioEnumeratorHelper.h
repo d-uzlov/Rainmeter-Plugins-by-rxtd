@@ -25,8 +25,8 @@ namespace rxtd::audio_analyzer {
 		utils::IMMDeviceEnumeratorWrapper enumeratorWrapper;
 
 		// IDs of all available devices
-		std::set<string> inputDevices;
-		std::set<string> outputDevices;
+		std::set<string> inputDevicesIDs;
+		std::set<string> outputDevicesIDs;
 
 		string deviceStringInput;
 		string deviceStringOutput;

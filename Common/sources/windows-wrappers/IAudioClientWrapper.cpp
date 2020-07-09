@@ -1,3 +1,12 @@
+/*
+ * Copyright (C) 2020 rxtd
+ *
+ * This Source Code Form is subject to the terms of the GNU General Public
+ * License; either version 2 of the License, or (at your option) any later
+ * version. If a copy of the GPL was not distributed with this file, You can
+ * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
+ */
+
 #include "IAudioClientWrapper.h"
 
 static const IID IID_IAudioCaptureClient = __uuidof(IAudioCaptureClient);
@@ -5,13 +14,18 @@ static const IID IID_IAudioCaptureClient = __uuidof(IAudioCaptureClient);
 static constexpr long long REF_TIMES_PER_SEC = 1000'000'0; // 1 sec in 100-ns units
 
 namespace rxtd::utils {
-
-	IAudioClientWrapper::IAudioClientWrapper(MediaDeviceType type): type(type) { }
+	IAudioClientWrapper::IAudioClientWrapper(MediaDeviceType type, InitFunction initFunction) : 
+		GenericComWrapper(std::move(initFunction)),
+		type(type) {
+	}
 
 	IAudioCaptureClientWrapper IAudioClientWrapper::openCapture() {
-		IAudioCaptureClientWrapper audioCaptureClient;
-		lastResult = (*this)->GetService(IID_IAudioCaptureClient, reinterpret_cast<void**>(audioCaptureClient.getMetaPointer()));;
-		return audioCaptureClient;
+		return IAudioCaptureClientWrapper {
+			[&](auto ptr) {
+				lastResult = (*this)->GetService(IID_IAudioCaptureClient, reinterpret_cast<void**>(ptr));
+				return lastResult == S_OK;
+			}
+		};
 	}
 
 	WaveFormat IAudioClientWrapper::getFormat() const {

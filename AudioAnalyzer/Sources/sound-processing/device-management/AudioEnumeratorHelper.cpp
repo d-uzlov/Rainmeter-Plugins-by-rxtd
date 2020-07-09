@@ -77,10 +77,10 @@ namespace rxtd::audio_analyzer {
 	}
 
 	std::optional<utils::MediaDeviceType> AudioEnumeratorHelper::getDeviceType(const string& deviceID) {
-		if (outputDevices.find(deviceID) != outputDevices.end()) {
+		if (outputDevicesIDs.find(deviceID) != outputDevicesIDs.end()) {
 			return utils::MediaDeviceType::eOUTPUT;
 		}
-		if (inputDevices.find(deviceID) != inputDevices.end()) {
+		if (inputDevicesIDs.find(deviceID) != inputDevicesIDs.end()) {
 			return utils::MediaDeviceType::eINPUT;
 		}
 
@@ -101,21 +101,17 @@ namespace rxtd::audio_analyzer {
 	}
 
 	string AudioEnumeratorHelper::makeDeviceString(utils::MediaDeviceType type) {
-		auto collection = enumeratorWrapper.enumerateActiveDevices(type);
-		if (collection.getLastResult() != S_OK) {
-			logger.error(L"Can't read audio device list: EnumAudioEndpoints() failed, error code {}", collection.getLastResult());
+		auto collection = enumeratorWrapper.getActiveDevices(type);
+		if (enumeratorWrapper.getLastResult() != S_OK) {
+			logger.error(L"Can't read audio device list: EnumAudioEndpoints() failed, error code {}", enumeratorWrapper.getLastResult());
 			valid = false;
 			return { };
 		}
 
-		const auto devicesCount = collection.getDevicesCount();
-
 		string result;
-		result.reserve(devicesCount * 120);
+		result.reserve(120 * collection.size());
 
-		for (index deviceIndex = 0; deviceIndex < devicesCount; ++deviceIndex) {
-			utils::MediaDeviceWrapper device = collection.get(deviceIndex);
-
+		for (auto& device : collection) {
 			const auto deviceInfo = device.readDeviceInfo();
 
 			result += deviceInfo.id;
@@ -132,28 +128,21 @@ namespace rxtd::audio_analyzer {
 	}
 
 	void AudioEnumeratorHelper::updateDeviceLists() {
-		inputDevices = readDeviceList(utils::MediaDeviceType::eINPUT);
-		outputDevices = readDeviceList(utils::MediaDeviceType::eOUTPUT);
+		inputDevicesIDs = readDeviceList(utils::MediaDeviceType::eINPUT);
+		outputDevicesIDs = readDeviceList(utils::MediaDeviceType::eOUTPUT);
 	}
 
 	std::set<string> AudioEnumeratorHelper::readDeviceList(utils::MediaDeviceType type) {
-		auto collection = enumeratorWrapper.enumerateAllDevices(type);
-		if (collection.getLastResult() != S_OK) {
-			logger.error(L"Can't read audio device list: EnumAudioEndpoints() failed, error code {}", collection.getLastResult());
+		auto collection = enumeratorWrapper.getAllDevices(type);
+		if (enumeratorWrapper.getLastResult() != S_OK) {
+			logger.error(L"Can't read audio device list: EnumAudioEndpoints() failed, error code {}", enumeratorWrapper.getLastResult());
 			valid = false;
 			return { };
 		}
 
-		const auto devicesCount = collection.getDevicesCount();
-
 		std::set<string> list;
-
-		for (index deviceIndex = 0; deviceIndex < devicesCount; ++deviceIndex) {
-			utils::MediaDeviceWrapper device = collection.get(deviceIndex);
-
-			const auto id = device.readDeviceId();
-
-			list.insert(id);
+		for (auto& device : collection) {
+			list.insert(device.readDeviceId());
 		}
 
 		return list;

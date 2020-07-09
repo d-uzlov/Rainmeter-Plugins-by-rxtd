@@ -1,3 +1,12 @@
+/*
+ * Copyright (C) 2020 rxtd
+ *
+ * This Source Code Form is subject to the terms of the GNU General Public
+ * License; either version 2 of the License, or (at your option) any later
+ * version. If a copy of the GPL was not distributed with this file, You can
+ * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
+ */
+
 #include "MediaDeviceWrapper.h"
 
 #include <functiondiscoverykeys_devpkey.h>
@@ -6,7 +15,9 @@
 static const IID IID_IAudioClient = __uuidof(IAudioClient);
 
 namespace rxtd::utils {
-	MediaDeviceWrapper::MediaDeviceWrapper(MediaDeviceType type): type(type) {
+	MediaDeviceWrapper::
+	MediaDeviceWrapper(MediaDeviceType type, InitFunction initFunction) : 
+		GenericComWrapper(std::move(initFunction)), type(type) {
 	}
 
 	MediaDeviceWrapper::DeviceInfo MediaDeviceWrapper::readDeviceInfo() {
@@ -14,7 +25,11 @@ namespace rxtd::utils {
 			return { };
 		}
 
-		PropertyStoreWrapper props { *this };
+		PropertyStoreWrapper props{
+			[&](auto ptr) {
+				return S_OK == (*this)->OpenPropertyStore(STGM_READ, ptr);
+			}
+		};
 		if (!props.isValid()) {
 			return { };
 		}
@@ -46,14 +61,18 @@ namespace rxtd::utils {
 	}
 
 	IAudioClientWrapper MediaDeviceWrapper::openAudioClient() {
-		IAudioClientWrapper audioClient { type };
-		lastResult = (*this)->Activate(
-			IID_IAudioClient,
-			CLSCTX_ALL,
-			nullptr,
-			reinterpret_cast<void**>(audioClient.getMetaPointer())
-		);
-		return audioClient;
+		return IAudioClientWrapper {
+			type,
+			[&](auto ptr) {
+				lastResult = (*this)->Activate(
+					IID_IAudioClient,
+					CLSCTX_ALL,
+					nullptr,
+					reinterpret_cast<void**>(ptr)
+				);
+				return lastResult == S_OK;
+			}
+		};
 	}
 
 	index MediaDeviceWrapper::getLastResult() const {

@@ -1,3 +1,12 @@
+/*
+ * Copyright (C) 2020 rxtd
+ *
+ * This Source Code Form is subject to the terms of the GNU General Public
+ * License; either version 2 of the License, or (at your option) any later
+ * version. If a copy of the GPL was not distributed with this file, You can
+ * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
+ */
+
 #include "PropertyStoreWrapper.h"
 #include "MediaDeviceWrapper.h"
 
@@ -30,13 +39,7 @@ namespace rxtd::utils {
 		};
 	}
 
-	PropertyStoreWrapper::PropertyStoreWrapper(MediaDeviceWrapper& device) {
-		const auto result = device->OpenPropertyStore(STGM_READ, getMetaPointer());
-
-		if (result != S_OK) {
-			release();
-			return;
-		}
+	PropertyStoreWrapper::PropertyStoreWrapper(InitFunction initFunction) : GenericComWrapper(std::move(initFunction)) {
 	}
 
 	string PropertyStoreWrapper::readProperty(const PROPERTYKEY& key) {
@@ -45,8 +48,6 @@ namespace rxtd::utils {
 		if ((*this)->GetValue(key, &prop) != S_OK) {
 			return {};
 		}
-
-		GenericComWrapper<IUnknown> test;
 
 		return prop.getCString();
 	}

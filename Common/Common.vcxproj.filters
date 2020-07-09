@@ -62,9 +62,6 @@
     <ClCompile Include="sources\windows-wrappers\IMMDeviceEnumeratorWrapper.cpp">
       <Filter>Source Files\windows-wrappers</Filter>
     </ClCompile>
-    <ClCompile Include="sources\windows-wrappers\IMMDeviceCollectionWrapper.cpp">
-      <Filter>Source Files\windows-wrappers</Filter>
-    </ClCompile>
     <ClCompile Include="sources\option-parser\Tokenizer.cpp">
       <Filter>Source Files\option-parser</Filter>
     </ClCompile>
@@ -158,9 +155,6 @@
       <Filter>Source Files\windows-wrappers</Filter>
     </ClInclude>
     <ClInclude Include="sources\windows-wrappers\IMMDeviceEnumeratorWrapper.h">
-      <Filter>Source Files\windows-wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\windows-wrappers\IMMDeviceCollectionWrapper.h">
       <Filter>Source Files\windows-wrappers</Filter>
     </ClInclude>
     <ClInclude Include="sources\option-parser\AbstractOption.h">
