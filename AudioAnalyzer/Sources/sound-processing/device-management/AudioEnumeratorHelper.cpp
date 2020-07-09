@@ -102,7 +102,7 @@ namespace rxtd::audio_analyzer {
 
 	string AudioEnumeratorHelper::makeDeviceString(utils::MediaDeviceType type) {
 		auto collection = enumeratorWrapper.getActiveDevices(type);
-		if (enumeratorWrapper.getLastResult() != S_OK) {
+		if (enumeratorWrapper.getLastResult() != S_OK) { // TODO this is never true
 			logger.error(L"Can't read audio device list: EnumAudioEndpoints() failed, error code {}", enumeratorWrapper.getLastResult());
 			valid = false;
 			return { };

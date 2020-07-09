@@ -22,7 +22,7 @@ namespace rxtd::utils {
 	IAudioCaptureClientWrapper IAudioClientWrapper::openCapture() {
 		return IAudioCaptureClientWrapper {
 			[&](auto ptr) {
-				lastResult = (*this)->GetService(IID_IAudioCaptureClient, reinterpret_cast<void**>(ptr));
+				lastResult = getPointer()->GetService(IID_IAudioCaptureClient, reinterpret_cast<void**>(ptr));
 				return lastResult == S_OK;
 			}
 		};
@@ -34,7 +34,7 @@ namespace rxtd::utils {
 
 	void IAudioClientWrapper::initShared() {
 		WAVEFORMATEX* waveFormat;
-		lastResult = (*this)->GetMixFormat(&waveFormat);
+		lastResult = getPointer()->GetMixFormat(&waveFormat);
 		switch (lastResult) {
 		case AUDCLNT_E_DEVICE_INVALIDATED:
 		case AUDCLNT_E_SERVICE_NOT_RUNNING:
@@ -44,7 +44,7 @@ namespace rxtd::utils {
 		}
 
 		const bool loopback = type == MediaDeviceType::eOUTPUT;
-		lastResult = (*this)->Initialize(
+		lastResult = getPointer()->Initialize(
 			AUDCLNT_SHAREMODE_SHARED,
 			loopback ? AUDCLNT_STREAMFLAGS_LOOPBACK : 0,
 			REF_TIMES_PER_SEC,

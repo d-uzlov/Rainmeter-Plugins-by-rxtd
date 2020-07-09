@@ -31,7 +31,7 @@ namespace rxtd::utils {
 		return MediaDeviceWrapper{
 			type, 
 			[&](auto ptr) {
-				return S_OK == (*this)->GetDevice(id.c_str(), ptr);
+				return S_OK == getPointer()->GetDevice(id.c_str(), ptr);
 			}
 		};
 	}
@@ -39,7 +39,7 @@ namespace rxtd::utils {
 	MediaDeviceWrapper IMMDeviceEnumeratorWrapper::getDefaultDevice(MediaDeviceType type) {
 		return MediaDeviceWrapper{
 			type, [&](auto ptr) {
-				return S_OK == (*this)->GetDefaultAudioEndpoint(
+				return S_OK == getPointer()->GetDefaultAudioEndpoint(
 					type == MediaDeviceType::eOUTPUT ? eRender : eCapture,
 					eConsole,
 					ptr
@@ -59,7 +59,7 @@ namespace rxtd::utils {
 	std::vector<MediaDeviceWrapper> IMMDeviceEnumeratorWrapper::getCollection(MediaDeviceType type, uint32_t deviceStateMask) {
 		GenericComWrapper<IMMDeviceCollection> collection{
 			[&](auto ptr) {
-				return S_OK == (*this)->EnumAudioEndpoints(
+				return S_OK == getPointer()->EnumAudioEndpoints(
 					type == MediaDeviceType::eOUTPUT ? eRender : eCapture,
 					deviceStateMask,
 					ptr
@@ -70,14 +70,14 @@ namespace rxtd::utils {
 		static_assert(std::is_same<UINT, uint32_t>::value);
 
 		uint32_t devicesCountUINT;
-		collection->GetCount(&devicesCountUINT);
+		collection.getPointer()->GetCount(&devicesCountUINT);
 		const index devicesCount = devicesCountUINT;
 
 		std::vector<MediaDeviceWrapper> result;
 		for (index i = 0; i < devicesCount; ++i) {
 			MediaDeviceWrapper device{
 				type, [&](auto ptr) {
-					return S_OK == collection->Item(UINT(i), ptr);
+					return S_OK == collection.getPointer()->Item(UINT(i), ptr);
 				}
 			};
 

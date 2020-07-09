@@ -30,7 +30,7 @@ namespace rxtd::utils {
 				PropVariantClear(&handle);
 			}
 
-			PROPVARIANT* operator &() {
+			PROPVARIANT* getMetaPointer() {
 				return &handle;
 			}
 			const wchar_t* getCString() const {
@@ -45,11 +45,11 @@ namespace rxtd::utils {
 	string PropertyStoreWrapper::readProperty(const PROPERTYKEY& key) {
 		PropVariantWrapper prop;
 
-		if ((*this)->GetValue(key, &prop) != S_OK) {
+		if (getPointer()->GetValue(key, prop.getMetaPointer()) != S_OK) {
 			return {};
 		}
 
-		return prop.getCString();
+		return { prop.getCString() };
 	}
 }
 

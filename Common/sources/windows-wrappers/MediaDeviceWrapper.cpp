@@ -27,7 +27,7 @@ namespace rxtd::utils {
 
 		PropertyStoreWrapper props{
 			[&](auto ptr) {
-				return S_OK == (*this)->OpenPropertyStore(STGM_READ, ptr);
+				return S_OK == getPointer()->OpenPropertyStore(STGM_READ, ptr);
 			}
 		};
 		if (!props.isValid()) {
@@ -49,7 +49,7 @@ namespace rxtd::utils {
 		}
 
 		wchar_t* resultCString = nullptr;
-		lastResult = (*this)->GetId(&resultCString);
+		lastResult = getPointer()->GetId(&resultCString);
 		if (lastResult != S_OK) {
 			return { };
 		}
@@ -64,7 +64,7 @@ namespace rxtd::utils {
 		return IAudioClientWrapper {
 			type,
 			[&](auto ptr) {
-				lastResult = (*this)->Activate(
+				lastResult = getPointer()->Activate(
 					IID_IAudioClient,
 					CLSCTX_ALL,
 					nullptr,
@@ -94,7 +94,7 @@ namespace rxtd::utils {
 		// I wish I could use proper types everywhere :(
 
 		DWORD state;
-		const auto result = (*this)->GetState(&state);
+		const auto result = getPointer()->GetState(&state);
 		if (result != S_OK) {
 			return false;
 		}

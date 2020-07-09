@@ -69,13 +69,5 @@ namespace rxtd::utils {
 		T* getPointer() {
 			return ptr;
 		}
-
-		T* operator->() {
-			return ptr;
-		}
-
-		const T* operator->() const {
-			return ptr;
-		}
 	};
 }

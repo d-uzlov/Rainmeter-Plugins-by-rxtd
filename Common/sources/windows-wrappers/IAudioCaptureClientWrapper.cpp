@@ -24,13 +24,15 @@ namespace rxtd::utils {
 		releaseBuffer(lastBufferID);
 		lastBufferID++;
 
-		uint8_t* buffer = nullptr;
+		uint8_t* bufferData = nullptr;
 
 		DWORD flags { };
-		lastResult = (*this)->GetBuffer(&buffer, &lastBufferSize, &flags, nullptr, nullptr);
+		lastResult = getPointer()->GetBuffer(&bufferData, &lastBufferSize, &flags, nullptr, nullptr);
 		const bool silent = (flags & AUDCLNT_BUFFERFLAGS_SILENT) != 0;
 
-		return AudioBuffer { *this, lastBufferID, silent, reinterpret_cast<const std::byte*>(buffer), lastBufferSize };
+		const array_view<std::byte> buffer = { reinterpret_cast<const std::byte*>(bufferData), lastBufferSize };
+
+		return AudioBuffer { *this, lastBufferID, silent, buffer };
 	}
 
 	index IAudioCaptureClientWrapper::getLastResult() const {
@@ -42,7 +44,7 @@ namespace rxtd::utils {
 			return;
 		}
 
-		(*this)->ReleaseBuffer(lastBufferSize);
+		getPointer()->ReleaseBuffer(lastBufferSize);
 		lastBufferSize = 0;
 	}
 }

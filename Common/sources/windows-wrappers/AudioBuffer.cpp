@@ -2,15 +2,14 @@
 #include "IAudioCaptureClientWrapper.h"
 
 namespace rxtd::utils {
-	AudioBuffer::AudioBuffer(IAudioCaptureClientWrapper& parent, index id, bool silent, const std::byte* bufferPointer, uint32_t size) :
+	AudioBuffer::AudioBuffer(IAudioCaptureClientWrapper& parent, index id, bool silent, array_view<std::byte> buffer) :
 		parent(parent),
 		id(id),
 		silent(silent),
-		buffer(bufferPointer, size) { }
+		buffer(buffer) { }
 
 	AudioBuffer::~AudioBuffer() {
 		parent.releaseBuffer(id);
 	}
-
 }
 

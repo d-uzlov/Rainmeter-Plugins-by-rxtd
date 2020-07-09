@@ -56,8 +56,7 @@ namespace rxtd::audio_analyzer {
 			return;
 		}
 
-		HRESULT hr;
-		hr = audioClient->Start();
+		HRESULT hr = audioClient.getPointer()->Start();
 		if (hr != S_OK) {
 			valid = false;
 			logger.error(L"Can't start stream, error code {}", hr);

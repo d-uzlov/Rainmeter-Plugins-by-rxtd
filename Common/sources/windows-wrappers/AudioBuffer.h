@@ -2,7 +2,6 @@
 #include "array_view.h"
 
 namespace rxtd::utils {
-
 	class IAudioCaptureClientWrapper;
 
 	class AudioBuffer {
@@ -13,7 +12,7 @@ namespace rxtd::utils {
 		const bool silent{ };
 		const array_view<std::byte> buffer;
 
-		AudioBuffer(IAudioCaptureClientWrapper& parent, index id, bool silent, const std::byte* buffer, uint32_t size);
+		AudioBuffer(IAudioCaptureClientWrapper& parent, index id, bool silent, array_view<std::byte> buffer);
 
 	public:
 		// I want lifetime of this object to be very limited
