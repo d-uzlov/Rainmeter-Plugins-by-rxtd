@@ -7,18 +7,18 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include "TransposedLinedImageHelper.h"
+#include "TransposedStripedImageHelper.h"
 #include "BmpWriter.h"
 
 #include "undef.h"
 
 using namespace utils;
 
-void TransposedLinedImageHelper::setBackground(PixelColor value) {
+void TransposedStripedImageHelper::setBackground(PixelColor value) {
 	backgroundValue = value;
 }
 
-void TransposedLinedImageHelper::setDimensions(index width, index height) {
+void TransposedStripedImageHelper::setDimensions(index width, index height) {
 	if (this->width == width && this->height == height) {
 		return;
 	}
@@ -40,7 +40,7 @@ void TransposedLinedImageHelper::setDimensions(index width, index height) {
 	emptinessWritten = false;
 }
 
-void TransposedLinedImageHelper::pushStrip(array_view<PixelColor> stripData) {
+void TransposedStripedImageHelper::pushStrip(array_view<PixelColor> stripData) {
 	sameStripsCount = 0;
 	emptinessWritten = false;
 
@@ -53,7 +53,7 @@ void TransposedLinedImageHelper::pushStrip(array_view<PixelColor> stripData) {
 	}
 }
 
-void TransposedLinedImageHelper::pushEmptyLine(PixelColor value) {
+void TransposedStripedImageHelper::pushEmptyLine(PixelColor value) {
 	if (sameStripsCount >= width) {
 		return;
 	}
@@ -75,7 +75,7 @@ void TransposedLinedImageHelper::pushEmptyLine(PixelColor value) {
 	}
 }
 
-void TransposedLinedImageHelper::write(const string& filepath) const {
+void TransposedStripedImageHelper::write(const string& filepath) const {
 	if (emptinessWritten) {
 		return;
 	}
@@ -87,20 +87,20 @@ void TransposedLinedImageHelper::write(const string& filepath) const {
 	}
 }
 
-index TransposedLinedImageHelper::getReserveSize(index size) {
+index TransposedStripedImageHelper::getReserveSize(index size) {
 	constexpr double reserveCoef = 0.5;
 	return static_cast<index>(std::ceil(size * reserveCoef));
 }
 
-array2d_span<TransposedLinedImageHelper::PixelColor> TransposedLinedImageHelper::getCurrentLinesArray() {
+array2d_span<TransposedStripedImageHelper::PixelColor> TransposedStripedImageHelper::getCurrentLinesArray() {
 	return { pixelData.data() + beginningOffset, height, width };
 }
 
-array2d_view<TransposedLinedImageHelper::PixelColor> TransposedLinedImageHelper::getCurrentLinesArray() const {
+array2d_view<TransposedStripedImageHelper::PixelColor> TransposedStripedImageHelper::getCurrentLinesArray() const {
 	return { pixelData.data() + beginningOffset, height, width };
 }
 
-void TransposedLinedImageHelper::incrementStrip() {
+void TransposedStripedImageHelper::incrementStrip() {
 	if (beginningOffset < maxOffset) {
 		beginningOffset++;
 		return;
