@@ -75,16 +75,7 @@ namespace rxtd::audio_analyzer {
 			WaveformValueTransformer(CVT cvt) : cvt(std::move(cvt)) {
 			}
 
-			double apply(double value) {
-				const bool positive = value > 0;
-				value = cvt.apply(std::abs(value));
-
-				if (!positive) {
-					value *= -1;
-				}
-
-				return value;
-			}
+			double apply(double value);
 		};
 
 		index samplesPerSec{ };
@@ -142,15 +133,6 @@ namespace rxtd::audio_analyzer {
 	private:
 		void updateParams();
 
-		void pushStrip(double min, double max) {
-			min = minTransformer.apply(min);
-			max = maxTransformer.apply(max);
-
-			if (std::abs(min) < minDistinguishableValue && std::abs(max) < minDistinguishableValue) {
-				drawer.fillSilence();
-			}
-
-			drawer.fillStrip(min, max);
-		}
+		void pushStrip(double min, double max);
 	};
 }

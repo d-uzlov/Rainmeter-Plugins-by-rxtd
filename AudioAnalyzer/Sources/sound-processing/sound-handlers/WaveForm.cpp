@@ -90,6 +90,17 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& op
 	return params;
 }
 
+double WaveForm::WaveformValueTransformer::apply(double value) {
+	const bool positive = value > 0;
+	value = cvt.apply(std::abs(value));
+
+	if (!positive) {
+		value *= -1;
+	}
+
+	return value;
+}
+
 void WaveForm::setParams(const Params &_params, Channel channel) {
 	if (params == _params) {
 		return;
@@ -148,6 +159,17 @@ void WaveForm::updateParams() {
 	blockSize = index(samplesPerSec * params.resolution / params.supersamplingSize);
 	blockSize = std::max<index>(blockSize, 1);
 	reset();
+}
+
+void WaveForm::pushStrip(double min, double max) {
+	min = minTransformer.apply(min);
+	max = maxTransformer.apply(max);
+
+	if (std::abs(min) < minDistinguishableValue && std::abs(max) < minDistinguishableValue) {
+		drawer.fillSilence();
+	}
+
+	drawer.fillStrip(min, max);
 }
 
 void WaveForm::process(const DataSupplier& dataSupplier) {
