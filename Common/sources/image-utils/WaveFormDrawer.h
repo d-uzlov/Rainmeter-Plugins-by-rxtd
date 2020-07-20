@@ -26,7 +26,6 @@ namespace rxtd::utils {
 		Vector2D<uint32_t> resultBuffer{ };
 		std::vector<float> stripBuffer{ };
 		DiscreetInterpolator interpolator;
-		double gain = 1.0; // TODO remove
 
 		index width{ };
 		index height{ };
@@ -42,10 +41,6 @@ namespace rxtd::utils {
 
 	public:
 		WaveFormDrawer();
-
-		void setGain(double value) {
-			gain = value;
-		}
 
 		void setEdgeAntialiasing(bool value) {
 			edgeAntialiasing = value;

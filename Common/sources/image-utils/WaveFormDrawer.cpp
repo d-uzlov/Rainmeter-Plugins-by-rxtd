@@ -98,9 +98,6 @@ std::pair<double, double> WaveFormDrawer::correctMinMaxPixels(double minPixel, d
 void WaveFormDrawer::fillStripBuffer(double min, double max) {
 	auto& buffer = stripBuffer;
 
-	min *= gain;
-	max *= gain;
-
 	min = std::clamp(min, -1.0, 1.0);
 	max = std::clamp(max, -1.0, 1.0);
 	min = std::min(min, max);

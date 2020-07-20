@@ -36,7 +36,6 @@ namespace rxtd::audio_analyzer {
 			utils::Color waveColor{ };
 			utils::Color lineColor{ };
 			LDP lineDrawingPolicy{ };
-			double gain{ };
 			bool peakAntialiasing{ };
 			bool moving{ };
 			bool fading{ };
@@ -53,7 +52,6 @@ namespace rxtd::audio_analyzer {
 					&& lhs.waveColor == rhs.waveColor
 					&& lhs.lineColor == rhs.lineColor
 					&& lhs.lineDrawingPolicy == rhs.lineDrawingPolicy
-					&& lhs.gain == rhs.gain
 					&& lhs.peakAntialiasing == rhs.peakAntialiasing
 					&& lhs.moving == rhs.moving
 					&& lhs.fading == rhs.fading

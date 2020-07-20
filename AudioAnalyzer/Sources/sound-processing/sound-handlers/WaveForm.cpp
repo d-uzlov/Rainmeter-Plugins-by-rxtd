@@ -73,8 +73,6 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& op
 		params.lineDrawingPolicy = LDP::ALWAYS;
 	}
 
-	params.gain = optionMap.get(L"gain"sv).asFloat(1.0);
-
 	params.peakAntialiasing = optionMap.get(L"peakAntialiasing").asBool(false);
 	params.supersamplingSize = optionMap.get(L"supersamplingSize").asInt(1);
 	if (params.supersamplingSize < 1) {
@@ -85,7 +83,15 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& op
 	params.moving = optionMap.get(L"moving").asBool(true);
 	params.fading = optionMap.get(L"fading").asBool(false);
 
-	params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform"), cl);
+	if (optionMap.has(L"gain"sv)) {
+		cl.warning(L"Using deprecated 'gain' option. Transforms are ignored");
+		auto gain = optionMap.get(L"gain"sv).asFloat(1.0);
+		utils::BufferPrinter printer;
+		printer.print(L"map[0,1][0,{}]", gain);
+		params.transformer = audio_utils::TransformationParser::parse(utils::Option{ printer.getBufferView() }, cl);
+	} else {
+		params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform"), cl);
+	}
 
 	return params;
 }

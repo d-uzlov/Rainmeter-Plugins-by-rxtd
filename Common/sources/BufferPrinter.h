@@ -150,6 +150,11 @@ namespace rxtd::utils {
 			buffer.appendEOL();
 			return buffer.getBuffer();
 		}
+
+		sview getBufferView() {
+			buffer.appendEOL();
+			return buffer.getBuffer();
+		}
 	private:
 
 		template<typename T, typename... Args>
