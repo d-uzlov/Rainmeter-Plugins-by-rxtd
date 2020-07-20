@@ -15,15 +15,13 @@
 #include "DiscreetInterpolator.h"
 #include "image-utils/LinedImageHelper.h"
 #include "image-utils/StripedImage.h"
+#include "image-utils/WaveFormDrawer.h"
+#include "image-utils/ImageWriteHelper.h"
 
 namespace rxtd::audio_analyzer {
 	class WaveForm : public SoundHandler {
+		using LDP = utils::WaveFormDrawer::LineDrawingPolicy;
 	public:
-		enum class LineDrawingPolicy {
-			NEVER,
-			BELOW_WAVE,
-			ALWAYS,
-		};
 
 		struct Params {
 		private:
@@ -36,7 +34,7 @@ namespace rxtd::audio_analyzer {
 			utils::Color backgroundColor{ };
 			utils::Color waveColor{ };
 			utils::Color lineColor{ };
-			LineDrawingPolicy lineDrawingPolicy{ };
+			LDP lineDrawingPolicy{ };
 			double gain{ };
 			bool peakAntialiasing{ };
 			bool moving{ };
@@ -80,12 +78,10 @@ namespace rxtd::audio_analyzer {
 
 		mutable string propString{ };
 
-		utils::StripedImage<float> inflatableImage{ };
-		std::vector<float> stripBuffer{ };
+		utils::WaveFormDrawer drawer{ };
+		utils::ImageWriteHelper writerHelper { };
 
 		string filepath{ };
-
-		utils::DiscreetInterpolator interpolator;
 
 	public:
 		void setParams(const Params& _params, Channel channel);
@@ -119,7 +115,5 @@ namespace rxtd::audio_analyzer {
 
 	private:
 		void updateParams();
-		// void fillLine(array_span<uint32_t> buffer);
-		void fillLine(array_span<utils::Color> buffer);
 	};
 }

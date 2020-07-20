@@ -86,6 +86,9 @@
     <ClCompile Include="sources\image-utils\LinedImageHelper.cpp">
       <Filter>Source Files\image-utils</Filter>
     </ClCompile>
+    <ClCompile Include="sources\image-utils\WaveFormDrawer.cpp">
+      <Filter>Source Files\image-utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sources\BmpWriter.h">
@@ -197,6 +200,9 @@
       <Filter>Source Files\image-utils</Filter>
     </ClInclude>
     <ClInclude Include="sources\image-utils\StripedImage.h">
+      <Filter>Source Files\image-utils</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\image-utils\WaveFormDrawer.h">
       <Filter>Source Files\image-utils</Filter>
     </ClInclude>
   </ItemGroup>

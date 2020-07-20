@@ -64,14 +64,14 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& op
 
 	auto ldpString = optionMap.get(L"lineDrawingPolicy"sv).asIString();
 	if (ldpString.empty() || ldpString == L"always") {
-		params.lineDrawingPolicy = LineDrawingPolicy::ALWAYS;
+		params.lineDrawingPolicy = LDP::ALWAYS;
 	} else if (ldpString == L"belowWave") {
-		params.lineDrawingPolicy = LineDrawingPolicy::BELOW_WAVE;
+		params.lineDrawingPolicy = LDP::BELOW_WAVE;
 	} else if (ldpString == L"never") {
-		params.lineDrawingPolicy = LineDrawingPolicy::NEVER;
+		params.lineDrawingPolicy = LDP::NEVER;
 	} else {
 		cl.warning(L"lineDrawingPolicy '{}' not recognized, assume 'always'", ldpString);
-		params.lineDrawingPolicy = LineDrawingPolicy::ALWAYS;
+		params.lineDrawingPolicy = LDP::ALWAYS;
 	}
 
 	params.gain = optionMap.get(L"gain"sv).asFloat(1.0);
@@ -100,29 +100,10 @@ void WaveForm::setParams(const Params &_params, Channel channel) {
 		return;
 	}
 
-	interpolator = { -1.0, 1.0, 0, _params.height - 1 };
-
-	inflatableImage.setBackground(params.backgroundColor.toInt());
-	inflatableImage.setWidth(_params.width);
-	inflatableImage.setHeight(_params.height);
-	
-	uint32_t color;
-	if (_params.lineDrawingPolicy == LineDrawingPolicy::ALWAYS) {
-		color = params.lineColor.toInt();
-	} else {
-		color = params.waveColor.toInt();
-	}
-
-	// std::vector<uint32_t> defaultStrip;
-	// defaultStrip.resize(_params.height);
-	// std::fill(defaultStrip.begin(), defaultStrip.end(), color);
-	//
-	// const index centerPixel = interpolator.toValueD(0.0);
-	// defaultStrip[centerPixel] = color;
-	//
-	// for (index i = 0; i < _params.width * params.supersamplingSize; ++i) {
-	// 	inflatableImage.pushStrip(defaultStrip);
-	// }
+	drawer.setDimensions(params.width, params.height);
+	drawer.setEdgeAntialiasing(params.peakAntialiasing);
+	drawer.setColors(params.backgroundColor, params.waveColor, params.lineColor);
+	drawer.setLineDrawingPolicy(params.lineDrawingPolicy);
 
 	filepath = params.prefix;
 	filepath += L"wave-";
@@ -163,102 +144,6 @@ void WaveForm::updateParams() {
 	reset();
 }
 
-void WaveForm::fillLine(array_span<utils::Color> buffer) {
-	min *= params.gain;
-	max *= params.gain;
-
-	min = std::clamp(min, -1.0, 1.0);
-	max = std::clamp(max, -1.0, 1.0);
-	min = std::min(min, max);
-	max = std::max(min, max);
-
-	auto minPixel = interpolator.toValue(min);
-	auto maxPixel = interpolator.toValue(max);
-	const auto minMaxDelta = maxPixel - minPixel;
-	if (minMaxDelta < 1) {
-		const auto average = (minPixel + maxPixel) * 0.5;
-		minPixel = average - 0.5;
-		maxPixel = minPixel + 1.0; // max should always be >= min + 1
-
-		const auto minD = interpolator.makeDiscreet(minPixel);
-		const auto minDC = interpolator.makeDiscreetClamped(minPixel);
-		if (minD != minDC) {
-			const double shift = 1.0 - interpolator.percentRelativeToNext(minPixel);
-			minPixel += shift;
-			maxPixel += shift;
-		}
-
-		const auto maxD = interpolator.makeDiscreet(maxPixel);
-		const auto maxDC = interpolator.makeDiscreetClamped(maxPixel);
-		if (maxD != maxDC) {
-			const double shift = -interpolator.percentRelativeToNext(maxPixel);
-			minPixel += shift;
-			maxPixel += shift;
-		}
-	}
-
-	const auto lowBackgroundBound = interpolator.makeDiscreetClamped(minPixel);
-	const auto highBackgroundBound = interpolator.makeDiscreetClamped(maxPixel);
-
-	// [0, lowBackgroundBound) ← background
-	// [lowBackgroundBound, lowBackgroundBound] ← transition
-	// [lowBackgroundBound + 1, highBackgroundBound) ← line
-	// [highBackgroundBound, highBackgroundBound] ← transition
-	// [highBackgroundBound + 1, MAX] ← background
-
-	// Should never really clamp due to minPixel <= maxPixel - 1
-	// Because discreet(maxPixel) and discreet(minPixel) shouldn't clamp after shift above
-	// If (max - min) was already >= 1.0, then also no clamp because discreet(toValue([-1.0, 1.0])) should be within clamp range
-	const auto lowLineBound = interpolator.clamp(lowBackgroundBound + 1);
-	const auto highLineBound = highBackgroundBound;
-
-	for (index i = 0; i < lowBackgroundBound; ++i) {
-		buffer[i] = params.backgroundColor;
-	}
-	for (index i = highBackgroundBound + 1; i < params.height; ++i) {
-		buffer[i] = params.backgroundColor;
-	}
-
-	if (params.lineDrawingPolicy == LineDrawingPolicy::BELOW_WAVE) {
-		const index centerPixel = interpolator.toValueD(0.0);
-		buffer[centerPixel] = params.lineColor;
-	}
-
-	const double lowPercent = interpolator.percentRelativeToNext(minPixel);
-	if (params.peakAntialiasing) {
-		const auto lowTransitionColor = params.backgroundColor * lowPercent + params.waveColor * (1.0 - lowPercent);
-		buffer[lowBackgroundBound] = lowTransitionColor;
-	} else {
-		if (lowPercent < 0.5) {
-			buffer[lowBackgroundBound] = params.waveColor;
-		} else {
-			buffer[lowBackgroundBound] = params.backgroundColor;
-		}
-	}
-
-	for (index i = lowLineBound; i < highLineBound; i++) {
-		buffer[i] = params.waveColor;
-	}
-
-	const double highPercent = interpolator.percentRelativeToNext(maxPixel);
-
-	if (params.peakAntialiasing) {
-		const auto highTransitionColor = params.backgroundColor * (1.0 - highPercent) + params.waveColor * highPercent;
-		buffer[highBackgroundBound] = highTransitionColor;
-	} else {
-		if (highPercent > 0.5) {
-			buffer[highBackgroundBound] = params.waveColor;
-		} else {
-			buffer[highBackgroundBound] = params.backgroundColor;
-		}
-	}
-
-	if (params.lineDrawingPolicy == LineDrawingPolicy::ALWAYS) {
-		const index centerPixel = interpolator.toValueD(0.0);
-		buffer[centerPixel] = params.lineColor;
-	}
-}
-
 void WaveForm::process(const DataSupplier& dataSupplier) {
 	if (blockSize <= 0 || params.width <= 0 || params.height <= 0) {
 		return;
@@ -273,7 +158,11 @@ void WaveForm::process(const DataSupplier& dataSupplier) {
 		max = std::max<double>(max, value);
 		counter++;
 		if (counter >= blockSize) {
-			//dataIsZero ? image.fillNextLineManual() : image.nextLine()
+			if (dataIsZero) {
+				drawer.fillSilence();
+			} else {
+				drawer.fillStrip(min, max);
+			}
 
 			counter = 0;
 			min = 10.0;
@@ -299,7 +188,7 @@ void WaveForm::processSilence(const DataSupplier& dataSupplier) {
 		changed = true;
 
 		if (waveProcessed + blockRemaining <= waveSize) {
-			// fillLine(image.fillNextLineManual());
+			drawer.fillSilence();
 			waveProcessed += blockRemaining;
 			counter = 0;
 			min = 10.0;
@@ -313,6 +202,8 @@ void WaveForm::processSilence(const DataSupplier& dataSupplier) {
 
 void WaveForm::finish(const DataSupplier& dataSupplier) {
 	if (changed) {
+		drawer.inflate();
+		writerHelper.write(drawer.getResultBuffer(), drawer.isEmpty(), filepath);
 		// image.writeTransposed(filepath, params.moving, params.fading);
 		changed = false;
 	}
