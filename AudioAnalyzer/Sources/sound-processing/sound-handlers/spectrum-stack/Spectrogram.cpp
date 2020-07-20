@@ -273,7 +273,7 @@ void Spectrogram::processSilence(const DataSupplier& dataSupplier) {
 
 void Spectrogram::finish(const DataSupplier& dataSupplier) {
 	if (changed) {
-		image.write(filepath);
+		writerHelper.write(image.getPixels(), image.isEmpty(), filepath);
 		changed = false;
 	}
 }

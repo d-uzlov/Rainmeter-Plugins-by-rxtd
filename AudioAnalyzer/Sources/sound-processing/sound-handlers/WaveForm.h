@@ -13,7 +13,8 @@
 #include "option-parser/OptionMap.h"
 #include "RainmeterWrappers.h"
 #include "DiscreetInterpolator.h"
-#include "LinedImageHelper.h"
+#include "image-utils/LinedImageHelper.h"
+#include "image-utils/StripedImageHelper.h"
 
 namespace rxtd::audio_analyzer {
 	class WaveForm : public SoundHandler {
@@ -79,7 +80,9 @@ namespace rxtd::audio_analyzer {
 
 		mutable string propString{ };
 
-		// utils::SupersamplingHelper image { };
+		utils::StripedImageHelper image{ };
+		std::vector<utils::StripedImageHelper::PixelColor> stripBuffer{ };
+
 		string filepath{ };
 
 		utils::DiscreetInterpolator interpolator;

@@ -31,7 +31,7 @@ void utils::ImageTransposer::transposeToBufferSimple(const Vector2D<uint32_t>& i
 	}
 }
 
-void utils::ImageTransposer::transposeToBuffer(const Vector2D<Color>& imageData, index lineOffset, bool withFading, index gradientOffset) {
+void utils::ImageTransposer::transposeToBuffer(const Vector2D<float>& imageData, index lineOffset, bool withFading, index gradientOffset, Color c1, Color c2) {
 	const auto sourceWidth = imageData.getBufferSize();
 	const auto sourceHeight = imageData.getBuffersCount();
 	buffer.setBufferSize(sourceHeight);
@@ -46,7 +46,7 @@ void utils::ImageTransposer::transposeToBuffer(const Vector2D<Color>& imageData,
 		}
 		float amplification = withFading ? interpolator.toValue(gradientAmplification) : 1.0;
 		amplification = 1.0 - (1.0 - amplification) * (1.0 - amplification);
-		transposeLine(sourceY - lineOffset, imageData[sourceY], amplification);
+		transposeLine(sourceY - lineOffset, imageData[sourceY], amplification, c1, c2);
 	}
 
 	for (index sourceY = 0; sourceY < lineOffset; sourceY++) {
@@ -56,7 +56,7 @@ void utils::ImageTransposer::transposeToBuffer(const Vector2D<Color>& imageData,
 		}
 		float amplification = withFading ? interpolator.toValue(gradientAmplification) : 1.0;
 		amplification = 1.0 - (1.0 - amplification) * (1.0 - amplification);
-		transposeLine(sourceY + sourceHeight - lineOffset, imageData[sourceY], amplification);
+		transposeLine(sourceY + sourceHeight - lineOffset, imageData[sourceY], amplification, c1, c2);
 	}
 }
 
@@ -70,9 +70,10 @@ void utils::ImageTransposer::transposeLineSimple(index lineIndex, array_view<uin
 	}
 }
 
-void utils::ImageTransposer::transposeLine(index lineIndex, array_view<Color> lineData, float amplification) {
+void utils::ImageTransposer::transposeLine(index lineIndex, array_view<float> lineData, float amplification, Color c1, Color c2) {
 	for (index x = 0; x < lineData.size(); x++) {
-		Color color = lineData[x] * amplification + backgroundColor * (1.0 - amplification);
+		Color color = Color::mix(lineData[x], c1, c2); // TODO
+		color = Color::mix(amplification, color, backgroundColor);
 		buffer[x][lineIndex] = color.toInt();
 	}
 }

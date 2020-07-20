@@ -26,7 +26,6 @@ namespace rxtd::utils {
 		PixelColor backgroundValue = { };
 		PixelColor lastFillValue = { };
 		index sameStripsCount = 0;
-		mutable bool emptinessWritten = false;
 
 	public:
 		// Must be called before #setDimensions
@@ -46,11 +45,15 @@ namespace rxtd::utils {
 
 		void pushEmptyLine(PixelColor value);
 
+		void pushEmptyStrip(array_view<PixelColor> stripData);
+
 		bool isEmpty() const {
 			return sameStripsCount >= width;
 		}
 
-		void write(const string& filepath) const;
+		array2d_view<PixelColor> getPixels() const {
+			return getCurrentLinesArray();
+		}
 
 	private:
 		static index getReserveSize(index size);

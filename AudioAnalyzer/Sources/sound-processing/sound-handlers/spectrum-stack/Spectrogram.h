@@ -11,7 +11,8 @@
 #include "../SoundHandler.h"
 #include "Color.h"
 #include "RainmeterWrappers.h"
-#include "StripedImageHelper.h"
+#include "image-utils/StripedImageHelper.h"
+#include "image-utils/ImageWriteHelper.h"
 
 namespace rxtd::audio_analyzer {
 	class Spectrogram : public SoundHandler {
@@ -79,6 +80,7 @@ namespace rxtd::audio_analyzer {
 		mutable string propString{ };
 
 		utils::StripedImageHelper image{ };
+		utils::ImageWriteHelper writerHelper{ };
 
 		string filepath{ };
 

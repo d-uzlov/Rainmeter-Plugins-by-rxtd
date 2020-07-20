@@ -156,8 +156,9 @@
     <ClCompile Include="sources\array_view.h" />
     <ClCompile Include="sources\BmpWriter.cpp" />
     <ClCompile Include="sources\BufferPrinter.cpp" />
-    <ClCompile Include="sources\ImageTransposer.cpp" />
-    <ClCompile Include="sources\LinedImageHelper.cpp" />
+    <ClCompile Include="sources\image-utils\ImageTransposer.cpp" />
+    <ClCompile Include="sources\image-utils\LinedImageHelper.cpp" />
+    <ClCompile Include="sources\image-utils\StripedImageHelper.cpp" />
     <ClCompile Include="sources\MathExpressionParser.cpp" />
     <ClCompile Include="sources\option-parser\Option.cpp" />
     <ClCompile Include="sources\option-parser\OptionList.cpp" />
@@ -166,7 +167,6 @@
     <ClCompile Include="sources\option-parser\Tokenizer.cpp" />
     <ClCompile Include="sources\RainmeterWrappers.cpp" />
     <ClCompile Include="sources\StringUtils.cpp" />
-    <ClCompile Include="sources\StripedImageHelper.cpp" />
     <ClCompile Include="sources\TypeHolder.cpp" />
     <ClCompile Include="sources\windows-wrappers\AudioBuffer.cpp" />
     <ClCompile Include="sources\windows-wrappers\FileWrapper.cpp" />
@@ -184,8 +184,10 @@
     <ClInclude Include="sources\CaseInsensitiveString.h" />
     <ClInclude Include="sources\Color.h" />
     <ClInclude Include="sources\DiscreetInterpolator.h" />
-    <ClInclude Include="sources\ImageTransposer.h" />
-    <ClInclude Include="sources\LinedImageHelper.h" />
+    <ClInclude Include="sources\image-utils\ImageTransposer.h" />
+    <ClInclude Include="sources\image-utils\ImageWriteHelper.h" />
+    <ClInclude Include="sources\image-utils\LinedImageHelper.h" />
+    <ClInclude Include="sources\image-utils\StripedImageHelper.h" />
     <ClInclude Include="sources\LinearInterpolator.h" />
     <ClInclude Include="sources\option-parser\AbstractOption.h" />
     <ClInclude Include="sources\option-parser\Option.h" />
@@ -193,7 +195,6 @@
     <ClInclude Include="sources\option-parser\OptionMap.h" />
     <ClInclude Include="sources\option-parser\OptionSequence.h" />
     <ClInclude Include="sources\option-parser\Tokenizer.h" />
-    <ClInclude Include="sources\StripedImageHelper.h" />
     <ClInclude Include="sources\Vector2D.h" />
     <ClInclude Include="sources\FastMath.h" />
     <ClInclude Include="sources\MathExpressionParser.h" />

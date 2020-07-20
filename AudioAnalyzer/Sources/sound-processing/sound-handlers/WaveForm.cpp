@@ -102,24 +102,26 @@ void WaveForm::setParams(const Params &_params, Channel channel) {
 
 	interpolator = { -1.0, 1.0, 0, _params.height - 1 };
 
-	image.setBackground(params.backgroundColor);
-	// yes, width to height, and vice versa — there is no error
-	// image will be transposed later
-	image.setImageWidth(_params.height);
-	image.setImageHeight(_params.width);
-
-	image.setSupersamplingSize(params.supersamplingSize);
-
-	utils::Color color;
+	image.setBackground(params.backgroundColor.toInt());
+	image.setWidth(_params.width);
+	image.setHeight(_params.height);
+	
+	uint32_t color;
 	if (_params.lineDrawingPolicy == LineDrawingPolicy::ALWAYS) {
-		color = params.lineColor;
+		color = params.lineColor.toInt();
 	} else {
-		color = params.waveColor;
+		color = params.waveColor.toInt();
 	}
+
+	std::vector<uint32_t> defaultStrip;
+	defaultStrip.resize(_params.height);
+	std::fill(defaultStrip.begin(), defaultStrip.end(), color);
+
 	const index centerPixel = interpolator.toValueD(0.0);
+	defaultStrip[centerPixel] = color;
+
 	for (index i = 0; i < _params.width * params.supersamplingSize; ++i) {
-		auto line = image.fillNextLineManual();
-		line[centerPixel] = color;
+		image.pushEmptyStrip(defaultStrip);
 	}
 
 	filepath = params.prefix;
@@ -271,7 +273,8 @@ void WaveForm::process(const DataSupplier& dataSupplier) {
 		max = std::max<double>(max, value);
 		counter++;
 		if (counter >= blockSize) {
-			fillLine(dataIsZero ? image.fillNextLineManual() : image.nextLine());
+			//dataIsZero ? image.fillNextLineManual() : image.nextLine()
+
 			counter = 0;
 			min = 10.0;
 			max = -10.0;
@@ -296,7 +299,7 @@ void WaveForm::processSilence(const DataSupplier& dataSupplier) {
 		changed = true;
 
 		if (waveProcessed + blockRemaining <= waveSize) {
-			fillLine(image.fillNextLineManual());
+			// fillLine(image.fillNextLineManual());
 			waveProcessed += blockRemaining;
 			counter = 0;
 			min = 10.0;
@@ -310,7 +313,7 @@ void WaveForm::processSilence(const DataSupplier& dataSupplier) {
 
 void WaveForm::finish(const DataSupplier& dataSupplier) {
 	if (changed) {
-		image.writeTransposed(filepath, params.moving, params.fading);
+		// image.writeTransposed(filepath, params.moving, params.fading);
 		changed = false;
 	}
 }

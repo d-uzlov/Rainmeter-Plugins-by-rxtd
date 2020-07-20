@@ -8,7 +8,6 @@
  */
 
 #include "StripedImageHelper.h"
-#include "BmpWriter.h"
 
 #include "undef.h"
 
@@ -37,12 +36,10 @@ void StripedImageHelper::setDimensions(index width, index height) {
 
 	lastFillValue = backgroundValue;
 	sameStripsCount = imageLines.getBuffersCount();
-	emptinessWritten = false;
 }
 
 void StripedImageHelper::pushStrip(array_view<PixelColor> stripData) {
 	sameStripsCount = 0;
-	emptinessWritten = false;
 
 	incrementStrip();
 
@@ -64,7 +61,6 @@ void StripedImageHelper::pushEmptyLine(PixelColor value) {
 	} else {
 		sameStripsCount++;
 	}
-	emptinessWritten = false;
 
 	incrementStrip();
 
@@ -75,15 +71,23 @@ void StripedImageHelper::pushEmptyLine(PixelColor value) {
 	}
 }
 
-void StripedImageHelper::write(const string& filepath) const {
-	if (emptinessWritten) {
+void StripedImageHelper::pushEmptyStrip(array_view<PixelColor> stripData) {
+	if (sameStripsCount >= width) {
 		return;
 	}
 
-	BmpWriter::writeFile(filepath, getCurrentLinesArray());
+	if (sameStripsCount == 0) {
+		sameStripsCount = 1;
+	} else {
+		sameStripsCount++;
+	}
 
-	if (isEmpty()) {
-		emptinessWritten = true;
+	incrementStrip();
+
+	auto imageLines = getCurrentLinesArray();
+	const index lastStripIndex = width - 1;
+	for (index i = 0; i < stripData.size(); i++) {
+		imageLines[i][lastStripIndex] = stripData[i];
 	}
 }
 

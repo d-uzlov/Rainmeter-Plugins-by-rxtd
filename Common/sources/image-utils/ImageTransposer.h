@@ -21,13 +21,13 @@ namespace rxtd::utils {
 
 		void transposeToBufferSimple(const Vector2D<uint32_t>& imageData, index lineOffset);
 
-		void transposeToBuffer(const Vector2D<Color>& imageData, index lineOffset, bool withFading, index gradientOffset);
+		void transposeToBuffer(const Vector2D<float>& imageData, index lineOffset, bool withFading, index gradientOffset, Color c1, Color c2);
 
 		const Vector2D<uint32_t>& getBuffer() const;
 
 	private:
 		void transposeLineSimple(index lineIndex, array_view<uint32_t> lineData);
 
-		void transposeLine(index lineIndex, array_view<Color> lineData, float amplification);
+		void transposeLine(index lineIndex, array_view<float> lineData, float amplification, Color c1, Color c2);
 	};
 }

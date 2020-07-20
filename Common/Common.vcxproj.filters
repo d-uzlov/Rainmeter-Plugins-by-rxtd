@@ -15,6 +15,9 @@
     <Filter Include="Source Files\option-parser">
       <UniqueIdentifier>{f56a22ca-0b8d-451f-8bdb-b5ebc4f1b7d7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\image-utils">
+      <UniqueIdentifier>{08fa18ac-6900-4055-bbf4-97d851946a26}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\BmpWriter.cpp">
@@ -77,14 +80,14 @@
     <ClCompile Include="sources\option-parser\OptionMap.cpp">
       <Filter>Source Files\option-parser</Filter>
     </ClCompile>
-    <ClCompile Include="sources\LinedImageHelper.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="sources\image-utils\ImageTransposer.cpp">
+      <Filter>Source Files\image-utils</Filter>
     </ClCompile>
-    <ClCompile Include="sources\ImageTransposer.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="sources\image-utils\LinedImageHelper.cpp">
+      <Filter>Source Files\image-utils</Filter>
     </ClCompile>
-    <ClCompile Include="sources\StripedImageHelper.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="sources\image-utils\StripedImageHelper.cpp">
+      <Filter>Source Files\image-utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -178,12 +181,6 @@
     <ClInclude Include="sources\option-parser\OptionMap.h">
       <Filter>Source Files\option-parser</Filter>
     </ClInclude>
-    <ClInclude Include="sources\LinedImageHelper.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\ImageTransposer.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="sources\LinearInterpolator.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -193,8 +190,17 @@
     <ClInclude Include="sources\array2d_view.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="sources\StripedImageHelper.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="sources\image-utils\ImageTransposer.h">
+      <Filter>Source Files\image-utils</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\image-utils\LinedImageHelper.h">
+      <Filter>Source Files\image-utils</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\image-utils\StripedImageHelper.h">
+      <Filter>Source Files\image-utils</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\image-utils\ImageWriteHelper.h">
+      <Filter>Source Files\image-utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
