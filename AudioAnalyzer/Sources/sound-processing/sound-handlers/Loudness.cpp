@@ -23,6 +23,7 @@ void Loudness::_setSamplesPerSec(index samplesPerSec) {
 }
 
 void Loudness::_reset() {
+	counter = 0;
 	intermediateRmsResult = 0.0;
 }
 
@@ -42,7 +43,11 @@ void Loudness::_process(array_view<float> wave, float average) {
 }
 
 void Loudness::finishBlock() {
-	const double value = std::sqrt(intermediateRmsResult / getBlockSize());
+	if (counter == 0) {
+		return;
+	}
+
+	const double value = std::sqrt(intermediateRmsResult / counter);
 	setNextValue(value);
 	counter = 0;
 	intermediateRmsResult = 0.0;

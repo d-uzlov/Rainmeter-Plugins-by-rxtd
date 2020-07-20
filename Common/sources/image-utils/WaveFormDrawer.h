@@ -31,7 +31,7 @@ namespace rxtd::utils {
 		index width{ };
 		index height{ };
 
-		LineDrawingPolicy lineDrawingPolicy { };
+		LineDrawingPolicy lineDrawingPolicy = LineDrawingPolicy::NEVER;
 		bool edgeAntialiasing = false;
 
 		struct {
