@@ -35,6 +35,17 @@ std::optional<BlockHandler::Params> BlockHandler::parseParams(
 
 	params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform"), cl);
 
+	// legacy
+	if (optionMap.has(L"attack") || optionMap.has(L"decay")) {
+		cl.warning(L"Using deprecated 'attack'/'decay' options. Transforms are ignored");
+		const auto attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.0);
+		const auto decayTime = std::max(optionMap.get(L"decay"sv).asFloat(attackTime), 0.0);
+
+		utils::BufferPrinter printer;
+		printer.print(L"filter[{}, {}]", attackTime, decayTime);
+		params.transformer = audio_utils::TransformationParser::parse(utils::Option { printer.getBufferView() }, cl);
+	}
+
 	return params;
 }
 
