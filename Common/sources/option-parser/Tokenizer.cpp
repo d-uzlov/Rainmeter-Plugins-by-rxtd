@@ -100,6 +100,11 @@ std::vector<std::vector<SubstringViewInfo>> Tokenizer::parseSequence(sview view,
 			begin = i;
 		}
 	}
+	if (state == State::eOPTION) {
+		const index end = view.length();
+		emitToken(description, begin, end);
+	}
+
 	if (!description.empty()) {
 		trimSpaces(description, view);
 		result.emplace_back(std::move(description));
