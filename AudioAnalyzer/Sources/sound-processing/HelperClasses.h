@@ -10,6 +10,7 @@
 #pragma once
 #include "Channel.h"
 #include "sound-handlers/SoundHandler.h"
+#include "RainmeterWrappers.h"
 
 namespace rxtd::audio_analyzer {
 	struct ChannelData {
@@ -26,6 +27,7 @@ namespace rxtd::audio_analyzer {
 		mutable std::vector<std::vector<std::byte>> buffers;
 
 	public:
+		mutable utils::Rainmeter::Logger logger;
 		void setWave(array_view<float> wave);
 		void setChannelData(const ChannelData* channelData);
 
@@ -35,6 +37,9 @@ namespace rxtd::audio_analyzer {
 		void resetBuffers();
 		void setWaveSize(index value);
 
+		void log(wchar_t * message) const override {
+			logger.error(message);
+		}
 	protected:
 		const SoundHandler* getHandlerRaw(isview id) const override;
 	};

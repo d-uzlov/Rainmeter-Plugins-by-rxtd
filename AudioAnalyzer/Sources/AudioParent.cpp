@@ -24,6 +24,8 @@ AudioParent::AudioParent(utils::Rainmeter&& rain) :
 		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
 	}
+
+	soundAnalyzer.setLogger(logger);
 }
 
 void AudioParent::_reload() {

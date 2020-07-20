@@ -61,6 +61,7 @@ void SoundAnalyzer::process(array_view<std::byte> frameBuffer, bool isSilent) {
 	}
 
 	dataSupplier.setWaveSize(channelMixer.getResampler().calculateFinalWaveSize(frameBuffer.size()));
+	dataSupplier.logger = logger;
 
 	for (auto& [channel, channelData] : channels) {
 		if (channelData.handlers.empty()) {

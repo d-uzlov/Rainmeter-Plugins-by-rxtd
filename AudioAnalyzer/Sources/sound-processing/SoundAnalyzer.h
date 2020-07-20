@@ -30,8 +30,9 @@ namespace rxtd::audio_analyzer {
 
 		mutable DataSupplierImpl dataSupplier;
 
-	public:
+		utils::Rainmeter::Logger logger;
 
+	public:
 		SoundAnalyzer() noexcept;
 
 		~SoundAnalyzer() = default;
@@ -40,6 +41,10 @@ namespace rxtd::audio_analyzer {
 		SoundAnalyzer(SoundAnalyzer&& other) = delete;
 		SoundAnalyzer& operator=(const SoundAnalyzer& other) = delete;
 		SoundAnalyzer& operator=(SoundAnalyzer&& other) = delete;
+
+		void setLogger(utils::Rainmeter::Logger logger) {
+			this->logger = logger;
+		}
 
 		void setTargetRate(index value) noexcept;
 

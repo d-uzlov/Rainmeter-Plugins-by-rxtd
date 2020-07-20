@@ -173,9 +173,11 @@ void WaveForm::pushStrip(double min, double max) {
 
 	if (std::abs(min) < minDistinguishableValue && std::abs(max) < minDistinguishableValue) {
 		drawer.fillSilence();
+	} else {
+		drawer.fillStrip(min, max);
 	}
 
-	drawer.fillStrip(min, max);
+	changed = true;
 }
 
 void WaveForm::process(const DataSupplier& dataSupplier) {
@@ -195,7 +197,6 @@ void WaveForm::process(const DataSupplier& dataSupplier) {
 			counter = 0;
 			min = 10.0;
 			max = -10.0;
-			changed = true;
 		}
 	}
 }
@@ -213,7 +214,6 @@ void WaveForm::processSilence(const DataSupplier& dataSupplier) {
 		const auto blockRemaining = blockSize - counter;
 		min = std::min<double>(min, 0.0);
 		max = std::max<double>(max, 0.0);
-		changed = true;
 
 		if (waveProcessed + blockRemaining <= waveSize) {
 			pushStrip(min, max);
