@@ -14,7 +14,7 @@
 using namespace audio_analyzer;
 
 
-AudioChildHelper::AudioChildHelper(std::map<Channel, ChannelData>& channels, DataSupplierImpl &dataSupplier) {
+AudioChildHelper::AudioChildHelper(std::map<Channel, ChannelData>& channels, DataSupplierImpl& dataSupplier) {
 	this->channels = &channels;
 	this->dataSupplier = &dataSupplier;
 }
@@ -26,13 +26,13 @@ AudioChildHelper::findHandler(Channel channel, isview handlerId) const {
 		return SearchError::eCHANNEL_NOT_FOUND;
 	}
 
-	const auto &channelData = channelIter->second;
+	const auto& channelData = channelIter->second;
 	const auto iter = channelData.indexMap.find(handlerId);
 	if (iter == channelData.indexMap.end()) {
 		return SearchError::eHANDLER_NOT_FOUND;
 	}
 
-	auto &handler = channelData.handlers[iter->second];
+	auto& handler = channelData.handlers[iter->second];
 	return handler.get();
 }
 
@@ -42,7 +42,7 @@ double AudioChildHelper::getValue(Channel channel, isview handlerId, index index
 		return 0.0;
 	}
 
-	auto &handler = std::get<0>(handlerVariant);
+	auto& handler = std::get<0>(handlerVariant);
 
 	const auto channelDataIter = channels->find(channel);
 	if (channelDataIter == channels->end()) {
@@ -77,6 +77,6 @@ AudioChildHelper::getProp(Channel channel, sview handlerId, sview prop) const {
 		return std::get<1>(handlerVariant);
 	}
 
-	auto &handler = std::get<0>(handlerVariant);
+	auto& handler = std::get<0>(handlerVariant);
 	return handler->getProp(prop % ciView());
 }

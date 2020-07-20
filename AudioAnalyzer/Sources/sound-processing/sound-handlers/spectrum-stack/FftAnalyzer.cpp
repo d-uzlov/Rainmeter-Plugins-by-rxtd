@@ -16,7 +16,7 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-void FftAnalyzer::CascadeData::setParams(FftAnalyzer* parent, CascadeData *successor, layer_t cascadeIndex) {
+void FftAnalyzer::CascadeData::setParams(FftAnalyzer* parent, CascadeData* successor, layer_t cascadeIndex) {
 	this->parent = parent;
 	this->successor = successor;
 
@@ -44,7 +44,7 @@ void FftAnalyzer::CascadeData::setParams(FftAnalyzer* parent, CascadeData *succe
 				index oldIndex = std::clamp<index>(i * coef, 0, values.size() - 1);
 				values[i] = values[oldIndex];
 			}
-			
+
 			values.resize(newValuesSize);
 		}
 
@@ -249,13 +249,17 @@ void FftAnalyzer::CascadeData::reset() {
 	std::fill(values.begin(), values.end(), 0.0f);
 }
 
-FftAnalyzer::Random::Random() : e2(rd()), dist(-1.0, 1.0) { }
+FftAnalyzer::Random::Random() : e2(rd()), dist(-1.0, 1.0) {
+}
 
 double FftAnalyzer::Random::next() {
 	return dist(e2);
 }
 
-std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(const utils::OptionMap &optionMap, utils::Rainmeter::Logger& cl) {
+std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(
+	const utils::OptionMap& optionMap,
+	utils::Rainmeter::Logger& cl
+) {
 	Params params{ };
 	params.attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.0);
 	params.decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.attackTime), 0.0);

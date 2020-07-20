@@ -19,7 +19,7 @@ namespace rxtd::audio_analyzer {
 		virtual ~DataSupplier() = default;
 		virtual array_view<float> getWave() const = 0;
 
-		template<typename T = SoundHandler>
+		template <typename T = SoundHandler>
 		const T* getHandler(isview id) const {
 			return dynamic_cast<const T*>(getHandlerRaw(id));
 		}
@@ -29,7 +29,7 @@ namespace rxtd::audio_analyzer {
 		 * Can be called several times, each time buffer will be different.
 		 * Released automatically after end of process() and processSilent().
 		 */
-		template<typename T>
+		template <typename T>
 		array_span<T> getBuffer(index size) const {
 			return { reinterpret_cast<T*>(getBufferRaw(size * sizeof(T))), size };
 		}

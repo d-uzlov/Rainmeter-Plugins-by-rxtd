@@ -18,7 +18,11 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-std::optional<BandResampler::Params> BandResampler::parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl, utils::Rainmeter &rain) {
+std::optional<BandResampler::Params> BandResampler::parseParams(
+	const utils::OptionMap& optionMap,
+	utils::Rainmeter::Logger& cl,
+	utils::Rainmeter& rain
+) {
 	Params params;
 	params.fftId = optionMap.get(L"source"sv).asIString();
 	if (params.fftId.empty()) {
@@ -71,7 +75,7 @@ void BandResampler::setParams(Params _params, Channel channel) {
 	}
 
 	bandFreqMultipliers.resize(bandsCount);
-	double multipliersSum { };
+	double multipliersSum{ };
 	for (index i = 0; i < bandsCount; ++i) {
 		bandFreqMultipliers[i] = std::log(params.bandFreqs[i + 1] - params.bandFreqs[i] + 1.0);
 		// bandFreqMultipliers[i] = params.bandFreqs[i + 1] - params.bandFreqs[i];
@@ -219,7 +223,7 @@ void BandResampler::updateValues(const DataSupplier& dataSupplier) {
 
 void BandResampler::computeBandInfo(const FftAnalyzer& source, layer_t startCascade, layer_t endCascade) {
 	cascadesInfo.resize(endCascade - startCascade);
-	for (auto &cascadeInfo : cascadesInfo) {
+	for (auto& cascadeInfo : cascadesInfo) {
 		cascadeInfo.setSize(bandsCount);
 	}
 
@@ -227,7 +231,7 @@ void BandResampler::computeBandInfo(const FftAnalyzer& source, layer_t startCasc
 	double binWidth = static_cast<double>(samplesPerSec) / (source.getFftSize() * std::pow(2, startCascade));
 	double binWidthInverse = 1.0 / binWidth;
 
-	for (auto&[_, cascadeWeights] : cascadesInfo) {
+	for (auto& [_, cascadeWeights] : cascadesInfo) {
 		index bin = params.includeDC ? 0 : 1; // bin 0 is ~DC
 		index band = 0;
 
@@ -291,7 +295,7 @@ void BandResampler::sampleData(const FftAnalyzer& source, layer_t startCascade, 
 
 		const auto fftData = source.getData(cascade);
 
-		auto &cascadeMagnitudes = cascadesInfo[cascade - startCascade].magnitudes;
+		auto& cascadeMagnitudes = cascadesInfo[cascade - startCascade].magnitudes;
 		std::fill(cascadeMagnitudes.begin(), cascadeMagnitudes.end(), 0.0f);
 		double value = 0.0;
 
@@ -336,7 +340,7 @@ void BandResampler::sampleData(const FftAnalyzer& source, layer_t startCascade, 
 	}
 
 	if (params.proportionalValues) {
-		for (auto&[cascadeMagnitudes, cascadeWeights] : cascadesInfo) {
+		for (auto& [cascadeMagnitudes, cascadeWeights] : cascadesInfo) {
 			for (index band = 0; band < bandsCount; ++band) {
 				cascadeMagnitudes[band] *= bandFreqMultipliers[band];
 			}
@@ -345,7 +349,9 @@ void BandResampler::sampleData(const FftAnalyzer& source, layer_t startCascade, 
 
 }
 
-std::optional<std::vector<double>> BandResampler::parseFreqList(const utils::OptionList& bounds, utils::Rainmeter::Logger& cl, const utils::Rainmeter &rain) {
+std::optional<std::vector<double>> BandResampler::parseFreqList(const utils::OptionList& bounds,
+                                                                utils::Rainmeter::Logger& cl,
+                                                                const utils::Rainmeter& rain) {
 	std::vector<double> freqs;
 
 	for (auto boundOption : bounds) {
@@ -408,7 +414,8 @@ std::optional<std::vector<double>> BandResampler::parseFreqList(const utils::Opt
 
 	std::sort(freqs.begin(), freqs.end());
 
-	const double threshold = rain.readDouble(L"FreqSimThreshold", 0.07); // 0.07 is a random constant that I feel appropriate
+	const double threshold = rain.readDouble(L"FreqSimThreshold", 0.07);
+	// 0.07 is a random constant that I feel appropriate
 
 	std::vector<double> result;
 	result.reserve(freqs.size());

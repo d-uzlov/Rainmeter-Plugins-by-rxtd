@@ -37,7 +37,4 @@ namespace rxtd::audio_analyzer {
 	public:
 		double getValue(sview id, Channel channel, index index) const;
 	};
-
-
 }
-

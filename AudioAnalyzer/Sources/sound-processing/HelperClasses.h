@@ -18,9 +18,9 @@ namespace rxtd::audio_analyzer {
 	};
 
 	class DataSupplierImpl : public DataSupplier {
-		array_view<float> wave { };
-		const ChannelData *channelData = nullptr;
-		index waveSize { };
+		array_view<float> wave{ };
+		const ChannelData* channelData = nullptr;
+		index waveSize{ };
 
 		mutable index nextBufferIndex = 0;
 		mutable std::vector<std::vector<std::byte>> buffers;

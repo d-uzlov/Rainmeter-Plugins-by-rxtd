@@ -157,7 +157,7 @@ void AudioParent::_resolve(int argc, const wchar_t* argv[], string& resolveBuffe
 			return;
 		}
 		if (deviceProperty == L"type") {
-			switch(deviceManager.getCurrentDeviceType()) {
+			switch (deviceManager.getCurrentDeviceType()) {
 			case utils::MediaDeviceType::eINPUT:
 				resolveBufferString = L"input";
 				return;

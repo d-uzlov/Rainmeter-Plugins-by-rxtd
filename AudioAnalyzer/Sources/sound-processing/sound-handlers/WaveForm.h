@@ -28,21 +28,21 @@ namespace rxtd::audio_analyzer {
 		private:
 			friend WaveForm;
 
-			double resolution { };
-			index width { };
-			index height { };
+			double resolution{ };
+			index width{ };
+			index height{ };
 			string prefix = L".";
-			utils::Color backgroundColor { };
-			utils::Color waveColor { };
-			utils::Color lineColor { };
-			LineDrawingPolicy lineDrawingPolicy { };
-			double gain { };
-			bool peakAntialiasing { };
-			bool moving { };
-			bool fading { };
-			index supersamplingSize { };
+			utils::Color backgroundColor{ };
+			utils::Color waveColor{ };
+			utils::Color lineColor{ };
+			LineDrawingPolicy lineDrawingPolicy{ };
+			double gain{ };
+			bool peakAntialiasing{ };
+			bool moving{ };
+			bool fading{ };
+			index supersamplingSize{ };
 
-			double minDistinguishableValue { };
+			double minDistinguishableValue{ };
 
 			// generated
 			friend bool operator==(const Params& lhs, const Params& rhs) {
@@ -66,28 +66,32 @@ namespace rxtd::audio_analyzer {
 		};
 
 	private:
-		index samplesPerSec { };
+		index samplesPerSec{ };
 
 		Params params;
 
-		index blockSize { };
+		index blockSize{ };
 
 		index counter = 0;
-		double min { };
-		double max { };
+		double min{ };
+		double max{ };
 		bool changed = false;
 
-		mutable string propString { };
+		mutable string propString{ };
 
-		utils::SupersamplingHelper image { };
-		string filepath { };
+		// utils::SupersamplingHelper image { };
+		string filepath{ };
 
 		utils::DiscreetInterpolator interpolator;
 
 	public:
 		void setParams(const Params& _params, Channel channel);
 
-		static std::optional<Params> parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger &cl, const utils::Rainmeter& rain);
+		static std::optional<Params> parseParams(
+			const utils::OptionMap& optionMap,
+			utils::Rainmeter::Logger& cl,
+			const utils::Rainmeter& rain
+		);
 
 		void setSamplesPerSec(index samplesPerSec) override;
 		void reset() override;
@@ -99,11 +103,13 @@ namespace rxtd::audio_analyzer {
 		array_view<float> getData(layer_t layer) const override {
 			return { };
 		}
+
 		layer_t getLayersCount() const override {
 			return 0;
 		}
 
 		const wchar_t* getProp(const isview& prop) const override;
+
 		bool isStandalone() override {
 			return true;
 		}

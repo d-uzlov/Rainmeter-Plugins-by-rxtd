@@ -61,22 +61,22 @@ namespace rxtd::audio_analyzer {
 
 	private:
 		struct CascadeData {
-			FftAnalyzer *parent { };
-			CascadeData *successor { };
+			FftAnalyzer* parent{ };
+			CascadeData* successor{ };
 
 			// double attackDecay[2] { 0.0, 0.0 };
-			audio_utils::LogarithmicIRF filter { };
+			audio_utils::LogarithmicIRF filter{ };
 			std::vector<float> ringBuffer;
 			std::vector<float> values;
-			index filledElements { };
-			index transferredElements { };
+			index filledElements{ };
+			index transferredElements{ };
 			float odd = 10.0f; // 10.0 is used as "no value" because valid values are in [-1.0; 1.0]
-			double dc { };
+			double dc{ };
 			// Fourier transform looses energy due to downsample, so we multiply result of FFT by (2^0.5)^countOfDownsampleIterations
-			double downsampleGain { };
+			double downsampleGain{ };
 
 			void setParams(FftAnalyzer* parent, CascadeData* successor, layer_t ind);
-			void process(const float *wave, index waveSize);
+			void process(const float* wave, index waveSize);
 			void processRandom(index waveSize, double amplitude);
 			void processSilence(index waveSize);
 			void reset();
@@ -86,22 +86,23 @@ namespace rxtd::audio_analyzer {
 			void processResampled(const float* wave, index waveSize);
 		};
 
-		Params params { };
+		Params params{ };
 
-		index samplesPerSec { };
+		index samplesPerSec{ };
 
 		index fftSize = 0;
 		index inputStride = 0;
 
 		index randomBlockSize = 0;
 		index randomCurrentOffset = 0;
-		enum class RandomState { ON, OFF } randomState { RandomState::ON };
 
-		std::vector<CascadeData> cascades { };
+		enum class RandomState { ON, OFF } randomState{ RandomState::ON };
 
-		audio_utils::FFT fft { };
+		std::vector<CascadeData> cascades{ };
 
-		mutable string propString { };
+		audio_utils::FFT fft{ };
+
+		mutable string propString{ };
 
 		class Random {
 			std::random_device rd;
@@ -133,7 +134,9 @@ namespace rxtd::audio_analyzer {
 
 		void process(const DataSupplier& dataSupplier) override;
 		void processSilence(const DataSupplier& dataSupplier) override;
-		void finish(const DataSupplier& dataSupplier) override { }
+
+		void finish(const DataSupplier& dataSupplier) override {
+		}
 
 		layer_t getLayersCount() const override;
 		array_view<float> getData(layer_t layer) const override;

@@ -19,7 +19,10 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-std::optional<BandCascadeTransformer::Params> BandCascadeTransformer::parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl) {
+std::optional<BandCascadeTransformer::Params> BandCascadeTransformer::parseParams(
+	const utils::OptionMap& optionMap,
+	utils::Rainmeter::Logger& cl
+) {
 	Params params;
 	params.sourceId = optionMap.get(L"source"sv).asIString();
 	if (params.sourceId.empty()) {
@@ -27,15 +30,22 @@ std::optional<BandCascadeTransformer::Params> BandCascadeTransformer::parseParam
 		return std::nullopt;
 	}
 
-	params.minWeight = std::max<double>(optionMap.get(L"minWeight"sv).asFloat(0.1), std::numeric_limits<float>::epsilon());
+	params.minWeight = std::max<double>(
+		optionMap.get(L"minWeight"sv).asFloat(0.1),
+		std::numeric_limits<float>::epsilon()
+	);
 	params.targetWeight = std::max<double>(optionMap.get(L"targetWeight"sv).asFloat(2.5), params.minWeight);
 	params.weightFallback = std::clamp(optionMap.get(L"weightFallback"sv).asFloat(0.4), 0.0, 1.0) * params.targetWeight;
 
-	params.zeroLevel = std::max<double>(optionMap.get(L"zeroLevelMultiplier"sv).asFloat(1.0), 0.0) * 0.66
+	params.zeroLevel = std::max<double>(optionMap.get(L"zeroLevelMultiplier"sv).asFloat(1.0), 0.0)
+		* 0.66
 		* std::numeric_limits<float>::epsilon();
 	params.zeroLevelHard = std::clamp<double>(optionMap.get(L"zeroLevelHardMultiplier"sv).asFloat(0.01), 0.0, 1.0)
 		* params.zeroLevel;
-	params.zeroWeight = std::max<double>(optionMap.get(L"zeroWeightMultiplier"sv).asFloat(1.0), std::numeric_limits<float>::epsilon());
+	params.zeroWeight = std::max<double>(
+		optionMap.get(L"zeroWeightMultiplier"sv).asFloat(1.0),
+		std::numeric_limits<float>::epsilon()
+	);
 
 	if (auto mixFunctionString = optionMap.get(L"mixFunction"sv).asIString(L"product");
 		mixFunctionString.empty() || mixFunctionString == L"product") {
@@ -138,7 +148,7 @@ void BandCascadeTransformer::reset() {
 }
 
 void BandCascadeTransformer::updateValues(const SoundHandler& source, const BandResampler& resampler) {
-	
+
 	const index bandsCount = resampler.getData(0).size();
 
 	resultValues.resize(bandsCount);

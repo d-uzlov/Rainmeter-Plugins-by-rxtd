@@ -35,7 +35,8 @@ using namespace audio_analyzer;
 ParamParser::ParamParser(utils::Rainmeter& rain, bool unusedOptionsWarning) :
 	rain(rain),
 	log(rain.getLogger()),
-	unusedOptionsWarning(unusedOptionsWarning) { }
+	unusedOptionsWarning(unusedOptionsWarning) {
+}
 
 void ParamParser::parse() {
 	handlerPatchersMap.clear();
@@ -133,7 +134,9 @@ void ParamParser::cacheHandlers(const utils::OptionList& indices) {
 	for (auto indexOption : indices) {
 
 		auto iter = handlerPatchersMap.lower_bound(indexOption.asIString());
-		if (iter != handlerPatchersMap.end() && !(handlerPatchersMap.key_comp()(indexOption.asIString(), iter->first))) {
+		if (iter != handlerPatchersMap.end()
+			&& !(handlerPatchersMap.key_comp()(indexOption.asIString(), iter->first))
+		) {
 			//key found
 			continue;
 		}
@@ -164,7 +167,10 @@ void ParamParser::cacheHandlers(const utils::OptionList& indices) {
 	}
 }
 
-std::function<SoundHandler*(SoundHandler*, Channel)> ParamParser::parseHandler(const utils::OptionMap& optionMap, utils::Rainmeter::Logger &cl) {
+std::function<SoundHandler*(SoundHandler*, Channel)> ParamParser::parseHandler(
+	const utils::OptionMap& optionMap,
+	utils::Rainmeter::Logger& cl
+) {
 	const auto type = optionMap.get(L"type"sv).asIString();
 
 	if (type.empty()) {

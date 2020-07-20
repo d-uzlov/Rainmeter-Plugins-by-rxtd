@@ -19,11 +19,11 @@ namespace rxtd::audio_analyzer {
 		//   https://github.com/BrechtDeMan/loudness.py/blob/master/loudness.py
 		//   https://hydrogenaud.io/index.php?topic=86116.25
 
-		audio_utils::InfiniteResponseFilter highShelfFilter { };
-		audio_utils::InfiniteResponseFilter highPassFilter { };
+		audio_utils::InfiniteResponseFilter highShelfFilter{ };
+		audio_utils::InfiniteResponseFilter highPassFilter{ };
 
 		double intermediateRmsResult = 0.0;
-		std::vector<float> intermediateWave { };
+		std::vector<float> intermediateWave{ };
 
 	public:
 		void _process(array_view<float> wave, float average) override;

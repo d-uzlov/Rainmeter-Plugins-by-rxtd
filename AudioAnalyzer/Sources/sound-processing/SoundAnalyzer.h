@@ -53,7 +53,7 @@ namespace rxtd::audio_analyzer {
 		 * but usually this is the same handler with updated parameters.
 		 */
 		void setHandlerPatchers(
-			std::map<Channel, std::vector<istring>> handlersOrder, 
+			std::map<Channel, std::vector<istring>> handlersOrder,
 			std::map<istring, std::function<SoundHandler*(SoundHandler*, Channel)>, std::less<>> patchers
 		);
 

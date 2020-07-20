@@ -18,7 +18,7 @@ using namespace std::literals::string_view_literals;
 using namespace audio_analyzer;
 
 const std::vector<double>& UniformBlur::GaussianCoefficientsManager::forRadius(index radius) {
-	auto &vec = blurCoefficients[radius];
+	auto& vec = blurCoefficients[radius];
 	if (!vec.empty()) {
 		return vec;
 	}
@@ -43,14 +43,17 @@ std::vector<double> UniformBlur::GaussianCoefficientsManager::generateGaussianKe
 		r++;
 	}
 	const double sumInverse = 1.0 / sum;
-	for (auto &c : kernel) {
+	for (auto& c : kernel) {
 		c *= sumInverse;
 	}
 
 	return kernel;
 }
 
-std::optional<UniformBlur::Params> UniformBlur::parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl) {
+std::optional<UniformBlur::Params> UniformBlur::parseParams(
+	const utils::OptionMap& optionMap,
+	utils::Rainmeter::Logger& cl
+) {
 	Params params;
 	params.resamplerId = optionMap.get(L"source"sv).asIString();
 	if (params.resamplerId.empty()) {
@@ -145,7 +148,7 @@ void UniformBlur::blurData(const SoundHandler& source) {
 		if (radius < 1) {
 			std::copy(cascadeMagnitudes.begin(), cascadeMagnitudes.end(), cascadeValues.begin());
 		} else {
-			auto &kernel = gcm.forRadius(radius);
+			auto& kernel = gcm.forRadius(radius);
 
 			for (index band = 0; band < bandsCount; ++band) {
 

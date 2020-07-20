@@ -18,7 +18,10 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-std::optional<LogarithmicValueMapper::Params> LogarithmicValueMapper::parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl) {
+std::optional<LogarithmicValueMapper::Params> LogarithmicValueMapper::parseParams(
+	const utils::OptionMap& optionMap,
+	utils::Rainmeter::Logger& cl
+) {
 	Params params;
 	params.sourceId = optionMap.get(L"source"sv).asIString();
 	if (params.sourceId.empty()) {
@@ -26,7 +29,11 @@ std::optional<LogarithmicValueMapper::Params> LogarithmicValueMapper::parseParam
 		return std::nullopt;
 	}
 
-	params.sensitivity = std::clamp<double>(optionMap.get(L"sensitivity"sv).asFloat(35.0), std::numeric_limits<float>::epsilon(), 1000.0);
+	params.sensitivity = std::clamp<double>(
+		optionMap.get(L"sensitivity"sv).asFloat(35.0),
+		std::numeric_limits<float>::epsilon(),
+		1000.0
+	);
 	params.offset = optionMap.get(L"offset"sv).asFloat(0.0);
 
 	return params;

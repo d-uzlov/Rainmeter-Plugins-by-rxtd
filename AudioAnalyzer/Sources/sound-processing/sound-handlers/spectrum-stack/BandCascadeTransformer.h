@@ -18,6 +18,7 @@ namespace rxtd::audio_analyzer {
 			AVERAGE,
 			PRODUCT,
 		};
+
 		struct Params {
 		private:
 			friend BandCascadeTransformer;
@@ -52,23 +53,23 @@ namespace rxtd::audio_analyzer {
 		};
 
 	private:
-		Params params { };
+		Params params{ };
 
-		index samplesPerSec { };
+		index samplesPerSec{ };
 
-		std::vector<float> resultValues { };
+		std::vector<float> resultValues{ };
 
 		bool changed = true;
 		bool valid = false;
 		bool analysisComputed = false;
 
-		mutable string propString { };
+		mutable string propString{ };
 
 		struct {
-			string analysisString { };
+			string analysisString{ };
 			layer_t minCascadeUsed = -1;
 			layer_t maxCascadeUsed = -1;
-			std::vector<layer_t> bandEndCascades { };
+			std::vector<layer_t> bandEndCascades{ };
 			bool weightError = false;
 		} analysis;
 
@@ -90,12 +91,15 @@ namespace rxtd::audio_analyzer {
 		bool isValid() const override {
 			return valid;
 		}
+
 		array_view<float> getData(layer_t layer) const override {
 			return resultValues;
 		}
+
 		layer_t getLayersCount() const override {
 			return 1;
 		}
+
 		layer_t getStartingLayer() const override {
 			return analysis.minCascadeUsed;
 		}

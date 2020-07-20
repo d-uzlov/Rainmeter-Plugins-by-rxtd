@@ -17,7 +17,10 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-std::optional<FiniteTimeFilter::Params> FiniteTimeFilter::parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl) {
+std::optional<FiniteTimeFilter::Params> FiniteTimeFilter::parseParams(
+	const utils::OptionMap& optionMap,
+	utils::Rainmeter::Logger& cl
+) {
 	Params params;
 	params.sourceId = optionMap.get(L"source"sv).asIString();
 	if (params.sourceId.empty()) {
@@ -65,15 +68,13 @@ void FiniteTimeFilter::setParams(Params _params, Channel channel) {
 			smoothingNormConstant = 1.0 / params.smoothingFactor;
 			break;
 
-		case SmoothingCurve::LINEAR:
-		{
+		case SmoothingCurve::LINEAR: {
 			const index smoothingWeight = params.smoothingFactor * (params.smoothingFactor + 1) / 2;
 			smoothingNormConstant = 1.0 / smoothingWeight;
 			break;
 		}
 
-		case SmoothingCurve::EXPONENTIAL:
-		{
+		case SmoothingCurve::EXPONENTIAL: {
 			double smoothingWeight = 0;
 			double weight = 1;
 
@@ -169,7 +170,7 @@ void FiniteTimeFilter::reset() {
 
 void FiniteTimeFilter::copyValues() {
 	const auto layersCount = source->getLayersCount();
-	
+
 	pastValuesIndex++;
 	if (pastValuesIndex >= params.smoothingFactor) {
 		pastValuesIndex = 0;
@@ -191,7 +192,7 @@ void FiniteTimeFilter::applyTimeFiltering() {
 
 	const auto layersCount = source->getLayersCount();
 	for (index layer = 0; layer < layersCount; ++layer) {
-		auto &currentPastValues = pastValues[layer];
+		auto& currentPastValues = pastValues[layer];
 		auto currentValues = values[layer];
 
 		switch (params.smoothingCurve) {

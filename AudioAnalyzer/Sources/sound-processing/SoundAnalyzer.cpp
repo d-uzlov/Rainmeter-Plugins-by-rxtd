@@ -25,8 +25,10 @@ AudioChildHelper SoundAnalyzer::getAudioChildHelper() const {
 	return audioChildHelper;
 }
 
-void SoundAnalyzer::setHandlerPatchers(std::map<Channel, std::vector<istring>> handlersOrder,
-	std::map<istring, std::function<SoundHandler*(SoundHandler*, Channel)>, std::less<>> patchers) {
+void SoundAnalyzer::setHandlerPatchers(
+	std::map<Channel, std::vector<istring>> handlersOrder,
+	std::map<istring, std::function<SoundHandler*(SoundHandler*, Channel)>, std::less<>> patchers
+) {
 
 	this->patchers = std::move(patchers);
 	this->orderOfHandlers = std::move(handlersOrder);
@@ -60,7 +62,7 @@ void SoundAnalyzer::process(array_view<std::byte> frameBuffer, bool isSilent) {
 
 	dataSupplier.setWaveSize(channelMixer.getResampler().calculateFinalWaveSize(frameBuffer.size()));
 
-	for (auto &[channel, channelData] : channels) {
+	for (auto& [channel, channelData] : channels) {
 		if (channelData.handlers.empty()) {
 			continue;
 		}
@@ -90,7 +92,7 @@ void SoundAnalyzer::resetValues() noexcept {
 }
 
 void SoundAnalyzer::finishStandalone() noexcept {
-	for (auto &[channel, channelData] : channels) {
+	for (auto& [channel, channelData] : channels) {
 		for (auto& handler : channelData.handlers) {
 			if (handler->isStandalone()) {
 				handler->finish(dataSupplier);
@@ -102,8 +104,8 @@ void SoundAnalyzer::finishStandalone() noexcept {
 void SoundAnalyzer::updateSampleRate() noexcept {
 	const auto sampleRate = channelMixer.getResampler().getSampleRate();
 
-	for (auto & [channel, channelData] : channels) {
-		for (auto &handler : channelData.handlers) {
+	for (auto& [channel, channelData] : channels) {
+		for (auto& handler : channelData.handlers) {
 			handler->setSamplesPerSec(sampleRate);
 		}
 	}
@@ -112,7 +114,7 @@ void SoundAnalyzer::updateSampleRate() noexcept {
 void SoundAnalyzer::removeNonexistentChannelsFromMap(MyWaveFormat waveFormat) {
 	std::vector<Channel> toDelete;
 
-	for (const auto &channelIter : channels) {
+	for (const auto& channelIter : channels) {
 		Channel c = channelIter.first;
 
 		if (c == Channel::eAUTO) {
@@ -130,7 +132,7 @@ void SoundAnalyzer::removeNonexistentChannelsFromMap(MyWaveFormat waveFormat) {
 }
 
 void SoundAnalyzer::patchHandlers() {
-	for (auto &[channel, channelData] : channels) {
+	for (auto& [channel, channelData] : channels) {
 		auto orderListIter = orderOfHandlers.find(channel);
 		if (orderListIter == orderOfHandlers.end()) {
 			// this channel doesn't have any handlers
@@ -145,7 +147,7 @@ void SoundAnalyzer::patchHandlers() {
 		auto& orderList = orderListIter->second;
 		index index = 0;
 
-		for (auto &handlerName : orderList) {
+		for (auto& handlerName : orderList) {
 			auto patcherIter = patchers.find(handlerName);
 			if (patcherIter == patchers.end()) {
 				continue;
@@ -158,7 +160,7 @@ void SoundAnalyzer::patchHandlers() {
 			if (handlerIndexIter == channelData.indexMap.end()) {
 				handler = std::unique_ptr<SoundHandler>(patcher(nullptr, channel));
 			} else {
-				std::unique_ptr<SoundHandler> &oldHandler = channelData.handlers[handlerIndexIter->second];
+				std::unique_ptr<SoundHandler>& oldHandler = channelData.handlers[handlerIndexIter->second];
 				SoundHandler* res = patcher(oldHandler.get(), channel);
 				if (res != oldHandler.get()) {
 					oldHandler.reset();

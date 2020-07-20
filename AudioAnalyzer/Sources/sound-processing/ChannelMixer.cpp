@@ -42,16 +42,17 @@ void ChannelMixer::decomposeFramesIntoChannels(array_view<std::byte> frameBuffer
 
 	if (waveFormat.format == utils::WaveDataFormat::ePCM_F32) {
 		const auto bufferFloat = reinterpret_cast<const float*>(frameBuffer.data());
-		
+
 		for (auto channel : waveFormat.channelLayout) {
 			channels[channel].resampled = false;
-			auto &waveBuffer = channels[channel].wave;
+			auto& waveBuffer = channels[channel].wave;
 			waveBuffer.resize(framesCount);
 			auto bufferTemp = bufferFloat + waveFormat.channelLayout.indexOf(channel).value();
 
 			for (index frame = 0; frame < framesCount; ++frame) {
 				const auto value = *bufferTemp;
-				constexpr float correctingCoef = 1.0 / 0.985047; // I just can't get absolute values of a wave above 0.985047
+				constexpr float correctingCoef = 1.0 / 0.985047;
+				// I just can't get absolute values of a wave above 0.985047
 				waveBuffer[frame] = value * correctingCoef;
 				bufferTemp += channelsCount;
 			}
@@ -61,7 +62,7 @@ void ChannelMixer::decomposeFramesIntoChannels(array_view<std::byte> frameBuffer
 
 		for (auto channel : waveFormat.channelLayout) {
 			channels[channel].resampled = false;
-			auto &waveBuffer = channels[channel].wave;
+			auto& waveBuffer = channels[channel].wave;
 			waveBuffer.resize(framesCount);
 			auto bufferTemp = bufferInt + waveFormat.channelLayout.indexOf(channel).value();
 

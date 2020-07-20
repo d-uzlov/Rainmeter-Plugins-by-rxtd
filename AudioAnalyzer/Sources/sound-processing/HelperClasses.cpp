@@ -17,7 +17,7 @@ void DataSupplierImpl::setWave(array_view<float> wave) {
 	this->wave = wave;
 }
 
-void DataSupplierImpl::setChannelData(const ChannelData *channelData) {
+void DataSupplierImpl::setChannelData(const ChannelData* channelData) {
 	this->channelData = channelData;
 }
 
@@ -44,7 +44,7 @@ std::byte* DataSupplierImpl::getBufferRaw(index size) const {
 	if (nextBufferIndex >= index(buffers.size())) {
 		buffers.emplace_back();
 	}
-	auto &buffer = buffers[nextBufferIndex];
+	auto& buffer = buffers[nextBufferIndex];
 	nextBufferIndex++;
 	buffer.resize(size);
 	return buffer.data();

@@ -70,4 +70,3 @@ PLUGIN_EXPORT void ExecuteBang(void* data, const wchar_t* args) {
 PLUGIN_EXPORT const wchar_t* resolve(void* data, const int argc, const wchar_t* argv[]) {
 	return static_cast<utils::TypeHolder*>(data)->resolve(argc, argv);
 }
-

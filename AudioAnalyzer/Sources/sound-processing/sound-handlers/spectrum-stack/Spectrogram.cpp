@@ -48,9 +48,13 @@ void Spectrogram::setParams(const Params& _params, Channel channel) {
 	updateParams();
 }
 
-std::optional<Spectrogram::Params> Spectrogram::parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl, const utils::Rainmeter& rain) {
+std::optional<Spectrogram::Params> Spectrogram::parseParams(
+	const utils::OptionMap& optionMap,
+	utils::Rainmeter::Logger& cl,
+	const utils::Rainmeter& rain
+) {
 	Params params;
-	
+
 	params.sourceName = optionMap.get(L"source"sv).asIString();
 	if (params.sourceName.empty()) {
 		cl.error(L"source not found");
@@ -70,11 +74,11 @@ std::optional<Spectrogram::Params> Spectrogram::parseParams(const utils::OptionM
 	}
 	params.resolution *= 0.001;
 
-	string folder { optionMap.get(L"folder"sv).asString() };
+	string folder{ optionMap.get(L"folder"sv).asString() };
 	if (!folder.empty() && folder[0] == L'\"') {
 		folder = folder.substr(1);
 	}
-	std::filesystem::path path { folder };
+	std::filesystem::path path{ folder };
 	if (!path.is_absolute()) {
 		folder = rain.replaceVariables(L"[#CURRENTPATH]") % own() + folder;
 	}
@@ -112,7 +116,7 @@ std::optional<Spectrogram::Params> Spectrogram::parseParams(const utils::OptionM
 			}
 
 			params.colorLevels.push_back(value);
-			params.colors.push_back(Params::ColorDescription { 0.0, colorOpt.asColor() });
+			params.colors.push_back(Params::ColorDescription{ 0.0, colorOpt.asColor() });
 			if (i > 0) {
 				params.colors[i - 1].widthInverted = 1.0 / (value - prevValue);
 			}
@@ -173,7 +177,7 @@ void Spectrogram::updateParams() {
 
 void Spectrogram::fillStrip(array_view<float> data) {
 	auto& strip = stripBuffer;
-	utils::LinearInterpolator interpolator { params.colorMinValue, params.colorMaxValue, 0.0, 1.0 };
+	utils::LinearInterpolator interpolator{ params.colorMinValue, params.colorMaxValue, 0.0, 1.0 };
 
 	for (index i = 0; i < index(strip.size()); ++i) {
 		double value = data[i];
@@ -236,7 +240,11 @@ void Spectrogram::process(const DataSupplier& dataSupplier) {
 	image.setHeight(dataSize);
 	stripBuffer.resize(dataSize);
 
-	const bool dataIsZero = std::all_of(data.data(), data.data() + dataSize, [=](auto x) { return x < params.colorMinValue; });
+	const bool dataIsZero = std::all_of(
+		data.data(),
+		data.data() + dataSize,
+		[=](auto x) { return x < params.colorMinValue; }
+	);
 
 	while (counter >= blockSize) {
 		changed = true;
@@ -244,9 +252,11 @@ void Spectrogram::process(const DataSupplier& dataSupplier) {
 		if (dataIsZero) {
 			image.pushEmptyLine(params.baseColor.toInt());
 		} else {
-			if (params.colors.empty()) { // only use 2 colors
+			if (params.colors.empty()) {
+				// only use 2 colors
 				fillStrip(data);
-			} else { // many colors, but slightly slower
+			} else {
+				// many colors, but slightly slower
 				fillStripMulticolor(data);
 			}
 

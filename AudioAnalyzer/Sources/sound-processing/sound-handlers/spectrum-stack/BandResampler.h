@@ -13,6 +13,7 @@
 
 namespace rxtd::audio_analyzer {
 	class BandResampler;
+
 	class ResamplerProvider : public SoundHandler {
 	public:
 		virtual const BandResampler* getResampler() const = 0;
@@ -59,25 +60,29 @@ namespace rxtd::audio_analyzer {
 			}
 		};
 
-		Params params { };
+		Params params{ };
 
-		index samplesPerSec { };
+		index samplesPerSec{ };
 
-		std::vector<double> bandFreqMultipliers { };
+		std::vector<double> bandFreqMultipliers{ };
 		layer_t beginCascade = 0;
 		layer_t endCascade = 0;
 		index bandsCount = 0;
 
-		std::vector<CascadeInfo> cascadesInfo { };
+		std::vector<CascadeInfo> cascadesInfo{ };
 
 		bool changed = true;
 		bool valid = false;
 
-		mutable string propString { };
+		mutable string propString{ };
 
 
 	public:
-		static std::optional<Params> parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl, utils::Rainmeter& rain);
+		static std::optional<Params> parseParams(
+			const utils::OptionMap& optionMap,
+			utils::Rainmeter::Logger& cl,
+			utils::Rainmeter& rain
+		);
 
 		void setParams(Params _params, Channel channel);
 
@@ -92,6 +97,7 @@ namespace rxtd::audio_analyzer {
 		bool isValid() const override {
 			return valid;
 		}
+
 		array_view<float> getData(layer_t layer) const override;
 		layer_t getLayersCount() const override;
 
@@ -100,9 +106,11 @@ namespace rxtd::audio_analyzer {
 		const BandResampler* getResampler() const override {
 			return this;
 		}
+
 		layer_t getStartingLayer() const override {
 			return beginCascade;
 		}
+
 		layer_t getEndCascade() const {
 			return endCascade;
 		}
@@ -115,6 +123,8 @@ namespace rxtd::audio_analyzer {
 		void computeBandInfo(const FftAnalyzer& source, layer_t startCascade, layer_t endCascade);
 		void sampleData(const FftAnalyzer& source, layer_t startCascade, layer_t endCascade);
 
-		static std::optional<std::vector<double>> parseFreqList(const utils::OptionList& bounds, utils::Rainmeter::Logger& cl, const utils::Rainmeter& rain);
+		static std::optional<std::vector<double>> parseFreqList(const utils::OptionList& bounds,
+		                                                        utils::Rainmeter::Logger& cl,
+		                                                        const utils::Rainmeter& rain);
 	};
 }

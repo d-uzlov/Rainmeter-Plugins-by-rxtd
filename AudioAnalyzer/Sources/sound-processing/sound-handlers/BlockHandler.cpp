@@ -22,8 +22,10 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-std::optional<BlockHandler::Params> BlockHandler::parseParams(const utils::OptionMap& optionMap,
-                                                              utils::Rainmeter::Logger& cl) {
+std::optional<BlockHandler::Params> BlockHandler::parseParams(
+	const utils::OptionMap& optionMap,
+	utils::Rainmeter::Logger& cl
+) {
 	Params params;
 
 	params.resolution = optionMap.get(L"resolution"sv).asFloat(1000.0 / 60.0);
@@ -107,7 +109,7 @@ void BlockHandler::setParams(Params params, Channel channel) {
 	recalculateConstants();
 
 	if (this->params.transformations.empty()) {
-		auto transformSequence = utils::Option { getDefaultTransform() }.asSequence();
+		auto transformSequence = utils::Option{ getDefaultTransform() }.asSequence();
 		for (auto list : transformSequence) {
 			utils::Rainmeter::Logger dummyLogger;
 			auto transformOpt = parseTransformation(list, dummyLogger);
@@ -155,9 +157,10 @@ void BlockHandler::process(const DataSupplier& dataSupplier) {
 	_process(wave, mean);
 }
 
-std::optional<BlockHandler::Transformation> BlockHandler::parseTransformation(utils::OptionList list, utils::Rainmeter::Logger &cl) {
+std::optional<BlockHandler::Transformation> BlockHandler::parseTransformation(
+	utils::OptionList list, utils::Rainmeter::Logger& cl) {
 	const auto transformName = list.get(0).asIString();
-	Transformation tr { };
+	Transformation tr{ };
 	index paramCount;
 	if (transformName == L"filter") {
 		tr.type = TransformType::eFILTER;
@@ -201,7 +204,7 @@ void BlockHandler::updateTransformations() {
 		switch (transform.type) {
 		case TransformType::eFILTER: {
 			if (transform.state == nullptr) {
-				transform.state = new audio_utils::LogarithmicIRF { };
+				transform.state = new audio_utils::LogarithmicIRF{ };
 			}
 			auto& filter = *static_cast<audio_utils::LogarithmicIRF*>(transform.state);
 			filter.setParams(transform.args[0] * 0.001, transform.args[1] * 0.001, samplesPerSec, blockSize);
@@ -210,7 +213,7 @@ void BlockHandler::updateTransformations() {
 		case TransformType::eDB: break;
 		case TransformType::eMAP: {
 			if (transform.state == nullptr) {
-				transform.state = new utils::LinearInterpolator { };
+				transform.state = new utils::LinearInterpolator{ };
 			}
 			auto& interpolator = *static_cast<utils::LinearInterpolator*>(transform.state);
 

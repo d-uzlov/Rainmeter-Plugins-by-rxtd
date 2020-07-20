@@ -33,8 +33,8 @@ namespace rxtd::audio_analyzer {
 	private:
 		struct CascadeInfo {
 			struct BandInfo {
-				float weight { };
-				float blurSigma { };
+				float weight{ };
+				float blurSigma{ };
 			};
 
 			std::vector<float> magnitudes;
@@ -50,8 +50,8 @@ namespace rxtd::audio_analyzer {
 			// radius -> coefs vector
 			std::unordered_map<index, std::vector<double>> blurCoefficients;
 
-			index minRadius { };
-			index maxRadius { };
+			index minRadius{ };
+			index maxRadius{ };
 
 		public:
 			const std::vector<double>& forSigma(double sigma);
@@ -61,11 +61,12 @@ namespace rxtd::audio_analyzer {
 		private:
 			static std::vector<double> generateGaussianKernel(index radius);
 		};
+
 		GaussianCoefficientsManager gcm;
 
-		Params params { };
+		Params params{ };
 
-		index samplesPerSec { };
+		index samplesPerSec{ };
 
 		const ResamplerProvider* source = nullptr;
 		std::vector<std::vector<float>> blurredValues;
@@ -73,7 +74,7 @@ namespace rxtd::audio_analyzer {
 		bool changed = true;
 		bool valid = false;
 
-		mutable string propString { };
+		mutable string propString{ };
 
 	public:
 
@@ -92,6 +93,7 @@ namespace rxtd::audio_analyzer {
 		bool isValid() const override {
 			return valid;
 		}
+
 		array_view<float> getData(layer_t layer) const override;
 		layer_t getLayersCount() const override;
 

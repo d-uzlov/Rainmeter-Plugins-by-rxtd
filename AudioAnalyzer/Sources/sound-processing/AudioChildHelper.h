@@ -19,18 +19,17 @@ namespace rxtd::audio_analyzer {
 			eCHANNEL_NOT_FOUND,
 			eHANDLER_NOT_FOUND,
 		};
-	private:
 
-		std::map<Channel, ChannelData> *channels;
-		DataSupplierImpl *dataSupplier;
+	private:
+		std::map<Channel, ChannelData>* channels;
+		DataSupplierImpl* dataSupplier;
 
 	public:
-		explicit AudioChildHelper(std::map<Channel, ChannelData>& channels, DataSupplierImpl &dataSupplier);
+		explicit AudioChildHelper(std::map<Channel, ChannelData>& channels, DataSupplierImpl& dataSupplier);
 
 		std::variant<SoundHandler*, SearchError> findHandler(Channel channel, isview handlerId) const;
 		double getValue(Channel channel, isview handlerId, index index) const;
 		std::variant<const wchar_t*, SearchError> getProp(Channel channel, sview handlerId, sview prop) const;
-	private:
 	};
 
 }

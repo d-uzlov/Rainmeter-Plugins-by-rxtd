@@ -25,18 +25,18 @@ namespace rxtd::audio_analyzer {
 		};
 
 	private:
-		Params params { };
+		Params params{ };
 
-		index samplesPerSec { };
+		index samplesPerSec{ };
 
-		double logNormalization { };
+		double logNormalization{ };
 
 		std::vector<std::vector<float>> resultValues;
 
 		bool changed = true;
 		bool valid = false;
 
-		mutable string propString { };
+		mutable string propString{ };
 
 	public:
 
@@ -55,12 +55,15 @@ namespace rxtd::audio_analyzer {
 		bool isValid() const override {
 			return valid;
 		}
+
 		array_view<float> getData(layer_t layer) const override {
 			return resultValues[layer];
 		}
+
 		layer_t getLayersCount() const override {
 			return layer_t(resultValues.size());
 		}
+
 		const wchar_t* getProp(const isview& prop) const override;
 
 	private:

@@ -20,7 +20,7 @@ using namespace audio_analyzer;
 const std::vector<double>& WeightedBlur::GaussianCoefficientsManager::forSigma(double sigma) {
 	const auto radius = std::clamp<index>(std::lround(sigma * 3.0), minRadius, maxRadius);
 
-	auto &vec = blurCoefficients[radius];
+	auto& vec = blurCoefficients[radius];
 	if (!vec.empty()) {
 		return vec;
 	}
@@ -30,7 +30,7 @@ const std::vector<double>& WeightedBlur::GaussianCoefficientsManager::forSigma(d
 }
 
 const std::vector<double>& WeightedBlur::GaussianCoefficientsManager::forMaximumRadius() {
-	auto &vec = blurCoefficients[maxRadius];
+	auto& vec = blurCoefficients[maxRadius];
 	if (!vec.empty()) {
 		return vec;
 	}
@@ -60,14 +60,17 @@ std::vector<double> WeightedBlur::GaussianCoefficientsManager::generateGaussianK
 		r++;
 	}
 	const double sumInverse = 1.0 / sum;
-	for (auto &c : kernel) {
+	for (auto& c : kernel) {
 		c *= sumInverse;
 	}
 
 	return kernel;
 }
 
-std::optional<WeightedBlur::Params> WeightedBlur::parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl) {
+std::optional<WeightedBlur::Params> WeightedBlur::parseParams(
+	const utils::OptionMap& optionMap,
+	utils::Rainmeter::Logger& cl
+) {
 	Params params;
 	params.sourceId = optionMap.get(L"source"sv).asIString();
 	if (params.sourceId.empty()) {
@@ -82,7 +85,8 @@ std::optional<WeightedBlur::Params> WeightedBlur::parseParams(const utils::Optio
 	params.maxRadius = std::max<double>(optionMap.get(L"maxRadius"sv).asFloat(20.0), params.minRadius);
 
 	params.minRadiusAdaptation = std::max<double>(optionMap.get(L"MinRadiusAdaptation"sv).asFloat(2.0), 0.0);
-	params.maxRadiusAdaptation = std::max<double>(optionMap.get(L"MaxRadiusAdaptation"sv).asFloat(params.minRadiusAdaptation), 0.0);
+	params.maxRadiusAdaptation = std::max<double>(
+		optionMap.get(L"MaxRadiusAdaptation"sv).asFloat(params.minRadiusAdaptation), 0.0);
 
 	// params.minWeight = std::max<double>(optionMap.get(L"minWeight"sv).asFloat(0), std::numeric_limits<float>::epsilon());
 	params.minWeight = 0.0; // doesn't work as expected
@@ -165,13 +169,16 @@ void WeightedBlur::blurData(const BandResampler& resampler) {
 		const auto cascadeWeights = resampler.getBandWeights(cascade);
 		const auto bandsCount = cascadeMagnitudes.size();
 
-		gcm.setRadiusBounds(std::min<index>(std::lround(minRadius), bandsCount), std::min<index>(std::lround(maxRadius), bandsCount));
+		gcm.setRadiusBounds(std::min<index>(std::lround(minRadius), bandsCount),
+		                    std::min<index>(std::lround(maxRadius), bandsCount));
 		auto& cascadeValues = blurredValues[cascade];
 		cascadeValues.resize(bandsCount);
 
 		for (index band = 0; band < bandsCount; ++band) {
 			const auto weight = cascadeWeights[band];
-			auto &kernel = weight > std::numeric_limits<float>::epsilon() ? gcm.forSigma(params.radiusMultiplier / weight) : gcm.forMaximumRadius();
+			auto& kernel = weight > std::numeric_limits<float>::epsilon()
+				               ? gcm.forSigma(params.radiusMultiplier / weight)
+				               : gcm.forMaximumRadius();
 			if (kernel.size() < 2) {
 				cascadeValues[band] = cascadeMagnitudes[band];
 				continue;
@@ -194,7 +201,8 @@ void WeightedBlur::blurData(const BandResampler& resampler) {
 				if (bandIndex >= bandsCount || kernelIndex >= index(kernel.size())) {
 					break;
 				}
-				result += (cascadeWeights[bandIndex] > params.minWeight ? 1.0 : 0.0) * kernel[kernelIndex] * cascadeMagnitudes[bandIndex];
+				result += (cascadeWeights[bandIndex] > params.minWeight ? 1.0 : 0.0) * kernel[kernelIndex] *
+					cascadeMagnitudes[bandIndex];
 
 				kernelIndex++;
 				bandIndex++;
