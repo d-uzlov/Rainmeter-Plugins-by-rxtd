@@ -75,7 +75,7 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& op
 
 	params.peakAntialiasing = optionMap.get(L"peakAntialiasing").asBool(false);
 
-	params.moving = optionMap.get(L"moving").asBool(true);
+	params.stationary = optionMap.get(L"Stationary").asBool(false);
 	params.fading = optionMap.get(L"fading").asBool(false);
 
 	params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform"), cl);
@@ -128,6 +128,7 @@ void WaveForm::setParams(const Params &_params, Channel channel) {
 	drawer.setEdgeAntialiasing(params.peakAntialiasing);
 	drawer.setColors(params.backgroundColor, params.waveColor, params.lineColor);
 	drawer.setLineDrawingPolicy(params.lineDrawingPolicy);
+	drawer.setStationary(params.stationary);
 
 	filepath = params.prefix;
 	filepath += L"wave-";

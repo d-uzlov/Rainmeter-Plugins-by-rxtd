@@ -18,7 +18,7 @@ namespace rxtd::utils {
 		using PixelValueType = PIXEL_VALUE_TYPE;
 
 	protected:
-		std::vector<PixelValueType> pixelData { };
+		std::vector<PixelValueType> pixelData{ };
 		index width = 0;
 		index height = 0;
 		index beginningOffset = 0;
@@ -27,11 +27,17 @@ namespace rxtd::utils {
 		PixelValueType backgroundValue = { };
 		PixelValueType lastFillValue = { };
 		index sameStripsCount = 0;
+		bool stationary = false;
+		index stationaryOffset = 0;
 
 	public:
 		// Must be called before #setDimensions
 		void setBackground(PixelValueType value) {
 			backgroundValue = value;
+		}
+
+		void setStationary(bool value) {
+			stationary = value;
 		}
 
 		void setDimensions(index width, index height) {
@@ -66,12 +72,10 @@ namespace rxtd::utils {
 		void pushStrip(array_view<PixelValueType> stripData) {
 			sameStripsCount = 0;
 
-			incrementStrip();
-
-			auto imageLines = getCurrentLinesArray();
-			const index lastStripIndex = width - 1;
+			index nextStripIndex = incrementAndGetIndex();
+			auto imageLines = getCurrentLinesArray(); // must be after #incrementAndGetIndex
 			for (index i = 0; i < stripData.size(); i++) {
-				imageLines[i][lastStripIndex] = stripData[i];
+				imageLines[i][nextStripIndex] = stripData[i];
 			}
 		}
 
@@ -87,12 +91,10 @@ namespace rxtd::utils {
 				sameStripsCount++;
 			}
 
-			incrementStrip();
-
-			auto imageLines = getCurrentLinesArray();
-			const index lastStripIndex = width - 1;
+			index nextStripIndex = incrementAndGetIndex();
+			auto imageLines = getCurrentLinesArray(); // must be after #incrementAndGetIndex
 			for (index i = 0; i < height; i++) {
-				imageLines[i][lastStripIndex] = value;
+				imageLines[i][nextStripIndex] = value;
 			}
 		}
 
@@ -105,7 +107,23 @@ namespace rxtd::utils {
 		}
 
 	private:
-		static index getReserveSize(index size) {
+		// returns index of next string to write to
+		index incrementAndGetIndex() {
+			if (stationary) {
+				const index resultIndex = stationaryOffset;
+				incrementStationary();
+				return resultIndex;
+			}
+
+			incrementStrip();
+			return width - 1;
+		}
+
+		index getReserveSize(index size) const {
+			if (stationary) {
+				return 0;
+			}
+
 			constexpr double reserveCoef = 0.5;
 			return static_cast<index>(std::ceil(size * reserveCoef));
 		}
@@ -130,6 +148,14 @@ namespace rxtd::utils {
 				pixelData.data()
 			);
 			beginningOffset = 0;
+		}
+
+		void incrementStationary() {
+			stationaryOffset++;
+
+			if (stationaryOffset >= width) {
+				stationaryOffset = 0;
+			}
 		}
 	};
 }

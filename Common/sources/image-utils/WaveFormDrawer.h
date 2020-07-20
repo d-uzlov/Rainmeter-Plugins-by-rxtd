@@ -46,6 +46,10 @@ namespace rxtd::utils {
 			edgeAntialiasing = value;
 		}
 
+		void setStationary(bool value) {
+			inflatableBuffer.setStationary(value);
+		}
+
 		void setLineDrawingPolicy(LineDrawingPolicy value) {
 			lineDrawingPolicy = value;
 		}

@@ -37,7 +37,7 @@ namespace rxtd::audio_analyzer {
 			utils::Color lineColor{ };
 			LDP lineDrawingPolicy{ };
 			bool peakAntialiasing{ };
-			bool moving{ };
+			bool stationary{ };
 			bool fading{ };
 			CVT transformer{ };
 
@@ -52,7 +52,7 @@ namespace rxtd::audio_analyzer {
 					&& lhs.lineColor == rhs.lineColor
 					&& lhs.lineDrawingPolicy == rhs.lineDrawingPolicy
 					&& lhs.peakAntialiasing == rhs.peakAntialiasing
-					&& lhs.moving == rhs.moving
+					&& lhs.stationary == rhs.stationary
 					&& lhs.fading == rhs.fading
 					&& lhs.transformer == rhs.transformer;
 			}
