@@ -144,6 +144,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="local-version.h" />
+    <ClInclude Include="Sources\audio-utils\CustomizableValueTransformer.h" />
     <ClInclude Include="Sources\audio-utils\FFT.h" />
     <ClInclude Include="Sources\audio-utils\InfiniteResponseFilter.h" />
     <ClInclude Include="Sources\audio-utils\kiss_fft\KissFft.hh" />
@@ -186,6 +187,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Test|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Sources\audio-utils\CustomizableValueTransformer.cpp" />
     <ClCompile Include="Sources\audio-utils\FFT.cpp" />
     <ClCompile Include="Sources\audio-utils\InfiniteResponseFilter.cpp" />
     <ClCompile Include="Sources\audio-utils\KWeightingFilterBuilder.cpp" />

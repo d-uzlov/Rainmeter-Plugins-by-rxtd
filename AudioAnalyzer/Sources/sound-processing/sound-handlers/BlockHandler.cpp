@@ -11,11 +11,7 @@
 
 #include "undef.h"
 #include <numeric>
-#include "LinearInterpolator.h"
-#include "../../audio-utils/LogarithmicIRF.h"
 #include "option-parser/OptionMap.h"
-#include "option-parser/OptionSequence.h"
-#include "option-parser/OptionList.h"
 
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
@@ -37,10 +33,7 @@ std::optional<BlockHandler::Params> BlockHandler::parseParams(
 
 	params.subtractMean = optionMap.get(L"subtractMean").asBool(true);
 
-	auto transform = optionMap.get(L"transform");
-	if (!transform.empty()) {
-		params.transformer = audio_utils::TransformationParser::parse(transform, cl);
-	}
+	params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform"), cl);
 
 	return params;
 }

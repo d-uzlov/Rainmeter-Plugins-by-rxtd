@@ -8,21 +8,22 @@
  */
 
 #pragma once
+#include <utility>
 #include "SoundHandler.h"
 #include "Color.h"
 #include "option-parser/OptionMap.h"
 #include "RainmeterWrappers.h"
-#include "DiscreetInterpolator.h"
 #include "image-utils/LinedImageHelper.h"
-#include "image-utils/StripedImage.h"
 #include "image-utils/WaveFormDrawer.h"
 #include "image-utils/ImageWriteHelper.h"
+#include "../../audio-utils/CustomizableValueTransformer.h"
 
 namespace rxtd::audio_analyzer {
 	class WaveForm : public SoundHandler {
 		using LDP = utils::WaveFormDrawer::LineDrawingPolicy;
-	public:
+		using CVT = audio_utils::CustomizableValueTransformer;
 
+	public:
 		struct Params {
 		private:
 			friend WaveForm;
@@ -40,8 +41,7 @@ namespace rxtd::audio_analyzer {
 			bool moving{ };
 			bool fading{ };
 			index supersamplingSize{ };
-
-			double minDistinguishableValue{ };
+			CVT transformer{ };
 
 			// generated
 			friend bool operator==(const Params& lhs, const Params& rhs) {
@@ -55,8 +55,10 @@ namespace rxtd::audio_analyzer {
 					&& lhs.lineDrawingPolicy == rhs.lineDrawingPolicy
 					&& lhs.gain == rhs.gain
 					&& lhs.peakAntialiasing == rhs.peakAntialiasing
+					&& lhs.moving == rhs.moving
+					&& lhs.fading == rhs.fading
 					&& lhs.supersamplingSize == rhs.supersamplingSize
-					&& lhs.minDistinguishableValue == rhs.minDistinguishableValue;
+					&& lhs.transformer == rhs.transformer;
 			}
 
 			friend bool operator!=(const Params& lhs, const Params& rhs) {
@@ -65,6 +67,26 @@ namespace rxtd::audio_analyzer {
 		};
 
 	private:
+		class WaveformValueTransformer {
+			CVT cvt;
+
+		public:
+			WaveformValueTransformer() = default;
+			WaveformValueTransformer(CVT cvt) : cvt(std::move(cvt)) {
+			}
+
+			double apply(double value) {
+				const bool positive = value > 0;
+				value = cvt.apply(std::abs(value));
+
+				if (!positive) {
+					value *= -1;
+				}
+
+				return value;
+			}
+		};
+
 		index samplesPerSec{ };
 
 		Params params;
@@ -75,6 +97,10 @@ namespace rxtd::audio_analyzer {
 		double min{ };
 		double max{ };
 		bool changed = false;
+
+		WaveformValueTransformer minTransformer { };
+		WaveformValueTransformer maxTransformer { };
+		double minDistinguishableValue { };
 
 		mutable string propString{ };
 
@@ -115,5 +141,16 @@ namespace rxtd::audio_analyzer {
 
 	private:
 		void updateParams();
+
+		void pushStrip(double min, double max) {
+			min = minTransformer.apply(min);
+			max = maxTransformer.apply(max);
+
+			if (std::abs(min) < minDistinguishableValue && std::abs(max) < minDistinguishableValue) {
+				drawer.fillSilence();
+			}
+
+			drawer.fillStrip(min, max);
+		}
 	};
 }

@@ -41,6 +41,10 @@ std::vector<std::vector<SubstringViewInfo>> Tokenizer::parseSequence(sview view,
 	std::vector<std::vector<SubstringViewInfo>> result;
 	std::vector<SubstringViewInfo> description;
 	index begin = view.find_first_not_of(L" \t");
+	if (begin == index(sview::npos)) {
+		return { };
+	}
+
 	for (index i = begin; i < index(view.length()); ++i) {
 		const auto symbol = view[i];
 

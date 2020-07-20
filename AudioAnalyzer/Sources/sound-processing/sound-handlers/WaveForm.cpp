@@ -32,7 +32,6 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& op
 		cl.error(L"height must be >= 2 but {} found", params.height);
 		return std::nullopt;
 	}
-	params.minDistinguishableValue = 1.0 / params.height / 2.0; // below half pixel
 
 	params.resolution = optionMap.get(L"resolution"sv).asFloat(50);
 	if (params.resolution <= 0) {
@@ -86,6 +85,8 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& op
 	params.moving = optionMap.get(L"moving").asBool(true);
 	params.fading = optionMap.get(L"fading").asBool(false);
 
+	params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform"), cl);
+
 	return params;
 }
 
@@ -100,6 +101,8 @@ void WaveForm::setParams(const Params &_params, Channel channel) {
 		return;
 	}
 
+	minDistinguishableValue = 1.0 / params.height / 2.0; // below half pixel
+
 	drawer.setDimensions(params.width, params.height);
 	drawer.setEdgeAntialiasing(params.peakAntialiasing);
 	drawer.setColors(params.backgroundColor, params.waveColor, params.lineColor);
@@ -109,6 +112,9 @@ void WaveForm::setParams(const Params &_params, Channel channel) {
 	filepath += L"wave-";
 	filepath += channel.technicalName();
 	filepath += L".bmp"sv;
+
+	minTransformer = { params.transformer };
+	maxTransformer = { params.transformer };
 
 	utils::FileWrapper::createDirectories(_params.prefix);
 
@@ -151,18 +157,12 @@ void WaveForm::process(const DataSupplier& dataSupplier) {
 
 	const auto wave = dataSupplier.getWave();
 
-	const bool dataIsZero = std::all_of(wave.begin(), wave.end(), [=](auto x) { return std::abs(x) < params.minDistinguishableValue; });
-
 	for (const auto value : wave) {
 		min = std::min<double>(min, value);
 		max = std::max<double>(max, value);
 		counter++;
 		if (counter >= blockSize) {
-			if (dataIsZero) {
-				drawer.fillSilence();
-			} else {
-				drawer.fillStrip(min, max);
-			}
+			pushStrip(min, max);
 
 			counter = 0;
 			min = 10.0;
@@ -188,7 +188,8 @@ void WaveForm::processSilence(const DataSupplier& dataSupplier) {
 		changed = true;
 
 		if (waveProcessed + blockRemaining <= waveSize) {
-			drawer.fillSilence();
+			pushStrip(min, max);
+
 			waveProcessed += blockRemaining;
 			counter = 0;
 			min = 10.0;
