@@ -32,6 +32,7 @@ namespace rxtd::utils {
 
 		LineDrawingPolicy lineDrawingPolicy = LineDrawingPolicy::NEVER;
 		bool edgeAntialiasing = false;
+		bool fading = false;
 
 		struct {
 			Color background;
@@ -44,6 +45,10 @@ namespace rxtd::utils {
 
 		void setEdgeAntialiasing(bool value) {
 			edgeAntialiasing = value;
+		}
+
+		void setFading(bool value) {
+			fading = value;
 		}
 
 		void setStationary(bool value) {

@@ -129,6 +129,7 @@ void WaveForm::setParams(const Params &_params, Channel channel) {
 	drawer.setColors(params.backgroundColor, params.waveColor, params.lineColor);
 	drawer.setLineDrawingPolicy(params.lineDrawingPolicy);
 	drawer.setStationary(params.stationary);
+	drawer.setFading(params.fading);
 
 	filepath = params.prefix;
 	filepath += L"wave-";

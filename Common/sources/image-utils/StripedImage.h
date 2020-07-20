@@ -106,6 +106,10 @@ namespace rxtd::utils {
 			return getCurrentLinesArray();
 		}
 
+		index getLastStripIndex() const {
+			return stationary ? stationaryOffset : width - 1;
+		}
+
 	private:
 		// returns index of next string to write to
 		index incrementAndGetIndex() {

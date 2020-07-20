@@ -45,10 +45,25 @@ void WaveFormDrawer::inflate() {
 		auto source = imageLines[lineIndex];
 		auto dest = resultBuffer[lineIndex];
 
-		for (int i = 0; i < width; ++i) {
-			const auto sourceValue = source[i];
-			const auto color = Color::mix(1.0 - sourceValue, colors.background, colors.wave);
-			dest[i] = color.toInt();
+		if (fading) {
+			const index lastStripIndex = inflatableBuffer.getLastStripIndex();
+			const double distanceCoef = 1.0 / width;
+			for (int i = 0; i < width; ++i) {
+				index reverseDistance = i - lastStripIndex;
+				if (reverseDistance < 0) {
+					reverseDistance += width;
+				}
+
+				const auto sourceValue = source[i] * reverseDistance * distanceCoef;
+				const auto color = Color::mix(1.0 - sourceValue, colors.background, colors.wave);
+				dest[i] = color.toInt();
+			}
+		} else {
+			for (int i = 0; i < width; ++i) {
+				const auto sourceValue = source[i];
+				const auto color = Color::mix(1.0 - sourceValue, colors.background, colors.wave);
+				dest[i] = color.toInt();
+			}
 		}
 	}
 
