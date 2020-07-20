@@ -86,7 +86,7 @@
     <ClCompile Include="sources\image-utils\LinedImageHelper.cpp">
       <Filter>Source Files\image-utils</Filter>
     </ClCompile>
-    <ClCompile Include="sources\image-utils\StripedImageHelper.cpp">
+    <ClCompile Include="sources\image-utils\StripedImage.cpp">
       <Filter>Source Files\image-utils</Filter>
     </ClCompile>
   </ItemGroup>
@@ -196,10 +196,10 @@
     <ClInclude Include="sources\image-utils\LinedImageHelper.h">
       <Filter>Source Files\image-utils</Filter>
     </ClInclude>
-    <ClInclude Include="sources\image-utils\StripedImageHelper.h">
+    <ClInclude Include="sources\image-utils\ImageWriteHelper.h">
       <Filter>Source Files\image-utils</Filter>
     </ClInclude>
-    <ClInclude Include="sources\image-utils\ImageWriteHelper.h">
+    <ClInclude Include="sources\image-utils\StripedImage.h">
       <Filter>Source Files\image-utils</Filter>
     </ClInclude>
   </ItemGroup>

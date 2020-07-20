@@ -25,5 +25,4 @@ namespace rxtd::utils {
 			emptinessWritten = empty;
 		}
 	};
-
 }

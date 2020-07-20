@@ -11,7 +11,7 @@
 #include "../SoundHandler.h"
 #include "Color.h"
 #include "RainmeterWrappers.h"
-#include "image-utils/StripedImageHelper.h"
+#include "image-utils/StripedImage.h"
 #include "image-utils/ImageWriteHelper.h"
 
 namespace rxtd::audio_analyzer {
@@ -73,13 +73,13 @@ namespace rxtd::audio_analyzer {
 
 		index blockSize{ };
 
-		std::vector<utils::StripedImageHelper::PixelColor> stripBuffer{ };
+		std::vector<utils::StripedImage::PixelColor> stripBuffer{ };
 		index counter = 0;
 		bool changed = false;
 
 		mutable string propString{ };
 
-		utils::StripedImageHelper image{ };
+		utils::StripedImage image{ };
 		utils::ImageWriteHelper writerHelper{ };
 
 		string filepath{ };

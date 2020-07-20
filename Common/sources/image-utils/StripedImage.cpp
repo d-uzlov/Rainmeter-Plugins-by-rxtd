@@ -7,17 +7,17 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include "StripedImageHelper.h"
+#include "StripedImage.h"
 
 #include "undef.h"
 
 using namespace utils;
 
-void StripedImageHelper::setBackground(PixelColor value) {
+void StripedImage::setBackground(PixelColor value) {
 	backgroundValue = value;
 }
 
-void StripedImageHelper::setDimensions(index width, index height) {
+void StripedImage::setDimensions(index width, index height) {
 	if (this->width == width && this->height == height) {
 		return;
 	}
@@ -38,7 +38,7 @@ void StripedImageHelper::setDimensions(index width, index height) {
 	sameStripsCount = imageLines.getBuffersCount();
 }
 
-void StripedImageHelper::pushStrip(array_view<PixelColor> stripData) {
+void StripedImage::pushStrip(array_view<PixelColor> stripData) {
 	sameStripsCount = 0;
 
 	incrementStrip();
@@ -50,7 +50,7 @@ void StripedImageHelper::pushStrip(array_view<PixelColor> stripData) {
 	}
 }
 
-void StripedImageHelper::pushEmptyLine(PixelColor value) {
+void StripedImage::pushEmptyLine(PixelColor value) {
 	if (sameStripsCount >= width) {
 		return;
 	}
@@ -71,7 +71,7 @@ void StripedImageHelper::pushEmptyLine(PixelColor value) {
 	}
 }
 
-void StripedImageHelper::pushEmptyStrip(array_view<PixelColor> stripData) {
+void StripedImage::pushEmptyStrip(array_view<PixelColor> stripData) {
 	if (sameStripsCount >= width) {
 		return;
 	}
@@ -91,20 +91,20 @@ void StripedImageHelper::pushEmptyStrip(array_view<PixelColor> stripData) {
 	}
 }
 
-index StripedImageHelper::getReserveSize(index size) {
+index StripedImage::getReserveSize(index size) {
 	constexpr double reserveCoef = 0.5;
 	return static_cast<index>(std::ceil(size * reserveCoef));
 }
 
-array2d_span<StripedImageHelper::PixelColor> StripedImageHelper::getCurrentLinesArray() {
+array2d_span<StripedImage::PixelColor> StripedImage::getCurrentLinesArray() {
 	return { pixelData.data() + beginningOffset, height, width };
 }
 
-array2d_view<StripedImageHelper::PixelColor> StripedImageHelper::getCurrentLinesArray() const {
+array2d_view<StripedImage::PixelColor> StripedImage::getCurrentLinesArray() const {
 	return { pixelData.data() + beginningOffset, height, width };
 }
 
-void StripedImageHelper::incrementStrip() {
+void StripedImage::incrementStrip() {
 	if (beginningOffset < maxOffset) {
 		beginningOffset++;
 		return;
