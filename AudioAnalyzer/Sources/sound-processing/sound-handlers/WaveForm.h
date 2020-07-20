@@ -74,6 +74,10 @@ namespace rxtd::audio_analyzer {
 			}
 
 			double apply(double value);
+
+			void updateTransformations(index samplesPerSec, index blockSize);
+
+			void reset();
 		};
 
 		index samplesPerSec{ };

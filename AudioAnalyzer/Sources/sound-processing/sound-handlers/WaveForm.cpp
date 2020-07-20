@@ -107,6 +107,14 @@ double WaveForm::WaveformValueTransformer::apply(double value) {
 	return value;
 }
 
+void WaveForm::WaveformValueTransformer::updateTransformations(index samplesPerSec, index blockSize) {
+	cvt.updateTransformations(samplesPerSec, blockSize);
+}
+
+void WaveForm::WaveformValueTransformer::reset() {
+	cvt.resetState();
+}
+
 void WaveForm::setParams(const Params &_params, Channel channel) {
 	if (params == _params) {
 		return;
@@ -159,11 +167,18 @@ void WaveForm::reset() {
 	counter = 0;
 	min = 10.0;
 	max = -10.0;
+
+	minTransformer.reset();
+	maxTransformer.reset();
 }
 
 void WaveForm::updateParams() {
 	blockSize = index(samplesPerSec * params.resolution / params.supersamplingSize);
 	blockSize = std::max<index>(blockSize, 1);
+
+	minTransformer.updateTransformations(samplesPerSec, blockSize);
+	maxTransformer.updateTransformations(samplesPerSec, blockSize);
+
 	reset();
 }
 
