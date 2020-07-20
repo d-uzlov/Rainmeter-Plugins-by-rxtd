@@ -11,7 +11,7 @@
 #include "../SoundHandler.h"
 #include "Color.h"
 #include "RainmeterWrappers.h"
-#include "TransposedStripedImageHelper.h"
+#include "StripedImageHelper.h"
 
 namespace rxtd::audio_analyzer {
 	class Spectrogram : public SoundHandler {
@@ -72,13 +72,13 @@ namespace rxtd::audio_analyzer {
 
 		index blockSize{ };
 
-		std::vector<utils::TransposedStripedImageHelper::PixelColor> stripBuffer{ };
+		std::vector<utils::StripedImageHelper::PixelColor> stripBuffer{ };
 		index counter = 0;
 		bool changed = false;
 
 		mutable string propString{ };
 
-		utils::TransposedStripedImageHelper image{ };
+		utils::StripedImageHelper image{ };
 
 		string filepath{ };
 

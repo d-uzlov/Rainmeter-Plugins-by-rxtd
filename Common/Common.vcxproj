@@ -166,7 +166,7 @@
     <ClCompile Include="sources\option-parser\Tokenizer.cpp" />
     <ClCompile Include="sources\RainmeterWrappers.cpp" />
     <ClCompile Include="sources\StringUtils.cpp" />
-    <ClCompile Include="sources\TransposedLinedImageHelper.cpp" />
+    <ClCompile Include="sources\StripedImageHelper.cpp" />
     <ClCompile Include="sources\TypeHolder.cpp" />
     <ClCompile Include="sources\windows-wrappers\AudioBuffer.cpp" />
     <ClCompile Include="sources\windows-wrappers\FileWrapper.cpp" />
@@ -193,7 +193,7 @@
     <ClInclude Include="sources\option-parser\OptionMap.h" />
     <ClInclude Include="sources\option-parser\OptionSequence.h" />
     <ClInclude Include="sources\option-parser\Tokenizer.h" />
-    <ClInclude Include="sources\TransposedLinedImageHelper.h" />
+    <ClInclude Include="sources\StripedImageHelper.h" />
     <ClInclude Include="sources\Vector2D.h" />
     <ClInclude Include="sources\FastMath.h" />
     <ClInclude Include="sources\MathExpressionParser.h" />

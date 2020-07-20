@@ -83,7 +83,7 @@
     <ClCompile Include="sources\ImageTransposer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sources\TransposedLinedImageHelper.cpp">
+    <ClCompile Include="sources\StripedImageHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -193,7 +193,7 @@
     <ClInclude Include="sources\array2d_view.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="sources\TransposedLinedImageHelper.h">
+    <ClInclude Include="sources\StripedImageHelper.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

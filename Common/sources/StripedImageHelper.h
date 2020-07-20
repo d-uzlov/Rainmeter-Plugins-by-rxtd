@@ -12,7 +12,7 @@
 #include "array2d_view.h"
 
 namespace rxtd::utils {
-	class TransposedStripedImageHelper {
+	class StripedImageHelper {
 	public:
 		using PixelColor = uint32_t;
 

@@ -7,18 +7,18 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include "TransposedStripedImageHelper.h"
+#include "StripedImageHelper.h"
 #include "BmpWriter.h"
 
 #include "undef.h"
 
 using namespace utils;
 
-void TransposedStripedImageHelper::setBackground(PixelColor value) {
+void StripedImageHelper::setBackground(PixelColor value) {
 	backgroundValue = value;
 }
 
-void TransposedStripedImageHelper::setDimensions(index width, index height) {
+void StripedImageHelper::setDimensions(index width, index height) {
 	if (this->width == width && this->height == height) {
 		return;
 	}
@@ -40,7 +40,7 @@ void TransposedStripedImageHelper::setDimensions(index width, index height) {
 	emptinessWritten = false;
 }
 
-void TransposedStripedImageHelper::pushStrip(array_view<PixelColor> stripData) {
+void StripedImageHelper::pushStrip(array_view<PixelColor> stripData) {
 	sameStripsCount = 0;
 	emptinessWritten = false;
 
@@ -53,7 +53,7 @@ void TransposedStripedImageHelper::pushStrip(array_view<PixelColor> stripData) {
 	}
 }
 
-void TransposedStripedImageHelper::pushEmptyLine(PixelColor value) {
+void StripedImageHelper::pushEmptyLine(PixelColor value) {
 	if (sameStripsCount >= width) {
 		return;
 	}
@@ -75,7 +75,7 @@ void TransposedStripedImageHelper::pushEmptyLine(PixelColor value) {
 	}
 }
 
-void TransposedStripedImageHelper::write(const string& filepath) const {
+void StripedImageHelper::write(const string& filepath) const {
 	if (emptinessWritten) {
 		return;
 	}
@@ -87,28 +87,28 @@ void TransposedStripedImageHelper::write(const string& filepath) const {
 	}
 }
 
-index TransposedStripedImageHelper::getReserveSize(index size) {
+index StripedImageHelper::getReserveSize(index size) {
 	constexpr double reserveCoef = 0.5;
 	return static_cast<index>(std::ceil(size * reserveCoef));
 }
 
-array2d_span<TransposedStripedImageHelper::PixelColor> TransposedStripedImageHelper::getCurrentLinesArray() {
+array2d_span<StripedImageHelper::PixelColor> StripedImageHelper::getCurrentLinesArray() {
 	return { pixelData.data() + beginningOffset, height, width };
 }
 
-array2d_view<TransposedStripedImageHelper::PixelColor> TransposedStripedImageHelper::getCurrentLinesArray() const {
+array2d_view<StripedImageHelper::PixelColor> StripedImageHelper::getCurrentLinesArray() const {
 	return { pixelData.data() + beginningOffset, height, width };
 }
 
-void TransposedStripedImageHelper::incrementStrip() {
+void StripedImageHelper::incrementStrip() {
 	if (beginningOffset < maxOffset) {
 		beginningOffset++;
 		return;
 	}
 
 	std::copy(
-		pixelData.data() + beginningOffset + 1,
-		pixelData.data() + beginningOffset + width * height,
+		pixelData.data() + maxOffset + 1, // this +1 is very important. Without it image won't shift enough
+		pixelData.data() + maxOffset + width * height,
 		pixelData.data()
 	);
 	beginningOffset = 0;
