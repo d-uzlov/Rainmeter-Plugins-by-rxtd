@@ -73,13 +73,13 @@ namespace rxtd::audio_analyzer {
 
 		index blockSize{ };
 
-		std::vector<utils::StripedImage::PixelColor> stripBuffer{ };
+		std::vector<uint32_t> stripBuffer{ };
 		index counter = 0;
 		bool changed = false;
 
 		mutable string propString{ };
 
-		utils::StripedImage image{ };
+		utils::StripedImage<uint32_t> image{ };
 		utils::ImageWriteHelper writerHelper{ };
 
 		string filepath{ };

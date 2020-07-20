@@ -80,8 +80,8 @@ namespace rxtd::audio_analyzer {
 
 		mutable string propString{ };
 
-		utils::StripedImage image{ };
-		std::vector<utils::StripedImage::PixelColor> stripBuffer{ };
+		utils::StripedImage<float> inflatableImage{ };
+		std::vector<float> stripBuffer{ };
 
 		string filepath{ };
 

@@ -102,9 +102,9 @@ void WaveForm::setParams(const Params &_params, Channel channel) {
 
 	interpolator = { -1.0, 1.0, 0, _params.height - 1 };
 
-	image.setBackground(params.backgroundColor.toInt());
-	image.setWidth(_params.width);
-	image.setHeight(_params.height);
+	inflatableImage.setBackground(params.backgroundColor.toInt());
+	inflatableImage.setWidth(_params.width);
+	inflatableImage.setHeight(_params.height);
 	
 	uint32_t color;
 	if (_params.lineDrawingPolicy == LineDrawingPolicy::ALWAYS) {
@@ -113,16 +113,16 @@ void WaveForm::setParams(const Params &_params, Channel channel) {
 		color = params.waveColor.toInt();
 	}
 
-	std::vector<uint32_t> defaultStrip;
-	defaultStrip.resize(_params.height);
-	std::fill(defaultStrip.begin(), defaultStrip.end(), color);
-
-	const index centerPixel = interpolator.toValueD(0.0);
-	defaultStrip[centerPixel] = color;
-
-	for (index i = 0; i < _params.width * params.supersamplingSize; ++i) {
-		image.pushEmptyStrip(defaultStrip);
-	}
+	// std::vector<uint32_t> defaultStrip;
+	// defaultStrip.resize(_params.height);
+	// std::fill(defaultStrip.begin(), defaultStrip.end(), color);
+	//
+	// const index centerPixel = interpolator.toValueD(0.0);
+	// defaultStrip[centerPixel] = color;
+	//
+	// for (index i = 0; i < _params.width * params.supersamplingSize; ++i) {
+	// 	inflatableImage.pushStrip(defaultStrip);
+	// }
 
 	filepath = params.prefix;
 	filepath += L"wave-";

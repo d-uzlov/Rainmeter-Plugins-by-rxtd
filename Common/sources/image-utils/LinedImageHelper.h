@@ -230,80 +230,80 @@
 // 		}
 // 	};
 //
-// 	class SupersamplingHelper {
-// 		LinedImageHelperDynamic mainImage;
-// 		LinedImageHelperDynamic supersamplingBuffer;
-// 		index supersamplingSize = 0;
-// 		index counter = 0;
-// 	
-// 	public:
-// 		void setBackground(Color value) {
-// 			mainImage.setBackground(value);
-// 			supersamplingBuffer.setBackground(value);
-// 		}
-// 	
-// 		void setImageWidth(index width) {
-// 			mainImage.setImageWidth(width);
-// 			supersamplingBuffer.setImageWidth(width);
-// 		}
-// 	
-// 		void setImageHeight(index height) {
-// 			mainImage.setImageHeight(height);
-// 		}
-//
-// 		void setSupersamplingSize(index value) {
-// 			supersamplingSize = value;
-// 			supersamplingBuffer.setImageHeight(value);
-// 		}
-// 	
-// 		array_span<Color> nextLine() {
-// 			if (counter == supersamplingSize) {
-// 				emitLine();
-// 				counter = 0;
-// 			}
-// 			counter++;
-// 			return supersamplingBuffer.nextLine();
-// 		}
-// 	
-// 		void fillNextLineFlat(Color value) {
-// 			if (counter == supersamplingSize) {
-// 				emitLine();
-// 				counter = 0;
-// 			}
-// 			counter++;
-// 			supersamplingBuffer.fillNextLineFlat(value);
-// 		}
-// 	
-// 		array_span<Color> fillNextLineManual() {
-// 			if (counter == supersamplingSize) {
-// 				emitLine();
-// 				counter = 0;
-// 			}
-// 			counter++;
-// 			return supersamplingBuffer.fillNextLineManual();
-// 		}
-// 	
-// 		void writeTransposed(const string& filepath, bool withOffset, bool withFading) const {
-// 			mainImage.writeTransposed(filepath, withOffset, withFading);
-// 		}
-//
-// 	private:
-// 		void emitLine() {
-// 			std::vector<Color> colorLine;
-// 			colorLine.resize(mainImage.getImageWidth());
-// 			supersamplingBuffer.collapseInto(colorLine);
-//
-// 			if (supersamplingBuffer.isEmpty()) {
-// 				auto line = mainImage.fillNextLineManual();
-// 				for (int i = 0; i < mainImage.getImageWidth(); ++i) {
-// 					line[i] = colorLine[i];
-// 				}
-// 			} else {
-// 				auto line = mainImage.nextLine();
-// 				for (int i = 0; i < mainImage.getImageWidth(); ++i) {
-// 					line[i] = colorLine[i];
-// 				}
-// 			}
-// 		}
-// 	};
+// 	// class SupersamplingHelper {
+// 	// 	LinedImageHelperDynamic mainImage;
+// 	// 	LinedImageHelperDynamic supersamplingBuffer;
+// 	// 	index supersamplingSize = 0;
+// 	// 	index counter = 0;
+// 	//
+// 	// public:
+// 	// 	void setBackground(Color value) {
+// 	// 		mainImage.setBackground(value);
+// 	// 		supersamplingBuffer.setBackground(value);
+// 	// 	}
+// 	//
+// 	// 	void setImageWidth(index width) {
+// 	// 		mainImage.setImageWidth(width);
+// 	// 		supersamplingBuffer.setImageWidth(width);
+// 	// 	}
+// 	//
+// 	// 	void setImageHeight(index height) {
+// 	// 		mainImage.setImageHeight(height);
+// 	// 	}
+// 	//
+// 	// 	void setSupersamplingSize(index value) {
+// 	// 		supersamplingSize = value;
+// 	// 		supersamplingBuffer.setImageHeight(value);
+// 	// 	}
+// 	//
+// 	// 	array_span<Color> nextLine() {
+// 	// 		if (counter == supersamplingSize) {
+// 	// 			emitLine();
+// 	// 			counter = 0;
+// 	// 		}
+// 	// 		counter++;
+// 	// 		return supersamplingBuffer.nextLine();
+// 	// 	}
+// 	//
+// 	// 	void fillNextLineFlat(Color value) {
+// 	// 		if (counter == supersamplingSize) {
+// 	// 			emitLine();
+// 	// 			counter = 0;
+// 	// 		}
+// 	// 		counter++;
+// 	// 		supersamplingBuffer.fillNextLineFlat(value);
+// 	// 	}
+// 	//
+// 	// 	array_span<Color> fillNextLineManual() {
+// 	// 		if (counter == supersamplingSize) {
+// 	// 			emitLine();
+// 	// 			counter = 0;
+// 	// 		}
+// 	// 		counter++;
+// 	// 		return supersamplingBuffer.fillNextLineManual();
+// 	// 	}
+// 	//
+// 	// 	void writeTransposed(const string& filepath, bool withOffset, bool withFading) const {
+// 	// 		mainImage.writeTransposed(filepath, withOffset, withFading);
+// 	// 	}
+// 	//
+// 	// private:
+// 	// 	void emitLine() {
+// 	// 		std::vector<Color> colorLine;
+// 	// 		colorLine.resize(mainImage.getImageWidth());
+// 	// 		supersamplingBuffer.collapseInto(colorLine);
+// 	//
+// 	// 		if (supersamplingBuffer.isEmpty()) {
+// 	// 			auto line = mainImage.fillNextLineManual();
+// 	// 			for (int i = 0; i < mainImage.getImageWidth(); ++i) {
+// 	// 				line[i] = colorLine[i];
+// 	// 			}
+// 	// 		} else {
+// 	// 			auto line = mainImage.nextLine();
+// 	// 			for (int i = 0; i < mainImage.getImageWidth(); ++i) {
+// 	// 				line[i] = colorLine[i];
+// 	// 			}
+// 	// 		}
+// 	// 	}
+// 	// };
 // }

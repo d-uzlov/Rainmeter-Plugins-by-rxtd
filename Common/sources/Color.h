@@ -39,6 +39,10 @@ namespace rxtd::utils {
 			blue = b * coef;
 		}
 
+		static Color mix(float percent, Color c1, Color c2) {
+			return c1 * percent + c2 * (1.0 - percent);
+		}
+
 		Color operator*(float value) const {
 			return { red * value, green * value, blue * value, alpha * value };
 		}

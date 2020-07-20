@@ -158,7 +158,6 @@
     <ClCompile Include="sources\BufferPrinter.cpp" />
     <ClCompile Include="sources\image-utils\ImageTransposer.cpp" />
     <ClCompile Include="sources\image-utils\LinedImageHelper.cpp" />
-    <ClCompile Include="sources\image-utils\StripedImage.cpp" />
     <ClCompile Include="sources\MathExpressionParser.cpp" />
     <ClCompile Include="sources\option-parser\Option.cpp" />
     <ClCompile Include="sources\option-parser\OptionList.cpp" />
