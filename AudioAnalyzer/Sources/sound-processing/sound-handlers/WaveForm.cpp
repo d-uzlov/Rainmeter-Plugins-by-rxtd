@@ -74,11 +74,6 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& op
 	}
 
 	params.peakAntialiasing = optionMap.get(L"peakAntialiasing").asBool(false);
-	params.supersamplingSize = optionMap.get(L"supersamplingSize").asInt(1);
-	if (params.supersamplingSize < 1) {
-		cl.error(L"supersamplingSize must be > 1 but {} found. Assume 1", params.supersamplingSize);
-		params.supersamplingSize = 1;
-	}
 
 	params.moving = optionMap.get(L"moving").asBool(true);
 	params.fading = optionMap.get(L"fading").asBool(false);
@@ -87,7 +82,7 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& op
 
 	// legacy
 	if (optionMap.has(L"gain"sv)) {
-		cl.warning(L"Using deprecated 'gain' option. Transforms are ignored");
+		cl.notice(L"Using deprecated 'gain' option. Transforms are ignored");
 		auto gain = optionMap.get(L"gain"sv).asFloat(1.0);
 		utils::BufferPrinter printer;
 		printer.print(L"map[0,1][0,{}]", gain);
@@ -174,7 +169,7 @@ void WaveForm::reset() {
 }
 
 void WaveForm::updateParams() {
-	blockSize = index(samplesPerSec * params.resolution / params.supersamplingSize);
+	blockSize = index(samplesPerSec * params.resolution);
 	blockSize = std::max<index>(blockSize, 1);
 
 	minTransformer.updateTransformations(samplesPerSec, blockSize);

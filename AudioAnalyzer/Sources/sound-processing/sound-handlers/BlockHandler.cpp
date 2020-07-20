@@ -37,7 +37,7 @@ std::optional<BlockHandler::Params> BlockHandler::parseParams(
 
 	// legacy
 	if (optionMap.has(L"attack") || optionMap.has(L"decay")) {
-		cl.warning(L"Using deprecated 'attack'/'decay' options. Transforms are ignored");
+		cl.notice(L"Using deprecated 'attack'/'decay' options. Transforms are ignored");
 		const auto attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.0);
 		const auto decayTime = std::max(optionMap.get(L"decay"sv).asFloat(attackTime), 0.0);
 

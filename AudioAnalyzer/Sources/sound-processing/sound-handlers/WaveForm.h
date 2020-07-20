@@ -39,7 +39,6 @@ namespace rxtd::audio_analyzer {
 			bool peakAntialiasing{ };
 			bool moving{ };
 			bool fading{ };
-			index supersamplingSize{ };
 			CVT transformer{ };
 
 			// generated
@@ -55,7 +54,6 @@ namespace rxtd::audio_analyzer {
 					&& lhs.peakAntialiasing == rhs.peakAntialiasing
 					&& lhs.moving == rhs.moving
 					&& lhs.fading == rhs.fading
-					&& lhs.supersamplingSize == rhs.supersamplingSize
 					&& lhs.transformer == rhs.transformer;
 			}
 
