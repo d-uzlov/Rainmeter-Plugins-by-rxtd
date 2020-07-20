@@ -83,6 +83,9 @@
     <ClCompile Include="sources\ImageTransposer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="sources\TransposedLinedImageHelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sources\BmpWriter.h">
@@ -185,6 +188,12 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="sources\DiscreetInterpolator.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\array2d_view.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\TransposedLinedImageHelper.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

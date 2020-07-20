@@ -44,7 +44,7 @@ bool FileWrapper::isValid() const {
 	return valid;
 }
 
-void FileWrapper::write(const std::byte * data, index count) {
+void FileWrapper::write(const void *data, index count) {
 	if (!valid) {
 		return;
 	}

@@ -25,7 +25,7 @@ namespace rxtd::utils {
 		~FileWrapper();
 
 		bool isValid() const;
-		void write(const std::byte* data, index count);
+		void write(const void *data, index count);
 
 		static void createDirectories(sview path);
 

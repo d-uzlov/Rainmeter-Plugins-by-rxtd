@@ -12,11 +12,11 @@
 
 #include "undef.h"
 
-void utils::BmpWriter::writeFile(const string& filepath, const uint32_t* data, index width, index height) {
-	BMPHeader header(static_cast<uint32_t>(height), static_cast<uint32_t>(width));
+void utils::BmpWriter::writeFile(const string& filepath, array2d_view<uint32_t> imageData) {
+	BMPHeader header(imageData.getBufferSize(), imageData.getBuffersCount());
 
 	FileWrapper file(filepath.c_str());
 
-	file.write(reinterpret_cast<std::byte*>(&header), sizeof(header));
-	file.write(reinterpret_cast<const std::byte*>(data), header.dibHeader.bitmapSizeInBytes);
+	file.write(&header, sizeof(header));
+	file.write(imageData[0].data(), header.dibHeader.bitmapSizeInBytes);
 }

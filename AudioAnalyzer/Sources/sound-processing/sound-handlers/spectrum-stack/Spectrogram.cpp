@@ -43,7 +43,7 @@ void Spectrogram::setParams(const Params& _params, Channel channel) {
 	utils::FileWrapper::createDirectories(params.prefix);
 
 	image.setBackground(params.baseColor.toInt());
-	image.setImageHeight(params.length);
+	image.setWidth(params.length);
 
 	updateParams();
 }
@@ -171,25 +171,25 @@ void Spectrogram::updateParams() {
 	blockSize = index(samplesPerSec * params.resolution);
 }
 
-void Spectrogram::fillLine(array_view<float> data) {
-	auto line = image.nextLine();
+void Spectrogram::fillStrip(array_view<float> data) {
+	auto& strip = stripBuffer;
 	utils::LinearInterpolator interpolator { params.colorMinValue, params.colorMaxValue, 0.0, 1.0 };
 
-	for (index i = 0; i < line.size(); ++i) {
+	for (index i = 0; i < index(strip.size()); ++i) {
 		double value = data[i];
 		value = interpolator.toValue(value);
 		value = std::clamp(value, 0.0, 1.0);
 
 		auto color = params.baseColor * (1.0 - value) + params.maxColor * value;
 
-		line[i] = color.toInt();
+		strip[i] = color.toInt();
 	}
 }
 
-void Spectrogram::fillLineMulticolor(array_view<float> data) {
-	auto line = image.nextLine();
+void Spectrogram::fillStripMulticolor(array_view<float> data) {
+	auto& strip = stripBuffer;
 
-	for (index i = 0; i < line.size(); ++i) {
+	for (index i = 0; i < index(strip.size()); ++i) {
 		const double value = std::clamp<double>(data[i], params.colorMinValue, params.colorMaxValue);
 
 		index lowColorIndex = 0;
@@ -210,7 +210,7 @@ void Spectrogram::fillLineMulticolor(array_view<float> data) {
 
 		const auto color = lowColor * (1.0 - percentValue) + highColor * percentValue;
 
-		line[i] = color.toInt();
+		strip[i] = color.toInt();
 	}
 }
 
@@ -233,7 +233,8 @@ void Spectrogram::process(const DataSupplier& dataSupplier) {
 
 	const auto data = source->getData(0);
 	const auto dataSize = data.size();
-	image.setImageWidth(dataSize);
+	image.setHeight(dataSize);
+	stripBuffer.resize(dataSize);
 
 	const bool dataIsZero = std::all_of(data.data(), data.data() + dataSize, [=](auto x) { return x < params.colorMinValue; });
 
@@ -241,16 +242,19 @@ void Spectrogram::process(const DataSupplier& dataSupplier) {
 		changed = true;
 
 		if (dataIsZero) {
-			image.fillNextLineFlat(params.baseColor.toInt());
-		} else if (params.colors.empty()) { // only use 2 colors
-			fillLine(data);
-		} else { // many colors, but slightly slower
-			fillLineMulticolor(data);
+			image.pushEmptyLine(params.baseColor.toInt());
+		} else {
+			if (params.colors.empty()) { // only use 2 colors
+				fillStrip(data);
+			} else { // many colors, but slightly slower
+				fillStripMulticolor(data);
+			}
+
+			image.pushStrip(stripBuffer);
 		}
 
 		counter -= blockSize;
 	}
-
 }
 
 void Spectrogram::processSilence(const DataSupplier& dataSupplier) {
@@ -259,7 +263,7 @@ void Spectrogram::processSilence(const DataSupplier& dataSupplier) {
 
 void Spectrogram::finish(const DataSupplier& dataSupplier) {
 	if (changed) {
-		image.writeTransposed(filepath, true);
+		image.write(filepath);
 		changed = false;
 	}
 }

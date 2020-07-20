@@ -9,6 +9,7 @@
 
 #pragma once
 #include "array_view.h"
+#include "array2d_view.h"
 
 namespace rxtd::utils {
 	class BmpWriter {
@@ -49,17 +50,17 @@ namespace rxtd::utils {
 			std::byte padding[dibSize - sizeof(dibHeader)] { };
 
 		public:
-			BMPHeader(uint32_t width, uint32_t height) {
+			BMPHeader(index width, index height) {
 				fileHeader.pixelArrayOffsetInBytes = sizeof(fileHeader) + dibHeader.headerSizeInBytes;
-				dibHeader.bitmapSizeInBytes = width * height * sizeof(uint32_t);
+				dibHeader.bitmapSizeInBytes = uint32_t(width * height * sizeof(uint32_t));
 				fileHeader.fileSizeInBytes = fileHeader.pixelArrayOffsetInBytes + dibHeader.bitmapSizeInBytes;
-				dibHeader.bitmapWidthInPixels = width;
-				dibHeader.bitmapHeightInPixels = height;
+				dibHeader.bitmapWidthInPixels = uint32_t(width);
+				dibHeader.bitmapHeightInPixels = uint32_t(height);
 			}
 		};
 #pragma pack( pop )
 
 	public:
-		static void writeFile(const string& filepath, const uint32_t* data, index width, index height);
+		static void writeFile(const string& filepath, array2d_view<uint32_t> imageData);
 	};
 }
