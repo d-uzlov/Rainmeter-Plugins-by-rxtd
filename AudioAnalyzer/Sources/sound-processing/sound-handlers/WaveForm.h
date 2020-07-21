@@ -10,7 +10,6 @@
 #pragma once
 #include <utility>
 #include "SoundHandler.h"
-#include "Color.h"
 #include "option-parser/OptionMap.h"
 #include "RainmeterWrappers.h"
 #include "image-utils/WaveFormDrawer.h"
@@ -21,6 +20,8 @@ namespace rxtd::audio_analyzer {
 	class WaveForm : public SoundHandler {
 		using LDP = utils::WaveFormDrawer::LineDrawingPolicy;
 		using FD = utils::WaveFormDrawer::FadingType;
+		using SE = utils::WaveFormDrawer::SmoothEdges;
+		using Colors = utils::WaveFormDrawer::Colors;
 		using CVT = audio_utils::CustomizableValueTransformer;
 
 	public:
@@ -32,12 +33,9 @@ namespace rxtd::audio_analyzer {
 			index width{ };
 			index height{ };
 			string prefix = L".";
-			utils::Color backgroundColor{ };
-			utils::Color waveColor{ };
-			utils::Color lineColor{ };
-			utils::Color borderColor{ };
+			Colors colors{ };
 			LDP lineDrawingPolicy{ };
-			bool peakAntialiasing{ };
+			SE edges{ };
 			bool stationary{ };
 			bool connected{ };
 			index borderSize{ };
@@ -50,12 +48,9 @@ namespace rxtd::audio_analyzer {
 					&& lhs.width == rhs.width
 					&& lhs.height == rhs.height
 					&& lhs.prefix == rhs.prefix
-					&& lhs.backgroundColor == rhs.backgroundColor
-					&& lhs.waveColor == rhs.waveColor
-					&& lhs.lineColor == rhs.lineColor
-					&& lhs.borderColor == rhs.borderColor
+					&& lhs.colors == rhs.colors
 					&& lhs.lineDrawingPolicy == rhs.lineDrawingPolicy
-					&& lhs.peakAntialiasing == rhs.peakAntialiasing
+					&& lhs.edges == rhs.edges
 					&& lhs.stationary == rhs.stationary
 					&& lhs.connected == rhs.connected
 					&& lhs.borderSize == rhs.borderSize

@@ -87,7 +87,6 @@ void WaveFormDrawer::inflateLineNoFade(array_view<float> source, array_span<uint
 	const index lastStripIndex = inflatableBuffer.getLastStripIndex();
 
 	const double realWidth = width - borderSize;
-	const double distanceCoef = 1.0 / realWidth;
 	for (int i = 0; i < width; ++i) {
 		double distance = lastStripIndex - i;
 		if (distance < 0.0) {
@@ -99,9 +98,7 @@ void WaveFormDrawer::inflateLineNoFade(array_view<float> source, array_span<uint
 			continue;
 		}
 
-		const auto sourceValue = source[i];
-		const auto color = Color::mix(1.0 - sourceValue, colors.background, colors.wave);
-		dest[i] = color.toInt();
+		dest[i] = inflatePixel(source, 0.0, i);
 	}
 }
 
@@ -123,9 +120,7 @@ void WaveFormDrawer::inflateLinePow1(array_view<float> source, array_span<uint32
 
 		distance *= distanceCoef;
 
-		const auto sourceValue = source[i] * (1.0 - distance);
-		const auto color = Color::mix(1.0 - sourceValue, colors.background, colors.wave);
-		dest[i] = color.toInt();
+		dest[i] = inflatePixel(source, distance, i);
 	}
 }
 
@@ -133,6 +128,8 @@ void WaveFormDrawer::inflateLinePow2(array_view<float> source, array_span<uint32
 	const index lastStripIndex = inflatableBuffer.getLastStripIndex();
 	const double realWidth = width - borderSize;
 	const double distanceCoef = 1.0 / realWidth;
+
+	float prev = 0.0;
 
 	for (int i = 0; i < width; ++i) {
 		double distance = lastStripIndex - i;
@@ -148,9 +145,7 @@ void WaveFormDrawer::inflateLinePow2(array_view<float> source, array_span<uint32
 		distance *= distanceCoef;
 		distance = distance * distance;
 
-		const auto sourceValue = source[i] * (1.0 - distance);
-		const auto color = Color::mix(1.0 - sourceValue, colors.background, colors.wave);
-		dest[i] = color.toInt();
+		dest[i] = inflatePixel(source, distance, i);
 	}
 }
 
@@ -174,9 +169,7 @@ void WaveFormDrawer::inflateLinePow4(array_view<float> source, array_span<uint32
 		distance = distance * distance;
 		distance = distance * distance;
 
-		const auto sourceValue = source[i] * (1.0 - distance);
-		const auto color = Color::mix(1.0 - sourceValue, colors.background, colors.wave);
-		dest[i] = color.toInt();
+		dest[i] = inflatePixel(source, distance, i);
 	}
 }
 
@@ -201,10 +194,32 @@ void WaveFormDrawer::inflateLinePow8(array_view<float> source, array_span<uint32
 		distance = distance * distance;
 		distance = distance * distance;
 
-		const auto sourceValue = source[i] * (1.0 - distance);
-		const auto color = Color::mix(1.0 - sourceValue, colors.background, colors.wave);
-		dest[i] = color.toInt();
+		dest[i] = inflatePixel(source, distance, i);
 	}
+}
+
+uint32_t WaveFormDrawer::inflatePixel(array_view<float> source, double backgroundCoef, index i) {
+	const float current = source[i];
+	const index nextIndex = i < width - 2 ? i + 1 : 0;
+	const float neighbours = std::max(inflatingPrev, source[nextIndex]);
+	inflatingPrev = current;
+
+	if (current > 2.0) { // when peak
+		inflatingPrev = current - 2.0;
+		const auto mixedColor = Color::mix(backgroundCoef, colors.background, colors.halo);
+		return mixedColor.toInt();
+	}
+
+	if (edges == SmoothEdges::eHALO && neighbours > current * 2.0) {
+		const auto sourceValue = (current + neighbours) * 0.5 * (1.0 - backgroundCoef);
+		const auto mixedColor = Color::mix(1.0 - sourceValue, colors.background, colors.halo);
+		return mixedColor.toInt();
+	}
+
+	// generic
+	const auto sourceValue = current * (1.0 - backgroundCoef);
+	const auto mixedColor = Color::mix(1.0 - sourceValue, colors.background, colors.wave);
+	return mixedColor.toInt();
 }
 
 std::pair<double, double> WaveFormDrawer::correctMinMaxPixels(double minPixel, double maxPixel) const {
@@ -258,33 +273,42 @@ void WaveFormDrawer::fillStripBuffer(double min, double max) {
 		buffer[i] = 0.0;
 	}
 
+	for (index i = lowLineBound; i < highLineBound; i++) {
+		buffer[i] = 1.0;
+	}
+
+	for (index i = highBackgroundBound + 1; i < height; ++i) {
+		buffer[i] = 0.0;
+	}
+
 	const double lowPercent = interpolator.percentRelativeToNext(minPixel);
-	if (edgeAntialiasing) {
-		buffer[lowBackgroundBound] = 1.0 - lowPercent;
-	} else {
+	const double highPercent = interpolator.percentRelativeToNext(maxPixel);
+
+	switch (edges) {
+	case SmoothEdges::eNONE: {
 		if (lowPercent < 0.5) {
 			buffer[lowBackgroundBound] = 1.0;
 		} else {
 			buffer[lowBackgroundBound] = 0.0;
 		}
-	}
 
-	for (index i = lowLineBound; i < highLineBound; i++) {
-		buffer[i] = 1.0;
-	}
-
-	const double highPercent = interpolator.percentRelativeToNext(maxPixel);
-	if (edgeAntialiasing) {
-		buffer[highBackgroundBound] = highPercent;
-	} else {
 		if (highPercent > 0.5) {
 			buffer[highBackgroundBound] = 1.0;
 		} else {
 			buffer[highBackgroundBound] = 0.0;
 		}
+		break;
 	}
-
-	for (index i = highBackgroundBound + 1; i < height; ++i) {
-		buffer[i] = 0.0;
+	case SmoothEdges::eMIN_MAX: {
+		buffer[lowBackgroundBound] = 1.0 - lowPercent;
+		buffer[highBackgroundBound] = highPercent;
+		break;
+	}
+	case SmoothEdges::eHALO: {
+		buffer[lowBackgroundBound] = 1.0 - lowPercent + 2.0;
+		buffer[highBackgroundBound] = highPercent + 2.0;
+		break;
+	}
+	default: ;
 	}
 }

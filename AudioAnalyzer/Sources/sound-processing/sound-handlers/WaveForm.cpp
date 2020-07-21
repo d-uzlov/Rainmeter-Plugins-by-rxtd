@@ -18,7 +18,8 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl, const utils::Rainmeter& rain) {
+std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl,
+                                                      const utils::Rainmeter& rain) {
 	Params params;
 
 	params.width = optionMap.get(L"width"sv).asInt(100);
@@ -40,11 +41,12 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& op
 	}
 	params.resolution *= 0.001;
 
-	string folder { optionMap.get(L"folder"sv).asString() };
-	if (!folder.empty() && folder[0] == L'\"') { // TODO WTF is this?
+	string folder{ optionMap.get(L"folder"sv).asString() };
+	if (!folder.empty() && folder[0] == L'\"') {
+		// TODO WTF is this?
 		folder = folder.substr(1);
 	}
-	std::filesystem::path path { folder };
+	std::filesystem::path path{ folder };
 	if (!path.is_absolute()) {
 		folder = rain.replaceVariables(L"[#CURRENTPATH]") % own() + folder;
 	}
@@ -56,13 +58,13 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& op
 
 	params.prefix = folder;
 
-	params.backgroundColor = optionMap.get(L"backgroundColor"sv).asColor({ 0, 0, 0, 1 });
+	params.colors.background = optionMap.get(L"backgroundColor"sv).asColor({ 0, 0, 0, 1 });
+	params.colors.wave = optionMap.get(L"waveColor"sv).asColor({ 1, 1, 1, 1 });
+	params.colors.line = optionMap.get(L"lineColor"sv).asColor({ 0.5, 0.5, 0.5, 0.5 });
+	params.colors.border = optionMap.get(L"borderColor"sv).asColor({ 1.0, 0.2, 0.2, 1 });
+	params.colors.halo = optionMap.get(L"haloColor"sv).asColor({ 1.0, 0.4, 0.0, 1 });
 
-	params.waveColor = optionMap.get(L"waveColor"sv).asColor({ 1, 1, 1, 1 });
-	params.lineColor = optionMap.get(L"lineColor"sv).asColor(params.waveColor);
-	params.borderColor = optionMap.get(L"borderColor"sv).asColor({ 1.0, 0.2, 0.2, 1});
-	
-	if (const auto ldpString = optionMap.get(L"lineDrawingPolicy"sv).asIString(L"always"); 
+	if (const auto ldpString = optionMap.get(L"lineDrawingPolicy"sv).asIString(L"always");
 		ldpString == L"always") {
 		params.lineDrawingPolicy = LDP::eALWAYS;
 	} else if (ldpString == L"belowWave") {
@@ -74,14 +76,24 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& op
 		params.lineDrawingPolicy = LDP::eALWAYS;
 	}
 
-	params.peakAntialiasing = optionMap.get(L"peakAntialiasing").asBool(false);
+	if (const auto ldpString = optionMap.get(L"Edges"sv).asIString(L"none");
+		ldpString == L"none") {
+		params.edges = SE::eNONE;
+	} else if (ldpString == L"smoothMinMax") {
+		params.edges = SE::eMIN_MAX;
+	} else if (ldpString == L"halo") {
+		params.edges = SE::eHALO;
+	} else {
+		cl.warning(L"SmoothEdges '{}' not recognized, assume 'none'", ldpString);
+		params.edges = SE::eNONE;
+	}
 
 	params.stationary = optionMap.get(L"Stationary").asBool(false);
 	params.connected = optionMap.get(L"connected").asBool(true);
 
 	params.borderSize = optionMap.get(L"borderSize").asInt(0);
 
-	if (const auto fading = optionMap.get(L"fading").asIString(L"None"); 
+	if (const auto fading = optionMap.get(L"fading").asIString(L"None");
 		fading == L"None") {
 		params.fading = FD::eNONE;
 	} else if (fading == L"Linear") {
@@ -130,7 +142,7 @@ void WaveForm::WaveformValueTransformer::reset() {
 	cvt.resetState();
 }
 
-void WaveForm::setParams(const Params &_params, Channel channel) {
+void WaveForm::setParams(const Params& _params, Channel channel) {
 	if (params == _params) {
 		return;
 	}
@@ -144,8 +156,8 @@ void WaveForm::setParams(const Params &_params, Channel channel) {
 	minDistinguishableValue = 1.0 / params.height / 2.0; // below half pixel
 
 	drawer.setDimensions(params.width, params.height);
-	drawer.setEdgeAntialiasing(params.peakAntialiasing);
-	drawer.setColors(params.backgroundColor, params.waveColor, params.lineColor, params.borderColor);
+	drawer.setEdges(params.edges);
+	drawer.setColors(params.colors);
 	drawer.setLineDrawingPolicy(params.lineDrawingPolicy);
 	drawer.setStationary(params.stationary);
 	drawer.setFading(params.fading);
@@ -241,7 +253,7 @@ void WaveForm::processSilence(const DataSupplier& dataSupplier) {
 	}
 
 	const auto waveSize = dataSupplier.getWave().size();
-	
+
 	index waveProcessed = 0;
 
 	while (waveProcessed != waveSize) {
