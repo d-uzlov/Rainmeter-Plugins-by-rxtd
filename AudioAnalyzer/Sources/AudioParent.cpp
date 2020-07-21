@@ -32,14 +32,34 @@ void AudioParent::_reload() {
 	const auto source = this->rain.readString(L"Source") % ciView();
 	string id = { };
 	DataSource sourceEnum;
-	if (source == L"" || source == L"Output") {
-		sourceEnum = DataSource::eDEFAULT_OUTPUT;
-	} else if (source == L"Input") {
-		sourceEnum = DataSource::eDEFAULT_INPUT;
+	if (!source.empty()) {
+		if (source == L"Output") {
+			sourceEnum = DataSource::eDEFAULT_OUTPUT;
+		} else if (source == L"Input") {
+			sourceEnum = DataSource::eDEFAULT_INPUT;
+		} else {
+			logger.debug(L"Using '{}' as source audio device ID.", source);
+			sourceEnum = DataSource::eID;
+			id = source % csView();
+		}
 	} else {
-		logger.debug(L"Using '{}' as source audio device ID.", source);
-		sourceEnum = DataSource::eID;
-		id = source % csView();
+		// legacy
+		if (auto legacyID = this->rain.readString(L"DeviceID");
+			!legacyID.empty()) {
+			logger.debug(L"Using '{}' as source audio device ID.", legacyID);
+			sourceEnum = DataSource::eID;
+			id = legacyID;
+		} else {
+			const auto port = this->rain.readString(L"Port") % ciView();
+			if (port.empty() || port == L"Output") {
+				sourceEnum = DataSource::eDEFAULT_OUTPUT;
+			} else if (port == L"Input") {
+				sourceEnum = DataSource::eDEFAULT_INPUT;
+			} else {
+				logger.error(L"Invalid Port '{}', must be one of: Output, Input. Set to Output.", port);
+				sourceEnum = DataSource::eDEFAULT_OUTPUT;
+			}
+		}
 	}
 
 	deviceManager.setOptions(sourceEnum, id);
@@ -81,6 +101,7 @@ double AudioParent::_update() {
 
 void AudioParent::_command(isview bangArgs) {
 	if (bangArgs == L"updateDevList") {
+		deviceManager.getDeviceEnumerator().updateDeviceStringLegacy(deviceManager.getCurrentDeviceType());
 		deviceManager.getDeviceEnumerator().updateDeviceStrings();
 		return;
 	}
@@ -193,6 +214,10 @@ void AudioParent::_resolve(int argc, const wchar_t* argv[], string& resolveBuffe
 		return;
 	}
 
+	if (optionName == L"device list") {
+		resolveBufferString = deviceManager.getDeviceEnumerator().getDeviceListLegacy();
+		return;
+	}
 	if (optionName == L"device list input") {
 		resolveBufferString = deviceManager.getDeviceEnumerator().getDeviceListInput();
 		return;

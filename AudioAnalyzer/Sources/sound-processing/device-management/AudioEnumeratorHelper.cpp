@@ -46,7 +46,8 @@ namespace rxtd::audio_analyzer {
 		utils::MediaDeviceWrapper audioDeviceHandle = enumeratorWrapper.getDeviceByID(typeOpt.value(), deviceID);
 
 		if (enumeratorWrapper.getLastResult() != S_OK) {
-			logger.error(L"Audio device with ID '{}' not found, error code {error}", deviceID, enumeratorWrapper.getLastResult());
+			logger.error(L"Audio device with ID '{}' not found, error code {error}", deviceID,
+			             enumeratorWrapper.getLastResult());
 			return std::nullopt;
 		}
 
@@ -57,7 +58,9 @@ namespace rxtd::audio_analyzer {
 		utils::MediaDeviceWrapper audioDeviceHandle = enumeratorWrapper.getDefaultDevice(type);
 
 		if (enumeratorWrapper.getLastResult() != S_OK) {
-			logger.error(L"Can't get default {} audio device, error code {error}", type == utils::MediaDeviceType::eOUTPUT ? L"output" : L"input", enumeratorWrapper.getLastResult());
+			logger.error(L"Can't get default {} audio device, error code {error}",
+			             type == utils::MediaDeviceType::eOUTPUT ? L"output" : L"input",
+			             enumeratorWrapper.getLastResult());
 			valid = false;
 			return std::nullopt;
 		}
@@ -102,8 +105,8 @@ namespace rxtd::audio_analyzer {
 
 	string AudioEnumeratorHelper::makeDeviceString(utils::MediaDeviceType type) {
 		auto collection = enumeratorWrapper.getActiveDevices(type);
-		if (enumeratorWrapper.getLastResult() != S_OK) { // TODO this is never true
-			logger.error(L"Can't read audio device list: EnumAudioEndpoints() failed, error code {}", enumeratorWrapper.getLastResult());
+		if (collection.empty()) {
+			logger.warning(L"No {} devices found", type == utils::MediaDeviceType::eINPUT ? L"input" : L"output");
 			valid = false;
 			return { };
 		}
@@ -134,8 +137,8 @@ namespace rxtd::audio_analyzer {
 
 	std::set<string> AudioEnumeratorHelper::readDeviceList(utils::MediaDeviceType type) {
 		auto collection = enumeratorWrapper.getAllDevices(type);
-		if (enumeratorWrapper.getLastResult() != S_OK) {
-			logger.error(L"Can't read audio device list: EnumAudioEndpoints() failed, error code {}", enumeratorWrapper.getLastResult());
+		if (collection.empty()) {
+			logger.warning(L"No {} devices found", type == utils::MediaDeviceType::eINPUT ? L"input" : L"output");
 			valid = false;
 			return { };
 		}
@@ -146,5 +149,28 @@ namespace rxtd::audio_analyzer {
 		}
 
 		return list;
+	}
+
+	void AudioEnumeratorHelper::updateDeviceStringLegacy(utils::MediaDeviceType type) {
+		deviceStringLegacy.clear();
+
+		auto collection = enumeratorWrapper.getActiveDevices(type);
+		if (collection.empty()) {
+			valid = false;
+			return;
+		}
+
+		deviceStringLegacy.reserve(collection.size() * 120);
+
+		for (auto& device : collection) {
+			const auto deviceInfo = device.readDeviceInfo();
+
+			deviceStringLegacy += deviceInfo.id;
+			deviceStringLegacy += L" "sv;
+			deviceStringLegacy += deviceInfo.fullFriendlyName;
+			deviceStringLegacy += L"\n"sv;
+		}
+
+		deviceStringLegacy.resize(deviceStringLegacy.size());
 	}
 }
