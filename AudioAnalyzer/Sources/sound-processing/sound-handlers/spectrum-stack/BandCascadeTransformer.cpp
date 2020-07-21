@@ -75,10 +75,6 @@ void BandCascadeTransformer::_process(const DataSupplier& dataSupplier) {
 	changed = true;
 }
 
-void BandCascadeTransformer::_processSilence(const DataSupplier& dataSupplier) {
-	_process(dataSupplier);
-}
-
 void BandCascadeTransformer::_finish(const DataSupplier& dataSupplier) {
 	if (!changed) {
 		return;

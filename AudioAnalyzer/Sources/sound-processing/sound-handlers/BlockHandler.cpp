@@ -125,6 +125,7 @@ void BlockHandler::_processSilence(const DataSupplier& dataSupplier) {
 	while (waveProcessed != waveSize) {
 		const index missingPoints = blockSize - counter;
 		if (waveProcessed + missingPoints <= waveSize) {
+			counter = blockSize;
 			finishBlock();
 			waveProcessed += missingPoints;
 		} else {

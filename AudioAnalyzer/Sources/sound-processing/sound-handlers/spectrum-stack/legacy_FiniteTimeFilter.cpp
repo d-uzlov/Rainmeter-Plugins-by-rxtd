@@ -98,10 +98,6 @@ void legacy_FiniteTimeFilter::_process(const DataSupplier& dataSupplier) {
 	changed = true;
 }
 
-void legacy_FiniteTimeFilter::_processSilence(const DataSupplier& dataSupplier) {
-	_process(dataSupplier);
-}
-
 void legacy_FiniteTimeFilter::_finish(const DataSupplier& dataSupplier) {
 	if (!changed) {
 		return;

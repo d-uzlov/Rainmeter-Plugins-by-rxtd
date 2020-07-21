@@ -74,8 +74,3 @@ void SingleValueTransformer::_process(const DataSupplier& dataSupplier) {
 	params.transformer.setParams(samplesPerSec, dataSupplier.getWave().size());
 	params.transformer.applyToArray(values);
 }
-
-void SingleValueTransformer::_processSilence(const DataSupplier& dataSupplier) {
-	// TODO
-}
-

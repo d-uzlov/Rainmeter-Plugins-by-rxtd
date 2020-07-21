@@ -78,10 +78,6 @@ void UniformBlur::_process(const DataSupplier& dataSupplier) {
 	changed = true;
 }
 
-void UniformBlur::_processSilence(const DataSupplier& dataSupplier) {
-	_process(dataSupplier);
-}
-
 void UniformBlur::_finish(const DataSupplier& dataSupplier) {
 	if (!changed) {
 		return;

@@ -89,10 +89,6 @@ void BandResampler::_process(const DataSupplier& dataSupplier) {
 	changed = true;
 }
 
-void BandResampler::_processSilence(const DataSupplier& dataSupplier) {
-	_process(dataSupplier);
-}
-
 void BandResampler::_finish(const DataSupplier& dataSupplier) {
 	if (changed) {
 		updateValues(dataSupplier);

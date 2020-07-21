@@ -51,10 +51,6 @@ void legacy_LogarithmicValueMapper::_process(const DataSupplier& dataSupplier) {
 	changed = true;
 }
 
-void legacy_LogarithmicValueMapper::_processSilence(const DataSupplier& dataSupplier) {
-	_process(dataSupplier);
-}
-
 void legacy_LogarithmicValueMapper::_finish(const DataSupplier& dataSupplier) {
 	if (changed) {
 		updateValues(dataSupplier);

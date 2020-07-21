@@ -103,10 +103,6 @@ void WeightedBlur::_process(const DataSupplier& dataSupplier) {
 	changed = true;
 }
 
-void WeightedBlur::_processSilence(const DataSupplier& dataSupplier) {
-	_process(dataSupplier);
-}
-
 void WeightedBlur::_finish(const DataSupplier& dataSupplier) {
 	if (!changed) {
 		return;

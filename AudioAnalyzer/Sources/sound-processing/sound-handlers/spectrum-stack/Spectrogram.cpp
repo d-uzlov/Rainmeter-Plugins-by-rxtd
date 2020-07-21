@@ -260,10 +260,6 @@ void Spectrogram::_process(const DataSupplier& dataSupplier) {
 	}
 }
 
-void Spectrogram::_processSilence(const DataSupplier& dataSupplier) {
-	_process(dataSupplier);
-}
-
 void Spectrogram::_finish(const DataSupplier& dataSupplier) {
 	if (changed) {
 		writerHelper.write(image.getPixels(), image.isEmpty(), filepath);
