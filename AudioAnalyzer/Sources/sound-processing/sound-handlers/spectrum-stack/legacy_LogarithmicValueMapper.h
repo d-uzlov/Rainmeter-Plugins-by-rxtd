@@ -12,11 +12,11 @@
 #include "RainmeterWrappers.h"
 
 namespace rxtd::audio_analyzer {
-	class LogarithmicValueMapper : public SoundHandler {
+	class legacy_LogarithmicValueMapper : public SoundHandler {
 	public:
 		struct Params {
 		private:
-			friend LogarithmicValueMapper;
+			friend legacy_LogarithmicValueMapper;
 
 			istring sourceId;
 

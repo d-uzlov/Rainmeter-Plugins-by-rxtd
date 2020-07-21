@@ -7,7 +7,7 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include "LogarithmicValueMapper.h"
+#include "legacy_LogarithmicValueMapper.h"
 #include "FastMath.h"
 #include "option-parser/OptionMap.h"
 
@@ -18,7 +18,7 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-std::optional<LogarithmicValueMapper::Params> LogarithmicValueMapper::parseParams(
+std::optional<legacy_LogarithmicValueMapper::Params> legacy_LogarithmicValueMapper::parseParams(
 	const utils::OptionMap& optionMap,
 	utils::Rainmeter::Logger& cl
 ) {
@@ -39,7 +39,7 @@ std::optional<LogarithmicValueMapper::Params> LogarithmicValueMapper::parseParam
 	return params;
 }
 
-void LogarithmicValueMapper::setParams(Params _params, Channel channel) {
+void legacy_LogarithmicValueMapper::setParams(Params _params, Channel channel) {
 	this->params = std::move(_params);
 
 	logNormalization = 20.0 / params.sensitivity;
@@ -47,37 +47,37 @@ void LogarithmicValueMapper::setParams(Params _params, Channel channel) {
 	setValid(true);
 }
 
-void LogarithmicValueMapper::_process(const DataSupplier& dataSupplier) {
+void legacy_LogarithmicValueMapper::_process(const DataSupplier& dataSupplier) {
 	changed = true;
 }
 
-void LogarithmicValueMapper::_processSilence(const DataSupplier& dataSupplier) {
+void legacy_LogarithmicValueMapper::_processSilence(const DataSupplier& dataSupplier) {
 	_process(dataSupplier);
 }
 
-void LogarithmicValueMapper::_finish(const DataSupplier& dataSupplier) {
+void legacy_LogarithmicValueMapper::_finish(const DataSupplier& dataSupplier) {
 	if (changed) {
 		updateValues(dataSupplier);
 		changed = false;
 	}
 }
 
-void LogarithmicValueMapper::setSamplesPerSec(index samplesPerSec) {
+void legacy_LogarithmicValueMapper::setSamplesPerSec(index samplesPerSec) {
 	this->samplesPerSec = samplesPerSec;
 }
 
-const wchar_t* LogarithmicValueMapper::getProp(const isview& prop) const {
+const wchar_t* legacy_LogarithmicValueMapper::getProp(const isview& prop) const {
 	propString.clear();
 
 	return nullptr;
 }
 
-void LogarithmicValueMapper::reset() {
+void legacy_LogarithmicValueMapper::reset() {
 	changed = true;
 }
 
 
-void LogarithmicValueMapper::updateValues(const DataSupplier& dataSupplier) {
+void legacy_LogarithmicValueMapper::updateValues(const DataSupplier& dataSupplier) {
 	setValid(false);
 
 	const auto source = dataSupplier.getHandler(params.sourceId);
@@ -90,7 +90,7 @@ void LogarithmicValueMapper::updateValues(const DataSupplier& dataSupplier) {
 	setValid(true);
 }
 
-void LogarithmicValueMapper::transformToLog(const SoundHandler& source) {
+void legacy_LogarithmicValueMapper::transformToLog(const SoundHandler& source) {
 	constexpr double log10inverse = 0.30102999566398119521; // 1.0 / log2(10)
 
 	const auto layersCount = source.getLayersCount();

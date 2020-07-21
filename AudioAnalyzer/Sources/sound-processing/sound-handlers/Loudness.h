@@ -38,5 +38,4 @@ namespace rxtd::audio_analyzer {
 	private:
 		void preprocessWave(array_span<float> wave);
 	};
-
 }

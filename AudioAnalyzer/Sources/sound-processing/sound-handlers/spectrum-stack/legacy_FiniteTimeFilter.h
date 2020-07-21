@@ -13,7 +13,7 @@
 #include "BandResampler.h"
 
 namespace rxtd::audio_analyzer {
-	class FiniteTimeFilter : public ResamplerProvider {
+	class legacy_FiniteTimeFilter : public ResamplerProvider {
 	public:
 		enum class SmoothingCurve {
 			FLAT,
@@ -23,7 +23,7 @@ namespace rxtd::audio_analyzer {
 
 		struct Params {
 		private:
-			friend FiniteTimeFilter;
+			friend legacy_FiniteTimeFilter;
 
 			istring sourceId{ };
 
@@ -50,9 +50,7 @@ namespace rxtd::audio_analyzer {
 		index samplesPerSec{ };
 
 		// pastValues[Layer][FilterSize][Band]
-		// std::vector<std::vector<std::vector<float>>> pastValues;
 		std::vector<utils::Vector2D<float>> pastValues;
-		// std::vector<std::vector<float>> values;
 		utils::Vector2D<float> values;
 		index pastValuesIndex = 0;
 
@@ -65,7 +63,6 @@ namespace rxtd::audio_analyzer {
 		mutable string propString{ };
 
 	public:
-
 		static std::optional<Params> parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl);
 
 		void setParams(Params _params, Channel channel);

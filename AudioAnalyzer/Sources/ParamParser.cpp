@@ -17,9 +17,9 @@
 #include "sound-processing/sound-handlers/spectrum-stack/BandResampler.h"
 #include "sound-processing/sound-handlers/spectrum-stack/BandCascadeTransformer.h"
 #include "sound-processing/sound-handlers/spectrum-stack/WeightedBlur.h"
-#include "sound-processing/sound-handlers/spectrum-stack/FiniteTimeFilter.h"
+#include "sound-processing/sound-handlers/spectrum-stack/legacy_FiniteTimeFilter.h"
 #include "sound-processing/sound-handlers/spectrum-stack/UniformBlur.h"
-#include "sound-processing/sound-handlers/spectrum-stack/LogarithmicValueMapper.h"
+#include "sound-processing/sound-handlers/spectrum-stack/legacy_LogarithmicValueMapper.h"
 #include "sound-processing/sound-handlers/spectrum-stack/Spectrogram.h"
 #include "sound-processing/sound-handlers/spectrum-stack/SingleValueTransformer.h"
 
@@ -219,10 +219,10 @@ std::function<SoundHandler*(SoundHandler*, Channel)> ParamParser::parseHandler(
 		return parseHandlerT<UniformBlur>(optionMap, cl);
 	}
 	if (type == L"FiniteTimeFilter") {
-		return parseHandlerT<FiniteTimeFilter>(optionMap, cl);
+		return parseHandlerT<legacy_FiniteTimeFilter>(optionMap, cl);
 	}
 	if (type == L"LogarithmicValueMapper") {
-		return parseHandlerT<LogarithmicValueMapper>(optionMap, cl);
+		return parseHandlerT<legacy_LogarithmicValueMapper>(optionMap, cl);
 	}
 	if (type == L"spectrogram") {
 		return parseHandlerT2<Spectrogram>(optionMap, cl);

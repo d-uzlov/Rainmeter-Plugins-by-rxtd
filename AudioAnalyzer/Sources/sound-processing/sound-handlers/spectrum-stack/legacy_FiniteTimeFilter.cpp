@@ -7,7 +7,7 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include "FiniteTimeFilter.h"
+#include "legacy_FiniteTimeFilter.h"
 #include "option-parser/OptionMap.h"
 
 #include "undef.h"
@@ -17,7 +17,7 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-std::optional<FiniteTimeFilter::Params> FiniteTimeFilter::parseParams(
+std::optional<legacy_FiniteTimeFilter::Params> legacy_FiniteTimeFilter::parseParams(
 	const utils::OptionMap& optionMap,
 	utils::Rainmeter::Logger& cl
 ) {
@@ -51,7 +51,7 @@ std::optional<FiniteTimeFilter::Params> FiniteTimeFilter::parseParams(
 	return params;
 }
 
-void FiniteTimeFilter::setParams(Params _params, Channel channel) {
+void legacy_FiniteTimeFilter::setParams(Params _params, Channel channel) {
 	if (this->params == _params) {
 		return;
 	}
@@ -94,15 +94,15 @@ void FiniteTimeFilter::setParams(Params _params, Channel channel) {
 	setValid(true);
 }
 
-void FiniteTimeFilter::_process(const DataSupplier& dataSupplier) {
+void legacy_FiniteTimeFilter::_process(const DataSupplier& dataSupplier) {
 	changed = true;
 }
 
-void FiniteTimeFilter::_processSilence(const DataSupplier& dataSupplier) {
+void legacy_FiniteTimeFilter::_processSilence(const DataSupplier& dataSupplier) {
 	_process(dataSupplier);
 }
 
-void FiniteTimeFilter::_finish(const DataSupplier& dataSupplier) {
+void legacy_FiniteTimeFilter::_finish(const DataSupplier& dataSupplier) {
 	if (!changed) {
 		return;
 	}
@@ -129,16 +129,16 @@ void FiniteTimeFilter::_finish(const DataSupplier& dataSupplier) {
 	setValid(true);
 }
 
-void FiniteTimeFilter::setSamplesPerSec(index samplesPerSec) {
+void legacy_FiniteTimeFilter::setSamplesPerSec(index samplesPerSec) {
 	this->samplesPerSec = samplesPerSec;
 }
 
-const wchar_t* FiniteTimeFilter::getProp(const isview& prop) const {
+const wchar_t* legacy_FiniteTimeFilter::getProp(const isview& prop) const {
 	propString.clear();
 	return nullptr; // TODO
 }
 
-void FiniteTimeFilter::adjustSize() {
+void legacy_FiniteTimeFilter::adjustSize() {
 	const auto layersCount = source->getLayersCount();
 	const auto valuesCount = source->getData(0).size();
 
@@ -157,11 +157,11 @@ void FiniteTimeFilter::adjustSize() {
 
 }
 
-void FiniteTimeFilter::reset() {
+void legacy_FiniteTimeFilter::reset() {
 	changed = true;
 }
 
-void FiniteTimeFilter::copyValues() {
+void legacy_FiniteTimeFilter::copyValues() {
 	const auto layersCount = source->getLayersCount();
 
 	pastValuesIndex++;
@@ -177,7 +177,7 @@ void FiniteTimeFilter::copyValues() {
 	}
 }
 
-void FiniteTimeFilter::applyTimeFiltering() {
+void legacy_FiniteTimeFilter::applyTimeFiltering() {
 	auto startPastIndex = pastValuesIndex + 1;
 	if (startPastIndex >= params.smoothingFactor) {
 		startPastIndex = 0;

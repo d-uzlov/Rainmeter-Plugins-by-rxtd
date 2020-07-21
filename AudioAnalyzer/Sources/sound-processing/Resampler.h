@@ -12,8 +12,6 @@
 
 namespace rxtd::audio_analyzer {
 	class Resampler {
-	private:
-
 		index sourceRate = 0; // before any modifications
 		index targetRate = 0; // desired rate
 		index sampleRate = 0; // after division
@@ -30,5 +28,4 @@ namespace rxtd::audio_analyzer {
 	private:
 		void updateValues();
 	};
-
 }

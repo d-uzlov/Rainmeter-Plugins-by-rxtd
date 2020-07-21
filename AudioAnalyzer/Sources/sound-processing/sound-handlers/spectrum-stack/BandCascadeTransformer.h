@@ -72,7 +72,6 @@ namespace rxtd::audio_analyzer {
 			bool weightError = false;
 		} analysis;
 
-
 	public:
 		static std::optional<Params> parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl);
 
