@@ -48,12 +48,18 @@ void ParamParser::parse() {
 	}
 
 	for (const auto& processingNameOption : processingIndices) {
-		auto processingName = processingNameOption.asIString();
+		auto processingName = processingNameOption.asString();
 		auto cl = rain.getLogger().context(L"Processing {}: ", processingName);
 
-		string processingOptionIndex = L"Processing_"s;
-		processingOptionIndex += processingName % csView();
+		string processingOptionIndex = L"Processing-"s;
+		processingOptionIndex += processingName;
 		auto processingDescriptionOption = rain.read(processingOptionIndex);
+		if (processingDescriptionOption.empty()) {
+			processingOptionIndex = L"Processing_"s;
+			processingOptionIndex += processingName;
+			processingDescriptionOption = rain.read(processingOptionIndex);
+		}
+
 		if (processingDescriptionOption.empty()) {
 			cl.error(L"processing description not found");
 			continue;
@@ -141,10 +147,17 @@ void ParamParser::cacheHandlers(const utils::OptionList& indices) {
 			continue;
 		}
 
-		string optionName = L"Handler_";
+		string optionName = L"Handler-";
 		optionName += indexOption.asString();
 
-		const auto descriptionOption = rain.read(optionName);
+		auto descriptionOption = rain.read(optionName);
+
+		if (descriptionOption.empty()) {
+			optionName = L"Handler_";
+			optionName += indexOption.asString();
+			descriptionOption = rain.read(optionName);
+		}
+
 		if (descriptionOption.empty()) {
 			log.error(L"Description of '{}' not found", indexOption.asString());
 			continue;
