@@ -9,10 +9,9 @@
 
 #pragma once
 #include "../SoundHandler.h"
-#include <random>
 #include "RainmeterWrappers.h"
 #include "../../../audio-utils/FFT.h"
-#include "../../../audio-utils/LogarithmicIRF.h"
+#include "../../../audio-utils/FftCascade.h"
 
 namespace rxtd::audio_analyzer {
 	class FftAnalyzer : public SoundHandler {
@@ -60,32 +59,6 @@ namespace rxtd::audio_analyzer {
 		};
 
 	private:
-		struct CascadeData {
-			FftAnalyzer* parent{ };
-			CascadeData* successor{ };
-
-			// double attackDecay[2] { 0.0, 0.0 };
-			audio_utils::LogarithmicIRF filter{ };
-			std::vector<float> ringBuffer;
-			std::vector<float> values;
-			index filledElements{ };
-			index transferredElements{ };
-			float odd = 10.0f; // 10.0 is used as "no value" because valid values are in [-1.0; 1.0]
-			double dc{ };
-			// Fourier transform looses energy due to downsample, so we multiply result of FFT by (2^0.5)^countOfDownsampleIterations
-			double downsampleGain{ };
-
-			void setParams(FftAnalyzer* parent, CascadeData* successor, layer_t ind);
-			void process(const float* wave, index waveSize);
-			void processRandom(index waveSize, double amplitude);
-			void processSilence(index waveSize);
-			void reset();
-
-		private:
-			void doFft();
-			void processResampled(const float* wave, index waveSize);
-		};
-
 		Params params{ };
 
 		index samplesPerSec{ };
@@ -98,21 +71,11 @@ namespace rxtd::audio_analyzer {
 
 		enum class RandomState { ON, OFF } randomState{ RandomState::ON };
 
-		std::vector<CascadeData> cascades{ };
+		std::vector<audio_utils::FftCascade> cascades{ };
 
 		audio_utils::FFT fft{ };
 
 		mutable string propString{ };
-
-		class Random {
-			std::random_device rd;
-			std::mt19937 e2;
-			std::uniform_real_distribution<> dist;
-
-		public:
-			Random();
-			double next();
-		} random;
 
 	public:
 		FftAnalyzer() = default;

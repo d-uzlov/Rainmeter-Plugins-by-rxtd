@@ -16,246 +16,6 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-void FftAnalyzer::CascadeData::setParams(FftAnalyzer* parent, CascadeData* successor, layer_t cascadeIndex) {
-	this->parent = parent;
-	this->successor = successor;
-
-	filledElements = 0;
-	transferredElements = 0;
-	ringBuffer.resize(parent->fftSize);
-
-	const index newValuesSize = parent->fftSize / 2;
-	if (values.empty()) {
-		values.resize(newValuesSize);
-	} else if (index(values.size()) != newValuesSize) {
-		double coef = double(values.size()) / newValuesSize;
-
-		if (index(values.size()) < newValuesSize) {
-			values.resize(newValuesSize);
-
-			for (int i = newValuesSize - 1; i >= 1; i--) {
-				index oldIndex = std::clamp<index>(i * coef, 0, values.size() - 1);
-				values[i] = values[oldIndex];
-			}
-		}
-
-		if (index(values.size()) > newValuesSize) {
-			for (int i = 1; i < newValuesSize; i++) {
-				index oldIndex = std::clamp<index>(i * coef, 0, values.size() - 1);
-				values[i] = values[oldIndex];
-			}
-
-			values.resize(newValuesSize);
-		}
-
-		values[0] = 0.0;
-		// std::fill(values.begin(), values.end(), 0.0f);
-	}
-
-	auto samplesPerSec = parent->samplesPerSec;
-	samplesPerSec = index(samplesPerSec / std::pow(2, cascadeIndex));
-
-	filter.setParams(parent->params.attackTime, parent->params.decayTime, samplesPerSec, parent->inputStride);
-
-	downsampleGain = std::pow(2, cascadeIndex * 0.5);
-}
-
-void FftAnalyzer::CascadeData::process(const float* wave, index waveSize) {
-	const auto fftSize = parent->fftSize;
-	const auto inputStride = parent->inputStride;
-
-	index waveProcessed = 0;
-	const auto tmpIn = ringBuffer.data();
-
-	while (waveProcessed != waveSize) {
-		const auto copySize = fftSize - filledElements;
-
-		if (waveProcessed + copySize <= waveSize) {
-			const auto copyStartPlace = wave + waveProcessed;
-			std::copy(copyStartPlace, copyStartPlace + copySize, tmpIn + filledElements);
-
-			if (successor != nullptr) {
-				successor->processResampled(tmpIn + transferredElements, ringBuffer.size() - transferredElements);
-			}
-
-			waveProcessed += copySize;
-
-			doFft();
-			std::copy(tmpIn + inputStride, tmpIn + fftSize, tmpIn);
-			filledElements = fftSize - inputStride;
-			transferredElements = filledElements;
-		} else {
-			std::copy(wave + waveProcessed, wave + waveSize, tmpIn + filledElements);
-
-			filledElements = filledElements + waveSize - waveProcessed;
-			waveProcessed = waveSize;
-		}
-	}
-}
-
-void FftAnalyzer::CascadeData::processRandom(index waveSize, double amplitude) {
-	const auto fftSize = parent->fftSize;
-	const auto inputStride = parent->inputStride;
-	auto& random = parent->random;
-
-	index waveProcessed = 0;
-	const auto tmpIn = ringBuffer.data();
-
-	while (waveProcessed != waveSize) {
-		const auto copySize = fftSize - filledElements;
-
-		if (waveProcessed + copySize <= waveSize) {
-			for (index i = 0; i < copySize; ++i) {
-				tmpIn[filledElements + i] = float(random.next() * amplitude);
-			}
-
-			if (successor != nullptr) {
-				successor->processResampled(tmpIn + transferredElements, ringBuffer.size() - transferredElements);
-			}
-
-			waveProcessed += copySize;
-
-			doFft();
-			std::copy(tmpIn + inputStride, tmpIn + fftSize, tmpIn);
-			filledElements = fftSize - inputStride;
-			transferredElements = filledElements;
-		} else {
-			for (index i = 0; i < waveSize - waveProcessed; ++i) {
-				tmpIn[filledElements + i] = float(random.next());
-			}
-
-			filledElements = filledElements + waveSize - waveProcessed;
-			waveProcessed = waveSize;
-		}
-	}
-}
-
-void FftAnalyzer::CascadeData::processResampled(const float* const wave, index waveSize) {
-	const auto fftSize = parent->fftSize;
-	const auto inputStride = parent->inputStride;
-
-	if (waveSize <= 0) {
-		return;
-	}
-
-	index waveProcessed = 0;
-	const auto tmpIn = ringBuffer.data();
-	if (std::abs(odd) <= 1.0f) {
-		tmpIn[filledElements] = (odd + wave[0]) * 0.5f;
-		odd = 10.0f;
-		filledElements++;
-		waveProcessed = 1;
-	}
-
-	while (waveProcessed != waveSize) {
-		const auto elementPairsNeeded = fftSize - filledElements;
-		const auto elementPairsLeft = (waveSize - waveProcessed) / 2;
-		const auto copyStartPlace = wave + waveProcessed;
-
-		if (elementPairsNeeded <= elementPairsLeft) {
-			for (index i = 0; i < elementPairsNeeded; i++) {
-				tmpIn[filledElements + i] = (copyStartPlace[i * 2] + copyStartPlace[i * 2 + 1]) * 0.5f;
-			}
-
-			if (successor != nullptr) {
-				successor->processResampled(tmpIn + transferredElements, ringBuffer.size() - transferredElements);
-			}
-
-			waveProcessed += elementPairsNeeded * 2;
-
-			doFft();
-			std::copy(tmpIn + inputStride, tmpIn + fftSize, tmpIn);
-			filledElements = fftSize - inputStride;
-			transferredElements = filledElements;
-		} else {
-			for (index i = 0; i < elementPairsLeft; i++) {
-				tmpIn[filledElements + i] = (copyStartPlace[i * 2] + copyStartPlace[i * 2 + 1]) * 0.5f;
-			}
-
-			filledElements = filledElements + elementPairsLeft;
-			waveProcessed += elementPairsLeft * 2;
-
-			if (waveProcessed != waveSize) {
-				// we should have exactly one element left
-				odd = wave[waveProcessed];
-				waveProcessed = waveSize;
-			} else {
-				odd = 10.0f;
-			}
-		}
-	}
-}
-
-void FftAnalyzer::CascadeData::processSilence(index waveSize) {
-	const auto fftSize = parent->fftSize;
-	const auto inputStride = parent->inputStride;
-
-	index waveProcessed = 0;
-	const auto tmpIn = ringBuffer.data();
-
-	while (waveProcessed != waveSize) {
-		const auto copySize = fftSize - filledElements;
-
-		if (waveProcessed + copySize <= waveSize) {
-			std::fill_n(tmpIn + filledElements, copySize, 0.0f);
-
-			if (successor != nullptr) {
-				successor->processResampled(tmpIn + transferredElements, ringBuffer.size() - transferredElements);
-			}
-
-			waveProcessed += copySize;
-
-			doFft();
-			std::copy(tmpIn + inputStride, tmpIn + fftSize, tmpIn);
-			filledElements = fftSize - inputStride;
-			transferredElements = filledElements;
-		} else {
-			std::fill_n(tmpIn + filledElements, waveSize - waveProcessed, 0.0f);
-
-			filledElements = filledElements + waveSize - waveProcessed;
-			waveProcessed = waveSize;
-		}
-	}
-
-}
-
-void FftAnalyzer::CascadeData::doFft() {
-	parent->fft.process(ringBuffer.data());
-
-	const auto binsCount = parent->fftSize / 2;
-	const auto fftImpl = parent->fft;
-	const auto correctZero = parent->params.correctZero;
-
-	const auto newDC = fftImpl.getDC();
-	dc = filter.apply(dc, newDC);
-
-	auto zerothBin = std::abs(newDC);
-	if (correctZero) {
-		constexpr double root2 = 1.4142135623730950488;
-		zerothBin *= root2;
-	}
-	zerothBin = zerothBin * downsampleGain;
-
-	values[0] = filter.apply(values[0], zerothBin);
-
-	for (index bin = 1; bin < binsCount; ++bin) {
-		const double oldValue = values[bin];
-		const double newValue = fftImpl.getBinMagnitude(bin) * downsampleGain;
-		values[bin] = filter.apply(oldValue, newValue);
-	}
-}
-
-void FftAnalyzer::CascadeData::reset() {
-	std::fill(values.begin(), values.end(), 0.0f);
-}
-
-FftAnalyzer::Random::Random() : e2(rd()), dist(-1.0, 1.0) {
-}
-
-double FftAnalyzer::Random::next() {
-	return dist(e2);
-}
-
 std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(
 	const utils::OptionMap& optionMap,
 	utils::Rainmeter::Logger& cl
@@ -268,7 +28,7 @@ std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(
 	params.decayTime *= 0.001;
 
 
-	if (const auto sizeBy = optionMap.get(L"sizeBy"sv).asIString(L"binWidth"); 
+	if (const auto sizeBy = optionMap.get(L"sizeBy"sv).asIString(L"binWidth");
 		sizeBy == L"binWidth") {
 		params.resolution = optionMap.get(L"binWidth"sv).asFloat(100.0);
 		if (params.resolution <= 0.0) {
@@ -373,7 +133,7 @@ SoundHandler::layer_t FftAnalyzer::getLayersCount() const {
 }
 
 array_view<float> FftAnalyzer::getData(layer_t layer) const {
-	return cascades[layer].values;
+	return cascades[layer].getValues();
 }
 
 void FftAnalyzer::processRandom(index waveSize) {
@@ -441,7 +201,7 @@ const wchar_t* FftAnalyzer::getProp(const isview& prop) const {
 			if (cascadeIndex > 0) {
 				cascadeIndex--;
 			}
-			propString = std::to_wstring(cascades[cascadeIndex].dc);
+			propString = std::to_wstring(cascades[cascadeIndex].getDC());
 			return propString.c_str();
 		}
 
@@ -507,8 +267,17 @@ void FftAnalyzer::updateParams() {
 	randomCurrentOffset = 0;
 
 	cascades.resize(params.cascadesCount);
+
+	audio_utils::FftCascade::Params cascadeParams{ };
+	cascadeParams.fftSize = fftSize;
+	cascadeParams.samplesPerSec = samplesPerSec;
+	cascadeParams.attackTime = params.attackTime;
+	cascadeParams.decayTime = params.decayTime;
+	cascadeParams.inputStride = inputStride;
+	cascadeParams.correctZero = params.correctZero;
+
 	for (layer_t i = 0; i < layer_t(cascades.size()); i++) {
 		const auto next = i + 1 < static_cast<index>(cascades.size()) ? &cascades[i + 1] : nullptr;
-		cascades[i].setParams(this, next, i);
+		cascades[i].setParams(cascadeParams, &fft, next, i);
 	}
 }
