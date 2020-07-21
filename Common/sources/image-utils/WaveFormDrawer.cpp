@@ -37,6 +37,19 @@ void WaveFormDrawer::fillSilence() {
 }
 
 void WaveFormDrawer::fillStrip(double min, double max) {
+	min = std::clamp(min, -1.0, 1.0);
+	max = std::clamp(max, -1.0, 1.0);
+	min = std::min(min, max);
+	max = std::max(min, max);
+
+	if (connected) {
+		min = std::min(min, prev.max);
+		max = std::max(max, prev.min);
+
+		prev.min = min;
+		prev.max = max;
+	}
+
 	fillStripBuffer(min, max);
 	inflatableBuffer.pushStrip(stripBuffer);
 }
@@ -48,26 +61,7 @@ void WaveFormDrawer::inflate() {
 		auto source = imageLines[lineIndex];
 		auto dest = resultBuffer[lineIndex];
 
-		if (fading) {
-			const index lastStripIndex = inflatableBuffer.getLastStripIndex();
-			const double distanceCoef = 1.0 / width;
-			for (int i = 0; i < width; ++i) {
-				index reverseDistance = i - lastStripIndex;
-				if (reverseDistance < 0) {
-					reverseDistance += width;
-				}
-
-				const auto sourceValue = source[i] * reverseDistance * distanceCoef;
-				const auto color = Color::mix(1.0 - sourceValue, colors.background, colors.wave);
-				dest[i] = color.toInt();
-			}
-		} else {
-			for (int i = 0; i < width; ++i) {
-				const auto sourceValue = source[i];
-				const auto color = Color::mix(1.0 - sourceValue, colors.background, colors.wave);
-				dest[i] = color.toInt();
-			}
-		}
+		inflateLine(source, dest);
 	}
 
 	const index centerLineIndex = interpolator.toValueD(0.0);
@@ -83,6 +77,80 @@ void WaveFormDrawer::inflate() {
 		for (int i = 0; i < width; ++i) {
 			destCenter[i] = Color::mix(1.0 - sourceCenter[i], colors.line, colors.wave).toInt();
 		}
+	}
+}
+
+void WaveFormDrawer::inflateLineNoFade(array_view<float> source, array_span<uint32_t> dest) {
+	for (int i = 0; i < width; ++i) {
+		const auto sourceValue = source[i];
+		const auto color = Color::mix(1.0 - sourceValue, colors.background, colors.wave);
+		dest[i] = color.toInt();
+	}
+}
+
+void WaveFormDrawer::inflateLinePow1(array_view<float> source, array_span<uint32_t> dest) {
+	const index lastStripIndex = inflatableBuffer.getLastStripIndex();
+	const double distanceCoef = 1.0 / width;
+	for (int i = 0; i < width; ++i) {
+		auto distance = (lastStripIndex - i) * distanceCoef;
+		if (distance < 0.0) {
+			distance += 1.0;
+		}
+
+		const auto sourceValue = source[i] * (1.0 - distance);
+		const auto color = Color::mix(1.0 - sourceValue, colors.background, colors.wave);
+		dest[i] = color.toInt();
+	}
+}
+
+void WaveFormDrawer::inflateLinePow2(array_view<float> source, array_span<uint32_t> dest) {
+	const index lastStripIndex = inflatableBuffer.getLastStripIndex();
+	const double distanceCoef = 1.0 / width;
+	for (int i = 0; i < width; ++i) {
+		auto distance = (lastStripIndex - i) * distanceCoef;
+		if (distance < 0.0) {
+			distance += 1.0;
+		}
+		distance = distance * distance;
+
+		const auto sourceValue = source[i] * (1.0 - distance);
+		const auto color = Color::mix(1.0 - sourceValue, colors.background, colors.wave);
+		dest[i] = color.toInt();
+	}
+}
+
+void WaveFormDrawer::inflateLinePow4(array_view<float> source, array_span<uint32_t> dest) {
+	const index lastStripIndex = inflatableBuffer.getLastStripIndex();
+	const double distanceCoef = 1.0 / width;
+	for (int i = 0; i < width; ++i) {
+		auto distance = (lastStripIndex - i) * distanceCoef;
+		if (distance < 0.0) {
+			distance += 1.0;
+		}
+		distance = distance * distance;
+		distance = distance * distance;
+
+		const auto sourceValue = source[i] * (1.0 - distance);
+		const auto color = Color::mix(1.0 - sourceValue, colors.background, colors.wave);
+		dest[i] = color.toInt();
+	}
+}
+
+void WaveFormDrawer::inflateLinePow8(array_view<float> source, array_span<uint32_t> dest) {
+	const index lastStripIndex = inflatableBuffer.getLastStripIndex();
+	const double distanceCoef = 1.0 / width;
+	for (int i = 0; i < width; ++i) {
+		auto distance = (lastStripIndex - i) * distanceCoef;
+		if (distance < 0.0) {
+			distance += 1.0;
+		}
+		distance = distance * distance;
+		distance = distance * distance;
+		distance = distance * distance;
+
+		const auto sourceValue = source[i] * (1.0 - distance);
+		const auto color = Color::mix(1.0 - sourceValue, colors.background, colors.wave);
+		dest[i] = color.toInt();
 	}
 }
 
@@ -115,11 +183,6 @@ std::pair<double, double> WaveFormDrawer::correctMinMaxPixels(double minPixel, d
 
 void WaveFormDrawer::fillStripBuffer(double min, double max) {
 	auto& buffer = stripBuffer;
-
-	min = std::clamp(min, -1.0, 1.0);
-	max = std::clamp(max, -1.0, 1.0);
-	min = std::min(min, max);
-	max = std::max(min, max);
 
 	const auto [minPixel, maxPixel] = correctMinMaxPixels(interpolator.toValue(min), interpolator.toValue(max));
 

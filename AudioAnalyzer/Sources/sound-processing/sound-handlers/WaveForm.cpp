@@ -76,7 +76,23 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& op
 	params.peakAntialiasing = optionMap.get(L"peakAntialiasing").asBool(false);
 
 	params.stationary = optionMap.get(L"Stationary").asBool(false);
-	params.fading = optionMap.get(L"fading").asBool(false);
+	params.connected = optionMap.get(L"connected").asBool(true);
+
+	const auto fading = optionMap.get(L"fading").asIString(L"None");
+	if (fading == L"None") {
+		params.fading = FD::eNONE;
+	} else if (fading == L"Linear") {
+		params.fading = FD::eLINEAR;
+	} else if (fading == L"Pow2") {
+		params.fading = FD::ePOW2;
+	} else if (fading == L"Pow4") {
+		params.fading = FD::ePOW4;
+	} else if (fading == L"Pow8") {
+		params.fading = FD::ePOW8;
+	} else {
+		cl.warning(L"fading '{}' not recognized, assume 'None'", fading);
+		params.fading = FD::eNONE;
+	}
 
 	params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform"), cl);
 
@@ -130,6 +146,7 @@ void WaveForm::setParams(const Params &_params, Channel channel) {
 	drawer.setLineDrawingPolicy(params.lineDrawingPolicy);
 	drawer.setStationary(params.stationary);
 	drawer.setFading(params.fading);
+	drawer.setConnected(params.connected);
 
 	filepath = params.prefix;
 	filepath += L"wave-";

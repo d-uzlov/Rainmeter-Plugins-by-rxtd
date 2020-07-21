@@ -20,6 +20,7 @@
 namespace rxtd::audio_analyzer {
 	class WaveForm : public SoundHandler {
 		using LDP = utils::WaveFormDrawer::LineDrawingPolicy;
+		using FD = utils::WaveFormDrawer::FadingType;
 		using CVT = audio_utils::CustomizableValueTransformer;
 
 	public:
@@ -37,7 +38,8 @@ namespace rxtd::audio_analyzer {
 			LDP lineDrawingPolicy{ };
 			bool peakAntialiasing{ };
 			bool stationary{ };
-			bool fading{ };
+			bool connected{ };
+			FD fading{ };
 			CVT transformer{ };
 
 			// generated
@@ -52,6 +54,7 @@ namespace rxtd::audio_analyzer {
 					&& lhs.lineDrawingPolicy == rhs.lineDrawingPolicy
 					&& lhs.peakAntialiasing == rhs.peakAntialiasing
 					&& lhs.stationary == rhs.stationary
+					&& lhs.connected == rhs.connected
 					&& lhs.fading == rhs.fading
 					&& lhs.transformer == rhs.transformer;
 			}
