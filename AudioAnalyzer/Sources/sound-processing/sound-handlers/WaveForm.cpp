@@ -79,15 +79,15 @@ std::optional<WaveForm::Params> WaveForm::parseParams(
 		params.lineDrawingPolicy = LDP::eALWAYS;
 	}
 
-	if (const auto ldpString = optionMap.get(L"Edges"sv).asIString(L"none");
-		ldpString == L"none") {
+	if (const auto edgesString = optionMap.get(L"Edges"sv).asIString(L"none");
+		edgesString == L"none") {
 		params.edges = SE::eNONE;
-	} else if (ldpString == L"smoothMinMax") {
+	} else if (edgesString == L"smoothMinMax") {
 		params.edges = SE::eMIN_MAX;
-	} else if (ldpString == L"halo") {
+	} else if (edgesString == L"halo") {
 		params.edges = SE::eHALO;
 	} else {
-		cl.warning(L"SmoothEdges '{}' is not recognized, assume 'none'", ldpString);
+		cl.warning(L"SmoothEdges '{}' is not recognized, assume 'none'", edgesString);
 		params.edges = SE::eNONE;
 	}
 
@@ -113,14 +113,13 @@ std::optional<WaveForm::Params> WaveForm::parseParams(
 	}
 
 	// legacy
-	if (optionMap.has(L"gain"sv)) {
-		cl.notice(L"Using deprecated 'gain' option. Transforms are ignored");
+	if (optionMap.has(L"transform"sv)) {
+		params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform"), cl);
+	} else {
 		const auto gain = optionMap.get(L"gain"sv).asFloat(1.0);
 		utils::BufferPrinter printer;
 		printer.print(L"map[0,1][0,{}]", gain);
 		params.transformer = audio_utils::TransformationParser::parse(utils::Option{ printer.getBufferView() }, cl);
-	} else {
-		params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform"), cl);
 	}
 
 	return params;
