@@ -34,7 +34,7 @@ namespace rxtd::audio_analyzer {
 			return { reinterpret_cast<T*>(getBufferRaw(size * sizeof(T))), size };
 		}
 
-		virtual void log(wchar_t * message) const = 0;
+		virtual void log(wchar_t* message) const = 0;
 
 	protected:
 		virtual std::byte* getBufferRaw(index size) const = 0;

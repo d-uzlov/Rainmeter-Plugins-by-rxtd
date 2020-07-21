@@ -29,19 +29,22 @@ namespace rxtd::audio_analyzer {
 		virtual void setSamplesPerSec(index samplesPerSec) = 0;
 		virtual void reset() = 0;
 
-		virtual void process(const DataSupplier &dataSupplier) = 0;
-		virtual void processSilence(const DataSupplier &dataSupplier) = 0;
+		virtual void process(const DataSupplier& dataSupplier) = 0;
+		virtual void processSilence(const DataSupplier& dataSupplier) = 0;
 
 		// Method can be called several times in a row, handler should check for changes to optimize performance
-		virtual void finish(const DataSupplier &dataSupplier) = 0;
+		virtual void finish(const DataSupplier& dataSupplier) = 0;
 
 		virtual bool isValid() const {
 			return true;
 		}
+
 		virtual array_view<float> getData(layer_t layer) const = 0;
-		virtual layer_t getLayersCount() const { 
+
+		virtual layer_t getLayersCount() const {
 			return 1;
 		}
+
 		virtual layer_t getStartingLayer() const {
 			return 0;
 		}
@@ -49,12 +52,13 @@ namespace rxtd::audio_analyzer {
 		virtual const wchar_t* getProp(const isview& prop) const {
 			return nullptr;
 		}
+
 		virtual bool isStandalone() {
 			return false;
 		}
 
 	protected:
-		
+
 		static index parseIndexProp(const isview& request, const isview& propName, index endBound) {
 			return parseIndexProp(request, propName, 0, endBound);
 		}

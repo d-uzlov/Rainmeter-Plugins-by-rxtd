@@ -43,6 +43,7 @@ namespace rxtd::audio_utils {
 		double getBinMagnitude(index binIndex) const;
 
 		void setBuffers(array_span<input_buffer_type> inputBuffer, array_span<output_buffer_type> outputBuffer);
+
 		void resetBuffers() {
 			inputBuffer = { };
 			outputBuffer = { };

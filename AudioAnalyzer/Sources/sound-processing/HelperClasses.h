@@ -37,9 +37,10 @@ namespace rxtd::audio_analyzer {
 		void resetBuffers();
 		void setWaveSize(index value);
 
-		void log(wchar_t * message) const override {
+		void log(wchar_t* message) const override {
 			logger.error(message);
 		}
+
 	protected:
 		const SoundHandler* getHandlerRaw(isview id) const override;
 	};

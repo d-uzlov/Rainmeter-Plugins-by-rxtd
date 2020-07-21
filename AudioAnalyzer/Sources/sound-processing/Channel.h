@@ -16,7 +16,7 @@ namespace rxtd::audio_analyzer {
 	class Channel {
 	public:
 		class ChannelParser {
-			std::map<istring, Channel, std::less<>> map { };
+			std::map<istring, Channel, std::less<>> map{ };
 
 		public:
 			ChannelParser();
@@ -50,6 +50,7 @@ namespace rxtd::audio_analyzer {
 	public:
 		Channel() = default;
 		Channel(Value value);
+
 		underlying_type toUnderlyingType() const {
 			return static_cast<underlying_type>(value);
 		}
@@ -63,6 +64,7 @@ namespace rxtd::audio_analyzer {
 	private:
 		friend bool operator <(Channel left, Channel right);
 	};
+
 	/**
 	 * For use in std::map
 	 */
@@ -70,12 +72,12 @@ namespace rxtd::audio_analyzer {
 }
 
 namespace std {
-	template<>
+	template <>
 	struct hash<rxtd::audio_analyzer::Channel> {
 		using Channel = audio_analyzer::Channel;
 		using hash_type = audio_analyzer::Channel::underlying_type;
 
-		size_t operator()(const Channel &c) const {
+		size_t operator()(const Channel& c) const {
 			return std::hash<hash_type>()(c.toUnderlyingType());
 		}
 	};
@@ -86,42 +88,47 @@ namespace rxtd::audio_analyzer {
 
 	class ChannelLayout {
 		friend LayoutBuilder;
-	
+
 		sview name = { };
 		std::unordered_map<Channel, index> channelMap;
 		std::vector<Channel> channelOrder;
-	
+
 	public:
-	
+
 		sview getName() const;
 		std::optional<index> indexOf(Channel channel) const;
 		bool contains(Channel channel) const;
 
 		static ChannelLayout create(sview name, const std::vector<Channel::Value>& channels);
-	
+
 		class const_iterator {
 			decltype(channelMap)::const_iterator iter;
-	
+
 		public:
 			explicit const_iterator(const decltype(channelMap)::const_iterator& iter) :
-				iter(iter) { }
-	
+				iter(iter) {
+			}
+
 			const_iterator& operator++() {
 				++iter;
 				return *this;
 			}
+
 			Channel operator*() const {
 				return (*iter).first;
 			}
+
 			bool operator!=(const const_iterator& other) const {
 				return iter != other.iter;
 			}
 		};
+
 		const_iterator begin() const {
-			return const_iterator { channelMap.cbegin() };
+			return const_iterator{ channelMap.cbegin() };
 		}
+
 		const_iterator end() const {
-			return const_iterator { channelMap.cend() };
+			return const_iterator{ channelMap.cend() };
 		}
 
 		const std::vector<Channel>& getChannelsOrderView() const;
@@ -130,15 +137,17 @@ namespace rxtd::audio_analyzer {
 
 	class LayoutBuilder {
 		index nextIndex = 0;
-		ChannelLayout layout { };
+		ChannelLayout layout{ };
 
 	public:
 		LayoutBuilder& add(Channel channel);
+
 		LayoutBuilder& skip() {
 			nextIndex++;
 
 			return *this;
 		}
+
 		ChannelLayout finish() const;
 	};
 
@@ -149,5 +158,3 @@ namespace rxtd::audio_analyzer {
 		static ChannelLayout layoutFromChannelMask(uint32_t mask, bool forceBackSpeakers);
 	};
 }
-
-

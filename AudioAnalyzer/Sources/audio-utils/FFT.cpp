@@ -32,7 +32,7 @@ double FFT::getDC() const {
 }
 
 double FFT::getBinMagnitude(index binIndex) const {
-	const auto &v = outputBuffer[binIndex];
+	const auto& v = outputBuffer[binIndex];
 	const auto square = v.real() * v.real() + v.imag() * v.imag();
 	// return fastSqrt(square); // doesn't seem to improve performance
 	return std::sqrt(square) * scalar;
@@ -40,7 +40,7 @@ double FFT::getBinMagnitude(index binIndex) const {
 
 void FFT::setBuffers(array_span<input_buffer_type> inputBuffer, array_span<output_buffer_type> outputBuffer) {
 	if (inputBuffer.size() < inputBufferSize || outputBuffer.size() < outputBufferSize) {
-		throw std::exception { };
+		throw std::exception{ };
 	}
 
 	this->inputBuffer = inputBuffer;
