@@ -20,7 +20,7 @@ FFT::FFT(index fftSize) {
 void FFT::setSize(index newSize) {
 	fftSize = newSize;
 	scalar = 1.0 / std::sqrt(fftSize);
-	windowFunction = createWindowFunction(fftSize);
+	window = createHannWindow(fftSize);
 	kiss.assign(fftSize / 2, false);
 
 	inputBufferSize = fftSize;
@@ -38,17 +38,21 @@ double FFT::getBinMagnitude(index binIndex) const {
 	return std::sqrt(square) * scalar;
 }
 
-void FFT::setBuffers(input_buffer_type* inputBuffer, output_buffer_type* outputBuffer) {
+void FFT::setBuffers(array_span<input_buffer_type> inputBuffer, array_span<output_buffer_type> outputBuffer) {
+	if (inputBuffer.size() < inputBufferSize || outputBuffer.size() < outputBufferSize) {
+		throw std::exception { };
+	}
+
 	this->inputBuffer = inputBuffer;
 	this->outputBuffer = outputBuffer;
 }
 
-void FFT::process(const float* wave) {
+void FFT::process(array_view<float> wave) {
 	for (index iBin = 0; iBin < fftSize; ++iBin) {
-		inputBuffer[iBin] = wave[iBin] * windowFunction[iBin];
+		inputBuffer[iBin] = wave[iBin] * window[iBin];
 	}
 
-	kiss.transform_real(inputBuffer, outputBuffer);
+	kiss.transform_real(inputBuffer.data(), outputBuffer.data());
 }
 
 index FFT::getInputBufferSize() const {
@@ -59,16 +63,15 @@ index FFT::getOutputBufferSize() const {
 	return outputBufferSize;
 }
 
-std::vector<float> FFT::createWindowFunction(index fftSize) {
-	std::vector<float> windowFunction;
-	windowFunction.resize(fftSize);
+std::vector<float> FFT::createHannWindow(index fftSize) {
+	std::vector<float> window;
+	window.resize(fftSize);
 	constexpr double _2pi = 2 * 3.14159265358979323846;
 
-	// calculate window function coefficients
 	// http://en.wikipedia.org/wiki/Window_function#Hann_.28Hanning.29_window
 	for (index bin = 0; bin < fftSize; ++bin) {
-		windowFunction[bin] = static_cast<float>(0.5 * (1.0 - std::cos(_2pi * bin / (fftSize - 1))));
+		window[bin] = static_cast<float>(0.5 * (1.0 - std::cos(_2pi * bin / (fftSize - 1))));
 	}
 
-	return windowFunction;
+	return window;
 }

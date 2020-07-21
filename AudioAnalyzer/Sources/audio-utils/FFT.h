@@ -9,14 +9,14 @@
 
 #pragma once
 #include "kiss_fft/KissFft.hh"
+#include "array_view.h"
 
 namespace rxtd::audio_utils {
 	class FFT {
-	private:
 		index fftSize{ };
 		double scalar{ };
 
-		std::vector<float> windowFunction;
+		std::vector<float> window;
 
 		kiss_fft::KissFft<float> kiss;
 
@@ -30,8 +30,8 @@ namespace rxtd::audio_utils {
 		using output_buffer_type = decltype(kiss)::cpx_t;
 
 	private:
-		input_buffer_type* inputBuffer{ };
-		output_buffer_type* outputBuffer{ };
+		array_span<input_buffer_type> inputBuffer{ };
+		array_span<output_buffer_type> outputBuffer{ };
 
 	public:
 		FFT() = default;
@@ -42,12 +42,17 @@ namespace rxtd::audio_utils {
 		double getDC() const;
 		double getBinMagnitude(index binIndex) const;
 
-		void setBuffers(input_buffer_type* inputBuffer, output_buffer_type* outputBuffer);
-		void process(const float* wave);
+		void setBuffers(array_span<input_buffer_type> inputBuffer, array_span<output_buffer_type> outputBuffer);
+		void resetBuffers() {
+			inputBuffer = { };
+			outputBuffer = { };
+		}
+
+		void process(array_view<float> wave);
 		index getInputBufferSize() const;
 		index getOutputBufferSize() const;
 
 	private:
-		static std::vector<float> createWindowFunction(index ftSize);
+		static std::vector<float> createHannWindow(index fftSize);
 	};
 }

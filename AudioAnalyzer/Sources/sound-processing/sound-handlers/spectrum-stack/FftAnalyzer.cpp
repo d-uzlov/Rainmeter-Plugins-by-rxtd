@@ -39,24 +39,28 @@ std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(
 			cl.warning(L"BinWidth {} is dangerously small, use values > 1", params.resolution);
 		}
 		params.sizeBy = SizeBy::BIN_WIDTH;
-	} else if (sizeBy == L"size") {
-		params.resolution = optionMap.get(L"size"sv).asInt(1000);
-		if (params.resolution < 2) {
-			cl.warning(L"Size must be >= 2 but {} found. Assume 1000", params.resolution);
-			params.resolution = 1000;
-		}
-		params.sizeBy = SizeBy::SIZE;
+	} else {
+		cl.warning(L"Options 'sizeBy' is deprecated");
 
-	} else if (sizeBy == L"sizeExact") {
-		params.resolution = optionMap.get(L"size"sv).asInt(1000);
-		if (params.resolution < 2) {
-			cl.error(L"Size must be >= 2, must be even, but {} found", params.resolution);
+		if (sizeBy == L"size") {
+			params.resolution = optionMap.get(L"size"sv).asInt(1000);
+			if (params.resolution < 2) {
+				cl.warning(L"Size must be >= 2 but {} found. Assume 1000", params.resolution);
+				params.resolution = 1000;
+			}
+			params.sizeBy = SizeBy::SIZE;
+
+		} else if (sizeBy == L"sizeExact") {
+			params.resolution = optionMap.get(L"size"sv).asInt(1000);
+			if (params.resolution < 2) {
+				cl.error(L"Size must be >= 2, must be even, but {} found", params.resolution);
+				return std::nullopt;
+			}
+			params.sizeBy = SizeBy::SIZE_EXACT;
+		} else {
+			cl.error(L"Unknown fft sizeBy '{}'", sizeBy);
 			return std::nullopt;
 		}
-		params.sizeBy = SizeBy::SIZE_EXACT;
-	} else {
-		cl.error(L"Unknown fft sizeBy '{}'", sizeBy);
-		return std::nullopt;
 	}
 
 	params.overlap = std::clamp(optionMap.get(L"overlap"sv).asFloat(0.5), 0.0, 1.0);
@@ -93,9 +97,10 @@ void FftAnalyzer::process(const DataSupplier& dataSupplier) {
 
 	const auto wave = dataSupplier.getWave();
 
-	auto fftInputBuffer = dataSupplier.getBuffer<audio_utils::FFT::input_buffer_type>(fft.getInputBufferSize());
-	auto fftOutputBuffer = dataSupplier.getBuffer<audio_utils::FFT::output_buffer_type>(fft.getOutputBufferSize());
-	fft.setBuffers(fftInputBuffer.data(), fftOutputBuffer.data());
+	fft.setBuffers(
+		dataSupplier.getBuffer<audio_utils::FFT::input_buffer_type>(fft.getInputBufferSize()),
+		dataSupplier.getBuffer<audio_utils::FFT::output_buffer_type>(fft.getOutputBufferSize())
+	);
 
 	if (params.randomTest != 0.0) {
 		processRandom(wave.size());
@@ -103,8 +108,7 @@ void FftAnalyzer::process(const DataSupplier& dataSupplier) {
 		cascades[0].process(wave.data(), wave.size());
 	}
 
-	// TODO that's ugly and error prone
-	fft.setBuffers(nullptr, nullptr);
+	fft.resetBuffers();
 }
 
 void FftAnalyzer::processSilence(const DataSupplier& dataSupplier) {
@@ -114,9 +118,10 @@ void FftAnalyzer::processSilence(const DataSupplier& dataSupplier) {
 
 	const auto waveSize = dataSupplier.getWave().size();
 
-	auto fftInputBuffer = dataSupplier.getBuffer<audio_utils::FFT::input_buffer_type>(fft.getInputBufferSize());
-	auto fftOutputBuffer = dataSupplier.getBuffer<audio_utils::FFT::output_buffer_type>(fft.getOutputBufferSize());
-	fft.setBuffers(fftInputBuffer.data(), fftOutputBuffer.data());
+	fft.setBuffers(
+		dataSupplier.getBuffer<audio_utils::FFT::input_buffer_type>(fft.getInputBufferSize()),
+		dataSupplier.getBuffer<audio_utils::FFT::output_buffer_type>(fft.getOutputBufferSize())
+	);
 
 	if (params.randomTest != 0.0) {
 		processRandom(waveSize);
@@ -124,8 +129,7 @@ void FftAnalyzer::processSilence(const DataSupplier& dataSupplier) {
 		cascades[0].processSilence(waveSize);
 	}
 
-	// TODO that's ugly and error prone
-	fft.setBuffers(nullptr, nullptr);
+	fft.resetBuffers();
 }
 
 SoundHandler::layer_t FftAnalyzer::getLayersCount() const {

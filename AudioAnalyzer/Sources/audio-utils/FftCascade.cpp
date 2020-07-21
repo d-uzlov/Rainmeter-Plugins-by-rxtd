@@ -219,7 +219,7 @@ void FftCascade::processSilence(index waveSize) {
 }
 
 void FftCascade::doFft() {
-	fft->process(ringBuffer.data());
+	fft->process(ringBuffer);
 
 	const auto binsCount = params.fftSize / 2;
 
