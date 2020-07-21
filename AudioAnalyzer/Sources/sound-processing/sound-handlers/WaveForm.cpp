@@ -60,6 +60,7 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& op
 
 	params.waveColor = optionMap.get(L"waveColor"sv).asColor({ 1, 1, 1, 1 });
 	params.lineColor = optionMap.get(L"lineColor"sv).asColor(params.waveColor);
+	params.borderColor = optionMap.get(L"borderColor"sv).asColor({ 1.0, 0.2, 0.2, 1});
 
 	auto ldpString = optionMap.get(L"lineDrawingPolicy"sv).asIString();
 	if (ldpString.empty() || ldpString == L"always") {
@@ -77,6 +78,8 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& op
 
 	params.stationary = optionMap.get(L"Stationary").asBool(false);
 	params.connected = optionMap.get(L"connected").asBool(true);
+
+	params.borderSize = optionMap.get(L"borderSize").asInt(0);
 
 	const auto fading = optionMap.get(L"fading").asIString(L"None");
 	if (fading == L"None") {
@@ -142,11 +145,12 @@ void WaveForm::setParams(const Params &_params, Channel channel) {
 
 	drawer.setDimensions(params.width, params.height);
 	drawer.setEdgeAntialiasing(params.peakAntialiasing);
-	drawer.setColors(params.backgroundColor, params.waveColor, params.lineColor);
+	drawer.setColors(params.backgroundColor, params.waveColor, params.lineColor, params.borderColor);
 	drawer.setLineDrawingPolicy(params.lineDrawingPolicy);
 	drawer.setStationary(params.stationary);
 	drawer.setFading(params.fading);
 	drawer.setConnected(params.connected);
+	drawer.setBorderSize(params.borderSize);
 
 	filepath = params.prefix;
 	filepath += L"wave-";

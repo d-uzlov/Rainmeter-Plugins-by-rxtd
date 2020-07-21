@@ -30,7 +30,10 @@ void WaveFormDrawer::setDimensions(index width, index height) {
 }
 
 void WaveFormDrawer::fillSilence() {
-	inflatableBuffer.pushEmptyLine(0.0);
+	const index lastStripIndex = inflatableBuffer.getLastStripIndex();
+	const bool force = (fading != FadingType::eNONE || borderSize != 0)
+		&& lastStripIndex != width - 1;
+	inflatableBuffer.pushEmptyLine(0.0, force);
 
 	const index centerLineIndex = interpolator.toValueD(0.0);
 	inflatableBuffer.correctLastLine(centerLineIndex, 1.0);
@@ -81,7 +84,21 @@ void WaveFormDrawer::inflate() {
 }
 
 void WaveFormDrawer::inflateLineNoFade(array_view<float> source, array_span<uint32_t> dest) {
+	const index lastStripIndex = inflatableBuffer.getLastStripIndex();
+
+	const double realWidth = width - borderSize;
+	const double distanceCoef = 1.0 / realWidth;
 	for (int i = 0; i < width; ++i) {
+		double distance = lastStripIndex - i;
+		if (distance < 0.0) {
+			distance += width;
+		}
+		if (distance >= realWidth) {
+			// this is border
+			dest[i] = colors.border.toInt();
+			continue;
+		}
+
 		const auto sourceValue = source[i];
 		const auto color = Color::mix(1.0 - sourceValue, colors.background, colors.wave);
 		dest[i] = color.toInt();
@@ -90,12 +107,21 @@ void WaveFormDrawer::inflateLineNoFade(array_view<float> source, array_span<uint
 
 void WaveFormDrawer::inflateLinePow1(array_view<float> source, array_span<uint32_t> dest) {
 	const index lastStripIndex = inflatableBuffer.getLastStripIndex();
-	const double distanceCoef = 1.0 / width;
+	const double realWidth = width - borderSize;
+	const double distanceCoef = 1.0 / realWidth;
+
 	for (int i = 0; i < width; ++i) {
-		auto distance = (lastStripIndex - i) * distanceCoef;
+		double distance = lastStripIndex - i;
 		if (distance < 0.0) {
-			distance += 1.0;
+			distance += width;
 		}
+		if (distance >= realWidth) {
+			// this is border
+			dest[i] = colors.border.toInt();
+			continue;
+		}
+
+		distance *= distanceCoef;
 
 		const auto sourceValue = source[i] * (1.0 - distance);
 		const auto color = Color::mix(1.0 - sourceValue, colors.background, colors.wave);
@@ -105,12 +131,21 @@ void WaveFormDrawer::inflateLinePow1(array_view<float> source, array_span<uint32
 
 void WaveFormDrawer::inflateLinePow2(array_view<float> source, array_span<uint32_t> dest) {
 	const index lastStripIndex = inflatableBuffer.getLastStripIndex();
-	const double distanceCoef = 1.0 / width;
+	const double realWidth = width - borderSize;
+	const double distanceCoef = 1.0 / realWidth;
+
 	for (int i = 0; i < width; ++i) {
-		auto distance = (lastStripIndex - i) * distanceCoef;
+		double distance = lastStripIndex - i;
 		if (distance < 0.0) {
-			distance += 1.0;
+			distance += width;
 		}
+		if (distance >= realWidth) {
+			// this is border
+			dest[i] = colors.border.toInt();
+			continue;
+		}
+
+		distance *= distanceCoef;
 		distance = distance * distance;
 
 		const auto sourceValue = source[i] * (1.0 - distance);
@@ -121,12 +156,21 @@ void WaveFormDrawer::inflateLinePow2(array_view<float> source, array_span<uint32
 
 void WaveFormDrawer::inflateLinePow4(array_view<float> source, array_span<uint32_t> dest) {
 	const index lastStripIndex = inflatableBuffer.getLastStripIndex();
-	const double distanceCoef = 1.0 / width;
+	const double realWidth = width - borderSize;
+	const double distanceCoef = 1.0 / realWidth;
+
 	for (int i = 0; i < width; ++i) {
-		auto distance = (lastStripIndex - i) * distanceCoef;
+		double distance = lastStripIndex - i;
 		if (distance < 0.0) {
-			distance += 1.0;
+			distance += width;
 		}
+		if (distance >= realWidth) {
+			// this is border
+			dest[i] = colors.border.toInt();
+			continue;
+		}
+
+		distance *= distanceCoef;
 		distance = distance * distance;
 		distance = distance * distance;
 
@@ -138,12 +182,21 @@ void WaveFormDrawer::inflateLinePow4(array_view<float> source, array_span<uint32
 
 void WaveFormDrawer::inflateLinePow8(array_view<float> source, array_span<uint32_t> dest) {
 	const index lastStripIndex = inflatableBuffer.getLastStripIndex();
-	const double distanceCoef = 1.0 / width;
+	const double realWidth = width - borderSize;
+	const double distanceCoef = 1.0 / realWidth;
+
 	for (int i = 0; i < width; ++i) {
-		auto distance = (lastStripIndex - i) * distanceCoef;
+		double distance = lastStripIndex - i;
 		if (distance < 0.0) {
-			distance += 1.0;
+			distance += width;
 		}
+		if (distance >= realWidth) {
+			// this is border
+			dest[i] = colors.border.toInt();
+			continue;
+		}
+
+		distance *= distanceCoef;
 		distance = distance * distance;
 		distance = distance * distance;
 		distance = distance * distance;

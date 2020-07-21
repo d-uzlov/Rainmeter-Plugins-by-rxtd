@@ -250,7 +250,7 @@ void Spectrogram::process(const DataSupplier& dataSupplier) {
 		changed = true;
 
 		if (dataIsZero) {
-			image.pushEmptyLine(params.baseColor.toInt());
+			image.pushEmptyLine(params.baseColor.toInt(), false);
 		} else {
 			if (params.colors.empty()) {
 				// only use 2 colors

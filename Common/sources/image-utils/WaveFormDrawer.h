@@ -41,12 +41,14 @@ namespace rxtd::utils {
 		LineDrawingPolicy lineDrawingPolicy = LineDrawingPolicy::NEVER;
 		bool edgeAntialiasing = false;
 		bool connected = false;
+		index borderSize = 0;
 		FadingType fading = FadingType::eNONE;
 
 		struct {
 			Color background;
 			Color wave;
 			Color line;
+			Color border;
 		} colors;
 
 		struct {
@@ -65,6 +67,10 @@ namespace rxtd::utils {
 			connected = value;
 		}
 
+		void setBorderSize(index value) {
+			borderSize = value;
+		}
+
 		void setFading(FadingType value) {
 			fading = value;
 		}
@@ -77,10 +83,11 @@ namespace rxtd::utils {
 			lineDrawingPolicy = value;
 		}
 
-		void setColors(Color background, Color wave, Color line) {
+		void setColors(Color background, Color wave, Color line, Color border) {
 			colors.background = background;
 			colors.wave = wave;
 			colors.line = line;
+			colors.border = border;
 		}
 
 		void setDimensions(index width, index height);
@@ -94,7 +101,11 @@ namespace rxtd::utils {
 		}
 
 		bool isEmpty() const {
-			return inflatableBuffer.isEmpty();
+			const index lastStripIndex = inflatableBuffer.getLastStripIndex();
+			const bool needMoreUpdates = (fading != FadingType::eNONE || borderSize != 0)
+				&& lastStripIndex != width - 1;
+
+			return !needMoreUpdates && inflatableBuffer.isEmpty();
 		}
 
 		void inflate();

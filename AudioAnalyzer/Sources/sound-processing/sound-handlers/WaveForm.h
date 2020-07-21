@@ -35,10 +35,12 @@ namespace rxtd::audio_analyzer {
 			utils::Color backgroundColor{ };
 			utils::Color waveColor{ };
 			utils::Color lineColor{ };
+			utils::Color borderColor{ };
 			LDP lineDrawingPolicy{ };
 			bool peakAntialiasing{ };
 			bool stationary{ };
 			bool connected{ };
+			index borderSize{ };
 			FD fading{ };
 			CVT transformer{ };
 
@@ -51,10 +53,12 @@ namespace rxtd::audio_analyzer {
 					&& lhs.backgroundColor == rhs.backgroundColor
 					&& lhs.waveColor == rhs.waveColor
 					&& lhs.lineColor == rhs.lineColor
+					&& lhs.borderColor == rhs.borderColor
 					&& lhs.lineDrawingPolicy == rhs.lineDrawingPolicy
 					&& lhs.peakAntialiasing == rhs.peakAntialiasing
 					&& lhs.stationary == rhs.stationary
 					&& lhs.connected == rhs.connected
+					&& lhs.borderSize == rhs.borderSize
 					&& lhs.fading == rhs.fading
 					&& lhs.transformer == rhs.transformer;
 			}

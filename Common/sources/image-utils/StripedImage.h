@@ -79,8 +79,8 @@ namespace rxtd::utils {
 			}
 		}
 
-		void pushEmptyLine(PixelValueType value) {
-			if (sameStripsCount >= width) {
+		void pushEmptyLine(PixelValueType value, bool force) {
+			if (!force && sameStripsCount >= width) {
 				return;
 			}
 
