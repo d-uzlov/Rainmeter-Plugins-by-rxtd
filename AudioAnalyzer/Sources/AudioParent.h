@@ -32,7 +32,7 @@ namespace rxtd::audio_analyzer {
 		void _reload() override;
 		double _update() override;
 		void _command(isview bangArgs) override;
-		void _resolve(int argc, const wchar_t* argv[], string& resolveBufferString) override;
+		void _resolve(array_view<isview> args, string& resolveBufferString) override;
 
 	public:
 		double getValue(sview id, Channel channel, index index) const;

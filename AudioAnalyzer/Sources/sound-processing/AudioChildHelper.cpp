@@ -71,12 +71,12 @@ double AudioChildHelper::getValue(Channel channel, isview handlerId, index index
 }
 
 std::variant<const wchar_t*, AudioChildHelper::SearchError>
-AudioChildHelper::getProp(Channel channel, sview handlerId, sview prop) const {
-	const auto handlerVariant = findHandler(channel, handlerId % ciView());
+AudioChildHelper::getProp(Channel channel, isview handlerId, isview prop) const {
+	const auto handlerVariant = findHandler(channel, handlerId);
 	if (handlerVariant.index() != 0) {
 		return std::get<1>(handlerVariant);
 	}
 
 	auto& handler = std::get<0>(handlerVariant);
-	return handler->getProp(prop % ciView());
+	return handler->getProp(prop);
 }

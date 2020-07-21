@@ -29,7 +29,6 @@ namespace rxtd::audio_analyzer {
 		AudioChild& operator=(const AudioChild& other) = delete;
 		AudioChild& operator=(AudioChild&& other) = delete;
 
-
 	protected:
 		void _reload() override;
 		double _update() override;

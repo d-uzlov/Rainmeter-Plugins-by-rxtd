@@ -9,6 +9,7 @@
 
 #pragma once
 #include "RainmeterWrappers.h"
+#include "array_view.h"
 
 namespace rxtd::utils {
 	enum class MeasureState {
@@ -29,6 +30,9 @@ namespace rxtd::utils {
 		string resolveString { };
 		bool useResultString = false;
 
+		istring resolveBuffer;
+		std::vector<isview> resolveVector;
+
 	public:
 		TypeHolder(Rainmeter&& rain);
 		virtual ~TypeHolder() = default;
@@ -37,17 +41,6 @@ namespace rxtd::utils {
 		TypeHolder& operator=(const TypeHolder& other) = delete;
 		TypeHolder& operator=(TypeHolder&& other) = delete;
 
-	protected:
-		virtual void _reload() = 0;
-		virtual double _update() = 0;
-		virtual void _updateString(string& resultStringBuffer) { }
-		virtual void _command(isview bangArgs);
-		virtual void _resolve(int argc, const wchar_t* argv[], string& resolveBufferString) { }
-
-		void setMeasureState(MeasureState brokenState);
-		void setUseResultString(bool value);
-
-	public:
 		double update();
 		void reload();
 		const wchar_t* getString() const;
@@ -55,6 +48,17 @@ namespace rxtd::utils {
 		const wchar_t* resolve(int argc, const wchar_t* argv[]);
 
 		MeasureState getState() const;
+
+	protected:
+		virtual void _reload() = 0;
+		virtual double _update() = 0;
+		virtual void _updateString(string& resultStringBuffer) { }
+		virtual void _command(isview bangArgs);
+		virtual void _resolve(array_view<isview> args, string& resolveBufferString) { }
+
+		void setMeasureState(MeasureState brokenState);
+		void setUseResultString(bool value);
+
 	};
 
 	class ParentBase : public TypeHolder {

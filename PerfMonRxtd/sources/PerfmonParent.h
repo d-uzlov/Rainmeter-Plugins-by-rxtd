@@ -104,7 +104,7 @@ namespace rxtd::perfmon {
 		double _update() override;
 		void _updateString(string& resultStringBuffer) override;
 		void _command(isview bangArgs) override;
-		void _resolve(int argc, const wchar_t* argv[], string& resolveBufferString) override;
+		void _resolve(array_view<isview> args, string& resolveBufferString) override;
 
 	public:
 		/** Parent measure can be stopped.

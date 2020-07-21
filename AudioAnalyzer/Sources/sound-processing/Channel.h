@@ -21,7 +21,7 @@ namespace rxtd::audio_analyzer {
 		public:
 			ChannelParser();
 
-			std::optional<Channel> find(sview string);
+			std::optional<Channel> find(isview string);
 
 		private:
 			void addElement(isview name, Channel value);

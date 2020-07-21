@@ -108,8 +108,8 @@ Channel::ChannelParser::ChannelParser() {
 	addElement(L"SR", eSIDE_RIGHT);
 }
 
-std::optional<Channel> Channel::ChannelParser::find(const sview str) {
-	const auto iter = map.find(str % ciView());
+std::optional<Channel> Channel::ChannelParser::find(const isview str) {
+	const auto iter = map.find(str);
 
 	if (iter == map.end()) {
 		return std::nullopt;

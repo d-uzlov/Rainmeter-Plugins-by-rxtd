@@ -29,6 +29,6 @@ namespace rxtd::audio_analyzer {
 
 		std::variant<SoundHandler*, SearchError> findHandler(Channel channel, isview handlerId) const;
 		double getValue(Channel channel, isview handlerId, index index) const;
-		std::variant<const wchar_t*, SearchError> getProp(Channel channel, sview handlerId, sview prop) const;
+		std::variant<const wchar_t*, SearchError> getProp(Channel channel, isview handlerId, isview prop) const;
 	};
 }

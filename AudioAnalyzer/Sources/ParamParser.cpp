@@ -125,7 +125,7 @@ std::set<Channel> ParamParser::parseChannels(utils::OptionList channelsStringLis
 	std::set<Channel> set;
 
 	for (auto channelOption : channelsStringList) {
-		auto opt = Channel::channelParser.find(channelOption.asString());
+		auto opt = Channel::channelParser.find(channelOption.asIString());
 		if (!opt.has_value()) {
 			log.error(L"Can't parse '{}' as channel", channelOption.asString());
 			continue;

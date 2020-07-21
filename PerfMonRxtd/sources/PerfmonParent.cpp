@@ -272,18 +272,16 @@ void PerfmonParent::_command(isview bangArgs) {
 	}
 }
 
-void PerfmonParent::_resolve(int argc, const wchar_t* argv[], string& resolveBufferString) {
-	if (argc < 1) {
+void PerfmonParent::_resolve(array_view<isview> args, string& resolveBufferString) {
+	if (args.empty()) {
 		return;
 	}
 
-	isview arg = argv[0];
-	// utils::StringUtils::trimInplace(bufferString);
-	if (arg == L"fetch size") {
+	if (args[0] == L"fetch size") {
 		resolveBufferString = std::to_wstring(snapshotCurrent.getItemsCount());
 		return;
 	}
-	if (arg == L"is stopped") {
+	if (args[0] == L"is stopped") {
 		resolveBufferString = stopped ? L"1" : L"0";
 		return;
 	}

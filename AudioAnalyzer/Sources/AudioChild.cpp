@@ -31,9 +31,9 @@ AudioChild::AudioChild(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rain)) 
 }
 
 void AudioChild::_reload() {
-	const auto channelStr = rain.readString(L"Channel");
+	const auto channelStr = rain.read(L"Channel").asIString();
 
-	if (channelStr == L"") {
+	if (channelStr.empty()) {
 		channel = Channel::eAUTO;
 	} else {
 		auto channelOpt = Channel::channelParser.find(channelStr);
