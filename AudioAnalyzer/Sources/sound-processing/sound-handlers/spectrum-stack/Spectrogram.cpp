@@ -26,13 +26,6 @@ void Spectrogram::setParams(const Params& _params, Channel channel) {
 		return;
 	}
 
-	// if (params.prefix != _params.prefix) {
-	// 	// this ensures that if there is a silence
-	// 	// and there is already an image in the .prefix folder
-	// 	// then we will properly show empty image instead of that old image
-	// 	buffer.init(params.baseColor.toInt());
-	// }
-
 	this->params = _params;
 
 	filepath = params.prefix;

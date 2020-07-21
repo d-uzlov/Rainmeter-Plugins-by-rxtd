@@ -58,7 +58,7 @@ namespace rxtd::utils {
 			imageLines.init(backgroundValue);
 
 			lastFillValue = backgroundValue;
-			sameStripsCount = imageLines.getBuffersCount();
+			sameStripsCount = width - 1;
 		}
 
 		void setWidth(index value) {
