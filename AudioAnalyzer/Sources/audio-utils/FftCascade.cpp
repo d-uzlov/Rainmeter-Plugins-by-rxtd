@@ -59,22 +59,22 @@ void FftCascade::setParams(Params _params, FFT* fft, FftCascade* successor, laye
 	downsampleGain = std::pow(2, cascadeIndex * 0.5);
 }
 
-void FftCascade::process(const float* wave, index waveSize) {
+void FftCascade::process(array_view<float> wave) {
 	const auto fftSize = params.fftSize;
 	const auto inputStride = params.inputStride;
 
 	index waveProcessed = 0;
 	const auto tmpIn = ringBuffer.data();
 
-	while (waveProcessed != waveSize) {
+	while (waveProcessed != wave.size()) {
 		const auto copySize = fftSize - filledElements;
 
-		if (waveProcessed + copySize <= waveSize) {
-			const auto copyStartPlace = wave + waveProcessed;
+		if (waveProcessed + copySize <= wave.size()) {
+			const auto copyStartPlace = wave.data() + waveProcessed;
 			std::copy(copyStartPlace, copyStartPlace + copySize, tmpIn + filledElements);
 
 			if (successor != nullptr) {
-				successor->processResampled(tmpIn + transferredElements, ringBuffer.size() - transferredElements);
+				successor->processResampled({ tmpIn + transferredElements, ringBuffer.size() - transferredElements });
 			}
 
 			waveProcessed += copySize;
@@ -84,10 +84,10 @@ void FftCascade::process(const float* wave, index waveSize) {
 			filledElements = fftSize - inputStride;
 			transferredElements = filledElements;
 		} else {
-			std::copy(wave + waveProcessed, wave + waveSize, tmpIn + filledElements);
+			std::copy(wave.data() + waveProcessed, wave.data() + wave.size(), tmpIn + filledElements);
 
-			filledElements = filledElements + waveSize - waveProcessed;
-			waveProcessed = waveSize;
+			filledElements = filledElements + wave.size() - waveProcessed;
+			waveProcessed = wave.size();
 		}
 	}
 }
@@ -110,7 +110,7 @@ void FftCascade::processRandom(index waveSize, double amplitude) {
 			}
 
 			if (successor != nullptr) {
-				successor->processResampled(tmpIn + transferredElements, ringBuffer.size() - transferredElements);
+				successor->processResampled({ tmpIn + transferredElements, ringBuffer.size() - transferredElements });
 			}
 
 			waveProcessed += copySize;
@@ -130,11 +130,11 @@ void FftCascade::processRandom(index waveSize, double amplitude) {
 	}
 }
 
-void FftCascade::processResampled(const float* const wave, index waveSize) {
+void FftCascade::processResampled(array_view<float> wave) {
 	const auto fftSize = params.fftSize;
 	const auto inputStride = params.inputStride;
 
-	if (waveSize <= 0) {
+	if (wave.empty()) {
 		return;
 	}
 
@@ -147,10 +147,10 @@ void FftCascade::processResampled(const float* const wave, index waveSize) {
 		waveProcessed = 1;
 	}
 
-	while (waveProcessed != waveSize) {
+	while (waveProcessed != wave.size()) {
 		const auto elementPairsNeeded = fftSize - filledElements;
-		const auto elementPairsLeft = (waveSize - waveProcessed) / 2;
-		const auto copyStartPlace = wave + waveProcessed;
+		const auto elementPairsLeft = (wave.size() - waveProcessed) / 2;
+		const auto copyStartPlace = wave.data() + waveProcessed;
 
 		if (elementPairsNeeded <= elementPairsLeft) {
 			for (index i = 0; i < elementPairsNeeded; i++) {
@@ -158,7 +158,7 @@ void FftCascade::processResampled(const float* const wave, index waveSize) {
 			}
 
 			if (successor != nullptr) {
-				successor->processResampled(tmpIn + transferredElements, ringBuffer.size() - transferredElements);
+				successor->processResampled({ tmpIn + transferredElements, ringBuffer.size() - transferredElements });
 			}
 
 			waveProcessed += elementPairsNeeded * 2;
@@ -175,10 +175,10 @@ void FftCascade::processResampled(const float* const wave, index waveSize) {
 			filledElements = filledElements + elementPairsLeft;
 			waveProcessed += elementPairsLeft * 2;
 
-			if (waveProcessed != waveSize) {
+			if (waveProcessed != wave.size()) {
 				// we should have exactly one element left
 				odd = wave[waveProcessed];
-				waveProcessed = waveSize;
+				waveProcessed = wave.size();
 			} else {
 				odd = 10.0f;
 			}
@@ -200,7 +200,7 @@ void FftCascade::processSilence(index waveSize) {
 			std::fill_n(tmpIn + filledElements, copySize, 0.0f);
 
 			if (successor != nullptr) {
-				successor->processResampled(tmpIn + transferredElements, ringBuffer.size() - transferredElements);
+				successor->processResampled({ tmpIn + transferredElements, ringBuffer.size() - transferredElements });
 			}
 
 			waveProcessed += copySize;

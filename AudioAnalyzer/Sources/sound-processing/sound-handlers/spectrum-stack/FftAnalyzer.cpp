@@ -105,7 +105,7 @@ void FftAnalyzer::process(const DataSupplier& dataSupplier) {
 	if (params.randomTest != 0.0) {
 		processRandom(wave.size());
 	} else {
-		cascades[0].process(wave.data(), wave.size());
+		cascades[0].process(wave);
 	}
 
 	fft.resetBuffers();
