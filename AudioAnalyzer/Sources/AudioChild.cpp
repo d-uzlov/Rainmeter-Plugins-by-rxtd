@@ -47,8 +47,8 @@ void AudioChild::_reload() {
 
 	valueId = rain.readString(L"ValueId");
 
-	const auto stringValueStr = rain.readString(L"StringValue") % ciView();
-	if (stringValueStr == L"" || stringValueStr == L"Number") {
+	const auto stringValueStr = rain.read(L"StringValue").asIString(L"Number");
+	if (stringValueStr == L"Number") {
 		setUseResultString(false);
 	} else if (stringValueStr == L"Info") {
 		setUseResultString(true);

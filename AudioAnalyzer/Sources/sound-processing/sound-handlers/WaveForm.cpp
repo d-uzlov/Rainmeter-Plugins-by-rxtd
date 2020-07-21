@@ -18,8 +18,11 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl,
-                                                      const utils::Rainmeter& rain) {
+std::optional<WaveForm::Params> WaveForm::parseParams(
+	const utils::OptionMap& optionMap,
+	utils::Rainmeter::Logger& cl,
+	const utils::Rainmeter& rain
+) {
 	Params params;
 
 	params.width = optionMap.get(L"width"sv).asInt(100);
@@ -72,7 +75,7 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& op
 	} else if (ldpString == L"never") {
 		params.lineDrawingPolicy = LDP::eNEVER;
 	} else {
-		cl.warning(L"lineDrawingPolicy '{}' not recognized, assume 'always'", ldpString);
+		cl.warning(L"lineDrawingPolicy '{}' is not recognized, assume 'always'", ldpString);
 		params.lineDrawingPolicy = LDP::eALWAYS;
 	}
 
@@ -84,7 +87,7 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& op
 	} else if (ldpString == L"halo") {
 		params.edges = SE::eHALO;
 	} else {
-		cl.warning(L"SmoothEdges '{}' not recognized, assume 'none'", ldpString);
+		cl.warning(L"SmoothEdges '{}' is not recognized, assume 'none'", ldpString);
 		params.edges = SE::eNONE;
 	}
 
@@ -105,19 +108,19 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& op
 	} else if (fading == L"Pow8") {
 		params.fading = FD::ePOW8;
 	} else {
-		cl.warning(L"fading '{}' not recognized, assume 'None'", fading);
+		cl.warning(L"fading '{}' is not recognized, assume 'None'", fading);
 		params.fading = FD::eNONE;
 	}
-
-	params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform"), cl);
 
 	// legacy
 	if (optionMap.has(L"gain"sv)) {
 		cl.notice(L"Using deprecated 'gain' option. Transforms are ignored");
-		auto gain = optionMap.get(L"gain"sv).asFloat(1.0);
+		const auto gain = optionMap.get(L"gain"sv).asFloat(1.0);
 		utils::BufferPrinter printer;
 		printer.print(L"map[0,1][0,{}]", gain);
 		params.transformer = audio_utils::TransformationParser::parse(utils::Option{ printer.getBufferView() }, cl);
+	} else {
+		params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform"), cl);
 	}
 
 	return params;

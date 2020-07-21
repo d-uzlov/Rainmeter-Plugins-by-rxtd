@@ -83,7 +83,16 @@ std::optional<Spectrogram::Params> Spectrogram::parseParams(
 
 	params.prefix = folder;
 
-	if (optionMap.has(L"colors"sv)) {
+	if (optionMap.has(L"baseColor") || optionMap.has(L"maxColor")) {
+		params.baseColor = optionMap.get(L"baseColor"sv).asColor({ 0, 0, 0, 1 });
+		params.maxColor = optionMap.get(L"maxColor"sv).asColor({ 1, 1, 1, 1 });
+		params.colorMinValue = 0.0;
+		params.colorMaxValue = 1.0;
+
+		if (optionMap.has(L"colors"sv)) {
+			cl.warning(L"'colors' option is ignored because old baseColor/maxColor options are found");
+		}
+	} else if (optionMap.has(L"colors"sv)) {
 		auto colorsDescriptionList = optionMap.get(L"colors"sv).asList(L';');
 
 		double prevValue = -std::numeric_limits<double>::infinity();
@@ -94,7 +103,7 @@ std::optional<Spectrogram::Params> Spectrogram::parseParams(
 		params.colorMaxValue = -std::numeric_limits<double>::infinity();
 
 		for (index i = 0; i < colorsDescriptionList.size(); i++) {
-			auto [valueOpt, colorOpt] = colorsDescriptionList.get(i).breakFirst(L' ');
+			auto[valueOpt, colorOpt] = colorsDescriptionList.get(i).breakFirst(L' ');
 
 			float value = valueOpt.asFloat();
 
@@ -109,7 +118,7 @@ std::optional<Spectrogram::Params> Spectrogram::parseParams(
 			}
 
 			params.colorLevels.push_back(value);
-			params.colors.push_back(Params::ColorDescription{ 0.0, colorOpt.asColor() });
+			params.colors.push_back(Params::ColorDescription { 0.0, colorOpt.asColor() });
 			if (i > 0) {
 				params.colors[i - 1].widthInverted = 1.0 / (value - prevValue);
 			}
@@ -133,11 +142,6 @@ std::optional<Spectrogram::Params> Spectrogram::parseParams(
 			// base color is used for background
 			params.baseColor = params.colors[0].color;
 		}
-	} else {
-		params.baseColor = optionMap.get(L"baseColor"sv).asColor({ 0, 0, 0, 1 });
-		params.maxColor = optionMap.get(L"maxColor"sv).asColor({ 1, 1, 1, 1 });
-		params.colorMinValue = 0.0;
-		params.colorMaxValue = 1.0;
 	}
 
 	return params;
