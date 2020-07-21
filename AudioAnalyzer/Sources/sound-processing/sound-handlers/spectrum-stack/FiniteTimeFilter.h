@@ -59,7 +59,6 @@ namespace rxtd::audio_analyzer {
 		double smoothingNormConstant{ };
 
 		bool changed = true;
-		bool valid = false;
 		const SoundHandler* source = nullptr;
 		const BandResampler* resampler = nullptr;
 
@@ -74,13 +73,9 @@ namespace rxtd::audio_analyzer {
 		void setSamplesPerSec(index samplesPerSec) override;
 		void reset() override;
 
-		void process(const DataSupplier& dataSupplier) override;
-		void processSilence(const DataSupplier& dataSupplier) override;
-		void finish(const DataSupplier& dataSupplier) override;
-
-		bool isValid() const override {
-			return valid;
-		}
+		void _process(const DataSupplier& dataSupplier) override;
+		void _processSilence(const DataSupplier& dataSupplier) override;
+		void _finish(const DataSupplier& dataSupplier) override;
 
 		array_view<float> getData(layer_t layer) const override {
 			if (params.smoothingFactor <= 1) {
@@ -99,7 +94,7 @@ namespace rxtd::audio_analyzer {
 		}
 
 		const BandResampler* getResampler() const override {
-			if (!valid) {
+			if (!isValid()) {
 				return nullptr;
 			}
 

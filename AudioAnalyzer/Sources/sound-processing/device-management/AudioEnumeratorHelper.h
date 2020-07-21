@@ -17,7 +17,6 @@
 
 namespace rxtd::audio_analyzer {
 	class AudioEnumeratorHelper {
-	private:
 		bool valid = true;
 
 		utils::Rainmeter::Logger& logger;

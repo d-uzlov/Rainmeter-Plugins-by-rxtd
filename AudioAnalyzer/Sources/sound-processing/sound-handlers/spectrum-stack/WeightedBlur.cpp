@@ -96,30 +96,23 @@ std::optional<WeightedBlur::Params> WeightedBlur::parseParams(
 
 void WeightedBlur::setParams(Params _params, Channel channel) {
 	this->params = std::move(_params);
-	valid = true;
+	setValid(true);
 }
 
-void WeightedBlur::process(const DataSupplier& dataSupplier) {
-	if (!valid) {
-		return;
-	}
-
+void WeightedBlur::_process(const DataSupplier& dataSupplier) {
 	changed = true;
 }
 
-void WeightedBlur::processSilence(const DataSupplier& dataSupplier) {
-	process(dataSupplier);
+void WeightedBlur::_processSilence(const DataSupplier& dataSupplier) {
+	_process(dataSupplier);
 }
 
-void WeightedBlur::finish(const DataSupplier& dataSupplier) {
-	if (!valid) {
-		return;
-	}
+void WeightedBlur::_finish(const DataSupplier& dataSupplier) {
 	if (!changed) {
 		return;
 	}
 
-	valid = false;
+	setValid(false);
 
 	source = dataSupplier.getHandler<ResamplerProvider>(params.sourceId);
 	if (source == nullptr) {
@@ -135,7 +128,7 @@ void WeightedBlur::finish(const DataSupplier& dataSupplier) {
 	blurData(*resampler);
 	changed = false;
 
-	valid = true;
+	setValid(true);
 }
 
 array_view<float> WeightedBlur::getData(layer_t layer) const {

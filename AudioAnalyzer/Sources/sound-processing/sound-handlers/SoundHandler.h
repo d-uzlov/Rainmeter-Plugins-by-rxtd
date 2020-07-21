@@ -14,6 +14,8 @@
 
 namespace rxtd::audio_analyzer {
 	class SoundHandler {
+		bool valid = true;
+
 	public:
 		using layer_t = int8_t;
 
@@ -29,14 +31,33 @@ namespace rxtd::audio_analyzer {
 		virtual void setSamplesPerSec(index value) = 0;
 		virtual void reset() = 0;
 
-		virtual void process(const DataSupplier& dataSupplier) = 0;
-		virtual void processSilence(const DataSupplier& dataSupplier) = 0;
+		void process(const DataSupplier& dataSupplier) {
+			if (!valid) {
+				return;
+			}
+
+			_process(dataSupplier);
+		}
+
+		void processSilence(const DataSupplier& dataSupplier) {
+			if (!valid) {
+				return;
+			}
+
+			_processSilence(dataSupplier);
+		}
 
 		// Method can be called several times in a row, handler should check for changes to optimize performance
-		virtual void finish(const DataSupplier& dataSupplier) = 0;
+		void finish(const DataSupplier& dataSupplier) {
+			if (!valid) {
+				return;
+			}
+
+			_finish(dataSupplier);
+		}
 
 		virtual bool isValid() const {
-			return true;
+			return valid;
 		}
 
 		virtual array_view<float> getData(layer_t layer) const = 0;
@@ -58,6 +79,13 @@ namespace rxtd::audio_analyzer {
 		}
 
 	protected:
+		void setValid(bool value) {
+			valid = value;
+		}
+
+		virtual void _process(const DataSupplier& dataSupplier) = 0;
+		virtual void _processSilence(const DataSupplier& dataSupplier) = 0;
+		virtual void _finish(const DataSupplier& dataSupplier) = 0;
 
 		static index parseIndexProp(const isview& request, const isview& propName, index endBound) {
 			return parseIndexProp(request, propName, 0, endBound);

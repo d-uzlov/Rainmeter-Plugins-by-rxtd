@@ -68,31 +68,23 @@ void BandCascadeTransformer::setParams(Params _params, Channel channel) {
 	this->params = std::move(_params);
 
 	analysisComputed = false;
-	valid = true;
+	setValid(true);
 }
 
-void BandCascadeTransformer::process(const DataSupplier& dataSupplier) {
-	if (!valid) {
-		return;
-	}
-
+void BandCascadeTransformer::_process(const DataSupplier& dataSupplier) {
 	changed = true;
 }
 
-void BandCascadeTransformer::processSilence(const DataSupplier& dataSupplier) {
-	process(dataSupplier);
+void BandCascadeTransformer::_processSilence(const DataSupplier& dataSupplier) {
+	_process(dataSupplier);
 }
 
-void BandCascadeTransformer::finish(const DataSupplier& dataSupplier) {
-	if (!valid) {
-		return;
-	}
-
+void BandCascadeTransformer::_finish(const DataSupplier& dataSupplier) {
 	if (!changed) {
 		return;
 	}
 
-	valid = false;
+	setValid(false);
 
 	const auto source = dataSupplier.getHandler<ResamplerProvider>(params.sourceId);
 	if (source == nullptr) {
@@ -115,7 +107,7 @@ void BandCascadeTransformer::finish(const DataSupplier& dataSupplier) {
 	updateValues(*source, *resampler);
 	changed = false;
 
-	valid = true;
+	setValid(true);
 }
 
 void BandCascadeTransformer::setSamplesPerSec(index samplesPerSec) {

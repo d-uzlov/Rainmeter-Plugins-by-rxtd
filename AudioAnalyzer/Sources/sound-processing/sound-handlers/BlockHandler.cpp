@@ -53,19 +53,19 @@ void BlockHandler::setNextValue(double value) {
 	result = params.transformer.apply(value);
 }
 
-void BlockHandler::setParams(Params params, Channel channel) {
-	if (this->params == params) {
+void BlockHandler::setParams(Params _params, Channel channel) {
+	if (params == _params) {
 		return;
 	}
 
-	this->params = params;
+	params = _params;
 
 	recalculateConstants();
 
-	if (this->params.transformer.isEmpty()) {
+	if (params.transformer.isEmpty()) {
 		auto transform = utils::Option{ getDefaultTransform() };
 		utils::Rainmeter::Logger dummyLogger;
-		this->params.transformer = audio_utils::TransformationParser::parse(transform, dummyLogger);
+		params.transformer = audio_utils::TransformationParser::parse(transform, dummyLogger);
 	}
 }
 
@@ -97,7 +97,7 @@ void BlockHandler::reset() {
 	_reset();
 }
 
-void BlockHandler::process(const DataSupplier& dataSupplier) {
+void BlockHandler::_process(const DataSupplier& dataSupplier) {
 	auto wave = dataSupplier.getWave();
 
 	float mean = 0.0;
@@ -118,7 +118,7 @@ void BlockHandler::recalculateConstants() {
 	params.transformer.updateTransformations(samplesPerSec, blockSize);
 }
 
-void BlockHandler::processSilence(const DataSupplier& dataSupplier) {
+void BlockHandler::_processSilence(const DataSupplier& dataSupplier) {
 	const auto waveSize = dataSupplier.getWave().size();
 	index waveProcessed = 0;
 

@@ -57,7 +57,7 @@ void FiniteTimeFilter::setParams(Params _params, Channel channel) {
 	}
 
 	this->params = std::move(_params);
-	valid = false;
+	setValid(false);
 	source = nullptr;
 
 	if (params.smoothingFactor <= 1) {
@@ -91,30 +91,23 @@ void FiniteTimeFilter::setParams(Params _params, Channel channel) {
 		}
 	}
 
-	valid = true;
+	setValid(true);
 }
 
-void FiniteTimeFilter::process(const DataSupplier& dataSupplier) {
-	if (!valid) {
-		return;
-	}
-
+void FiniteTimeFilter::_process(const DataSupplier& dataSupplier) {
 	changed = true;
 }
 
-void FiniteTimeFilter::processSilence(const DataSupplier& dataSupplier) {
-	process(dataSupplier);
+void FiniteTimeFilter::_processSilence(const DataSupplier& dataSupplier) {
+	_process(dataSupplier);
 }
 
-void FiniteTimeFilter::finish(const DataSupplier& dataSupplier) {
-	if (!valid) {
-		return;
-	}
+void FiniteTimeFilter::_finish(const DataSupplier& dataSupplier) {
 	if (!changed) {
 		return;
 	}
 
-	valid = false;
+	setValid(false);
 
 	source = dataSupplier.getHandler<>(params.sourceId);
 	if (source == nullptr) {
@@ -133,7 +126,7 @@ void FiniteTimeFilter::finish(const DataSupplier& dataSupplier) {
 	}
 
 	changed = false;
-	valid = true;
+	setValid(true);
 }
 
 void FiniteTimeFilter::setSamplesPerSec(index samplesPerSec) {

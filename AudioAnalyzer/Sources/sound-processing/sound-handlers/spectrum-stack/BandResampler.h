@@ -73,7 +73,6 @@ namespace rxtd::audio_analyzer {
 
 		bool cascadeInfoIsCalculated = false;
 		bool changed = true;
-		bool valid = false;
 
 		mutable string propString{ };
 
@@ -89,14 +88,9 @@ namespace rxtd::audio_analyzer {
 		void setSamplesPerSec(index value) override;
 		void reset() override;
 
-		void process(const DataSupplier& dataSupplier) override;
-		void processSilence(const DataSupplier& dataSupplier) override;
-		void finish(const DataSupplier& dataSupplier) override;
-
-
-		bool isValid() const override {
-			return valid;
-		}
+		void _process(const DataSupplier& dataSupplier) override;
+		void _processSilence(const DataSupplier& dataSupplier) override;
+		void _finish(const DataSupplier& dataSupplier) override;
 
 		array_view<float> getData(layer_t layer) const override;
 		layer_t getLayersCount() const override;

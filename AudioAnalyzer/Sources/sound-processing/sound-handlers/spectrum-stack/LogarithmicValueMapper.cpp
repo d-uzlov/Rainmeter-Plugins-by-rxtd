@@ -44,22 +44,18 @@ void LogarithmicValueMapper::setParams(Params _params, Channel channel) {
 
 	logNormalization = 20.0 / params.sensitivity;
 
-	valid = true;
+	setValid(true);
 }
 
-void LogarithmicValueMapper::process(const DataSupplier& dataSupplier) {
-	if (!valid) {
-		return;
-	}
-
+void LogarithmicValueMapper::_process(const DataSupplier& dataSupplier) {
 	changed = true;
 }
 
-void LogarithmicValueMapper::processSilence(const DataSupplier& dataSupplier) {
-	process(dataSupplier);
+void LogarithmicValueMapper::_processSilence(const DataSupplier& dataSupplier) {
+	_process(dataSupplier);
 }
 
-void LogarithmicValueMapper::finish(const DataSupplier& dataSupplier) {
+void LogarithmicValueMapper::_finish(const DataSupplier& dataSupplier) {
 	if (changed) {
 		updateValues(dataSupplier);
 		changed = false;
@@ -82,11 +78,7 @@ void LogarithmicValueMapper::reset() {
 
 
 void LogarithmicValueMapper::updateValues(const DataSupplier& dataSupplier) {
-	if (!valid) {
-		return;
-	}
-
-	valid = false;
+	setValid(false);
 
 	const auto source = dataSupplier.getHandler(params.sourceId);
 	if (source == nullptr) {
@@ -95,7 +87,7 @@ void LogarithmicValueMapper::updateValues(const DataSupplier& dataSupplier) {
 
 	transformToLog(*source);
 
-	valid = true;
+	setValid(true);
 }
 
 void LogarithmicValueMapper::transformToLog(const SoundHandler& source) {

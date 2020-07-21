@@ -211,7 +211,7 @@ void Spectrogram::fillStripMulticolor(array_view<float> data) {
 	}
 }
 
-void Spectrogram::process(const DataSupplier& dataSupplier) {
+void Spectrogram::_process(const DataSupplier& dataSupplier) {
 	if (blockSize <= 0) {
 		return;
 	}
@@ -260,11 +260,11 @@ void Spectrogram::process(const DataSupplier& dataSupplier) {
 	}
 }
 
-void Spectrogram::processSilence(const DataSupplier& dataSupplier) {
-	process(dataSupplier);
+void Spectrogram::_processSilence(const DataSupplier& dataSupplier) {
+	_process(dataSupplier);
 }
 
-void Spectrogram::finish(const DataSupplier& dataSupplier) {
+void Spectrogram::_finish(const DataSupplier& dataSupplier) {
 	if (changed) {
 		writerHelper.write(image.getPixels(), image.isEmpty(), filepath);
 		changed = false;

@@ -71,30 +71,23 @@ std::optional<UniformBlur::Params> UniformBlur::parseParams(
 void UniformBlur::setParams(Params _params, Channel channel) {
 	this->params = std::move(_params);
 	resampler = nullptr;
-	valid = true;
+	setValid(true);
 }
 
-void UniformBlur::process(const DataSupplier& dataSupplier) {
-	if (!valid) {
-		return;
-	}
-
+void UniformBlur::_process(const DataSupplier& dataSupplier) {
 	changed = true;
 }
 
-void UniformBlur::processSilence(const DataSupplier& dataSupplier) {
-	process(dataSupplier);
+void UniformBlur::_processSilence(const DataSupplier& dataSupplier) {
+	_process(dataSupplier);
 }
 
-void UniformBlur::finish(const DataSupplier& dataSupplier) {
-	if (!valid) {
-		return;
-	}
+void UniformBlur::_finish(const DataSupplier& dataSupplier) {
 	if (!changed) {
 		return;
 	}
 
-	valid = false;
+	setValid(false);
 
 	const auto source = dataSupplier.getHandler(params.resamplerId);
 	if (source == nullptr) {
@@ -109,7 +102,7 @@ void UniformBlur::finish(const DataSupplier& dataSupplier) {
 	blurData(*source);
 	changed = false;
 
-	valid = true;
+	setValid(true);
 }
 
 array_view<float> UniformBlur::getData(layer_t layer) const {

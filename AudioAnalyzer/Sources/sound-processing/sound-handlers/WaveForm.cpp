@@ -228,7 +228,7 @@ void WaveForm::pushStrip(double min, double max) {
 	changed = true;
 }
 
-void WaveForm::process(const DataSupplier& dataSupplier) {
+void WaveForm::_process(const DataSupplier& dataSupplier) {
 	if (blockSize <= 0 || params.width <= 0 || params.height <= 0) {
 		return;
 	}
@@ -249,7 +249,7 @@ void WaveForm::process(const DataSupplier& dataSupplier) {
 	}
 }
 
-void WaveForm::processSilence(const DataSupplier& dataSupplier) {
+void WaveForm::_processSilence(const DataSupplier& dataSupplier) {
 	if (blockSize <= 0 || params.width <= 0 || params.height <= 0) {
 		return;
 	}
@@ -277,7 +277,7 @@ void WaveForm::processSilence(const DataSupplier& dataSupplier) {
 	}
 }
 
-void WaveForm::finish(const DataSupplier& dataSupplier) {
+void WaveForm::_finish(const DataSupplier& dataSupplier) {
 	if (changed) {
 		drawer.inflate();
 		writerHelper.write(drawer.getResultBuffer(), drawer.isEmpty(), filepath);

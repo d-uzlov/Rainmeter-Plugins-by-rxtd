@@ -12,7 +12,6 @@
 namespace rxtd::utils {
 	class FileWrapper {
 		void *fileHandle { };
-		bool valid = true;
 
 	public:
 		FileWrapper(const wchar_t* path);
@@ -29,5 +28,7 @@ namespace rxtd::utils {
 
 		static void createDirectories(sview path);
 
+	private:
+		void close();
 	};
 }

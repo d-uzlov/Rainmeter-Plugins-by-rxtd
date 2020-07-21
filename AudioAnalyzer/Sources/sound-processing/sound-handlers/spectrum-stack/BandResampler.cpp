@@ -69,7 +69,7 @@ void BandResampler::setParams(Params _params, Channel channel) {
 
 	params = std::move(_params);
 
-	valid = false;
+	setValid(false);
 
 	bandsCount = index(params.bandFreqs.size() - 1);
 
@@ -82,26 +82,18 @@ void BandResampler::setParams(Params _params, Channel channel) {
 	}
 
 	cascadeInfoIsCalculated = false;
-	valid = true;
+	setValid(true);
 }
 
-void BandResampler::process(const DataSupplier& dataSupplier) {
-	if (!valid) {
-		return;
-	}
-
+void BandResampler::_process(const DataSupplier& dataSupplier) {
 	changed = true;
 }
 
-void BandResampler::processSilence(const DataSupplier& dataSupplier) {
-	process(dataSupplier);
+void BandResampler::_processSilence(const DataSupplier& dataSupplier) {
+	_process(dataSupplier);
 }
 
-void BandResampler::finish(const DataSupplier& dataSupplier) {
-	if (!valid) {
-		return;
-	}
-
+void BandResampler::_finish(const DataSupplier& dataSupplier) {
 	if (changed) {
 		updateValues(dataSupplier);
 		changed = false;
@@ -184,7 +176,7 @@ array_view<double> BandResampler::getBaseFreqs() const {
 }
 
 void BandResampler::updateValues(const DataSupplier& dataSupplier) {
-	valid = false;
+	setValid(false);
 
 	const auto source = dataSupplier.getHandler<FftAnalyzer>(params.fftId);
 	if (source == nullptr) {
@@ -199,7 +191,7 @@ void BandResampler::updateValues(const DataSupplier& dataSupplier) {
 
 	sampleData(*source);
 
-	valid = true;
+	setValid(true);
 }
 
 void BandResampler::sampleData(const FftAnalyzer& source) {

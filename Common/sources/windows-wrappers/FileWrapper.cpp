@@ -27,25 +27,18 @@ FileWrapper::FileWrapper(const wchar_t *path) {
 		// |FILE_ATTRIBUTE_NORMAL
 		// | FILE_ATTRIBUTE_TEMPORARY
 		, nullptr);
-	if (fileHandle == INVALID_HANDLE_VALUE) {
-		valid = false;
-		return;
-	}
 }
 
 FileWrapper::~FileWrapper() {
-	if (fileHandle != INVALID_HANDLE_VALUE) {
-		CloseHandle(fileHandle);
-		fileHandle = INVALID_HANDLE_VALUE;
-	}
+	close();
 }
 
 bool FileWrapper::isValid() const {
-	return valid;
+	return fileHandle != INVALID_HANDLE_VALUE;
 }
 
 void FileWrapper::write(const void *data, index count) {
-	if (!valid) {
+	if (!isValid()) {
 		return;
 	}
 
@@ -55,8 +48,7 @@ void FileWrapper::write(const void *data, index count) {
 		&bytesWritten, nullptr);
 
 	if (!success || index(bytesWritten) != count) {
-		valid = false;
-		return;
+		close();
 	}
 }
 
@@ -79,4 +71,11 @@ void FileWrapper::createDirectories(sview path) {
 		pos = nextPos + 1;
 	}
 	CreateDirectoryW(buffer.c_str(), nullptr);
+}
+
+void FileWrapper::close() {
+	if (fileHandle != INVALID_HANDLE_VALUE) {
+		CloseHandle(fileHandle);
+		fileHandle = INVALID_HANDLE_VALUE;
+	}
 }

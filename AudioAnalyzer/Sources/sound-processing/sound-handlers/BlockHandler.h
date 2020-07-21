@@ -56,10 +56,10 @@ namespace rxtd::audio_analyzer {
 		void setSamplesPerSec(index samplesPerSec) final;
 		void reset() final;
 
-		void process(const DataSupplier& dataSupplier) final;
-		void processSilence(const DataSupplier& dataSupplier) final;
+		void _process(const DataSupplier& dataSupplier) final;
+		void _processSilence(const DataSupplier& dataSupplier) final;
 
-		void finish(const DataSupplier& dataSupplier) final {
+		void _finish(const DataSupplier& dataSupplier) final {
 		}
 
 		array_view<float> getData(layer_t layer) const final {

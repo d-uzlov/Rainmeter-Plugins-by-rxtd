@@ -94,7 +94,7 @@ index FftAnalyzer::getFftSize() const {
 	return fftSize;
 }
 
-void FftAnalyzer::process(const DataSupplier& dataSupplier) {
+void FftAnalyzer::_process(const DataSupplier& dataSupplier) {
 	if (fftSize <= 0) {
 		return;
 	}
@@ -120,7 +120,7 @@ void FftAnalyzer::process(const DataSupplier& dataSupplier) {
 	fft.resetBuffers();
 }
 
-void FftAnalyzer::processSilence(const DataSupplier& dataSupplier) {
+void FftAnalyzer::_processSilence(const DataSupplier& dataSupplier) {
 	if (fftSize <= 0) {
 		return;
 	}
