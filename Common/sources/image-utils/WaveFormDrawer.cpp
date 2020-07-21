@@ -31,6 +31,9 @@ void WaveFormDrawer::setDimensions(index width, index height) {
 
 void WaveFormDrawer::fillSilence() {
 	inflatableBuffer.pushEmptyLine(0.0);
+
+	const index centerLineIndex = interpolator.toValueD(0.0);
+	inflatableBuffer.correctLastLine(centerLineIndex, 1.0);
 }
 
 void WaveFormDrawer::fillStrip(double min, double max) {

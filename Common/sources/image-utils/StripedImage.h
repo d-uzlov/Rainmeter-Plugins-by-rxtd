@@ -98,6 +98,13 @@ namespace rxtd::utils {
 			}
 		}
 
+		void correctLastLine(index pixelIndex, PixelValueType value) {
+			auto lastStripIndex = getLastStripIndex();
+			auto imageLines = getCurrentLinesArray();
+			auto line = imageLines[pixelIndex];
+			line[lastStripIndex] = value;
+		}
+
 		bool isEmpty() const {
 			return sameStripsCount >= width;
 		}
@@ -107,7 +114,14 @@ namespace rxtd::utils {
 		}
 
 		index getLastStripIndex() const {
-			return stationary ? stationaryOffset : width - 1;
+			if (stationary) {
+				index offset = stationaryOffset - 1;
+				if (offset < 0) {
+					offset += width;
+				}
+				return offset;
+			}
+			return width - 1;
 		}
 
 	private:
