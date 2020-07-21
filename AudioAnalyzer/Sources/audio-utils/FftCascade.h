@@ -47,7 +47,6 @@ namespace rxtd::audio_utils {
 	public:
 		void setParams(Params _params, FFT* fft, FftCascade* successor, layer_t cascadeIndex);
 		void process(array_view<float> wave);
-		void processRandom(index waveSize, double amplitude);
 		void processSilence(index waveSize);
 		void reset();
 

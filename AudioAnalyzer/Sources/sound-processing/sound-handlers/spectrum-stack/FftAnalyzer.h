@@ -12,6 +12,7 @@
 #include "RainmeterWrappers.h"
 #include "../../../audio-utils/FFT.h"
 #include "../../../audio-utils/FftCascade.h"
+#include "../../../audio-utils/InfiniteResponseFilter.h"
 
 namespace rxtd::audio_analyzer {
 	class FftAnalyzer : public SoundHandler {
@@ -35,6 +36,7 @@ namespace rxtd::audio_analyzer {
 			double overlap;
 
 			layer_t cascadesCount;
+			bool correctLoudness;
 
 			double randomTest;
 			double randomDuration;
@@ -48,6 +50,7 @@ namespace rxtd::audio_analyzer {
 					&& lhs.resolution == rhs.resolution
 					&& lhs.overlap == rhs.overlap
 					&& lhs.cascadesCount == rhs.cascadesCount
+					&& lhs.correctLoudness == rhs.correctLoudness
 					&& lhs.randomTest == rhs.randomTest
 					&& lhs.randomDuration == rhs.randomDuration
 					&& lhs.correctZero == rhs.correctZero;
@@ -72,9 +75,12 @@ namespace rxtd::audio_analyzer {
 		enum class RandomState { ON, OFF } randomState{ RandomState::ON };
 
 		std::vector<audio_utils::FftCascade> cascades{ };
+		audio_utils::InfiniteResponseFilter highShelfFilter { };
+		audio_utils::InfiniteResponseFilter highPassFilter { };
 
 		audio_utils::FFT fft{ };
 
+		std::vector<float> waveBuffer;
 		mutable string propString{ };
 
 	public:
@@ -109,7 +115,10 @@ namespace rxtd::audio_analyzer {
 		void setParams(Params params, Channel channel);
 
 	private:
+		void preprocessWave(array_span<float> wave);
+
 		void processRandom(index waveSize);
+
 		void updateParams();
 	};
 }

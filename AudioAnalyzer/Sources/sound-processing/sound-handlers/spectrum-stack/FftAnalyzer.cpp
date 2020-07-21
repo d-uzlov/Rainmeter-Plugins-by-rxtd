@@ -11,6 +11,8 @@
 #include "option-parser/OptionMap.h"
 
 #include "undef.h"
+#include "../../../audio-utils/KWeightingFilterBuilder.h"
+#include "../../../audio-utils/RandomGenerator.h"
 
 using namespace std::literals::string_view_literals;
 
@@ -71,10 +73,12 @@ std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(
 		params.cascadesCount = 1;
 	}
 
-	params.correctZero = optionMap.get(L"correctZero"sv).asBool(true);
+	params.correctLoudness = optionMap.get(L"correctLoudness"sv).asBool(false);
 
 	params.randomTest = std::abs(optionMap.get(L"testRandom"sv).asFloat(0.0));
 	params.randomDuration = std::abs(optionMap.get(L"randomDuration"sv).asFloat(1000.0)) * 0.001;
+
+	params.correctZero = optionMap.get(L"correctZero"sv).asBool(true);
 
 	return params;
 }
@@ -104,6 +108,11 @@ void FftAnalyzer::process(const DataSupplier& dataSupplier) {
 
 	if (params.randomTest != 0.0) {
 		processRandom(wave.size());
+	} else if (params.correctLoudness) {
+		waveBuffer.resize(wave.size());
+		std::copy(wave.begin(), wave.end(), waveBuffer.begin());
+		preprocessWave(waveBuffer);
+		cascades[0].process(waveBuffer);
 	} else {
 		cascades[0].process(wave);
 	}
@@ -141,16 +150,19 @@ array_view<float> FftAnalyzer::getData(layer_t layer) const {
 }
 
 void FftAnalyzer::processRandom(index waveSize) {
-	index remainingWave = waveSize;
-	while (remainingWave != 0) {
-		const index toProcess = std::min(randomBlockSize - randomCurrentOffset, remainingWave);
+	audio_utils::RandomGenerator random;
+
+	std::vector<float> wave;
+	wave.resize(waveSize);
+
+	for (index i = 0; i < waveSize; ++i) {
 		if (randomState == RandomState::ON) {
-			cascades[0].processRandom(waveSize, params.randomTest);
+			wave.push_back(random.next() * params.randomTest);
 		} else {
-			cascades[0].processSilence(waveSize);
+			wave.push_back(0.0f);
 		}
-		remainingWave -= toProcess;
-		randomCurrentOffset += toProcess;
+
+		randomCurrentOffset++;
 		if (randomCurrentOffset == randomBlockSize) {
 			randomCurrentOffset = 0;
 			if (randomState == RandomState::ON) {
@@ -160,6 +172,11 @@ void FftAnalyzer::processRandom(index waveSize) {
 			}
 		}
 	}
+
+	if (params.correctLoudness) {
+		preprocessWave(wave);
+	}
+	cascades[0].process(wave);
 }
 
 void FftAnalyzer::setSamplesPerSec(index samplesPerSec) {
@@ -168,6 +185,10 @@ void FftAnalyzer::setSamplesPerSec(index samplesPerSec) {
 	}
 
 	this->samplesPerSec = samplesPerSec;
+
+	highShelfFilter = audio_utils::KWeightingFilterBuilder::createHighShelf(samplesPerSec);
+	highPassFilter = audio_utils::KWeightingFilterBuilder::createHighPass(samplesPerSec);
+
 	updateParams();
 }
 
@@ -242,6 +263,11 @@ void FftAnalyzer::setParams(Params params, Channel channel) {
 	this->params = params;
 
 	updateParams();
+}
+
+void FftAnalyzer::preprocessWave(array_span<float> wave) {
+	highShelfFilter.apply(wave);
+	highPassFilter.apply(wave);
 }
 
 void FftAnalyzer::updateParams() {
