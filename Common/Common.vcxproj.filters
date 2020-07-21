@@ -80,12 +80,6 @@
     <ClCompile Include="sources\option-parser\OptionMap.cpp">
       <Filter>Source Files\option-parser</Filter>
     </ClCompile>
-    <ClCompile Include="sources\image-utils\ImageTransposer.cpp">
-      <Filter>Source Files\image-utils</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\image-utils\LinedImageHelper.cpp">
-      <Filter>Source Files\image-utils</Filter>
-    </ClCompile>
     <ClCompile Include="sources\image-utils\WaveFormDrawer.cpp">
       <Filter>Source Files\image-utils</Filter>
     </ClCompile>
@@ -189,12 +183,6 @@
     </ClInclude>
     <ClInclude Include="sources\array2d_view.h">
       <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\image-utils\ImageTransposer.h">
-      <Filter>Source Files\image-utils</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\image-utils\LinedImageHelper.h">
-      <Filter>Source Files\image-utils</Filter>
     </ClInclude>
     <ClInclude Include="sources\image-utils\ImageWriteHelper.h">
       <Filter>Source Files\image-utils</Filter>

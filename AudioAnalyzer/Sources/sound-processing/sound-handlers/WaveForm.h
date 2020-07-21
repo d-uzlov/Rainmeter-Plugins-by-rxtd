@@ -13,7 +13,6 @@
 #include "Color.h"
 #include "option-parser/OptionMap.h"
 #include "RainmeterWrappers.h"
-#include "image-utils/LinedImageHelper.h"
 #include "image-utils/WaveFormDrawer.h"
 #include "image-utils/ImageWriteHelper.h"
 #include "../../audio-utils/CustomizableValueTransformer.h"
