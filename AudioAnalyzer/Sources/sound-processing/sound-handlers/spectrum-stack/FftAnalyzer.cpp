@@ -268,8 +268,8 @@ std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(
 	params.decayTime *= 0.001;
 
 
-	const auto sizeBy = optionMap.get(L"sizeBy"sv).asIString(L"binWidth");
-	if (sizeBy == L"binWidth") {
+	if (const auto sizeBy = optionMap.get(L"sizeBy"sv).asIString(L"binWidth"); 
+		sizeBy == L"binWidth") {
 		params.resolution = optionMap.get(L"binWidth"sv).asFloat(100.0);
 		if (params.resolution <= 0.0) {
 			cl.error(L"Resolution must be > 0 but {} found", params.resolution);

@@ -41,7 +41,7 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& op
 	params.resolution *= 0.001;
 
 	string folder { optionMap.get(L"folder"sv).asString() };
-	if (!folder.empty() && folder[0] == L'\"') {
+	if (!folder.empty() && folder[0] == L'\"') { // TODO WTF is this?
 		folder = folder.substr(1);
 	}
 	std::filesystem::path path { folder };
@@ -61,9 +61,9 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& op
 	params.waveColor = optionMap.get(L"waveColor"sv).asColor({ 1, 1, 1, 1 });
 	params.lineColor = optionMap.get(L"lineColor"sv).asColor(params.waveColor);
 	params.borderColor = optionMap.get(L"borderColor"sv).asColor({ 1.0, 0.2, 0.2, 1});
-
-	auto ldpString = optionMap.get(L"lineDrawingPolicy"sv).asIString();
-	if (ldpString.empty() || ldpString == L"always") {
+	
+	if (const auto ldpString = optionMap.get(L"lineDrawingPolicy"sv).asIString(L"always"); 
+		ldpString == L"always") {
 		params.lineDrawingPolicy = LDP::eALWAYS;
 	} else if (ldpString == L"belowWave") {
 		params.lineDrawingPolicy = LDP::eBELOW_WAVE;
@@ -81,8 +81,8 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& op
 
 	params.borderSize = optionMap.get(L"borderSize").asInt(0);
 
-	const auto fading = optionMap.get(L"fading").asIString(L"None");
-	if (fading == L"None") {
+	if (const auto fading = optionMap.get(L"fading").asIString(L"None"); 
+		fading == L"None") {
 		params.fading = FD::eNONE;
 	} else if (fading == L"Linear") {
 		params.fading = FD::eLINEAR;

@@ -47,8 +47,8 @@ std::optional<BandCascadeTransformer::Params> BandCascadeTransformer::parseParam
 		std::numeric_limits<float>::epsilon()
 	);
 
-	if (auto mixFunctionString = optionMap.get(L"mixFunction"sv).asIString(L"product");
-		mixFunctionString.empty() || mixFunctionString == L"product") {
+	if (const auto mixFunctionString = optionMap.get(L"mixFunction"sv).asIString(L"product");
+		mixFunctionString == L"product") {
 		params.mixFunction = MixFunction::PRODUCT;
 	} else if (mixFunctionString == L"average") {
 		params.mixFunction = MixFunction::AVERAGE;

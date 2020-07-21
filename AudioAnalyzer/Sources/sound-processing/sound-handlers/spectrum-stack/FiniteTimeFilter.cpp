@@ -35,8 +35,8 @@ std::optional<FiniteTimeFilter::Params> FiniteTimeFilter::parseParams(
 	}
 
 	params.exponentialFactor = 1;
-	if (auto smoothingCurveString = optionMap.get(L"smoothingCurve"sv).asIString();
-		smoothingCurveString.empty() || smoothingCurveString == L"exponential") {
+	if (const auto smoothingCurveString = optionMap.get(L"smoothingCurve"sv).asIString(L"exponential");
+		smoothingCurveString == L"exponential") {
 		params.smoothingCurve = SmoothingCurve::EXPONENTIAL;
 		params.exponentialFactor = optionMap.get(L"exponentialFactor").asFloat(1.5);
 	} else if (smoothingCurveString == L"flat") {

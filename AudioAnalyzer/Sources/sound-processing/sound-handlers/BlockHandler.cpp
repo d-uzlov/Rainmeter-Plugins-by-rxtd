@@ -26,7 +26,7 @@ std::optional<BlockHandler::Params> BlockHandler::parseParams(
 
 	params.resolution = optionMap.get(L"resolution"sv).asFloat(1000.0 / 60.0);
 	if (params.resolution <= 0) {
-		cl.warning(L"block must be > 0 but {} found. Assume 10", params.resolution);
+		cl.warning(L"resolution must be > 0 but {} found. Assume 10", params.resolution);
 		params.resolution = 10;
 	}
 	params.resolution *= 0.001;
