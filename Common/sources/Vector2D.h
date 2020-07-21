@@ -48,8 +48,8 @@ namespace rxtd::utils {
 			return *this;
 		}
 
-		Vector2D(const Vector2D& other) = delete;
-		Vector2D& operator=(const Vector2D& other) = delete;
+		Vector2D(const Vector2D& other) = default;
+		Vector2D& operator=(const Vector2D& other) = default;
 
 		void init(const T value = {}) {
 			std::fill_n(array.data(), buffersCount * bufferSize, value);
@@ -65,7 +65,7 @@ namespace rxtd::utils {
 
 		void setBufferSize(index size) {
 			bufferSize = size;
-			array.reserve(buffersCount * size);
+			array.resize(buffersCount * size);
 		}
 		constexpr index getBufferSize() const {
 			return bufferSize;

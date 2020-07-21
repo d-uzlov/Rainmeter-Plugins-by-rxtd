@@ -137,7 +137,7 @@ double WaveForm::WaveformValueTransformer::apply(double value) {
 }
 
 void WaveForm::WaveformValueTransformer::updateTransformations(index samplesPerSec, index blockSize) {
-	cvt.updateTransformations(samplesPerSec, blockSize);
+	cvt.setParams(samplesPerSec, blockSize);
 }
 
 void WaveForm::WaveformValueTransformer::reset() {

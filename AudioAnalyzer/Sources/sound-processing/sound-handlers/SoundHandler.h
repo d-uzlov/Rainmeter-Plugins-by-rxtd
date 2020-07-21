@@ -85,7 +85,7 @@ namespace rxtd::audio_analyzer {
 
 		virtual void _process(const DataSupplier& dataSupplier) = 0;
 		virtual void _processSilence(const DataSupplier& dataSupplier) = 0;
-		virtual void _finish(const DataSupplier& dataSupplier) = 0;
+		virtual void _finish(const DataSupplier& dataSupplier) { }
 
 		static index parseIndexProp(const isview& request, const isview& propName, index endBound) {
 			return parseIndexProp(request, propName, 0, endBound);

@@ -115,7 +115,7 @@ void BlockHandler::recalculateConstants() {
 		blockSize = 1;
 	}
 
-	params.transformer.updateTransformations(samplesPerSec, blockSize);
+	params.transformer.setParams(samplesPerSec, blockSize);
 }
 
 void BlockHandler::_processSilence(const DataSupplier& dataSupplier) {

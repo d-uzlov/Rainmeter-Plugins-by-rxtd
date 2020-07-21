@@ -12,6 +12,8 @@
 #include "RainmeterWrappers.h"
 #include "LogarithmicIRF.h"
 #include "LinearInterpolator.h"
+#include "Vector2D.h"
+#include "array2d_view.h"
 
 namespace rxtd::audio_utils {
 	class CustomizableValueTransformer {
@@ -26,6 +28,7 @@ namespace rxtd::audio_utils {
 		struct Transformation {
 			TransformType type{ };
 			std::array<double, 4> args{ };
+			utils::Vector2D<float> pastFilterValues;
 
 			union {
 				LogarithmicIRF filter{ };
@@ -44,6 +47,8 @@ namespace rxtd::audio_utils {
 
 	private:
 		std::vector<Transformation> transforms;
+		index filterBuffersRows = 0;
+		index filterBuffersColumns = 0;
 
 	public:
 		CustomizableValueTransformer() = default;
@@ -71,9 +76,14 @@ namespace rxtd::audio_utils {
 
 		double apply(double value);
 
-		void updateTransformations(index samplesPerSec, index blockSize);
+		void applyToArray(utils::array2d_span<float> values);
+
+		void setParams(index samplesPerSec, index blockSize);
 
 		void resetState();
+
+	private:
+		void updateFilterBuffers(index rows, index columns);
 	};
 
 	class TransformationParser {

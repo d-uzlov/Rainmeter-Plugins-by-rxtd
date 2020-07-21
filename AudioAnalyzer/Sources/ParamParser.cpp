@@ -21,6 +21,7 @@
 #include "sound-processing/sound-handlers/spectrum-stack/UniformBlur.h"
 #include "sound-processing/sound-handlers/spectrum-stack/LogarithmicValueMapper.h"
 #include "sound-processing/sound-handlers/spectrum-stack/Spectrogram.h"
+#include "sound-processing/sound-handlers/spectrum-stack/SingleValueTransformer.h"
 
 #include "option-parser/OptionMap.h"
 #include "option-parser/OptionList.h"
@@ -136,7 +137,6 @@ std::set<Channel> ParamParser::parseChannels(utils::OptionList channelsStringLis
 }
 
 void ParamParser::cacheHandlers(const utils::OptionList& indices) {
-
 	for (auto indexOption : indices) {
 
 		auto iter = handlerPatchersMap.lower_bound(indexOption.asIString());
@@ -232,6 +232,9 @@ std::function<SoundHandler*(SoundHandler*, Channel)> ParamParser::parseHandler(
 	}
 	if (type == L"loudness") {
 		return parseHandlerT<Loudness>(optionMap, cl);
+	}
+	if (type == L"SingleValueTransformer") {
+		return parseHandlerT<SingleValueTransformer>(optionMap, cl);
 	}
 
 	cl.error(L"unknown type '{}'", type);

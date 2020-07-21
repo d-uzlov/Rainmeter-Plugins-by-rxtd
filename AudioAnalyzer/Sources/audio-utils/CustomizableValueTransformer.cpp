@@ -57,7 +57,52 @@ double CustomizableValueTransformer::apply(double value) {
 	return value;
 }
 
-void CustomizableValueTransformer::updateTransformations(index samplesPerSec, index blockSize) {
+void CustomizableValueTransformer::applyToArray(utils::array2d_span<float> values) {
+	const index rowsCount = values.getBuffersCount();
+	const index columnsCount = values.getBufferSize();
+	if (filterBuffersRows != rowsCount || filterBuffersColumns != columnsCount) {
+		updateFilterBuffers(rowsCount, columnsCount);
+	}
+
+	for (int row = 0; row < rowsCount; ++row) {
+		for (int column = 0; column < columnsCount; ++column) {
+			double value = values[row][column];
+
+			for (auto& transform : transforms) {
+				switch (transform.type) {
+				case TransformType::eFILTER:
+				{
+					const float prev = transform.pastFilterValues[row][column];
+					value = transform.state.filter.apply(prev, value);
+					transform.pastFilterValues[row][column] = value;
+					break;
+				}
+				case TransformType::eDB:
+				{
+					value = std::max<double>(value, std::numeric_limits<float>::min());
+					value = 10.0 * std::log10(value);
+					break;
+				}
+				case TransformType::eMAP:
+				{
+					value = transform.state.interpolator.toValue(value);
+					break;
+				}
+				case TransformType::eCLAMP:
+				{
+					value = std::clamp(value, transform.args[0], transform.args[1]);
+					break;
+				}
+				default: std::terminate();
+				}
+			}
+
+			values[row][column] = value;
+		}
+	}
+}
+
+void CustomizableValueTransformer::setParams(index samplesPerSec, index blockSize) {
 	for (auto& transform : transforms) {
 		if (transform.type == TransformType::eFILTER) {
 			transform.state.filter.setParams(
@@ -76,6 +121,19 @@ void CustomizableValueTransformer::resetState() {
 			transform.state.filter.reset();
 		}
 	}
+}
+
+void CustomizableValueTransformer::updateFilterBuffers(index rows, index columns) {
+	for (auto& transform : transforms) {
+		if (transform.type == TransformType::eFILTER) {
+			transform.pastFilterValues.setBuffersCount(rows);
+			transform.pastFilterValues.setBufferSize(columns);
+			transform.pastFilterValues.init(0.0);
+		}
+	}
+
+	filterBuffersRows = rows;
+	filterBuffersColumns = columns;
 }
 
 CustomizableValueTransformer TransformationParser::parse(utils::Option transform, utils::Rainmeter::Logger& cl) {
