@@ -23,11 +23,15 @@ std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(
 	utils::Rainmeter::Logger& cl
 ) {
 	Params params{ };
-	params.attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.0);
-	params.decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.attackTime), 0.0);
 
-	params.attackTime *= 0.001;
-	params.decayTime *= 0.001;
+	if (optionMap.has(L"attack") || optionMap.has(L"decay")) {
+		cl.warning(L"attack/decay options on FftAnalyzer are deprecated, use SingleValueTransformer instead");
+	}
+	params.legacy_attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.0);
+	params.legacy_decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.legacy_attackTime), 0.0);
+
+	params.legacy_attackTime *= 0.001;
+	params.legacy_decayTime *= 0.001;
 
 
 	if (const auto sizeBy = optionMap.get(L"sizeBy"sv).asIString(L"binWidth");
@@ -198,9 +202,9 @@ const wchar_t* FftAnalyzer::getProp(const isview& prop) const {
 	if (prop == L"size") {
 		propString = std::to_wstring(fftSize);
 	} else if (prop == L"attack") {
-		propString = std::to_wstring(params.attackTime * 1000.0);
+		propString = std::to_wstring(params.legacy_attackTime * 1000.0);
 	} else if (prop == L"decay") {
-		propString = std::to_wstring(params.decayTime * 1000.0);
+		propString = std::to_wstring(params.legacy_decayTime * 1000.0);
 	} else if (prop == L"cascades count") {
 		propString = std::to_wstring(cascades.size());
 	} else if (prop == L"overlap") {
@@ -301,8 +305,8 @@ void FftAnalyzer::updateParams() {
 	audio_utils::FftCascade::Params cascadeParams{ };
 	cascadeParams.fftSize = fftSize;
 	cascadeParams.samplesPerSec = samplesPerSec;
-	cascadeParams.attackTime = params.attackTime;
-	cascadeParams.decayTime = params.decayTime;
+	cascadeParams.legacy_attackTime = params.legacy_attackTime;
+	cascadeParams.legacy_decayTime = params.legacy_decayTime;
 	cascadeParams.inputStride = inputStride;
 	cascadeParams.correctZero = params.correctZero;
 

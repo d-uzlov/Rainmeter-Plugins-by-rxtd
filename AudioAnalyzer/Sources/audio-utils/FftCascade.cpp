@@ -54,7 +54,7 @@ void FftCascade::setParams(Params _params, FFT* fft, FftCascade* successor, laye
 	auto samplesPerSec = params.samplesPerSec;
 	samplesPerSec = index(samplesPerSec / std::pow(2, cascadeIndex));
 
-	filter.setParams(params.attackTime, params.decayTime, samplesPerSec, params.inputStride);
+	filter.setParams(params.legacy_attackTime, params.legacy_decayTime, samplesPerSec, params.inputStride);
 
 	downsampleGain = std::pow(2, cascadeIndex * 0.5);
 }
@@ -197,10 +197,16 @@ void FftCascade::doFft() {
 
 	values[0] = filter.apply(values[0], zerothBin);
 
-	for (index bin = 1; bin < binsCount; ++bin) {
-		const double oldValue = values[bin];
-		const double newValue = fft->getBinMagnitude(bin) * downsampleGain;
-		values[bin] = filter.apply(oldValue, newValue);
+	if (params.legacy_attackTime != 0.0 || params.legacy_decayTime != 0.0) {
+		for (index bin = 1; bin < binsCount; ++bin) {
+			const double oldValue = values[bin];
+			const double newValue = fft->getBinMagnitude(bin) * downsampleGain;
+			values[bin] = filter.apply(oldValue, newValue);
+		}
+	} else {
+		for (index bin = 1; bin < binsCount; ++bin) {
+			values[bin] = fft->getBinMagnitude(bin) * downsampleGain;
+		}
 	}
 }
 

@@ -53,7 +53,7 @@ std::optional<BandCascadeTransformer::Params> BandCascadeTransformer::parseParam
 	} else if (mixFunctionString == L"average") {
 		params.mixFunction = MixFunction::AVERAGE;
 	} else {
-		cl.warning(L"mixFunction '{}' now recognized, assume 'product'", mixFunctionString);
+		cl.warning(L"mixFunction '{}' is not recognized, assume 'product'", mixFunctionString);
 		params.mixFunction = MixFunction::PRODUCT;
 	}
 

@@ -20,8 +20,10 @@ namespace rxtd::audio_utils {
 		struct Params {
 			index fftSize;
 			index samplesPerSec;
-			double attackTime;
-			double decayTime;
+
+			double legacy_attackTime;
+			double legacy_decayTime;
+
 			index inputStride;
 			bool correctZero;
 		};
@@ -33,7 +35,6 @@ namespace rxtd::audio_utils {
 
 		Params params { };
 
-		// double attackDecay[2] { 0.0, 0.0 };
 		LogarithmicIRF filter { };
 		std::vector<float> ringBuffer;
 		std::vector<float> values;
