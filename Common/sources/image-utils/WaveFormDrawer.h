@@ -16,9 +16,9 @@ namespace rxtd::utils {
 	class WaveFormDrawer {
 	public:
 		enum class LineDrawingPolicy {
-			NEVER,
-			BELOW_WAVE,
-			ALWAYS,
+			eNEVER,
+			eBELOW_WAVE,
+			eALWAYS,
 		};
 
 		enum class FadingType {
@@ -38,7 +38,7 @@ namespace rxtd::utils {
 		index width{ };
 		index height{ };
 
-		LineDrawingPolicy lineDrawingPolicy = LineDrawingPolicy::NEVER;
+		LineDrawingPolicy lineDrawingPolicy = LineDrawingPolicy::eNEVER;
 		bool edgeAntialiasing = false;
 		bool connected = false;
 		index borderSize = 0;

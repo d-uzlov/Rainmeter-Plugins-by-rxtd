@@ -71,12 +71,12 @@ void WaveFormDrawer::inflate() {
 	auto sourceCenter = imageLines[centerLineIndex];
 	auto destCenter = resultBuffer[centerLineIndex];
 
-	if (lineDrawingPolicy == LineDrawingPolicy::ALWAYS) {
+	if (lineDrawingPolicy == LineDrawingPolicy::eALWAYS) {
 		const auto color = colors.line.toInt();
 		for (int i = 0; i < width; ++i) {
 			destCenter[i] = color;
 		}
-	} else if (lineDrawingPolicy == LineDrawingPolicy::BELOW_WAVE) {
+	} else if (lineDrawingPolicy == LineDrawingPolicy::eBELOW_WAVE) {
 		for (int i = 0; i < width; ++i) {
 			destCenter[i] = Color::mix(1.0 - sourceCenter[i], colors.line, colors.wave).toInt();
 		}

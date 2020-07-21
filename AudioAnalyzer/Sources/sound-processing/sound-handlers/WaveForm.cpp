@@ -64,14 +64,14 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const utils::OptionMap& op
 
 	auto ldpString = optionMap.get(L"lineDrawingPolicy"sv).asIString();
 	if (ldpString.empty() || ldpString == L"always") {
-		params.lineDrawingPolicy = LDP::ALWAYS;
+		params.lineDrawingPolicy = LDP::eALWAYS;
 	} else if (ldpString == L"belowWave") {
-		params.lineDrawingPolicy = LDP::BELOW_WAVE;
+		params.lineDrawingPolicy = LDP::eBELOW_WAVE;
 	} else if (ldpString == L"never") {
-		params.lineDrawingPolicy = LDP::NEVER;
+		params.lineDrawingPolicy = LDP::eNEVER;
 	} else {
 		cl.warning(L"lineDrawingPolicy '{}' not recognized, assume 'always'", ldpString);
-		params.lineDrawingPolicy = LDP::ALWAYS;
+		params.lineDrawingPolicy = LDP::eALWAYS;
 	}
 
 	params.peakAntialiasing = optionMap.get(L"peakAntialiasing").asBool(false);
