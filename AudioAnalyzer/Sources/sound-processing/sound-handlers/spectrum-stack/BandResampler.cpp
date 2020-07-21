@@ -51,26 +51,23 @@ std::optional<BandResampler::Params> BandResampler::parseParams(
 		return std::nullopt;
 	}
 	params.bandFreqs = freqsOpt.value();
-	if (params.bandFreqs.size() < 2) {
-		cl.error(L"freqList '{}' must have >= 2 frequencies but only {} found", freqListIndex, params.bandFreqs.size());
-		return std::nullopt;
-	}
 
 	params.minCascade = std::max<layer_t>(optionMap.get(L"minCascade"sv).asInt<layer_t>(0), 0);
 	params.maxCascade = std::max<layer_t>(optionMap.get(L"maxCascade"sv).asInt<layer_t>(0), 0);
 
-	params.proportionalValues = optionMap.get(L"proportionalValues"sv).asBool(true);
 	params.includeDC = optionMap.get(L"includeDC"sv).asBool(true);
+
+	params.legacy_proportionalValues = optionMap.get(L"proportionalValues"sv).asBool(true);
 
 	return params;
 }
 
 void BandResampler::setParams(Params _params, Channel channel) {
-	if (this->params == _params) {
+	if (params == _params) {
 		return;
 	}
 
-	this->params = std::move(_params);
+	params = std::move(_params);
 
 	valid = false;
 
@@ -80,19 +77,11 @@ void BandResampler::setParams(Params _params, Channel channel) {
 		return;
 	}
 
-	bandFreqMultipliers.resize(bandsCount);
-	double multipliersSum{ };
-	for (index i = 0; i < bandsCount; ++i) {
-		bandFreqMultipliers[i] = std::log(params.bandFreqs[i + 1] - params.bandFreqs[i] + 1.0);
-		// bandFreqMultipliers[i] = params.bandFreqs[i + 1] - params.bandFreqs[i];
-		multipliersSum += bandFreqMultipliers[i];
-	}
-	const double bandFreqMultipliersAverage = multipliersSum / bandsCount;
-	const double multiplierCorrectingConstant = 1.0 / bandFreqMultipliersAverage;
-	for (double& multiplier : bandFreqMultipliers) {
-		multiplier *= multiplierCorrectingConstant;
+	if (params.legacy_proportionalValues) {
+		legacy_generateBandMultipliers();
 	}
 
+	cascadeInfoIsCalculated = false;
 	valid = true;
 }
 
@@ -127,8 +116,9 @@ SoundHandler::layer_t BandResampler::getLayersCount() const {
 	return layer_t(cascadesInfo.size());
 }
 
-void BandResampler::setSamplesPerSec(index samplesPerSec) {
-	this->samplesPerSec = samplesPerSec;
+void BandResampler::setSamplesPerSec(index value) {
+	samplesPerSec = value;
+	cascadeInfoIsCalculated = false;
 }
 
 const wchar_t* BandResampler::getProp(const isview& prop) const {
@@ -201,99 +191,24 @@ void BandResampler::updateValues(const DataSupplier& dataSupplier) {
 		return;
 	}
 
-	const auto cascadesCount = source->getLayersCount();
-
-	beginCascade = 1;
-	endCascade = cascadesCount + 1;
-	if (params.minCascade > 0) {
-		if (cascadesCount < params.minCascade) {
-			return;
-		}
-
-		beginCascade = params.minCascade;
-
-		if (params.maxCascade >= params.minCascade && cascadesCount >= params.maxCascade) {
-			endCascade = params.maxCascade + 1;
-		}
+	if (!cascadeInfoIsCalculated) {
+		const auto cascadesCount = source->getLayersCount();
+		computeCascadesInfo(source->getFftSize(), cascadesCount);
+		cascadeInfoIsCalculated = true;
 	}
-	beginCascade--;
-	endCascade--;
 
-	// TODO only do this on reload?
-	computeBandInfo(*source, beginCascade, endCascade);
-
-	sampleData(*source, beginCascade, endCascade);
+	sampleData(*source);
 
 	valid = true;
 }
 
-void BandResampler::computeBandInfo(const FftAnalyzer& source, layer_t startCascade, layer_t endCascade) {
-	cascadesInfo.resize(endCascade - startCascade);
-	for (auto& cascadeInfo : cascadesInfo) {
-		cascadeInfo.setSize(bandsCount);
-	}
-
+void BandResampler::sampleData(const FftAnalyzer& source) {
 	const auto fftBinsCount = source.getData(0).size();
-	double binWidth = static_cast<double>(samplesPerSec) / (source.getFftSize() * std::pow(2, startCascade));
-	double binWidthInverse = 1.0 / binWidth;
-
-	for (auto& [_, cascadeWeights] : cascadesInfo) {
-		index bin = params.includeDC ? 0 : 1; // bin 0 is ~DC
-		index band = 0;
-
-		double bandMinFreq = params.bandFreqs[0];
-		double bandMaxFreq = params.bandFreqs[1];
-
-		double bandWeight = 0.0;
-
-		while (bin < fftBinsCount && band < bandsCount) {
-			const double binUpperFreq = (bin + 0.5) * binWidth;
-			if (binUpperFreq < bandMinFreq) {
-				bin++;
-				continue;
-			}
-
-			double binWeight = 1.0;
-			const double binLowerFreq = (bin - 0.5) * binWidth;
-
-			if (binLowerFreq < bandMinFreq) {
-				binWeight -= (bandMinFreq - binLowerFreq) * binWidthInverse;
-			}
-			if (binUpperFreq > bandMaxFreq) {
-				binWeight -= (binUpperFreq - bandMaxFreq) * binWidthInverse;
-			}
-			if (binWeight > 0) {
-				bandWeight += binWeight;
-			}
-
-			if (bandMaxFreq >= binUpperFreq) {
-				bin++;
-			} else {
-				cascadeWeights[band] = bandWeight;
-				bandWeight = 0.0;
-				band++;
-				if (band >= bandsCount) {
-					break;
-				}
-				bandMinFreq = bandMaxFreq;
-				bandMaxFreq = params.bandFreqs[band + 1];
-			}
-		}
-		binWidth *= 0.5;
-		binWidthInverse *= 2.0;
-	}
-}
-
-void BandResampler::sampleData(const FftAnalyzer& source, layer_t startCascade, layer_t endCascade) {
-
-	const auto fftBinsCount = source.getData(0).size();
-	// TODO this should be mostly const between params changes, but can actually change when sampleRate changes
-	// TODO change of binWidth invalidates almost everything
 	double binWidth = static_cast<double>(samplesPerSec) / (source.getFftSize() * std::pow(2, startCascade));
 	double binWidthInverse = 1.0 / binWidth;
 
 	for (auto cascade = startCascade; cascade < endCascade; ++cascade) {
-		index bin = params.includeDC ? 0 : 1; // bin 0 is ~DC
+		index bin = params.includeDC ? 0 : 1; // bin 0 is DC
 		index band = 0;
 
 		double bandMinFreq = params.bandFreqs[0];
@@ -345,19 +260,21 @@ void BandResampler::sampleData(const FftAnalyzer& source, layer_t startCascade, 
 		binWidthInverse *= 2.0;
 	}
 
-	if (params.proportionalValues) {
+	// legacy
+	if (params.legacy_proportionalValues) {
 		for (auto& [cascadeMagnitudes, cascadeWeights] : cascadesInfo) {
 			for (index band = 0; band < bandsCount; ++band) {
 				cascadeMagnitudes[band] *= bandFreqMultipliers[band];
 			}
 		}
 	}
-
 }
 
-std::optional<std::vector<double>> BandResampler::parseFreqList(const utils::OptionList& bounds,
-                                                                utils::Rainmeter::Logger& cl,
-                                                                const utils::Rainmeter& rain) {
+std::optional<std::vector<double>> BandResampler::parseFreqList(
+	const utils::OptionList& bounds,
+	utils::Rainmeter::Logger& cl,
+	const utils::Rainmeter& rain
+) {
 	std::vector<double> freqs;
 
 	for (auto boundOption : bounds) {
@@ -438,5 +355,102 @@ std::optional<std::vector<double>> BandResampler::parseFreqList(const utils::Opt
 		lastValue = value;
 	}
 
+	if (result.size() < 2) {
+		cl.error(L"need >= 2 frequencies but only {} found", result.size());
+		return std::nullopt;
+	}
+
 	return result;
+}
+
+void BandResampler::computeCascadesInfo(index fftSize, index cascadesCount) {
+	startCascade = 1;
+	endCascade = cascadesCount + 1;
+	if (params.minCascade > 0) {
+		if (cascadesCount < params.minCascade) {
+			return;
+		}
+
+		startCascade = params.minCascade;
+
+		if (params.maxCascade >= params.minCascade && cascadesCount >= params.maxCascade) {
+			endCascade = params.maxCascade + 1;
+		}
+	}
+	startCascade--;
+	endCascade--;
+
+	cascadesInfo.resize(endCascade - startCascade);
+	for (auto& cascadeInfo : cascadesInfo) {
+		cascadeInfo.setSize(bandsCount);
+	}
+
+	const auto fftBinsCount = fftSize / 2;
+	double binWidth = static_cast<double>(samplesPerSec) / (fftSize * std::pow(2, startCascade));
+
+	for (auto&[_, cascadeWeights] : cascadesInfo) {
+		calculateCascadeWeights(cascadeWeights, fftBinsCount, binWidth);
+		binWidth *= 0.5;
+	}
+}
+
+void BandResampler::calculateCascadeWeights(array_span<float> result, index fftBinsCount, double binWidth) {
+	const double binWidthInverse = 1.0 / binWidth;
+
+	index bin = params.includeDC ? 0 : 1; // bin 0 is ~DC
+	index band = 0;
+
+	double bandMinFreq = params.bandFreqs[0];
+	double bandMaxFreq = params.bandFreqs[1];
+
+	double bandWeight = 0.0;
+
+	while (bin < fftBinsCount && band < bandsCount) {
+		const double binUpperFreq = (bin + 0.5) * binWidth;
+		if (binUpperFreq < bandMinFreq) {
+			bin++;
+			continue;
+		}
+
+		double binWeight = 1.0;
+		const double binLowerFreq = (bin - 0.5) * binWidth;
+
+		if (binLowerFreq < bandMinFreq) {
+			binWeight -= (bandMinFreq - binLowerFreq) * binWidthInverse;
+		}
+		if (binUpperFreq > bandMaxFreq) {
+			binWeight -= (binUpperFreq - bandMaxFreq) * binWidthInverse;
+		}
+		if (binWeight > 0) {
+			bandWeight += binWeight;
+		}
+
+		if (bandMaxFreq >= binUpperFreq) {
+			bin++;
+		} else {
+			result[band] = bandWeight;
+			bandWeight = 0.0;
+			band++;
+			if (band >= bandsCount) {
+				break;
+			}
+			bandMinFreq = bandMaxFreq;
+			bandMaxFreq = params.bandFreqs[band + 1];
+		}
+	}
+}
+
+void BandResampler::legacy_generateBandMultipliers() {
+	bandFreqMultipliers.resize(bandsCount);
+	double multipliersSum{ };
+	for (index i = 0; i < bandsCount; ++i) {
+		bandFreqMultipliers[i] = std::log(params.bandFreqs[i + 1] - params.bandFreqs[i] + 1.0);
+		// bandFreqMultipliers[i] = params.bandFreqs[i + 1] - params.bandFreqs[i];
+		multipliersSum += bandFreqMultipliers[i];
+	}
+	const double bandFreqMultipliersAverage = multipliersSum / bandsCount;
+	const double multiplierCorrectingConstant = 1.0 / bandFreqMultipliersAverage;
+	for (double& multiplier : bandFreqMultipliers) {
+		multiplier *= multiplierCorrectingConstant;
+	}
 }

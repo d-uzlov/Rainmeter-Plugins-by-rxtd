@@ -26,7 +26,7 @@ namespace rxtd::audio_analyzer {
 
 		virtual ~SoundHandler() = default;
 
-		virtual void setSamplesPerSec(index samplesPerSec) = 0;
+		virtual void setSamplesPerSec(index value) = 0;
 		virtual void reset() = 0;
 
 		virtual void process(const DataSupplier& dataSupplier) = 0;
