@@ -1,0 +1,29 @@
+Human hearing has two major properties: it is roughly logarithmic and is based on frequencies.
+Let's discuss both.
+
+Logarithmic. What does it mean?
+It means that we perceive loudness based on logarithm of real physical sound pressure.
+It mean that difference between 1 and 2 (some theoretical sound units) is the same as the difference between 10 and 20, while the difference between 99 and 100 is almost imperceptible in comparison.
+
+So when you are measuring sound you don't want to use linear values, you want to translate it. There is a well known unit of measurement called decibel (db) that is used everywhere for this exact purpose: measure something in logarithmic scale.
+Decibels measure difference between two values. They can't describe values itself, only relative values. So when you say that something has a value of 10 db, you mean that it is 10 db greater than some reference value.
+Reference value is by definition 0 db.
+
+When you use decibels to describe sound, you also have a reference sound pressure p0. The common reference pressure is 20 micro pascals, which is often considered as the threshold of human hearing. Reference value is the smallest value you can hear.
+All other values are measured relative to p0, they are greater that reference, so you see positive decibel values: Threshold of pain is 130 db, Quiet library is 40 db, etc.
+
+Unfortunately, there isn't a direct equivalent to such reference value in computer audio. Every sound system is unique and have unique loudness. You can't measure real loudness of a computer with just a program: you need expensive specialized equipment.
+But there is also a convention on how to measure computer generated loudness. Reference value in this case in 1. Computer sound use values between -1 and 1 to generate sound wave, so every measurement based on sound has absolute value between 0 and 1, so everything that measures loudness of something use 1 as a reference.
+But now reference value is not the smallest value, it's actually the largest possible value. As all values are still measured relative to it, and are smaller, decibel values are negative.
+So you can have 0 db value, -10 db value, -35 db value, etc., but usually you don't have, for example, 15 db value.
+The only way to get a positive db value from a computer sound measurement is to transform it in such a way that it can't represent computer sound anymore.
+
+Also, there is no such thing as the lowest possible sound value in decibels.
+Sure, if there is no sound at all, then you have -infinity db, but that isn't helpful. You want to have some range from minimum value to maximum. But there isn't.
+According to Wikipedia, the dynamic range of human hearing is roughly 140 dB. Commonly used minimum value that I see is -70 db.
+
+
+What does mean that human hearing is based on frequencies?
+Humans don't hear audio wave as it is. Humans decompose wave into frequencies it contains, and then analyze frequencies.
+And frequencies perception is also logarithmic. That means that the difference in tone between 50 and 100 Hz is very noticeable, while difference between 10050 and 10100 Hz is almost imperceptible. That's why all frequency analyzers use logarithmic scale for frequencies.
+Human perception of loudness is also based on frequencies. That means that given two waves with the same sound pressure but different frequencies it's possible that these two waves will have very different loudness to you.

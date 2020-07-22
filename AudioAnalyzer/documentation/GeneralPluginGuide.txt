@@ -1,0 +1,51 @@
+﻿
+Plugin uses parent-child model. You should declare one parent measure and zero or more child measured to get information. Child measures don't do any calculations.
+Parent measures use following structure of calculations:
+There are several Channels (defined in your sound card settings), each being processed independently.
+A Channel has zero or more Handlers.
+Each Handler do some computations.
+Child measures access values in parent measure.
+
+To make declaration of handlers more shorter and convenient they are declared in groups named Processing. A Processing declares that for each specified Channel there will be a sequence of specified sound Handlers. If one channel is noted in several Processings then the order of Handlers between different Processings is undefined.
+A channel-handler pairs must be unique. You can't have two different processings mentioning same handler with the same channel.
+
+Channels:
+Plugin supports 9 channels: 8 real and 1 fake.
+Real channels:
+FrontLeft or FL or Left
+FrontRight or FR or Right
+Center or C
+LowFrequency or LFE
+BackLeft or BL
+BackRight or BR
+SideLeft or SL
+SideRight or SR
+These channels correspond to real channels in layout that you can define in your audio card settings.
+There is a fake channel: "Auto". This channel is either average of FrontLeft and FrontRight if they both exist, or Center if it exist, or else fist channel in the layout.
+This generally gives you reliable source, but can be counter-intuitive (i.g., two sine waves of inverted amplitudes in left and right channels will make Auto channel be exactly zero).
+
+Handlers are very different in terms of usage.
+Loudness and Peak generate a single value that you can take.
+FFT-chain — that is, FFT, BandResampler, WeightedBlur, UniformBlur, BandCascadeTransformer, ValueTransformer — generate an array (sometimes even multidimensional array) of values that you can either get with a lot of child measures or feed into Spectrogram.
+Spectrogram and Waveform don't generate any values but they write pictures to your logical drives, which you can then show using Meter=Image.
+
+For you FFT-chain you probably want to use the following:
+FFT → BandResampler → BandCascadeTransformer → ValueTransformer
+FFT will give you frequency amplitude information, BandResampler will transform it to desired bands, BandCascadeTransformer will improve precision on low frequency range, ValueTransformer will map values from raw linear range to something you desire.
+
+If you don't want to use FFT cascades (see FFT-cascades guide), then you should get rid of BandCascadeTransformer.
+
+You can add some blurring to you chain if you  think that values are changing too abruptly.
+ValueTransformer add time-blurring on each value when it contains filter[][] in the transform description.
+UniformBlur and WeightedBlur add blurring between adjacent bands.
+// TODO ///////////////////////////////////////////////////
+// TODO ///////////////////////////////////////////////////
+// TODO ///////////////////////////////////////////////////
+// TODO ///////////////////////////////////////////////////
+// TODO ///////////////////////////////////////////////////
+// TODO ///////////////////////////////////////////////////
+// TODO ///////////////////////////////////////////////////
+// TODO ///////////////////////////////////////////////////
+// TODO ///////////////////////////////////////////////////
+// TODO ///////////////////////////////////////////////////
+

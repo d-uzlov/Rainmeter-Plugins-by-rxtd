@@ -1,0 +1,12 @@
+Why this plugin is better than AudioLevel:
+More types of data analysis: measure loudness, draw Spectrogram, draw Waveform.
+Automation: updating inner values when sample rate or default audio device changes.
+More intuitive parameters (for example, "Bin width in hertz" parameter on Fourier transform instead of "Fourier transform size", which requires understanding of FFT specifics).
+Better channel layout support (for example, AudioLevel doesn't support 4.0 layout, treating it as 3.1 instead).
+Fourier transform optimization to provide fast and precise values with minimal CPU load.
+Improvements in measures, for example:
+Peak: AudioLevel doesn't really have Peak. It calculates filtered absolute wave value instead.
+FFT: AudioLevel doesn't do proper normalization of the values. This leads to drastic change of values when size if changed. To be precise, FFT of size 16384 will give you 32 times bigger values than FFT of size 16.
+FFT: AudioLevel calculates bound using squared values of the FFT, which leads to incorrect filtering and (as far as I can tell) incorrect final values (they are much spikier than they need to be).
+Band: AudioLevel's Band feature always calculates sum of the FFT bins instead of average, which is not always desirable.
+Band: AudioLevel incorrectly calculates very first band: if you define first band to be 100 Hz, it will still count in all FFT bins from 0 to 100 Hz.
