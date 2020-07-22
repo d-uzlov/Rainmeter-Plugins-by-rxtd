@@ -24,11 +24,15 @@ static_assert(std::is_same<LPCWSTR, const wchar_t*>::value);
 
 PLUGIN_EXPORT void Initialize(void** data, void* rm) {
 	utils::Rainmeter rain(rm);
-	const auto str = rain.readString(L"Type");
-	if (str == L"Parent") {
-		*data = new rxtd::audio_analyzer::AudioParent(std::move(rain));
+	const auto typeString = rain.read(L"Type").asIString();
+	if (typeString == L"Parent") {
+		*data = new audio_analyzer::AudioParent(std::move(rain));
 	} else {
-		*data = new rxtd::audio_analyzer::AudioChild(std::move(rain));
+		if (typeString != L"Child") {
+			rain.getLogger().error(L"Type '{}' is not recognized, use Child instead", typeString);
+			rain.getLogger().error(L"Defaulting to 'Child' is undocumented and unsupported, it will be removed in future");
+		}
+		*data = new audio_analyzer::AudioChild(std::move(rain));
 	}
 }
 
