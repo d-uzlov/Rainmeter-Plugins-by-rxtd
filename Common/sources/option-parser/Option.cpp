@@ -22,7 +22,7 @@ using namespace utils;
 Option::Option(sview view) : AbstractOption(view, { }) {
 }
 
-Option::Option(wchar_t* view) : Option(sview{view}) {
+Option::Option(wchar_t* view) : Option(sview{ view }) {
 	own();
 }
 
@@ -96,9 +96,9 @@ OptionSeparated Option::breakFirst(wchar_t separator) const {
 		return { *this, { } };
 	}
 
-	auto first = Option { sview(view.data(), delimiterPlace) };
-	auto rest = Option { sview(view.data() + delimiterPlace + 1, view.size() - delimiterPlace - 1) };
-	return OptionSeparated { first, rest };
+	auto first = Option{ sview(view.data(), delimiterPlace) };
+	auto rest = Option{ sview(view.data() + delimiterPlace + 1, view.size() - delimiterPlace - 1) };
+	return OptionSeparated{ first, rest };
 }
 
 OptionMap Option::asMap(wchar_t optionDelimiter, wchar_t nameDelimiter) const & {
@@ -125,11 +125,19 @@ OptionList Option::asList(wchar_t delimiter) && {
 	return { view, std::move(*this).consumeSource(), std::move(list) };
 }
 
-OptionSequence Option::asSequence(wchar_t optionBegin, wchar_t optionEnd, wchar_t paramDelimiter, wchar_t optionDelimiter) const & {
+OptionSequence Option::asSequence(
+	wchar_t optionBegin, wchar_t optionEnd,
+	wchar_t paramDelimiter,
+	wchar_t optionDelimiter
+) const & {
 	return { getView(), { }, optionBegin, optionEnd, paramDelimiter, optionDelimiter };
 }
 
-OptionSequence Option::asSequence(wchar_t optionBegin, wchar_t optionEnd, wchar_t paramDelimiter, wchar_t optionDelimiter) && {
+OptionSequence Option::asSequence(
+	wchar_t optionBegin, wchar_t optionEnd,
+	wchar_t paramDelimiter,
+	wchar_t optionDelimiter
+) && {
 	// if this option owns a string, then view points to it, and .consumeSource() destroys it
 	// so we need to everything we want with the view before calling .consumeSource()
 	const sview view = getView();
@@ -159,10 +167,14 @@ double Option::parseNumber(sview source) {
 	return exp.number;
 }
 
-std::map<SubstringViewInfo, SubstringViewInfo> Option::parseMapParams(sview source, wchar_t optionDelimiter, wchar_t nameDelimiter) {
+std::map<SubstringViewInfo, SubstringViewInfo> Option::parseMapParams(
+	sview source,
+	wchar_t optionDelimiter,
+	wchar_t nameDelimiter
+) {
 	auto list = Tokenizer::parse(source, optionDelimiter);
 
-	std::map<SubstringViewInfo, SubstringViewInfo> paramsInfo { };
+	std::map<SubstringViewInfo, SubstringViewInfo> paramsInfo{ };
 	for (const auto& viewInfo : list) {
 		const auto delimiterPlace = viewInfo.makeView(source).find_first_of(nameDelimiter);
 		if (delimiterPlace == sview::npos) {
