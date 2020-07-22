@@ -233,7 +233,7 @@ std::function<SoundHandler*(SoundHandler*, Channel)> ParamParser::parseHandler(
 	if (type == L"loudness") {
 		return parseHandlerT<Loudness>(optionMap, cl);
 	}
-	if (type == L"SingleValueTransformer") {
+	if (type == L"ValueTransformer") {
 		return parseHandlerT<SingleValueTransformer>(optionMap, cl);
 	}
 
