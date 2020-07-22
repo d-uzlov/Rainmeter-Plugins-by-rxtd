@@ -52,6 +52,20 @@ double Option::asFloat(double defaultValue) const {
 	return parseNumber(view);
 }
 
+bool Option::asBool(bool defaultValue) const {
+	const isview view = getView() % ciView();
+	if (view.empty()) {
+		return defaultValue;
+	}
+	if (view == L"true") {
+		return true;
+	}
+	if (view == L"false") {
+		return false;
+	}
+	return asFloat() != 0.0;
+}
+
 Color Option::asColor(Color defaultValue) const {
 	sview view = getView();
 
@@ -59,8 +73,7 @@ Color Option::asColor(Color defaultValue) const {
 		return defaultValue;
 	}
 
-	Tokenizer tokenizer;
-	auto numbers = tokenizer.parse(view, L',');
+	auto numbers = Tokenizer::parse(view, L',');
 	const auto count = index(numbers.size());
 	if (count != 3 && count != 4) {
 		return defaultValue;
@@ -93,10 +106,11 @@ OptionMap Option::asMap(wchar_t optionDelimiter, wchar_t nameDelimiter) const & 
 }
 
 OptionMap Option::asMap(wchar_t optionDelimiter, wchar_t nameDelimiter) && {
-	// consumeSource() below may destroy view content so we need to do everything before it
+	// if this option owns a string, then view points to it, and .consumeSource() destroys it
+	// so we need to everything we want with the view before calling .consumeSource()
 	const sview view = getView();
 	auto params = parseMapParams(view, optionDelimiter, nameDelimiter);
-	return { view, std::move(std::move(*this).consumeSource()), std::move(params) };
+	return { view, std::move(*this).consumeSource(), std::move(params) };
 }
 
 OptionList Option::asList(wchar_t delimiter) const & {
@@ -104,10 +118,11 @@ OptionList Option::asList(wchar_t delimiter) const & {
 }
 
 OptionList Option::asList(wchar_t delimiter) && {
-	// consumeSource() below may destroy view content so we need to do everything before it
+	// if this option owns a string, then view points to it, and .consumeSource() destroys it
+	// so we need to everything we want with the view before calling .consumeSource()
 	const sview view = getView();
 	auto list = Tokenizer::parse(view, delimiter);
-	return { view, std::move(std::move(*this).consumeSource()), std::move(list) };
+	return { view, std::move(*this).consumeSource(), std::move(list) };
 }
 
 OptionSequence Option::asSequence(wchar_t optionBegin, wchar_t optionEnd, wchar_t paramDelimiter, wchar_t optionDelimiter) const & {
@@ -115,9 +130,10 @@ OptionSequence Option::asSequence(wchar_t optionBegin, wchar_t optionEnd, wchar_
 }
 
 OptionSequence Option::asSequence(wchar_t optionBegin, wchar_t optionEnd, wchar_t paramDelimiter, wchar_t optionDelimiter) && {
-	// consumeSource() below may destroy view content so we need to do everything before it
+	// if this option owns a string, then view points to it, and .consumeSource() destroys it
+	// so we need to everything we want with the view before calling .consumeSource()
 	const sview view = getView();
-	return { view, std::move(std::move(*this).consumeSource()), optionBegin, optionEnd, paramDelimiter, optionDelimiter };
+	return { view, std::move(*this).consumeSource(), optionBegin, optionEnd, paramDelimiter, optionDelimiter };
 }
 
 bool Option::empty() const {

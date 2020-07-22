@@ -44,10 +44,7 @@ namespace rxtd::utils {
 			}
 			return static_cast<I>(dVal);
 		}
-		// Alias to asFloat() != 0
-		bool asBool(bool defaultValue = false) const {
-			return asFloat(defaultValue ? 1.0 : 0.0) != 0.0;
-		}
+		bool asBool(bool defaultValue = false) const;
 		// Parse Color, support math operations per color component.
 		Color asColor(Color defaultValue = { }) const;
 
