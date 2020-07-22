@@ -24,7 +24,7 @@ namespace rxtd::audio_analyzer {
 			double resolution{ };
 			index length{ };
 			istring sourceName{ };
-			string prefix = { };
+			string folser = { };
 			utils::Color baseColor{ };
 			utils::Color maxColor{ };
 
@@ -52,7 +52,7 @@ namespace rxtd::audio_analyzer {
 				return lhs.resolution == rhs.resolution
 					&& lhs.length == rhs.length
 					&& lhs.sourceName == rhs.sourceName
-					&& lhs.prefix == rhs.prefix
+					&& lhs.folser == rhs.folser
 					&& lhs.baseColor == rhs.baseColor
 					&& lhs.maxColor == rhs.maxColor
 					&& lhs.colorLevels == rhs.colorLevels

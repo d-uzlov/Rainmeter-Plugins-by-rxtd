@@ -29,12 +29,16 @@ std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(
 
 	if (optionMap.has(L"attack") || optionMap.has(L"decay")) {
 		cl.warning(L"attack/decay options on FftAnalyzer are deprecated, use SingleValueTransformer instead");
-	}
-	params.legacy_attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.0);
-	params.legacy_decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.legacy_attackTime), 0.0);
 
-	params.legacy_attackTime *= 0.001;
-	params.legacy_decayTime *= 0.001;
+		params.legacy_attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.0);
+		params.legacy_decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.legacy_attackTime), 0.0);
+
+		params.legacy_attackTime *= 0.001;
+		params.legacy_decayTime *= 0.001;
+	} else {
+		params.legacy_attackTime = 0;
+		params.legacy_decayTime = 0;
+	}
 
 
 	if (const auto sizeBy = optionMap.get(L"sizeBy"sv).asIString(L"binWidth");

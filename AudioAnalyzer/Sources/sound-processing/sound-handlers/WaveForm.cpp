@@ -44,18 +44,10 @@ std::optional<WaveForm::Params> WaveForm::parseParams(
 	}
 	params.resolution *= 0.001;
 
-	string folder{ optionMap.get(L"folder"sv).asString() };
-	std::filesystem::path path{ folder };
-	if (!path.is_absolute()) {
-		folder = rain.replaceVariables(L"[#CURRENTPATH]") % own() + folder;
-	}
-	folder = std::filesystem::absolute(folder).wstring();
-	folder = LR"(\\?\)"s + folder;
-	if (folder[folder.size() - 1] != L'\\') {
-		folder += L'\\';
-	}
-
-	params.prefix = folder;
+	params.folder = utils::FileWrapper::getAbsolutePath(
+		optionMap.get(L"folder"sv).asString() % own(),
+		rain.replaceVariables(L"[#CURRENTPATH]") % own()
+	);
 
 	params.colors.background = optionMap.get(L"backgroundColor"sv).asColor({ 0, 0, 0, 1 });
 	params.colors.wave = optionMap.get(L"waveColor"sv).asColor({ 1, 1, 1, 1 });
@@ -162,15 +154,13 @@ void WaveForm::setParams(const Params& _params, Channel channel) {
 	drawer.setConnected(params.connected);
 	drawer.setBorderSize(params.borderSize);
 
-	filepath = params.prefix;
+	filepath = params.folder;
 	filepath += L"wave-";
 	filepath += channel.technicalName();
 	filepath += L".bmp"sv;
 
 	minTransformer = { params.transformer };
 	maxTransformer = { params.transformer };
-
-	utils::FileWrapper::createDirectories(_params.prefix);
 
 	updateParams();
 }
@@ -279,7 +269,6 @@ void WaveForm::_finish(const DataSupplier& dataSupplier) {
 	if (changed) {
 		drawer.inflate();
 		writerHelper.write(drawer.getResultBuffer(), drawer.isEmpty(), filepath);
-		// image.writeTransposed(filepath, params.moving, params.fading);
 		changed = false;
 	}
 }

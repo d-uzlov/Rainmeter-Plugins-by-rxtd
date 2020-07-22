@@ -21,26 +21,6 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-void Spectrogram::setParams(const Params& _params, Channel channel) {
-	if (this->params == _params) {
-		return;
-	}
-
-	this->params = _params;
-
-	filepath = params.prefix;
-	filepath += L"spectrogram-";
-	filepath += channel.technicalName();
-	filepath += L".bmp"sv;
-
-	utils::FileWrapper::createDirectories(params.prefix);
-
-	image.setBackground(params.baseColor.toInt());
-	image.setWidth(params.length);
-
-	updateParams();
-}
-
 std::optional<Spectrogram::Params> Spectrogram::parseParams(
 	const utils::OptionMap& optionMap,
 	utils::Rainmeter::Logger& cl,
@@ -67,18 +47,10 @@ std::optional<Spectrogram::Params> Spectrogram::parseParams(
 	}
 	params.resolution *= 0.001;
 
-	string folder{ optionMap.get(L"folder"sv).asString() };
-	std::filesystem::path path{ folder };
-	if (!path.is_absolute()) {
-		folder = rain.replaceVariables(L"[#CURRENTPATH]") % own() + folder;
-	}
-	folder = std::filesystem::absolute(folder).wstring();
-	folder = LR"(\\?\)"s + folder;
-	if (!folder.empty() && folder[folder.size() - 1] != L'\\') {
-		folder += L'\\';
-	}
-
-	params.prefix = folder;
+	params.folser = utils::FileWrapper::getAbsolutePath(
+		optionMap.get(L"folder"sv).asString() % own(),
+		rain.replaceVariables(L"[#CURRENTPATH]") % own()
+	);
 
 	if (optionMap.has(L"colors"sv)) {
 		auto colorsDescriptionList = optionMap.get(L"colors"sv).asList(L';');
@@ -91,7 +63,7 @@ std::optional<Spectrogram::Params> Spectrogram::parseParams(
 		params.colorMaxValue = -std::numeric_limits<double>::infinity();
 
 		for (index i = 0; i < colorsDescriptionList.size(); i++) {
-			auto[valueOpt, colorOpt] = colorsDescriptionList.get(i).breakFirst(L' ');
+			auto [valueOpt, colorOpt] = colorsDescriptionList.get(i).breakFirst(L' ');
 
 			float value = valueOpt.asFloat();
 
@@ -106,7 +78,7 @@ std::optional<Spectrogram::Params> Spectrogram::parseParams(
 			}
 
 			params.colorLevels.push_back(value);
-			params.colors.push_back(Params::ColorDescription { 0.0, colorOpt.asColor() });
+			params.colors.push_back(Params::ColorDescription{ 0.0, colorOpt.asColor() });
 			if (i > 0) {
 				params.colors[i - 1].widthInverted = 1.0 / (value - prevValue);
 			}
@@ -140,6 +112,24 @@ std::optional<Spectrogram::Params> Spectrogram::parseParams(
 	return params;
 }
 
+void Spectrogram::setParams(const Params& _params, Channel channel) {
+	if (params == _params) {
+		return;
+	}
+
+	params = _params;
+
+	filepath = params.folser;
+	filepath += L"spectrogram-";
+	filepath += channel.technicalName();
+	filepath += L".bmp"sv;
+
+	image.setBackground(params.baseColor.toInt());
+	image.setWidth(params.length);
+
+	updateParams();
+}
+
 void Spectrogram::setSamplesPerSec(index samplesPerSec) {
 	if (this->samplesPerSec == samplesPerSec) {
 		return;
@@ -154,7 +144,7 @@ bool Spectrogram::getProp(const isview& prop, utils::BufferPrinter& printer) con
 	if (prop == L"file") {
 		printer.print(filepath);
 		return true;
-	} 
+	}
 	if (prop == L"block size") {
 		printer.print(blockSize);
 		return true;

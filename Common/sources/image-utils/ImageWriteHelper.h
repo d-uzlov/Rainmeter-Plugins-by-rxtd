@@ -9,6 +9,7 @@
 
 #pragma once
 #include "BmpWriter.h"
+#include "windows-wrappers/FileWrapper.h"
 
 namespace rxtd::utils {
 	class ImageWriteHelper {
@@ -19,6 +20,8 @@ namespace rxtd::utils {
 			if (emptinessWritten && empty) {
 				return;
 			}
+
+			FileWrapper::createDirectories(filepath);
 
 			BmpWriter::writeFile(filepath, pixels);
 

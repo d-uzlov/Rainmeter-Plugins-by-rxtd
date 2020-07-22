@@ -26,6 +26,8 @@ namespace rxtd::utils {
 		bool isValid() const;
 		void write(const void *data, index count);
 
+		static string getAbsolutePath(string folder, string currentPath);
+
 		static void createDirectories(sview path);
 
 	private:

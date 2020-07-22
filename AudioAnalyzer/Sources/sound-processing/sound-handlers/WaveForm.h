@@ -32,7 +32,7 @@ namespace rxtd::audio_analyzer {
 			double resolution{ };
 			index width{ };
 			index height{ };
-			string prefix = L".";
+			string folder = L".";
 			Colors colors{ };
 			LDP lineDrawingPolicy{ };
 			SE edges{ };
@@ -47,7 +47,7 @@ namespace rxtd::audio_analyzer {
 				return lhs.resolution == rhs.resolution
 					&& lhs.width == rhs.width
 					&& lhs.height == rhs.height
-					&& lhs.prefix == rhs.prefix
+					&& lhs.folder == rhs.folder
 					&& lhs.colors == rhs.colors
 					&& lhs.lineDrawingPolicy == rhs.lineDrawingPolicy
 					&& lhs.edges == rhs.edges

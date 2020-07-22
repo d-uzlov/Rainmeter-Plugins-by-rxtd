@@ -11,6 +11,7 @@
 #include "my-windows.h"
 
 #include "undef.h"
+#include <filesystem>
 
 using namespace utils;
 
@@ -50,6 +51,22 @@ void FileWrapper::write(const void *data, index count) {
 	if (!success || index(bytesWritten) != count) {
 		close();
 	}
+}
+
+string FileWrapper::getAbsolutePath(string folder, string currentPath) {
+	std::filesystem::path path { folder };
+	if (!path.is_absolute()) {
+		folder = currentPath + folder;
+	}
+
+	folder = std::filesystem::absolute(folder).wstring();
+	folder = LR"(\\?\)" + folder;
+
+	if (folder[folder.size() - 1] != L'\\') {
+		folder += L'\\';
+	}
+
+	return folder;
 }
 
 void FileWrapper::createDirectories(sview path) {
