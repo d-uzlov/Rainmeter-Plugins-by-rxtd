@@ -33,6 +33,7 @@ std::optional<BlockHandler::Params> BlockHandler::parseParams(
 
 	params.subtractMean = optionMap.get(L"subtractMean").asBool(true);
 
+	params.transform = optionMap.get(L"transform").asString();
 	params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform"), cl);
 
 	// legacy
@@ -43,7 +44,7 @@ std::optional<BlockHandler::Params> BlockHandler::parseParams(
 
 		utils::BufferPrinter printer;
 		printer.print(L"filter[{}, {}]", attackTime, decayTime);
-		params.transformer = audio_utils::TransformationParser::parse(utils::Option { printer.getBufferView() }, cl);
+		params.transformer = audio_utils::TransformationParser::parse(utils::Option{ printer.getBufferView() }, cl);
 	}
 
 	return params;
@@ -58,14 +59,14 @@ void BlockHandler::setParams(Params _params, Channel channel) {
 		return;
 	}
 
-	params = _params;
+	params = std::move(_params);
 
 	recalculateConstants();
 
 	if (params.transformer.isEmpty()) {
-		auto transform = utils::Option{ getDefaultTransform() };
+		params.transform = getDefaultTransform();
 		utils::Rainmeter::Logger dummyLogger;
-		params.transformer = audio_utils::TransformationParser::parse(transform, dummyLogger);
+		params.transformer = audio_utils::TransformationParser::parse(utils::Option{ params.transform }, dummyLogger);
 	}
 }
 
@@ -83,7 +84,12 @@ void BlockHandler::setSamplesPerSec(index samplesPerSec) {
 
 bool BlockHandler::getProp(const isview& prop, utils::BufferPrinter& printer) const {
 	if (prop == L"block size") {
-		printer.print(L"{}", blockSize);
+		printer.print(blockSize);
+		return true;
+	}
+
+	if (prop == L"transformString") {
+		printer.print(params.transform);
 		return true;
 	}
 

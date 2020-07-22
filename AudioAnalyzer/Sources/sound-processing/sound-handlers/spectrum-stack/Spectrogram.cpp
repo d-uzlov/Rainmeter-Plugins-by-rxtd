@@ -159,7 +159,7 @@ bool Spectrogram::getProp(const isview& prop, utils::BufferPrinter& printer) con
 		return true;
 	} 
 	if (prop == L"block size") {
-		printer.print(L"{}", blockSize);
+		printer.print(blockSize);
 		return true;
 	}
 

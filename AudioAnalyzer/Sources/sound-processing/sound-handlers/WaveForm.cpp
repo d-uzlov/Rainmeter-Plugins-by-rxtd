@@ -191,7 +191,7 @@ bool WaveForm::getProp(const isview& prop, utils::BufferPrinter& printer) const 
 		return true;
 	}
 	if (prop == L"block size") {
-		printer.print(L"{}", blockSize);
+		printer.print(blockSize);
 		return true;
 	}
 
