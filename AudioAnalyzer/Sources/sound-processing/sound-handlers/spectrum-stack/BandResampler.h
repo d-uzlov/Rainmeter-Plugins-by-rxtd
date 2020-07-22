@@ -12,14 +12,7 @@
 #include "../SoundHandler.h"
 
 namespace rxtd::audio_analyzer {
-	class BandResampler;
-
-	class ResamplerProvider : public SoundHandler {
-	public:
-		virtual const BandResampler* getResampler() const = 0;
-	};
-
-	class BandResampler final : public ResamplerProvider {
+	class BandResampler final : public SoundHandler {
 	public:
 		struct Params {
 		private:
@@ -93,10 +86,6 @@ namespace rxtd::audio_analyzer {
 		layer_t getLayersCount() const override;
 
 		bool getProp(const isview& prop, utils::BufferPrinter& printer) const override;
-
-		const BandResampler* getResampler() const override {
-			return this;
-		}
 
 		layer_t getStartingLayer() const override {
 			return startCascade;

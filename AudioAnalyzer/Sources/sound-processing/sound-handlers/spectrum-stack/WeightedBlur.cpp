@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -95,11 +95,12 @@ std::optional<WeightedBlur::Params> WeightedBlur::parseParams(
 }
 
 void WeightedBlur::setParams(Params _params, Channel channel) {
-	this->params = std::move(_params);
+	params = std::move(_params);
+	setResamplerID(params.sourceId);
 	setValid(true);
 }
 
-void WeightedBlur::_process(const DataSupplier& dataSupplier) {
+void WeightedBlur::_process2(const DataSupplier& dataSupplier) {
 	changed = true;
 }
 
@@ -115,13 +116,7 @@ void WeightedBlur::_finish(const DataSupplier& dataSupplier) {
 		return;
 	}
 
-	const auto resampler = source->getResampler();
-	if (resampler == nullptr) {
-		return;
-	}
-
-
-	blurData(*resampler);
+	blurData();
 	changed = false;
 
 	setValid(true);
@@ -143,7 +138,8 @@ void WeightedBlur::reset() {
 	changed = true;
 }
 
-void WeightedBlur::blurData(const BandResampler& resampler) {
+void WeightedBlur::blurData() {
+	const BandResampler& resampler = *getResampler();
 	blurredValues.resize(source->getLayersCount());
 
 	double minRadius = params.minRadius * std::pow(params.minRadiusAdaptation, resampler.getStartingLayer());
@@ -154,8 +150,10 @@ void WeightedBlur::blurData(const BandResampler& resampler) {
 		const auto cascadeWeights = resampler.getBandWeights(cascade);
 		const auto bandsCount = cascadeMagnitudes.size();
 
-		gcm.setRadiusBounds(std::min<index>(std::lround(minRadius), bandsCount),
-		                    std::min<index>(std::lround(maxRadius), bandsCount));
+		gcm.setRadiusBounds(
+			std::min<index>(std::lround(minRadius), bandsCount),
+			std::min<index>(std::lround(maxRadius), bandsCount)
+		);
 		auto& cascadeValues = blurredValues[cascade];
 		cascadeValues.resize(bandsCount);
 

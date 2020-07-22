@@ -227,6 +227,7 @@ void Spectrogram::_process(const DataSupplier& dataSupplier) {
 
 	const auto source = dataSupplier.getHandler(params.sourceName);
 	if (source == nullptr) {
+		setValid(false);
 		return;
 	}
 

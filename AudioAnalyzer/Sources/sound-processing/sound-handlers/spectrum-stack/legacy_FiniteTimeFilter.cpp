@@ -52,11 +52,13 @@ std::optional<legacy_FiniteTimeFilter::Params> legacy_FiniteTimeFilter::parsePar
 }
 
 void legacy_FiniteTimeFilter::setParams(Params _params, Channel channel) {
-	if (this->params == _params) {
+	if (params == _params) {
 		return;
 	}
 
-	this->params = std::move(_params);
+	params = std::move(_params);
+	setResamplerID(params.sourceId);
+
 	setValid(false);
 	source = nullptr;
 
@@ -94,7 +96,7 @@ void legacy_FiniteTimeFilter::setParams(Params _params, Channel channel) {
 	setValid(true);
 }
 
-void legacy_FiniteTimeFilter::_process(const DataSupplier& dataSupplier) {
+void legacy_FiniteTimeFilter::_process2(const DataSupplier& dataSupplier) {
 	changed = true;
 }
 
@@ -108,11 +110,6 @@ void legacy_FiniteTimeFilter::_finish(const DataSupplier& dataSupplier) {
 	source = dataSupplier.getHandler<>(params.sourceId);
 	if (source == nullptr) {
 		return;
-	}
-
-	const auto resamplerProvider = dynamic_cast<const ResamplerProvider*>(source);
-	if (resamplerProvider != nullptr) {
-		resampler = resamplerProvider->getResampler();
 	}
 
 	if (params.smoothingFactor > 1) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -10,6 +10,7 @@
 #pragma once
 #include "../SoundHandler.h"
 #include "BandResampler.h"
+#include "ResamplerProvider.h"
 
 namespace rxtd::audio_analyzer {
 	class WeightedBlur : public ResamplerProvider {
@@ -68,7 +69,7 @@ namespace rxtd::audio_analyzer {
 
 		index samplesPerSec{ };
 
-		const ResamplerProvider* source = nullptr;
+		const SoundHandler* source = nullptr;
 		std::vector<std::vector<float>> blurredValues;
 
 		bool changed = true;
@@ -82,17 +83,13 @@ namespace rxtd::audio_analyzer {
 		void setSamplesPerSec(index samplesPerSec) override;
 		void reset() override;
 
-		void _process(const DataSupplier& dataSupplier) override;
+		void _process2(const DataSupplier& dataSupplier) override;
 		void _finish(const DataSupplier& dataSupplier) override;
 
 		array_view<float> getData(layer_t layer) const override;
 		layer_t getLayersCount() const override;
 
-		const BandResampler* getResampler() const override {
-			return source->getResampler();
-		}
-
 	private:
-		void blurData(const BandResampler& resampler);
+		void blurData();
 	};
 }

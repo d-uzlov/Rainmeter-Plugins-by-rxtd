@@ -55,8 +55,8 @@ std::optional<UniformBlur::Params> UniformBlur::parseParams(
 	utils::Rainmeter::Logger& cl
 ) {
 	Params params;
-	params.resamplerId = optionMap.get(L"source"sv).asIString();
-	if (params.resamplerId.empty()) {
+	params.source = optionMap.get(L"source"sv).asIString();
+	if (params.source.empty()) {
 		cl.error(L"source not found");
 		return std::nullopt;
 	}
@@ -69,12 +69,12 @@ std::optional<UniformBlur::Params> UniformBlur::parseParams(
 }
 
 void UniformBlur::setParams(Params _params, Channel channel) {
-	this->params = std::move(_params);
-	resampler = nullptr;
+	params = std::move(_params);
+	setResamplerID(params.source);
 	setValid(true);
 }
 
-void UniformBlur::_process(const DataSupplier& dataSupplier) {
+void UniformBlur::_process2(const DataSupplier& dataSupplier) {
 	changed = true;
 }
 
@@ -85,15 +85,10 @@ void UniformBlur::_finish(const DataSupplier& dataSupplier) {
 
 	setValid(false);
 
-	const auto source = dataSupplier.getHandler(params.resamplerId);
+	const auto source = dataSupplier.getHandler(params.source);
 	if (source == nullptr) {
 		return;
 	}
-	const auto resamplerProvider = dynamic_cast<const ResamplerProvider*>(source);
-	if (resamplerProvider != nullptr) {
-		resampler = resamplerProvider->getResampler();
-	}
-
 
 	blurData(*source);
 	changed = false;

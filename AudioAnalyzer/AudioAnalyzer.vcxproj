@@ -174,6 +174,7 @@
     <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\FftAnalyzer.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\legacy_FiniteTimeFilter.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\legacy_LogarithmicValueMapper.h" />
+    <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\ResamplerProvider.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\Spectrogram.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\SingleValueTransformer.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\UniformBlur.h" />
@@ -215,6 +216,7 @@
     <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\FftAnalyzer.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\legacy_FiniteTimeFilter.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\legacy_LogarithmicValueMapper.cpp" />
+    <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\ResamplerProvider.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\Spectrogram.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\SingleValueTransformer.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\UniformBlur.cpp" />

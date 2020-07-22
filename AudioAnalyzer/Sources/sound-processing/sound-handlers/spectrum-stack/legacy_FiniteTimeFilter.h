@@ -11,6 +11,7 @@
 #include "../SoundHandler.h"
 #include "Vector2D.h"
 #include "BandResampler.h"
+#include "ResamplerProvider.h"
 
 namespace rxtd::audio_analyzer {
 	class legacy_FiniteTimeFilter : public ResamplerProvider {
@@ -58,7 +59,6 @@ namespace rxtd::audio_analyzer {
 
 		bool changed = true;
 		const SoundHandler* source = nullptr;
-		const BandResampler* resampler = nullptr;
 
 	public:
 		static std::optional<Params> parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl);
@@ -68,7 +68,7 @@ namespace rxtd::audio_analyzer {
 		void setSamplesPerSec(index samplesPerSec) override;
 		void reset() override;
 
-		void _process(const DataSupplier& dataSupplier) override;
+		void _process2(const DataSupplier& dataSupplier) override;
 		void _finish(const DataSupplier& dataSupplier) override;
 
 		array_view<float> getData(layer_t layer) const override {
@@ -85,14 +85,6 @@ namespace rxtd::audio_analyzer {
 			}
 
 			return layer_t(values.getBuffersCount());
-		}
-
-		const BandResampler* getResampler() const override {
-			if (!isValid()) {
-				return nullptr;
-			}
-
-			return resampler;
 		}
 
 	private:

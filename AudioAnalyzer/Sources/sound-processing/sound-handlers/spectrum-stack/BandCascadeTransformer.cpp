@@ -13,6 +13,7 @@
 #include "option-parser/OptionMap.h"
 
 #include "undef.h"
+#include "ResamplerProvider.h"
 
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
@@ -82,14 +83,22 @@ void BandCascadeTransformer::_finish(const DataSupplier& dataSupplier) {
 
 	setValid(false);
 
-	const auto source = dataSupplier.getHandler<ResamplerProvider>(params.sourceId);
+	const auto source = dataSupplier.getHandler(params.sourceId);
 	if (source == nullptr) {
 		return;
 	}
 
-	const auto resampler = source->getResampler();
+	const BandResampler* resampler = nullptr;
+	resampler = dynamic_cast<const BandResampler*>(source);
 	if (resampler == nullptr) {
-		return;
+		const auto provider = dynamic_cast<const ResamplerProvider*>(source);
+		if (provider == nullptr) {
+			return;
+		}
+		resampler = provider->getResampler();
+		if (resampler == nullptr) {
+			return;
+		}
 	}
 
 	if (!analysisComputed) {

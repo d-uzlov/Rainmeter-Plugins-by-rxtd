@@ -7,12 +7,15 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
+#include <random>
+
 #include "FftAnalyzer.h"
 #include "option-parser/OptionMap.h"
 
-#include "undef.h"
 #include "../../../audio-utils/KWeightingFilterBuilder.h"
 #include "../../../audio-utils/RandomGenerator.h"
+
+#include "undef.h"
 
 using namespace std::literals::string_view_literals;
 
@@ -155,17 +158,17 @@ array_view<float> FftAnalyzer::getData(layer_t layer) const {
 
 void FftAnalyzer::processRandom(index waveSize) {
 	audio_utils::RandomGenerator random;
-
+	
 	std::vector<float> wave;
 	wave.resize(waveSize);
-
+	
 	for (index i = 0; i < waveSize; ++i) {
 		if (randomState == RandomState::ON) {
 			wave.push_back(random.next() * params.randomTest);
 		} else {
 			wave.push_back(0.0f);
 		}
-
+	
 		randomCurrentOffset++;
 		if (randomCurrentOffset == randomBlockSize) {
 			randomCurrentOffset = 0;
@@ -176,7 +179,7 @@ void FftAnalyzer::processRandom(index waveSize) {
 			}
 		}
 	}
-
+	
 	if (params.correctLoudness) {
 		preprocessWave(wave);
 	}
