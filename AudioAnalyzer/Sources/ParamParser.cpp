@@ -94,7 +94,14 @@ void ParamParser::parse() {
 
 		for (auto channel : channels) {
 			for (auto handlerNameOption : handlersList) {
-				handlers[channel].emplace_back(handlerNameOption.asIString());
+				auto &channelHandlersList = handlers[channel];
+				auto iter = std::find(channelHandlersList.begin(), channelHandlersList.end(), handlerNameOption.asIString());
+				if (iter != channelHandlersList.end()) {
+					cl.error(L"found repeating handler '{}' in channel {}, aborting", handlerNameOption.asString(), channel.technicalName());
+					return;
+				}
+
+				channelHandlersList.emplace_back(handlerNameOption.asIString());
 			}
 		}
 	}
