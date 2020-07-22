@@ -31,21 +31,21 @@ AudioChild::AudioChild(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rain)) 
 }
 
 void AudioChild::_reload() {
-	const auto channelStr = rain.read(L"Channel").asIString();
-
-	if (channelStr.empty()) {
+	const auto channelStr = rain.read(L"Channel").asIString(L"auto");
+	auto channelOpt = Channel::channelParser.find(channelStr);
+	if (!channelOpt.has_value()) {
+		logger.error(L"Invalid Channel '{}', set to Auto.", channelStr);
 		channel = Channel::eAUTO;
 	} else {
-		auto channelOpt = Channel::channelParser.find(channelStr);
-		if (!channelOpt.has_value()) {
-			logger.error(L"Invalid Channel '{}', set to Auto.", channelStr);
-			channel = Channel::eAUTO;
-		} else {
-			channel = channelOpt.value();
-		}
+		channel = channelOpt.value();
 	}
 
 	valueId = rain.readString(L"ValueId");
+	if (valueId.empty()) {
+		logger.error(L"ValueID can't be empty");
+		setMeasureState(utils::MeasureState::eTEMP_BROKEN);
+		return;
+	}
 
 	const auto stringValueStr = rain.read(L"StringValue").asIString(L"Number");
 	if (stringValueStr == L"Number") {
@@ -75,12 +75,70 @@ void AudioChild::_reload() {
 		signedIndex = 0;
 	}
 	valueIndex = static_cast<decltype(valueIndex)>(signedIndex);
+
+	// legacy
+	if (!rain.read(L"NumberTransform").empty()
+		|| !rain.read(L"Clamp01").empty()
+		|| !rain.read(L"Gain").empty()
+		) {
+		legacy_readOptions();
+		legacy.use = true;
+	}
 }
 
 double AudioChild::_update() {
+	if (legacy.use) {
+		return legacy_update();
+	}
+
 	return parent->getValue(valueId, channel, valueIndex);
 }
 
 void AudioChild::_updateString(string& resultStringBuffer) {
 	resultStringBuffer = parent->resolve(infoRequestC);
+}
+
+void AudioChild::legacy_readOptions() {
+	if (const auto numTr = rain.read(L"NumberTransform").asIString(L"Linear");
+		numTr == L"Linear") {
+		legacy.numberTransform = Legacy::NumberTransform::eLINEAR;
+	} else if (numTr == L"DB") {
+		legacy.numberTransform = Legacy::NumberTransform::eDB;
+	} else if (numTr == L"None") {
+		legacy.numberTransform = Legacy::NumberTransform::eNONE;
+	} else {
+		logger.error(L"Invalid NumberTransform '{}', set to Linear.", numTr);
+		legacy.numberTransform = Legacy::NumberTransform::eLINEAR;
+	}
+	legacy.clamp01 = rain.read(L"Clamp01").asBool(true);
+
+	legacy.correctingConstant = rain.readDouble(L"Gain");
+	if (legacy.correctingConstant <= 0) {
+		legacy.correctingConstant = 1.0;
+	}
+}
+
+double AudioChild::legacy_update() {
+	double result = 0.0;
+
+	switch (legacy.numberTransform) {
+	case Legacy::NumberTransform::eLINEAR:
+		result = parent->getValue(valueId, channel, valueIndex);
+		result = result * legacy.correctingConstant;
+		break;
+
+	case Legacy::NumberTransform::eDB:
+		result = parent->getValue(valueId, channel, valueIndex);
+		result = 20.0 / legacy.correctingConstant * std::log10(result) + 1.0;
+		break;
+
+	case Legacy::NumberTransform::eNONE:
+	default:
+		break;
+	}
+	if (legacy.clamp01) {
+		result = std::clamp(result, 0.0, 1.0);
+	}
+
+	return result;
 }

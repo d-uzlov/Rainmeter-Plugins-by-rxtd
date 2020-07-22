@@ -20,6 +20,20 @@ namespace rxtd::audio_analyzer {
 
 		AudioParent* parent = nullptr;
 
+		struct Legacy {
+			enum class NumberTransform {
+				eNONE,
+				eLINEAR,
+				eDB,
+			};
+
+			bool use = false;
+			bool clamp01 = false;
+			NumberTransform numberTransform = NumberTransform::eNONE;
+			double correctingConstant = 0.0;
+
+		} legacy;
+
 	public:
 		explicit AudioChild(utils::Rainmeter&& _rain);
 		~AudioChild() = default;
@@ -33,5 +47,9 @@ namespace rxtd::audio_analyzer {
 		void _reload() override;
 		double _update() override;
 		void _updateString(string& resultStringBuffer) override;
+
+	private:
+		void legacy_readOptions();
+		double legacy_update();
 	};
 }
