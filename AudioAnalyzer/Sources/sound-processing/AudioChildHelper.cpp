@@ -19,17 +19,17 @@ AudioChildHelper::AudioChildHelper(std::map<Channel, ChannelData>& channels, Dat
 	this->dataSupplier = &dataSupplier;
 }
 
-std::variant<SoundHandler*, AudioChildHelper::SearchError>
+std::variant<SoundHandler*, AudioChildHelper::SearchResult>
 AudioChildHelper::findHandler(Channel channel, isview handlerId) const {
 	const auto channelIter = channels->find(channel);
 	if (channelIter == channels->end()) {
-		return SearchError::eCHANNEL_NOT_FOUND;
+		return SearchResult::eCHANNEL_NOT_FOUND;
 	}
 
 	const auto& channelData = channelIter->second;
 	const auto iter = channelData.indexMap.find(handlerId);
 	if (iter == channelData.indexMap.end()) {
-		return SearchError::eHANDLER_NOT_FOUND;
+		return SearchResult::eHANDLER_NOT_FOUND;
 	}
 
 	auto& handler = channelData.handlers[iter->second];
@@ -68,15 +68,4 @@ double AudioChildHelper::getValue(Channel channel, isview handlerId, index index
 		return 0.0;
 	}
 	return data[index];
-}
-
-std::variant<const wchar_t*, AudioChildHelper::SearchError>
-AudioChildHelper::getProp(Channel channel, isview handlerId, isview prop) const {
-	const auto handlerVariant = findHandler(channel, handlerId);
-	if (handlerVariant.index() != 0) {
-		return std::get<1>(handlerVariant);
-	}
-
-	auto& handler = std::get<0>(handlerVariant);
-	return handler->getProp(prop);
 }

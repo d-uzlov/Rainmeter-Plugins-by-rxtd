@@ -62,8 +62,6 @@ namespace rxtd::audio_analyzer {
 		bool changed = true;
 		bool analysisComputed = false;
 
-		mutable string propString{ };
-
 		struct {
 			string analysisString{ };
 			layer_t minCascadeUsed = -1;
@@ -95,7 +93,7 @@ namespace rxtd::audio_analyzer {
 			return analysis.minCascadeUsed;
 		}
 
-		const wchar_t* getProp(const isview& prop) const override;
+		bool getProp(const isview& prop, utils::BufferPrinter& printer) const override;
 
 	private:
 		void updateValues(const SoundHandler& source, const BandResampler& resampler);

@@ -61,8 +61,6 @@ namespace rxtd::audio_analyzer {
 
 		bool changed = true;
 
-		mutable string propString{ };
-
 	public:
 
 		static std::optional<Params> parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl);
@@ -77,8 +75,6 @@ namespace rxtd::audio_analyzer {
 
 		array_view<float> getData(layer_t layer) const override;
 		layer_t getLayersCount() const override;
-
-		const wchar_t* getProp(const isview& prop) const override;
 
 		const BandResampler* getResampler() const override {
 			return resampler;

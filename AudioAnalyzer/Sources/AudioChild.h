@@ -15,8 +15,8 @@ namespace rxtd::audio_analyzer {
 		Channel channel = Channel::eFRONT_LEFT;
 		index valueIndex = 0;
 		string valueId;
-		std::vector<string> infoRequest;
-		std::vector<const wchar_t*> infoRequestC;
+		std::vector<istring> infoRequest;
+		std::vector<isview> infoRequestC;
 
 		AudioParent* parent = nullptr;
 

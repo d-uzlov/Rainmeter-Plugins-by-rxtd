@@ -153,15 +153,17 @@ void Spectrogram::setSamplesPerSec(index samplesPerSec) {
 	updateParams();
 }
 
-const wchar_t* Spectrogram::getProp(const isview& prop) const {
+bool Spectrogram::getProp(const isview& prop, utils::BufferPrinter& printer) const {
 	if (prop == L"file") {
-		return filepath.c_str();
-	} else if (prop == L"block size") {
-		propString = std::to_wstring(blockSize);
-	} else {
-		return nullptr;
+		printer.print(filepath);
+		return true;
+	} 
+	if (prop == L"block size") {
+		printer.print(L"{}", blockSize);
+		return true;
 	}
-	return propString.c_str();
+
+	return false;
 }
 
 void Spectrogram::updateParams() {

@@ -35,8 +35,6 @@ namespace rxtd::audio_analyzer {
 
 		bool changed = true;
 
-		mutable string propString{ };
-
 	public:
 
 		static std::optional<Params> parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl);
@@ -56,8 +54,6 @@ namespace rxtd::audio_analyzer {
 		layer_t getLayersCount() const override {
 			return layer_t(resultValues.size());
 		}
-
-		const wchar_t* getProp(const isview& prop) const override;
 
 	private:
 		void updateValues(const DataSupplier& dataSupplier);

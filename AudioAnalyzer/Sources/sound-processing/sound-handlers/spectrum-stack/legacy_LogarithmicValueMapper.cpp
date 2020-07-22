@@ -62,12 +62,6 @@ void legacy_LogarithmicValueMapper::setSamplesPerSec(index samplesPerSec) {
 	this->samplesPerSec = samplesPerSec;
 }
 
-const wchar_t* legacy_LogarithmicValueMapper::getProp(const isview& prop) const {
-	propString.clear();
-
-	return nullptr;
-}
-
 void legacy_LogarithmicValueMapper::reset() {
 	changed = true;
 }

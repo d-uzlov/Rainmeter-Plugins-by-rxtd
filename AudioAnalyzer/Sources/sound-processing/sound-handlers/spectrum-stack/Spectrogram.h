@@ -77,8 +77,6 @@ namespace rxtd::audio_analyzer {
 		index counter = 0;
 		bool changed = false;
 
-		mutable string propString{ };
-
 		utils::StripedImage<uint32_t> image{ };
 		utils::ImageWriteHelper writerHelper{ };
 
@@ -109,7 +107,7 @@ namespace rxtd::audio_analyzer {
 			return 0;
 		}
 
-		const wchar_t* getProp(const isview& prop) const override;
+		bool getProp(const isview& prop, utils::BufferPrinter& printer) const override;
 
 		bool isStandalone() override {
 			return true;

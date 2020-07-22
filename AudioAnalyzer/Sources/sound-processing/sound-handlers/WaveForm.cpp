@@ -185,15 +185,17 @@ void WaveForm::setSamplesPerSec(index samplesPerSec) {
 	updateParams();
 }
 
-const wchar_t* WaveForm::getProp(const isview& prop) const {
+bool WaveForm::getProp(const isview& prop, utils::BufferPrinter& printer) const {
 	if (prop == L"file") {
-		return filepath.c_str();
-	} else if (prop == L"block size") {
-		propString = std::to_wstring(blockSize);
-	} else {
-		return nullptr;
+		printer.print(filepath);
+		return true;
 	}
-	return propString.c_str();
+	if (prop == L"block size") {
+		printer.print(L"{}", blockSize);
+		return true;
+	}
+
+	return false;
 }
 
 void WaveForm::reset() {

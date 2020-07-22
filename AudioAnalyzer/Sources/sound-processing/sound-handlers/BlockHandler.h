@@ -48,8 +48,6 @@ namespace rxtd::audio_analyzer {
 	private:
 		float result = 0.0;
 
-		mutable string propString{ };
-
 	public:
 		void setParams(Params params, Channel channel);
 
@@ -66,7 +64,7 @@ namespace rxtd::audio_analyzer {
 			return { &result, 1 };
 		}
 
-		const wchar_t* getProp(const isview& prop) const override;
+		bool getProp(const isview& prop, utils::BufferPrinter& printer) const override;
 
 		static std::optional<Params> parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl);
 

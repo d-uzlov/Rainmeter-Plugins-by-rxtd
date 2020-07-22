@@ -81,6 +81,18 @@ const wchar_t* TypeHolder::resolve(int argc, const wchar_t* argv[]) {
 	return resolveString.c_str();
 }
 
+const wchar_t* TypeHolder::resolve(array_view<isview> args) {
+	if (measureState != MeasureState::eWORKING) {
+		logger.warning(L"Skipping resolve on a broken measure");
+		return L"";
+	}
+
+	resolveString = { };
+	_resolve(args, resolveString);
+
+	return resolveString.c_str();
+}
+
 const wchar_t* TypeHolder::getString() const {
 	if (measureState != MeasureState::eWORKING) {
 		return L"broken";

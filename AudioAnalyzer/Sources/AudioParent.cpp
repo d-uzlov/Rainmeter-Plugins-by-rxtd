@@ -129,17 +129,18 @@ void AudioParent::_resolve(array_view<isview> args, string& resolveBufferString)
 			cl.error(L"channel '{}' not recognized", args[1]);
 			return;
 		}
-		auto propVariant = soundAnalyzer.getAudioChildHelper().getProp(channelOpt.value(), args[2], args[3]);
 
-		if (propVariant.index() == 1) {
-			const auto error = std::get<1>(propVariant);
+		auto handlerVariant = soundAnalyzer.getAudioChildHelper().findHandler(channelOpt.value(), args[2]);
+
+		if (handlerVariant.index() == 1) {
+			const auto error = std::get<1>(handlerVariant);
 			switch (error) {
-			case AudioChildHelper::SearchError::eCHANNEL_NOT_FOUND:
+			case AudioChildHelper::SearchResult::eCHANNEL_NOT_FOUND:
 				cl.printer.print(L"channel '{}' not found", args[1]);
 				resolveBufferString = cl.printer.getBufferPtr();
 				return;
 
-			case AudioChildHelper::SearchError::eHANDLER_NOT_FOUND:
+			case AudioChildHelper::SearchResult::eHANDLER_NOT_FOUND:
 				cl.error(L"handler '{}:{}' not found", args[1], args[2]);
 				return;
 
@@ -148,18 +149,19 @@ void AudioParent::_resolve(array_view<isview> args, string& resolveBufferString)
 				return;
 			}
 		}
-		if (propVariant.index() == 0) {
-			const auto result = std::get<0>(propVariant);
-			if (result == nullptr) {
+		if (handlerVariant.index() == 0) {
+			const auto handler = std::get<0>(handlerVariant);
+			const bool found = handler->getProp(args[3], cl.printer);
+			if (!found) {
 				cl.error(L"prop '{}:{}' not found", args[2], args[3]);
 				return;
 			}
 
-			resolveBufferString = result;
+			resolveBufferString = cl.printer.getBufferView();
 			return;
 		}
 
-		cl.error(L"unexpected propVariant index '{}'", propVariant.index());
+		cl.error(L"unexpected handlerVariant index '{}'", handlerVariant.index());
 		return;
 	}
 

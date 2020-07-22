@@ -109,11 +109,9 @@ void BandResampler::setSamplesPerSec(index value) {
 	cascadeInfoIsCalculated = false;
 }
 
-const wchar_t* BandResampler::getProp(const isview& prop) const {
-	propString.clear();
-
+bool BandResampler::getProp(const isview& prop, utils::BufferPrinter& printer) const {
 	if (prop == L"bands count") {
-		propString = std::to_wstring(bandsCount);
+		printer.print(bandsCount);
 	} else {
 		auto index = parseIndexProp(prop, L"lower bound", bandsCount + 1);
 		if (index == -2) {
@@ -123,8 +121,8 @@ const wchar_t* BandResampler::getProp(const isview& prop) const {
 			if (index > 0) {
 				index--;
 			}
-			propString = std::to_wstring(params.bandFreqs[index]);
-			return propString.c_str();
+			printer.print(params.bandFreqs[index]);
+			return true;
 		}
 
 		index = parseIndexProp(prop, L"upper bound", bandsCount + 1);
@@ -135,8 +133,8 @@ const wchar_t* BandResampler::getProp(const isview& prop) const {
 			if (index > 0) {
 				index--;
 			}
-			propString = std::to_wstring(params.bandFreqs[index + 1]);
-			return propString.c_str();
+			printer.print(params.bandFreqs[index + 1]);
+			return true;
 		}
 
 		index = parseIndexProp(prop, L"central frequency", bandsCount + 1);
@@ -147,14 +145,14 @@ const wchar_t* BandResampler::getProp(const isview& prop) const {
 			if (index > 0) {
 				index--;
 			}
-			propString = std::to_wstring((params.bandFreqs[index] + params.bandFreqs[index + 1]) * 0.5);
-			return propString.c_str();
+			printer.print((params.bandFreqs[index] + params.bandFreqs[index + 1]) * 0.5);
+			return true;
 		}
 
-		return nullptr;
+		return false;
 	}
 
-	return propString.c_str();
+	return true;
 }
 
 void BandResampler::reset() {

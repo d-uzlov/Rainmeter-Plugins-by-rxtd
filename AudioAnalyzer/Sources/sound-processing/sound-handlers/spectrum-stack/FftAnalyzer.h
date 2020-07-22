@@ -81,7 +81,6 @@ namespace rxtd::audio_analyzer {
 		audio_utils::FFT fft{ };
 
 		std::vector<float> waveBuffer;
-		mutable string propString{ };
 
 	public:
 		FftAnalyzer() = default;
@@ -110,7 +109,7 @@ namespace rxtd::audio_analyzer {
 		layer_t getLayersCount() const override;
 		array_view<float> getData(layer_t layer) const override;
 
-		const wchar_t* getProp(const isview& prop) const override;
+		bool getProp(const isview& prop, utils::BufferPrinter& printer) const override;
 
 		void setParams(Params params, Channel channel);
 

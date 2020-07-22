@@ -94,8 +94,6 @@ namespace rxtd::audio_analyzer {
 		WaveformValueTransformer maxTransformer { };
 		double minDistinguishableValue { };
 
-		mutable string propString{ };
-
 		utils::WaveFormDrawer drawer{ };
 		utils::ImageWriteHelper writerHelper { };
 
@@ -125,7 +123,7 @@ namespace rxtd::audio_analyzer {
 			return 0;
 		}
 
-		const wchar_t* getProp(const isview& prop) const override;
+		bool getProp(const isview& prop, utils::BufferPrinter& printer) const override;
 
 		bool isStandalone() override {
 			return true;

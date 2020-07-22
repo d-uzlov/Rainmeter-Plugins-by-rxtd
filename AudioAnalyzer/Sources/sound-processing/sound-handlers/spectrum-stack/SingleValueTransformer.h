@@ -39,8 +39,6 @@ namespace rxtd::audio_analyzer {
 
 		utils::Vector2D<float> values;
 
-		mutable string propString{ };
-
 	public:
 		static std::optional<Params> parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl);
 
@@ -57,10 +55,6 @@ namespace rxtd::audio_analyzer {
 
 		layer_t getLayersCount() const override {
 			return layer_t(values.getBuffersCount());
-		}
-
-		const wchar_t* getProp(const isview& prop) const override {
-			return nullptr;
 		}
 	};
 }

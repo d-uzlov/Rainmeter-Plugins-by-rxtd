@@ -15,7 +15,7 @@
 namespace rxtd::audio_analyzer {
 	class AudioChildHelper {
 	public:
-		enum class SearchError {
+		enum class SearchResult {
 			eCHANNEL_NOT_FOUND,
 			eHANDLER_NOT_FOUND,
 		};
@@ -27,8 +27,7 @@ namespace rxtd::audio_analyzer {
 	public:
 		explicit AudioChildHelper(std::map<Channel, ChannelData>& channels, DataSupplierImpl& dataSupplier);
 
-		std::variant<SoundHandler*, SearchError> findHandler(Channel channel, isview handlerId) const;
+		std::variant<SoundHandler*, SearchResult> findHandler(Channel channel, isview handlerId) const;
 		double getValue(Channel channel, isview handlerId, index index) const;
-		std::variant<const wchar_t*, SearchError> getProp(Channel channel, isview handlerId, isview prop) const;
 	};
 }

@@ -113,10 +113,6 @@ void UniformBlur::setSamplesPerSec(index samplesPerSec) {
 	this->samplesPerSec = samplesPerSec;
 }
 
-const wchar_t* UniformBlur::getProp(const isview& prop) const {
-	return nullptr; // TODO
-}
-
 void UniformBlur::reset() {
 	changed = true;
 }

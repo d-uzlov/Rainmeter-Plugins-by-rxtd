@@ -57,12 +57,12 @@ void AudioChild::_reload() {
 
 		infoRequest.clear();
 		for (auto view : requestList) {
-			infoRequest.emplace_back(view.asString());
+			infoRequest.emplace_back(view.asIString());
 		}
 
 		infoRequestC.clear();
 		for (const auto& str : infoRequest) {
-			infoRequestC.push_back(str.c_str());
+			infoRequestC.push_back(str);
 		}
 	} else {
 		logger.error(L"Invalid StringValue '{}', set to Number.", stringValueStr);
@@ -82,5 +82,5 @@ double AudioChild::_update() {
 }
 
 void AudioChild::_updateString(string& resultStringBuffer) {
-	resultStringBuffer = parent->resolve(index(infoRequestC.size()), infoRequestC.data());
+	resultStringBuffer = parent->resolve(infoRequestC);
 }

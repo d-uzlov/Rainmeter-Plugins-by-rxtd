@@ -196,19 +196,17 @@ void FftAnalyzer::setSamplesPerSec(index samplesPerSec) {
 	updateParams();
 }
 
-const wchar_t* FftAnalyzer::getProp(const isview& prop) const {
-	propString.clear();
-
+bool FftAnalyzer::getProp(const isview& prop, utils::BufferPrinter& printer) const {
 	if (prop == L"size") {
-		propString = std::to_wstring(fftSize);
+		printer.print(fftSize);
 	} else if (prop == L"attack") {
-		propString = std::to_wstring(params.legacy_attackTime * 1000.0);
+		printer.print(params.legacy_attackTime * 1000.0);
 	} else if (prop == L"decay") {
-		propString = std::to_wstring(params.legacy_decayTime * 1000.0);
+		printer.print(params.legacy_decayTime * 1000.0);
 	} else if (prop == L"cascades count") {
-		propString = std::to_wstring(cascades.size());
+		printer.print(cascades.size());
 	} else if (prop == L"overlap") {
-		propString = std::to_wstring(params.overlap);
+		printer.print(params.overlap);
 	} else {
 		auto cascadeIndex = parseIndexProp(prop, L"nyquist frequency", cascades.size() + 1);
 		if (cascadeIndex == -2) {
@@ -218,8 +216,8 @@ const wchar_t* FftAnalyzer::getProp(const isview& prop) const {
 			if (cascadeIndex > 0) {
 				cascadeIndex--;
 			}
-			propString = std::to_wstring(static_cast<index>(samplesPerSec / 2 / std::pow(2, cascadeIndex)));
-			return propString.c_str();
+			printer.print(static_cast<index>(samplesPerSec / 2.0 / std::pow(2, cascadeIndex)));
+			return true;
 		}
 
 		cascadeIndex = parseIndexProp(prop, L"dc", cascades.size() + 1);
@@ -230,8 +228,8 @@ const wchar_t* FftAnalyzer::getProp(const isview& prop) const {
 			if (cascadeIndex > 0) {
 				cascadeIndex--;
 			}
-			propString = std::to_wstring(cascades[cascadeIndex].getDC());
-			return propString.c_str();
+			printer.print(cascades[cascadeIndex].getDC());
+			return true;
 		}
 
 		cascadeIndex = parseIndexProp(prop, L"resolution", cascades.size() + 1);
@@ -243,14 +241,14 @@ const wchar_t* FftAnalyzer::getProp(const isview& prop) const {
 				cascadeIndex--;
 			}
 			const auto resolution = static_cast<double>(samplesPerSec) / fftSize / std::pow(2, cascadeIndex);
-			propString = std::to_wstring(resolution);
-			return propString.c_str();
+			printer.print(resolution);
+			return true;
 		}
 
-		return nullptr;
+		return false;
 	}
 
-	return propString.c_str();
+	return true;
 }
 
 void FftAnalyzer::reset() {

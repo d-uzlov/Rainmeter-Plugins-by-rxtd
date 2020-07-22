@@ -46,6 +46,7 @@ namespace rxtd::utils {
 		const wchar_t* getString() const;
 		void command(const wchar_t *bangArgs);
 		const wchar_t* resolve(int argc, const wchar_t* argv[]);
+		const wchar_t* resolve(array_view<isview> args);
 
 		MeasureState getState() const;
 

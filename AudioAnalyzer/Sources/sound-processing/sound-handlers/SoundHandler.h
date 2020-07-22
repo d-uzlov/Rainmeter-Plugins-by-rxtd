@@ -11,6 +11,7 @@
 #include "../DataSupplier.h"
 #include "StringUtils.h"
 #include "array_view.h"
+#include "BufferPrinter.h"
 
 namespace rxtd::audio_analyzer {
 	class SoundHandler {
@@ -69,8 +70,9 @@ namespace rxtd::audio_analyzer {
 			return 0;
 		}
 
-		virtual const wchar_t* getProp(const isview& prop) const {
-			return nullptr;
+		// return true if such prop exists, false otherwise
+		virtual bool getProp(const isview& prop, utils::BufferPrinter& printer) const {
+			return false;
 		}
 
 		virtual bool isStandalone() {

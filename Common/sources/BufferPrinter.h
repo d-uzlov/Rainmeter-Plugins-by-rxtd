@@ -130,6 +130,16 @@ namespace rxtd::utils {
 		void setSkipUnlistedArgs(bool value);
 
 		template<typename... Args>
+		void print(string formatString, const Args&... args) {
+			print(formatString.c_str(), args...);
+		}
+
+		template<typename T>
+		void print(T arg) {
+			print(L"{}", arg);
+		}
+
+		template<typename... Args>
 		void print(const wchar_t *formatString, const Args&... args) {
 			buffer.resetPointers();
 			append(formatString, args...);

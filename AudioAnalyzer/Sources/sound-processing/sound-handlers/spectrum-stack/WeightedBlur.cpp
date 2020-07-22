@@ -139,10 +139,6 @@ void WeightedBlur::setSamplesPerSec(index samplesPerSec) {
 	this->samplesPerSec = samplesPerSec;
 }
 
-const wchar_t* WeightedBlur::getProp(const isview& prop) const {
-	return nullptr; // TODO
-}
-
 void WeightedBlur::reset() {
 	changed = true;
 }

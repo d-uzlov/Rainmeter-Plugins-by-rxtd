@@ -129,11 +129,6 @@ void legacy_FiniteTimeFilter::setSamplesPerSec(index samplesPerSec) {
 	this->samplesPerSec = samplesPerSec;
 }
 
-const wchar_t* legacy_FiniteTimeFilter::getProp(const isview& prop) const {
-	propString.clear();
-	return nullptr; // TODO
-}
-
 void legacy_FiniteTimeFilter::adjustSize() {
 	const auto layersCount = source->getLayersCount();
 	const auto valuesCount = source->getData(0).size();

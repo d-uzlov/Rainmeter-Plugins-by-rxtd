@@ -60,8 +60,6 @@ namespace rxtd::audio_analyzer {
 		const SoundHandler* source = nullptr;
 		const BandResampler* resampler = nullptr;
 
-		mutable string propString{ };
-
 	public:
 		static std::optional<Params> parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl);
 
@@ -96,8 +94,6 @@ namespace rxtd::audio_analyzer {
 
 			return resampler;
 		}
-
-		const wchar_t* getProp(const isview& prop) const override;
 
 	private:
 		void adjustSize();

@@ -74,8 +74,6 @@ namespace rxtd::audio_analyzer {
 		bool cascadeInfoIsCalculated = false;
 		bool changed = true;
 
-		mutable string propString{ };
-
 	public:
 		static std::optional<Params> parseParams(
 			const utils::OptionMap& optionMap,
@@ -94,7 +92,7 @@ namespace rxtd::audio_analyzer {
 		array_view<float> getData(layer_t layer) const override;
 		layer_t getLayersCount() const override;
 
-		const wchar_t* getProp(const isview& prop) const override;
+		bool getProp(const isview& prop, utils::BufferPrinter& printer) const override;
 
 		const BandResampler* getResampler() const override {
 			return this;

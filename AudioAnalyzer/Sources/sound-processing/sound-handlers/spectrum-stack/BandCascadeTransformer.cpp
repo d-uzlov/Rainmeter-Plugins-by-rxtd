@@ -115,20 +115,18 @@ void BandCascadeTransformer::setSamplesPerSec(index samplesPerSec) {
 	analysisComputed = false;
 }
 
-const wchar_t* BandCascadeTransformer::getProp(const isview& prop) const {
-	propString.clear();
-
+bool BandCascadeTransformer::getProp(const isview& prop, utils::BufferPrinter& printer) const {
 	if (prop == L"cascade analysis") {
-		return analysis.analysisString.c_str();
+		printer.print(analysis.analysisString);
 	} else if (prop == L"min cascade used") {
-		propString = std::to_wstring(analysis.minCascadeUsed + 1);
+		printer.print(analysis.minCascadeUsed + 1);
 	} else if (prop == L"max cascade used") {
-		propString = std::to_wstring(analysis.maxCascadeUsed + 1);
+		printer.print(analysis.maxCascadeUsed + 1);
 	} else {
-		return nullptr;
+		return false;
 	}
 
-	return propString.c_str();
+	return true;
 }
 
 void BandCascadeTransformer::reset() {

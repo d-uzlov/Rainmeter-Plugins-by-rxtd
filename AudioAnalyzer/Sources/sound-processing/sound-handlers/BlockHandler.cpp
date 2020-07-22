@@ -81,13 +81,13 @@ void BlockHandler::setSamplesPerSec(index samplesPerSec) {
 	_setSamplesPerSec(samplesPerSec);
 }
 
-const wchar_t* BlockHandler::getProp(const isview& prop) const {
+bool BlockHandler::getProp(const isview& prop, utils::BufferPrinter& printer) const {
 	if (prop == L"block size") {
-		propString = std::to_wstring(blockSize);
-	} else {
-		return nullptr;
+		printer.print(L"{}", blockSize);
+		return true;
 	}
-	return propString.c_str();
+
+	return false;
 }
 
 void BlockHandler::reset() {
