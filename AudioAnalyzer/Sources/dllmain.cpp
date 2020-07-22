@@ -24,7 +24,8 @@ static_assert(std::is_same<LPCWSTR, const wchar_t*>::value);
 
 PLUGIN_EXPORT void Initialize(void** data, void* rm) {
 	utils::Rainmeter rain(rm);
-	const auto typeString = rain.read(L"Type").asIString();
+	const auto typeOption = rain.read(L"Type");
+	const auto typeString = typeOption.asIString();
 	if (typeString == L"Parent") {
 		*data = new audio_analyzer::AudioParent(std::move(rain));
 	} else {

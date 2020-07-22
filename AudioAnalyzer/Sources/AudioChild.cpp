@@ -31,7 +31,8 @@ AudioChild::AudioChild(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rain)) 
 }
 
 void AudioChild::_reload() {
-	const auto channelStr = rain.read(L"Channel").asIString(L"auto");
+	const auto channelOption = rain.read(L"Channel");
+	const auto channelStr = channelOption.asIString(L"auto");
 	auto channelOpt = Channel::channelParser.find(channelStr);
 	if (!channelOpt.has_value()) {
 		logger.error(L"Invalid Channel '{}', set to Auto.", channelStr);
@@ -47,7 +48,8 @@ void AudioChild::_reload() {
 		return;
 	}
 
-	const auto stringValueStr = rain.read(L"StringValue").asIString(L"Number");
+	const auto stringValueOption = rain.read(L"StringValue");
+	const auto stringValueStr = stringValueOption.asIString(L"Number");
 	if (stringValueStr == L"Number") {
 		setUseResultString(false);
 	} else if (stringValueStr == L"Info") {
@@ -99,7 +101,8 @@ void AudioChild::_updateString(string& resultStringBuffer) {
 }
 
 void AudioChild::legacy_readOptions() {
-	if (const auto numTr = rain.read(L"NumberTransform").asIString(L"Linear");
+	const auto numTrOption = rain.read(L"NumberTransform");
+	if (const auto numTr = numTrOption.asIString(L"Linear");
 		numTr == L"Linear") {
 		legacy.numberTransform = Legacy::NumberTransform::eLINEAR;
 	} else if (numTr == L"DB") {
