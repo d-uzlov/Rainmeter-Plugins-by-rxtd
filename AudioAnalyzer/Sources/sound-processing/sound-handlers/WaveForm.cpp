@@ -45,10 +45,6 @@ std::optional<WaveForm::Params> WaveForm::parseParams(
 	params.resolution *= 0.001;
 
 	string folder{ optionMap.get(L"folder"sv).asString() };
-	if (!folder.empty() && folder[0] == L'\"') {
-		// TODO WTF is this?
-		folder = folder.substr(1);
-	}
 	std::filesystem::path path{ folder };
 	if (!path.is_absolute()) {
 		folder = rain.replaceVariables(L"[#CURRENTPATH]") % own() + folder;
