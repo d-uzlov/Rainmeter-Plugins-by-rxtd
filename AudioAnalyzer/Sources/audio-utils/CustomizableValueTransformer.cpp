@@ -126,7 +126,8 @@ CustomizableValueTransformer TransformationParser::parse(utils::Option transform
 
 	auto transformSequence = transform.asSequence();
 	for (auto list : transformSequence) {
-		auto transformOpt = parseTransformation(list, cl);
+		auto logger = cl.context(L"{}: ", list.get(0).asString());
+		auto transformOpt = parseTransformation(list, logger);
 		if (!transformOpt.has_value()) {
 			return { };
 		}
@@ -148,7 +149,7 @@ std::optional<TransformationParser::Transformation> TransformationParser::parseT
 		tr.type = TransformType::eFILTER;
 
 		if (paramCount == 0 || paramCount > 2) {
-			cl.error(L"'filter' must have 1 or 2 parameters but {} found", paramCount);
+			cl.error(L"must have 1 or 2 parameters but {} found", paramCount);
 			return std::nullopt;
 		}
 		tr.args[0] = list.get(1).asFloat();
@@ -157,7 +158,7 @@ std::optional<TransformationParser::Transformation> TransformationParser::parseT
 		tr.type = TransformType::eDB;
 
 		if (paramCount != 0) {
-			cl.error(L"'db' must have 0 parameters but {} found", paramCount);
+			cl.error(L"must have 0 parameters but {} found", paramCount);
 			return std::nullopt;
 		}
 	} else if (transformName == L"map") {
@@ -172,11 +173,12 @@ std::optional<TransformationParser::Transformation> TransformationParser::parseT
 				args[i - 1] = list.get(i).asFloat();
 			}
 		} else {
-			cl.error(L"'map' must have 2 or 4 parameters but {} found", paramCount);
+			cl.error(L"must have 2 or 4 parameters but {} found", paramCount);
 			return std::nullopt;
 		}
 
 		if (std::abs(args[0] - args[1]) < std::numeric_limits<float>::epsilon()) {
+			cl.error(L"first 2 parameters are too close: {} and {}", args[0], args[1]);
 			return std::nullopt;
 		}
 

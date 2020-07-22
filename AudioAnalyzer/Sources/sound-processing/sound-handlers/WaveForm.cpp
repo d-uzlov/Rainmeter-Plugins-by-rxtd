@@ -83,6 +83,7 @@ std::optional<WaveForm::Params> WaveForm::parseParams(
 	params.connected = optionMap.get(L"connected").asBool(true);
 
 	params.borderSize = optionMap.get(L"borderSize").asInt(0);
+	params.borderSize = std::max<index>(params.borderSize, 0);
 
 	if (const auto fading = optionMap.get(L"fading").asIString(L"None");
 		fading == L"None") {
