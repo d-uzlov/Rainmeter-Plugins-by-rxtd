@@ -39,11 +39,11 @@ std::optional<BlockHandler::Params> BlockHandler::parseParams(
 	// legacy
 	if (optionMap.has(L"attack") || optionMap.has(L"decay")) {
 		cl.notice(L"Using deprecated 'attack'/'decay' options. Transforms are ignored");
-		const auto attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.0);
-		const auto decayTime = std::max(optionMap.get(L"decay"sv).asFloat(attackTime), 0.0);
+		params.legacy_attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.0);
+		params.legacy_decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.legacy_attackTime), 0.0);
 
 		utils::BufferPrinter printer;
-		printer.print(L"filter[{}, {}]", attackTime, decayTime);
+		printer.print(L"filter[{}, {}]", params.legacy_attackTime, params.legacy_decayTime);
 		params.transformer = audio_utils::TransformationParser::parse(utils::Option{ printer.getBufferView() }, cl);
 	}
 
@@ -85,6 +85,14 @@ void BlockHandler::setSamplesPerSec(index samplesPerSec) {
 bool BlockHandler::getProp(const isview& prop, utils::BufferPrinter& printer) const {
 	if (prop == L"block size") {
 		printer.print(blockSize);
+		return true;
+	}
+	if (prop == L"attack") {
+		printer.print(params.legacy_attackTime);
+		return true;
+	}
+	if (prop == L"decay") {
+		printer.print(params.legacy_decayTime);
 		return true;
 	}
 
