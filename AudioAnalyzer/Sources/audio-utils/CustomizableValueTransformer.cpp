@@ -17,17 +17,6 @@ using namespace audio_utils;
 
 CustomizableValueTransformer::CustomizableValueTransformer(std::vector<Transformation> transformations):
 	transforms(std::move(transformations)) {
-	for (auto& tr : transforms) {
-		if (tr.type == TransformType::eMAP) {
-			tr.state.interpolator = { };
-
-			if (std::abs(tr.args[0] - tr.args[1]) < std::numeric_limits<float>::epsilon()) {
-				tr.state.interpolator.setParams(0.0, 1.0, tr.args[2], tr.args[3]);
-			} else {
-				tr.state.interpolator.setParams(tr.args[0], tr.args[1], tr.args[2], tr.args[3]);
-			}
-		}
-	}
 }
 
 double CustomizableValueTransformer::apply(double value) {
@@ -70,26 +59,22 @@ void CustomizableValueTransformer::applyToArray(utils::array2d_span<float> value
 
 			for (auto& transform : transforms) {
 				switch (transform.type) {
-				case TransformType::eFILTER:
-				{
+				case TransformType::eFILTER: {
 					const float prev = transform.pastFilterValues[row][column];
 					value = transform.state.filter.apply(prev, value);
 					transform.pastFilterValues[row][column] = value;
 					break;
 				}
-				case TransformType::eDB:
-				{
+				case TransformType::eDB: {
 					value = std::max<double>(value, std::numeric_limits<float>::min());
 					value = 10.0 * std::log10(value);
 					break;
 				}
-				case TransformType::eMAP:
-				{
+				case TransformType::eMAP: {
 					value = transform.state.interpolator.toValue(value);
 					break;
 				}
-				case TransformType::eCLAMP:
-				{
+				case TransformType::eCLAMP: {
 					value = std::clamp(value, transform.args[0], transform.args[1]);
 					break;
 				}
@@ -141,10 +126,8 @@ CustomizableValueTransformer TransformationParser::parse(utils::Option transform
 
 	auto transformSequence = transform.asSequence();
 	for (auto list : transformSequence) {
-		const auto transformName = list.get(0).asIString();
 		auto transformOpt = parseTransformation(list, cl);
 		if (!transformOpt.has_value()) {
-			cl.error(L"transform '{}' is not recognized, using default transform sequence", transformName);
 			return { };
 		}
 		transforms.emplace_back(transformOpt.value());
@@ -159,30 +142,64 @@ std::optional<TransformationParser::Transformation> TransformationParser::parseT
 ) {
 	const auto transformName = list.get(0).asIString();
 	Transformation tr{ };
-	index paramCount;
+	const index paramCount = list.size() - 1;
+
 	if (transformName == L"filter") {
 		tr.type = TransformType::eFILTER;
-		paramCount = 2;
+
+		if (paramCount == 0 || paramCount > 2) {
+			cl.error(L"'filter' must have 1 or 2 parameters but {} found", paramCount);
+			return std::nullopt;
+		}
+		tr.args[0] = list.get(1).asFloat();
+		tr.args[1] = paramCount == 1 ? tr.args[0] : list.get(2).asFloat(tr.args[0]);
 	} else if (transformName == L"db") {
 		tr.type = TransformType::eDB;
-		paramCount = 0;
+
+		if (paramCount != 0) {
+			cl.error(L"'db' must have 0 parameters but {} found", paramCount);
+			return std::nullopt;
+		}
 	} else if (transformName == L"map") {
 		tr.type = TransformType::eMAP;
-		paramCount = 4;
+
+		std::array<double, 4> args{ };
+		if (paramCount == 2) {
+			args[2] = 0.0;
+			args[3] = 1.0;
+		} else if (paramCount == 4) {
+			for (int i = 1; i < list.size(); ++i) {
+				args[i - 1] = list.get(i).asFloat();
+			}
+		} else {
+			cl.error(L"'map' must have 2 or 4 parameters but {} found", paramCount);
+			return std::nullopt;
+		}
+
+		if (std::abs(args[0] - args[1]) < std::numeric_limits<float>::epsilon()) {
+			return std::nullopt;
+		}
+
+		tr.state.interpolator.setParams(args[0], args[1], args[2], args[3]);
+
 	} else if (transformName == L"clamp") {
 		tr.type = TransformType::eCLAMP;
-		paramCount = 2;
+
+		if (paramCount == 0) {
+			tr.args[0] = 0.0;
+			tr.args[1] = 1.0;
+		} else if (paramCount == 2) {
+			for (int i = 1; i < list.size(); ++i) {
+				tr.args[i - 1] = list.get(i).asFloat();
+			}
+		} else {
+			cl.error(L"'clamp' must have 0 or 2 parameters but {} found", paramCount);
+			return std::nullopt;
+		}
 	} else {
+		cl.error(L"'{}' is not recognized as transform type", transformName);
 		return std::nullopt;
 	}
 
-	if (list.size() != paramCount + 1) {
-		cl.error(L"wrong params count for {}: {} instead of {}", transformName, list.size() - 1, paramCount);
-		return std::nullopt;
-	}
-
-	for (int i = 1; i < list.size(); ++i) {
-		tr.args[i - 1] = list.get(i).asFloat();
-	}
 	return tr;
 }

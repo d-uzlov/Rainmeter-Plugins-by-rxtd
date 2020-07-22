@@ -27,7 +27,7 @@ namespace rxtd::audio_utils {
 
 		struct Transformation {
 			TransformType type{ };
-			std::array<double, 4> args{ };
+			std::array<double, 2> args{ };
 			utils::Vector2D<float> pastFilterValues;
 
 			union {
