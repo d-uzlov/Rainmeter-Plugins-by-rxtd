@@ -22,14 +22,7 @@ namespace rxtd::audio_analyzer {
 			resamplerId = value;
 		}
 
-		void _process(const DataSupplier& dataSupplier) final;
-
-		const BandResampler* getResampler() const {
-			return resampler;
-		}
-
-	protected:
-		virtual void _process2(const DataSupplier& dataSupplier) = 0;
+		const BandResampler* getResampler(const DataSupplier& dataSupplier) const;
 	};
 
 }

@@ -96,7 +96,7 @@ void legacy_FiniteTimeFilter::setParams(Params _params, Channel channel) {
 	setValid(true);
 }
 
-void legacy_FiniteTimeFilter::_process2(const DataSupplier& dataSupplier) {
+void legacy_FiniteTimeFilter::_process(const DataSupplier& dataSupplier) {
 	changed = true;
 }
 

@@ -74,7 +74,7 @@ void UniformBlur::setParams(Params _params, Channel channel) {
 	setValid(true);
 }
 
-void UniformBlur::_process2(const DataSupplier& dataSupplier) {
+void UniformBlur::_process(const DataSupplier& dataSupplier) {
 	changed = true;
 }
 

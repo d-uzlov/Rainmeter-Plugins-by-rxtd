@@ -15,7 +15,7 @@
 
 namespace rxtd::audio_analyzer {
 	class SoundHandler {
-		bool valid = true;
+		mutable bool valid = true;
 
 	public:
 		using layer_t = int8_t;
@@ -80,7 +80,7 @@ namespace rxtd::audio_analyzer {
 		}
 
 	protected:
-		void setValid(bool value) {
+		void setValid(bool value) const {
 			valid = value;
 		}
 

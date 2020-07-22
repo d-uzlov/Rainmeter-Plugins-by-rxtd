@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2019-2020 rxtd
+ * Copyright (C) 2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -41,6 +41,8 @@ void SingleValueTransformer::setParams(Params _params, Channel channel) {
 
 	params = std::move(_params);
 	params.transformer.setParams(samplesPerSec, 1);
+
+	setResamplerID(params.sourceId);
 }
 
 void SingleValueTransformer::setSamplesPerSec(index value) {

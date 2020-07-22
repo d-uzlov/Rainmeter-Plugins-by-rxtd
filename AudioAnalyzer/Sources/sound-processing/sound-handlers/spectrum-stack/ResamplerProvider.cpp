@@ -17,23 +17,21 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-void ResamplerProvider::_process(const DataSupplier& dataSupplier) {
+const BandResampler* ResamplerProvider::getResampler(const DataSupplier& dataSupplier) const {
 	const auto source = dataSupplier.getHandler(resamplerId);
 	if (source == nullptr) {
 		setValid(false);
-		return;
+		return nullptr;
 	}
 	const auto tryResampler = dynamic_cast<const BandResampler*>(source);
 	if (tryResampler != nullptr) {
-		resampler = tryResampler;
-		return;
+		return tryResampler;
 	}
 
 	const auto provider = dynamic_cast<const ResamplerProvider*>(source);
 	if (provider == nullptr) {
-		setValid(false);
-		return;
+		return nullptr;
 	}
 
-	resampler = provider->getResampler();
+	return provider->getResampler(dataSupplier);
 }

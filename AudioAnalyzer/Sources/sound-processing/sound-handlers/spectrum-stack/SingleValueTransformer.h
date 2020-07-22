@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -12,9 +12,10 @@
 #include "RainmeterWrappers.h"
 #include "../../../audio-utils/CustomizableValueTransformer.h"
 #include "Vector2D.h"
+#include "ResamplerProvider.h"
 
 namespace rxtd::audio_analyzer {
-	class SingleValueTransformer : public SoundHandler {
+	class SingleValueTransformer : public ResamplerProvider {
 	public:
 		struct Params {
 			istring sourceId;

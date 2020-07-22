@@ -95,7 +95,7 @@ void BandCascadeTransformer::_finish(const DataSupplier& dataSupplier) {
 		if (provider == nullptr) {
 			return;
 		}
-		resampler = provider->getResampler();
+		resampler = provider->getResampler(dataSupplier);
 		if (resampler == nullptr) {
 			return;
 		}

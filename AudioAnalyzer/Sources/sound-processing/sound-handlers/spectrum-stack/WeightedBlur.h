@@ -83,13 +83,13 @@ namespace rxtd::audio_analyzer {
 		void setSamplesPerSec(index samplesPerSec) override;
 		void reset() override;
 
-		void _process2(const DataSupplier& dataSupplier) override;
+		void _process(const DataSupplier& dataSupplier) override;
 		void _finish(const DataSupplier& dataSupplier) override;
 
 		array_view<float> getData(layer_t layer) const override;
 		layer_t getLayersCount() const override;
 
 	private:
-		void blurData();
+		void blurData(const DataSupplier& dataSupplier);
 	};
 }

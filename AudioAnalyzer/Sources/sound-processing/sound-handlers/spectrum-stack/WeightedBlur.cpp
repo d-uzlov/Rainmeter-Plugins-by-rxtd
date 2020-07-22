@@ -100,7 +100,7 @@ void WeightedBlur::setParams(Params _params, Channel channel) {
 	setValid(true);
 }
 
-void WeightedBlur::_process2(const DataSupplier& dataSupplier) {
+void WeightedBlur::_process(const DataSupplier& dataSupplier) {
 	changed = true;
 }
 
@@ -109,17 +109,14 @@ void WeightedBlur::_finish(const DataSupplier& dataSupplier) {
 		return;
 	}
 
-	setValid(false);
-
 	source = dataSupplier.getHandler<ResamplerProvider>(params.sourceId);
 	if (source == nullptr) {
+		setValid(false);
 		return;
 	}
 
-	blurData();
+	blurData(dataSupplier);
 	changed = false;
-
-	setValid(true);
 }
 
 array_view<float> WeightedBlur::getData(layer_t layer) const {
@@ -138,8 +135,14 @@ void WeightedBlur::reset() {
 	changed = true;
 }
 
-void WeightedBlur::blurData() {
-	const BandResampler& resampler = *getResampler();
+void WeightedBlur::blurData(const DataSupplier& dataSupplier) {
+	const BandResampler* resamplerPtr = getResampler(dataSupplier);
+	if (resamplerPtr == nullptr) {
+		setValid(false);
+		return;
+	}
+
+	const BandResampler& resampler = *resamplerPtr;
 	blurredValues.resize(source->getLayersCount());
 
 	double minRadius = params.minRadius * std::pow(params.minRadiusAdaptation, resampler.getStartingLayer());
