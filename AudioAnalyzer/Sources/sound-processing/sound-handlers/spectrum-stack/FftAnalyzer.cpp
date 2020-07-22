@@ -36,30 +36,30 @@ std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(
 
 	if (const auto sizeBy = optionMap.get(L"sizeBy"sv).asIString(L"binWidth");
 		sizeBy == L"binWidth") {
-		params.resolution = optionMap.get(L"binWidth"sv).asFloat(100.0);
-		if (params.resolution <= 0.0) {
-			cl.error(L"Resolution must be > 0 but {} found", params.resolution);
+		params.binWidth = optionMap.get(L"binWidth"sv).asFloat(100.0);
+		if (params.binWidth <= 0.0) {
+			cl.error(L"Resolution must be > 0 but {} found", params.binWidth);
 			return std::nullopt;
 		}
-		if (params.resolution <= 1.0) {
-			cl.warning(L"BinWidth {} is dangerously small, use values > 1", params.resolution);
+		if (params.binWidth <= 1.0) {
+			cl.warning(L"BinWidth {} is dangerously small, use values > 1", params.binWidth);
 		}
 		params.sizeBy = SizeBy::BIN_WIDTH;
 	} else {
 		cl.warning(L"Options 'sizeBy' is deprecated");
 
 		if (sizeBy == L"size") {
-			params.resolution = optionMap.get(L"size"sv).asInt(1000);
-			if (params.resolution < 2) {
-				cl.warning(L"Size must be >= 2 but {} found. Assume 1000", params.resolution);
-				params.resolution = 1000;
+			params.binWidth = optionMap.get(L"size"sv).asInt(1000);
+			if (params.binWidth < 2) {
+				cl.warning(L"Size must be >= 2 but {} found. Assume 1000", params.binWidth);
+				params.binWidth = 1000;
 			}
 			params.sizeBy = SizeBy::SIZE;
 
 		} else if (sizeBy == L"sizeExact") {
-			params.resolution = optionMap.get(L"size"sv).asInt(1000);
-			if (params.resolution < 2) {
-				cl.error(L"Size must be >= 2, must be even, but {} found", params.resolution);
+			params.binWidth = optionMap.get(L"size"sv).asInt(1000);
+			if (params.binWidth < 2) {
+				cl.error(L"Size must be >= 2, must be even, but {} found", params.binWidth);
 				return std::nullopt;
 			}
 			params.sizeBy = SizeBy::SIZE_EXACT;
@@ -236,6 +236,9 @@ bool FftAnalyzer::getProp(const isview& prop, utils::BufferPrinter& printer) con
 		if (cascadeIndex == -2) {
 			return L"0";
 		}
+		if (cascadeIndex < 0) {
+			cascadeIndex = parseIndexProp(prop, L"binWidth", cascades.size() + 1);
+		}
 		if (cascadeIndex >= 0) {
 			if (cascadeIndex > 0) {
 				cascadeIndex--;
@@ -275,13 +278,13 @@ void FftAnalyzer::preprocessWave(array_span<float> wave) {
 void FftAnalyzer::updateParams() {
 	switch (params.sizeBy) {
 	case SizeBy::BIN_WIDTH:
-		fftSize = kiss_fft::calculateNextFastSize(index(samplesPerSec / params.resolution), true);
+		fftSize = kiss_fft::calculateNextFastSize(index(samplesPerSec / params.binWidth), true);
 		break;
 	case SizeBy::SIZE:
-		fftSize = kiss_fft::calculateNextFastSize(index(params.resolution), true);
+		fftSize = kiss_fft::calculateNextFastSize(index(params.binWidth), true);
 		break;
 	case SizeBy::SIZE_EXACT:
-		fftSize = static_cast<index>(static_cast<size_t>(params.resolution) & ~1); // only even sizes are allowed
+		fftSize = static_cast<index>(static_cast<size_t>(params.binWidth) & ~1); // only even sizes are allowed
 		break;
 	default: // must be unreachable statement
 		std::abort();

@@ -32,7 +32,7 @@ namespace rxtd::audio_analyzer {
 			double legacy_attackTime;
 			double legacy_decayTime;
 
-			double resolution;
+			double binWidth;
 			double overlap;
 
 			layer_t cascadesCount;
@@ -47,7 +47,7 @@ namespace rxtd::audio_analyzer {
 				return lhs.sizeBy == rhs.sizeBy
 					&& lhs.legacy_attackTime == rhs.legacy_attackTime
 					&& lhs.legacy_decayTime == rhs.legacy_decayTime
-					&& lhs.resolution == rhs.resolution
+					&& lhs.binWidth == rhs.binWidth
 					&& lhs.overlap == rhs.overlap
 					&& lhs.cascadesCount == rhs.cascadesCount
 					&& lhs.correctLoudness == rhs.correctLoudness
