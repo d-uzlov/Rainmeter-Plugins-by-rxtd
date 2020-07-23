@@ -30,10 +30,7 @@ void WaveFormDrawer::setDimensions(index width, index height) {
 }
 
 void WaveFormDrawer::fillSilence() {
-	const index lastStripIndex = inflatableBuffer.getLastStripIndex();
-	const bool force = (fading != FadingType::eNONE || borderSize != 0)
-		&& lastStripIndex != width - 1;
-	inflatableBuffer.pushEmptyLine(0.0, force);
+	inflatableBuffer.pushEmptyLine(0.0);
 
 	const index centerLineIndex = interpolator.toValueD(0.0);
 	inflatableBuffer.correctLastLine(centerLineIndex, 1.0);

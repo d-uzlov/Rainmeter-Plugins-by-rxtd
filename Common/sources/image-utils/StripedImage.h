@@ -79,8 +79,11 @@ namespace rxtd::utils {
 			}
 		}
 
-		void pushEmptyLine(PixelValueType value, bool force) {
+		void pushEmptyLine(PixelValueType value) {
+			const index lastStripIndex = getLastStripIndex();
+			const bool force = lastStripIndex != width - 1;
 			if (!force && sameStripsCount >= width) {
+				// bool force ensures that when image is stationary it will be cleared fully instead of stopping in the middle
 				return;
 			}
 
