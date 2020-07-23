@@ -90,6 +90,7 @@ std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(
 	params.randomDuration = std::abs(optionMap.get(L"randomDuration"sv).asFloat(1000.0)) * 0.001;
 
 	params.correctZero = optionMap.get(L"correctZero"sv).asBool(true);
+	params.legacyAmplification = optionMap.get(L"legacyAmplification"sv).asBool(true);
 
 	return params;
 }
@@ -300,7 +301,7 @@ void FftAnalyzer::updateParams() {
 		fftSize = 0;
 		return;
 	}
-	fft.setSize(fftSize);
+	fft.setSize(fftSize, !params.legacyAmplification);
 
 	inputStride = static_cast<index>(fftSize * (1 - params.overlap));
 	inputStride = std::clamp<index>(inputStride, std::min<index>(16, fftSize), fftSize);

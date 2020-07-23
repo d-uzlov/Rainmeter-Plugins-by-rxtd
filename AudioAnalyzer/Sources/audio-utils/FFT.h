@@ -35,9 +35,9 @@ namespace rxtd::audio_utils {
 
 	public:
 		FFT() = default;
-		FFT(index fftSize);
+		FFT(index fftSize, bool correctScalar);
 
-		void setSize(index newSize);
+		void setSize(index newSize, bool correctScalar);
 
 		double getDC() const;
 		double getBinMagnitude(index binIndex) const;

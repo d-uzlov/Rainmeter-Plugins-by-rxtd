@@ -13,13 +13,13 @@
 
 using namespace audio_utils;
 
-FFT::FFT(index fftSize) {
-	setSize(fftSize);
+FFT::FFT(index fftSize, bool correctScalar) {
+	setSize(fftSize, correctScalar);
 }
 
-void FFT::setSize(index newSize) {
+void FFT::setSize(index newSize, bool correctScalar) {
 	fftSize = newSize;
-	scalar = 1.0 / std::sqrt(fftSize);
+	scalar = correctScalar ? 1.0 / fftSize : 1.0 / std::sqrt(fftSize);
 	window = createHannWindow(fftSize);
 	kiss.assign(fftSize / 2, false);
 

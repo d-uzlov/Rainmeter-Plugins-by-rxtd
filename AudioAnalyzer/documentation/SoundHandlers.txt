@@ -30,6 +30,9 @@ Type : { fft }
 Fourier Transform of the signal. Gives you values of frequencies from 0 to SamplingRate/2 (=Nyquist frequency).
 Should always be used with Band handler. You can get values directly from FFT but that doesn't make much sense.
 Options:
+legacyAmplification : boolean : true
+    Should always be set to false. It only exists to keep old skins working as with old versions of plugin.
+    When true FFT values are not consistent when sampling rate or BinWidth change.
 BinWidth : float > 0 : 100
     Width of one FFT result bin. Actual width of one bin can be less than specified value because FFT parameters are adjusted to make performance better.
     The less this option is, the more detailed result you get, but the less frequently values change.
