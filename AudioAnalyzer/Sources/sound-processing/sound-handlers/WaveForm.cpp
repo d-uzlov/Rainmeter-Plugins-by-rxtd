@@ -75,7 +75,7 @@ std::optional<WaveForm::Params> WaveForm::parseParams(
 	} else if (edgesString == L"halo") {
 		params.edges = SE::eHALO;
 	} else {
-		cl.warning(L"SmoothEdges '{}' is not recognized, assume 'none'", edgesString);
+		cl.warning(L"edges '{}' is not recognized, assume 'none'", edgesString);
 		params.edges = SE::eNONE;
 	}
 

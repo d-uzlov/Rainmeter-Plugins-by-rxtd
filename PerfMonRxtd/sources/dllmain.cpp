@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2019 rxtd
+ * Copyright (C) 2018-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -19,10 +19,14 @@
 PLUGIN_EXPORT void Initialize(void** data, void* rm) {
 	utils::Rainmeter rain(rm);
 
-	auto type = rain.readString(L"Type") % ciView();
-	if (type == L"Parent") {
+	const auto typeString = rain.read(L"Type").asIString();
+	if (typeString == L"Parent") {
 		*data = new perfmon::PerfmonParent(std::move(rain));
 	} else {
+		if (typeString != L"Child") {
+			rain.getLogger().error(L"Type '{}' is not recognized, use Child instead", typeString);
+			rain.getLogger().error(L"Defaulting to 'Child' is undocumented and unsupported, it will be removed in future");
+		}
 		*data = new perfmon::PerfmonChild(std::move(rain));
 	}
 }

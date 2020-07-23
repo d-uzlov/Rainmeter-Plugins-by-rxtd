@@ -26,7 +26,7 @@ Option::Option(wchar_t* view) : Option(sview{ view }) {
 	own();
 }
 
-sview Option::asString(sview defaultValue) const {
+sview Option::asString(sview defaultValue) const & {
 	sview view = getView();
 	if (view.empty()) {
 		return defaultValue;
@@ -34,7 +34,7 @@ sview Option::asString(sview defaultValue) const {
 	return view;
 }
 
-isview Option::asIString(isview defaultValue) const {
+isview Option::asIString(isview defaultValue) const & {
 	sview view = getView();
 	if (view.empty()) {
 		return defaultValue;

@@ -26,9 +26,18 @@ namespace rxtd::utils {
 		explicit Option(wchar_t* view);
 
 		// Raw view of option.
-		sview asString(sview defaultValue = { }) const;
+		sview asString(sview defaultValue = { }) const &;
+		// Raw view of option.
+		string asString(sview defaultValue = { }) && {
+			return string{ asString(defaultValue) };
+		}
+
 		// Raw case-insensitive view of option.
-		isview asIString(isview defaultValue = { }) const;
+		isview asIString(isview defaultValue = { }) const &;
+		// Raw case-insensitive view of option.
+		istring asIString(isview defaultValue = { }) && {
+			return istring { asIString(defaultValue) };
+		}
 		// Parse float, support math operations.
 		double asFloat(double defaultValue = 0.0) const;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -24,8 +24,7 @@ static_assert(std::is_same<LPCWSTR, const wchar_t*>::value);
 
 PLUGIN_EXPORT void Initialize(void** data, void* rm) {
 	utils::Rainmeter rain(rm);
-	const auto typeOption = rain.read(L"Type");
-	const auto typeString = typeOption.asIString();
+	const auto typeString = rain.read(L"Type").asIString();
 	if (typeString == L"Parent") {
 		*data = new audio_analyzer::AudioParent(std::move(rain));
 	} else {

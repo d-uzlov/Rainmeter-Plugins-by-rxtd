@@ -15,8 +15,8 @@
 
 using namespace audio_analyzer;
 
-AudioParent::AudioParent(utils::Rainmeter&& rain) :
-	ParentBase(std::move(rain)),
+AudioParent::AudioParent(utils::Rainmeter&& _rain) :
+	ParentBase(std::move(_rain)),
 	deviceManager(logger, [this](auto format) { soundAnalyzer.setWaveFormat(format); }) {
 	setUseResultString(false);
 
@@ -29,7 +29,7 @@ AudioParent::AudioParent(utils::Rainmeter&& rain) :
 }
 
 void AudioParent::_reload() {
-	const auto source = this->rain.readString(L"Source") % ciView();
+	const auto source = rain.read(L"Source").asIString();
 	string id = { };
 	DataSource sourceEnum;
 	if (!source.empty()) {
