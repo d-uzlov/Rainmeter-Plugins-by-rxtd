@@ -10,9 +10,10 @@
 #pragma once
 #include "FftAnalyzer.h"
 #include "../SoundHandler.h"
+#include "ResamplerProvider.h"
 
 namespace rxtd::audio_analyzer {
-	class BandResampler final : public SoundHandler {
+	class BandResampler final : public ResamplerProvider {
 	public:
 		struct Params {
 		private:
@@ -98,6 +99,9 @@ namespace rxtd::audio_analyzer {
 		array_view<float> getBandWeights(layer_t cascade) const;
 		array_view<double> getBaseFreqs() const;
 
+		const BandResampler* getResampler(const DataSupplier& dataSupplier) const override {
+			return this;
+		}
 	private:
 		void updateValues(const DataSupplier& dataSupplier);
 		void sampleData(const FftAnalyzer& source);

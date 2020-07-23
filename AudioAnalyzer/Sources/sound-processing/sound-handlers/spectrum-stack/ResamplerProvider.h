@@ -15,14 +15,15 @@ namespace rxtd::audio_analyzer {
 
 	class ResamplerProvider : public SoundHandler {
 		istring resamplerId{ };
-		const BandResampler* resampler = nullptr;
 
 	public:
+		virtual ~ResamplerProvider() = default;
+
 		void setResamplerID(isview value) {
 			resamplerId = value;
 		}
 
-		const BandResampler* getResampler(const DataSupplier& dataSupplier) const;
+		virtual const BandResampler* getResampler(const DataSupplier& dataSupplier) const;
 	};
 
 }

@@ -23,10 +23,6 @@ const BandResampler* ResamplerProvider::getResampler(const DataSupplier& dataSup
 		setValid(false);
 		return nullptr;
 	}
-	const auto tryResampler = dynamic_cast<const BandResampler*>(source);
-	if (tryResampler != nullptr) {
-		return tryResampler;
-	}
 
 	const auto provider = dynamic_cast<const ResamplerProvider*>(source);
 	if (provider == nullptr) {
