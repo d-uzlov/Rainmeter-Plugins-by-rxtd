@@ -109,6 +109,8 @@ std::optional<Spectrogram::Params> Spectrogram::parseParams(
 		params.colorMaxValue = 1.0;
 	}
 
+	params.stationary = optionMap.get(L"stationary").asBool(false);
+
 	return params;
 }
 
@@ -126,6 +128,7 @@ void Spectrogram::setParams(const Params& _params, Channel channel) {
 
 	image.setBackground(params.baseColor.toInt());
 	image.setWidth(params.length);
+	image.setStationary(params.stationary);
 
 	updateParams();
 }

@@ -201,6 +201,9 @@ BaseColor : color : 0,0,0,1
 MaxColor : color : 1,1,1,1
     Only used when Colors suboption is not present.
     Color of the space where band values are above 1.
+Stationary : boolean : false
+    When false image is completely redrawn on each update. Image is moving to the left as it updates.
+    When true image is only redrawn in places where it has changed. All stripes are stationary, but some are replaces with new values.
 Example: type spectrogram | length 600 | resolution 25 | source band | folder [#@] | colors 0.0 0.1, 0.1, 0.1, 0.8 ; 1.0 0.9, 0.85, 0.5, 1.0 ; 1.5 1.0, 0.0, 0.0, 1.0
 Props:
 "file" : path of the file in which image is written.
