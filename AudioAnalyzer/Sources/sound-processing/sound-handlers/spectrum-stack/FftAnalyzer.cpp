@@ -12,7 +12,7 @@
 #include "FftAnalyzer.h"
 #include "option-parser/OptionMap.h"
 
-#include "../../../audio-utils/KWeightingFilterBuilder.h"
+#include "../../../audio-utils/WeightingFilterBuilder.h"
 #include "../../../audio-utils/RandomGenerator.h"
 
 #include "undef.h"
@@ -198,8 +198,8 @@ void FftAnalyzer::setSamplesPerSec(index samplesPerSec) {
 
 	this->samplesPerSec = samplesPerSec;
 
-	highShelfFilter = audio_utils::KWeightingFilterBuilder::createHighShelf(samplesPerSec);
-	highPassFilter = audio_utils::KWeightingFilterBuilder::createHighPass(samplesPerSec);
+	highShelfFilter = audio_utils::WeightingFilterBuilder::createHighShelf(samplesPerSec);
+	highPassFilter = audio_utils::WeightingFilterBuilder::createHighPass(samplesPerSec);
 
 	updateParams();
 }

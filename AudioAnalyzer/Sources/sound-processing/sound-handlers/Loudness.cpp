@@ -10,7 +10,7 @@
 #include "Loudness.h"
 
 #include "undef.h"
-#include "../../audio-utils/KWeightingFilterBuilder.h"
+#include "../../audio-utils/WeightingFilterBuilder.h"
 
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
@@ -18,8 +18,8 @@ using namespace std::literals::string_view_literals;
 using namespace audio_analyzer;
 
 void Loudness::_setSamplesPerSec(index samplesPerSec) {
-	highShelfFilter = audio_utils::KWeightingFilterBuilder::createHighShelf(samplesPerSec);
-	highPassFilter = audio_utils::KWeightingFilterBuilder::createHighPass(samplesPerSec);
+	highShelfFilter = audio_utils::WeightingFilterBuilder::createHighShelf(samplesPerSec);
+	highPassFilter = audio_utils::WeightingFilterBuilder::createHighPass(samplesPerSec);
 }
 
 void Loudness::_reset() {

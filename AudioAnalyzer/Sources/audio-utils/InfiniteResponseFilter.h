@@ -26,5 +26,4 @@ namespace rxtd::audio_utils {
 
 		void updateState(double next, double nextFiltered);
 	};
-
 }

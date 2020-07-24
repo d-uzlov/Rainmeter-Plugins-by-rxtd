@@ -11,7 +11,7 @@
 #include "InfiniteResponseFilter.h"
 
 namespace rxtd::audio_utils {
-	class KWeightingFilterBuilder {
+	class WeightingFilterBuilder {
 	public:
 		static InfiniteResponseFilter createHighShelf(double samplingFrequency);
 		static InfiniteResponseFilter createHighPass(double samplingFrequency);

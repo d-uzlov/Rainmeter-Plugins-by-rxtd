@@ -7,17 +7,18 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include "KWeightingFilterBuilder.h"
+#include "WeightingFilterBuilder.h"
 
 using namespace audio_utils;
 
-InfiniteResponseFilter KWeightingFilterBuilder::createHighShelf(double samplingFrequency) {
+InfiniteResponseFilter WeightingFilterBuilder::createHighShelf(double samplingFrequency) {
 	if (samplingFrequency == 0.0) {
 		return { };
 	}
 
 	const static double pi = std::acos(-1.0);
 
+	// https://hydrogenaud.io/index.php?topic=86116.25
 	// V are gain values
 	// Q is a "magic number" that effects the shape of the filter
 	// Fc is the nominal cutoff frequency.
@@ -48,7 +49,7 @@ InfiniteResponseFilter KWeightingFilterBuilder::createHighShelf(double samplingF
 	return { std::move(a), std::move(b) };
 }
 
-InfiniteResponseFilter KWeightingFilterBuilder::createHighPass(double samplingFrequency) {
+InfiniteResponseFilter WeightingFilterBuilder::createHighPass(double samplingFrequency) {
 	const static double pi = std::acos(-1.0);
 
 	const double fc = 38.13547087613982;
