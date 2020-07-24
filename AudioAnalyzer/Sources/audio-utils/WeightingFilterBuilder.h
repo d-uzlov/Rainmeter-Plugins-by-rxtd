@@ -15,5 +15,8 @@ namespace rxtd::audio_utils {
 	public:
 		static BiQuadIIR createKWHighShelf(double samplingFrequency);
 		static BiQuadIIR createKWHighPass(double samplingFrequency);
+
+		static BiQuadIIR createHighShelf_DeMan(double dbGain, double Q, double centralFrequency, double samplingFrequency);
+		static BiQuadIIR createHighPass_DeMan(double Q, double centralFrequency, double samplingFrequency);
 	};
 }

@@ -11,12 +11,12 @@
 
 using namespace audio_utils;
 
+const static double pi = std::acos(-1.0);
+
 BiQuadIIR WeightingFilterBuilder::createKWHighShelf(double samplingFrequency) {
 	if (samplingFrequency == 0.0) {
 		return { };
 	}
-
-	const static double pi = std::acos(-1.0);
 
 	// https://hydrogenaud.io/index.php?topic=86116.25
 	// V are gain values
@@ -28,9 +28,25 @@ BiQuadIIR WeightingFilterBuilder::createKWHighShelf(double samplingFrequency) {
 	const double fc = 1681.9744509555319;
 	const double G = 3.99984385397;
 	const double Q = 0.7071752369554193;
-	const double K = std::tan(pi * fc / samplingFrequency);
 
-	const double Vh = std::pow(10.0, G / 20.0);
+	return createHighShelf_DeMan(G, Q, fc, samplingFrequency);
+}
+
+BiQuadIIR WeightingFilterBuilder::createKWHighPass(double samplingFrequency) {
+	const double fc = 38.13547087613982;
+	const double Q = 0.5003270373253953;
+
+	return createHighPass_DeMan(Q, fc, samplingFrequency);
+}
+
+BiQuadIIR WeightingFilterBuilder::createHighShelf_DeMan(
+	double dbGain,
+	double Q,
+	double centralFrequency,
+	double samplingFrequency) {
+
+	const double K = std::tan(pi * centralFrequency / samplingFrequency);
+	const double Vh = std::pow(10.0, dbGain / 20.0);
 	const double Vb = std::pow(Vh, 0.499666774155);
 
 	return {
@@ -43,12 +59,11 @@ BiQuadIIR WeightingFilterBuilder::createKWHighShelf(double samplingFrequency) {
 	};
 }
 
-BiQuadIIR WeightingFilterBuilder::createKWHighPass(double samplingFrequency) {
-	const static double pi = std::acos(-1.0);
-
-	const double fc = 38.13547087613982;
-	const double Q = 0.5003270373253953;
-	const double K = std::tan(pi * fc / samplingFrequency);
+BiQuadIIR WeightingFilterBuilder::createHighPass_DeMan(
+	double Q,
+	double centralFrequency,
+	double samplingFrequency) {
+	const double K = std::tan(pi * centralFrequency / samplingFrequency);
 
 	return {
 		1.0,
