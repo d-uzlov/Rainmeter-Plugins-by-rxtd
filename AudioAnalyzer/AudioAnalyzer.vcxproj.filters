@@ -143,6 +143,9 @@
     <ClInclude Include="Sources\audio-utils\WeightingFilterBuilder.h">
       <Filter>Source Files\audio-utils</Filter>
     </ClInclude>
+    <ClInclude Include="Sources\audio-utils\BiQuadIIR.h">
+      <Filter>Source Files\audio-utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sources\AudioChild.cpp">
@@ -242,6 +245,9 @@
       <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
     </ClCompile>
     <ClCompile Include="Sources\audio-utils\WeightingFilterBuilder.cpp">
+      <Filter>Source Files\audio-utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\audio-utils\BiQuadIIR.cpp">
       <Filter>Source Files\audio-utils</Filter>
     </ClCompile>
   </ItemGroup>

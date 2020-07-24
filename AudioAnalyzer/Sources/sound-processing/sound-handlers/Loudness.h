@@ -9,7 +9,7 @@
 
 #pragma once
 #include "BlockHandler.h"
-#include "../../audio-utils/InfiniteResponseFilter.h"
+#include "../../audio-utils/BiQuadIIR.h"
 
 namespace rxtd::audio_analyzer {
 	class Loudness : public BlockHandler {
@@ -20,8 +20,8 @@ namespace rxtd::audio_analyzer {
 		//   https://github.com/BrechtDeMan/loudness.py/blob/master/loudness.py
 		//   https://hydrogenaud.io/index.php?topic=86116.25
 
-		audio_utils::InfiniteResponseFilter highShelfFilter{ };
-		audio_utils::InfiniteResponseFilter highPassFilter{ };
+		audio_utils::BiQuadIIR highShelfFilter{ };
+		audio_utils::BiQuadIIR highPassFilter{ };
 
 		double intermediateRmsResult = 0.0;
 		std::vector<float> intermediateWave{ };

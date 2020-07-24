@@ -11,7 +11,7 @@
 
 using namespace audio_utils;
 
-InfiniteResponseFilter WeightingFilterBuilder::createHighShelf(double samplingFrequency) {
+BiQuadIIR WeightingFilterBuilder::createHighShelf(double samplingFrequency) {
 	if (samplingFrequency == 0.0) {
 		return { };
 	}
@@ -32,40 +32,30 @@ InfiniteResponseFilter WeightingFilterBuilder::createHighShelf(double samplingFr
 
 	const double Vh = std::pow(10.0, G / 20.0);
 	const double Vb = std::pow(Vh, 0.499666774155);
-	const double a0_ = 1.0 + K / Q + K * K;
 
-	std::vector<double> b = {
-		(Vh + Vb * K / Q + K * K) / a0_,
-		2.0 * (K * K - Vh) / a0_,
-		(Vh - Vb * K / Q + K * K) / a0_
+	return {
+		1.0 + K / Q + K * K,
+		2.0 * (K * K - 1.0),
+		(1.0 - K / Q + K * K),
+		(Vh + Vb * K / Q + K * K),
+		2.0 * (K * K - Vh),
+		(Vh - Vb * K / Q + K * K)
 	};
-
-	std::vector<double> a = {
-		1.0,
-		2.0 * (K * K - 1.0) / a0_,
-		(1.0 - K / Q + K * K) / a0_
-	};
-
-	return { std::move(a), std::move(b) };
 }
 
-InfiniteResponseFilter WeightingFilterBuilder::createHighPass(double samplingFrequency) {
+BiQuadIIR WeightingFilterBuilder::createHighPass(double samplingFrequency) {
 	const static double pi = std::acos(-1.0);
 
 	const double fc = 38.13547087613982;
 	const double Q = 0.5003270373253953;
 	const double K = std::tan(pi * fc / samplingFrequency);
 
-	std::vector<double> a = {
+	return {
 		1.0,
 		2.0 * (K * K - 1.0) / (1.0 + K / Q + K * K),
-		(1.0 - K / Q + K * K) / (1.0 + K / Q + K * K)
-	};
-	std::vector<double> b = {
+		(1.0 - K / Q + K * K) / (1.0 + K / Q + K * K),
 		1.0,
 		-2.0,
 		1.0
 	};
-
-	return { std::move(a), std::move(b) };
 }

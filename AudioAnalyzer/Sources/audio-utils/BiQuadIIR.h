@@ -11,20 +11,22 @@
 #include "array_view.h"
 
 namespace rxtd::audio_utils {
-	class InfiniteResponseFilter {
+	class BiQuadIIR {
 		// inspired by https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.lfilter.html
 
-		std::vector<double> a;
-		std::vector<double> b;
-		std::vector<double> state;
+		double a1;
+		double a2;
+		double b0;
+		double b1;
+		double b2;
+
+		double state0;
+		double state1;
 
 	public:
-		InfiniteResponseFilter() = default;
-		InfiniteResponseFilter(std::vector<double> a, std::vector<double> b);
+		BiQuadIIR() = default;
+		BiQuadIIR(double a0, double a1, double a2, double b0, double b1, double b2);
 
 		void apply(array_span<float> signal);
-
-	private:
-		void updateState(double next, double nextFiltered);
 	};
 }

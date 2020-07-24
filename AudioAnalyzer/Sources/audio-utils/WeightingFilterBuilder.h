@@ -8,12 +8,12 @@
  */
 
 #pragma once
-#include "InfiniteResponseFilter.h"
+#include "BiQuadIIR.h"
 
 namespace rxtd::audio_utils {
 	class WeightingFilterBuilder {
 	public:
-		static InfiniteResponseFilter createHighShelf(double samplingFrequency);
-		static InfiniteResponseFilter createHighPass(double samplingFrequency);
+		static BiQuadIIR createHighShelf(double samplingFrequency);
+		static BiQuadIIR createHighPass(double samplingFrequency);
 	};
 }

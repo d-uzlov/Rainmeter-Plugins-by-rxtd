@@ -12,7 +12,7 @@
 #include "RainmeterWrappers.h"
 #include "../../../audio-utils/FFT.h"
 #include "../../../audio-utils/FftCascade.h"
-#include "../../../audio-utils/InfiniteResponseFilter.h"
+#include "../../../audio-utils/BiQuadIIR.h"
 
 namespace rxtd::audio_analyzer {
 	class FftAnalyzer : public SoundHandler {
@@ -77,8 +77,8 @@ namespace rxtd::audio_analyzer {
 		enum class RandomState { ON, OFF } randomState{ RandomState::ON };
 
 		std::vector<audio_utils::FftCascade> cascades{ };
-		audio_utils::InfiniteResponseFilter highShelfFilter { };
-		audio_utils::InfiniteResponseFilter highPassFilter { };
+		audio_utils::BiQuadIIR highShelfFilter { };
+		audio_utils::BiQuadIIR highPassFilter { };
 
 		audio_utils::FFT fft{ };
 
