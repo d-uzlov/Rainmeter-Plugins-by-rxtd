@@ -33,7 +33,7 @@ void Loudness::_process(array_view<float> wave, float average) {
 
 	preprocessWave(intermediateWave);
 
-	for (double x : wave) {
+	for (double x : intermediateWave) {
 		intermediateRmsResult += x * x;
 		counter++;
 		if (counter >= getBlockSize()) {
