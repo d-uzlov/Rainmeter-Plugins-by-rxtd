@@ -18,8 +18,8 @@ using namespace std::literals::string_view_literals;
 using namespace audio_analyzer;
 
 void Loudness::_setSamplesPerSec(index samplesPerSec) {
-	highShelfFilter = audio_utils::WeightingFilterBuilder::createHighShelf(samplesPerSec);
-	highPassFilter = audio_utils::WeightingFilterBuilder::createHighPass(samplesPerSec);
+	highShelfFilter = audio_utils::WeightingFilterBuilder::createKWHighShelf(samplesPerSec);
+	highPassFilter = audio_utils::WeightingFilterBuilder::createKWHighPass(samplesPerSec);
 }
 
 void Loudness::_reset() {

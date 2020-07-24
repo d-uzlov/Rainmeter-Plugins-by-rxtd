@@ -11,7 +11,7 @@
 
 using namespace audio_utils;
 
-BiQuadIIR WeightingFilterBuilder::createHighShelf(double samplingFrequency) {
+BiQuadIIR WeightingFilterBuilder::createKWHighShelf(double samplingFrequency) {
 	if (samplingFrequency == 0.0) {
 		return { };
 	}
@@ -43,7 +43,7 @@ BiQuadIIR WeightingFilterBuilder::createHighShelf(double samplingFrequency) {
 	};
 }
 
-BiQuadIIR WeightingFilterBuilder::createHighPass(double samplingFrequency) {
+BiQuadIIR WeightingFilterBuilder::createKWHighPass(double samplingFrequency) {
 	const static double pi = std::acos(-1.0);
 
 	const double fc = 38.13547087613982;

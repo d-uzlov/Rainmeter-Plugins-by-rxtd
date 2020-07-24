@@ -13,7 +13,7 @@
 namespace rxtd::audio_utils {
 	class WeightingFilterBuilder {
 	public:
-		static BiQuadIIR createHighShelf(double samplingFrequency);
-		static BiQuadIIR createHighPass(double samplingFrequency);
+		static BiQuadIIR createKWHighShelf(double samplingFrequency);
+		static BiQuadIIR createKWHighPass(double samplingFrequency);
 	};
 }

@@ -198,8 +198,8 @@ void FftAnalyzer::setSamplesPerSec(index samplesPerSec) {
 
 	this->samplesPerSec = samplesPerSec;
 
-	highShelfFilter = audio_utils::WeightingFilterBuilder::createHighShelf(samplesPerSec);
-	highPassFilter = audio_utils::WeightingFilterBuilder::createHighPass(samplesPerSec);
+	highShelfFilter = audio_utils::WeightingFilterBuilder::createKWHighShelf(samplesPerSec);
+	highPassFilter = audio_utils::WeightingFilterBuilder::createKWHighPass(samplesPerSec);
 
 	updateParams();
 }
