@@ -32,9 +32,22 @@ BiQuadIIR BQFilterBuilder::createHighShelf(double dbGain, double q, double centr
 }
 
 BiQuadIIR BQFilterBuilder::createLowShelf(double dbGain, double q, double centralFrequency, double samplingFrequency) {
-	auto result = createHighShelf(-dbGain, q, centralFrequency, samplingFrequency);
-	result.addGain(dbGain);
-	return result;
+	if (samplingFrequency == 0.0 || q == 0) {
+		return { };
+	}
+
+	const double a = std::pow(10, dbGain / 40);
+	const double w0 = 2 * utils::Math::pi * centralFrequency / samplingFrequency;
+	const double alpha = std::sin(w0) / (2 * q);
+
+	return {
+				  (a + 1) + (a - 1) * std::cos(w0) + 2 * std::sqrt(a) * alpha,
+			-2 * ((a - 1) + (a + 1) * std::cos(w0)),
+				  (a + 1) + (a - 1) * std::cos(w0) - 2 * std::sqrt(a) * alpha,
+			 a * ((a + 1) - (a - 1) * std::cos(w0) + 2 * std::sqrt(a) * alpha),
+		 2 * a * ((a - 1) - (a + 1) * std::cos(w0)),
+			 a * ((a + 1) - (a - 1) * std::cos(w0) - 2 * std::sqrt(a) * alpha),
+	};
 }
 
 BiQuadIIR BQFilterBuilder::createHighPass(double q, double centralFrequency, double samplingFrequency) {

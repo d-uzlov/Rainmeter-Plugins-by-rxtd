@@ -31,11 +31,11 @@ namespace rxtd::audio_utils {
 		}
 
 	private:
-		static BiQuadIIR createHighShelf(double samplingFrequency);
+		static BiQuadIIR createFilter1(double samplingFrequency);
 
-		static BiQuadIIR createHighPass(double samplingFrequency);
+		static BiQuadIIR createFilter2(double samplingFrequency);
 
-		static BiQuadIIR createLowPass(double samplingFrequency);
+		static BiQuadIIR createFilter3(double samplingFrequency);
 	};
 
 }

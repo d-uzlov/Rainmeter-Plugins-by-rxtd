@@ -15,9 +15,9 @@
 using namespace audio_utils;
 
 LoudnessNormalizationHelper::LoudnessNormalizationHelper(double samplingFrequency) {
-	filter1 = createHighShelf(samplingFrequency);
-	filter2 = createHighPass(samplingFrequency);
-	filter3 = createLowPass(samplingFrequency);
+	filter1 = createFilter1(samplingFrequency);
+	filter2 = createFilter2(samplingFrequency);
+	filter3 = createFilter3(samplingFrequency);
 }
 
 void LoudnessNormalizationHelper::apply(array_view<float> wave) {
@@ -29,7 +29,7 @@ void LoudnessNormalizationHelper::apply(array_view<float> wave) {
 	filter3.apply(processed);
 }
 
-BiQuadIIR LoudnessNormalizationHelper::createHighShelf(double samplingFrequency) {
+BiQuadIIR LoudnessNormalizationHelper::createFilter1(double samplingFrequency) {
 	const double fc = 1681.9744509555319;
 	const double G = 3.99984385397;
 	const double Q = 0.7071752369554193;
@@ -37,14 +37,14 @@ BiQuadIIR LoudnessNormalizationHelper::createHighShelf(double samplingFrequency)
 	return BQFilterBuilder::createHighShelf(G, Q, fc, samplingFrequency);
 }
 
-BiQuadIIR LoudnessNormalizationHelper::createHighPass(double samplingFrequency) {
+BiQuadIIR LoudnessNormalizationHelper::createFilter2(double samplingFrequency) {
 	const double fc = 38.13547087613982;
 	const double Q = 0.5003270373253953;
 
 	return BQFilterBuilder::createHighPass(Q, fc, samplingFrequency);
 }
 
-BiQuadIIR LoudnessNormalizationHelper::createLowPass(double samplingFrequency) {
+BiQuadIIR LoudnessNormalizationHelper::createFilter3(double samplingFrequency) {
 	const double fc = 10'000;
 	const double Q = 2.0;
 
