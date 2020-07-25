@@ -83,6 +83,9 @@
     <ClCompile Include="sources\image-utils\WaveFormDrawer.cpp">
       <Filter>Source Files\image-utils</Filter>
     </ClCompile>
+    <ClCompile Include="sources\Math.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sources\BmpWriter.h">

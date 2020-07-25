@@ -21,6 +21,6 @@ namespace rxtd::utils {
 
 		static float fastSqrt(float value);
 
-		static double dbToGain(double value);
+		static double db2Gain(double value);
 	};
 }
