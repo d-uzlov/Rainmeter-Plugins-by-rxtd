@@ -193,7 +193,7 @@
     <ClInclude Include="sources\option-parser\OptionSequence.h" />
     <ClInclude Include="sources\option-parser\Tokenizer.h" />
     <ClInclude Include="sources\Vector2D.h" />
-    <ClInclude Include="sources\FastMath.h" />
+    <ClInclude Include="sources\Math.h" />
     <ClInclude Include="sources\MathExpressionParser.h" />
     <ClInclude Include="sources\my-windows.h" />
     <ClInclude Include="sources\RainmeterWrappers.h" />

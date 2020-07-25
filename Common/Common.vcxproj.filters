@@ -94,9 +94,6 @@
     <ClInclude Include="sources\Color.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="sources\FastMath.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="sources\RainmeterWrappers.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -192,6 +189,9 @@
     </ClInclude>
     <ClInclude Include="sources\image-utils\WaveFormDrawer.h">
       <Filter>Source Files\image-utils</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\Math.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -8,7 +8,7 @@
  */
 
 #include "legacy_LogarithmicValueMapper.h"
-#include "FastMath.h"
+#include "Math.h"
 #include "option-parser/OptionMap.h"
 
 #include "undef.h"
@@ -94,7 +94,7 @@ void legacy_LogarithmicValueMapper::transformToLog(const SoundHandler& source) {
 		for (index i = 0; i < values.size(); ++i) {
 			double value = values[i];
 
-			value = utils::FastMath::log2(float(value)) * log10inverse;
+			value = utils::Math::fastLog2(float(value)) * log10inverse;
 			value = value * logNormalization + 1.0;
 			value += params.offset;
 			resultValues[layer][i] = value;

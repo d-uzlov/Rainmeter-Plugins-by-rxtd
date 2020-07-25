@@ -8,7 +8,7 @@
  */
 
 #include "BandCascadeTransformer.h"
-#include "FastMath.h"
+#include "Math.h"
 #include "BandResampler.h"
 #include "option-parser/OptionMap.h"
 
@@ -223,7 +223,7 @@ void BandCascadeTransformer::updateValues(const SoundHandler& source, const Band
 
 		if (cascadesSummed > 0) {
 			if (params.mixFunction == MixFunction::PRODUCT) {
-				value = utils::FastMath::pow(value, 1.0 / cascadesSummed);
+				value = utils::Math::fastPow(value, 1.0 / cascadesSummed);
 			} else {
 				value /= cascadesSummed;
 			}

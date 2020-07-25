@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -10,9 +10,9 @@
 #pragma once
 
 namespace rxtd::utils {
-	class FastMath {
+	class Math {
 	public:
-		static double pow(double a, double b) {
+		static double fastPow(double a, double b) {
 			// https://martin.ankerl.com/2007/10/04/optimized-pow-approximation-for-java-and-c-c/
 
 			static_assert(sizeof(double) == 2 * sizeof(int32_t));
@@ -27,7 +27,7 @@ namespace rxtd::utils {
 			return u.d;
 		}
 
-		static float log2(float val) {
+		static float fastLog2(float val) {
 			// http://www.flipcode.com/archives/Fast_log_Function.shtml
 
 			static_assert(sizeof(float) == sizeof(uint32_t));
@@ -48,7 +48,7 @@ namespace rxtd::utils {
 			return u.fl + log_2;
 		}
 
-		static float sqrt(float value) {
+		static float fastSqrt(float value) {
 			// https://bits.stephan-brumme.com/squareRoot.html
 
 			static_assert(sizeof(float) == sizeof(uint32_t));
