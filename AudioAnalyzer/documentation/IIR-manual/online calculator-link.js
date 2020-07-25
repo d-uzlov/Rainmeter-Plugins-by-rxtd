@@ -157,7 +157,7 @@ function calcBiquad(type, Fc, Fs, Q, peakGain, plotType) {
 				b1 = 2 * (K * K - 1) * norm;
 				b2 = (1 - Math.SQRT2 * K + K * K) * norm;
 			}
-			else {	
+			else {
 				norm = 1 / (1 + Math.sqrt(2*V) * K + V * K * K);
 				a0 = (1 + Math.SQRT2 * K + K * K) * norm;
 				a1 = 2 * (K * K - 1) * norm;
@@ -175,7 +175,7 @@ function calcBiquad(type, Fc, Fs, Q, peakGain, plotType) {
                 b1 = 2 * (K * K - 1) * norm;
                 b2 = (1 - Math.SQRT2 * K + K * K) * norm;
             }
-            else {	
+            else {
                 norm = 1 / (V + Math.sqrt(2*V) * K + K * K);
                 a0 = (1 + Math.SQRT2 * K + K * K) * norm;
                 a1 = 2 * (K * K - 1) * norm;

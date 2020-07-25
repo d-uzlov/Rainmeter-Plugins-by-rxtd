@@ -8,69 +8,90 @@
  */
 
 #include "WeightingFilterBuilder.h"
+#include "Math.h"
 
 using namespace audio_utils;
 
-const static double pi = std::acos(-1.0);
-
 BiQuadIIR WeightingFilterBuilder::createKWHighShelf(double samplingFrequency) {
-	if (samplingFrequency == 0.0) {
-		return { };
-	}
-
-	// https://hydrogenaud.io/index.php?topic=86116.25
-	// V are gain values
-	// Q is a "magic number" that effects the shape of the filter
-	// Fc is the nominal cutoff frequency.
-	//    That is, it's the cutoff frequency as a percentage of the sampling rate,
-	//    and "pre-warped" with tan() to match the frequency warping done by the bilinear transform
-
 	const double fc = 1681.9744509555319;
 	const double G = 3.99984385397;
 	const double Q = 0.7071752369554193;
 
-	return createHighShelf_DeMan(G, Q, fc, samplingFrequency);
+	return createHighShelf(G, Q, fc, samplingFrequency);
 }
 
 BiQuadIIR WeightingFilterBuilder::createKWHighPass(double samplingFrequency) {
 	const double fc = 38.13547087613982;
 	const double Q = 0.5003270373253953;
 
-	return createHighPass_DeMan(Q, fc, samplingFrequency);
+	return createHighPass(Q, fc, samplingFrequency);
 }
 
-BiQuadIIR WeightingFilterBuilder::createHighShelf_DeMan(
+BiQuadIIR WeightingFilterBuilder::createHighShelf(
 	double dbGain,
-	double Q,
+	double q,
 	double centralFrequency,
 	double samplingFrequency) {
+	if (samplingFrequency == 0.0 || q == 0) {
+		return { };
+	}
 
-	const double K = std::tan(pi * centralFrequency / samplingFrequency);
-	const double Vh = std::pow(10.0, dbGain / 20.0);
-	const double Vb = std::pow(Vh, 0.499666774155);
+	const double a = std::pow(10, dbGain / 40);
+	const double w0 = 2 * utils::Math::pi * centralFrequency / samplingFrequency;
+	const double alpha = std::sin(w0) / (2 * q);
 
 	return {
-		1.0 + K / Q + K * K,
-		2.0 * (K * K - 1.0),
-		(1.0 - K / Q + K * K),
-		(Vh + Vb * K / Q + K * K),
-		2.0 * (K * K - Vh),
-		(Vh - Vb * K / Q + K * K)
+				  (a + 1) - (a - 1) * std::cos(w0) + 2 * std::sqrt(a) * alpha,
+			 2 * ((a - 1) - (a + 1) * std::cos(w0)),
+				  (a + 1) - (a - 1) * std::cos(w0) - 2 * std::sqrt(a) * alpha,
+			 a * ((a + 1) + (a - 1) * std::cos(w0) + 2 * std::sqrt(a) * alpha),
+		-2 * a * ((a - 1) + (a + 1) * std::cos(w0)),
+			 a * ((a + 1) + (a - 1) * std::cos(w0) - 2 * std::sqrt(a) * alpha),
 	};
 }
 
-BiQuadIIR WeightingFilterBuilder::createHighPass_DeMan(
-	double Q,
+BiQuadIIR WeightingFilterBuilder::createLowShelf(
+	double dbGain,
+	double q,
 	double centralFrequency,
 	double samplingFrequency) {
-	const double K = std::tan(pi * centralFrequency / samplingFrequency);
+	auto result = createHighShelf(-dbGain, q, centralFrequency, samplingFrequency);
+	result.addGain(dbGain);
+	return result;
+}
+
+BiQuadIIR WeightingFilterBuilder::createHighPass(double q, double centralFrequency, double samplingFrequency) {
+	if (samplingFrequency == 0.0 || q == 0) {
+		return { };
+	}
+
+	const double w0 = 2 * utils::Math::pi * centralFrequency / samplingFrequency;
+	const double alpha = std::sin(w0) / (2 * q);
 
 	return {
-		1.0,
-		2.0 * (K * K - 1.0) / (1.0 + K / Q + K * K),
-		(1.0 - K / Q + K * K) / (1.0 + K / Q + K * K),
-		1.0,
-		-2.0,
-		1.0
+		  1 + alpha,
+		 -2 * std::cos(w0),
+		  1 - alpha,
+		 (1 + std::cos(w0)) / 2,
+		-(1 + std::cos(w0)),
+		 (1 + std::cos(w0)) / 2,
+	};
+}
+
+BiQuadIIR WeightingFilterBuilder::createLowPass(double q, double centralFrequency, double samplingFrequency) {
+	if (samplingFrequency == 0.0 || q == 0) {
+		return { };
+	}
+
+	const double w0 = 2 * utils::Math::pi * centralFrequency / samplingFrequency;
+	const double alpha = std::sin(w0) / (2 * q);
+
+	return {
+		  1 + alpha,
+		 -2 * std::cos(w0),
+		  1 - alpha,
+		 (1 + std::cos(w0)) / 2,
+		 (1 + std::cos(w0)),
+		 (1 + std::cos(w0)) / 2,
 	};
 }
