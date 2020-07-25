@@ -28,5 +28,7 @@ namespace rxtd::audio_utils {
 		BiQuadIIR(double a0, double a1, double a2, double b0, double b1, double b2);
 
 		void apply(array_span<float> signal);
+
+		void addGain(double gainDB);
 	};
 }

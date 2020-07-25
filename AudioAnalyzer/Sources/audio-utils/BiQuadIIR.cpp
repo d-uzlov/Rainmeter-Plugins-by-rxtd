@@ -8,6 +8,7 @@
  */
 
 #include "BiQuadIIR.h"
+#include "Math.h"
 
 #include "undef.h"
 
@@ -31,4 +32,11 @@ void BiQuadIIR::apply(array_span<float> signal) {
 		state1 = b2 * value - a2 * valueFiltered;
 		value = valueFiltered;
 	}
+}
+
+void BiQuadIIR::addGain(double gainDB) {
+	const double gain = utils::Math::dbToGain(gainDB);
+	b0 *= gain;
+	b1 *= gain;
+	b2 *= gain;
 }
