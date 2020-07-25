@@ -10,7 +10,7 @@
 #pragma once
 #include <array>
 #include "RainmeterWrappers.h"
-#include "LogarithmicIRF.h"
+#include "filter-utils/LogarithmicIRF.h"
 #include "LinearInterpolator.h"
 #include "Vector2D.h"
 #include "array2d_view.h"

@@ -12,7 +12,7 @@
 #include "FftAnalyzer.h"
 #include "option-parser/OptionMap.h"
 
-#include "../../../audio-utils/BQFilterBuilder.h"
+#include "../../../audio-utils/filter-utils/BQFilterBuilder.h"
 #include "../../../audio-utils/RandomGenerator.h"
 
 #include "undef.h"

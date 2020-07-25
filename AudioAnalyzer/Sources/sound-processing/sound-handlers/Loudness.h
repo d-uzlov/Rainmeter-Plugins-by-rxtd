@@ -9,7 +9,7 @@
 
 #pragma once
 #include "BlockHandler.h"
-#include "../../audio-utils/BiQuadIIR.h"
+#include "../../audio-utils/filter-utils/BiQuadIIR.h"
 
 namespace rxtd::audio_analyzer {
 	class Loudness : public BlockHandler {

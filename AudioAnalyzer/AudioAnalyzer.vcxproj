@@ -144,15 +144,15 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="local-version.h" />
-    <ClInclude Include="Sources\audio-utils\BiQuadIIR.h" />
     <ClInclude Include="Sources\audio-utils\CustomizableValueTransformer.h" />
     <ClInclude Include="Sources\audio-utils\FFT.h" />
     <ClInclude Include="Sources\audio-utils\FftCascade.h" />
-    <ClInclude Include="Sources\audio-utils\InfiniteResponseFilter.h" />
+    <ClInclude Include="Sources\audio-utils\filter-utils\BiQuadIIR.h" />
+    <ClInclude Include="Sources\audio-utils\filter-utils\BQFilterBuilder.h" />
+    <ClInclude Include="Sources\audio-utils\filter-utils\InfiniteResponseFilter.h" />
+    <ClInclude Include="Sources\audio-utils\filter-utils\LogarithmicIRF.h" />
     <ClInclude Include="Sources\audio-utils\kiss_fft\KissFft.hh" />
-    <ClInclude Include="Sources\audio-utils\LogarithmicIRF.h" />
     <ClInclude Include="Sources\audio-utils\RandomGenerator.h" />
-    <ClInclude Include="Sources\audio-utils\BQFilterBuilder.h" />
     <ClInclude Include="Sources\AudioChild.h" />
     <ClInclude Include="Sources\AudioParent.h" />
     <ClInclude Include="Sources\ParamParser.h" />
@@ -192,13 +192,13 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Test|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Sources\audio-utils\BiQuadIIR.cpp" />
     <ClCompile Include="Sources\audio-utils\CustomizableValueTransformer.cpp" />
     <ClCompile Include="Sources\audio-utils\FFT.cpp" />
     <ClCompile Include="Sources\audio-utils\FftCascade.cpp" />
-    <ClCompile Include="Sources\audio-utils\InfiniteResponseFilter.cpp" />
-    <ClCompile Include="Sources\audio-utils\LogarithmicIRF.cpp" />
-    <ClCompile Include="Sources\audio-utils\BQFilterBuilder.cpp" />
+    <ClCompile Include="Sources\audio-utils\filter-utils\BiQuadIIR.cpp" />
+    <ClCompile Include="Sources\audio-utils\filter-utils\BQFilterBuilder.cpp" />
+    <ClCompile Include="Sources\audio-utils\filter-utils\InfiniteResponseFilter.cpp" />
+    <ClCompile Include="Sources\audio-utils\filter-utils\LogarithmicIRF.cpp" />
     <ClCompile Include="Sources\AudioChild.cpp" />
     <ClCompile Include="Sources\dllmain.cpp" />
     <ClCompile Include="Sources\AudioParent.cpp" />

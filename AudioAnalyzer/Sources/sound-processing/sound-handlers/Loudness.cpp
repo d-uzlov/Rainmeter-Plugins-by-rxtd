@@ -8,7 +8,7 @@
  */
 
 #include "Loudness.h"
-#include "../../audio-utils/BQFilterBuilder.h"
+#include "../../audio-utils/filter-utils/BQFilterBuilder.h"
 
 #include "undef.h"
 
