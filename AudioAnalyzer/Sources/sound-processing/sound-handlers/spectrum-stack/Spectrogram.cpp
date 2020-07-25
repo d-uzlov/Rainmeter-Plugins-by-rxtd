@@ -21,11 +21,8 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-std::optional<Spectrogram::Params> Spectrogram::parseParams(
-	const utils::OptionMap& optionMap,
-	utils::Rainmeter::Logger& cl,
-	const utils::Rainmeter& rain
-) {
+std::optional<Spectrogram::Params>
+Spectrogram::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain) {
 	Params params;
 
 	params.sourceName = optionMap.get(L"source"sv).asIString();

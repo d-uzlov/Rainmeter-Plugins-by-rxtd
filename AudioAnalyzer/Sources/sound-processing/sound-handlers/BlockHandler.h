@@ -70,7 +70,7 @@ namespace rxtd::audio_analyzer {
 
 		bool getProp(const isview& prop, utils::BufferPrinter& printer) const override;
 
-		static std::optional<Params> parseParams(const utils::OptionMap& optionMap, utils::Rainmeter::Logger& cl);
+		static std::optional<Params> parseParams(const OptionMap& optionMap, Logger& cl);
 
 	protected:
 		void setNextValue(double value);

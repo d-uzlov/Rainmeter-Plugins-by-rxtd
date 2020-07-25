@@ -17,10 +17,8 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-std::optional<SingleValueTransformer::Params> SingleValueTransformer::parseParams(
-	const utils::OptionMap& optionMap,
-	utils::Rainmeter::Logger& cl
-) {
+std::optional<SingleValueTransformer::Params>
+SingleValueTransformer::parseParams(const OptionMap& optionMap, Logger& cl) {
 	Params params;
 
 	params.sourceId = optionMap.get(L"source"sv).asIString();
@@ -35,7 +33,7 @@ std::optional<SingleValueTransformer::Params> SingleValueTransformer::parseParam
 }
 
 void SingleValueTransformer::setParams(Params _params, Channel channel) {
-	if (this->params == _params) {
+	if (params == _params) {
 		return;
 	}
 

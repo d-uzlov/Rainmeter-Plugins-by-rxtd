@@ -12,9 +12,16 @@
 #include "StringUtils.h"
 #include "array_view.h"
 #include "BufferPrinter.h"
+#include "RainmeterWrappers.h"
 
 namespace rxtd::audio_analyzer {
 	class SoundHandler {
+	protected:
+		using OptionMap = utils::OptionMap;
+		using Rainmeter = utils::Rainmeter;
+		using Logger = utils::Rainmeter::Logger;
+
+	private:
 		mutable bool valid = true;
 
 	public:

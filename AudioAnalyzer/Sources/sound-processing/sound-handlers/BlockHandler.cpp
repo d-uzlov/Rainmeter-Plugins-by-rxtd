@@ -18,10 +18,7 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-std::optional<BlockHandler::Params> BlockHandler::parseParams(
-	const utils::OptionMap& optionMap,
-	utils::Rainmeter::Logger& cl
-) {
+std::optional<BlockHandler::Params> BlockHandler::parseParams(const OptionMap& optionMap, Logger& cl) {
 	Params params;
 
 	params.resolution = optionMap.get(L"resolution"sv).asFloat(1000.0 / 60.0);

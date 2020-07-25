@@ -21,10 +21,7 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(
-	const utils::OptionMap& optionMap,
-	utils::Rainmeter::Logger& cl
-) {
+std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(const OptionMap& optionMap, Logger& cl) {
 	Params params{ };
 
 	if (optionMap.has(L"attack") || optionMap.has(L"decay")) {
@@ -163,17 +160,17 @@ array_view<float> FftAnalyzer::getData(layer_t layer) const {
 
 void FftAnalyzer::processRandom(index waveSize) {
 	audio_utils::RandomGenerator random;
-	
+
 	std::vector<float> wave;
 	wave.resize(waveSize);
-	
+
 	for (index i = 0; i < waveSize; ++i) {
 		if (randomState == RandomState::ON) {
 			wave.push_back(random.next() * params.randomTest);
 		} else {
 			wave.push_back(0.0f);
 		}
-	
+
 		randomCurrentOffset++;
 		if (randomCurrentOffset == randomBlockSize) {
 			randomCurrentOffset = 0;
@@ -184,7 +181,7 @@ void FftAnalyzer::processRandom(index waveSize) {
 			}
 		}
 	}
-	
+
 	if (params.correctLoudness) {
 		preprocessWave(wave);
 	}

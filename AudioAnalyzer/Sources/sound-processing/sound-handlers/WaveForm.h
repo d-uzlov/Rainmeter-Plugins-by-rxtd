@@ -69,6 +69,7 @@ namespace rxtd::audio_analyzer {
 
 		public:
 			WaveformValueTransformer() = default;
+
 			WaveformValueTransformer(CVT cvt) : cvt(std::move(cvt)) {
 			}
 
@@ -90,23 +91,19 @@ namespace rxtd::audio_analyzer {
 		double max{ };
 		bool changed = false;
 
-		WaveformValueTransformer minTransformer { };
-		WaveformValueTransformer maxTransformer { };
-		double minDistinguishableValue { };
+		WaveformValueTransformer minTransformer{ };
+		WaveformValueTransformer maxTransformer{ };
+		double minDistinguishableValue{ };
 
 		utils::WaveFormDrawer drawer{ };
-		utils::ImageWriteHelper writerHelper { };
+		utils::ImageWriteHelper writerHelper{ };
 
 		string filepath{ };
 
 	public:
 		void setParams(const Params& _params, Channel channel);
 
-		static std::optional<Params> parseParams(
-			const utils::OptionMap& optionMap,
-			utils::Rainmeter::Logger& cl,
-			const utils::Rainmeter& rain
-		);
+		static std::optional<Params> parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain);
 
 		void setSamplesPerSec(index samplesPerSec) override;
 		void reset() override;

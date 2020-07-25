@@ -18,11 +18,8 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-std::optional<BandResampler::Params> BandResampler::parseParams(
-	const utils::OptionMap& optionMap,
-	utils::Rainmeter::Logger& cl,
-	utils::Rainmeter& rain
-) {
+std::optional<BandResampler::Params>
+BandResampler::parseParams(const OptionMap& optionMap, Logger& cl, Rainmeter& rain) {
 	Params params;
 	params.fftId = optionMap.get(L"source"sv).asIString();
 	if (params.fftId.empty()) {
@@ -194,7 +191,7 @@ void BandResampler::sampleData(const FftAnalyzer& source) {
 	double binWidth = static_cast<double>(samplesPerSec) / (source.getFftSize() * std::pow(2, startCascade));
 
 	for (auto cascade = startCascade; cascade < endCascade; ++cascade) {
-		
+
 		const auto fftData = source.getData(cascade);
 
 		auto& cascadeMagnitudes = cascadesInfo[cascade - startCascade].magnitudes;
@@ -205,7 +202,7 @@ void BandResampler::sampleData(const FftAnalyzer& source) {
 		} else {
 			sampleCascade(fftData, cascadeMagnitudes, binWidth, fftBinsCount);
 		}
-		
+
 		binWidth *= 0.5;
 	}
 
@@ -219,7 +216,8 @@ void BandResampler::sampleData(const FftAnalyzer& source) {
 	}
 }
 
-void BandResampler::sampleCascade(array_view<float> fftData, array_span<float> result, double binWidth, index fftBinsCount) {
+void BandResampler::sampleCascade(array_view<float> fftData, array_span<float> result, double binWidth,
+                                  index fftBinsCount) {
 	const double binWidthInverse = 1.0 / binWidth;
 
 	index bin = params.includeDC ? 0 : 1; // bin 0 is DC
@@ -268,7 +266,8 @@ void BandResampler::sampleCascade(array_view<float> fftData, array_span<float> r
 	}
 }
 
-void BandResampler::sampleCascadeByDistance(array_view<float> fftData, array_span<float> result, double binWidth, index fftBinsCount) {
+void BandResampler::sampleCascadeByDistance(array_view<float> fftData, array_span<float> result, double binWidth,
+                                            index fftBinsCount) {
 	const double binWidthInverse = 1.0 / binWidth;
 
 	index bin = params.includeDC ? 0 : 1; // bin 0 is DC
@@ -433,7 +432,7 @@ void BandResampler::computeCascadesInfo(index fftSize, index cascadesCount) {
 	const auto fftBinsCount = fftSize / 2;
 	double binWidth = static_cast<double>(samplesPerSec) / (fftSize * std::pow(2, startCascade));
 
-	for (auto&[_, cascadeWeights] : cascadesInfo) {
+	for (auto& [_, cascadeWeights] : cascadesInfo) {
 		calculateCascadeWeights(cascadeWeights, fftBinsCount, binWidth);
 		binWidth *= 0.5;
 	}

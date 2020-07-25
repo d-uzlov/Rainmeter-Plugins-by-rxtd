@@ -17,10 +17,8 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-std::optional<legacy_FiniteTimeFilter::Params> legacy_FiniteTimeFilter::parseParams(
-	const utils::OptionMap& optionMap,
-	utils::Rainmeter::Logger& cl
-) {
+std::optional<legacy_FiniteTimeFilter::Params>
+legacy_FiniteTimeFilter::parseParams(const OptionMap& optionMap, Logger& cl) {
 	Params params;
 	params.sourceId = optionMap.get(L"source"sv).asIString();
 	if (params.sourceId.empty()) {

@@ -17,6 +17,30 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
+std::optional<WeightedBlur::Params> WeightedBlur::parseParams(const OptionMap& optionMap, Logger& cl) {
+	Params params;
+	params.sourceId = optionMap.get(L"source"sv).asIString();
+	if (params.sourceId.empty()) {
+		cl.error(L"source not found");
+		return std::nullopt;
+	}
+
+	//                                                                      ?? ↓↓ looks best ?? at 0.25 ↓↓ ?? // TODO
+	params.radiusMultiplier = std::max<double>(optionMap.get(L"radiusMultiplier"sv).asFloat(1.0) * 0.25, 0.0);
+
+	params.minRadius = std::max<double>(optionMap.get(L"minRadius"sv).asFloat(1.0), 0.0);
+	params.maxRadius = std::max<double>(optionMap.get(L"maxRadius"sv).asFloat(20.0), params.minRadius);
+
+	params.minRadiusAdaptation = std::max<double>(optionMap.get(L"MinRadiusAdaptation"sv).asFloat(2.0), 0.0);
+	params.maxRadiusAdaptation = std::max<double>(
+		optionMap.get(L"MaxRadiusAdaptation"sv).asFloat(params.minRadiusAdaptation), 0.0);
+
+	// params.minWeight = std::max<double>(optionMap.get(L"minWeight"sv).asFloat(0), std::numeric_limits<float>::epsilon());
+	params.minWeight = 0.0; // doesn't work as expected
+
+	return params;
+}
+
 const std::vector<double>& WeightedBlur::GaussianCoefficientsManager::forSigma(double sigma) {
 	const auto radius = std::clamp<index>(std::lround(sigma * 3.0), minRadius, maxRadius);
 
@@ -65,33 +89,6 @@ std::vector<double> WeightedBlur::GaussianCoefficientsManager::generateGaussianK
 	}
 
 	return kernel;
-}
-
-std::optional<WeightedBlur::Params> WeightedBlur::parseParams(
-	const utils::OptionMap& optionMap,
-	utils::Rainmeter::Logger& cl
-) {
-	Params params;
-	params.sourceId = optionMap.get(L"source"sv).asIString();
-	if (params.sourceId.empty()) {
-		cl.error(L"source not found");
-		return std::nullopt;
-	}
-
-	//                                                                      ?? ↓↓ looks best ?? at 0.25 ↓↓ ?? // TODO
-	params.radiusMultiplier = std::max<double>(optionMap.get(L"radiusMultiplier"sv).asFloat(1.0) * 0.25, 0.0);
-
-	params.minRadius = std::max<double>(optionMap.get(L"minRadius"sv).asFloat(1.0), 0.0);
-	params.maxRadius = std::max<double>(optionMap.get(L"maxRadius"sv).asFloat(20.0), params.minRadius);
-
-	params.minRadiusAdaptation = std::max<double>(optionMap.get(L"MinRadiusAdaptation"sv).asFloat(2.0), 0.0);
-	params.maxRadiusAdaptation = std::max<double>(
-		optionMap.get(L"MaxRadiusAdaptation"sv).asFloat(params.minRadiusAdaptation), 0.0);
-
-	// params.minWeight = std::max<double>(optionMap.get(L"minWeight"sv).asFloat(0), std::numeric_limits<float>::epsilon());
-	params.minWeight = 0.0; // doesn't work as expected
-
-	return params;
 }
 
 void WeightedBlur::setParams(Params _params, Channel channel) {

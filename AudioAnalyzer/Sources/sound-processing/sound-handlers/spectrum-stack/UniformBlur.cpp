@@ -17,6 +17,21 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
+std::optional<UniformBlur::Params> UniformBlur::parseParams(const OptionMap& optionMap, Logger& cl) {
+	Params params;
+	params.source = optionMap.get(L"source"sv).asIString();
+	if (params.source.empty()) {
+		cl.error(L"source not found");
+		return std::nullopt;
+	}
+
+	//                                                        ?? ↓↓ looks best ?? at 0.25 ↓↓ ?? // TODO
+	params.blurRadius = std::max<double>(optionMap.get(L"Radius"sv).asFloat(1.0) * 0.25, 0.0);
+	params.blurRadiusAdaptation = std::max<double>(optionMap.get(L"RadiusAdaptation"sv).asFloat(2.0), 0.0);
+
+	return params;
+}
+
 const std::vector<double>& UniformBlur::GaussianCoefficientsManager::forRadius(index radius) {
 	auto& vec = blurCoefficients[radius];
 	if (!vec.empty()) {
@@ -48,24 +63,6 @@ std::vector<double> UniformBlur::GaussianCoefficientsManager::generateGaussianKe
 	}
 
 	return kernel;
-}
-
-std::optional<UniformBlur::Params> UniformBlur::parseParams(
-	const utils::OptionMap& optionMap,
-	utils::Rainmeter::Logger& cl
-) {
-	Params params;
-	params.source = optionMap.get(L"source"sv).asIString();
-	if (params.source.empty()) {
-		cl.error(L"source not found");
-		return std::nullopt;
-	}
-
-	//                                                        ?? ↓↓ looks best ?? at 0.25 ↓↓ ?? // TODO
-	params.blurRadius = std::max<double>(optionMap.get(L"Radius"sv).asFloat(1.0) * 0.25, 0.0);
-	params.blurRadiusAdaptation = std::max<double>(optionMap.get(L"RadiusAdaptation"sv).asFloat(2.0), 0.0);
-
-	return params;
 }
 
 void UniformBlur::setParams(Params _params, Channel channel) {
