@@ -35,7 +35,7 @@ void BiQuadIIR::apply(array_span<float> signal) {
 }
 
 void BiQuadIIR::addGain(double gainDB) {
-	const double gain = utils::Math::db2Gain(gainDB);
+	const double gain = utils::Math::db2amplitude(gainDB);
 	b0 *= gain;
 	b1 *= gain;
 	b2 *= gain;

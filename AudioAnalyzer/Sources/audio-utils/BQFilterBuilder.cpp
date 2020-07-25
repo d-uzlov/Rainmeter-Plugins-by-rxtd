@@ -7,12 +7,12 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include "WeightingFilterBuilder.h"
+#include "BQFilterBuilder.h"
 #include "Math.h"
 
 using namespace audio_utils;
 
-BiQuadIIR WeightingFilterBuilder::createKWHighShelf(double samplingFrequency) {
+BiQuadIIR BQFilterBuilder::createKWHighShelf(double samplingFrequency) {
 	const double fc = 1681.9744509555319;
 	const double G = 3.99984385397;
 	const double Q = 0.7071752369554193;
@@ -20,18 +20,14 @@ BiQuadIIR WeightingFilterBuilder::createKWHighShelf(double samplingFrequency) {
 	return createHighShelf(G, Q, fc, samplingFrequency);
 }
 
-BiQuadIIR WeightingFilterBuilder::createKWHighPass(double samplingFrequency) {
+BiQuadIIR BQFilterBuilder::createKWHighPass(double samplingFrequency) {
 	const double fc = 38.13547087613982;
 	const double Q = 0.5003270373253953;
 
 	return createHighPass(Q, fc, samplingFrequency);
 }
 
-BiQuadIIR WeightingFilterBuilder::createHighShelf(
-	double dbGain,
-	double q,
-	double centralFrequency,
-	double samplingFrequency) {
+BiQuadIIR BQFilterBuilder::createHighShelf(double dbGain, double q, double centralFrequency, double samplingFrequency) {
 	if (samplingFrequency == 0.0 || q == 0) {
 		return { };
 	}
@@ -50,17 +46,13 @@ BiQuadIIR WeightingFilterBuilder::createHighShelf(
 	};
 }
 
-BiQuadIIR WeightingFilterBuilder::createLowShelf(
-	double dbGain,
-	double q,
-	double centralFrequency,
-	double samplingFrequency) {
+BiQuadIIR BQFilterBuilder::createLowShelf(double dbGain, double q, double centralFrequency, double samplingFrequency) {
 	auto result = createHighShelf(-dbGain, q, centralFrequency, samplingFrequency);
 	result.addGain(dbGain);
 	return result;
 }
 
-BiQuadIIR WeightingFilterBuilder::createHighPass(double q, double centralFrequency, double samplingFrequency) {
+BiQuadIIR BQFilterBuilder::createHighPass(double q, double centralFrequency, double samplingFrequency) {
 	if (samplingFrequency == 0.0 || q == 0) {
 		return { };
 	}
@@ -78,7 +70,7 @@ BiQuadIIR WeightingFilterBuilder::createHighPass(double q, double centralFrequen
 	};
 }
 
-BiQuadIIR WeightingFilterBuilder::createLowPass(double q, double centralFrequency, double samplingFrequency) {
+BiQuadIIR BQFilterBuilder::createLowPass(double q, double centralFrequency, double samplingFrequency) {
 	if (samplingFrequency == 0.0 || q == 0) {
 		return { };
 	}

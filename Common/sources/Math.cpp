@@ -64,6 +64,6 @@ float utils::Math::fastSqrt(float value) {
 	return u.f;
 }
 
-double utils::Math::db2Gain(double value) {
+double utils::Math::db2amplitude(double value) {
 	return std::pow(10.0, value / 20.0);
 }

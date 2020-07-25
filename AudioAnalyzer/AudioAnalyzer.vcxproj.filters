@@ -140,10 +140,10 @@
     <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\ResamplerProvider.h">
       <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\audio-utils\WeightingFilterBuilder.h">
+    <ClInclude Include="Sources\audio-utils\BiQuadIIR.h">
       <Filter>Source Files\audio-utils</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\audio-utils\BiQuadIIR.h">
+    <ClInclude Include="Sources\audio-utils\BQFilterBuilder.h">
       <Filter>Source Files\audio-utils</Filter>
     </ClInclude>
   </ItemGroup>
@@ -244,10 +244,10 @@
     <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\ResamplerProvider.cpp">
       <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\audio-utils\WeightingFilterBuilder.cpp">
+    <ClCompile Include="Sources\audio-utils\BiQuadIIR.cpp">
       <Filter>Source Files\audio-utils</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\audio-utils\BiQuadIIR.cpp">
+    <ClCompile Include="Sources\audio-utils\BQFilterBuilder.cpp">
       <Filter>Source Files\audio-utils</Filter>
     </ClCompile>
   </ItemGroup>

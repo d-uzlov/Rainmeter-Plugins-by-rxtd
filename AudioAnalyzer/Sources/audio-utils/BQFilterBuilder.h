@@ -11,7 +11,7 @@
 #include "BiQuadIIR.h"
 
 namespace rxtd::audio_utils {
-	class WeightingFilterBuilder {
+	class BQFilterBuilder {
 	public:
 		static BiQuadIIR createKWHighShelf(double samplingFrequency);
 		static BiQuadIIR createKWHighPass(double samplingFrequency);
