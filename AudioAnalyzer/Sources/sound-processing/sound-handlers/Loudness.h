@@ -9,7 +9,7 @@
 
 #pragma once
 #include "BlockHandler.h"
-#include "../../audio-utils/filter-utils/BiQuadIIR.h"
+#include "../../audio-utils/filter-utils/LoudnessNormalizationHelper.h"
 
 namespace rxtd::audio_analyzer {
 	class Loudness : public BlockHandler {
@@ -20,11 +20,9 @@ namespace rxtd::audio_analyzer {
 		//   https://github.com/BrechtDeMan/loudness.py/blob/master/loudness.py
 		//   https://hydrogenaud.io/index.php?topic=86116.25
 
-		audio_utils::BiQuadIIR highShelfFilter{ };
-		audio_utils::BiQuadIIR highPassFilter{ };
+		audio_utils::LoudnessNormalizationHelper lnh{ };
 
 		double intermediateRmsResult = 0.0;
-		std::vector<float> intermediateWave{ };
 
 	public:
 		void _process(array_view<float> wave, float average) override;
@@ -34,8 +32,5 @@ namespace rxtd::audio_analyzer {
 		void _reset() override;
 		void finishBlock() override;
 		sview getDefaultTransform() override;
-
-	private:
-		void preprocessWave(array_span<float> wave);
 	};
 }

@@ -12,7 +12,7 @@
 #include "RainmeterWrappers.h"
 #include "../../../audio-utils/FFT.h"
 #include "../../../audio-utils/FftCascade.h"
-#include "../../../audio-utils/filter-utils/BiQuadIIR.h"
+#include "../../../audio-utils/filter-utils/LoudnessNormalizationHelper.h"
 
 namespace rxtd::audio_analyzer {
 	class FftAnalyzer : public SoundHandler {
@@ -77,12 +77,9 @@ namespace rxtd::audio_analyzer {
 		enum class RandomState { ON, OFF } randomState{ RandomState::ON };
 
 		std::vector<audio_utils::FftCascade> cascades{ };
-		audio_utils::BiQuadIIR highShelfFilter { };
-		audio_utils::BiQuadIIR highPassFilter { };
+		audio_utils::LoudnessNormalizationHelper lnh{ };
 
 		audio_utils::FFT fft{ };
-
-		std::vector<float> waveBuffer;
 
 	public:
 		FftAnalyzer() = default;
@@ -116,8 +113,6 @@ namespace rxtd::audio_analyzer {
 		void setParams(Params params, Channel channel);
 
 	private:
-		void preprocessWave(array_span<float> wave);
-
 		void processRandom(index waveSize);
 
 		void updateParams();

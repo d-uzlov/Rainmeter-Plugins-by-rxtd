@@ -13,9 +13,6 @@
 namespace rxtd::audio_utils {
 	class BQFilterBuilder {
 	public:
-		static BiQuadIIR createKWHighShelf(double samplingFrequency);
-		static BiQuadIIR createKWHighPass(double samplingFrequency);
-
 		static BiQuadIIR createHighShelf(double dbGain, double q, double centralFrequency, double samplingFrequency);
 		static BiQuadIIR createLowShelf(double dbGain, double q, double centralFrequency, double samplingFrequency);
 

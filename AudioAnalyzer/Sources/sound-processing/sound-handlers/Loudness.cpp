@@ -8,7 +8,6 @@
  */
 
 #include "Loudness.h"
-#include "../../audio-utils/filter-utils/BQFilterBuilder.h"
 
 #include "undef.h"
 
@@ -18,8 +17,7 @@ using namespace std::literals::string_view_literals;
 using namespace audio_analyzer;
 
 void Loudness::_setSamplesPerSec(index samplesPerSec) {
-	highShelfFilter = audio_utils::BQFilterBuilder::createKWHighShelf(samplesPerSec);
-	highPassFilter = audio_utils::BQFilterBuilder::createKWHighPass(samplesPerSec);
+	lnh = { double(samplesPerSec) };
 }
 
 void Loudness::_reset() {
@@ -28,12 +26,9 @@ void Loudness::_reset() {
 }
 
 void Loudness::_process(array_view<float> wave, float average) {
-	intermediateWave.resize(wave.size());
-	std::copy(wave.begin(), wave.end(), intermediateWave.begin());
+	lnh.apply(wave);
 
-	preprocessWave(intermediateWave);
-
-	for (double x : intermediateWave) {
+	for (double x : lnh.getProcessed()) {
 		intermediateRmsResult += x * x;
 		counter++;
 		if (counter >= getBlockSize()) {
@@ -55,9 +50,4 @@ void Loudness::finishBlock() {
 
 sview Loudness::getDefaultTransform() {
 	return L"db map[-70 + 0.691, 0.691][0, 1] clamp[0, 1] filter[100, 500]"sv;
-}
-
-void Loudness::preprocessWave(array_span<float> wave) {
-	highShelfFilter.apply(wave);
-	highPassFilter.apply(wave);
 }

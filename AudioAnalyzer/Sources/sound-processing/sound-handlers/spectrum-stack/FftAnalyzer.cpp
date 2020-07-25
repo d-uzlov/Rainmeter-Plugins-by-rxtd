@@ -118,10 +118,8 @@ void FftAnalyzer::_process(const DataSupplier& dataSupplier) {
 	if (params.randomTest != 0.0) {
 		processRandom(wave.size());
 	} else if (params.correctLoudness) {
-		waveBuffer.resize(wave.size());
-		std::copy(wave.begin(), wave.end(), waveBuffer.begin());
-		preprocessWave(waveBuffer);
-		cascades[0].process(waveBuffer);
+		lnh.apply(wave);
+		cascades[0].process(lnh.getProcessed());
 	} else {
 		cascades[0].process(wave);
 	}
@@ -183,9 +181,11 @@ void FftAnalyzer::processRandom(index waveSize) {
 	}
 
 	if (params.correctLoudness) {
-		preprocessWave(wave);
+		lnh.apply(wave);
+		cascades[0].process(lnh.getProcessed());
+	} else {
+		cascades[0].process(wave);
 	}
-	cascades[0].process(wave);
 }
 
 void FftAnalyzer::setSamplesPerSec(index samplesPerSec) {
@@ -195,8 +195,7 @@ void FftAnalyzer::setSamplesPerSec(index samplesPerSec) {
 
 	this->samplesPerSec = samplesPerSec;
 
-	highShelfFilter = audio_utils::BQFilterBuilder::createKWHighShelf(samplesPerSec);
-	highPassFilter = audio_utils::BQFilterBuilder::createKWHighPass(samplesPerSec);
+	lnh = { double(samplesPerSec) };
 
 	updateParams();
 }
@@ -273,11 +272,6 @@ void FftAnalyzer::setParams(Params params, Channel channel) {
 	this->params = params;
 
 	updateParams();
-}
-
-void FftAnalyzer::preprocessWave(array_span<float> wave) {
-	highShelfFilter.apply(wave);
-	highPassFilter.apply(wave);
 }
 
 void FftAnalyzer::updateParams() {
