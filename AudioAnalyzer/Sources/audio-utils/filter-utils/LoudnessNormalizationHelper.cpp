@@ -9,6 +9,7 @@
 
 #include "LoudnessNormalizationHelper.h"
 #include "FilterCascadeParser.h"
+#include "option-parser/OptionSequence.h"
 
 #include "undef.h"
 

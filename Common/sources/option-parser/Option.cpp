@@ -127,21 +127,19 @@ OptionList Option::asList(wchar_t delimiter) && {
 
 OptionSequence Option::asSequence(
 	wchar_t optionBegin, wchar_t optionEnd,
-	wchar_t paramDelimiter,
 	wchar_t optionDelimiter
 ) const & {
-	return { getView(), { }, optionBegin, optionEnd, paramDelimiter, optionDelimiter };
+	return { getView(), { }, optionBegin, optionEnd, optionDelimiter };
 }
 
 OptionSequence Option::asSequence(
 	wchar_t optionBegin, wchar_t optionEnd,
-	wchar_t paramDelimiter,
 	wchar_t optionDelimiter
 ) && {
 	// if this option owns a string, then view points to it, and .consumeSource() destroys it
 	// so we need to everything we want with the view before calling .consumeSource()
 	const sview view = getView();
-	return { view, std::move(*this).consumeSource(), optionBegin, optionEnd, paramDelimiter, optionDelimiter };
+	return { view, std::move(*this).consumeSource(), optionBegin, optionEnd, optionDelimiter };
 }
 
 bool Option::empty() const {

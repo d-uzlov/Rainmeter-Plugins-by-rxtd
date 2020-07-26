@@ -25,6 +25,7 @@
 
 #include "option-parser/OptionMap.h"
 #include "option-parser/OptionList.h"
+#include "option-parser/OptionSequence.h"
 
 #include "undef.h"
 
@@ -116,11 +117,15 @@ std::optional<ParamParser::ProcessingData> ParamParser::parseProcessing(sview na
 		ffc = { };
 	} else if (filterDescription.asIString() == L"replayGain-like") {
 		ffc = audio_utils::FilterCascadeParser::parse(
-			utils::Option{ L"bqHighPass[0.5, 310] bqPeak[4, 1125, -4.1] bqPeak[4.0, 2665, 5.5] bwLowPass[5, 20000]" }
-			.asSequence()
+			utils::Option{
+				L"bqHighPass[q 0.5, freq 310] " // spaces in the ends of strings are necessary
+				L"bqPeak[q 4.0, freq 1125, gain -4.1] "
+				L"bqPeak[q 4.0, freq 2665, gain 5.5] "
+				L"bwLowPass[order 5, freq 20000] "
+			}.asSequence()
 		);
 	} else {
-		auto[name, desc] = filterDescription.breakFirst(' ');
+		auto [name, desc] = filterDescription.breakFirst(' ');
 		if (name.asIString() == L"custom") {
 			ffc = audio_utils::FilterCascadeParser::parse(desc.asSequence());
 		} else {

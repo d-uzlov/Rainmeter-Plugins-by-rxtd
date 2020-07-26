@@ -65,12 +65,10 @@ namespace rxtd::utils {
 		OptionList asList(wchar_t delimiter) &&;
 		OptionSequence asSequence(
 			wchar_t optionBegin = L'[', wchar_t optionEnd = L']',
-			wchar_t paramDelimiter = L',',
 			wchar_t optionDelimiter = L' '
 		) const &;
 		OptionSequence asSequence(
 			wchar_t optionBegin = L'[', wchar_t optionEnd = L']',
-			wchar_t paramDelimiter = L',',
 			wchar_t optionDelimiter = L' '
 		) &&;
 

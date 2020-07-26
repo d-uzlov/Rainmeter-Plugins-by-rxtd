@@ -10,6 +10,7 @@
 #include "CustomizableValueTransformer.h"
 #include "option-parser/OptionList.h"
 #include "option-parser/OptionSequence.h"
+#include "option-parser/OptionMap.h"
 
 #include "undef.h"
 
@@ -143,63 +144,63 @@ std::optional<TransformationParser::Transformation> TransformationParser::parseT
 ) {
 	const auto transformName = list.get(0).asIString();
 	Transformation tr{ };
-	const index paramCount = list.size() - 1;
+
+	utils::OptionMap params;
+	if (list.size() >= 2) {
+		params = list.get(1).asMap(L',', L' ');
+	}
 
 	if (transformName == L"filter") {
 		tr.type = TransformType::eFILTER;
 
-		if (paramCount == 0 || paramCount > 2) {
-			cl.error(L"must have 1 or 2 parameters but {} found", paramCount);
-			return std::nullopt;
-		}
-		tr.args[0] = list.get(1).asFloat();
-		tr.args[1] = paramCount == 1 ? tr.args[0] : list.get(2).asFloat(tr.args[0]);
+		tr.args[0] = params.get(L"a").asFloat();
+		tr.args[1] = params.get(L"d").asFloat(tr.args[0]);
 	} else if (transformName == L"db") {
 		tr.type = TransformType::eDB;
-
-		if (paramCount != 0) {
-			cl.error(L"must have 0 parameters but {} found", paramCount);
-			return std::nullopt;
-		}
 	} else if (transformName == L"map") {
 		tr.type = TransformType::eMAP;
 
-		std::array<double, 4> args{ };
-		if (paramCount == 2) {
-			args[2] = 0.0;
-			args[3] = 1.0;
-		} else if (paramCount == 4) {
-			for (int i = 1; i < list.size(); ++i) {
-				args[i - 1] = list.get(i).asFloat();
+		double linMin;
+		double linMax;
+		if (params.has(L"from")) {
+			auto range = params.get(L"from").asList(L';');
+			if (range.size() != 2) {
+				cl.error(L"need 2 params for source range but {} found", range.size());
+				return std::nullopt;
+			}
+			linMin = range.get(0).asFloat();
+			linMax = range.get(1).asFloat();
+
+			if (std::abs(linMin - linMax) < std::numeric_limits<float>::epsilon()) {
+				cl.error(L"source range is too small: {} and {}", linMin, linMax);
+				return std::nullopt;
 			}
 		} else {
-			cl.error(L"must have 2 or 4 parameters but {} found", paramCount);
+			cl.error(L"source range is not found");
 			return std::nullopt;
 		}
+		double valMin = 0.0;
+		double valMax = 1.0;
 
-		if (std::abs(args[0] - args[1]) < std::numeric_limits<float>::epsilon()) {
-			cl.error(L"first 2 parameters are too close: {} and {}", args[0], args[1]);
-			return std::nullopt;
+		if (params.has(L"to")) {
+			auto range = params.get(L"to").asList(L';');
+			if (range.size() != 2) {
+				cl.error(L"need 2 params for target range but {} found", range.size());
+				return std::nullopt;
+			}
+			valMin = range.get(0).asFloat();
+			valMax = range.get(1).asFloat();
 		}
 
-		tr.state.interpolator.setParams(args[0], args[1], args[2], args[3]);
+		tr.state.interpolator.setParams(linMin, linMax, valMin, valMax);
 
 	} else if (transformName == L"clamp") {
 		tr.type = TransformType::eCLAMP;
 
-		if (paramCount == 0) {
-			tr.args[0] = 0.0;
-			tr.args[1] = 1.0;
-		} else if (paramCount == 2) {
-			for (int i = 1; i < list.size(); ++i) {
-				tr.args[i - 1] = list.get(i).asFloat();
-			}
-		} else {
-			cl.error(L"'clamp' must have 0 or 2 parameters but {} found", paramCount);
-			return std::nullopt;
-		}
+		tr.args[0] = params.get(L"min").asFloat(0.0);
+		tr.args[1] = params.get(L"min").asFloat(1.0);
 	} else {
-		cl.error(L"'{}' is not recognized as transform type", transformName);
+		cl.error(L"'{}' is not recognized as a transform type", transformName);
 		return std::nullopt;
 	}
 

@@ -100,11 +100,13 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const OptionMap& optionMap
 	// legacy
 	if (optionMap.has(L"transform"sv)) {
 		params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform"), cl);
-	} else {
+	} else if (optionMap.has(L"gain")) {
 		const auto gain = optionMap.get(L"gain"sv).asFloat(1.0);
 		utils::BufferPrinter printer;
-		printer.print(L"map[0,1][0,{}]", gain);
+		printer.print(L"map[from 0 ; 1][to 0 ; {}]", gain);
 		params.transformer = audio_utils::TransformationParser::parse(utils::Option{ printer.getBufferView() }, cl);
+	} else {
+		params.transformer = { };
 	}
 
 	return params;

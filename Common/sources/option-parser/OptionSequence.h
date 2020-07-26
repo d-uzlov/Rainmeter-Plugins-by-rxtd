@@ -18,7 +18,7 @@ namespace rxtd::utils {
 
 	public:
 		OptionSequence() = default;
-		OptionSequence(sview view, std::vector<wchar_t> &&source, wchar_t optionBegin, wchar_t optionEnd, wchar_t paramDelimiter, wchar_t optionDelimiter);
+		OptionSequence(sview view, std::vector<wchar_t> &&source, wchar_t optionBegin, wchar_t optionEnd, wchar_t optionDelimiter);
 
 		class iterator {
 			sview view;

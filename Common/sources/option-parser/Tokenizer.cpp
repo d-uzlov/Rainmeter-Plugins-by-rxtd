@@ -14,7 +14,7 @@
 using namespace utils;
 
 std::vector<SubstringViewInfo> Tokenizer::parse(sview view, wchar_t delimiter) {
-	// this method is guarantied to return non - empty views
+	// this method is guarantied to return non empty views
 
 	if (view.empty()) {
 		return { };
@@ -30,7 +30,7 @@ std::vector<SubstringViewInfo> Tokenizer::parse(sview view, wchar_t delimiter) {
 }
 
 std::vector<std::vector<SubstringViewInfo>> Tokenizer::parseSequence(sview view, wchar_t optionBegin,
-	wchar_t optionEnd, wchar_t paramDelimiter, wchar_t optionDelimiter) {
+	wchar_t optionEnd, wchar_t optionDelimiter) {
 	enum class State {
 		eSEARCH,
 		eOPTION,
@@ -64,16 +64,6 @@ std::vector<std::vector<SubstringViewInfo>> Tokenizer::parseSequence(sview view,
 				return { };
 			}
 			state = State::eOPTION;
-
-			const index end = i;
-			emitToken(description, begin, end);
-			begin = end + 1;
-			continue;
-		}
-		if (symbol == paramDelimiter) {
-			if (state != State::eSWALLOW) {
-				return { };
-			}
 
 			const index end = i;
 			emitToken(description, begin, end);

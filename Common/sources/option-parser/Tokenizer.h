@@ -14,7 +14,7 @@ namespace rxtd::utils {
 	class Tokenizer {
 	public:
 		static std::vector<SubstringViewInfo> parse(sview view, wchar_t delimiter);
-		static std::vector<std::vector<SubstringViewInfo>> parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wchar_t paramDelimiter, wchar_t optionDelimiter);
+		static std::vector<std::vector<SubstringViewInfo>> parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wchar_t optionDelimiter);
 
 	private:
 		static void emitToken(std::vector<SubstringViewInfo>& list, index begin, index end);

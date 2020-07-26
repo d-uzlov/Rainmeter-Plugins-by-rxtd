@@ -12,6 +12,8 @@
 #include "BiQuadIIR.h"
 #include "BQFilterBuilder.h"
 #include "ButterworthWrapper.h"
+#include "option-parser/OptionMap.h"
+#include "option-parser/OptionSequence.h"
 
 using namespace audio_utils;
 
@@ -29,6 +31,10 @@ FilterCascadeCreator FilterCascadeParser::parse(const utils::OptionSequence& des
 
 	for (auto filterDescription : description) {
 		auto patcher = parseFilter(filterDescription);
+		if (patcher == nullptr) {
+			return { };
+		}
+
 		result.push_back(std::move(patcher));
 	}
 
@@ -42,9 +48,15 @@ FilterCascadeParser::FCF FilterCascadeParser::parseFilter(const utils::OptionLis
 		return { };
 	}
 
+	auto args = description.get(1).asMap(L',', L' ');
+
 	if (name == L"bqHighPass") {
-		const double q = description.get(1).asFloat();
-		const double cutoff = description.get(2).asFloat();
+		if (!args.has(L"q") || !args.has(L"freq")) {
+			return { };
+		}
+
+		const double q = args.get(L"q").asFloat();
+		const double cutoff = args.get(L"freq").asFloat();
 		return [=](double sampleFrequency) {
 			auto filter = new BiQuadIIR{ };
 			*filter = BQFilterBuilder::createHighPass(q, cutoff, sampleFrequency);
@@ -53,8 +65,12 @@ FilterCascadeParser::FCF FilterCascadeParser::parseFilter(const utils::OptionLis
 	}
 
 	if (name == L"bqLowPass") {
-		const double q = description.get(1).asFloat();
-		const double cutoff = description.get(2).asFloat();
+		if (!args.has(L"q") || !args.has(L"freq")) {
+			return { };
+		}
+
+		const double q = args.get(L"q").asFloat();
+		const double cutoff = args.get(L"freq").asFloat();
 		return [=](double sampleFrequency) {
 			auto filter = new BiQuadIIR{ };
 			*filter = BQFilterBuilder::createLowPass(q, cutoff, sampleFrequency);
@@ -63,9 +79,13 @@ FilterCascadeParser::FCF FilterCascadeParser::parseFilter(const utils::OptionLis
 	}
 
 	if (name == L"bqHighShelf") {
-		const double q = description.get(1).asFloat();
-		const double cutoff = description.get(2).asFloat();
-		const double gain = description.get(3).asFloat();
+		if (!args.has(L"q") || !args.has(L"freq") || !args.has(L"gain")) {
+			return { };
+		}
+
+		const double q = args.get(L"q").asFloat();
+		const double cutoff = args.get(L"freq").asFloat();
+		const double gain = args.get(L"gain").asFloat();
 		return [=](double sampleFrequency) {
 			auto filter = new BiQuadIIR{ };
 			*filter = BQFilterBuilder::createHighShelf(gain, q, cutoff, sampleFrequency);
@@ -77,9 +97,13 @@ FilterCascadeParser::FCF FilterCascadeParser::parseFilter(const utils::OptionLis
 	}
 
 	if (name == L"bqLowShelf") {
-		const double q = description.get(1).asFloat();
-		const double cutoff = description.get(2).asFloat();
-		const double gain = description.get(3).asFloat();
+		if (!args.has(L"q") || !args.has(L"freq") || !args.has(L"gain")) {
+			return { };
+		}
+
+		const double q = args.get(L"q").asFloat();
+		const double cutoff = args.get(L"freq").asFloat();
+		const double gain = args.get(L"gain").asFloat();
 		return [=](double sampleFrequency) {
 			auto filter = new BiQuadIIR{ };
 			*filter = BQFilterBuilder::createLowShelf(gain, q, cutoff, sampleFrequency);
@@ -91,9 +115,13 @@ FilterCascadeParser::FCF FilterCascadeParser::parseFilter(const utils::OptionLis
 	}
 
 	if (name == L"bqPeak") {
-		const double q = description.get(1).asFloat();
-		const double cutoff = description.get(2).asFloat();
-		const double gain = description.get(3).asFloat();
+		if (!args.has(L"q") || !args.has(L"freq") || !args.has(L"gain")) {
+			return { };
+		}
+
+		const double q = args.get(L"q").asFloat();
+		const double cutoff = args.get(L"freq").asFloat();
+		const double gain = args.get(L"gain").asFloat();
 		return [=](double sampleFrequency) {
 			auto filter = new BiQuadIIR{ };
 			*filter = BQFilterBuilder::createPeak(gain, q, cutoff, sampleFrequency);
@@ -105,21 +133,61 @@ FilterCascadeParser::FCF FilterCascadeParser::parseFilter(const utils::OptionLis
 	}
 
 	if (name == L"bwLowPass") {
-		const index order = description.get(1).asInt();
-		const double cutoff = description.get(2).asFloat();
+		if (!args.has(L"order") || !args.has(L"freq")) {
+			return { };
+		}
+
+		const index order = args.get(L"order").asInt();
+		if (order <= 0) {
+			return { };
+		}
+
+		const double cutoff = args.get(L"freq").asFloat();
 		return parseBWLowPass(order, cutoff);
 	}
 
 	if (name == L"bwHighPass") {
-		const index order = description.get(1).asInt();
-		const double cutoff = description.get(2).asFloat();
+		if (!args.has(L"order") || !args.has(L"freq")) {
+			return { };
+		}
+
+		const index order = args.get(L"order").asInt();
+		if (order <= 0) {
+			return { };
+		}
+
+		const double cutoff = args.get(L"freq").asFloat();
 		return parseBWHighPass(order, cutoff);
 	}
 
 	if (name == L"bwBandPass") {
-		const index order = description.get(1).asInt();
-		const double cutoff = description.get(2).asFloat();
-		return parseBWLowPass(order, cutoff);
+		if (!args.has(L"order") || !args.has(L"freqLow") || !args.has(L"freqHigh")) {
+			return { };
+		}
+
+		const index order = args.get(L"order").asInt();
+		if (order <= 0) {
+			return { };
+		}
+
+		const double cutoffLow = args.get(L"freqLow").asFloat();
+		const double cutoffHigh = args.get(L"freqHigh").asFloat();
+		return parseBWBandPass(order, cutoffLow, cutoffHigh);
+	}
+
+	if (name == L"bwBandStop") {
+		if (!args.has(L"order") || !args.has(L"freqLow") || !args.has(L"freqHigh")) {
+			return { };
+		}
+
+		const index order = args.get(L"order").asInt();
+		if (order <= 0) {
+			return { };
+		}
+
+		const double cutoffLow = args.get(L"freqLow").asFloat();
+		const double cutoffHigh = args.get(L"freqHigh").asFloat();
+		return parseBWBandStop(order, cutoffLow, cutoffHigh);
 	}
 
 	return { };

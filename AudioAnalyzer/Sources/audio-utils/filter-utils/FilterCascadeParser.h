@@ -10,7 +10,6 @@
 #pragma once
 #include <functional>
 #include "AbstractFilter.h"
-#include "option-parser/OptionSequence.h"
 #include "option-parser/OptionList.h"
 #include "FilterCascade.h"
 
