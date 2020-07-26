@@ -19,13 +19,22 @@ namespace rxtd::audio_utils {
 		using FilterCreationFunction = std::function<std::unique_ptr<AbstractFilter>(double sampleFrequency)>;
 
 	private:
+		string source;
 		std::vector<FilterCreationFunction> patchers;
 
 	public:
 		FilterCascadeCreator() = default;
 
-		FilterCascadeCreator(std::vector<FilterCreationFunction> patchers) :
-			patchers(std::move(patchers)) {
+		FilterCascadeCreator(string source, std::vector<FilterCreationFunction> patchers) :
+			source(source), patchers(std::move(patchers)) {
+		}
+
+		friend bool operator==(const FilterCascadeCreator& lhs, const FilterCascadeCreator& rhs) {
+			return lhs.source == rhs.source;
+		}
+
+		friend bool operator!=(const FilterCascadeCreator& lhs, const FilterCascadeCreator& rhs) {
+			return !(lhs == rhs);
 		}
 
 		FilterCascade getInstance(double samplingFrequency) const;
@@ -35,7 +44,7 @@ namespace rxtd::audio_utils {
 	public:
 		using FCF = FilterCascadeCreator::FilterCreationFunction;
 
-		static FilterCascadeCreator parse(const utils::OptionSequence& description);
+		static FilterCascadeCreator parse(const utils::Option& description);
 
 	private:
 		static FCF parseFilter(const utils::OptionList& description);

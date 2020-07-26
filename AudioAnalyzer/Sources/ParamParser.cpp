@@ -40,25 +40,25 @@ ParamParser::ParamParser(utils::Rainmeter& rain, bool unusedOptionsWarning) :
 	unusedOptionsWarning(unusedOptionsWarning) {
 }
 
-std::vector<ParamParser::ProcessingData> ParamParser::parse() {
-	std::vector<ProcessingData> result;
+std::map<istring, ParamParser::ProcessingData> ParamParser::parse() {
+	std::map<istring, ProcessingData> result;
 
 	auto processingIndices = rain.read(L"Processing").asList(L'|');
 	if (!checkListUnique(processingIndices)) {
 		rain.getLogger().error(L"Found repeating processings, aborting");
-		return result;
+		return { };
 	}
 
 	for (const auto& nameOption : processingIndices) {
-		const auto name = nameOption.asString();
+		const auto name = nameOption.asIString();
 
-		auto procOpt = parseProcessing(name);
+		auto procOpt = parseProcessing(name % csView());
 		if (!procOpt.has_value()) {
 			rain.getLogger().error(L"Invalid processing '{}'", name);
 			continue;
 		}
 
-		result.push_back(procOpt.value());
+		result[name % own()] = procOpt.value();
 	}
 
 	return result;
@@ -122,12 +122,12 @@ std::optional<ParamParser::ProcessingData> ParamParser::parseProcessing(sview na
 				L"bqPeak[q 4.0, freq 1125, gain -4.1] "
 				L"bqPeak[q 4.0, freq 2665, gain 5.5] "
 				L"bwLowPass[order 5, freq 20000] "
-			}.asSequence()
+			}
 		);
 	} else {
 		auto [name, desc] = filterDescription.breakFirst(' ');
 		if (name.asIString() == L"custom") {
-			ffc = audio_utils::FilterCascadeParser::parse(desc.asSequence());
+			ffc = audio_utils::FilterCascadeParser::parse(desc);
 		} else {
 			cl.error(L"filter '{}' is not supported", name);
 			ffc = { };
@@ -188,7 +188,7 @@ std::vector<ParamParser::HandlerInfo> ParamParser::parseHandlers(const utils::Op
 	return result;
 }
 
-ParamParser::Patcher ParamParser::parseHandler(sview name, array_view<HandlerInfo> prevHandlers) {
+ParamParser::HandlerPatcher ParamParser::parseHandler(sview name, array_view<HandlerInfo> prevHandlers) {
 	string optionName = L"Handler-"s += name;
 	auto descriptionOption = rain.read(optionName);
 	if (descriptionOption.empty()) {
@@ -218,7 +218,7 @@ ParamParser::Patcher ParamParser::parseHandler(sview name, array_view<HandlerInf
 	return patcher;
 }
 
-ParamParser::Patcher ParamParser::getHandlerPatcher(
+ParamParser::HandlerPatcher ParamParser::getHandlerPatcher(
 	const utils::OptionMap& optionMap,
 	utils::Rainmeter::Logger& cl,
 	array_view<HandlerInfo> prevHandlers

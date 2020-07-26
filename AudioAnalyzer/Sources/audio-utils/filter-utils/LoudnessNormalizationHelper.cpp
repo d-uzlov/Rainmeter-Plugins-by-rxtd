@@ -16,6 +16,6 @@
 using namespace audio_utils;
 
 FilterCascade LoudnessNormalizationHelper::getInstance(double samplingFrequency) {
-	return FilterCascadeParser::parse(utils::Option{ description }.asSequence())
+	return FilterCascadeParser::parse(utils::Option{ description })
 		.getInstance(samplingFrequency);
 }

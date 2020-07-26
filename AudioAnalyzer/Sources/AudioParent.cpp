@@ -19,10 +19,10 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 	ParentBase(std::move(_rain)),
 	deviceManager(logger, [this](MyWaveFormat format) {
 		channelMixer.setFormat(format);
-		for (auto& analyzer : analyzers) {
-			analyzer.setSourceRate(format.samplesPerSec);
-			analyzer.setLayout(format.channelLayout);
-		}
+		callAllSA([=](SoundAnalyzer& sa) {
+			sa.setSourceRate(format.samplesPerSec);
+			sa.setLayout(format.channelLayout);
+		});
 		currentFormat = std::move(format);
 	}) {
 	setUseResultString(false);
@@ -79,17 +79,7 @@ void AudioParent::_reload() {
 	paramParser.setTargetRate(targetRate);
 	auto processings = paramParser.parse();
 
-	analyzers.reserve(processings.size());
-	// TODO save state on reload
-	for (auto& procInfo : processings) {
-		auto& a = analyzers.emplace_back(channelMixer, logger);
-		a.getCPH().setTargetRate(procInfo.targetRate);
-		a.getCPH().setFCC(std::move(procInfo.fcc));
-		a.setHandlers(procInfo.channels, procInfo.handlerInfo);
-
-		a.setSourceRate(currentFormat.samplesPerSec);
-		a.setLayout(currentFormat.channelLayout);
-	}
+	patchSA(std::move(processings));
 }
 
 double AudioParent::_update() {
@@ -103,22 +93,22 @@ double AudioParent::_update() {
 			logger.error(L"Unrecoverable error");
 		}
 
-		for (auto& analyzer : analyzers) {
-			analyzer.resetValues();
-		}
+		callAllSA([=](SoundAnalyzer& sa) {
+			sa.resetValues();
+		});
 	} else {
 		deviceManager.getCaptureManager().capture([&](bool silent, array_view<std::byte> buffer) {
 			if (!silent) {
 				channelMixer.decomposeFramesIntoChannels(buffer, true);
 			}
-			for (auto& analyzer : analyzers) {
-				analyzer.process(silent);
-			}
+			callAllSA([=](SoundAnalyzer& sa) {
+				sa.process(silent);
+			});
 		}, maxLoop);
 
-		for (auto& analyzer : analyzers) {
-			analyzer.finishStandalone();
-		}
+		callAllSA([=](SoundAnalyzer& sa) {
+			sa.finishStandalone();
+		});
 	}
 
 	return deviceManager.getDeviceStatus();
@@ -159,7 +149,7 @@ void AudioParent::_resolve(array_view<isview> args, string& resolveBufferString)
 			return;
 		}
 
-		auto[handler, helper] = findHandlerByName(handlerName, channelOpt.value());
+		auto [handler, helper] = findHandlerByName(handlerName, channelOpt.value());
 		if (handler == nullptr) {
 			cl.error(L"handler '{}:{}' not found", channelName, handlerName);
 			return;
@@ -251,8 +241,35 @@ double AudioParent::getValue(isview id, Channel channel, index ind) const {
 	return helper->getValueFrom(handler, channel, ind);
 }
 
+void AudioParent::patchSA(std::map<istring, ParamParser::ProcessingData> procs) {
+	std::set<istring> toDelete;
+	for (auto& [name, ptr] : saMap) {
+		if (procs.find(name) == procs.end()) {
+			toDelete.insert(name);
+		}
+	}
+	for (auto& name : toDelete) {
+		saMap.erase(name);
+	}
+
+	for (auto& [name, data] : procs) {
+		auto& saPtr = saMap[name];
+		if (saPtr == nullptr) {
+			saPtr = std::make_unique<SoundAnalyzer>(channelMixer, logger);
+		}
+
+		auto& sa = *saPtr;
+		sa.getCPH().setTargetRate(data.targetRate);
+		sa.getCPH().setFCC(std::move(data.fcc));
+		sa.setHandlers(data.channels, data.handlerInfo);
+		sa.setSourceRate(currentFormat.samplesPerSec);
+		sa.setLayout(currentFormat.channelLayout);
+	}
+}
+
 std::pair<SoundHandler*, const AudioChildHelper*> AudioParent::findHandlerByName(isview name, Channel channel) const {
-	for (auto& analyzer : analyzers) {
+	for (auto& [_, ptr] : saMap) {
+		auto& analyzer = *ptr;
 		auto handlerVar = analyzer.getAudioChildHelper().findHandler(channel, name);
 		if (handlerVar.index() == 0) {
 			return {

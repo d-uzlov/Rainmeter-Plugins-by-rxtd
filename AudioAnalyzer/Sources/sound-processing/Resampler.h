@@ -18,6 +18,14 @@ namespace rxtd::audio_analyzer {
 		index divide = 1;
 
 	public:
+		index getSourceRate() const {
+			return sourceRate;
+		}
+
+		index getTargetRate() const {
+			return targetRate;
+		}
+
 		void setSourceRate(index value);
 		void setTargetRate(index value);
 

@@ -33,6 +33,10 @@ void ChannelProcessingHelper::setChannels(const std::set<Channel>& set) {
 }
 
 void ChannelProcessingHelper::setFCC(audio_utils::FilterCascadeCreator value) {
+	if (fcc == value) {
+		return;
+	}
+
 	fcc = std::move(value);
 	updateFC();
 }

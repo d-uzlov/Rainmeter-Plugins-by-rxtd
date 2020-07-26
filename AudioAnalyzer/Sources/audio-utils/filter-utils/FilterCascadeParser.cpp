@@ -26,10 +26,10 @@ FilterCascade FilterCascadeCreator::getInstance(double samplingFrequency) const 
 	return FilterCascade{ std::move(result) };
 }
 
-FilterCascadeCreator FilterCascadeParser::parse(const utils::OptionSequence& description) {
+FilterCascadeCreator FilterCascadeParser::parse(const utils::Option& description) {
 	std::vector<FCF> result;
 
-	for (auto filterDescription : description) {
+	for (auto filterDescription : description.asSequence()) {
 		auto patcher = parseFilter(filterDescription);
 		if (patcher == nullptr) {
 			return { };
@@ -38,7 +38,7 @@ FilterCascadeCreator FilterCascadeParser::parse(const utils::OptionSequence& des
 		result.push_back(std::move(patcher));
 	}
 
-	return FilterCascadeCreator{ result };
+	return FilterCascadeCreator{ description.asString() % own(), result };
 }
 
 FilterCascadeParser::FCF FilterCascadeParser::parseFilter(const utils::OptionList& description) {

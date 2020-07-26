@@ -42,11 +42,19 @@ namespace rxtd::audio_analyzer {
 		void setFCC(audio_utils::FilterCascadeCreator value);
 
 		void setTargetRate(index value) {
+			if (resampler.getTargetRate() == value) {
+				return;
+			}
+
 			resampler.setTargetRate(value);
 			updateFC();
 		}
 
 		void setSourceRate(index value) {
+			if (resampler.getSourceRate() == value) {
+				return;
+			}
+
 			resampler.setSourceRate(value);
 			updateFC();
 		}

@@ -17,13 +17,14 @@
 #include "audio-utils/filter-utils/FilterCascadeParser.h"
 
 namespace rxtd::audio_analyzer {
+	class SoundAnalyzer;
 	class ParamParser {
 	public:
-		using Patcher = std::function<SoundHandler*(SoundHandler*, Channel)>;
+		using HandlerPatcher = std::function<SoundHandler*(SoundHandler*, Channel)>;
 
 		struct HandlerInfo {
 			istring name;
-			Patcher patcher;
+			HandlerPatcher patcher;
 		};
 
 		struct ProcessingData {
@@ -53,7 +54,7 @@ namespace rxtd::audio_analyzer {
 			defaultTargetRate = value;
 		}
 
-		std::vector<ProcessingData> parse();
+		std::map<istring, ProcessingData> parse();
 
 	private:
 		static bool checkListUnique(const utils::OptionList& list);
@@ -62,15 +63,15 @@ namespace rxtd::audio_analyzer {
 		std::set<Channel> parseChannels(utils::OptionList channelsStringList) const;
 		std::vector<HandlerInfo> parseHandlers(const utils::OptionList& indices);
 
-		Patcher parseHandler(sview name, array_view<HandlerInfo> prevHandlers);
-		Patcher getHandlerPatcher(
+		HandlerPatcher parseHandler(sview name, array_view<HandlerInfo> prevHandlers);
+		HandlerPatcher getHandlerPatcher(
 			const utils::OptionMap& optionMap,
 			utils::Rainmeter::Logger& cl,
 			array_view<HandlerInfo> prevHandlers
 		);
 
 		template <typename T>
-		Patcher parseHandlerT(
+		HandlerPatcher parseHandlerT(
 			const utils::OptionMap& optionMap,
 			utils::Rainmeter::Logger& cl
 		) {
@@ -92,7 +93,7 @@ namespace rxtd::audio_analyzer {
 		}
 
 		template <typename T>
-		Patcher parseHandlerT2(
+		HandlerPatcher parseHandlerT2(
 			const utils::OptionMap& optionMap,
 			utils::Rainmeter::Logger& cl
 		) {
