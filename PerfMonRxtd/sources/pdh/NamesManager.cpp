@@ -9,9 +9,9 @@
 
 #include "NamesManager.h"
 #include <unordered_map>
+#include "BufferPrinter.h"
 
 #include "undef.h"
-#include "BufferPrinter.h"
 
 using namespace perfmon::pdh;
 

@@ -12,9 +12,9 @@
 #include "windows-wrappers/FileWrapper.h"
 #include "option-parser/OptionMap.h"
 #include "option-parser/OptionList.h"
+#include "LinearInterpolator.h"
 
 #include "undef.h"
-#include "LinearInterpolator.h"
 
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;

@@ -11,9 +11,9 @@
 #include "Math.h"
 #include "BandResampler.h"
 #include "option-parser/OptionMap.h"
+#include "ResamplerProvider.h"
 
 #include "undef.h"
-#include "ResamplerProvider.h"
 
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;

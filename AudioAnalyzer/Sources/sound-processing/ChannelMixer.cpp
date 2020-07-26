@@ -8,9 +8,9 @@
  */
 
 #include "ChannelMixer.h"
+#include "Channel.h"
 
 #include "undef.h"
-#include "Channel.h"
 
 using namespace audio_analyzer;
 

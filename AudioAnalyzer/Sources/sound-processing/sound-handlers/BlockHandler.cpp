@@ -8,10 +8,10 @@
  */
 
 #include "BlockHandler.h"
-
-#include "undef.h"
 #include <numeric>
 #include "option-parser/OptionMap.h"
+
+#include "undef.h"
 
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
