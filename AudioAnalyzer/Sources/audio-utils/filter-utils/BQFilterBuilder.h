@@ -11,6 +11,7 @@
 #include "BiQuadIIR.h"
 
 namespace rxtd::audio_utils {
+	// Based on formulas from Audio-EQ-Cookbook
 	class BQFilterBuilder {
 	public:
 		static BiQuadIIR createHighShelf(double dbGain, double q, double centralFrequency, double samplingFrequency);

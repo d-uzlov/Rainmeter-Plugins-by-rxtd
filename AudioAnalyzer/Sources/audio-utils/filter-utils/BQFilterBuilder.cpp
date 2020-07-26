@@ -12,6 +12,8 @@
 
 using namespace audio_utils;
 
+// Based on formulas from Audio-EQ-Cookbook
+
 BiQuadIIR BQFilterBuilder::createHighShelf(double dbGain, double q, double centralFrequency, double samplingFrequency) {
 	if (samplingFrequency == 0.0 || q == 0) {
 		return { };

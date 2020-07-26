@@ -13,6 +13,12 @@
 #include "InfiniteResponseFilter.h"
 
 namespace rxtd::audio_utils {
+	// Based on ReplayGain algorithm curve
+	// I approximated the filter cascade
+	// using ReplayGain curve picture and frequency response curves of filters
+	// Probably nowhere near close to proper implementation,
+	// but it works good enough for me
+	// and, most importantly, I mostly understand how this works
 	class LoudnessNormalizationHelper {
 		static constexpr index BWOrder = 5;
 
