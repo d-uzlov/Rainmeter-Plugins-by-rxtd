@@ -9,6 +9,7 @@
 
 #pragma once
 #include "array_view.h"
+#include <array>
 
 namespace rxtd::audio_utils {
 	class InfiniteResponseFilter {
@@ -26,5 +27,54 @@ namespace rxtd::audio_utils {
 
 	private:
 		void updateState(double next, double nextFiltered);
+	};
+
+	template<index order>
+	class InfiniteResponseFilterFixed {
+		// inspired by https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.lfilter.html
+
+		std::array<double, order> a;
+		std::array<double, order> b;
+		std::array<double, order - 1> state;
+
+	public:
+		InfiniteResponseFilterFixed() = default;
+		InfiniteResponseFilterFixed(std::vector<double> _a, std::vector<double> _b) {
+			if (_a.size() > order || _b.size() > order) {
+				throw std::exception { };
+			}
+
+			std::copy(_a.begin(), _a.end(), a.begin());
+			std::copy(_b.begin(), _b.end(), b.begin());
+
+			const double a0 = a[0];
+			for (auto& value : a) {
+				value /= a0;
+			}
+			for (auto& value : b) {
+				value /= a0;
+			}
+		}
+
+		void apply(array_span<float> signal) {
+			for (float& value : signal) {
+				const double next = value;
+				const double nextFiltered = b[0] * next + state[0];
+				value = nextFiltered;
+				updateState(next, nextFiltered);
+			}
+		}
+
+	private:
+		void updateState(double next, double nextFiltered) {
+			const index lastIndex = state.size() - 1;
+			for (index i = 0; i < lastIndex; ++i) {
+				const double ai = a[i + 1];
+				const double bi = b[i + 1];
+				const double prevD = state[i + 1];
+				state[i] = bi * next - ai * nextFiltered + prevD;
+			}
+			state[lastIndex] = b[lastIndex + 1] * next - a[lastIndex + 1] * nextFiltered;
+		}
 	};
 }

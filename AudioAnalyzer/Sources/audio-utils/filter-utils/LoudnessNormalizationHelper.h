@@ -10,13 +10,16 @@
 #pragma once
 #include "array_view.h"
 #include "BiQuadIIR.h"
+#include "InfiniteResponseFilter.h"
 
 namespace rxtd::audio_utils {
 	class LoudnessNormalizationHelper {
+		static constexpr index BWOrder = 5;
+
 		BiQuadIIR filter1{ };
 		BiQuadIIR filter2{ };
 		BiQuadIIR filter3{ };
-		BiQuadIIR filter4{ };
+		InfiniteResponseFilterFixed<BWOrder + 1> filter4{ };
 
 		std::vector<float> processed;
 
@@ -38,7 +41,7 @@ namespace rxtd::audio_utils {
 
 		static BiQuadIIR createFilter3(double samplingFrequency);
 
-		static BiQuadIIR createFilter4(double samplingFrequency);
+		static InfiniteResponseFilterFixed<BWOrder + 1> createFilter4(double samplingFrequency);
 	};
 
 }

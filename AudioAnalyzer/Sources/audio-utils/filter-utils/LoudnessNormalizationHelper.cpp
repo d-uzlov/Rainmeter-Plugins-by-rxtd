@@ -9,6 +9,7 @@
 
 #include "LoudnessNormalizationHelper.h"
 #include "BQFilterBuilder.h"
+#include "ButterworthWrapper.h"
 
 #include "undef.h"
 
@@ -18,6 +19,7 @@ LoudnessNormalizationHelper::LoudnessNormalizationHelper(double samplingFrequenc
 	filter1 = createFilter1(samplingFrequency);
 	filter2 = createFilter2(samplingFrequency);
 	filter3 = createFilter3(samplingFrequency);
+	filter4 = createFilter4(samplingFrequency);
 }
 
 void LoudnessNormalizationHelper::apply(array_view<float> wave) {
@@ -27,6 +29,7 @@ void LoudnessNormalizationHelper::apply(array_view<float> wave) {
 	filter1.apply(processed);
 	filter2.apply(processed);
 	filter3.apply(processed);
+	filter4.apply(processed);
 }
 
 BiQuadIIR LoudnessNormalizationHelper::createFilter1(double samplingFrequency) {
@@ -54,6 +57,7 @@ BiQuadIIR LoudnessNormalizationHelper::createFilter3(double samplingFrequency) {
 	return result;
 }
 
-BiQuadIIR LoudnessNormalizationHelper::createFilter4(double samplingFrequency) {
-	// butterworth, order 5, cutoff 9200
+InfiniteResponseFilterFixed<LoudnessNormalizationHelper::BWOrder + 1>
+LoudnessNormalizationHelper::createFilter4(double samplingFrequency) {
+	return ButterworthWrapper::createFixed<BWOrder>(20000, samplingFrequency);
 }

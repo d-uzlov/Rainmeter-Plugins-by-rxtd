@@ -30,6 +30,9 @@
     <Filter Include="Source Files\audio-utils\filter-utils">
       <UniqueIdentifier>{5b48eb26-d45a-499a-8e18-14f7815e3222}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\audio-utils\butterworth-lib">
+      <UniqueIdentifier>{f1e43e54-5810-43fb-9cfb-0fc68f48aeca}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Sources\AudioChild.h">
@@ -152,6 +155,12 @@
     <ClInclude Include="Sources\audio-utils\filter-utils\LoudnessNormalizationHelper.h">
       <Filter>Source Files\audio-utils\filter-utils</Filter>
     </ClInclude>
+    <ClInclude Include="Sources\audio-utils\butterworth-lib\iir.h">
+      <Filter>Source Files\audio-utils\butterworth-lib</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\audio-utils\filter-utils\ButterworthWrapper.h">
+      <Filter>Source Files\audio-utils\filter-utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sources\AudioChild.cpp">
@@ -257,6 +266,12 @@
       <Filter>Source Files\audio-utils\filter-utils</Filter>
     </ClCompile>
     <ClCompile Include="Sources\audio-utils\filter-utils\LoudnessNormalizationHelper.cpp">
+      <Filter>Source Files\audio-utils\filter-utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\audio-utils\butterworth-lib\iir.cpp">
+      <Filter>Source Files\audio-utils\butterworth-lib</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\audio-utils\filter-utils\ButterworthWrapper.cpp">
       <Filter>Source Files\audio-utils\filter-utils</Filter>
     </ClCompile>
   </ItemGroup>
