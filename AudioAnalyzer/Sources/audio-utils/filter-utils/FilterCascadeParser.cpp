@@ -69,7 +69,9 @@ FilterCascadeParser::FCF FilterCascadeParser::parseFilter(const utils::OptionLis
 		return [=](double sampleFrequency) {
 			auto filter = new BiQuadIIR{ };
 			*filter = BQFilterBuilder::createHighShelf(gain, q, cutoff, sampleFrequency);
-			filter->addGain(-gain);
+			if (gain > 0) {
+				filter->addGain(-gain);
+			}
 			return std::unique_ptr<AbstractFilter>{ filter };
 		};
 	}
@@ -81,7 +83,9 @@ FilterCascadeParser::FCF FilterCascadeParser::parseFilter(const utils::OptionLis
 		return [=](double sampleFrequency) {
 			auto filter = new BiQuadIIR{ };
 			*filter = BQFilterBuilder::createLowShelf(gain, q, cutoff, sampleFrequency);
-			filter->addGain(-gain);
+			if (gain > 0) {
+				filter->addGain(-gain);
+			}
 			return std::unique_ptr<AbstractFilter>{ filter };
 		};
 	}
@@ -93,6 +97,9 @@ FilterCascadeParser::FCF FilterCascadeParser::parseFilter(const utils::OptionLis
 		return [=](double sampleFrequency) {
 			auto filter = new BiQuadIIR{ };
 			*filter = BQFilterBuilder::createPeak(gain, q, cutoff, sampleFrequency);
+			if (gain > 0) {
+				filter->addGain(-gain);
+			}
 			return std::unique_ptr<AbstractFilter>{ filter };
 		};
 	}
