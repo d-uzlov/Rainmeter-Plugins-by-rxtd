@@ -59,5 +59,5 @@ BiQuadIIR LoudnessNormalizationHelper::createFilter3(double samplingFrequency) {
 
 InfiniteResponseFilterFixed<LoudnessNormalizationHelper::BWOrder + 1>
 LoudnessNormalizationHelper::createFilter4(double samplingFrequency) {
-	return ButterworthWrapper::createFixed<BWOrder>(20000, samplingFrequency);
+	return ButterworthWrapper::createLowPass<BWOrder>(20000, samplingFrequency);
 }
