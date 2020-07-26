@@ -15,21 +15,26 @@
 
 using namespace audio_utils;
 
-LoudnessNormalizationHelper::LoudnessNormalizationHelper(double samplingFrequency) {
-	filter1 = createFilter1(samplingFrequency);
-	filter2 = createFilter2(samplingFrequency);
-	filter3 = createFilter3(samplingFrequency);
-	filter4 = createFilter4(samplingFrequency);
-}
+FilterCascade LoudnessNormalizationHelper::getInstance(double samplingFrequency) {
+	std::vector<std::unique_ptr<AbstractFilter>> filters;
 
-void LoudnessNormalizationHelper::apply(array_view<float> wave) {
-	processed.resize(wave.size());
-	std::copy(wave.begin(), wave.end(), processed.begin());
+	auto filter1 = new BiQuadIIR{ };
+	*filter1 = createFilter1(samplingFrequency);
+	filters.push_back(std::unique_ptr<AbstractFilter>(filter1));
 
-	filter1.apply(processed);
-	filter2.apply(processed);
-	filter3.apply(processed);
-	filter4.apply(processed);
+	auto filter2 = new BiQuadIIR{ };
+	*filter2 = createFilter2(samplingFrequency);
+	filters.push_back(std::unique_ptr<AbstractFilter>(filter2));
+
+	auto filter3 = new BiQuadIIR{ };
+	*filter3 = createFilter3(samplingFrequency);
+	filters.push_back(std::unique_ptr<AbstractFilter>(filter3));
+
+	auto filter4 = new InfiniteResponseFilterFixed<BWOrder + 1>{ };
+	*filter4 = createFilter4(samplingFrequency);
+	filters.push_back(std::unique_ptr<AbstractFilter>(filter4));
+
+	return { std::move(filters) };
 }
 
 BiQuadIIR LoudnessNormalizationHelper::createFilter1(double samplingFrequency) {

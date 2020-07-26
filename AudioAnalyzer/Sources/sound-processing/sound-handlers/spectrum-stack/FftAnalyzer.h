@@ -12,7 +12,7 @@
 #include "RainmeterWrappers.h"
 #include "../../../audio-utils/FFT.h"
 #include "../../../audio-utils/FftCascade.h"
-#include "../../../audio-utils/filter-utils/LoudnessNormalizationHelper.h"
+#include "../../../audio-utils/filter-utils/FilterCascade.h"
 
 namespace rxtd::audio_analyzer {
 	class FftAnalyzer : public SoundHandler {
@@ -77,7 +77,7 @@ namespace rxtd::audio_analyzer {
 		enum class RandomState { ON, OFF } randomState{ RandomState::ON };
 
 		std::vector<audio_utils::FftCascade> cascades{ };
-		audio_utils::LoudnessNormalizationHelper lnh{ };
+		audio_utils::FilterCascade fc{ };
 
 		audio_utils::FFT fft{ };
 

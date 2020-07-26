@@ -10,9 +10,10 @@
 #pragma once
 #include "array_view.h"
 #include <array>
+#include "AbstractFilter.h"
 
 namespace rxtd::audio_utils {
-	class InfiniteResponseFilter {
+	class InfiniteResponseFilter : public AbstractFilter {
 		// inspired by https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.lfilter.html
 
 		std::vector<double> a;
@@ -23,14 +24,14 @@ namespace rxtd::audio_utils {
 		InfiniteResponseFilter() = default;
 		InfiniteResponseFilter(std::vector<double> a, std::vector<double> b);
 
-		void apply(array_span<float> signal);
+		void apply(array_span<float> signal) override;
 
 	private:
 		void updateState(double next, double nextFiltered);
 	};
 
 	template<index order>
-	class InfiniteResponseFilterFixed {
+	class InfiniteResponseFilterFixed : public AbstractFilter {
 		// inspired by https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.lfilter.html
 
 		std::array<double, order> a;
@@ -56,7 +57,7 @@ namespace rxtd::audio_utils {
 			}
 		}
 
-		void apply(array_span<float> signal) {
+		void apply(array_span<float> signal) override {
 			for (float& value : signal) {
 				const double next = value;
 				const double nextFiltered = b[0] * next + state[0];

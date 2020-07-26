@@ -12,8 +12,8 @@
 #include "FftAnalyzer.h"
 #include "option-parser/OptionMap.h"
 
-#include "../../../audio-utils/filter-utils/BQFilterBuilder.h"
 #include "../../../audio-utils/RandomGenerator.h"
+#include "../../../audio-utils/filter-utils/LoudnessNormalizationHelper.h"
 
 #include "undef.h"
 
@@ -118,8 +118,8 @@ void FftAnalyzer::_process(const DataSupplier& dataSupplier) {
 	if (params.randomTest != 0.0) {
 		processRandom(wave.size());
 	} else if (params.correctLoudness) {
-		lnh.apply(wave);
-		cascades[0].process(lnh.getProcessed());
+		fc.apply(wave);
+		cascades[0].process(fc.getProcessed());
 	} else {
 		cascades[0].process(wave);
 	}
@@ -181,8 +181,8 @@ void FftAnalyzer::processRandom(index waveSize) {
 	}
 
 	if (params.correctLoudness) {
-		lnh.apply(wave);
-		cascades[0].process(lnh.getProcessed());
+		fc.apply(wave);
+		cascades[0].process(fc.getProcessed());
 	} else {
 		cascades[0].process(wave);
 	}
@@ -195,7 +195,7 @@ void FftAnalyzer::setSamplesPerSec(index samplesPerSec) {
 
 	this->samplesPerSec = samplesPerSec;
 
-	lnh = { double(samplesPerSec) };
+	fc = audio_utils::LoudnessNormalizationHelper::getInstance(samplesPerSec);
 
 	updateParams();
 }

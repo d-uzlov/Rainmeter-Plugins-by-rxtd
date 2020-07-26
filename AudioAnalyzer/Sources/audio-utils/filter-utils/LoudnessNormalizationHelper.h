@@ -8,9 +8,9 @@
  */
 
 #pragma once
-#include "array_view.h"
 #include "BiQuadIIR.h"
 #include "InfiniteResponseFilter.h"
+#include "FilterCascade.h"
 
 namespace rxtd::audio_utils {
 	// Based on ReplayGain algorithm curve
@@ -22,23 +22,8 @@ namespace rxtd::audio_utils {
 	class LoudnessNormalizationHelper {
 		static constexpr index BWOrder = 5;
 
-		BiQuadIIR filter1{ };
-		BiQuadIIR filter2{ };
-		BiQuadIIR filter3{ };
-		InfiniteResponseFilterFixed<BWOrder + 1> filter4{ };
-
-		std::vector<float> processed;
-
 	public:
-		LoudnessNormalizationHelper() = default;
-
-		LoudnessNormalizationHelper(double samplingFrequency);
-
-		void apply(array_view<float> wave);
-
-		array_view<float> getProcessed() const {
-			return processed;
-		}
+		static FilterCascade getInstance(double samplingFrequency);
 
 	private:
 		static BiQuadIIR createFilter1(double samplingFrequency);

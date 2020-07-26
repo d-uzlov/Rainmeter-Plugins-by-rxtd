@@ -8,6 +8,7 @@
  */
 
 #include "Loudness.h"
+#include "../../audio-utils/filter-utils/LoudnessNormalizationHelper.h"
 
 #include "undef.h"
 
@@ -17,7 +18,7 @@ using namespace std::literals::string_view_literals;
 using namespace audio_analyzer;
 
 void Loudness::_setSamplesPerSec(index samplesPerSec) {
-	lnh = { double(samplesPerSec) };
+	fc = audio_utils::LoudnessNormalizationHelper::getInstance(samplesPerSec);
 }
 
 void Loudness::_reset() {
@@ -26,9 +27,9 @@ void Loudness::_reset() {
 }
 
 void Loudness::_process(array_view<float> wave, float average) {
-	lnh.apply(wave);
+	fc.apply(wave);
 
-	for (double x : lnh.getProcessed()) {
+	for (double x : fc.getProcessed()) {
 		intermediateRmsResult += x * x;
 		counter++;
 		if (counter >= getBlockSize()) {

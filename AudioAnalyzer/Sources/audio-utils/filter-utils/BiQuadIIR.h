@@ -9,9 +9,10 @@
 
 #pragma once
 #include "array_view.h"
+#include "AbstractFilter.h"
 
 namespace rxtd::audio_utils {
-	class BiQuadIIR {
+	class BiQuadIIR : public AbstractFilter {
 		// inspired by https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.lfilter.html
 
 		double a1;
@@ -27,7 +28,7 @@ namespace rxtd::audio_utils {
 		BiQuadIIR() = default;
 		BiQuadIIR(double a0, double a1, double a2, double b0, double b1, double b2);
 
-		void apply(array_span<float> signal);
+		void apply(array_span<float> signal) override;
 
 		void addGain(double gainDB);
 	};

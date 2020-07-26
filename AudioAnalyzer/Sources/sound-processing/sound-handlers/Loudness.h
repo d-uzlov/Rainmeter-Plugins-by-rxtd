@@ -9,18 +9,11 @@
 
 #pragma once
 #include "BlockHandler.h"
-#include "../../audio-utils/filter-utils/LoudnessNormalizationHelper.h"
+#include "../../audio-utils/filter-utils/FilterCascade.h"
 
 namespace rxtd::audio_analyzer {
 	class Loudness : public BlockHandler {
-		// based on EBU R 128
-		// see:
-		//   https://www.itu.int/dms_pubrec/itu-r/rec/bs/R-REC-BS.1770-2-201103-S!!PDF-E.pdf
-		//   https://books.google.ru/books?id=wYNiDwAAQBAJ&pg=PT402&lpg=PT402&source=bl&ots=b_IYgSnzH_&sig=ACfU3U24oCdbQZLqFmaH7sFO39CpaoRZVQ&hl=en&sa=X&ved=2ahUKEwjMobfksaDqAhVxx4sKHaRSBToQ6AEwAnoECAoQAQ#v=onepage&f=false
-		//   https://github.com/BrechtDeMan/loudness.py/blob/master/loudness.py
-		//   https://hydrogenaud.io/index.php?topic=86116.25
-
-		audio_utils::LoudnessNormalizationHelper lnh{ };
+		audio_utils::FilterCascade fc{ };
 
 		double intermediateRmsResult = 0.0;
 

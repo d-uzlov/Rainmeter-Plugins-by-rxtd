@@ -161,6 +161,12 @@
     <ClInclude Include="Sources\audio-utils\filter-utils\ButterworthWrapper.h">
       <Filter>Source Files\audio-utils\filter-utils</Filter>
     </ClInclude>
+    <ClInclude Include="Sources\audio-utils\filter-utils\AbstractFilter.h">
+      <Filter>Source Files\audio-utils\filter-utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\audio-utils\filter-utils\FilterCascade.h">
+      <Filter>Source Files\audio-utils\filter-utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sources\AudioChild.cpp">
@@ -272,6 +278,9 @@
       <Filter>Source Files\audio-utils\butterworth-lib</Filter>
     </ClCompile>
     <ClCompile Include="Sources\audio-utils\filter-utils\ButterworthWrapper.cpp">
+      <Filter>Source Files\audio-utils\filter-utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\audio-utils\filter-utils\FilterCascade.cpp">
       <Filter>Source Files\audio-utils\filter-utils</Filter>
     </ClCompile>
   </ItemGroup>
