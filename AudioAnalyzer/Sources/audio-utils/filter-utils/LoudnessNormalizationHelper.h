@@ -8,8 +8,6 @@
  */
 
 #pragma once
-#include "BiQuadIIR.h"
-#include "InfiniteResponseFilter.h"
 #include "FilterCascade.h"
 
 namespace rxtd::audio_utils {
@@ -22,17 +20,10 @@ namespace rxtd::audio_utils {
 	class LoudnessNormalizationHelper {
 		static constexpr index BWOrder = 5;
 
+		inline const static string description = L"bqHighPass[0.5, 310] bqPeak[4, 1125, -4.1] bqPeak[4.0, 2665, 5.5] bwLowPass[5, 20000]";
+
 	public:
 		static FilterCascade getInstance(double samplingFrequency);
-
-	private:
-		static BiQuadIIR createFilter1(double samplingFrequency);
-
-		static BiQuadIIR createFilter2(double samplingFrequency);
-
-		static BiQuadIIR createFilter3(double samplingFrequency);
-
-		static InfiniteResponseFilterFixed<BWOrder + 1> createFilter4(double samplingFrequency);
 	};
 
 }
