@@ -13,7 +13,6 @@
 #include "option-parser/OptionMap.h"
 
 #include "../../../audio-utils/RandomGenerator.h"
-#include "../../../audio-utils/filter-utils/LoudnessNormalizationHelper.h"
 
 #include "undef.h"
 
@@ -48,7 +47,7 @@ std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(const OptionMap& opt
 		if (params.binWidth <= 1.0) {
 			cl.warning(L"BinWidth {} is dangerously small, use values > 1", params.binWidth);
 		}
-		params.sizeBy = SizeBy::BIN_WIDTH;
+		params.legacy_sizeBy = SizeBy::BIN_WIDTH;
 	} else {
 		cl.warning(L"Options 'sizeBy' is deprecated");
 
@@ -58,7 +57,7 @@ std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(const OptionMap& opt
 				cl.warning(L"Size must be >= 2 but {} found. Assume 1000", params.binWidth);
 				params.binWidth = 1000;
 			}
-			params.sizeBy = SizeBy::SIZE;
+			params.legacy_sizeBy = SizeBy::SIZE;
 
 		} else if (sizeBy == L"sizeExact") {
 			params.binWidth = optionMap.get(L"size"sv).asInt(1000);
@@ -66,7 +65,7 @@ std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(const OptionMap& opt
 				cl.error(L"Size must be >= 2, must be even, but {} found", params.binWidth);
 				return std::nullopt;
 			}
-			params.sizeBy = SizeBy::SIZE_EXACT;
+			params.legacy_sizeBy = SizeBy::SIZE_EXACT;
 		} else {
 			cl.error(L"Unknown fft sizeBy '{}'", sizeBy);
 			return std::nullopt;
@@ -80,8 +79,6 @@ std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(const OptionMap& opt
 		cl.warning(L"cascadesCount must be >= 1 but {} found. Assume 1", params.cascadesCount);
 		params.cascadesCount = 1;
 	}
-
-	params.correctLoudness = optionMap.get(L"correctLoudness"sv).asBool(false);
 
 	params.randomTest = std::abs(optionMap.get(L"testRandom"sv).asFloat(0.0));
 	params.randomDuration = std::abs(optionMap.get(L"randomDuration"sv).asFloat(1000.0)) * 0.001;
@@ -117,10 +114,6 @@ void FftAnalyzer::_process(const DataSupplier& dataSupplier) {
 
 	if (params.randomTest != 0.0) {
 		processRandom(wave.size());
-	} else if (params.correctLoudness) {
-		// fc.apply(wave);
-		// cascades[0].process(fc.getProcessed());
-		cascades[0].process(wave);
 	} else {
 		cascades[0].process(wave);
 	}
@@ -181,13 +174,7 @@ void FftAnalyzer::processRandom(index waveSize) {
 		}
 	}
 
-	if (params.correctLoudness) {
-		// fc.apply(wave);
-		// cascades[0].process(fc.getProcessed());
-		cascades[0].process(wave);
-	} else {
-		cascades[0].process(wave);
-	}
+	cascades[0].process(wave);
 }
 
 void FftAnalyzer::setSamplesPerSec(index samplesPerSec) {
@@ -196,8 +183,6 @@ void FftAnalyzer::setSamplesPerSec(index samplesPerSec) {
 	}
 
 	this->samplesPerSec = samplesPerSec;
-
-	// fc = audio_utils::LoudnessNormalizationHelper::getInstance(samplesPerSec);
 
 	updateParams();
 }
@@ -277,7 +262,7 @@ void FftAnalyzer::setParams(Params params, Channel channel) {
 }
 
 void FftAnalyzer::updateParams() {
-	switch (params.sizeBy) {
+	switch (params.legacy_sizeBy) {
 	case SizeBy::BIN_WIDTH:
 		fftSize = kiss_fft::calculateNextFastSize(index(samplesPerSec / params.binWidth), true);
 		break;

@@ -9,12 +9,9 @@
 
 #pragma once
 #include "BlockHandler.h"
-#include "../../audio-utils/filter-utils/FilterCascade.h"
 
 namespace rxtd::audio_analyzer {
 	class Loudness : public BlockHandler {
-		// audio_utils::FilterCascade fc{ };
-
 		double intermediateRmsResult = 0.0;
 
 	public:
