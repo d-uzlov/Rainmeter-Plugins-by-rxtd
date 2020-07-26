@@ -53,7 +53,3 @@ std::byte* DataSupplierImpl::getBufferRaw(index size) const {
 void DataSupplierImpl::resetBuffers() {
 	nextBufferIndex = 0;
 }
-
-void DataSupplierImpl::setWaveSize(index value) {
-	waveSize = value;
-}

@@ -23,6 +23,7 @@ namespace rxtd::audio_analyzer {
 
 		index getSampleRate() const;
 		index calculateFinalWaveSize(index waveSize) const;
+		void resample(array_view<float> from, array_span<float> to) const;
 		void resample(array_span<float> values) const;
 
 	private:

@@ -37,7 +37,7 @@ void SoundAnalyzer::setSampleRate(index value) {
 	}
 
 	sampleRate = value;
-	updateSampleRate();
+	updateHandlerSampleRate();
 }
 
 AudioChildHelper SoundAnalyzer::getAudioChildHelper() const {
@@ -55,12 +55,11 @@ void SoundAnalyzer::setHandlerPatchers(
 	patchHandlers();
 }
 
-void SoundAnalyzer::process(const ChannelMixer& mixer, bool isSilent) {
+void SoundAnalyzer::process(const ChannelProcessingHelper& cph, bool isSilent) {
 	if (channels.empty()) {
 		return;
 	}
 
-	dataSupplier.setWaveSize(mixer.getWaveSize());
 	dataSupplier.logger = logger;
 
 	for (auto& [channel, channelData] : channels) {
@@ -75,7 +74,7 @@ void SoundAnalyzer::process(const ChannelMixer& mixer, bool isSilent) {
 				handler->processSilence(dataSupplier);
 			}
 		} else {
-			dataSupplier.setWave(mixer.getChannelPCM(channel));
+			dataSupplier.setWave(cph.getChannelPCM(channel));
 			for (auto& handler : channelData.handlers) {
 				handler->process(dataSupplier);
 			}
@@ -102,7 +101,7 @@ void SoundAnalyzer::finishStandalone() noexcept {
 	}
 }
 
-void SoundAnalyzer::updateSampleRate() noexcept {
+void SoundAnalyzer::updateHandlerSampleRate() noexcept {
 	for (auto& [channel, channelData] : channels) {
 		for (auto& handler : channelData.handlers) {
 			handler->setSamplesPerSec(sampleRate);
@@ -178,5 +177,5 @@ void SoundAnalyzer::patchHandlers() {
 		channelData.indexMap = std::move(newIndexMap);
 	}
 
-	updateSampleRate();
+	updateHandlerSampleRate();
 }

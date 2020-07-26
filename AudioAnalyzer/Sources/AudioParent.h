@@ -12,10 +12,12 @@
 #include "RainmeterWrappers.h"
 #include "sound-processing/SoundAnalyzer.h"
 #include "sound-processing/device-management/DeviceManager.h"
+#include "sound-processing/ChannelProcessingHelper.h"
 
 namespace rxtd::audio_analyzer {
 	class AudioParent : public utils::ParentBase {
 		ChannelMixer channelMixer;
+		ChannelProcessingHelper cph;
 		SoundAnalyzer soundAnalyzer;
 		DeviceManager deviceManager;
 

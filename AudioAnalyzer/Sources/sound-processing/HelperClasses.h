@@ -21,7 +21,6 @@ namespace rxtd::audio_analyzer {
 	class DataSupplierImpl : public DataSupplier {
 		array_view<float> wave{ };
 		const ChannelData* channelData = nullptr;
-		index waveSize{ };
 
 		mutable index nextBufferIndex = 0;
 		mutable std::vector<std::vector<std::byte>> buffers;
@@ -35,7 +34,6 @@ namespace rxtd::audio_analyzer {
 		std::byte* getBufferRaw(index size) const override;
 
 		void resetBuffers();
-		void setWaveSize(index value);
 
 		void log(wchar_t* message) const override {
 			logger.error(message);

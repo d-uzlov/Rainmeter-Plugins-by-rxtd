@@ -11,9 +11,9 @@
 #include "sound-handlers/SoundHandler.h"
 #include <functional>
 #include "Channel.h"
-#include "ChannelMixer.h"
 #include "AudioChildHelper.h"
 #include "HelperClasses.h"
+#include "ChannelProcessingHelper.h"
 
 namespace rxtd::audio_analyzer {
 	class SoundAnalyzer {
@@ -65,7 +65,7 @@ namespace rxtd::audio_analyzer {
 			std::map<istring, std::function<SoundHandler*(SoundHandler*, Channel)>, std::less<>> patchers
 		);
 
-		void process(const ChannelMixer& mixer, bool isSilent);
+		void process(const ChannelProcessingHelper& mixer, bool isSilent);
 		void resetValues() noexcept;
 		void finishStandalone() noexcept;
 
@@ -78,7 +78,7 @@ namespace rxtd::audio_analyzer {
 		}
 
 	private:
-		void updateSampleRate() noexcept;
+		void updateHandlerSampleRate() noexcept;
 		void removeNonexistentChannelsFromMap();
 		void patchHandlers();
 	};

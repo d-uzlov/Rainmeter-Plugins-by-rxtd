@@ -31,18 +31,24 @@ index Resampler::calculateFinalWaveSize(index waveSize) const {
 	return waveSize / divide;
 }
 
-void Resampler::resample(array_span<float> values) const {
+void Resampler::resample(array_view<float> from, array_span<float> to) const {
 	if (divide <= 1) {
+		std::copy(from.begin(), from.end(), to.begin());
 		return;
 	}
-	const auto newCount = values.size() / divide;
+
+	const auto newCount = from.size() / divide;
 	for (index i = 0; i < newCount; ++i) {
 		double value = 0.0;
 		for (index j = 0; j < divide; ++j) {
-			value += values[i * divide + j];
+			value += from[i * divide + j];
 		}
-		values[i] = static_cast<float>(value / divide);
+		to[i] = static_cast<float>(value / divide);
 	}
+}
+
+void Resampler::resample(array_span<float> values) const {
+	resample(values, values);
 }
 
 void Resampler::updateValues() {
