@@ -14,7 +14,7 @@ namespace rxtd::audio_analyzer {
 	class AudioChild : public utils::TypeHolder {
 		Channel channel = Channel::eFRONT_LEFT;
 		index valueIndex = 0;
-		string valueId;
+		istring valueId;
 		std::vector<istring> infoRequest;
 		std::vector<isview> infoRequestC;
 

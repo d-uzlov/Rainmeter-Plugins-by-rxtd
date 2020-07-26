@@ -26,11 +26,11 @@ array_view<float> DataSupplierImpl::getWave() const {
 }
 
 const SoundHandler* DataSupplierImpl::getHandlerRaw(isview id) const {
-	const auto iter = channelData->indexMap.find(id);
-	if (iter == channelData->indexMap.end()) {
+	const auto iter = channelData->find(id % own()); // TODO transfer all to sview
+	if (iter == channelData->end()) {
 		return nullptr;
 	}
-	auto handler = channelData->handlers[iter->second].get();
+	auto handler = iter->second.get();
 	handler->finish(*this); // endless loop is impossible because of "source" checking in ParamParser
 
 	if (!handler->isValid()) {

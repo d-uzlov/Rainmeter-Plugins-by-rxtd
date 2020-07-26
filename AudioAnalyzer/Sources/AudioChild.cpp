@@ -40,7 +40,7 @@ void AudioChild::_reload() {
 		channel = channelOpt.value();
 	}
 
-	valueId = rain.readString(L"ValueId");
+	valueId = rain.read(L"ValueId").asIString();
 	if (valueId.empty()) {
 		logger.error(L"ValueID can't be empty");
 		setMeasureState(utils::MeasureState::eTEMP_BROKEN);

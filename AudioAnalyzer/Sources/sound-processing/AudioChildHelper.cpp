@@ -27,12 +27,12 @@ AudioChildHelper::findHandler(Channel channel, isview handlerId) const {
 	}
 
 	const auto& channelData = channelIter->second;
-	const auto iter = channelData.indexMap.find(handlerId);
-	if (iter == channelData.indexMap.end()) {
+	const auto iter = channelData.find(handlerId % own()); // TODO move to sview
+	if (iter == channelData.end()) {
 		return SearchResult::eHANDLER_NOT_FOUND;
 	}
 
-	auto& handler = channelData.handlers[iter->second];
+	auto& handler = iter->second;
 	return handler.get();
 }
 
@@ -44,6 +44,33 @@ double AudioChildHelper::getValue(Channel channel, isview handlerId, index index
 
 	auto& handler = std::get<0>(handlerVariant);
 
+	const auto channelDataIter = channels->find(channel);
+	if (channelDataIter == channels->end()) {
+		return 0.0;
+	}
+	dataSupplier->setChannelData(&channelDataIter->second);
+
+	handler->finish(*dataSupplier);
+	if (!handler->isValid()) {
+		return 0.0;
+	}
+
+	const auto layersCount = handler->getLayersCount();
+	if (layersCount <= 0) {
+		return 0.0;
+	}
+
+	const auto data = handler->getData(0);
+	if (data.empty()) {
+		return 0.0;
+	}
+	if (index >= data.size()) {
+		return 0.0;
+	}
+	return data[index];
+}
+
+double AudioChildHelper::getValueFrom(SoundHandler* handler, Channel channel, index index) const {
 	const auto channelDataIter = channels->find(channel);
 	if (channelDataIter == channels->end()) {
 		return 0.0;

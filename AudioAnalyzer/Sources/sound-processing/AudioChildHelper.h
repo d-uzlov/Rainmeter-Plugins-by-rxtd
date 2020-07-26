@@ -30,5 +30,6 @@ namespace rxtd::audio_analyzer {
 
 		std::variant<SoundHandler*, SearchResult> findHandler(Channel channel, isview handlerId) const;
 		double getValue(Channel channel, isview handlerId, index index) const;
+		double getValueFrom(SoundHandler* handler, Channel channel, index index) const;
 	};
 }

@@ -12,6 +12,8 @@
 
 namespace rxtd::audio_utils {
 	class ButterworthWrapper {
+		// https://stackoverflow.com/questions/10373184/bandpass-butterworth-filter-implementation-in-c
+
 	public:
 		struct AB {
 			std::vector<double> a;

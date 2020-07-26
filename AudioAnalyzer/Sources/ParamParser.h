@@ -8,22 +8,35 @@
  */
 
 #pragma once
-#include "sound-processing/Channel.h"
-#include <functional>
-#include "sound-processing/sound-handlers/SoundHandler.h"
 #include <set>
+#include <functional>
+
 #include "RainmeterWrappers.h"
-#include "option-parser/OptionMap.h"
+#include "sound-processing/Channel.h"
+#include "sound-processing/sound-handlers/SoundHandler.h"
+#include "audio-utils/filter-utils/FilterCascadeParser.h"
 
 namespace rxtd::audio_analyzer {
 	class ParamParser {
+	public:
+		using Patcher = std::function<SoundHandler*(SoundHandler*, Channel)>;
+
+		struct HandlerInfo {
+			istring name;
+			Patcher patcher;
+		};
+
+		struct ProcessingData {
+			index targetRate;
+			audio_utils::FilterCascadeCreator fcc;
+			std::set<Channel> channels;
+			std::vector<HandlerInfo> handlerInfo;
+		};
+
 	private:
 		utils::Rainmeter& rain;
 		utils::Rainmeter::Logger& log;
 		bool unusedOptionsWarning;
-
-		std::map<Channel, std::vector<istring>> handlers;
-		std::map<istring, std::function<SoundHandler*(SoundHandler*, Channel)>, std::less<>> handlerPatchersMap;
 
 	public:
 		explicit ParamParser(utils::Rainmeter& rain, bool unusedOptionsWarning);
@@ -35,21 +48,24 @@ namespace rxtd::audio_analyzer {
 		ParamParser& operator=(const ParamParser& other) = delete;
 		ParamParser& operator=(ParamParser&& other) = delete;
 
-		void parse();
-		const std::map<Channel, std::vector<istring>>& getHandlers() const;
-		const std::map<istring, std::function<SoundHandler*(SoundHandler*, Channel)>, std::less<>>& getPatches() const;
+		std::vector<ProcessingData> parse();
 
 	private:
 		static bool checkListUnique(const utils::OptionList& list);
+
+		std::optional<ProcessingData> parseProcessing(sview name);
 		std::set<Channel> parseChannels(utils::OptionList channelsStringList) const;
-		void cacheHandlers(const utils::OptionList& indices);
-		std::function<SoundHandler*(SoundHandler*, Channel)> parseHandler(
+		std::vector<HandlerInfo> parseHandlers(const utils::OptionList& indices);
+
+		Patcher parseHandler(sview name, array_view<HandlerInfo> prevHandlers);
+		Patcher getHandlerPatcher(
 			const utils::OptionMap& optionMap,
-			utils::Rainmeter::Logger& cl
+			utils::Rainmeter::Logger& cl,
+			array_view<HandlerInfo> prevHandlers
 		);
 
 		template <typename T>
-		std::function<SoundHandler*(SoundHandler*, Channel)> parseHandlerT(
+		Patcher parseHandlerT(
 			const utils::OptionMap& optionMap,
 			utils::Rainmeter::Logger& cl
 		) {
@@ -71,7 +87,7 @@ namespace rxtd::audio_analyzer {
 		}
 
 		template <typename T>
-		std::function<SoundHandler*(SoundHandler*, Channel)> parseHandlerT2(
+		Patcher parseHandlerT2(
 			const utils::OptionMap& optionMap,
 			utils::Rainmeter::Logger& cl
 		) {

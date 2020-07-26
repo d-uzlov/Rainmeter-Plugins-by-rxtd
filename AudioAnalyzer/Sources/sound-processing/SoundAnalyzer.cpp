@@ -20,15 +20,7 @@ void SoundAnalyzer::setLayout(ChannelLayout _layout) {
 
 	layout = std::move(_layout);
 
-	removeNonexistentChannelsFromMap();
-
-	// add channels that didn't exist
-	for (auto [newChannel, _] : layout.getChannelsMapView()) {
-		channels[newChannel];
-	}
-	channels[Channel::eAUTO];
-
-	patchHandlers();
+	patch();
 }
 
 void SoundAnalyzer::setSourceRate(index value) {
@@ -41,19 +33,19 @@ void SoundAnalyzer::setSourceRate(index value) {
 	updateHandlerSampleRate();
 }
 
-AudioChildHelper SoundAnalyzer::getAudioChildHelper() const {
+const AudioChildHelper& SoundAnalyzer::getAudioChildHelper() const {
 	return audioChildHelper;
 }
 
-void SoundAnalyzer::setHandlerPatchers(
-	std::map<Channel, std::vector<istring>> handlersOrder,
-	std::map<istring, std::function<SoundHandler*(SoundHandler*, Channel)>, std::less<>> patchers
+void SoundAnalyzer::setHandlers(
+	std::set<Channel> channelSetRequested,
+	std::vector<ParamParser::HandlerInfo> handlerPatchers
 ) {
 
-	this->patchers = std::move(patchers);
-	this->orderOfHandlers = std::move(handlersOrder);
+	this->channelSetRequested = std::move(channelSetRequested);
+	this->handlerPatchers = std::move(handlerPatchers);
 
-	patchHandlers();
+	patch();
 }
 
 void SoundAnalyzer::process(bool isSilent) {
@@ -61,19 +53,19 @@ void SoundAnalyzer::process(bool isSilent) {
 	dataSupplier.logger = logger;
 
 	for (auto& [channel, channelData] : channels) {
-		if (channelData.handlers.empty()) {
+		if (channelData.empty()) {
 			continue;
 		}
 
 		dataSupplier.setChannelData(&channelData);
 
 		if (isSilent) {
-			for (auto& handler : channelData.handlers) {
+			for (auto& [name, handler] : channelData) {
 				handler->processSilence(dataSupplier);
 			}
 		} else {
 			dataSupplier.setWave(cph.getChannelPCM(channel));
-			for (auto& handler : channelData.handlers) {
+			for (auto& [name, handler] : channelData) {
 				handler->process(dataSupplier);
 			}
 		}
@@ -82,8 +74,8 @@ void SoundAnalyzer::process(bool isSilent) {
 }
 
 void SoundAnalyzer::resetValues() noexcept {
-	for (auto& [_, channel] : channels) {
-		for (auto& handler : channel.handlers) {
+	for (auto& [channel, channelData] : channels) {
+		for (auto& [name, handler] : channelData) {
 			handler->reset();
 		}
 	}
@@ -91,7 +83,7 @@ void SoundAnalyzer::resetValues() noexcept {
 
 void SoundAnalyzer::finishStandalone() noexcept {
 	for (auto& [channel, channelData] : channels) {
-		for (auto& handler : channelData.handlers) {
+		for (auto& [name, handler] : channelData) {
 			if (handler->isStandalone()) {
 				handler->finish(dataSupplier);
 			}
@@ -101,78 +93,52 @@ void SoundAnalyzer::finishStandalone() noexcept {
 
 void SoundAnalyzer::updateHandlerSampleRate() noexcept {
 	for (auto& [channel, channelData] : channels) {
-		for (auto& handler : channelData.handlers) {
+		for (auto& [name, handler] : channelData) {
 			handler->setSamplesPerSec(cph.getResampler().getSampleRate());
 		}
 	}
 }
 
-void SoundAnalyzer::removeNonexistentChannelsFromMap() {
+void SoundAnalyzer::patchChannels() {
+	// Delete not needed channels
 	std::vector<Channel> toDelete;
+	for (const auto& [channel, _] : channels) {
+		const bool exists = channel == Channel::eAUTO || layout.contains(channel);
+		const bool isRequested = channelSetRequested.count(channel) >= 1;
 
-	for (const auto& channelIter : channels) {
-		Channel c = channelIter.first;
-
-		if (c == Channel::eAUTO) {
-			continue;
-		}
-
-		if (!layout.contains(c)) {
-			toDelete.push_back(c);
+		if (!exists || !isRequested) {
+			toDelete.push_back(channel);
 		}
 	}
-
 	for (auto c : toDelete) {
 		channels.erase(c);
+	}
+
+	// Create missing channels
+	for (const auto channel : channelSetRequested) {
+		const bool exists = channel == Channel::eAUTO || layout.contains(channel);
+		if (exists) {
+			channels[channel];
+		}
 	}
 }
 
 void SoundAnalyzer::patchHandlers() {
 	for (auto& [channel, channelData] : channels) {
-		auto orderListIter = orderOfHandlers.find(channel);
-		if (orderListIter == orderOfHandlers.end()) {
-			// this channel doesn't have any handlers
-			// remove all handlers that it could have had earlier
-			channelData = { };
-			continue;
-		}
+		ChannelData newData;
 
-		decltype(ChannelData::handlers) newHandlers;
-		decltype(ChannelData::indexMap) newIndexMap;
+		for (auto& [handlerName, patcher] : handlerPatchers) {
+			auto& handlerPtr = channelData[handlerName];
 
-		auto& orderList = orderListIter->second;
-		index index = 0;
-
-		for (auto& handlerName : orderList) {
-			auto patcherIter = patchers.find(handlerName);
-			if (patcherIter == patchers.end()) {
-				continue;
+			SoundHandler* res = patcher(handlerPtr.get(), channel);
+			if (res != handlerPtr.get()) {
+				handlerPtr = std::unique_ptr<SoundHandler>(res);
 			}
 
-			auto& patcher = patcherIter->second;
-			std::unique_ptr<SoundHandler> handler;
-
-			auto handlerIndexIter = channelData.indexMap.find(handlerName);
-			if (handlerIndexIter == channelData.indexMap.end()) {
-				handler = std::unique_ptr<SoundHandler>(patcher(nullptr, channel));
-			} else {
-				std::unique_ptr<SoundHandler>& oldHandler = channelData.handlers[handlerIndexIter->second];
-				SoundHandler* res = patcher(oldHandler.get(), channel);
-				if (res != oldHandler.get()) {
-					oldHandler.reset();
-					handler = std::unique_ptr<SoundHandler>(res);
-				} else {
-					handler = std::move(oldHandler);
-				}
-			}
-
-			newHandlers.push_back(std::move(handler));
-			newIndexMap[handlerName] = index;
-			index++;
+			newData[handlerName] = std::move(handlerPtr);
 		}
 
-		channelData.handlers = std::move(newHandlers);
-		channelData.indexMap = std::move(newIndexMap);
+		channelData = std::move(newData);
 	}
 
 	updateHandlerSampleRate();

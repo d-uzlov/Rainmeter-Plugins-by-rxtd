@@ -13,10 +13,7 @@
 #include "RainmeterWrappers.h"
 
 namespace rxtd::audio_analyzer {
-	struct ChannelData {
-		std::vector<std::unique_ptr<SoundHandler>> handlers;
-		std::map<istring, index, std::less<>> indexMap;
-	};
+	using ChannelData = std::map<istring, std::unique_ptr<SoundHandler>>;
 
 	class DataSupplierImpl : public DataSupplier {
 		array_view<float> wave{ };

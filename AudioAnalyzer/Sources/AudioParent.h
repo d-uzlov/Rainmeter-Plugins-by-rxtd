@@ -17,8 +17,9 @@
 namespace rxtd::audio_analyzer {
 	class AudioParent : public utils::ParentBase {
 		ChannelMixer channelMixer;
-		SoundAnalyzer soundAnalyzer;
 		DeviceManager deviceManager;
+		std::vector<SoundAnalyzer> analyzers;
+		MyWaveFormat currentFormat{ };
 
 	public:
 		explicit AudioParent(utils::Rainmeter&& rain);
@@ -37,6 +38,9 @@ namespace rxtd::audio_analyzer {
 		void _resolve(array_view<isview> args, string& resolveBufferString) override;
 
 	public:
-		double getValue(sview id, Channel channel, index index) const;
+		double getValue(isview id, Channel channel, index index) const;
+
+	private:
+		std::pair<SoundHandler*, const AudioChildHelper*> findHandlerByName(isview name, Channel channel) const;
 	};
 }

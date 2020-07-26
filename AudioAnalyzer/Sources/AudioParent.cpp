@@ -17,11 +17,13 @@ using namespace audio_analyzer;
 
 AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 	ParentBase(std::move(_rain)),
-	soundAnalyzer(channelMixer),
 	deviceManager(logger, [this](MyWaveFormat format) {
 		channelMixer.setFormat(format);
-		soundAnalyzer.setSourceRate(format.samplesPerSec);
-		soundAnalyzer.setLayout(format.channelLayout);
+		for (auto& analyzer : analyzers) {
+			analyzer.setSourceRate(format.samplesPerSec);
+			analyzer.setLayout(format.channelLayout);
+		}
+		currentFormat = std::move(format);
 	}) {
 	setUseResultString(false);
 
@@ -29,8 +31,6 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
 	}
-
-	soundAnalyzer.setLogger(logger);
 }
 
 void AudioParent::_reload() {
@@ -49,14 +49,14 @@ void AudioParent::_reload() {
 		}
 	} else {
 		// legacy
-		if (auto legacyID = this->rain.readString(L"DeviceID");
+		if (auto legacyID = this->rain.read(L"DeviceID").asString();
 			!legacyID.empty()) {
 			logger.debug(L"Using '{}' as source audio device ID.", legacyID);
 			sourceEnum = DataSource::eID;
 			id = legacyID;
 		} else {
-			const auto port = this->rain.readString(L"Port") % ciView();
-			if (port.empty() || port == L"Output") {
+			const auto port = this->rain.read(L"Port").asIString(L"Output");
+			if (port == L"Output") {
 				sourceEnum = DataSource::eDEFAULT_OUTPUT;
 			} else if (port == L"Input") {
 				sourceEnum = DataSource::eDEFAULT_INPUT;
@@ -69,19 +69,26 @@ void AudioParent::_reload() {
 
 	deviceManager.setOptions(sourceEnum, id);
 
+	ParamParser paramParser(rain, rain.read(L"UnusedOptionsWarning").asBool(true));
+	auto processings = paramParser.parse();
+
+	analyzers.reserve(processings.size());
+	// TODO save state on reload
+	for (auto& procInfo : processings) {
+		auto& a = analyzers.emplace_back(channelMixer, logger);
+		a.getCPH().setTargetRate(procInfo.targetRate);
+		a.getCPH().setFCC(std::move(procInfo.fcc));
+		a.setHandlers(procInfo.channels, procInfo.handlerInfo);
+
+		a.setSourceRate(currentFormat.samplesPerSec);
+		a.setLayout(currentFormat.channelLayout);
+	}
+
 	auto targetRate = rain.read(L"TargetRate").asInt(44100);
 	if (targetRate < 0) {
 		logger.warning(L"Invalid TargetRate {}, must be > 0, assume 0.", targetRate);
 		targetRate = 0;
 	}
-
-	auto fcc = audio_utils::FilterCascadeParser::parse(rain.read(L"Preprocessing").asSequence());
-	soundAnalyzer.getCPH().setTargetRate(targetRate);
-	soundAnalyzer.getCPH().setFCC(std::move(fcc));
-
-	ParamParser paramParser(rain, rain.read(L"UnusedOptionsWarning").asBool(true));
-	paramParser.parse();
-	soundAnalyzer.setHandlerPatchers(paramParser.getHandlers(), paramParser.getPatches());
 }
 
 double AudioParent::_update() {
@@ -94,17 +101,23 @@ double AudioParent::_update() {
 			setMeasureState(utils::MeasureState::eBROKEN);
 			logger.error(L"Unrecoverable error");
 		}
-		soundAnalyzer.resetValues();
+
+		for (auto& analyzer : analyzers) {
+			analyzer.resetValues();
+		}
 	} else {
 		deviceManager.getCaptureManager().capture([&](bool silent, array_view<std::byte> buffer) {
 			if (!silent) {
-				const bool needAuto = soundAnalyzer.needChannelAuto();
-				channelMixer.decomposeFramesIntoChannels(buffer, needAuto);
+				channelMixer.decomposeFramesIntoChannels(buffer, true);
 			}
-			soundAnalyzer.process(silent);
+			for (auto& analyzer : analyzers) {
+				analyzer.process(silent);
+			}
 		}, maxLoop);
 
-		soundAnalyzer.finishStandalone();
+		for (auto& analyzer : analyzers) {
+			analyzer.finishStandalone();
+		}
 	}
 
 	return deviceManager.getDeviceStatus();
@@ -135,44 +148,29 @@ void AudioParent::_resolve(array_view<isview> args, string& resolveBufferString)
 			return;
 		}
 
-		auto channelOpt = Channel::channelParser.find(args[1]);
+		const auto channelName = args[1];
+		const auto handlerName = args[2];
+		const auto propName = args[3];
+
+		auto channelOpt = Channel::channelParser.find(channelName);
 		if (!channelOpt.has_value()) {
-			cl.error(L"channel '{}' not recognized", args[1]);
+			cl.error(L"channel '{}' not recognized", channelName);
 			return;
 		}
 
-		auto handlerVariant = soundAnalyzer.getAudioChildHelper().findHandler(channelOpt.value(), args[2]);
-
-		if (handlerVariant.index() == 1) {
-			const auto error = std::get<1>(handlerVariant);
-			switch (error) {
-			case AudioChildHelper::SearchResult::eCHANNEL_NOT_FOUND:
-				cl.printer.print(L"channel '{}' not found", args[1]);
-				resolveBufferString = cl.printer.getBufferPtr();
-				return;
-
-			case AudioChildHelper::SearchResult::eHANDLER_NOT_FOUND:
-				cl.error(L"handler '{}:{}' not found", args[1], args[2]);
-				return;
-
-			default:
-				cl.error(L"unexpected SearchError value '{}'", error);
-				return;
-			}
-		}
-		if (handlerVariant.index() == 0) {
-			const auto handler = std::get<0>(handlerVariant);
-			const bool found = handler->getProp(args[3], cl.printer);
-			if (!found) {
-				cl.error(L"prop '{}:{}' not found", args[2], args[3]);
-				return;
-			}
-
-			resolveBufferString = cl.printer.getBufferView();
+		auto[handler, helper] = findHandlerByName(handlerName, channelOpt.value());
+		if (handler == nullptr) {
+			cl.error(L"handler '{}:{}' not found", channelName, handlerName);
 			return;
 		}
 
-		cl.error(L"unexpected handlerVariant index '{}'", handlerVariant.index());
+		const bool found = handler->getProp(propName, cl.printer);
+		if (!found) {
+			cl.error(L"prop '{}:{}' not found", handlerName, propName);
+			return;
+		}
+
+		resolveBufferString = cl.printer.getBufferView();
 		return;
 	}
 
@@ -244,6 +242,24 @@ void AudioParent::_resolve(array_view<isview> args, string& resolveBufferString)
 	return;
 }
 
-double AudioParent::getValue(sview id, Channel channel, index index) const {
-	return soundAnalyzer.getAudioChildHelper().getValue(channel, id % ciView(), index);
+double AudioParent::getValue(isview id, Channel channel, index ind) const {
+	auto [handler, helper ] = findHandlerByName(id, channel);
+	if (handler == nullptr) {
+		return 0.0;
+	}
+	return helper->getValueFrom(handler, channel, ind);
+}
+
+std::pair<SoundHandler*, const AudioChildHelper*> AudioParent::findHandlerByName(isview name, Channel channel) const {
+	for (auto& analyzer : analyzers) {
+		auto handlerVar = analyzer.getAudioChildHelper().findHandler(channel, name);
+		if (handlerVar.index() == 0) {
+			return {
+				std::get<0>(handlerVar),
+				&analyzer.getAudioChildHelper(),
+			};
+		}
+	}
+
+	return { };
 }

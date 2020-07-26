@@ -39,81 +39,85 @@ ParamParser::ParamParser(utils::Rainmeter& rain, bool unusedOptionsWarning) :
 	unusedOptionsWarning(unusedOptionsWarning) {
 }
 
-void ParamParser::parse() {
-	handlerPatchersMap.clear();
+std::vector<ParamParser::ProcessingData> ParamParser::parse() {
+	std::vector<ProcessingData> result;
 
 	auto processingIndices = rain.read(L"Processing").asList(L'|');
 	if (!checkListUnique(processingIndices)) {
 		rain.getLogger().error(L"Found repeating processings, aborting");
-		return;
+		return result;
 	}
 
-	for (const auto& processingNameOption : processingIndices) {
-		auto processingName = processingNameOption.asString();
-		auto cl = rain.getLogger().context(L"Processing {}: ", processingName);
+	for (const auto& nameOption : processingIndices) {
+		const auto name = nameOption.asString();
 
-		string processingOptionIndex = L"Processing-"s;
-		processingOptionIndex += processingName;
-		auto processingDescriptionOption = rain.read(processingOptionIndex);
-		if (processingDescriptionOption.empty()) {
-			processingOptionIndex = L"Processing_"s;
-			processingOptionIndex += processingName;
-			processingDescriptionOption = rain.read(processingOptionIndex);
-		}
-
-		if (processingDescriptionOption.empty()) {
-			cl.error(L"processing description not found");
+		auto procOpt = parseProcessing(name);
+		if (!procOpt.has_value()) {
+			rain.getLogger().error(L"Invalid processing '{}'", name);
 			continue;
 		}
 
-		auto processingMap = processingDescriptionOption.asMap(L'|', L' ');
-		auto channelsList = processingMap.get(L"channels"sv).asList(L',');
-		if (channelsList.empty()) {
-			cl.error(L"channels not found");
-			continue;
-		}
-		auto channels = parseChannels(channelsList);
-		if (channels.empty()) {
-			cl.error(L"no valid channels found");
-			continue;
-		}
-
-		auto handlersOption = processingMap.get(L"handlers"sv);
-		if (handlersOption.empty()) {
-			cl.error(L"handlers not found");
-			continue;
-		}
-
-		auto handlersList = handlersOption.asList(L',');
-		if (!checkListUnique(handlersList)) {
-			cl.error(L"found repeating handlers, aborting");
-			return;
-		}
-
-		cacheHandlers(handlersList);
-
-		for (auto channel : channels) {
-			for (auto handlerNameOption : handlersList) {
-				auto &channelHandlersList = handlers[channel];
-				auto iter = std::find(channelHandlersList.begin(), channelHandlersList.end(), handlerNameOption.asIString());
-				if (iter != channelHandlersList.end()) {
-					cl.error(L"found repeating handler '{}' in channel {}, aborting", handlerNameOption.asString(), channel.technicalName());
-					return;
-				}
-
-				channelHandlersList.emplace_back(handlerNameOption.asIString());
-			}
-		}
+		result.push_back(procOpt.value());
 	}
+
+	return result;
 }
 
-const std::map<Channel, std::vector<istring>>& ParamParser::getHandlers() const {
-	return handlers;
-}
+std::optional<ParamParser::ProcessingData> ParamParser::parseProcessing(sview name) {
+	auto cl = rain.getLogger().context(L"Processing {}: ", name);
 
-const std::map<istring, std::function<SoundHandler*(SoundHandler*, Channel)>, std::less<>>&
-ParamParser::getPatches() const {
-	return handlerPatchersMap;
+	string processingOptionIndex = L"Processing-"s += name;
+	auto processingDescriptionOption = rain.read(processingOptionIndex);
+	if (processingDescriptionOption.empty()) {
+		processingOptionIndex = L"Processing_"s += name;
+		processingDescriptionOption = rain.read(processingOptionIndex);
+	}
+
+	if (processingDescriptionOption.empty()) {
+		cl.error(L"processing description not found");
+		return { };
+	}
+
+	auto processingMap = processingDescriptionOption.asMap(L'|', L' ');
+
+	auto channelsList = processingMap.get(L"channels"sv).asList(L',');
+	if (channelsList.empty()) {
+		cl.error(L"channels not found");
+		return { };
+	}
+	auto channels = parseChannels(channelsList);
+	if (channels.empty()) {
+		cl.error(L"no valid channels found");
+		return { };
+	}
+
+	auto handlersOption = processingMap.get(L"handlers"sv);
+	if (handlersOption.empty()) {
+		cl.error(L"handlers not found");
+		return { };
+	}
+
+	auto handlersList = handlersOption.asList(L',');
+	if (!checkListUnique(handlersList)) {
+		cl.error(L"found repeating handlers, invalidate processing");
+		return { };
+	}
+
+	auto handlers = parseHandlers(handlersList);
+	if (handlers.empty()) {
+		cl.warning(L"no valid handlers found");
+		return { };
+	}
+
+	index targetRate = processingMap.get(L"targetRate").asInt(44100);
+	auto ffc = audio_utils::FilterCascadeParser::parse(processingMap.get(L"filter").asSequence());
+
+	return ProcessingData{
+		targetRate,
+		std::move(ffc),
+		channels,
+		handlers
+	};
 }
 
 bool ParamParser::checkListUnique(const utils::OptionList& list) {
@@ -143,65 +147,81 @@ std::set<Channel> ParamParser::parseChannels(utils::OptionList channelsStringLis
 	return set;
 }
 
-void ParamParser::cacheHandlers(const utils::OptionList& indices) {
-	for (auto indexOption : indices) {
+std::vector<ParamParser::HandlerInfo> ParamParser::parseHandlers(const utils::OptionList& names) {
+	std::vector<HandlerInfo> result;
 
-		auto iter = handlerPatchersMap.lower_bound(indexOption.asIString());
-		if (iter != handlerPatchersMap.end()
-			&& !(handlerPatchersMap.key_comp()(indexOption.asIString(), iter->first))
-		) {
-			//key found
-			continue;
-		}
-
-		string optionName = L"Handler-";
-		optionName += indexOption.asString();
-
-		auto descriptionOption = rain.read(optionName);
-
-		if (descriptionOption.empty()) {
-			optionName = L"Handler_";
-			optionName += indexOption.asString();
-			descriptionOption = rain.read(optionName);
-		}
-
-		if (descriptionOption.empty()) {
-			log.error(L"Description of '{}' not found", indexOption.asString());
-			continue;
-		}
-
-		auto optionMap = descriptionOption.asMap(L'|', L' ');
-
-		auto cl = rain.getLogger().context(L"Handler '{}': ", indexOption.asString());
-		auto patcher = parseHandler(optionMap, cl);
+	for (auto nameOption : names) {
+		auto name = nameOption.asString();
+		auto patcher = parseHandler(name, result);
 		if (patcher == nullptr) {
-			cl.error(L"not a valid description");
 			continue;
 		}
-		const auto unusedOptions = optionMap.getListOfUntouched();
-		if (unusedOptionsWarning && !unusedOptions.empty()) {
-			cl.warning(L"unused option: '{}'", unusedOptions);
-		}
 
-		handlerPatchersMap.insert(iter, decltype(handlerPatchersMap)::value_type(indexOption.asIString(), patcher));
+		HandlerInfo info{ };
+		info.name = nameOption.asIString();
+		info.patcher = patcher;
+		result.push_back(info);
 	}
+
+	return result;
 }
 
-std::function<SoundHandler*(SoundHandler*, Channel)> ParamParser::parseHandler(
+ParamParser::Patcher ParamParser::parseHandler(sview name, array_view<HandlerInfo> prevHandlers) {
+	string optionName = L"Handler-"s += name;
+	auto descriptionOption = rain.read(optionName);
+	if (descriptionOption.empty()) {
+		optionName = L"Handler_"s += name;
+		descriptionOption = rain.read(optionName);
+	}
+
+	auto cl = rain.getLogger().context(L"Handler '{}': ", name);
+
+	if (descriptionOption.empty()) {
+		cl.error(L"description is not found", name);
+		return { };
+	}
+
+	auto optionMap = descriptionOption.asMap(L'|', L' ');
+
+	auto patcher = getHandlerPatcher(optionMap, cl, prevHandlers);
+	if (patcher == nullptr) {
+		return { };
+	}
+
+	const auto unusedOptions = optionMap.getListOfUntouched();
+	if (unusedOptionsWarning && !unusedOptions.empty()) {
+		cl.warning(L"unused options: '{}'", unusedOptions);
+	}
+
+	return patcher;
+}
+
+ParamParser::Patcher ParamParser::getHandlerPatcher(
 	const utils::OptionMap& optionMap,
-	utils::Rainmeter::Logger& cl
+	utils::Rainmeter::Logger& cl,
+	array_view<HandlerInfo> prevHandlers
 ) {
 	const auto type = optionMap.get(L"type"sv).asIString();
 
 	if (type.empty()) {
+		cl.error(L"type is not found");
 		return nullptr;
 	}
 
 	// source must be checked to prevent loops
 	const auto source = optionMap.getUntouched(L"source").asIString();
-	if (!source.empty() && handlerPatchersMap.find(source) == handlerPatchersMap.end()) {
-		cl.error(L"reverse or unknown dependency '{}'", source);
-		return nullptr;
+	if (!source.empty()) {
+		bool found = false;
+		for (auto& info : prevHandlers) {
+			if (info.name == source) {
+				found = true;
+				break;
+			}
+		}
+		if (!found) {
+			cl.error(L"reverse or unknown dependency '{}'", source);
+			return nullptr;
+		}
 	}
 
 	if (type == L"rms") {
@@ -245,6 +265,5 @@ std::function<SoundHandler*(SoundHandler*, Channel)> ParamParser::parseHandler(
 	}
 
 	cl.error(L"unknown type '{}'", type);
-
 	return nullptr;
 }

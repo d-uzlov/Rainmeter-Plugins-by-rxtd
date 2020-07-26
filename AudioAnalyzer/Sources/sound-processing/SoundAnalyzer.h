@@ -8,28 +8,26 @@
  */
 
 #pragma once
-#include "sound-handlers/SoundHandler.h"
-#include <functional>
+#include <utility>
 #include "Channel.h"
 #include "AudioChildHelper.h"
 #include "HelperClasses.h"
 #include "ChannelProcessingHelper.h"
+#include "../ParamParser.h"
 
 namespace rxtd::audio_analyzer {
 	class SoundAnalyzer {
 		// Following two fields are used for updating .channels field.
 		// They can contain info about handlers that doesn't exist because of channel layout
-		std::map<Channel, std::vector<istring>> orderOfHandlers;
-		std::map<istring, std::function<SoundHandler*(SoundHandler*, Channel)>, std::less<>> patchers;
-
-		ChannelProcessingHelper cph;
-		AudioChildHelper audioChildHelper{ };
+		std::set<Channel> channelSetRequested;
+		std::vector<ParamParser::HandlerInfo> handlerPatchers;
 
 		std::map<Channel, ChannelData> channels;
+		DataSupplierImpl dataSupplier;
 
-		mutable DataSupplierImpl dataSupplier;
-
+		ChannelProcessingHelper cph;
 		utils::Rainmeter::Logger logger;
+		AudioChildHelper audioChildHelper{ };
 
 		index sampleRate{ };
 		ChannelLayout layout;
@@ -37,25 +35,21 @@ namespace rxtd::audio_analyzer {
 	public:
 		SoundAnalyzer() = default;
 
-		SoundAnalyzer(const ChannelMixer& channelMixer) noexcept :
-			cph(channelMixer), audioChildHelper(channels, dataSupplier) {
+		SoundAnalyzer(const ChannelMixer& channelMixer, utils::Rainmeter::Logger logger) noexcept :
+			cph(channelMixer), logger(std::move(logger)), audioChildHelper(channels, dataSupplier) {
 		}
 
 		~SoundAnalyzer() = default;
 		/** This class is non copyable */
 		SoundAnalyzer(const SoundAnalyzer& other) = delete;
-		SoundAnalyzer(SoundAnalyzer&& other) = delete;
+		SoundAnalyzer(SoundAnalyzer&& other) = default;
 		SoundAnalyzer& operator=(const SoundAnalyzer& other) = delete;
-		SoundAnalyzer& operator=(SoundAnalyzer&& other) = delete;
+		SoundAnalyzer& operator=(SoundAnalyzer&& other) = default;
 
 		void setLayout(ChannelLayout layout);
 		void setSourceRate(index value);
 
-		void setLogger(utils::Rainmeter::Logger logger) {
-			this->logger = logger;
-		}
-
-		AudioChildHelper getAudioChildHelper() const;
+		const AudioChildHelper& getAudioChildHelper() const;
 
 		/**
 		 * Handlers aren't completely recreated when measure is reloaded.
@@ -64,9 +58,9 @@ namespace rxtd::audio_analyzer {
 		 * This new handler may be completely new if it didn't exist before or if class of handler with this name changed,
 		 * but usually this is the same handler with updated parameters.
 		 */
-		void setHandlerPatchers(
-			std::map<Channel, std::vector<istring>> handlersOrder,
-			std::map<istring, std::function<SoundHandler*(SoundHandler*, Channel)>, std::less<>> patchers
+		void setHandlers(
+			std::set<Channel> channelSetRequested,
+			std::vector<ParamParser::HandlerInfo> handlerPatchers
 		);
 
 		ChannelProcessingHelper& getCPH() {
@@ -82,12 +76,17 @@ namespace rxtd::audio_analyzer {
 			if (iter == channels.end()) {
 				return false;
 			}
-			return !iter->second.handlers.empty();
+			return !iter->second.empty();
 		}
 
 	private:
+		void patch() {
+			patchChannels();
+			patchHandlers();
+		}
+
 		void updateHandlerSampleRate() noexcept;
-		void removeNonexistentChannelsFromMap();
+		void patchChannels();
 		void patchHandlers();
 	};
 }
