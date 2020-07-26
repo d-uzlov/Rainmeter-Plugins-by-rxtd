@@ -14,13 +14,27 @@
 
 using namespace audio_analyzer;
 
-void ChannelProcessingHelper::setFCC(audio_utils::FilterCascadeCreator value) {
-	fcc = std::move(value);
-	if (waveFormat.samplesPerSec != 0) {
-		for (auto&[c, cd] : channels) {
-			cd.fc = fcc.getInstance(resampler.getSampleRate());
+void ChannelProcessingHelper::setChannels(const std::set<Channel>& set) {
+	std::vector<Channel> toDelete;
+	for (auto& [channel, data] : channels) {
+		if (set.count(channel) < 1) {
+			toDelete.push_back(channel);
 		}
 	}
+	for (auto channel : toDelete) {
+		channels.erase(channel);
+	}
+	for (auto channel : set) {
+		if (channels.count(channel) < 1) {
+			const index sampleRate = resampler.getSampleRate();
+			channels[channel].fc = fcc.getInstance(sampleRate);
+		}
+	}
+}
+
+void ChannelProcessingHelper::setFCC(audio_utils::FilterCascadeCreator value) {
+	fcc = std::move(value);
+	updateFC();
 }
 
 array_view<float> ChannelProcessingHelper::getChannelPCM(Channel channel) const {
@@ -51,5 +65,16 @@ array_view<float> ChannelProcessingHelper::getChannelPCM(Channel channel) const 
 void ChannelProcessingHelper::reset() const {
 	for (auto& [channel, data] : channels) {
 		data.preprocessed = false;
+	}
+}
+
+void ChannelProcessingHelper::updateFC() {
+	const index sampleRate = resampler.getSampleRate();
+	if (sampleRate == 0) {
+		return;
+	}
+
+	for (auto&[c, cd] : channels) {
+		cd.fc = fcc.getInstance(sampleRate);
 	}
 }

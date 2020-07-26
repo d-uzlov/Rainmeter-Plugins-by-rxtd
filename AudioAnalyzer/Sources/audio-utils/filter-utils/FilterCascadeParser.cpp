@@ -17,7 +17,7 @@
 
 using namespace audio_utils;
 
-FilterCascade FilterCascadeCreator::getInstance(double samplingFrequency) {
+FilterCascade FilterCascadeCreator::getInstance(double samplingFrequency) const {
 	std::vector<std::unique_ptr<AbstractFilter>> result;
 	for (const auto& patcher : patchers) {
 		result.push_back(patcher(samplingFrequency));
@@ -57,6 +57,11 @@ FilterCascadeParser::FCF FilterCascadeParser::parseFilter(const utils::OptionLis
 
 		const double q = args.get(L"q").asFloat();
 		const double cutoff = args.get(L"freq").asFloat();
+
+		if (q <= std::numeric_limits<float>::epsilon() || cutoff < std::numeric_limits<float>::epsilon()) {
+			return { };
+		}
+
 		return [=](double sampleFrequency) {
 			auto filter = new BiQuadIIR{ };
 			*filter = BQFilterBuilder::createHighPass(q, cutoff, sampleFrequency);
@@ -71,6 +76,11 @@ FilterCascadeParser::FCF FilterCascadeParser::parseFilter(const utils::OptionLis
 
 		const double q = args.get(L"q").asFloat();
 		const double cutoff = args.get(L"freq").asFloat();
+
+		if (q <= std::numeric_limits<float>::epsilon() || cutoff < std::numeric_limits<float>::epsilon()) {
+			return { };
+		}
+
 		return [=](double sampleFrequency) {
 			auto filter = new BiQuadIIR{ };
 			*filter = BQFilterBuilder::createLowPass(q, cutoff, sampleFrequency);
@@ -86,6 +96,11 @@ FilterCascadeParser::FCF FilterCascadeParser::parseFilter(const utils::OptionLis
 		const double q = args.get(L"q").asFloat();
 		const double cutoff = args.get(L"freq").asFloat();
 		const double gain = args.get(L"gain").asFloat();
+
+		if (q <= std::numeric_limits<float>::epsilon() || cutoff < std::numeric_limits<float>::epsilon()) {
+			return { };
+		}
+
 		return [=](double sampleFrequency) {
 			auto filter = new BiQuadIIR{ };
 			*filter = BQFilterBuilder::createHighShelf(gain, q, cutoff, sampleFrequency);
@@ -104,6 +119,11 @@ FilterCascadeParser::FCF FilterCascadeParser::parseFilter(const utils::OptionLis
 		const double q = args.get(L"q").asFloat();
 		const double cutoff = args.get(L"freq").asFloat();
 		const double gain = args.get(L"gain").asFloat();
+
+		if (q <= std::numeric_limits<float>::epsilon() || cutoff < std::numeric_limits<float>::epsilon()) {
+			return { };
+		}
+
 		return [=](double sampleFrequency) {
 			auto filter = new BiQuadIIR{ };
 			*filter = BQFilterBuilder::createLowShelf(gain, q, cutoff, sampleFrequency);
@@ -122,6 +142,11 @@ FilterCascadeParser::FCF FilterCascadeParser::parseFilter(const utils::OptionLis
 		const double q = args.get(L"q").asFloat();
 		const double cutoff = args.get(L"freq").asFloat();
 		const double gain = args.get(L"gain").asFloat();
+
+		if (q <= std::numeric_limits<float>::epsilon() || cutoff < std::numeric_limits<float>::epsilon()) {
+			return { };
+		}
+
 		return [=](double sampleFrequency) {
 			auto filter = new BiQuadIIR{ };
 			*filter = BQFilterBuilder::createPeak(gain, q, cutoff, sampleFrequency);
@@ -143,6 +168,11 @@ FilterCascadeParser::FCF FilterCascadeParser::parseFilter(const utils::OptionLis
 		}
 
 		const double cutoff = args.get(L"freq").asFloat();
+
+		if (cutoff < std::numeric_limits<float>::epsilon()) {
+			return { };
+		}
+
 		return parseBWLowPass(order, cutoff);
 	}
 
@@ -157,6 +187,11 @@ FilterCascadeParser::FCF FilterCascadeParser::parseFilter(const utils::OptionLis
 		}
 
 		const double cutoff = args.get(L"freq").asFloat();
+
+		if (cutoff < std::numeric_limits<float>::epsilon()) {
+			return { };
+		}
+
 		return parseBWHighPass(order, cutoff);
 	}
 
@@ -172,6 +207,12 @@ FilterCascadeParser::FCF FilterCascadeParser::parseFilter(const utils::OptionLis
 
 		const double cutoffLow = args.get(L"freqLow").asFloat();
 		const double cutoffHigh = args.get(L"freqHigh").asFloat();
+
+		if (cutoffLow < std::numeric_limits<float>::epsilon()
+			|| cutoffHigh < cutoffLow + std::numeric_limits<float>::epsilon()) {
+			return { };
+		}
+
 		return parseBWBandPass(order, cutoffLow, cutoffHigh);
 	}
 
@@ -187,6 +228,12 @@ FilterCascadeParser::FCF FilterCascadeParser::parseFilter(const utils::OptionLis
 
 		const double cutoffLow = args.get(L"freqLow").asFloat();
 		const double cutoffHigh = args.get(L"freqHigh").asFloat();
+
+		if (cutoffLow < std::numeric_limits<float>::epsilon()
+			|| cutoffHigh < cutoffLow + std::numeric_limits<float>::epsilon()) {
+			return { };
+		}
+
 		return parseBWBandStop(order, cutoffLow, cutoffHigh);
 	}
 

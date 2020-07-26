@@ -14,6 +14,10 @@ using namespace audio_utils;
 
 ButterworthWrapper::AB
 ButterworthWrapper::calcCoefLowPass(index order, double cutoffFrequency, double samplingFrequency) {
+	if (order < 0) {
+		return { };
+	}
+
 	const double digitalFreq = cutoffFrequency / samplingFrequency;
 
 	double* aCoef = dcof_bwlp(order, digitalFreq);

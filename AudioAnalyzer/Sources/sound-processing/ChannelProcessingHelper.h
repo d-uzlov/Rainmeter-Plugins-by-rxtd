@@ -13,6 +13,7 @@
 #include "array_view.h"
 #include "../audio-utils/filter-utils/FilterCascadeParser.h"
 #include "ChannelMixer.h"
+#include <set>
 
 namespace rxtd::audio_analyzer {
 	class ChannelProcessingHelper {
@@ -36,20 +37,18 @@ namespace rxtd::audio_analyzer {
 		ChannelProcessingHelper(const ChannelMixer& mixer) : mixer(&mixer) {
 		}
 
+		void setChannels(const std::set<Channel>& set);
+
 		void setFCC(audio_utils::FilterCascadeCreator value);
 
 		void setTargetRate(index value) {
-			resampler.setSourceRate(value);
-			for (auto& [c, cd] : channels) {
-				cd.fc = fcc.getInstance(resampler.getSampleRate());
-			}
+			resampler.setTargetRate(value);
+			updateFC();
 		}
 
 		void setSourceRate(index value) {
 			resampler.setSourceRate(value);
-			for (auto&[c, cd] : channels) {
-				cd.fc = fcc.getInstance(resampler.getSampleRate());
-			}
+			updateFC();
 		}
 
 		array_view<float> getChannelPCM(Channel channel) const;
@@ -63,5 +62,8 @@ namespace rxtd::audio_analyzer {
 		}
 
 		void reset() const;
+
+	private:
+		void updateFC();
 	};
 }

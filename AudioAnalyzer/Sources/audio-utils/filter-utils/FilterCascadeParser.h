@@ -28,7 +28,7 @@ namespace rxtd::audio_utils {
 			patchers(std::move(patchers)) {
 		}
 
-		FilterCascade getInstance(double samplingFrequency);
+		FilterCascade getInstance(double samplingFrequency) const;
 	};
 
 	class FilterCascadeParser {

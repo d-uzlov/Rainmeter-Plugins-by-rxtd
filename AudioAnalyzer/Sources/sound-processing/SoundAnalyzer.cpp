@@ -114,13 +114,16 @@ void SoundAnalyzer::patchChannels() {
 		channels.erase(c);
 	}
 
+	std::set<Channel> channelsSet;
 	// Create missing channels
 	for (const auto channel : channelSetRequested) {
 		const bool exists = channel == Channel::eAUTO || layout.contains(channel);
 		if (exists) {
 			channels[channel];
+			channelsSet.insert(channel);
 		}
 	}
+	cph.setChannels(channelsSet);
 }
 
 void SoundAnalyzer::patchHandlers() {
