@@ -29,7 +29,7 @@ PLUGIN_EXPORT void Initialize(void** data, void* rm) {
 		*data = new audio_analyzer::AudioParent(std::move(rain));
 	} else {
 		if (typeString != L"Child") {
-			rain.getLogger().warning(L"Unknown type '{}', defaulting to Child is unsupported", typeString);
+			rain.getLogger().warning(L"Unknown type '{}', defaulting to Child is deprecated", typeString);
 		}
 		*data = new audio_analyzer::AudioChild(std::move(rain));
 	}

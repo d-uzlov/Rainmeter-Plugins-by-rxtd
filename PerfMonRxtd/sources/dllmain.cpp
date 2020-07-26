@@ -24,7 +24,7 @@ PLUGIN_EXPORT void Initialize(void** data, void* rm) {
 		*data = new perfmon::PerfmonParent(std::move(rain));
 	} else {
 		if (typeString != L"Child") {
-			rain.getLogger().warning(L"Unknown type '{}', defaulting to Child is unsupported", typeString);
+			rain.getLogger().warning(L"Unknown type '{}', defaulting to Child is deprecated", typeString);
 		}
 		*data = new perfmon::PerfmonChild(std::move(rain));
 	}
