@@ -135,33 +135,47 @@ namespace rxtd::utils {
 		void inflateLine(array_view<float> source, array_span<uint32_t> dest) {
 			switch (fading) {
 			case FadingType::eNONE:
-				inflateLineNoFade(source, dest);
+				inflateLine<distNone>(source, dest);
 				break;
 			case FadingType::eLINEAR:
-				inflateLinePow1(source, dest);
+				inflateLine<distLinear>(source, dest);
 				break;
 			case FadingType::ePOW2:
-				inflateLinePow2(source, dest);
+				inflateLine<distPow2>(source, dest);
 				break;
 			case FadingType::ePOW4:
-				inflateLinePow4(source, dest);
+				inflateLine<distPow4>(source, dest);
 				break;
 			case FadingType::ePOW8:
-				inflateLinePow8(source, dest);
+				inflateLine<distPow8>(source, dest);
 				break;
 			default: ;
 			}
 		}
 
-		void inflateLineNoFade(array_view<float> source, array_span<uint32_t> dest);
+		template<double (*distanceTransformFunc)(double)>
+		void inflateLine(array_view<float> source, array_span<uint32_t> dest) {
+			const index lastStripIndex = inflatableBuffer.getLastStripIndex();
+			const double realWidth = width - borderSize;
+			const double distanceCoef = 1.0 / realWidth;
 
-		void inflateLinePow1(array_view<float> source, array_span<uint32_t> dest);
+			for (int i = 0; i < width; ++i) {
+				double distance = lastStripIndex - i;
+				if (distance < 0.0) {
+					distance += width;
+				}
+				if (distance >= realWidth) {
+					// this is border
+					dest[i] = colors.border.toInt();
+					continue;
+				}
 
-		void inflateLinePow2(array_view<float> source, array_span<uint32_t> dest);
+				distance *= distanceCoef;
+				distance = distanceTransformFunc(distance);
 
-		void inflateLinePow4(array_view<float> source, array_span<uint32_t> dest);
-
-		void inflateLinePow8(array_view<float> source, array_span<uint32_t> dest);
+				dest[i] = inflatePixel(source, distance, i);
+			}
+		}
 
 		uint32_t inflatePixel(array_view<float> source, double backgroundCoef, index i);
 
@@ -169,5 +183,30 @@ namespace rxtd::utils {
 
 		void fillStripBuffer(double min, double max);
 
+		static double distNone(double) {
+			return 0.0;
+		}
+
+		static double distLinear(double value) {
+			return value;
+		}
+
+		static double distPow2(double value) {
+			value = value * value;
+			return value;
+		}
+
+		static double distPow4(double value) {
+			value = value * value;
+			value = value * value;
+			return value;
+		}
+
+		static double distPow8(double value) {
+			value = value * value;
+			value = value * value;
+			value = value * value;
+			return value;
+		}
 	};
 }
