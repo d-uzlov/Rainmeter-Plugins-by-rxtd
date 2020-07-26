@@ -21,9 +21,6 @@
     <Filter Include="Source Files\audio-utils">
       <UniqueIdentifier>{9983f910-0024-44d2-bdc9-31dbc74164be}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\audio-utils\kiss_fft">
-      <UniqueIdentifier>{3cb7bcf2-f4bf-4ed8-a4a5-8b0851d3df34}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\sound-processing\sound-handlers\spectrum-stack">
       <UniqueIdentifier>{de102e90-3811-445c-9f63-d12d9f1758b2}</UniqueIdentifier>
     </Filter>
@@ -32,6 +29,9 @@
     </Filter>
     <Filter Include="Source Files\audio-utils\butterworth-lib">
       <UniqueIdentifier>{f1e43e54-5810-43fb-9cfb-0fc68f48aeca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\audio-utils\kiss_fft-lib">
+      <UniqueIdentifier>{3cb7bcf2-f4bf-4ed8-a4a5-8b0851d3df34}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -82,9 +82,6 @@
     </ClInclude>
     <ClInclude Include="Sources\sound-processing\device-management\AudioEnumeratorHelper.h">
       <Filter>Source Files\sound-processing\device-management</Filter>
-    </ClInclude>
-    <ClInclude Include="Sources\audio-utils\kiss_fft\KissFft.hh">
-      <Filter>Source Files\audio-utils\kiss_fft</Filter>
     </ClInclude>
     <ClInclude Include="Sources\audio-utils\FFT.h">
       <Filter>Source Files\audio-utils</Filter>
@@ -152,14 +149,8 @@
     <ClInclude Include="Sources\audio-utils\filter-utils\LogarithmicIRF.h">
       <Filter>Source Files\audio-utils\filter-utils</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\audio-utils\filter-utils\LoudnessNormalizationHelper.h">
-      <Filter>Source Files\audio-utils\filter-utils</Filter>
-    </ClInclude>
     <ClInclude Include="Sources\audio-utils\butterworth-lib\iir.h">
       <Filter>Source Files\audio-utils\butterworth-lib</Filter>
-    </ClInclude>
-    <ClInclude Include="Sources\audio-utils\filter-utils\ButterworthWrapper.h">
-      <Filter>Source Files\audio-utils\filter-utils</Filter>
     </ClInclude>
     <ClInclude Include="Sources\audio-utils\filter-utils\AbstractFilter.h">
       <Filter>Source Files\audio-utils\filter-utils</Filter>
@@ -172,6 +163,12 @@
     </ClInclude>
     <ClInclude Include="Sources\sound-processing\ChannelProcessingHelper.h">
       <Filter>Source Files\sound-processing</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\audio-utils\kiss_fft-lib\KissFft.hh">
+      <Filter>Source Files\audio-utils\kiss_fft-lib</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\audio-utils\butterworth-lib\ButterworthWrapper.h">
+      <Filter>Source Files\audio-utils\butterworth-lib</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -277,14 +274,8 @@
     <ClCompile Include="Sources\audio-utils\filter-utils\LogarithmicIRF.cpp">
       <Filter>Source Files\audio-utils\filter-utils</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\audio-utils\filter-utils\LoudnessNormalizationHelper.cpp">
-      <Filter>Source Files\audio-utils\filter-utils</Filter>
-    </ClCompile>
     <ClCompile Include="Sources\audio-utils\butterworth-lib\iir.cpp">
       <Filter>Source Files\audio-utils\butterworth-lib</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\audio-utils\filter-utils\ButterworthWrapper.cpp">
-      <Filter>Source Files\audio-utils\filter-utils</Filter>
     </ClCompile>
     <ClCompile Include="Sources\audio-utils\filter-utils\FilterCascade.cpp">
       <Filter>Source Files\audio-utils\filter-utils</Filter>
@@ -294,6 +285,9 @@
     </ClCompile>
     <ClCompile Include="Sources\sound-processing\ChannelProcessingHelper.cpp">
       <Filter>Source Files\sound-processing</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\audio-utils\butterworth-lib\ButterworthWrapper.cpp">
+      <Filter>Source Files\audio-utils\butterworth-lib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

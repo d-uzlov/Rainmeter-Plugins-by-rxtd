@@ -8,7 +8,7 @@
  */
 
 #include "ButterworthWrapper.h"
-#include "../butterworth-lib/iir.h"
+#include "iir.h"
 
 using namespace audio_utils;
 

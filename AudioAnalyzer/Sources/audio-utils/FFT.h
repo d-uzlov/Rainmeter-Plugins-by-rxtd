@@ -8,7 +8,7 @@
  */
 
 #pragma once
-#include "kiss_fft/KissFft.hh"
+#include "kiss_fft-lib/KissFft.hh"
 #include "array_view.h"
 
 namespace rxtd::audio_utils {

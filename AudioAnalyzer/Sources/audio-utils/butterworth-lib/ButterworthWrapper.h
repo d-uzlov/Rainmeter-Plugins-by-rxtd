@@ -8,7 +8,7 @@
  */
 
 #pragma once
-#include "InfiniteResponseFilter.h"
+#include "../filter-utils/InfiniteResponseFilter.h"
 
 namespace rxtd::audio_utils {
 	class ButterworthWrapper {
