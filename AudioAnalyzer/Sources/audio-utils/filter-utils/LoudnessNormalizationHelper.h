@@ -16,6 +16,7 @@ namespace rxtd::audio_utils {
 		BiQuadIIR filter1{ };
 		BiQuadIIR filter2{ };
 		BiQuadIIR filter3{ };
+		BiQuadIIR filter4{ };
 
 		std::vector<float> processed;
 
@@ -36,6 +37,8 @@ namespace rxtd::audio_utils {
 		static BiQuadIIR createFilter2(double samplingFrequency);
 
 		static BiQuadIIR createFilter3(double samplingFrequency);
+
+		static BiQuadIIR createFilter4(double samplingFrequency);
 	};
 
 }

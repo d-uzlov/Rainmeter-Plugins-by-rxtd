@@ -30,23 +30,30 @@ void LoudnessNormalizationHelper::apply(array_view<float> wave) {
 }
 
 BiQuadIIR LoudnessNormalizationHelper::createFilter1(double samplingFrequency) {
-	const double fc = 1681.9744509555319;
-	const double G = 3.99984385397;
-	const double Q = 0.7071752369554193;
+	const double freq = 310.0;
+	const double q = 0.5;
 
-	return BQFilterBuilder::createHighShelf(G, Q, fc, samplingFrequency);
+	return BQFilterBuilder::createHighPass(q, freq, samplingFrequency);
 }
 
 BiQuadIIR LoudnessNormalizationHelper::createFilter2(double samplingFrequency) {
-	const double fc = 38.13547087613982;
-	const double Q = 0.5003270373253953;
+	const double freq = 1125;
+	const double gain = -4.1;
+	const double q = 4.0;
 
-	return BQFilterBuilder::createHighPass(Q, fc, samplingFrequency);
+	return BQFilterBuilder::createPeak(gain, q, freq, samplingFrequency);
 }
 
 BiQuadIIR LoudnessNormalizationHelper::createFilter3(double samplingFrequency) {
-	const double fc = 10'000;
-	const double Q = 2.0;
+	const double freq = 3665;
+	const double gain = 5.5;
+	const double q = 4.0;
 
-	return BQFilterBuilder::createLowPass(Q, fc, samplingFrequency);
+	auto result = BQFilterBuilder::createPeak(gain, q, freq, samplingFrequency);
+	result.addGain(-gain);
+	return result;
+}
+
+BiQuadIIR LoudnessNormalizationHelper::createFilter4(double samplingFrequency) {
+	// butterworth, order 5, cutoff 9200
 }

@@ -18,5 +18,7 @@ namespace rxtd::audio_utils {
 
 		static BiQuadIIR createHighPass(double q, double centralFrequency, double samplingFrequency);
 		static BiQuadIIR createLowPass(double q, double centralFrequency, double samplingFrequency);
+
+		static BiQuadIIR createPeak(double dbGain, double q, double centralFrequency, double samplingFrequency);
 	};
 }

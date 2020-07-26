@@ -85,3 +85,22 @@ BiQuadIIR BQFilterBuilder::createLowPass(double q, double centralFrequency, doub
 		 (1 + std::cos(w0)) / 2,
 	};
 }
+
+BiQuadIIR BQFilterBuilder::createPeak(double dbGain, double q, double centralFrequency, double samplingFrequency) {
+	if (samplingFrequency == 0.0 || q == 0) {
+		return { };
+	}
+
+	const double a = std::pow(10, dbGain / 40);
+	const double w0 = 2 * utils::Math::pi * centralFrequency / samplingFrequency;
+	const double alpha = std::sin(w0) / (2 * q);
+
+	return {
+		1 + alpha / a,
+		-2 * std::cos(w0),
+		1 - alpha / a,
+		1 + alpha * a,
+		-2 * std::cos(w0),
+		1 - alpha * a,
+	};
+}
