@@ -25,9 +25,6 @@ void Loudness::_reset() {
 }
 
 void Loudness::_process(array_view<float> wave, float average) {
-	// fc.apply(wave);
-
-	// for (double x : fc.getProcessed()) {
 	for (double x : wave) {
 		intermediateRmsResult += x * x;
 		counter++;
@@ -49,5 +46,5 @@ void Loudness::finishBlock() {
 }
 
 sview Loudness::getDefaultTransform() {
-	return L"db map[from -70 + 0.691 : 0.691] clamp filter[a 100, d 500]"sv;
+	return L"db map[from -70 + 0.691 : 0.691] filter[rise 100, fall 500] clamp"sv;
 }

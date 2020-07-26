@@ -153,8 +153,8 @@ std::optional<TransformationParser::Transformation> TransformationParser::parseT
 	if (transformName == L"filter") {
 		tr.type = TransformType::eFILTER;
 
-		tr.args[0] = params.get(L"a").asFloat();
-		tr.args[1] = params.get(L"d").asFloat(tr.args[0]);
+		tr.args[0] = params.get(L"rise").asFloat();
+		tr.args[1] = params.get(L"fall").asFloat(tr.args[0]);
 	} else if (transformName == L"db") {
 		tr.type = TransformType::eDB;
 	} else if (transformName == L"map") {
@@ -179,6 +179,7 @@ std::optional<TransformationParser::Transformation> TransformationParser::parseT
 			cl.error(L"source range is not found");
 			return std::nullopt;
 		}
+
 		double valMin = 0.0;
 		double valMax = 1.0;
 
