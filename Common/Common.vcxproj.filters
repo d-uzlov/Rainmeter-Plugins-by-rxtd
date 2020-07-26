@@ -83,7 +83,7 @@
     <ClCompile Include="sources\image-utils\WaveFormDrawer.cpp">
       <Filter>Source Files\image-utils</Filter>
     </ClCompile>
-    <ClCompile Include="sources\Math.cpp">
+    <ClCompile Include="sources\MyMath.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -193,7 +193,7 @@
     <ClInclude Include="sources\image-utils\WaveFormDrawer.h">
       <Filter>Source Files\image-utils</Filter>
     </ClInclude>
-    <ClInclude Include="sources\Math.h">
+    <ClInclude Include="sources\MyMath.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -8,7 +8,7 @@
  */
 
 #include "BQFilterBuilder.h"
-#include "Math.h"
+#include "MyMath.h"
 
 using namespace audio_utils;
 
@@ -18,7 +18,7 @@ BiQuadIIR BQFilterBuilder::createHighShelf(double dbGain, double q, double centr
 	}
 
 	const double a = std::pow(10, dbGain / 40);
-	const double w0 = 2 * utils::Math::pi * centralFrequency / samplingFrequency;
+	const double w0 = 2 * utils::MyMath::pi * centralFrequency / samplingFrequency;
 	const double alpha = std::sin(w0) / (2 * q);
 
 	return {
@@ -37,7 +37,7 @@ BiQuadIIR BQFilterBuilder::createLowShelf(double dbGain, double q, double centra
 	}
 
 	const double a = std::pow(10, dbGain / 40);
-	const double w0 = 2 * utils::Math::pi * centralFrequency / samplingFrequency;
+	const double w0 = 2 * utils::MyMath::pi * centralFrequency / samplingFrequency;
 	const double alpha = std::sin(w0) / (2 * q);
 
 	return {
@@ -55,7 +55,7 @@ BiQuadIIR BQFilterBuilder::createHighPass(double q, double centralFrequency, dou
 		return { };
 	}
 
-	const double w0 = 2 * utils::Math::pi * centralFrequency / samplingFrequency;
+	const double w0 = 2 * utils::MyMath::pi * centralFrequency / samplingFrequency;
 	const double alpha = std::sin(w0) / (2 * q);
 
 	return {
@@ -73,7 +73,7 @@ BiQuadIIR BQFilterBuilder::createLowPass(double q, double centralFrequency, doub
 		return { };
 	}
 
-	const double w0 = 2 * utils::Math::pi * centralFrequency / samplingFrequency;
+	const double w0 = 2 * utils::MyMath::pi * centralFrequency / samplingFrequency;
 	const double alpha = std::sin(w0) / (2 * q);
 
 	return {
@@ -92,7 +92,7 @@ BiQuadIIR BQFilterBuilder::createPeak(double dbGain, double q, double centralFre
 	}
 
 	const double a = std::pow(10, dbGain / 40);
-	const double w0 = 2 * utils::Math::pi * centralFrequency / samplingFrequency;
+	const double w0 = 2 * utils::MyMath::pi * centralFrequency / samplingFrequency;
 	const double alpha = std::sin(w0) / (2 * q);
 
 	return {

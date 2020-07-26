@@ -10,7 +10,7 @@
 #pragma once
 
 namespace rxtd::utils {
-	class Math {
+	class MyMath {
 	public:
 		static const double pi;
 

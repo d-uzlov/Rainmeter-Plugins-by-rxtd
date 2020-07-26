@@ -7,13 +7,13 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include "Math.h"
+#include "MyMath.h"
 
 #include "undef.h"
 
-const double utils::Math::pi = std::acos(-1.0);
+const double utils::MyMath::pi = std::acos(-1.0);
 
-double utils::Math::fastPow(double a, double b) {
+double utils::MyMath::fastPow(double a, double b) {
 	// https://martin.ankerl.com/2007/10/04/optimized-pow-approximation-for-java-and-c-c/
 
 	static_assert(sizeof(double) == 2 * sizeof(int32_t));
@@ -28,7 +28,7 @@ double utils::Math::fastPow(double a, double b) {
 	return u.d;
 }
 
-float utils::Math::fastLog2(float val) {
+float utils::MyMath::fastLog2(float val) {
 	// http://www.flipcode.com/archives/Fast_log_Function.shtml
 
 	static_assert(sizeof(float) == sizeof(uint32_t));
@@ -49,7 +49,7 @@ float utils::Math::fastLog2(float val) {
 	return u.fl + log_2;
 }
 
-float utils::Math::fastSqrt(float value) {
+float utils::MyMath::fastSqrt(float value) {
 	// https://bits.stephan-brumme.com/squareRoot.html
 
 	static_assert(sizeof(float) == sizeof(uint32_t));
@@ -64,6 +64,6 @@ float utils::Math::fastSqrt(float value) {
 	return u.f;
 }
 
-double utils::Math::db2amplitude(double value) {
+double utils::MyMath::db2amplitude(double value) {
 	return std::pow(10.0, value / 20.0);
 }
