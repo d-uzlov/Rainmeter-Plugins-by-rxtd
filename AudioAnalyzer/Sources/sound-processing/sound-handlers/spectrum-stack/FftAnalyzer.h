@@ -77,7 +77,7 @@ namespace rxtd::audio_analyzer {
 		enum class RandomState { ON, OFF } randomState{ RandomState::ON };
 
 		std::vector<audio_utils::FftCascade> cascades{ };
-		audio_utils::FilterCascade fc{ };
+		// audio_utils::FilterCascade fc{ };
 
 		audio_utils::FFT fft{ };
 

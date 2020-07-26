@@ -70,7 +70,8 @@ void AudioParent::_reload() {
 		targetRate = 0;
 	}
 
-	soundAnalyzer.setTargetRate(targetRate);
+	auto fcc = audio_utils::FilterCascadeParser::parse(rain.read(L"Preprocessing").asSequence());
+	soundAnalyzer.setPreprocessing(targetRate, std::move(fcc));
 
 	ParamParser paramParser(rain, rain.read(L"UnusedOptionsWarning").asBool(true));
 	paramParser.parse();

@@ -14,10 +14,17 @@
 
 using namespace audio_analyzer;
 
-void ChannelMixer::setFormat(MyWaveFormat waveFormat) {
-	this->waveFormat = waveFormat;
+void ChannelMixer::setFormat(MyWaveFormat _waveFormat) {
+	if (waveFormat == _waveFormat) {
+		return;
+	}
 
-	resampler.setSourceRate(waveFormat.samplesPerSec);
+	if (waveFormat.samplesPerSec != _waveFormat.samplesPerSec) {
+		resampler.setSourceRate(_waveFormat.samplesPerSec);
+		fc = fcc.getInstance(_waveFormat.samplesPerSec);
+	}
+
+	waveFormat = std::move(_waveFormat);
 
 	auto left = waveFormat.channelLayout.indexOf(Channel::eFRONT_LEFT);
 	auto right = waveFormat.channelLayout.indexOf(Channel::eFRONT_RIGHT);
@@ -36,6 +43,13 @@ void ChannelMixer::setFormat(MyWaveFormat waveFormat) {
 	}
 }
 
+void ChannelMixer::setFCC(audio_utils::FilterCascadeCreator value) {
+	fcc = std::move(value);
+	if (waveFormat.samplesPerSec != 0) {
+		fc = fcc.getInstance(waveFormat.samplesPerSec);
+	}
+}
+
 void ChannelMixer::decomposeFramesIntoChannels(array_view<std::byte> frameBuffer, bool withAuto) {
 	const auto channelsCount = waveFormat.channelsCount;
 	const auto framesCount = frameBuffer.size();
@@ -44,7 +58,7 @@ void ChannelMixer::decomposeFramesIntoChannels(array_view<std::byte> frameBuffer
 		const auto bufferFloat = reinterpret_cast<const float*>(frameBuffer.data());
 
 		for (auto channel : waveFormat.channelLayout) {
-			channels[channel].resampled = false;
+			channels[channel].preprocessed = false;
 			auto& waveBuffer = channels[channel].wave;
 			waveBuffer.resize(framesCount);
 			auto bufferTemp = bufferFloat + waveFormat.channelLayout.indexOf(channel).value();
@@ -61,7 +75,7 @@ void ChannelMixer::decomposeFramesIntoChannels(array_view<std::byte> frameBuffer
 		const auto bufferInt = reinterpret_cast<const int16_t*>(frameBuffer.data());
 
 		for (auto channel : waveFormat.channelLayout) {
-			channels[channel].resampled = false;
+			channels[channel].preprocessed = false;
 			auto& waveBuffer = channels[channel].wave;
 			waveBuffer.resize(framesCount);
 			auto bufferTemp = bufferInt + waveFormat.channelLayout.indexOf(channel).value();
@@ -96,9 +110,10 @@ array_view<float> ChannelMixer::getChannelPCM(Channel channel) {
 	}
 
 	auto& data = channels[channel];
-	if (!data.resampled) {
+	if (!data.preprocessed) {
 		resampler.resample(data.wave);
 		data.wave.resize(resampler.calculateFinalWaveSize(data.wave.size()));
+		fc.applyInPlace(data.wave);
 	}
 
 	return data.wave;

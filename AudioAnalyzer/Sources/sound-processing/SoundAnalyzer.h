@@ -15,6 +15,7 @@
 #include "ChannelMixer.h"
 #include "AudioChildHelper.h"
 #include "HelperClasses.h"
+#include "../audio-utils/filter-utils/FilterCascadeParser.h"
 
 namespace rxtd::audio_analyzer {
 	class SoundAnalyzer {
@@ -46,7 +47,7 @@ namespace rxtd::audio_analyzer {
 			this->logger = logger;
 		}
 
-		void setTargetRate(index value) noexcept;
+		void setPreprocessing(index targetRate, audio_utils::FilterCascadeCreator fcc) noexcept;
 
 		AudioChildHelper getAudioChildHelper() const;
 

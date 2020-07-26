@@ -18,7 +18,7 @@ using namespace std::literals::string_view_literals;
 using namespace audio_analyzer;
 
 void Loudness::_setSamplesPerSec(index samplesPerSec) {
-	fc = audio_utils::LoudnessNormalizationHelper::getInstance(samplesPerSec);
+	// fc = audio_utils::LoudnessNormalizationHelper::getInstance(samplesPerSec);
 }
 
 void Loudness::_reset() {
@@ -27,9 +27,10 @@ void Loudness::_reset() {
 }
 
 void Loudness::_process(array_view<float> wave, float average) {
-	fc.apply(wave);
+	// fc.apply(wave);
 
-	for (double x : fc.getProcessed()) {
+	// for (double x : fc.getProcessed()) {
+	for (double x : wave) {
 		intermediateRmsResult += x * x;
 		counter++;
 		if (counter >= getBlockSize()) {

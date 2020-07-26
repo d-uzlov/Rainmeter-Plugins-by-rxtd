@@ -118,8 +118,9 @@ void FftAnalyzer::_process(const DataSupplier& dataSupplier) {
 	if (params.randomTest != 0.0) {
 		processRandom(wave.size());
 	} else if (params.correctLoudness) {
-		fc.apply(wave);
-		cascades[0].process(fc.getProcessed());
+		// fc.apply(wave);
+		// cascades[0].process(fc.getProcessed());
+		cascades[0].process(wave);
 	} else {
 		cascades[0].process(wave);
 	}
@@ -181,8 +182,9 @@ void FftAnalyzer::processRandom(index waveSize) {
 	}
 
 	if (params.correctLoudness) {
-		fc.apply(wave);
-		cascades[0].process(fc.getProcessed());
+		// fc.apply(wave);
+		// cascades[0].process(fc.getProcessed());
+		cascades[0].process(wave);
 	} else {
 		cascades[0].process(wave);
 	}
@@ -195,7 +197,7 @@ void FftAnalyzer::setSamplesPerSec(index samplesPerSec) {
 
 	this->samplesPerSec = samplesPerSec;
 
-	fc = audio_utils::LoudnessNormalizationHelper::getInstance(samplesPerSec);
+	// fc = audio_utils::LoudnessNormalizationHelper::getInstance(samplesPerSec);
 
 	updateParams();
 }

@@ -16,8 +16,9 @@ using namespace audio_analyzer;
 SoundAnalyzer::SoundAnalyzer() noexcept : audioChildHelper(channels, dataSupplier) {
 }
 
-void SoundAnalyzer::setTargetRate(index value) noexcept {
-	channelMixer.getResampler().setTargetRate(value);
+void SoundAnalyzer::setPreprocessing(index targetRate, audio_utils::FilterCascadeCreator fcc) noexcept {
+	channelMixer.getResampler().setTargetRate(targetRate);
+	channelMixer.setFCC(std::move(fcc));
 	updateSampleRate();
 }
 

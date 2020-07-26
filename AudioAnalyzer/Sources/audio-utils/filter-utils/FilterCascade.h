@@ -25,8 +25,14 @@ namespace rxtd::audio_utils {
 
 		void apply(array_view<float> wave);
 
+		void applyInPlace(array_span<float> wave);
+
 		array_view<float> getProcessed() const {
 			return processed;
+		}
+
+		bool isEmpty() const {
+			return filters.empty();
 		}
 	};
 }

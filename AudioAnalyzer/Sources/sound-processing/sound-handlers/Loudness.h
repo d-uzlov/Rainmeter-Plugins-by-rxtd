@@ -13,7 +13,7 @@
 
 namespace rxtd::audio_analyzer {
 	class Loudness : public BlockHandler {
-		audio_utils::FilterCascade fc{ };
+		// audio_utils::FilterCascade fc{ };
 
 		double intermediateRmsResult = 0.0;
 

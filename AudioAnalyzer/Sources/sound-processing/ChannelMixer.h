@@ -11,21 +11,25 @@
 #include "device-management/MyWaveFormat.h"
 #include "Resampler.h"
 #include "array_view.h"
+#include "../audio-utils/filter-utils/FilterCascadeParser.h"
 
 namespace rxtd::audio_analyzer {
 	class ChannelMixer {
 		struct ChannelData {
 			std::vector<float> wave;
-			bool resampled = false;
+			bool preprocessed = false;
 		};
 
 		MyWaveFormat waveFormat;
 		std::map<Channel, ChannelData> channels;
 		Channel aliasOfAuto = Channel::eAUTO;
 		Resampler resampler;
+		audio_utils::FilterCascadeCreator fcc;
+		audio_utils::FilterCascade fc;
 
 	public:
 		void setFormat(MyWaveFormat waveFormat);
+		void setFCC(audio_utils::FilterCascadeCreator value);
 		void decomposeFramesIntoChannels(array_view<std::byte> frameBuffer, bool withAuto);
 
 		array_view<float> getChannelPCM(Channel channel);
