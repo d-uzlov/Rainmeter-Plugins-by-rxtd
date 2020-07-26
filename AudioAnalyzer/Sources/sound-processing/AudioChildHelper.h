@@ -25,6 +25,7 @@ namespace rxtd::audio_analyzer {
 		DataSupplierImpl* dataSupplier;
 
 	public:
+		AudioChildHelper() = default;
 		explicit AudioChildHelper(std::map<Channel, ChannelData>& channels, DataSupplierImpl& dataSupplier);
 
 		std::variant<SoundHandler*, SearchResult> findHandler(Channel channel, isview handlerId) const;

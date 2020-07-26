@@ -22,7 +22,8 @@ namespace rxtd::audio_analyzer {
 		std::map<Channel, std::vector<istring>> orderOfHandlers;
 		std::map<istring, std::function<SoundHandler*(SoundHandler*, Channel)>, std::less<>> patchers;
 
-		AudioChildHelper audioChildHelper;
+		ChannelProcessingHelper cph;
+		AudioChildHelper audioChildHelper{ };
 
 		std::map<Channel, ChannelData> channels;
 
@@ -34,7 +35,10 @@ namespace rxtd::audio_analyzer {
 		ChannelLayout layout;
 
 	public:
-		SoundAnalyzer() noexcept : audioChildHelper(channels, dataSupplier) {
+		SoundAnalyzer() = default;
+
+		SoundAnalyzer(const ChannelMixer& channelMixer) noexcept :
+			cph(channelMixer), audioChildHelper(channels, dataSupplier) {
 		}
 
 		~SoundAnalyzer() = default;
@@ -45,7 +49,7 @@ namespace rxtd::audio_analyzer {
 		SoundAnalyzer& operator=(SoundAnalyzer&& other) = delete;
 
 		void setLayout(ChannelLayout layout);
-		void setSampleRate(index value);
+		void setSourceRate(index value);
 
 		void setLogger(utils::Rainmeter::Logger logger) {
 			this->logger = logger;
@@ -65,7 +69,11 @@ namespace rxtd::audio_analyzer {
 			std::map<istring, std::function<SoundHandler*(SoundHandler*, Channel)>, std::less<>> patchers
 		);
 
-		void process(const ChannelProcessingHelper& mixer, bool isSilent);
+		ChannelProcessingHelper& getCPH() {
+			return cph;
+		}
+
+		void process(bool isSilent);
 		void resetValues() noexcept;
 		void finishStandalone() noexcept;
 

@@ -31,15 +31,21 @@ namespace rxtd::audio_analyzer {
 		audio_utils::FilterCascade fc;
 
 	public:
-		void setChannelMixer(const ChannelMixer& value) {
-			mixer = &value;
+		ChannelProcessingHelper() = default;
+
+		ChannelProcessingHelper(const ChannelMixer& mixer) : mixer(&mixer) {
 		}
 
 		void setFCC(audio_utils::FilterCascadeCreator value);
 
-		void setSampleRate(index value) {
-			fc = fcc.getInstance(value);
+		void setTargetRate(index value) {
 			resampler.setSourceRate(value);
+			fc = fcc.getInstance(resampler.getSampleRate());
+		}
+
+		void setSourceRate(index value) {
+			resampler.setSourceRate(value);
+			fc = fcc.getInstance(resampler.getSampleRate());
 		}
 
 		array_view<float> getChannelPCM(Channel channel) const;

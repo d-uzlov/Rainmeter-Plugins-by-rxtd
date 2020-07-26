@@ -23,7 +23,7 @@ void SoundAnalyzer::setLayout(ChannelLayout _layout) {
 	removeNonexistentChannelsFromMap();
 
 	// add channels that didn't exist
-	for (auto[newChannel, _] : layout.getChannelsMapView()) {
+	for (auto [newChannel, _] : layout.getChannelsMapView()) {
 		channels[newChannel];
 	}
 	channels[Channel::eAUTO];
@@ -31,12 +31,13 @@ void SoundAnalyzer::setLayout(ChannelLayout _layout) {
 	patchHandlers();
 }
 
-void SoundAnalyzer::setSampleRate(index value) {
+void SoundAnalyzer::setSourceRate(index value) {
 	if (sampleRate == value) {
 		return;
 	}
 
 	sampleRate = value;
+	cph.setSourceRate(value);
 	updateHandlerSampleRate();
 }
 
@@ -55,11 +56,8 @@ void SoundAnalyzer::setHandlerPatchers(
 	patchHandlers();
 }
 
-void SoundAnalyzer::process(const ChannelProcessingHelper& cph, bool isSilent) {
-	if (channels.empty()) {
-		return;
-	}
-
+void SoundAnalyzer::process(bool isSilent) {
+	cph.reset();
 	dataSupplier.logger = logger;
 
 	for (auto& [channel, channelData] : channels) {
@@ -104,7 +102,7 @@ void SoundAnalyzer::finishStandalone() noexcept {
 void SoundAnalyzer::updateHandlerSampleRate() noexcept {
 	for (auto& [channel, channelData] : channels) {
 		for (auto& handler : channelData.handlers) {
-			handler->setSamplesPerSec(sampleRate);
+			handler->setSamplesPerSec(cph.getResampler().getSampleRate());
 		}
 	}
 }
