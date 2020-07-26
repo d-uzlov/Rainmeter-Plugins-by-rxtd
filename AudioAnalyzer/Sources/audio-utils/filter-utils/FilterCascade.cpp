@@ -17,7 +17,7 @@ void FilterCascade::apply(array_view<float> wave) {
 	applyInPlace(processed);
 }
 
-void FilterCascade::applyInPlace(array_span<float> wave) {
+void FilterCascade::applyInPlace(array_span<float> wave) const {
 	for (const auto& filterPtr : filters) {
 		filterPtr->apply(wave);
 	}

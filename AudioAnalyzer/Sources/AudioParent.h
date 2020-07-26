@@ -15,6 +15,7 @@
 
 namespace rxtd::audio_analyzer {
 	class AudioParent : public utils::ParentBase {
+		ChannelMixer channelMixer;
 		SoundAnalyzer soundAnalyzer;
 		DeviceManager deviceManager;
 

@@ -13,12 +13,30 @@
 
 using namespace audio_analyzer;
 
-SoundAnalyzer::SoundAnalyzer() noexcept : audioChildHelper(channels, dataSupplier) {
+void SoundAnalyzer::setLayout(ChannelLayout _layout) {
+	if (layout == _layout) {
+		return;
+	}
+
+	layout = std::move(_layout);
+
+	removeNonexistentChannelsFromMap();
+
+	// add channels that didn't exist
+	for (auto[newChannel, _] : layout.getChannelsMapView()) {
+		channels[newChannel];
+	}
+	channels[Channel::eAUTO];
+
+	patchHandlers();
 }
 
-void SoundAnalyzer::setPreprocessing(index targetRate, audio_utils::FilterCascadeCreator fcc) noexcept {
-	channelMixer.getResampler().setTargetRate(targetRate);
-	channelMixer.setFCC(std::move(fcc));
+void SoundAnalyzer::setSampleRate(index value) {
+	if (sampleRate == value) {
+		return;
+	}
+
+	sampleRate = value;
 	updateSampleRate();
 }
 
@@ -37,31 +55,12 @@ void SoundAnalyzer::setHandlerPatchers(
 	patchHandlers();
 }
 
-void SoundAnalyzer::setWaveFormat(MyWaveFormat waveFormat) {
-	removeNonexistentChannelsFromMap(waveFormat);
-
-	// add channels that didn't exist
-	for (auto [newChannel, _] : waveFormat.channelLayout.getChannelsMapView()) {
-		channels[newChannel];
-	}
-	channels[Channel::eAUTO];
-
-	channelMixer.setFormat(waveFormat);
-
-	patchHandlers();
-}
-
-void SoundAnalyzer::process(array_view<std::byte> frameBuffer, bool isSilent) {
+void SoundAnalyzer::process(const ChannelMixer& mixer, bool isSilent) {
 	if (channels.empty()) {
 		return;
 	}
 
-	if (!isSilent) {
-		const bool needAuto = !channels[Channel::eAUTO].handlers.empty();
-		channelMixer.decomposeFramesIntoChannels(frameBuffer, needAuto);
-	}
-
-	dataSupplier.setWaveSize(channelMixer.getResampler().calculateFinalWaveSize(frameBuffer.size()));
+	dataSupplier.setWaveSize(mixer.getWaveSize());
 	dataSupplier.logger = logger;
 
 	for (auto& [channel, channelData] : channels) {
@@ -76,7 +75,7 @@ void SoundAnalyzer::process(array_view<std::byte> frameBuffer, bool isSilent) {
 				handler->processSilence(dataSupplier);
 			}
 		} else {
-			dataSupplier.setWave(channelMixer.getChannelPCM(channel));
+			dataSupplier.setWave(mixer.getChannelPCM(channel));
 			for (auto& handler : channelData.handlers) {
 				handler->process(dataSupplier);
 			}
@@ -104,8 +103,6 @@ void SoundAnalyzer::finishStandalone() noexcept {
 }
 
 void SoundAnalyzer::updateSampleRate() noexcept {
-	const auto sampleRate = channelMixer.getResampler().getSampleRate();
-
 	for (auto& [channel, channelData] : channels) {
 		for (auto& handler : channelData.handlers) {
 			handler->setSamplesPerSec(sampleRate);
@@ -113,7 +110,7 @@ void SoundAnalyzer::updateSampleRate() noexcept {
 	}
 }
 
-void SoundAnalyzer::removeNonexistentChannelsFromMap(MyWaveFormat waveFormat) {
+void SoundAnalyzer::removeNonexistentChannelsFromMap() {
 	std::vector<Channel> toDelete;
 
 	for (const auto& channelIter : channels) {
@@ -123,7 +120,7 @@ void SoundAnalyzer::removeNonexistentChannelsFromMap(MyWaveFormat waveFormat) {
 			continue;
 		}
 
-		if (!waveFormat.channelLayout.contains(c)) {
+		if (!layout.contains(c)) {
 			toDelete.push_back(c);
 		}
 	}

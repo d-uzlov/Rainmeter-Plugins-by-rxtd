@@ -8,14 +8,12 @@
  */
 
 #pragma once
-#include "device-management/MyWaveFormat.h"
 #include "sound-handlers/SoundHandler.h"
 #include <functional>
 #include "Channel.h"
 #include "ChannelMixer.h"
 #include "AudioChildHelper.h"
 #include "HelperClasses.h"
-#include "../audio-utils/filter-utils/FilterCascadeParser.h"
 
 namespace rxtd::audio_analyzer {
 	class SoundAnalyzer {
@@ -24,7 +22,6 @@ namespace rxtd::audio_analyzer {
 		std::map<Channel, std::vector<istring>> orderOfHandlers;
 		std::map<istring, std::function<SoundHandler*(SoundHandler*, Channel)>, std::less<>> patchers;
 
-		ChannelMixer channelMixer;
 		AudioChildHelper audioChildHelper;
 
 		std::map<Channel, ChannelData> channels;
@@ -33,8 +30,12 @@ namespace rxtd::audio_analyzer {
 
 		utils::Rainmeter::Logger logger;
 
+		index sampleRate{ };
+		ChannelLayout layout;
+
 	public:
-		SoundAnalyzer() noexcept;
+		SoundAnalyzer() noexcept : audioChildHelper(channels, dataSupplier) {
+		}
 
 		~SoundAnalyzer() = default;
 		/** This class is non copyable */
@@ -43,11 +44,12 @@ namespace rxtd::audio_analyzer {
 		SoundAnalyzer& operator=(const SoundAnalyzer& other) = delete;
 		SoundAnalyzer& operator=(SoundAnalyzer&& other) = delete;
 
+		void setLayout(ChannelLayout layout);
+		void setSampleRate(index value);
+
 		void setLogger(utils::Rainmeter::Logger logger) {
 			this->logger = logger;
 		}
-
-		void setPreprocessing(index targetRate, audio_utils::FilterCascadeCreator fcc) noexcept;
 
 		AudioChildHelper getAudioChildHelper() const;
 
@@ -63,16 +65,21 @@ namespace rxtd::audio_analyzer {
 			std::map<istring, std::function<SoundHandler*(SoundHandler*, Channel)>, std::less<>> patchers
 		);
 
-		void setWaveFormat(MyWaveFormat waveFormat);
-
-		void process(array_view<std::byte> frameBuffer, bool isSilent);
+		void process(const ChannelMixer& mixer, bool isSilent);
 		void resetValues() noexcept;
 		void finishStandalone() noexcept;
 
+		bool needChannelAuto() const {
+			const auto iter = channels.find(Channel::eAUTO);
+			if (iter == channels.end()) {
+				return false;
+			}
+			return !iter->second.handlers.empty();
+		}
+
 	private:
 		void updateSampleRate() noexcept;
-
-		void removeNonexistentChannelsFromMap(MyWaveFormat waveFormat);
+		void removeNonexistentChannelsFromMap();
 		void patchHandlers();
 	};
 }

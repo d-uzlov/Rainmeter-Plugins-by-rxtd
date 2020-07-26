@@ -97,9 +97,11 @@ void ChannelMixer::decomposeFramesIntoChannels(array_view<std::byte> frameBuffer
 	if (withAuto && aliasOfAuto == Channel::eAUTO) {
 		resampleToAuto();
 	}
+
+	waveSize = resampler.calculateFinalWaveSize(framesCount);
 }
 
-array_view<float> ChannelMixer::getChannelPCM(Channel channel) {
+array_view<float> ChannelMixer::getChannelPCM(Channel channel) const {
 	if (channel == Channel::eAUTO) {
 		channel = aliasOfAuto;
 	}
@@ -109,18 +111,15 @@ array_view<float> ChannelMixer::getChannelPCM(Channel channel) {
 		return { };
 	}
 
-	auto& data = channels[channel];
+	auto& data = dataIter->second;
 	if (!data.preprocessed) {
 		resampler.resample(data.wave);
 		data.wave.resize(resampler.calculateFinalWaveSize(data.wave.size()));
 		fc.applyInPlace(data.wave);
+		data.preprocessed = true;
 	}
 
 	return data.wave;
-}
-
-Resampler& ChannelMixer::getResampler() {
-	return resampler;
 }
 
 void ChannelMixer::resampleToAuto() {

@@ -30,6 +30,8 @@ namespace rxtd::utils {
 		lastResult = getPointer()->GetBuffer(&bufferData, &lastBufferSize, &flags, nullptr, nullptr);
 		const bool silent = (flags & AUDCLNT_BUFFERFLAGS_SILENT) != 0;
 
+		// TODO this is incorrect
+		// lastBufferSize is in frames but array_view operates std::byte
 		const array_view<std::byte> buffer = { reinterpret_cast<const std::byte*>(bufferData), lastBufferSize };
 
 		return AudioBuffer { *this, lastBufferID, silent, buffer };

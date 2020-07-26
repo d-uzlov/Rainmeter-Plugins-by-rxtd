@@ -21,20 +21,31 @@ namespace rxtd::audio_analyzer {
 		};
 
 		MyWaveFormat waveFormat;
-		std::map<Channel, ChannelData> channels;
+		mutable std::map<Channel, ChannelData> channels;
 		Channel aliasOfAuto = Channel::eAUTO;
 		Resampler resampler;
 		audio_utils::FilterCascadeCreator fcc;
 		audio_utils::FilterCascade fc;
+		index waveSize{ };
 
 	public:
 		void setFormat(MyWaveFormat waveFormat);
 		void setFCC(audio_utils::FilterCascadeCreator value);
 		void decomposeFramesIntoChannels(array_view<std::byte> frameBuffer, bool withAuto);
 
-		array_view<float> getChannelPCM(Channel channel);
+		array_view<float> getChannelPCM(Channel channel) const;
 
-		Resampler& getResampler();
+		Resampler& getResampler() {
+			return resampler;
+		}
+
+		const Resampler& getResampler() const {
+			return resampler;
+		}
+
+		index getWaveSize() const {
+			return waveSize;
+		}
 
 	private:
 		void resampleToAuto();

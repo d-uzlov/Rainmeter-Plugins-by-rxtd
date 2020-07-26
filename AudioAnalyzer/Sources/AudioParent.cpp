@@ -17,7 +17,11 @@ using namespace audio_analyzer;
 
 AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 	ParentBase(std::move(_rain)),
-	deviceManager(logger, [this](auto format) { soundAnalyzer.setWaveFormat(format); }) {
+	deviceManager(logger, [this](MyWaveFormat format) {
+		channelMixer.setFormat(format);
+		soundAnalyzer.setLayout(format.channelLayout);
+		soundAnalyzer.setSampleRate(channelMixer.getResampler().getSampleRate());
+	}) {
 	setUseResultString(false);
 
 	if (deviceManager.getState() == DeviceManager::State::eFATAL) {
@@ -71,7 +75,10 @@ void AudioParent::_reload() {
 	}
 
 	auto fcc = audio_utils::FilterCascadeParser::parse(rain.read(L"Preprocessing").asSequence());
-	soundAnalyzer.setPreprocessing(targetRate, std::move(fcc));
+	channelMixer.getResampler().setTargetRate(targetRate);
+	channelMixer.setFCC(std::move(fcc));
+	const auto resamplerSampleRate = channelMixer.getResampler().getSampleRate();
+	soundAnalyzer.setSampleRate(resamplerSampleRate);
 
 	ParamParser paramParser(rain, rain.read(L"UnusedOptionsWarning").asBool(true));
 	paramParser.parse();
@@ -91,7 +98,11 @@ double AudioParent::_update() {
 		soundAnalyzer.resetValues();
 	} else {
 		deviceManager.getCaptureManager().capture([&](bool silent, array_view<std::byte> buffer) {
-			soundAnalyzer.process(buffer, silent);
+			if (!silent) {
+				const bool needAuto = soundAnalyzer.needChannelAuto();
+				channelMixer.decomposeFramesIntoChannels(buffer, needAuto);
+			}
+			soundAnalyzer.process(channelMixer, silent);
 		}, maxLoop);
 
 		soundAnalyzer.finishStandalone();
