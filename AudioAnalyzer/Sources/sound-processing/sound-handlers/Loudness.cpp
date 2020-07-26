@@ -49,5 +49,5 @@ void Loudness::finishBlock() {
 }
 
 sview Loudness::getDefaultTransform() {
-	return L"db map[from -70 + 0.691 ; 0.691] clamp filter[a 100, d 500]"sv;
+	return L"db map[from -70 + 0.691 : 0.691] clamp filter[a 100, d 500]"sv;
 }

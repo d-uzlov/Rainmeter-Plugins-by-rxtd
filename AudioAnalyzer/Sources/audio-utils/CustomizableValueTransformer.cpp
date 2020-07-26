@@ -163,7 +163,7 @@ std::optional<TransformationParser::Transformation> TransformationParser::parseT
 		double linMin;
 		double linMax;
 		if (params.has(L"from")) {
-			auto range = params.get(L"from").asList(L';');
+			auto range = params.get(L"from").asList(L':');
 			if (range.size() != 2) {
 				cl.error(L"need 2 params for source range but {} found", range.size());
 				return std::nullopt;
@@ -183,7 +183,7 @@ std::optional<TransformationParser::Transformation> TransformationParser::parseT
 		double valMax = 1.0;
 
 		if (params.has(L"to")) {
-			auto range = params.get(L"to").asList(L';');
+			auto range = params.get(L"to").asList(L':');
 			if (range.size() != 2) {
 				cl.error(L"need 2 params for target range but {} found", range.size());
 				return std::nullopt;

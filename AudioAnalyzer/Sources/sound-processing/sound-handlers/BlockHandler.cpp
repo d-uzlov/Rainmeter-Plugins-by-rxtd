@@ -170,7 +170,7 @@ void BlockRms::_reset() {
 }
 
 sview BlockRms::getDefaultTransform() {
-	return L"db map[from -70 ; 0, to 0 ; 1] clamp filter[a 200, d 200]"sv;
+	return L"db map[from -70 : 0] clamp filter[a 200, d 200]"sv;
 }
 
 void BlockPeak::_process(array_view<float> wave, float average) {
