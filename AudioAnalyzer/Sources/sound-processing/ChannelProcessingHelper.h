@@ -18,6 +18,7 @@ namespace rxtd::audio_analyzer {
 	class ChannelProcessingHelper {
 		struct ChannelData {
 			std::vector<float> wave;
+			audio_utils::FilterCascade fc;
 			bool preprocessed = false;
 		};
 
@@ -28,7 +29,6 @@ namespace rxtd::audio_analyzer {
 		const ChannelMixer* mixer{ };
 
 		audio_utils::FilterCascadeCreator fcc;
-		audio_utils::FilterCascade fc;
 
 	public:
 		ChannelProcessingHelper() = default;
@@ -40,12 +40,16 @@ namespace rxtd::audio_analyzer {
 
 		void setTargetRate(index value) {
 			resampler.setSourceRate(value);
-			fc = fcc.getInstance(resampler.getSampleRate());
+			for (auto& [c, cd] : channels) {
+				cd.fc = fcc.getInstance(resampler.getSampleRate());
+			}
 		}
 
 		void setSourceRate(index value) {
 			resampler.setSourceRate(value);
-			fc = fcc.getInstance(resampler.getSampleRate());
+			for (auto&[c, cd] : channels) {
+				cd.fc = fcc.getInstance(resampler.getSampleRate());
+			}
 		}
 
 		array_view<float> getChannelPCM(Channel channel) const;

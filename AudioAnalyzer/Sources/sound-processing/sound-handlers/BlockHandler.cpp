@@ -40,7 +40,7 @@ std::optional<BlockHandler::Params> BlockHandler::parseParams(const OptionMap& o
 		params.legacy_decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.legacy_attackTime), 0.0);
 
 		utils::BufferPrinter printer;
-		printer.print(L"filter[{}, {}]", params.legacy_attackTime, params.legacy_decayTime);
+		printer.print(L"filter[a {}, d {}]", params.legacy_attackTime, params.legacy_decayTime);
 		params.transformer = audio_utils::TransformationParser::parse(utils::Option{ printer.getBufferView() }, cl);
 	}
 

@@ -17,7 +17,9 @@ using namespace audio_analyzer;
 void ChannelProcessingHelper::setFCC(audio_utils::FilterCascadeCreator value) {
 	fcc = std::move(value);
 	if (waveFormat.samplesPerSec != 0) {
-		fc = fcc.getInstance(waveFormat.samplesPerSec);
+		for (auto&[c, cd] : channels) {
+			cd.fc = fcc.getInstance(resampler.getSampleRate());
+		}
 	}
 }
 
@@ -39,7 +41,7 @@ array_view<float> ChannelProcessingHelper::getChannelPCM(Channel channel) const 
 	if (!data.preprocessed) {
 		data.wave.resize(resampler.calculateFinalWaveSize(wave.size()));
 		resampler.resample(wave, data.wave);
-		fc.applyInPlace(data.wave);
+		data.fc.applyInPlace(data.wave);
 		data.preprocessed = true;
 	}
 
