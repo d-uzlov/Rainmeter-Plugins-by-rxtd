@@ -27,5 +27,9 @@ namespace rxtd::utils {
 
 			emptinessWritten = empty;
 		}
+
+		bool isEmptinessWritten() const {
+			return emptinessWritten;
+		}
 	};
 }

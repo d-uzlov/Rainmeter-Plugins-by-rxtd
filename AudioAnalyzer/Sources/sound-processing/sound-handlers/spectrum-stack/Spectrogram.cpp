@@ -44,7 +44,7 @@ Spectrogram::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter
 	}
 	params.resolution *= 0.001;
 
-	params.folser = utils::FileWrapper::getAbsolutePath(
+	params.folder = utils::FileWrapper::getAbsolutePath(
 		optionMap.get(L"folder"sv).asString() % own(),
 		rain.replaceVariables(L"[#CURRENTPATH]") % own()
 	);
@@ -106,6 +106,26 @@ Spectrogram::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter
 		params.colorMaxValue = 1.0;
 	}
 
+	params.borderColor = optionMap.get(L"borderColor"sv).asColor({ 1.0, 0.2, 0.2, 1 });
+
+	if (const auto fading = optionMap.get(L"fading").asIString(L"None");
+		fading == L"None") {
+		params.fading = FD::eNONE;
+	} else if (fading == L"Linear") {
+		params.fading = FD::eLINEAR;
+	} else if (fading == L"Pow2") {
+		params.fading = FD::ePOW2;
+	} else if (fading == L"Pow4") {
+		params.fading = FD::ePOW4;
+	} else if (fading == L"Pow8") {
+		params.fading = FD::ePOW8;
+	} else {
+		cl.warning(L"fading '{}' is not recognized, assume 'None'", fading);
+		params.fading = FD::eNONE;
+	}
+
+	params.borderSize = std::max(optionMap.get(L"borderSize"sv).asInt(0), 0);
+
 	params.stationary = optionMap.get(L"stationary").asBool(false);
 
 	return params;
@@ -118,7 +138,7 @@ void Spectrogram::setParams(const Params& _params, Channel channel) {
 
 	params = _params;
 
-	filepath = params.folser;
+	filepath = params.folder;
 	filepath += L"spectrogram-";
 	filepath += channel.technicalName();
 	filepath += L".bmp"sv;
@@ -126,6 +146,10 @@ void Spectrogram::setParams(const Params& _params, Channel channel) {
 	image.setBackground(params.baseColor.toInt());
 	image.setWidth(params.length);
 	image.setStationary(params.stationary);
+
+	sifh.setBorderSize(params.borderSize);
+	sifh.setColors(params.colors[0].color, params.borderColor);
+	sifh.setFading(params.fading);
 
 	updateParams();
 }
@@ -251,8 +275,19 @@ void Spectrogram::_process(const DataSupplier& dataSupplier) {
 }
 
 void Spectrogram::_finish(const DataSupplier& dataSupplier) {
-	if (changed) {
-		writerHelper.write(image.getPixels(), image.isEmpty(), filepath);
-		changed = false;
+	if (!changed) {
+		return;
 	}
+
+	if (params.borderSize > 0 || params.fading != utils::StripedImageFadeHelper::FadingType::eNONE) {
+		if (!writerHelper.isEmptinessWritten()) {
+			sifh.setLastStripIndex(image.getLastStripIndex());
+			sifh.inflate(image.getPixels());
+		}
+		writerHelper.write(sifh.getResultBuffer(), !image.isForced(), filepath);
+	} else {
+		writerHelper.write(image.getPixels(), image.isEmpty(), filepath);
+	}
+
+	changed = false;
 }

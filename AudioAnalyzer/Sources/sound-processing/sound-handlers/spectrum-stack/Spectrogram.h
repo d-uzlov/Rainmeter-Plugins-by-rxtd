@@ -13,9 +13,12 @@
 #include "RainmeterWrappers.h"
 #include "image-utils/StripedImage.h"
 #include "image-utils/ImageWriteHelper.h"
+#include "image-utils/StripedImageFadeHelper.h"
 
 namespace rxtd::audio_analyzer {
 	class Spectrogram : public SoundHandler {
+		using FD = utils::StripedImageFadeHelper::FadingType;
+
 	public:
 		struct Params {
 		private:
@@ -23,10 +26,13 @@ namespace rxtd::audio_analyzer {
 
 			double resolution{ };
 			index length{ };
+			index borderSize { };
 			istring sourceName{ };
-			string folser = { };
+			string folder = { };
 			utils::Color baseColor{ };
 			utils::Color maxColor{ };
+			utils::Color borderColor{ };
+			FD fading{ };
 
 			struct ColorDescription {
 				float widthInverted;
@@ -53,10 +59,13 @@ namespace rxtd::audio_analyzer {
 			friend bool operator==(const Params& lhs, const Params& rhs) {
 				return lhs.resolution == rhs.resolution
 					&& lhs.length == rhs.length
+					&& lhs.borderSize == rhs.borderSize
 					&& lhs.sourceName == rhs.sourceName
-					&& lhs.folser == rhs.folser
+					&& lhs.folder == rhs.folder
 					&& lhs.baseColor == rhs.baseColor
 					&& lhs.maxColor == rhs.maxColor
+					&& lhs.borderColor == rhs.borderColor
+					&& lhs.fading == rhs.fading
 					&& lhs.colorLevels == rhs.colorLevels
 					&& lhs.colors == rhs.colors
 					&& lhs.colorMinValue == rhs.colorMinValue
@@ -81,6 +90,7 @@ namespace rxtd::audio_analyzer {
 		bool changed = false;
 
 		utils::StripedImage<uint32_t> image{ };
+		utils::StripedImageFadeHelper sifh{ };
 		utils::ImageWriteHelper writerHelper{ };
 
 		string filepath{ };

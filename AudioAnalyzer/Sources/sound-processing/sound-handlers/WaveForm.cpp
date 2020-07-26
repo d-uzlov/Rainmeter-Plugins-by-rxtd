@@ -266,7 +266,9 @@ void WaveForm::_processSilence(const DataSupplier& dataSupplier) {
 
 void WaveForm::_finish(const DataSupplier& dataSupplier) {
 	if (changed) {
-		drawer.inflate();
+		if (!writerHelper.isEmptinessWritten()) {
+			drawer.inflate();
+		}
 		writerHelper.write(drawer.getResultBuffer(), drawer.isEmpty(), filepath);
 		changed = false;
 	}
