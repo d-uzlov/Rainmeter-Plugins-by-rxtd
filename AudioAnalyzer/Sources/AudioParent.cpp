@@ -69,7 +69,14 @@ void AudioParent::_reload() {
 
 	deviceManager.setOptions(sourceEnum, id);
 
+	auto targetRate = rain.read(L"TargetRate").asInt(44100);
+	if (targetRate < 0) {
+		logger.warning(L"Invalid TargetRate {}, must be > 0, assume 0.", targetRate);
+		targetRate = 0;
+	}
+
 	ParamParser paramParser(rain, rain.read(L"UnusedOptionsWarning").asBool(true));
+	paramParser.setTargetRate(targetRate);
 	auto processings = paramParser.parse();
 
 	analyzers.reserve(processings.size());
@@ -82,12 +89,6 @@ void AudioParent::_reload() {
 
 		a.setSourceRate(currentFormat.samplesPerSec);
 		a.setLayout(currentFormat.channelLayout);
-	}
-
-	auto targetRate = rain.read(L"TargetRate").asInt(44100);
-	if (targetRate < 0) {
-		logger.warning(L"Invalid TargetRate {}, must be > 0, assume 0.", targetRate);
-		targetRate = 0;
 	}
 }
 

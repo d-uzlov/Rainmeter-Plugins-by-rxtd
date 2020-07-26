@@ -109,8 +109,25 @@ std::optional<ParamParser::ProcessingData> ParamParser::parseProcessing(sview na
 		return { };
 	}
 
-	index targetRate = processingMap.get(L"targetRate").asInt(44100);
-	auto ffc = audio_utils::FilterCascadeParser::parse(processingMap.get(L"filter").asSequence());
+	const index targetRate = processingMap.get(L"targetRate").asInt(defaultTargetRate);
+	auto filterDescription = processingMap.get(L"filter");
+	audio_utils::FilterCascadeCreator ffc{ };
+	if (filterDescription.asIString(L"none") == L"none") {
+		ffc = { };
+	} else if (filterDescription.asIString() == L"replayGain-like") {
+		ffc = audio_utils::FilterCascadeParser::parse(
+			utils::Option{ L"bqHighPass[0.5, 310] bqPeak[4, 1125, -4.1] bqPeak[4.0, 2665, 5.5] bwLowPass[5, 20000]" }
+			.asSequence()
+		);
+	} else {
+		auto[name, desc] = filterDescription.breakFirst(' ');
+		if (name.asIString() == L"custom") {
+			ffc = audio_utils::FilterCascadeParser::parse(desc.asSequence());
+		} else {
+			cl.error(L"filter '{}' is not supported", name);
+			ffc = { };
+		}
+	}
 
 	return ProcessingData{
 		targetRate,

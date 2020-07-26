@@ -37,6 +37,7 @@ namespace rxtd::audio_analyzer {
 		utils::Rainmeter& rain;
 		utils::Rainmeter::Logger& log;
 		bool unusedOptionsWarning;
+		index defaultTargetRate{ };
 
 	public:
 		explicit ParamParser(utils::Rainmeter& rain, bool unusedOptionsWarning);
@@ -47,6 +48,10 @@ namespace rxtd::audio_analyzer {
 		ParamParser(ParamParser&& other) = delete;
 		ParamParser& operator=(const ParamParser& other) = delete;
 		ParamParser& operator=(ParamParser&& other) = delete;
+
+		void setTargetRate(index value) {
+			defaultTargetRate = value;
+		}
 
 		std::vector<ProcessingData> parse();
 
