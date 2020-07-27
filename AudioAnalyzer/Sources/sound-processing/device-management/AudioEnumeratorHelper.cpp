@@ -20,7 +20,7 @@ namespace rxtd::audio_analyzer {
 		logger(logger) {
 
 		if (!enumeratorWrapper.isValid()) {
-			logger.error(L"Can't create device enumerator, error {error}", enumeratorWrapper.getLastResult());
+			logger.error(L"Can't create device enumerator");
 			valid = false;
 			return;
 		}
@@ -38,16 +38,15 @@ namespace rxtd::audio_analyzer {
 			updateDeviceLists();
 			typeOpt = getDeviceType(deviceID);
 			if (!typeOpt.has_value()) {
-				logger.error(L"Audio device with ID '{}' not found", deviceID);
+				logger.error(L"Audio device is not found, id '{}'", deviceID);
 				return std::nullopt;
 			}
 		}
 
 		utils::MediaDeviceWrapper audioDeviceHandle = enumeratorWrapper.getDeviceByID(typeOpt.value(), deviceID);
 
-		if (enumeratorWrapper.getLastResult() != S_OK) {
-			logger.error(L"Audio device with ID '{}' not found, error code {error}", deviceID,
-			             enumeratorWrapper.getLastResult());
+		if (!audioDeviceHandle.isValid()) {
+			logger.error(L"Can't connect to audio device, id '{}'", deviceID);
 			return std::nullopt;
 		}
 
@@ -57,10 +56,11 @@ namespace rxtd::audio_analyzer {
 	std::optional<utils::MediaDeviceWrapper> AudioEnumeratorHelper::getDefaultDevice(utils::MediaDeviceType type) {
 		utils::MediaDeviceWrapper audioDeviceHandle = enumeratorWrapper.getDefaultDevice(type);
 
-		if (enumeratorWrapper.getLastResult() != S_OK) {
-			logger.error(L"Can't get default {} audio device, error code {error}",
-			             type == utils::MediaDeviceType::eOUTPUT ? L"output" : L"input",
-			             enumeratorWrapper.getLastResult());
+		if (!audioDeviceHandle.isValid()) {
+			logger.error(
+				L"Can't get default {} audio device",
+				type == utils::MediaDeviceType::eOUTPUT ? L"output" : L"input"
+			);
 			valid = false;
 			return std::nullopt;
 		}
@@ -71,7 +71,7 @@ namespace rxtd::audio_analyzer {
 	string AudioEnumeratorHelper::getDefaultDeviceId(utils::MediaDeviceType type) {
 		utils::MediaDeviceWrapper audioDeviceHandle = enumeratorWrapper.getDefaultDevice(type);
 
-		if (enumeratorWrapper.getLastResult() != S_OK) {
+		if (!audioDeviceHandle.isValid()) {
 			valid = false;
 			return { };
 		}

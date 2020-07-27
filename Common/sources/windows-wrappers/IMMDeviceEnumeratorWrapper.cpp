@@ -23,10 +23,6 @@ namespace rxtd::utils {
 		);
 	}) { }
 
-	index IMMDeviceEnumeratorWrapper::getLastResult() const {
-		return lastResult;
-	}
-
 	MediaDeviceWrapper IMMDeviceEnumeratorWrapper::getDeviceByID(MediaDeviceType type, const string& id) {
 		return MediaDeviceWrapper{
 			type, 

@@ -17,12 +17,8 @@ namespace rxtd::utils {
 	enum class MediaDeviceType;
 
 	class IMMDeviceEnumeratorWrapper : public GenericComWrapper<IMMDeviceEnumerator> {
-		index lastResult = { };
-
 	public:
 		IMMDeviceEnumeratorWrapper();
-
-		index getLastResult() const;
 
 		MediaDeviceWrapper getDeviceByID(MediaDeviceType type, const string& id);
 		
