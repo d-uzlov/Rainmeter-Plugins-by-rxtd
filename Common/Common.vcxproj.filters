@@ -74,9 +74,6 @@
     <ClCompile Include="sources\option-parser\OptionSequence.cpp">
       <Filter>Source Files\option-parser</Filter>
     </ClCompile>
-    <ClCompile Include="sources\option-parser\OptionList.cpp">
-      <Filter>Source Files\option-parser</Filter>
-    </ClCompile>
     <ClCompile Include="sources\option-parser\OptionMap.cpp">
       <Filter>Source Files\option-parser</Filter>
     </ClCompile>

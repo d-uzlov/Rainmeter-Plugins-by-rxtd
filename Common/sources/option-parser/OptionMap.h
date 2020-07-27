@@ -35,40 +35,46 @@ namespace rxtd::utils {
 		OptionMap() = default;
 		OptionMap(sview view, std::vector<wchar_t> &&source, std::map<SubstringViewInfo, SubstringViewInfo>&& paramsInfo);
 
-		//Returns named option, search is case-insensitive.
+		// Returns named option, search is case-insensitive.
 		// Doesn't raise the "touched" flag on the option
 		Option getUntouched(sview name) const;
 
-		//Returns named option, search is case-insensitive.
-		Option get(sview name) const;
+		GhostOption get(sview name) const & {
+			return get(name % ciView());
+		}
 
-		//Returns named option, search is case-insensitive.
-		Option get(isview name) const;
+		GhostOption get(isview name) const &;
 
-		//Returns named option, search is case-insensitive.
-		// This overload disambiguates sview/isview call.
-		Option get(const wchar_t* name) const;
+		GhostOption get(const wchar_t* name) const & {
+			return get(isview { name });
+		}
+
+		Option get(sview name) const && {
+			return get(name);
+		}
+		
+		Option get(isview name) const && {
+			return get(name);
+		}
+		
+		Option get(const wchar_t* name) const && {
+			return get(name);
+		}
 
 		// returns true if option with such name exists.
-		bool has(sview name) const;
-
+		bool has(sview name) const {
+			return has(name % ciView());
+		}
 		// returns true if option with such name exists.
 		bool has(isview name) const;
-
 		// returns true if option with such name exists.
-		// This overload disambiguates sview/isview call.
-		bool has(const wchar_t* name) const;
+		bool has(const wchar_t* name) const {
+			return has(isview { name });
+		}
 
 		std::vector<isview> getListOfUntouched() const;
 	private:
 		void fillParams() const;
 		MapOptionInfo* find(isview name) const;
 	};
-
-
-
-	// class OptionParser {
-	// public:
-	// 	static Option parse(sview string);
-	// };
 }

@@ -26,7 +26,7 @@ array_view<float> DataSupplierImpl::getWave() const {
 }
 
 const SoundHandler* DataSupplierImpl::getHandlerRaw(isview id) const {
-	const auto iter = channelData->find(id % own()); // TODO transfer all to sview
+	const auto iter = channelData->find(id);
 	if (iter == channelData->end()) {
 		return nullptr;
 	}

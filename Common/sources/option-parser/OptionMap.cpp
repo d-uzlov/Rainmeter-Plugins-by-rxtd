@@ -29,35 +29,19 @@ Option OptionMap::getUntouched(sview name) const {
 	return Option{ optionInfoPtr->substringInfo.makeView(getView()) };
 }
 
-Option OptionMap::get(sview name) const {
-	return get(name % ciView());
-}
-
-Option OptionMap::get(isview name) const {
+GhostOption OptionMap::get(isview name) const & {
 	const auto optionInfoPtr = find(name);
 	if (optionInfoPtr == nullptr) {
 		return { };
 	}
 
 	optionInfoPtr->touched = true;
-	return Option{ optionInfoPtr->substringInfo.makeView(getView()) };
-}
-
-Option OptionMap::get(const wchar_t* name) const {
-	return get(isview{ name });
-}
-
-bool OptionMap::has(sview name) const {
-	return has(name % ciView());
+	return GhostOption { optionInfoPtr->substringInfo.makeView(getView()) };
 }
 
 bool OptionMap::has(isview name) const {
 	const auto optionInfoPtr = find(name);
 	return optionInfoPtr != nullptr;
-}
-
-bool OptionMap::has(const wchar_t* name) const {
-	return has(isview{ name });
 }
 
 std::vector<isview> OptionMap::getListOfUntouched() const {
@@ -91,7 +75,3 @@ OptionMap::MapOptionInfo* OptionMap::find(isview name) const {
 	}
 	return &iter->second;
 }
-
-// Option OptionParser::parse(sview string) {
-// 	return Option { string };
-// }

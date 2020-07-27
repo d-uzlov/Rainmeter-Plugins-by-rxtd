@@ -53,10 +53,11 @@ void FileWrapper::write(const void *data, index count) {
 	}
 }
 
-string FileWrapper::getAbsolutePath(string folder, string currentPath) {
+string FileWrapper::getAbsolutePath(string folder, sview currentPath) {
 	std::filesystem::path path { folder };
 	if (!path.is_absolute()) {
-		folder = currentPath + folder;
+		folder = currentPath;
+		folder += folder;
 	}
 
 	folder = std::filesystem::absolute(folder).wstring();
@@ -69,25 +70,23 @@ string FileWrapper::getAbsolutePath(string folder, string currentPath) {
 	return folder;
 }
 
-void FileWrapper::createDirectories(sview path) {
-	string buffer { path };
-
-	auto pos = buffer.find(L':') + 1; // either npos+1 == 0 or index of first meaningful symbol
+void FileWrapper::createDirectories(string path) {
+	auto pos = path.find(L':') + 1; // either npos+1 == 0 or index of first meaningful symbol
 
 	while (true) {
-		const auto nextPos = buffer.find(L'\\', pos);
+		const auto nextPos = path.find(L'\\', pos);
 
 		if (nextPos == string::npos) {
 			break;
 		}
 
-		buffer[nextPos] = L'\0';
-		CreateDirectoryW(buffer.c_str(), nullptr);
-		buffer[nextPos] = L'\\';
+		path[nextPos] = L'\0';
+		CreateDirectoryW(path.c_str(), nullptr);
+		path[nextPos] = L'\\';
 
 		pos = nextPos + 1;
 	}
-	CreateDirectoryW(buffer.c_str(), nullptr);
+	CreateDirectoryW(path.c_str(), nullptr);
 }
 
 void FileWrapper::close() {

@@ -33,10 +33,10 @@ BandResampler::parseParams(const OptionMap& optionMap, Logger& cl, Rainmeter& ra
 		return std::nullopt;
 	}
 
-	auto freqListOptionName = L"FreqList-" + freqListIndex;
+	auto freqListOptionName = L"FreqList-"s += freqListIndex;
 	auto freqListOption = rain.read(freqListOptionName);
 	if (freqListOption.empty()) {
-		freqListOptionName = L"FreqList_" + freqListIndex;
+		freqListOptionName = L"FreqList_"s += freqListIndex;
 		freqListOption = rain.read(freqListOptionName);
 	}
 

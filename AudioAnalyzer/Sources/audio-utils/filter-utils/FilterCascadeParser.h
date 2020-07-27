@@ -9,6 +9,7 @@
 
 #pragma once
 #include <functional>
+#include <utility>
 #include "AbstractFilter.h"
 #include "option-parser/OptionList.h"
 #include "FilterCascade.h"
@@ -26,7 +27,7 @@ namespace rxtd::audio_utils {
 		FilterCascadeCreator() = default;
 
 		FilterCascadeCreator(string source, std::vector<FilterCreationFunction> patchers) :
-			source(source), patchers(std::move(patchers)) {
+			source(std::move(source)), patchers(std::move(patchers)) {
 		}
 
 		friend bool operator==(const FilterCascadeCreator& lhs, const FilterCascadeCreator& rhs) {

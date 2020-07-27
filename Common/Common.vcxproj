@@ -161,7 +161,6 @@
     <ClCompile Include="sources\MyMath.cpp" />
     <ClCompile Include="sources\MathExpressionParser.cpp" />
     <ClCompile Include="sources\option-parser\Option.cpp" />
-    <ClCompile Include="sources\option-parser\OptionList.cpp" />
     <ClCompile Include="sources\option-parser\OptionMap.cpp" />
     <ClCompile Include="sources\option-parser\OptionSequence.cpp" />
     <ClCompile Include="sources\option-parser\Tokenizer.cpp" />

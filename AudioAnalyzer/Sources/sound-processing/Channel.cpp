@@ -255,7 +255,6 @@ ChannelLayout ChannelLayouts::layoutFromChannelMask(uint32_t mask, bool forceBac
 			builder.skip();
 		}
 	}
-	// TODO also need to add code to determine (from skin side) if a channel exist in layout
 
 	return builder.finish();
 }

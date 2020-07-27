@@ -23,22 +23,26 @@ namespace rxtd::utils {
 	public:
 		Option() = default;
 		explicit Option(sview view);
-		explicit Option(isview view) : Option(view % csView()) { }
+
+		explicit Option(isview view) : Option(view % csView()) {
+		}
+
 		explicit Option(wchar_t* view);
 
 		// Raw view of option.
 		sview asString(sview defaultValue = { }) const &;
-		// Raw view of option.
-		string asString(sview defaultValue = { }) && {
+
+		string asString(sview defaultValue = { }) const && {
 			return string{ asString(defaultValue) };
 		}
 
 		// Raw case-insensitive view of option.
 		isview asIString(isview defaultValue = { }) const &;
-		// Raw case-insensitive view of option.
-		istring asIString(isview defaultValue = { }) && {
-			return istring { asIString(defaultValue) };
+
+		istring asIString(isview defaultValue = { }) const && {
+			return istring{ asIString(defaultValue) };
 		}
+
 		// Parse float, support math operations.
 		double asFloat(double defaultValue = 0.0) const;
 
@@ -82,6 +86,30 @@ namespace rxtd::utils {
 			wchar_t optionDelimiter,
 			wchar_t nameDelimiter
 		);
+	};
+
+	// same as option but doesn't allocate memory
+	// intended to be created when reading options from already allocated map/list
+	class GhostOption : public Option {
+	public:
+		GhostOption() = default;
+
+		explicit GhostOption(sview view) : Option(view) {
+		}
+
+		explicit GhostOption(isview view) : Option(view) {
+		}
+
+		explicit GhostOption(wchar_t* view) : Option(view) {
+		}
+
+		sview asString(sview defaultValue = { }) const {
+			return Option::asString(defaultValue);
+		}
+
+		isview asIString(isview defaultValue = { }) const {
+			return Option::asIString(defaultValue);
+		}
 	};
 
 	struct OptionSeparated {
