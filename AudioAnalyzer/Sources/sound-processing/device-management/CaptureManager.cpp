@@ -13,7 +13,7 @@ using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
 
 namespace rxtd::audio_analyzer {
-	CaptureManager::CaptureManager(utils::Rainmeter::Logger& logger, utils::MediaDeviceWrapper& audioDeviceHandle) : logger(&logger) {
+	CaptureManager::CaptureManager(utils::Rainmeter::Logger _logger, utils::MediaDeviceWrapper& audioDeviceHandle) : logger(std::move(_logger)) {
 		audioClient = audioDeviceHandle.openAudioClient();
 		if (audioDeviceHandle.getLastResult() != S_OK) {
 			valid = false;
@@ -93,16 +93,22 @@ namespace rxtd::audio_analyzer {
 		return recoverable;
 	}
 
-	void CaptureManager::capture(const std::function<void(bool silent, array_view<std::byte> frameBuffer)>& processingCallback, index maxLoop) {
+	void CaptureManager::capture(const ProcessingCallback& processingCallback, clock::time_point maxTime, double duration) {
 		if (!isValid()) {
 			return;
 		}
 
-		for (int i = 0; i < maxLoop; ++i) {
+		while (true) {
 			const auto buffer = audioCaptureClient.readBuffer();
 
 			const auto queryResult = audioCaptureClient.getLastResult();
 			const auto now = clock::now();
+
+			if (now >= maxTime) {
+				const std::chrono::duration<float, std::milli> overheadTime = now - maxTime;
+				logger.debug(L"compute timeout: {} ms overhead over specified {} ms", overheadTime.count(), duration);
+				return;
+			}
 
 			switch (queryResult) {
 			case S_OK:
@@ -115,7 +121,8 @@ namespace rxtd::audio_analyzer {
 				// Windows bug: sometimes when shutting down a playback application, it doesn't zero out the buffer.
 				// rxtd: I don't really understand this. I can't reproduce this and I don't know if this workaround do anything useful
 				if (now - lastBufferFillTime >= EMPTY_TIMEOUT) {
-					logger->error(L"timeout {}", (now - lastBufferFillTime).count());
+					const std::chrono::duration<float, std::milli> overheadTime = now - lastBufferFillTime;
+					logger.debug(L"poll timeout: {} ms", overheadTime.count());
 					invalidate();
 				}
 				return;
@@ -123,12 +130,12 @@ namespace rxtd::audio_analyzer {
 			case AUDCLNT_E_BUFFER_ERROR:
 			case AUDCLNT_E_DEVICE_INVALIDATED:
 			case AUDCLNT_E_SERVICE_NOT_RUNNING:
-				logger->debug(L"Audio device disconnected");
+				logger.debug(L"Audio device disconnected");
 				invalidate();
 				return;
 
 			default:
-				logger->warning(L"Unexpected buffer query error code {error}", queryResult);
+				logger.warning(L"Unexpected buffer query error code {error}", queryResult);
 				invalidate();
 				return;
 			}

@@ -81,6 +81,9 @@ void AudioParent::_reload() {
 		}
 	}
 
+	computeTimeout = rain.read(L"computeTimeout").asFloat(4.0);
+	finishTimeout = rain.read(L"finishTimeout").asFloat(2.0);
+
 	deviceManager.setOptions(sourceEnum, id);
 
 	auto targetRate = rain.read(L"TargetRate").asInt(44100);
@@ -97,9 +100,6 @@ void AudioParent::_reload() {
 }
 
 double AudioParent::_update() {
-	// TODO make an option for this value?
-	constexpr index maxLoop = 15;
-
 	const bool eventHappened = notificationCheck();
 	if (eventHappened) {
 		deviceManager.checkAndRepair();
@@ -119,6 +119,12 @@ double AudioParent::_update() {
 			sa.resetValues();
 		});
 	} else {
+		using clock = std::chrono::high_resolution_clock;
+		static_assert(clock::is_steady);
+
+		const std::chrono::duration<float, std::milli> duration{ computeTimeout };
+		const auto maxTime = clock::now() + std::chrono::duration_cast<std::chrono::milliseconds>(duration);
+
 		deviceManager.getCaptureManager().capture([&](bool silent, array_view<std::byte> buffer) {
 			if (!silent) {
 				channelMixer.decomposeFramesIntoChannels(buffer, true);
@@ -126,11 +132,21 @@ double AudioParent::_update() {
 			callAllSA([=](SoundAnalyzer& sa) {
 				sa.process(silent);
 			});
-		}, maxLoop);
+		}, maxTime, computeTimeout);
+
+		const auto maxFinishTime = clock::now() + std::chrono::duration_cast<std::chrono::milliseconds>(
+			std::chrono::duration<float, std::milli>{ finishTimeout }
+		);
 
 		callAllSA([=](SoundAnalyzer& sa) {
 			sa.finishStandalone();
 		});
+
+		const auto finishTime = clock::now();
+		if (finishTime > maxFinishTime) {
+			const std::chrono::duration<float, std::milli> overheadTime = finishTime - maxFinishTime;
+			logger.notice(L"finish time overhead {} ms over specified {} ms", overheadTime.count(), finishTimeout);
+		}
 	}
 
 	return deviceManager.getDeviceStatus();

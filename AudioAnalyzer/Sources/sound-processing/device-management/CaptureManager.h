@@ -19,17 +19,21 @@
 
 namespace rxtd::audio_analyzer {
 	class CaptureManager {
+	public:
+		using ProcessingCallback = std::function<void(bool silent, array_view<std::byte> frameBuffer)>;
+
+	private:
 		using clock = std::chrono::high_resolution_clock;
 		static_assert(clock::is_steady);
 
-		utils::Rainmeter::Logger *logger = nullptr;
+		utils::Rainmeter::Logger logger;
 
-		utils::IAudioClientWrapper audioClient { };
-		utils::IAudioCaptureClientWrapper audioCaptureClient { };
-		MyWaveFormat waveFormat { };
-		string formatString { };
+		utils::IAudioClientWrapper audioClient{ };
+		utils::IAudioCaptureClientWrapper audioCaptureClient{ };
+		MyWaveFormat waveFormat{ };
+		string formatString{ };
 
-		clock::time_point lastBufferFillTime { };
+		clock::time_point lastBufferFillTime{ };
 		static constexpr clock::duration EMPTY_TIMEOUT = std::chrono::milliseconds(100);
 
 		bool valid = true;
@@ -37,7 +41,7 @@ namespace rxtd::audio_analyzer {
 
 	public:
 		CaptureManager() = default;
-		CaptureManager(utils::Rainmeter::Logger& logger, utils::MediaDeviceWrapper& audioDeviceHandle);
+		CaptureManager(utils::Rainmeter::Logger logger, utils::MediaDeviceWrapper& audioDeviceHandle);
 		~CaptureManager();
 
 		CaptureManager(CaptureManager&& other) noexcept = default;
@@ -51,7 +55,7 @@ namespace rxtd::audio_analyzer {
 		bool isEmpty() const;
 		bool isValid() const;
 		bool isRecoverable() const;
-		void capture(const std::function<void(bool silent, array_view<std::byte> frameBuffer)>& processingCallback, index maxLoop);
+		void capture(const ProcessingCallback& processingCallback, clock::time_point maxTime, double duration);
 
 	private:
 		void invalidate();

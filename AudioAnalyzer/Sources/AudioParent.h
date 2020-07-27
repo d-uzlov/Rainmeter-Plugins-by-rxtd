@@ -22,6 +22,9 @@ namespace rxtd::audio_analyzer {
 		DeviceManager deviceManager;
 		std::map<istring, std::unique_ptr<SoundAnalyzer>, std::less<>> saMap;
 		MyWaveFormat currentFormat{ };
+		double computeTimeout = 0.0;
+		double finishTimeout = 0.0;
+
 		utils::GenericComWrapper<IMMNotificationClient> notificationClient;
 		std::mutex notificationClientMutex;
 		bool deviceListChanged = false;
