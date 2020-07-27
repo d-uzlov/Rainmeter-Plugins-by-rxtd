@@ -11,7 +11,7 @@
 
 namespace rxtd::utils {
 	// TODO check endianness at compile time
-	union IntColorTest {
+	union IntColor {
 		struct {
 			uint8_t b;
 			uint8_t g;
@@ -21,16 +21,14 @@ namespace rxtd::utils {
 
 		uint32_t full;
 
-		friend bool operator==(const IntColorTest& lhs, const IntColorTest& rhs) {
+		friend bool operator==(const IntColor& lhs, const IntColor& rhs) {
 			return lhs.full == rhs.full;
 		}
 
-		friend bool operator!=(const IntColorTest& lhs, const IntColorTest& rhs) {
+		friend bool operator!=(const IntColor& lhs, const IntColor& rhs) {
 			return !(lhs == rhs);
 		}
 	};
-
-	using IntColor = IntColorTest;
 
 	class Color {
 		float red = 0.0;

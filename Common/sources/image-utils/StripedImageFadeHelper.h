@@ -21,8 +21,8 @@ namespace rxtd::utils {
 		index lastStripIndex{ };
 		double fading = 0.0;
 
-		Color background;
-		Color border;
+		IntColor background;
+		IntColor border;
 
 	public:
 		void setBorderSize(index value) {
@@ -38,8 +38,8 @@ namespace rxtd::utils {
 		}
 
 		void setColors(Color _background, Color _border) {
-			background = _background;
-			border = _border;
+			background = _background.toIntColor();
+			border = _border.toIntColor();
 		}
 
 		array2d_view<uint32_t> getResultBuffer() const {
@@ -54,28 +54,25 @@ namespace rxtd::utils {
 
 			const double realWidth = width - borderSize;
 
-			const index fadeEnd = realWidth * (1.0 - fading);
+			const index fadeWidth = realWidth * fading;
+			const index flatWidth = realWidth - fadeWidth;
 
-			const double distanceCoef = 1.0 / (realWidth * fading);
 			IntMixer<> mixer;
-			auto back = background.toIntColor();
+			const auto back = background;
 
-			for (int i = 0; i < width; ++i) {
-				index distance = lastStripIndex - i;
-				if (distance < 0) {
-					distance += width;
-				}
-				if (distance >= realWidth) {
-					// this is border
-					dest[i] = border.toInt();
-					continue;
-				}
+			const double fadeDistanceStep = 1.0 / (realWidth * fading);
+			double fadeDistance = 1.0;
 
-				if (distance > fadeEnd) {
-					double dd = (distance - fadeEnd) * distanceCoef;
-					dd = dd * dd;
+			index fadeBeginIndex = lastStripIndex + borderSize;
+			if (fadeBeginIndex >= width) {
+				fadeBeginIndex -= width;
+			}
 
-					mixer.setParams(dd);
+			index flatBeginIndex = fadeBeginIndex + fadeWidth;
+
+			if (flatBeginIndex >= width) {
+				for (index i = fadeBeginIndex; i < width; i++) {
+					mixer.setParams(fadeDistance * fadeDistance);
 					auto sc = source[i];
 					sc.a = mixer.mix(back.a, sc.a);
 					sc.r = mixer.mix(back.r, sc.r);
@@ -83,23 +80,50 @@ namespace rxtd::utils {
 					sc.b = mixer.mix(back.b, sc.b);
 					dest[i] = sc.full;
 
-					// dest[i] = Color::mix(distance, background, Color { source[i] }).toInt();
-				} else {
+					fadeDistance -= fadeDistanceStep;
+				}
+
+				fadeBeginIndex = 0;
+				flatBeginIndex -= width;
+			}
+
+			for (index i = fadeBeginIndex; i < flatBeginIndex; i++) {
+				mixer.setParams(fadeDistance * fadeDistance);
+				auto sc = source[i];
+				sc.a = mixer.mix(back.a, sc.a);
+				sc.r = mixer.mix(back.r, sc.r);
+				sc.g = mixer.mix(back.g, sc.g);
+				sc.b = mixer.mix(back.b, sc.b);
+				dest[i] = sc.full;
+
+				fadeDistance -= fadeDistanceStep;
+			}
+
+			index borderBeginIndex = flatBeginIndex + flatWidth;
+			if (borderBeginIndex >= width) {
+				for (index i = flatBeginIndex; i < width; i++) {
 					dest[i] = source[i].full;
 				}
 
+				flatBeginIndex = 0;
+				borderBeginIndex -= width;
 			}
-		}
 
-		static double distNone(double) {
-			return 0.0;
-		}
+			for (index i = flatBeginIndex; i < borderBeginIndex; i++) {
+				dest[i] = source[i].full;
+			}
 
-		static double distPow8(double value) {
-			value = value * value;
-			value = value * value;
-			value = value * value;
-			return value;
+			index borderEndIndex = borderBeginIndex + borderSize;
+			if (borderEndIndex >= width) {
+				for (index i = borderBeginIndex; i < width; i++) {
+					dest[i] = border.full;
+				}
+				borderBeginIndex = 0;
+				borderEndIndex -= width;
+			}
+			for (index i = borderBeginIndex; i < borderEndIndex; i++) {
+				dest[i] = border.full;
+			}
 		}
 	};
 }
