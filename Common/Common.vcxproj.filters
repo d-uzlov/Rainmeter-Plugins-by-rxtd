@@ -199,6 +199,12 @@
     <ClInclude Include="sources\image-utils\StripedImageFadeHelper.h">
       <Filter>Source Files\image-utils</Filter>
     </ClInclude>
+    <ClInclude Include="sources\windows-wrappers\IMMNotificationClientImpl.h">
+      <Filter>Source Files\windows-wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\windows-wrappers\IUnknownImpl.h">
+      <Filter>Source Files\windows-wrappers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="array_view.natvis" />

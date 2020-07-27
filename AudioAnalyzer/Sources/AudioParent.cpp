@@ -31,6 +31,18 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
 	}
+
+	notificationClient = {
+		[=](auto ptr) {
+			*ptr = new utils::CMMNotificationClient{
+				[=](sview id) {
+					notificationCallback(id);
+				},
+				deviceManager.getDeviceEnumerator().getWrapper()
+			};
+			return true;
+		}
+	};
 }
 
 void AudioParent::_reload() {
@@ -86,7 +98,11 @@ double AudioParent::_update() {
 	// TODO make an option for this value?
 	constexpr index maxLoop = 15;
 
-	deviceManager.checkAndRepair();
+	const bool eventHappened = notificationCheck();
+	if (eventHappened) {
+		deviceManager.checkAndRepair();
+	}
+
 	if (deviceManager.getState() != DeviceManager::State::eOK) {
 		if (deviceManager.getState() == DeviceManager::State::eFATAL) {
 			setMeasureState(utils::MeasureState::eBROKEN);

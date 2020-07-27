@@ -51,6 +51,10 @@ namespace rxtd::audio_analyzer {
 		const string& getDeviceListLegacy() const {
 			return deviceStringLegacy;
 		}
+
+		utils::IMMDeviceEnumeratorWrapper& getWrapper() {
+			return enumeratorWrapper;
+		}
 	private:
 		void updateDeviceLists();
 		std::set<string> readDeviceList(utils::MediaDeviceType type);
