@@ -15,7 +15,6 @@ using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
 
 namespace rxtd::audio_analyzer {
-
 	AudioEnumeratorHelper::AudioEnumeratorHelper(utils::Rainmeter::Logger& logger) :
 		logger(logger) {
 
@@ -61,7 +60,6 @@ namespace rxtd::audio_analyzer {
 				L"Can't get default {} audio device",
 				type == utils::MediaDeviceType::eOUTPUT ? L"output" : L"input"
 			);
-			valid = false;
 			return std::nullopt;
 		}
 
@@ -72,7 +70,6 @@ namespace rxtd::audio_analyzer {
 		utils::MediaDeviceWrapper audioDeviceHandle = enumeratorWrapper.getDefaultDevice(type);
 
 		if (!audioDeviceHandle.isValid()) {
-			valid = false;
 			return { };
 		}
 
@@ -106,8 +103,7 @@ namespace rxtd::audio_analyzer {
 	string AudioEnumeratorHelper::makeDeviceString(utils::MediaDeviceType type) {
 		auto collection = enumeratorWrapper.getActiveDevices(type);
 		if (collection.empty()) {
-			logger.warning(L"No {} devices found", type == utils::MediaDeviceType::eINPUT ? L"input" : L"output");
-			valid = false;
+			logger.debug(L"No {} devices found", type == utils::MediaDeviceType::eINPUT ? L"input" : L"output");
 			return { };
 		}
 
@@ -138,8 +134,7 @@ namespace rxtd::audio_analyzer {
 	std::set<string> AudioEnumeratorHelper::readDeviceList(utils::MediaDeviceType type) {
 		auto collection = enumeratorWrapper.getAllDevices(type);
 		if (collection.empty()) {
-			logger.warning(L"No {} devices found", type == utils::MediaDeviceType::eINPUT ? L"input" : L"output");
-			valid = false;
+			logger.debug(L"No {} devices found", type == utils::MediaDeviceType::eINPUT ? L"input" : L"output");
 			return { };
 		}
 
@@ -156,7 +151,6 @@ namespace rxtd::audio_analyzer {
 
 		auto collection = enumeratorWrapper.getActiveDevices(type);
 		if (collection.empty()) {
-			valid = false;
 			return;
 		}
 

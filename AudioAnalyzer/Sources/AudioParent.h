@@ -62,7 +62,6 @@ namespace rxtd::audio_analyzer {
 		void legacy_resolve(array_view<isview> args, string& resolveBufferString);
 
 		void notificationCallback(sview deviceId) {
-			rain.getLogger().debug(L"hi");
 			std::lock_guard<std::mutex> lock { notificationClientMutex };
 			deviceListChanged = true;
 		}

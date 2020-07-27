@@ -43,6 +43,8 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 			return true;
 		}
 	};
+
+	deviceManager.getDeviceEnumerator().updateDeviceStrings();
 }
 
 void AudioParent::_reload() {
@@ -101,6 +103,10 @@ double AudioParent::_update() {
 	const bool eventHappened = notificationCheck();
 	if (eventHappened) {
 		deviceManager.checkAndRepair();
+
+		if (deviceManager.getState() == DeviceManager::State::eOK) {
+			deviceManager.getDeviceEnumerator().updateDeviceStrings();
+		}
 	}
 
 	if (deviceManager.getState() != DeviceManager::State::eOK) {
@@ -133,7 +139,6 @@ double AudioParent::_update() {
 void AudioParent::_command(isview bangArgs) {
 	if (bangArgs == L"updateDevList") {
 		deviceManager.getDeviceEnumerator().updateDeviceStringLegacy(deviceManager.getCurrentDeviceType());
-		deviceManager.getDeviceEnumerator().updateDeviceStrings();
 		return;
 	}
 
@@ -200,10 +205,6 @@ void AudioParent::_resolve(array_view<isview> args, string& resolveBufferString)
 		return;
 	}
 
-	if (optionName == L"device list") {
-		resolveBufferString = deviceManager.getDeviceEnumerator().getDeviceListLegacy();
-		return;
-	}
 	if (optionName == L"device list input") {
 		resolveBufferString = deviceManager.getDeviceEnumerator().getDeviceListInput();
 		return;
@@ -344,6 +345,11 @@ AudioParent::findHandlerByName(isview name, Channel channel) const {
 void AudioParent::legacy_resolve(array_view<isview> args, string& resolveBufferString) {
 	const isview optionName = args[0];
 	auto cl = logger.context(L"Invalid section variable '{}': ", optionName);
+
+	if (optionName == L"device list") {
+		resolveBufferString = deviceManager.getDeviceEnumerator().getDeviceListLegacy();
+		return;
+	}
 
 	if (optionName == L"prop") {
 		if (args.size() < 4) {
