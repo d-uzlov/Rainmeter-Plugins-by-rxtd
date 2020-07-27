@@ -269,14 +269,20 @@ void Spectrogram::_finish(const DataSupplier& dataSupplier) {
 		return;
 	}
 
-	if (true || params.borderSize > 0 || params.fading != 0.0) {
+	if (params.fading != 0.0) {
 		if (!writerHelper.isEmptinessWritten()) {
 			sifh.setLastStripIndex(image.getLastStripIndex());
 			sifh.inflate(image.getPixels());
 		}
 		writerHelper.write(sifh.getResultBuffer(), !image.isForced(), filepath);
 	} else {
-		// writerHelper.write(image.getPixels(), image.isEmpty(), filepath);
+		if (params.borderSize == 0) {
+			sifh.setLastStripIndex(image.getLastStripIndex());
+			sifh.drawBorderInPlace(image.getPixelsWritable());
+		}
+		auto pixels = image.getPixels();
+		utils::array2d_view<uint32_t> buffer { &(pixels[0].data()->full), pixels.getBuffersCount(), pixels.getBufferSize() };
+		writerHelper.write(buffer, image.isEmpty(), filepath);
 	}
 
 	changed = false;

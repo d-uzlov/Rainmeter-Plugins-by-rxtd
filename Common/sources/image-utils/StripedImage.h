@@ -121,6 +121,10 @@ namespace rxtd::utils {
 			return getCurrentLinesArray();
 		}
 
+		array2d_span<PixelValueType> getPixelsWritable() {
+			return getCurrentLinesArray();
+		}
+
 		index getLastStripIndex() const {
 			if (stationary) {
 				index offset = stationaryOffset - 1;
