@@ -18,7 +18,7 @@ namespace rxtd::audio_analyzer {
 	class AudioParent : public utils::ParentBase {
 		ChannelMixer channelMixer;
 		DeviceManager deviceManager;
-		std::map<istring, std::unique_ptr<SoundAnalyzer>> saMap;
+		std::map<istring, std::unique_ptr<SoundAnalyzer>, std::less<>> saMap;
 		MyWaveFormat currentFormat{ };
 
 	public:
@@ -38,19 +38,22 @@ namespace rxtd::audio_analyzer {
 		void _resolve(array_view<isview> args, string& resolveBufferString) override;
 
 	public:
-		double getValue(isview id, Channel channel, index index) const;
+		double getValue(isview proc, isview id, Channel channel, index ind) const;
+		double legacy_getValue(isview id, Channel channel, index ind) const;
 
 	private:
 		void patchSA(std::map<istring, ParamParser::ProcessingData> procs);
 
-		template<typename Callable>
+		template <typename Callable>
 		void callAllSA(Callable lambda) {
-			for (auto&[name, analyzerPtr] : saMap) {
+			for (auto& [name, analyzerPtr] : saMap) {
 				auto& analyzer = *analyzerPtr;
 				lambda(analyzer);
 			}
 		}
 
 		std::pair<SoundHandler*, const AudioChildHelper*> findHandlerByName(isview name, Channel channel) const;
+
+		void legacy_resolve(array_view<isview> args, string& resolveBufferString);
 	};
 }

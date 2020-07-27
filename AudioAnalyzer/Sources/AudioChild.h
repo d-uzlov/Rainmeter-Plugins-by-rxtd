@@ -15,6 +15,7 @@ namespace rxtd::audio_analyzer {
 		Channel channel = Channel::eFRONT_LEFT;
 		index valueIndex = 0;
 		istring valueId;
+		istring procId;
 		std::vector<istring> infoRequest;
 		std::vector<isview> infoRequestC;
 

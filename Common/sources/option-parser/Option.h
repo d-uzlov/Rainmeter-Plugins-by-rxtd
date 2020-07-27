@@ -23,6 +23,7 @@ namespace rxtd::utils {
 	public:
 		Option() = default;
 		explicit Option(sview view);
+		explicit Option(isview view) : Option(view % csView()) { }
 		explicit Option(wchar_t* view);
 
 		// Raw view of option.

@@ -9,18 +9,10 @@
 
 #pragma once
 #include "Channel.h"
-#include <variant>
 #include "HelperClasses.h"
 
 namespace rxtd::audio_analyzer {
 	class AudioChildHelper {
-	public:
-		enum class SearchResult {
-			eCHANNEL_NOT_FOUND,
-			eHANDLER_NOT_FOUND,
-		};
-
-	private:
 		std::map<Channel, ChannelData>* channels;
 		DataSupplierImpl* dataSupplier;
 
@@ -28,7 +20,7 @@ namespace rxtd::audio_analyzer {
 		AudioChildHelper() = default;
 		explicit AudioChildHelper(std::map<Channel, ChannelData>& channels, DataSupplierImpl& dataSupplier);
 
-		std::variant<SoundHandler*, SearchResult> findHandler(Channel channel, isview handlerId) const;
+		SoundHandler* findHandler(Channel channel, isview handlerId) const;
 		double getValue(Channel channel, isview handlerId, index index) const;
 		double getValueFrom(SoundHandler* handler, Channel channel, index index) const;
 	};

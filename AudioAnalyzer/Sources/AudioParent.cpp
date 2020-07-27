@@ -133,38 +133,6 @@ void AudioParent::_resolve(array_view<isview> args, string& resolveBufferString)
 	const isview optionName = args[0];
 	auto cl = logger.context(L"Invalid section variable '{}': ", optionName);
 
-	if (optionName == L"prop") {
-		if (args.size() < 4) {
-			cl.error(L"need >= 4 argc, but only {} found", args.size());
-			return;
-		}
-
-		const auto channelName = args[1];
-		const auto handlerName = args[2];
-		const auto propName = args[3];
-
-		auto channelOpt = Channel::channelParser.find(channelName);
-		if (!channelOpt.has_value()) {
-			cl.error(L"channel '{}' not recognized", channelName);
-			return;
-		}
-
-		auto [handler, helper] = findHandlerByName(handlerName, channelOpt.value());
-		if (handler == nullptr) {
-			cl.error(L"handler '{}:{}' not found", channelName, handlerName);
-			return;
-		}
-
-		const bool found = handler->getProp(propName, cl.printer);
-		if (!found) {
-			cl.error(L"prop '{}:{}' not found", handlerName, propName);
-			return;
-		}
-
-		resolveBufferString = cl.printer.getBufferView();
-		return;
-	}
-
 	if (optionName == L"current device") {
 		if (args.size() < 2) {
 			cl.error(L"need >= 2 argc, but only {} found", args.size());
@@ -229,11 +197,88 @@ void AudioParent::_resolve(array_view<isview> args, string& resolveBufferString)
 		return;
 	}
 
-	cl.error(L"option '{}' not supported", optionName);
-	return;
+	if (optionName == L"value") {
+		if (args.size() < 5) {
+			cl.error(L"need >= 5 argc, but only {} found", args.size());
+			return;
+		}
+
+		const auto procName = args[1];
+		const auto channelName = args[2];
+		const auto handlerName = args[3];
+		const auto ind = utils::Option{ args[4] }.asInt(0);
+
+		auto channelOpt = Channel::channelParser.find(channelName);
+		if (!channelOpt.has_value()) {
+			cl.error(L"channel '{}' is not recognized", channelName);
+			return;
+		}
+
+		auto procIter = saMap.find(procName);
+		if (procIter == saMap.end()) {
+			cl.error(L"processing '{}' is not found", procName);
+			return;
+		}
+
+		const auto value = procIter->second->getAudioChildHelper().getValue(channelOpt.value(), handlerName, ind);
+		cl.printer.print(value);
+
+		resolveBufferString = cl.printer.getBufferView();
+		return;
+	}
+
+	if (optionName == L"handler info") {
+		if (args.size() < 5) {
+			cl.error(L"need >= 5 argc, but only {} found", args.size());
+			return;
+		}
+
+		const auto procName = args[1];
+		const auto channelName = args[2];
+		const auto handlerName = args[3];
+		const auto propName = args[4];
+
+		auto channelOpt = Channel::channelParser.find(channelName);
+		if (!channelOpt.has_value()) {
+			cl.error(L"channel '{}' is not recognized", channelName);
+			return;
+		}
+
+		auto procIter = saMap.find(procName);
+		if (procIter == saMap.end()) {
+			cl.error(L"processing '{}' is not found", procName);
+			return;
+		}
+
+		auto handler = procIter->second->getAudioChildHelper().findHandler(channelOpt.value(), handlerName);
+		if (handler == nullptr) {
+			cl.error(L"handler '{}:{}:{}' is not found", procName, channelName, handlerName);
+			return;
+		}
+
+		const bool found = handler->getProp(propName, cl.printer);
+		if (!found) {
+			cl.error(L"prop '{}:{}' is not found", handlerName, propName);
+			return;
+		}
+
+		resolveBufferString = cl.printer.getBufferView();
+		return;
+	}
+
+
+	legacy_resolve(args, resolveBufferString);
 }
 
-double AudioParent::getValue(isview id, Channel channel, index ind) const {
+double AudioParent::getValue(isview proc, isview id, Channel channel, index ind) const {
+	auto procIter = saMap.find(proc);
+	if (procIter == saMap.end()) {
+		return 0.0;
+	}
+	return procIter->second->getAudioChildHelper().getValue(channel, id, ind);
+}
+
+double AudioParent::legacy_getValue(isview id, Channel channel, index ind) const {
 	auto [handler, helper ] = findHandlerByName(id, channel);
 	if (handler == nullptr) {
 		return 0.0;
@@ -267,17 +312,54 @@ void AudioParent::patchSA(std::map<istring, ParamParser::ProcessingData> procs) 
 	}
 }
 
-std::pair<SoundHandler*, const AudioChildHelper*> AudioParent::findHandlerByName(isview name, Channel channel) const {
+std::pair<SoundHandler*, const AudioChildHelper*>
+AudioParent::findHandlerByName(isview name, Channel channel) const {
 	for (auto& [_, ptr] : saMap) {
 		auto& analyzer = *ptr;
-		auto handlerVar = analyzer.getAudioChildHelper().findHandler(channel, name);
-		if (handlerVar.index() == 0) {
-			return {
-				std::get<0>(handlerVar),
-				&analyzer.getAudioChildHelper(),
-			};
+		auto handler = analyzer.getAudioChildHelper().findHandler(channel, name);
+		if (handler != nullptr) {
+			return { handler, &analyzer.getAudioChildHelper() };
 		}
 	}
 
 	return { };
+}
+
+void AudioParent::legacy_resolve(array_view<isview> args, string& resolveBufferString) {
+	const isview optionName = args[0];
+	auto cl = logger.context(L"Invalid section variable '{}': ", optionName);
+
+	if (optionName == L"prop") {
+		if (args.size() < 4) {
+			cl.error(L"need >= 4 argc, but only {} found", args.size());
+			return;
+		}
+
+		const auto channelName = args[1];
+		const auto handlerName = args[2];
+		const auto propName = args[3];
+
+		auto channelOpt = Channel::channelParser.find(channelName);
+		if (!channelOpt.has_value()) {
+			cl.error(L"channel '{}' is not recognized", channelName);
+			return;
+		}
+
+		auto [handler, helper] = findHandlerByName(handlerName, channelOpt.value());
+		if (handler == nullptr) {
+			cl.error(L"handler '{}:{}' is not found", channelName, handlerName);
+			return;
+		}
+
+		const bool found = handler->getProp(propName, cl.printer);
+		if (!found) {
+			cl.error(L"prop '{}:{}' is not found", handlerName, propName);
+			return;
+		}
+
+		resolveBufferString = cl.printer.getBufferView();
+		return;
+	}
+
+	cl.error(L"option is not supported");
 }

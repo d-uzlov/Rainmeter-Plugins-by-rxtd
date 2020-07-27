@@ -19,17 +19,16 @@ AudioChildHelper::AudioChildHelper(std::map<Channel, ChannelData>& channels, Dat
 	this->dataSupplier = &dataSupplier;
 }
 
-std::variant<SoundHandler*, AudioChildHelper::SearchResult>
-AudioChildHelper::findHandler(Channel channel, isview handlerId) const {
+SoundHandler* AudioChildHelper::findHandler(Channel channel, isview handlerId) const {
 	const auto channelIter = channels->find(channel);
 	if (channelIter == channels->end()) {
-		return SearchResult::eCHANNEL_NOT_FOUND;
+		return {};
 	}
 
 	const auto& channelData = channelIter->second;
-	const auto iter = channelData.find(handlerId % own()); // TODO move to sview
+	const auto iter = channelData.find(handlerId);
 	if (iter == channelData.end()) {
-		return SearchResult::eHANDLER_NOT_FOUND;
+		return {};
 	}
 
 	auto& handler = iter->second;
@@ -37,12 +36,10 @@ AudioChildHelper::findHandler(Channel channel, isview handlerId) const {
 }
 
 double AudioChildHelper::getValue(Channel channel, isview handlerId, index index) const {
-	const auto handlerVariant = findHandler(channel, handlerId);
-	if (handlerVariant.index() != 0) {
+	const auto handler = findHandler(channel, handlerId);
+	if (handler == nullptr) {
 		return 0.0;
 	}
-
-	auto& handler = std::get<0>(handlerVariant);
 
 	const auto channelDataIter = channels->find(channel);
 	if (channelDataIter == channels->end()) {

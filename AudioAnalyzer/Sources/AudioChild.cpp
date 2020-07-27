@@ -47,6 +47,8 @@ void AudioChild::_reload() {
 		return;
 	}
 
+	procId = rain.read(L"Processing").asIString();
+
 	const auto stringValueStr = rain.read(L"StringValue").asIString(L"Number");
 	if (stringValueStr == L"Number") {
 		setUseResultString(false);
@@ -91,7 +93,10 @@ double AudioChild::_update() {
 		return legacy_update();
 	}
 
-	return parent->getValue(valueId, channel, valueIndex);
+	if (procId.empty()) {
+		return parent->legacy_getValue(valueId, channel, valueIndex);
+	}
+	return parent->getValue(procId, valueId, channel, valueIndex);
 }
 
 void AudioChild::_updateString(string& resultStringBuffer) {
@@ -123,12 +128,12 @@ double AudioChild::legacy_update() {
 
 	switch (legacy.numberTransform) {
 	case Legacy::NumberTransform::eLINEAR:
-		result = parent->getValue(valueId, channel, valueIndex);
+		result = parent->legacy_getValue(valueId, channel, valueIndex);
 		result = result * legacy.correctingConstant;
 		break;
 
 	case Legacy::NumberTransform::eDB:
-		result = parent->getValue(valueId, channel, valueIndex);
+		result = parent->legacy_getValue(valueId, channel, valueIndex);
 		result = 20.0 / legacy.correctingConstant * std::log10(result) + 1.0;
 		break;
 
