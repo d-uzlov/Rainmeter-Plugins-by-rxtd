@@ -13,7 +13,7 @@
 
 using namespace utils;
 
-void StripedImageFadeHelper::inflate(array2d_view<uint32_t> source) {
+void StripedImageFadeHelper::inflate(array2d_view<IntColor> source) {
 	const index height = source.getBuffersCount();
 
 	resultBuffer.setBufferSize(source.getBufferSize());

@@ -205,6 +205,9 @@
     <ClInclude Include="sources\windows-wrappers\IUnknownImpl.h">
       <Filter>Source Files\windows-wrappers</Filter>
     </ClInclude>
+    <ClInclude Include="sources\IntMixer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="array_view.natvis" />

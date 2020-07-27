@@ -26,7 +26,7 @@ namespace rxtd::audio_analyzer {
 
 			double resolution{ };
 			index length{ };
-			index borderSize { };
+			index borderSize{ };
 			istring sourceName{ };
 			string folder = { };
 			utils::Color baseColor{ };
@@ -85,11 +85,11 @@ namespace rxtd::audio_analyzer {
 
 		index blockSize{ };
 
-		std::vector<uint32_t> stripBuffer{ };
+		std::vector<utils::IntColor> stripBuffer{ };
 		index counter = 0;
 		bool changed = false;
 
-		utils::StripedImage<uint32_t> image{ };
+		utils::StripedImage<utils::IntColor> image{ };
 		utils::StripedImageFadeHelper sifh{ };
 		utils::ImageWriteHelper writerHelper{ };
 

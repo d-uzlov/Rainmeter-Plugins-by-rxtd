@@ -10,6 +10,28 @@
 #pragma once
 
 namespace rxtd::utils {
+	// TODO check endianness at compile time
+	union IntColorTest {
+		struct {
+			uint8_t b;
+			uint8_t g;
+			uint8_t r;
+			uint8_t a;
+		};
+
+		uint32_t full;
+
+		friend bool operator==(const IntColorTest& lhs, const IntColorTest& rhs) {
+			return lhs.full == rhs.full;
+		}
+
+		friend bool operator!=(const IntColorTest& lhs, const IntColorTest& rhs) {
+			return !(lhs == rhs);
+		}
+	};
+
+	using IntColor = IntColorTest;
+
 	class Color {
 		float red = 0.0;
 		float green = 0.0;
@@ -37,6 +59,14 @@ namespace rxtd::utils {
 			red = r * coef;
 			green = g * coef;
 			blue = b * coef;
+		}
+
+		Color(IntColor value) {
+			constexpr float coef = 1 / 255.0;
+			alpha = value.a * coef;
+			red = value.r * coef;
+			green = value.g * coef;
+			blue = value.b * coef;
 		}
 
 		static Color mix(float percent, Color c1, Color c2) {
@@ -76,6 +106,14 @@ namespace rxtd::utils {
 
 			return a << 24 | r << 16 | g << 8 | b;
 		}
-	};
 
+		IntColor toIntColor() const {
+			const uint8_t r = uint8_t(std::clamp<float>(red * 255, 0.0, 255.0));
+			const uint8_t g = uint8_t(std::clamp<float>(green * 255, 0.0, 255.0));
+			const uint8_t b = uint8_t(std::clamp<float>(blue * 255, 0.0, 255.0));
+			const uint8_t a = uint8_t(std::clamp<float>(alpha * 255, 0.0, 255.0));
+
+			return { b, g, r, a };
+		}
+	};
 }

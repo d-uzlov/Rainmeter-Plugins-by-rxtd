@@ -143,12 +143,16 @@ void Spectrogram::setParams(const Params& _params, Channel channel) {
 	filepath += channel.technicalName();
 	filepath += L".bmp"sv;
 
-	image.setBackground(params.baseColor.toInt());
+	image.setBackground(params.baseColor.toIntColor());
 	image.setWidth(params.length);
 	image.setStationary(params.stationary);
 
 	sifh.setBorderSize(params.borderSize);
-	sifh.setColors(params.colors[0].color, params.borderColor);
+	if (params.colors.empty()) {
+		sifh.setColors(params.baseColor, params.borderColor);
+	} else {
+		sifh.setColors(params.colors[0].color, params.borderColor);
+	}
 	sifh.setFading(params.fading);
 
 	updateParams();
@@ -192,7 +196,7 @@ void Spectrogram::fillStrip(array_view<float> data) {
 
 		auto color = params.baseColor * (1.0 - value) + params.maxColor * value;
 
-		strip[i] = color.toInt();
+		strip[i] = color.toIntColor();
 	}
 }
 
@@ -220,7 +224,7 @@ void Spectrogram::fillStripMulticolor(array_view<float> data) {
 
 		const auto color = lowColor * (1.0 - percentValue) + highColor * percentValue;
 
-		strip[i] = color.toInt();
+		strip[i] = color.toIntColor();
 	}
 }
 
@@ -257,7 +261,7 @@ void Spectrogram::_process(const DataSupplier& dataSupplier) {
 		changed = true;
 
 		if (dataIsZero) {
-			image.pushEmptyLine(params.baseColor.toInt());
+			image.pushEmptyLine(params.baseColor.toIntColor());
 		} else {
 			if (params.colors.empty()) {
 				// only use 2 colors
@@ -279,14 +283,14 @@ void Spectrogram::_finish(const DataSupplier& dataSupplier) {
 		return;
 	}
 
-	if (params.borderSize > 0 || params.fading != utils::StripedImageFadeHelper::FadingType::eNONE) {
+	if (true || params.borderSize > 0 || params.fading != utils::StripedImageFadeHelper::FadingType::eNONE) {
 		if (!writerHelper.isEmptinessWritten()) {
 			sifh.setLastStripIndex(image.getLastStripIndex());
 			sifh.inflate(image.getPixels());
 		}
 		writerHelper.write(sifh.getResultBuffer(), !image.isForced(), filepath);
 	} else {
-		writerHelper.write(image.getPixels(), image.isEmpty(), filepath);
+		// writerHelper.write(image.getPixels(), image.isEmpty(), filepath);
 	}
 
 	changed = false;

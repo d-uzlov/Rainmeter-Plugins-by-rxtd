@@ -10,6 +10,7 @@
 #pragma once
 #include "StripedImage.h"
 #include "Color.h"
+#include "IntMixer.h"
 
 namespace rxtd::utils {
 	class StripedImageFadeHelper {
@@ -54,10 +55,10 @@ namespace rxtd::utils {
 			return resultBuffer;
 		}
 
-		void inflate(array2d_view<uint32_t> source);
+		void inflate(array2d_view<IntColor> source);
 
 	private:
-		void inflateLine(array_view<uint32_t> source, array_span<uint32_t> dest) {
+		void inflateLine(array_view<IntColor> source, array_span<uint32_t> dest) {
 			switch (fading) {
 			case FadingType::eNONE:
 				inflateLine<distNone>(source, dest);
@@ -79,10 +80,12 @@ namespace rxtd::utils {
 		}
 
 		template<double (*distanceTransformFunc)(double)>
-		void inflateLine(array_view<uint32_t> source, array_span<uint32_t> dest) {
+		void inflateLine(array_view<IntColor> source, array_span<uint32_t> dest) {
 			const index width = source.size();
 			const double realWidth = width - borderSize;
 			const double distanceCoef = 1.0 / realWidth;
+			IntMixer<> mixer;
+			auto back = background.toIntColor();
 
 			for (int i = 0; i < width; ++i) {
 				double distance = lastStripIndex - i;
@@ -98,7 +101,15 @@ namespace rxtd::utils {
 				distance *= distanceCoef;
 				distance = distanceTransformFunc(distance);
 
-				dest[i] = Color::mix(distance, background, Color { source[i] }).toInt();
+				mixer.setParams(distance);
+				auto sc = source[i];
+				sc.a = mixer.mix(back.a, sc.a);
+				sc.r = mixer.mix(back.r, sc.r);
+				sc.g = mixer.mix(back.g, sc.g);
+				sc.b = mixer.mix(back.b, sc.b);
+				dest[i] = sc.full;
+
+				// dest[i] = Color::mix(distance, background, Color { source[i] }).toInt();
 			}
 		}
 
