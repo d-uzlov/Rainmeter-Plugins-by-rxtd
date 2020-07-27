@@ -108,21 +108,7 @@ Spectrogram::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter
 
 	params.borderColor = optionMap.get(L"borderColor"sv).asColor({ 1.0, 0.2, 0.2, 1 });
 
-	if (const auto fading = optionMap.get(L"fading").asIString(L"None");
-		fading == L"None") {
-		params.fading = FD::eNONE;
-	} else if (fading == L"Linear") {
-		params.fading = FD::eLINEAR;
-	} else if (fading == L"Pow2") {
-		params.fading = FD::ePOW2;
-	} else if (fading == L"Pow4") {
-		params.fading = FD::ePOW4;
-	} else if (fading == L"Pow8") {
-		params.fading = FD::ePOW8;
-	} else {
-		cl.warning(L"fading '{}' is not recognized, assume 'None'", fading);
-		params.fading = FD::eNONE;
-	}
+	params.fading = optionMap.get(L"fadingPercent").asFloat(0.0);
 
 	params.borderSize = std::max(optionMap.get(L"borderSize"sv).asInt(0), 0);
 
@@ -283,7 +269,7 @@ void Spectrogram::_finish(const DataSupplier& dataSupplier) {
 		return;
 	}
 
-	if (true || params.borderSize > 0 || params.fading != utils::StripedImageFadeHelper::FadingType::eNONE) {
+	if (true || params.borderSize > 0 || params.fading != 0.0) {
 		if (!writerHelper.isEmptinessWritten()) {
 			sifh.setLastStripIndex(image.getLastStripIndex());
 			sifh.inflate(image.getPixels());

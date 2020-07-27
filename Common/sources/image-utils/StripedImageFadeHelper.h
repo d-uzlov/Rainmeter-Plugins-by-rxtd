@@ -14,21 +14,12 @@
 
 namespace rxtd::utils {
 	class StripedImageFadeHelper {
-	public:
-		enum class FadingType {
-			eNONE,
-			eLINEAR,
-			ePOW2,
-			ePOW4,
-			ePOW8,
-		};
-
 	private:
 		Vector2D<uint32_t> resultBuffer{ };
 
 		index borderSize = 0;
-		index lastStripIndex { };
-		FadingType fading = FadingType::eNONE;
+		index lastStripIndex{ };
+		double fading = 0.0;
 
 		Color background;
 		Color border;
@@ -42,7 +33,7 @@ namespace rxtd::utils {
 			lastStripIndex = value;
 		}
 
-		void setFading(FadingType value) {
+		void setFading(double value) {
 			fading = value;
 		}
 
@@ -59,37 +50,19 @@ namespace rxtd::utils {
 
 	private:
 		void inflateLine(array_view<IntColor> source, array_span<uint32_t> dest) {
-			switch (fading) {
-			case FadingType::eNONE:
-				inflateLine<distNone>(source, dest);
-				break;
-			case FadingType::eLINEAR:
-				inflateLine<distLinear>(source, dest);
-				break;
-			case FadingType::ePOW2:
-				inflateLine<distPow2>(source, dest);
-				break;
-			case FadingType::ePOW4:
-				inflateLine<distPow4>(source, dest);
-				break;
-			case FadingType::ePOW8:
-				inflateLine<distPow8>(source, dest);
-				break;
-			default: ;
-			}
-		}
-
-		template<double (*distanceTransformFunc)(double)>
-		void inflateLine(array_view<IntColor> source, array_span<uint32_t> dest) {
 			const index width = source.size();
+
 			const double realWidth = width - borderSize;
-			const double distanceCoef = 1.0 / realWidth;
+
+			const index fadeEnd = realWidth * (1.0 - fading);
+
+			const double distanceCoef = 1.0 / (realWidth * fading);
 			IntMixer<> mixer;
 			auto back = background.toIntColor();
 
 			for (int i = 0; i < width; ++i) {
-				double distance = lastStripIndex - i;
-				if (distance < 0.0) {
+				index distance = lastStripIndex - i;
+				if (distance < 0) {
 					distance += width;
 				}
 				if (distance >= realWidth) {
@@ -98,38 +71,28 @@ namespace rxtd::utils {
 					continue;
 				}
 
-				distance *= distanceCoef;
-				distance = distanceTransformFunc(distance);
+				if (distance > fadeEnd) {
+					double dd = (distance - fadeEnd) * distanceCoef;
+					dd = dd * dd;
 
-				mixer.setParams(distance);
-				auto sc = source[i];
-				sc.a = mixer.mix(back.a, sc.a);
-				sc.r = mixer.mix(back.r, sc.r);
-				sc.g = mixer.mix(back.g, sc.g);
-				sc.b = mixer.mix(back.b, sc.b);
-				dest[i] = sc.full;
+					mixer.setParams(dd);
+					auto sc = source[i];
+					sc.a = mixer.mix(back.a, sc.a);
+					sc.r = mixer.mix(back.r, sc.r);
+					sc.g = mixer.mix(back.g, sc.g);
+					sc.b = mixer.mix(back.b, sc.b);
+					dest[i] = sc.full;
 
-				// dest[i] = Color::mix(distance, background, Color { source[i] }).toInt();
+					// dest[i] = Color::mix(distance, background, Color { source[i] }).toInt();
+				} else {
+					dest[i] = source[i].full;
+				}
+
 			}
 		}
 
 		static double distNone(double) {
 			return 0.0;
-		}
-
-		static double distLinear(double value) {
-			return value;
-		}
-
-		static double distPow2(double value) {
-			value = value * value;
-			return value;
-		}
-
-		static double distPow4(double value) {
-			value = value * value;
-			value = value * value;
-			return value;
 		}
 
 		static double distPow8(double value) {

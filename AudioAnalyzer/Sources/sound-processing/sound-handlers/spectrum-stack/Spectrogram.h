@@ -17,8 +17,6 @@
 
 namespace rxtd::audio_analyzer {
 	class Spectrogram : public SoundHandler {
-		using FD = utils::StripedImageFadeHelper::FadingType;
-
 	public:
 		struct Params {
 		private:
@@ -32,7 +30,7 @@ namespace rxtd::audio_analyzer {
 			utils::Color baseColor{ };
 			utils::Color maxColor{ };
 			utils::Color borderColor{ };
-			FD fading{ };
+			double fading { };
 
 			struct ColorDescription {
 				float widthInverted;
