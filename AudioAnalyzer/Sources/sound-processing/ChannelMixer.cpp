@@ -11,6 +11,7 @@
 #include "Channel.h"
 
 #include "undef.h"
+#include <set>
 
 using namespace audio_analyzer;
 
@@ -34,8 +35,25 @@ void ChannelMixer::setFormat(MyWaveFormat _waveFormat) {
 	} else if (center.has_value()) {
 		aliasOfAuto = Channel::eCENTER;
 	} else {
-		aliasOfAuto = waveFormat.channelLayout.getChannelsOrderView()[0];
+		aliasOfAuto = waveFormat.channelLayout.getChannelsOrderView()[0]; // todo when empty there will be a crash
 	}
+
+	std::vector<Channel> toDelete;
+	for (const auto&[channel, _] : channels) {
+		const bool exists = channel == Channel::eAUTO || waveFormat.channelLayout.contains(channel);
+		if (!exists) {
+			toDelete.push_back(channel);
+		}
+	}
+	for (auto c : toDelete) {
+		channels.erase(c);
+	}
+
+	// Create missing channels
+	for (const auto channel : waveFormat.channelLayout) {
+		channels[channel];
+	}
+	channels[aliasOfAuto];
 }
 
 void ChannelMixer::decomposeFramesIntoChannels(array_view<std::byte> frameBuffer, bool withAuto) {
@@ -51,10 +69,7 @@ void ChannelMixer::decomposeFramesIntoChannels(array_view<std::byte> frameBuffer
 			auto bufferTemp = bufferFloat + waveFormat.channelLayout.indexOf(channel).value();
 
 			for (index frame = 0; frame < framesCount; ++frame) {
-				const auto value = *bufferTemp;
-				constexpr float correctingCoef = 1.0 / 0.985047;
-				// I just can't get absolute values of a wave above 0.985047
-				waveBuffer[frame] = value * correctingCoef;
+				waveBuffer[frame] = *bufferTemp;
 				bufferTemp += channelsCount;
 			}
 		}
@@ -83,6 +98,26 @@ void ChannelMixer::decomposeFramesIntoChannels(array_view<std::byte> frameBuffer
 	if (withAuto && aliasOfAuto == Channel::eAUTO) {
 		resampleToAuto();
 	}
+
+	isSilent = false;
+}
+
+void ChannelMixer::writeSilence(index size, bool withAuto) {
+	if (isSilent) {
+		return;
+	}
+
+	for (auto& [channel, buffer] : channels) {
+		buffer.resize(size);
+		std::fill(buffer.begin(), buffer.end(), 0.0);
+	}
+
+	if (withAuto && aliasOfAuto == Channel::eAUTO) {
+		resampleToAuto();
+	}
+
+	isSilent = true;
+
 }
 
 array_view<float> ChannelMixer::getChannelPCM(Channel channel) const {

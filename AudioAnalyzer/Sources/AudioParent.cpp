@@ -128,9 +128,11 @@ double AudioParent::_update() {
 		deviceManager.getCaptureManager().capture([&](bool silent, array_view<std::byte> buffer) {
 			if (!silent) {
 				channelMixer.decomposeFramesIntoChannels(buffer, true);
+			} else {
+				channelMixer.writeSilence(buffer.size(), true);
 			}
 			callAllSA([=](SoundAnalyzer& sa) {
-				sa.process(silent);
+				sa.process();
 			});
 		}, maxTime, computeTimeout);
 

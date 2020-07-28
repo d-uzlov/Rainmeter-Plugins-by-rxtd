@@ -129,24 +129,6 @@ void BlockHandler::recalculateConstants() {
 	params.transformer.setParams(samplesPerSec, blockSize);
 }
 
-void BlockHandler::_processSilence(const DataSupplier& dataSupplier) {
-	const auto waveSize = dataSupplier.getWave().size();
-	index waveProcessed = 0;
-
-	while (waveProcessed != waveSize) {
-		const index missingPoints = blockSize - counter;
-		if (waveProcessed + missingPoints <= waveSize) {
-			counter = blockSize;
-			finishBlock();
-			waveProcessed += missingPoints;
-		} else {
-			const auto waveRemainder = waveSize - waveProcessed;
-			counter = waveRemainder;
-			break;
-		}
-	}
-}
-
 void BlockRms::_process(array_view<float> wave, float average) {
 	for (double x : wave) {
 		x -= average;

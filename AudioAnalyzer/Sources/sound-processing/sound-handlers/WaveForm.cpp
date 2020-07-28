@@ -208,34 +208,6 @@ void WaveForm::_process(const DataSupplier& dataSupplier) {
 	}
 }
 
-void WaveForm::_processSilence(const DataSupplier& dataSupplier) {
-	if (blockSize <= 0 || params.width <= 0 || params.height <= 0) {
-		return;
-	}
-
-	const auto waveSize = dataSupplier.getWave().size();
-
-	index waveProcessed = 0;
-
-	while (waveProcessed != waveSize) {
-		const auto blockRemaining = blockSize - counter;
-		min = std::min<double>(min, 0.0);
-		max = std::max<double>(max, 0.0);
-
-		if (waveProcessed + blockRemaining <= waveSize) {
-			pushStrip(min, max);
-
-			waveProcessed += blockRemaining;
-			counter = 0;
-			min = 10.0;
-			max = -10.0;
-		} else {
-			counter = counter + waveSize - waveProcessed;
-			waveProcessed = waveSize;
-		}
-	}
-}
-
 void WaveForm::_finish(const DataSupplier& dataSupplier) {
 	if (changed) {
 		if (!writerHelper.isEmptinessWritten()) {

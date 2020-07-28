@@ -97,7 +97,6 @@ namespace rxtd::audio_analyzer {
 		void reset() override;
 
 		void _process(const DataSupplier& dataSupplier) override;
-		void _processSilence(const DataSupplier& dataSupplier) override;
 
 		void _finish(const DataSupplier& dataSupplier) override {
 		}

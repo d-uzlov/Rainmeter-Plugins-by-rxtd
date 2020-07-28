@@ -59,7 +59,6 @@ namespace rxtd::audio_analyzer {
 		void reset() final;
 
 		void _process(const DataSupplier& dataSupplier) final;
-		void _processSilence(const DataSupplier& dataSupplier) final;
 
 		void _finish(const DataSupplier& dataSupplier) final {
 		}

@@ -121,27 +121,6 @@ void FftAnalyzer::_process(const DataSupplier& dataSupplier) {
 	fft.resetBuffers();
 }
 
-void FftAnalyzer::_processSilence(const DataSupplier& dataSupplier) {
-	if (fftSize <= 0) {
-		return;
-	}
-
-	const auto waveSize = dataSupplier.getWave().size();
-
-	fft.setBuffers(
-		dataSupplier.getBuffer<audio_utils::FFT::input_buffer_type>(fft.getInputBufferSize()),
-		dataSupplier.getBuffer<audio_utils::FFT::output_buffer_type>(fft.getOutputBufferSize())
-	);
-
-	if (params.randomTest != 0.0) {
-		processRandom(waveSize);
-	} else {
-		cascades[0].processSilence(waveSize);
-	}
-
-	fft.resetBuffers();
-}
-
 SoundHandler::layer_t FftAnalyzer::getLayersCount() const {
 	return layer_t(cascades.size());
 }

@@ -67,7 +67,7 @@ namespace rxtd::audio_analyzer {
 			return cph;
 		}
 
-		void process(bool isSilent);
+		void process();
 		void resetValues() noexcept;
 		void finishStandalone() noexcept;
 

@@ -48,7 +48,7 @@ void SoundAnalyzer::setHandlers(
 	patch();
 }
 
-void SoundAnalyzer::process(bool isSilent) {
+void SoundAnalyzer::process() {
 	cph.reset();
 	dataSupplier.logger = logger;
 
@@ -59,17 +59,11 @@ void SoundAnalyzer::process(bool isSilent) {
 
 		dataSupplier.setChannelData(&channelData);
 
-		if (isSilent) {
-			for (auto& [name, handler] : channelData) {
-				handler->processSilence(dataSupplier);
-			}
-		} else {
-			dataSupplier.setWave(cph.getChannelPCM(channel));
-			for (auto& [name, handler] : channelData) {
-				handler->process(dataSupplier);
-			}
+		dataSupplier.setWave(cph.getChannelPCM(channel));
+		for (auto&[name, handler] : channelData) {
+			handler->process(dataSupplier);
+			dataSupplier.resetBuffers();
 		}
-		dataSupplier.resetBuffers();
 	}
 }
 

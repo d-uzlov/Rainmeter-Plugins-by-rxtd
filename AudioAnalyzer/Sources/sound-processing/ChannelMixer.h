@@ -16,10 +16,12 @@ namespace rxtd::audio_analyzer {
 		MyWaveFormat waveFormat;
 		std::map<Channel, std::vector<float>> channels;
 		Channel aliasOfAuto = Channel::eAUTO;
+		bool isSilent = false;
 
 	public:
 		void setFormat(MyWaveFormat waveFormat);
 		void decomposeFramesIntoChannels(array_view<std::byte> frameBuffer, bool withAuto);
+		void writeSilence(index size, bool withAuto);
 
 		array_view<float> getChannelPCM(Channel channel) const;
 
