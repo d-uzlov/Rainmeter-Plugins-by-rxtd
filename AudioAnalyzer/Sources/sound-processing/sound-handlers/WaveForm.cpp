@@ -210,7 +210,8 @@ void WaveForm::_process(const DataSupplier& dataSupplier) {
 
 void WaveForm::_finish(const DataSupplier& dataSupplier) {
 	if (changed) {
-		if (!writerHelper.isEmptinessWritten()) {
+		const bool forced = !drawer.isEmpty();
+		if (forced || !writerHelper.isEmptinessWritten()) {
 			drawer.inflate();
 		}
 		writerHelper.write(drawer.getResultBuffer(), drawer.isEmpty(), filepath);

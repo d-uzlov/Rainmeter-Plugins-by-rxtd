@@ -79,18 +79,18 @@ namespace rxtd::utils {
 			}
 		}
 
-		void pushEmptyLine(PixelValueType value) {
-			if (!isForced()) {
-				// ensures that when image is stationary it will be cleared fully instead of stopping in the middle
-				return;
-			}
-
-			if (sameStripsCount == 0 || lastFillValue != value) {
+		void pushEmptyStrip(PixelValueType value) {
+			if (lastFillValue != value) {
 				lastFillValue = value;
 				sameStripsCount = 1;
+			} else if (isEmpty()) {
+				if (!isForced()) {
+					return;
+				}
 			} else {
 				sameStripsCount++;
 			}
+			
 
 			index nextStripIndex = incrementAndGetIndex();
 			auto imageLines = getCurrentLinesArray(); // must be after #incrementAndGetIndex
@@ -111,6 +111,10 @@ namespace rxtd::utils {
 		}
 
 		bool isForced() const {
+			// should be used to ensure 
+			// that when image is stationary it will be cleared fully
+			// instead of stopping in the middle
+
 			const index lastStripIndex = getLastStripIndex();
 			const bool forced = lastStripIndex != width - 1;
 			return forced || !isEmpty();

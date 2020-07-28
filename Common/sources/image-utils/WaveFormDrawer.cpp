@@ -35,7 +35,7 @@ void WaveFormDrawer::setDimensions(index width, index height) {
 
 void WaveFormDrawer::fillSilence() {
 	const index centerLineIndex = interpolator.toValueD(0.0);
-	minMaxBuffer.pushEmptyLine({ centerLineIndex, centerLineIndex + 1 });
+	minMaxBuffer.pushEmptyStrip({ centerLineIndex, centerLineIndex + 1 });
 }
 
 void WaveFormDrawer::fillStrip(double min, double max) {
@@ -62,7 +62,7 @@ void WaveFormDrawer::fillStrip(double min, double max) {
 		prev.max = maxPixel;
 	}
 
-	minMaxBuffer.pushEmptyLine({ minPixel, maxPixel });
+	minMaxBuffer.pushEmptyStrip({ minPixel, maxPixel });
 }
 
 void WaveFormDrawer::inflate() {
