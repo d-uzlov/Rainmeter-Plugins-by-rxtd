@@ -86,7 +86,6 @@ void FileWrapper::createDirectories(string path) {
 
 		pos = nextPos + 1;
 	}
-	CreateDirectoryW(path.c_str(), nullptr);
 }
 
 void FileWrapper::close() {
