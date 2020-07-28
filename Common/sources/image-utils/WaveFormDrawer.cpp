@@ -10,18 +10,18 @@
 #include "WaveFormDrawer.h"
 
 #include "undef.h"
+#include "IntMixer.h"
 
 using namespace utils;
 
 WaveFormDrawer::WaveFormDrawer() {
-	inflatableBuffer.setBackground(0.0);
+	minMaxBuffer.setBackground({ 0, 0 });
 }
 
 void WaveFormDrawer::setDimensions(index width, index height) {
-	inflatableBuffer.setDimensions(width, height);
+	minMaxBuffer.setDimensions(width, height);
 	resultBuffer.setBufferSize(width);
 	resultBuffer.setBuffersCount(height);
-	stripBuffer.resize(height);
 
 	interpolator = { -1.0, 1.0, 0, height - 1 };
 
@@ -30,10 +30,8 @@ void WaveFormDrawer::setDimensions(index width, index height) {
 }
 
 void WaveFormDrawer::fillSilence() {
-	inflatableBuffer.pushEmptyLine(0.0);
-
 	const index centerLineIndex = interpolator.toValueD(0.0);
-	inflatableBuffer.correctLastLine(centerLineIndex, 1.0);
+	minMaxBuffer.pushEmptyLine({ centerLineIndex, centerLineIndex + 1 });
 }
 
 void WaveFormDrawer::fillStrip(double min, double max) {
@@ -50,58 +48,117 @@ void WaveFormDrawer::fillStrip(double min, double max) {
 		prev.max = max;
 	}
 
-	fillStripBuffer(min, max);
-	inflatableBuffer.pushStrip(stripBuffer);
+	auto minPixel = interpolator.toValueD(min);
+	auto maxPixel = interpolator.toValueD(max);
+	if (minPixel == maxPixel) {
+		if (minPixel == 0) {
+			maxPixel++;
+		} else {
+			minPixel--;
+		}
+	}
+
+	minMaxBuffer.pushEmptyLine({ minPixel, maxPixel });
 }
 
 void WaveFormDrawer::inflate() {
-	auto imageLines = inflatableBuffer.getPixels();
+	const index centerLineIndex = interpolator.toValueD(0.0);
 
-	for (int lineIndex = 0; lineIndex < height; ++lineIndex) {
-		auto source = imageLines[lineIndex];
-		auto dest = resultBuffer[lineIndex];
-
-		inflateLine(source, dest);
+	for (int lineIndex = 0; lineIndex < centerLineIndex; ++lineIndex) {
+		inflateLine(lineIndex, resultBuffer[lineIndex], colors.background);
 	}
 
-	const index centerLineIndex = interpolator.toValueD(0.0);
-	auto sourceCenter = imageLines[centerLineIndex];
-	auto destCenter = resultBuffer[centerLineIndex];
+	for (int lineIndex = centerLineIndex + 1; lineIndex < height; ++lineIndex) {
+		inflateLine(lineIndex, resultBuffer[lineIndex], colors.background);
+	}
 
 	if (lineDrawingPolicy == LineDrawingPolicy::eALWAYS) {
-		const auto color = colors.line.toInt();
+		auto destCenter = resultBuffer[centerLineIndex];
 		for (int i = 0; i < width; ++i) {
-			destCenter[i] = color;
+			destCenter[i] = colors.line.full;
 		}
 	} else if (lineDrawingPolicy == LineDrawingPolicy::eBELOW_WAVE) {
-		for (int i = 0; i < width; ++i) {
-			destCenter[i] = Color::mix(1.0 - sourceCenter[i], colors.line, colors.wave).toInt();
-		}
+		inflateLine(centerLineIndex, resultBuffer[centerLineIndex], colors.line);
 	}
 }
 
-uint32_t WaveFormDrawer::inflatePixel(array_view<float> source, double backgroundCoef, index i) {
-	const float current = source[i];
-	const index nextIndex = i < width - 2 ? i + 1 : 0;
-	const float neighbours = std::max(inflatingPrev, source[nextIndex]);
-	inflatingPrev = current;
+void WaveFormDrawer::inflateLine(index line, array_span<uint32_t> dest, IntColor backgroundColor) const {
+	const double realWidth = width - borderSize;
 
-	if (current > 2.0) { // when peak
-		inflatingPrev = current - 2.0;
-		const auto mixedColor = Color::mix(backgroundCoef, colors.background, colors.halo);
-		return mixedColor.toInt();
+	const index fadeWidth = realWidth * fading;
+	const index flatWidth = realWidth - fadeWidth;
+
+	IntMixer<> mixer;
+	const auto border = colors.border;
+
+	const double fadeDistanceStep = 1.0 / (realWidth * fading);
+	double fadeDistance = 1.0;
+
+	const auto lastStripIndex = minMaxBuffer.getLastStripIndex();
+
+	index fadeBeginIndex = lastStripIndex + borderSize;
+	if (fadeBeginIndex >= width) {
+		fadeBeginIndex -= width;
 	}
 
-	if (edges == SmoothEdges::eHALO && neighbours > current * 2.0) {
-		const auto sourceValue = (current + neighbours) * 0.5 * (1.0 - backgroundCoef);
-		const auto mixedColor = Color::mix(1.0 - sourceValue, colors.background, colors.halo);
-		return mixedColor.toInt();
+	index flatBeginIndex = fadeBeginIndex + fadeWidth;
+
+	if (flatBeginIndex >= width) {
+		for (index i = fadeBeginIndex; i < width; i++) {
+			mixer.setParams(fadeDistance * fadeDistance);
+			auto sc = isWaveAt(i, line) ? colors.wave : backgroundColor;
+			sc.a = mixer.mix(backgroundColor.a, sc.a);
+			sc.r = mixer.mix(backgroundColor.r, sc.r);
+			sc.g = mixer.mix(backgroundColor.g, sc.g);
+			sc.b = mixer.mix(backgroundColor.b, sc.b);
+			dest[i] = sc.full;
+
+			fadeDistance -= fadeDistanceStep;
+		}
+
+		fadeBeginIndex = 0;
+		flatBeginIndex -= width;
 	}
 
-	// generic
-	const auto sourceValue = current * (1.0 - backgroundCoef);
-	const auto mixedColor = Color::mix(1.0 - sourceValue, colors.background, colors.wave);
-	return mixedColor.toInt();
+	for (index i = fadeBeginIndex; i < flatBeginIndex; i++) {
+		mixer.setParams(fadeDistance * fadeDistance);
+		auto sc = isWaveAt(i, line) ? colors.wave : backgroundColor;
+		sc.a = mixer.mix(backgroundColor.a, sc.a);
+		sc.r = mixer.mix(backgroundColor.r, sc.r);
+		sc.g = mixer.mix(backgroundColor.g, sc.g);
+		sc.b = mixer.mix(backgroundColor.b, sc.b);
+		dest[i] = sc.full;
+
+		fadeDistance -= fadeDistanceStep;
+	}
+
+	index borderBeginIndex = flatBeginIndex + flatWidth;
+	if (borderBeginIndex >= width) {
+		for (index i = flatBeginIndex; i < width; i++) {
+			auto sc = isWaveAt(i, line) ? colors.wave : backgroundColor;
+			dest[i] = sc.full;
+		}
+
+		flatBeginIndex = 0;
+		borderBeginIndex -= width;
+	}
+
+	for (index i = flatBeginIndex; i < borderBeginIndex; i++) {
+		auto sc = isWaveAt(i, line) ? colors.wave : backgroundColor;
+		dest[i] = sc.full;
+	}
+
+	index borderEndIndex = borderBeginIndex + borderSize;
+	if (borderEndIndex >= width) {
+		for (index i = borderBeginIndex; i < width; i++) {
+			dest[i] = border.full;
+		}
+		borderBeginIndex = 0;
+		borderEndIndex -= width;
+	}
+	for (index i = borderBeginIndex; i < borderEndIndex; i++) {
+		dest[i] = border.full;
+	}
 }
 
 std::pair<double, double> WaveFormDrawer::correctMinMaxPixels(double minPixel, double maxPixel) const {
@@ -131,66 +188,7 @@ std::pair<double, double> WaveFormDrawer::correctMinMaxPixels(double minPixel, d
 	return { minPixel, maxPixel };
 }
 
-void WaveFormDrawer::fillStripBuffer(double min, double max) {
-	auto& buffer = stripBuffer;
-
-	const auto [minPixel, maxPixel] = correctMinMaxPixels(interpolator.toValue(min), interpolator.toValue(max));
-
-	const auto lowBackgroundBound = interpolator.makeDiscreetClamped(minPixel);
-	const auto highBackgroundBound = interpolator.makeDiscreetClamped(maxPixel);
-
-	// Should never really clamp due to minPixel <= maxPixel - 1
-	// Because discreet(maxPixel) and discreet(minPixel) shouldn't clamp after shift above
-	// If (max - min) was already >= 1.0, then also no clamp because discreet(toValue([-1.0, 1.0])) should be within clamp range
-	const auto lowLineBound = interpolator.clamp(lowBackgroundBound + 1);
-	const auto highLineBound = highBackgroundBound;
-
-	// [0, lowBackgroundBound) ← background
-	// [lowBackgroundBound, lowBackgroundBound] ← transition
-	// [lowBackgroundBound + 1, highBackgroundBound) ← line
-	// [highBackgroundBound, highBackgroundBound] ← transition
-	// [highBackgroundBound + 1, MAX] ← background
-
-	for (index i = 0; i < lowBackgroundBound; ++i) {
-		buffer[i] = 0.0;
-	}
-
-	for (index i = lowLineBound; i < highLineBound; i++) {
-		buffer[i] = 1.0;
-	}
-
-	for (index i = highBackgroundBound + 1; i < height; ++i) {
-		buffer[i] = 0.0;
-	}
-
-	const double lowPercent = interpolator.percentRelativeToNext(minPixel);
-	const double highPercent = interpolator.percentRelativeToNext(maxPixel);
-
-	switch (edges) {
-	case SmoothEdges::eNONE: {
-		if (lowPercent < 0.5) {
-			buffer[lowBackgroundBound] = 1.0;
-		} else {
-			buffer[lowBackgroundBound] = 0.0;
-		}
-
-		if (highPercent > 0.5) {
-			buffer[highBackgroundBound] = 1.0;
-		} else {
-			buffer[highBackgroundBound] = 0.0;
-		}
-		break;
-	}
-	case SmoothEdges::eMIN_MAX: {
-		buffer[lowBackgroundBound] = 1.0 - lowPercent;
-		buffer[highBackgroundBound] = highPercent;
-		break;
-	}
-	case SmoothEdges::eHALO: {
-		buffer[lowBackgroundBound] = 1.0 - lowPercent + 2.0;
-		buffer[highBackgroundBound] = highPercent + 2.0;
-		break;
-	}
-	default: ;
-	}
+bool WaveFormDrawer::isWaveAt(index i, index line) const {
+	const auto minMax = minMaxBuffer.getPixels()[0][i];
+	return line > minMax.minPixel && line < minMax.maxPixel;
 }

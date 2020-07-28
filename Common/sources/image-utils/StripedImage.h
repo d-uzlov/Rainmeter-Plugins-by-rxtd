@@ -80,7 +80,6 @@ namespace rxtd::utils {
 		}
 
 		void pushEmptyLine(PixelValueType value) {
-			const index lastStripIndex = getLastStripIndex();
 			if (!isForced()) {
 				// ensures that when image is stationary it will be cleared fully instead of stopping in the middle
 				return;

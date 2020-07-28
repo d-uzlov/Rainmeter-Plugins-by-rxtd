@@ -19,8 +19,6 @@
 namespace rxtd::audio_analyzer {
 	class WaveForm : public SoundHandler {
 		using LDP = utils::WaveFormDrawer::LineDrawingPolicy;
-		using FD = utils::WaveFormDrawer::FadingType;
-		using SE = utils::WaveFormDrawer::SmoothEdges;
 		using Colors = utils::WaveFormDrawer::Colors;
 		using CVT = audio_utils::CustomizableValueTransformer;
 
@@ -35,11 +33,10 @@ namespace rxtd::audio_analyzer {
 			string folder = L".";
 			Colors colors{ };
 			LDP lineDrawingPolicy{ };
-			SE edges{ };
 			bool stationary{ };
 			bool connected{ };
 			index borderSize{ };
-			FD fading{ };
+			double fading{ };
 			CVT transformer{ };
 
 			// generated
@@ -50,7 +47,6 @@ namespace rxtd::audio_analyzer {
 					&& lhs.folder == rhs.folder
 					&& lhs.colors == rhs.colors
 					&& lhs.lineDrawingPolicy == rhs.lineDrawingPolicy
-					&& lhs.edges == rhs.edges
 					&& lhs.stationary == rhs.stationary
 					&& lhs.connected == rhs.connected
 					&& lhs.borderSize == rhs.borderSize

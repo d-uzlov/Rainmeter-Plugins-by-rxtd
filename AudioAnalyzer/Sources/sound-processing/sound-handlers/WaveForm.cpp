@@ -45,11 +45,10 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const OptionMap& optionMap
 		rain.replaceVariables(L"[#CURRENTPATH]") % own()
 	);
 
-	params.colors.background = optionMap.get(L"backgroundColor"sv).asColor({ 0, 0, 0, 1 });
-	params.colors.wave = optionMap.get(L"waveColor"sv).asColor({ 1, 1, 1, 1 });
-	params.colors.line = optionMap.get(L"lineColor"sv).asColor({ 0.5, 0.5, 0.5, 0.5 });
-	params.colors.border = optionMap.get(L"borderColor"sv).asColor({ 1.0, 0.2, 0.2, 1 });
-	params.colors.halo = optionMap.get(L"haloColor"sv).asColor({ 1.0, 0.4, 0.0, 1 });
+	params.colors.background = optionMap.get(L"backgroundColor"sv).asColor({ 0, 0, 0, 1 }).toIntColor();
+	params.colors.wave = optionMap.get(L"waveColor"sv).asColor({ 1, 1, 1, 1 }).toIntColor();
+	params.colors.line = optionMap.get(L"lineColor"sv).asColor({ 0.5, 0.5, 0.5, 0.5 }).toIntColor();
+	params.colors.border = optionMap.get(L"borderColor"sv).asColor({ 1.0, 0.2, 0.2, 1 }).toIntColor();
 
 	if (const auto ldpString = optionMap.get(L"lineDrawingPolicy"sv).asIString(L"always");
 		ldpString == L"always") {
@@ -63,44 +62,17 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const OptionMap& optionMap
 		params.lineDrawingPolicy = LDP::eALWAYS;
 	}
 
-	if (const auto edgesString = optionMap.get(L"Edges"sv).asIString(L"none");
-		edgesString == L"none") {
-		params.edges = SE::eNONE;
-	} else if (edgesString == L"smoothMinMax") {
-		params.edges = SE::eMIN_MAX;
-	} else if (edgesString == L"halo") {
-		params.edges = SE::eHALO;
-	} else {
-		cl.warning(L"edges '{}' is not recognized, assume 'none'", edgesString);
-		params.edges = SE::eNONE;
-	}
-
 	params.stationary = optionMap.get(L"Stationary").asBool(false);
 	params.connected = optionMap.get(L"connected").asBool(true);
 
 	params.borderSize = optionMap.get(L"borderSize").asInt(0);
 	params.borderSize = std::max<index>(params.borderSize, 0);
 
-	if (const auto fading = optionMap.get(L"fading").asIString(L"None");
-		fading == L"None") {
-		params.fading = FD::eNONE;
-	} else if (fading == L"Linear") {
-		params.fading = FD::eLINEAR;
-	} else if (fading == L"Pow2") {
-		params.fading = FD::ePOW2;
-	} else if (fading == L"Pow4") {
-		params.fading = FD::ePOW4;
-	} else if (fading == L"Pow8") {
-		params.fading = FD::ePOW8;
-	} else {
-		cl.warning(L"fading '{}' is not recognized, assume 'None'", fading);
-		params.fading = FD::eNONE;
-	}
+	params.fading = optionMap.get(L"fadingPercent").asFloat(0.0);
 
-	// legacy
 	if (optionMap.has(L"transform"sv)) {
 		params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform"), cl);
-	} else if (optionMap.has(L"gain")) {
+	} else if (optionMap.has(L"gain")) { // legacy
 		const auto gain = optionMap.get(L"gain"sv).asFloat(1.0);
 		utils::BufferPrinter printer;
 		printer.print(L"map[from 0 ; 1][to 0 ; {}]", gain);
@@ -145,7 +117,7 @@ void WaveForm::setParams(const Params& _params, Channel channel) {
 	minDistinguishableValue = 1.0 / params.height / 2.0; // below half pixel
 
 	drawer.setDimensions(params.width, params.height);
-	drawer.setEdges(params.edges);
+	// drawer.setEdges(params.edges);
 	drawer.setColors(params.colors);
 	drawer.setLineDrawingPolicy(params.lineDrawingPolicy);
 	drawer.setStationary(params.stationary);
