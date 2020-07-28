@@ -19,7 +19,11 @@ WaveFormDrawer::WaveFormDrawer() {
 }
 
 void WaveFormDrawer::setDimensions(index width, index height) {
-	minMaxBuffer.setDimensions(width, height);
+	if (width == this->width && height == this->height) {
+		return;
+	}
+
+	minMaxBuffer.setDimensions(width, 1);
 	resultBuffer.setBufferSize(width);
 	resultBuffer.setBuffersCount(height);
 
@@ -29,8 +33,8 @@ void WaveFormDrawer::setDimensions(index width, index height) {
 	this->height = height;
 
 	const index centerLineIndex = interpolator.toValueD(0.0);
-	prev.min = centerLineIndex;
-	prev.max = centerLineIndex;
+	prev.minPixel = centerLineIndex;
+	prev.maxPixel = centerLineIndex;
 }
 
 void WaveFormDrawer::fillSilence() {
@@ -46,20 +50,21 @@ void WaveFormDrawer::fillStrip(double min, double max) {
 
 	auto minPixel = interpolator.toValueD(min);
 	auto maxPixel = interpolator.toValueD(max);
-	if (minPixel == maxPixel) {
-		if (minPixel == 0) {
-			maxPixel++;
-		} else {
-			minPixel--;
-		}
-	}
 
 	if (connected) {
-		minPixel = std::min(minPixel, prev.max);
-		maxPixel = std::max(maxPixel, prev.min);
+		minPixel = std::min(minPixel, prev.maxPixel);
+		maxPixel = std::max(maxPixel, prev.minPixel);
 
-		prev.min = minPixel;
-		prev.max = maxPixel;
+		prev.minPixel = minPixel;
+		prev.maxPixel = maxPixel;
+	}
+
+	if (minPixel == maxPixel) {
+		if (minPixel > 0) {
+			minPixel--;
+		} else {
+			maxPixel++;
+		}
 	}
 
 	minMaxBuffer.pushEmptyStrip({ minPixel, maxPixel });
@@ -167,5 +172,5 @@ void WaveFormDrawer::inflateLine(index line, array_span<uint32_t> dest, IntColor
 
 bool WaveFormDrawer::isWaveAt(index i, index line) const {
 	const auto minMax = minMaxBuffer.getPixels()[0][i];
-	return line > minMax.minPixel && line < minMax.maxPixel;
+	return line > minMax.minPixel && line <= minMax.maxPixel;
 }

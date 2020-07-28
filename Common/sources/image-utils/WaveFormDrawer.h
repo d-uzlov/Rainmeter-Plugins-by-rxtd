@@ -70,10 +70,7 @@ namespace rxtd::utils {
 
 		Colors colors{ };
 
-		struct {
-			index min = 0;
-			index max = 0;
-		} prev;
+		MinMax prev;
 
 	public:
 		WaveFormDrawer();
