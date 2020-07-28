@@ -12,21 +12,21 @@
 
 namespace rxtd::audio_utils {
 	class LogarithmicIRF {
-		double attackDecayConstants[2] { };
-		double result = 0.0;
+		float attackDecayConstants[2] { };
+		float result = 0.0;
 
 	public:
 		void setParams(double attackTime, double decayTime, index samplesPerSec, index stride);
 		void setParams(double attackTime, double decayTime, index samplesPerSec);
 
-		double next(double value);
-		double apply(double prev, double value);
-		double getLastResult() const;
+		float next(float value);
+		float apply(float prev, float value);
+		float getLastResult() const;
 
 		void reset();
 
 	private:
-		static double calculateAttackDecayConstant(double time, index samplesPerSec, index stride);
+		static float calculateAttackDecayConstant(float time, index samplesPerSec, index stride);
 	};
 
 }

@@ -29,4 +29,33 @@ namespace rxtd::utils {
 			return linMin + (value - valMin) * reverseAlpha;
 		}
 	};
+
+	class LinearInterpolatorF {
+		float valMin = 0;
+		float linMin = 0;
+		float alpha = 1;
+		float reverseAlpha = 1;
+
+	public:
+		LinearInterpolatorF() = default;
+
+		LinearInterpolatorF(float linMin, float linMax, float valMin, float valMax) {
+			setParams(linMin, linMax, valMin, valMax);
+		}
+
+		void setParams(float linMin, float linMax, float valMin, float valMax) {
+			this->linMin = linMin;
+			this->valMin = valMin;
+			this->alpha = (valMax - valMin) / (linMax - linMin);
+			this->reverseAlpha = 1 / alpha;
+		}
+
+		float toValue(float linear) const {
+			return valMin + (linear - linMin) * alpha;
+		}
+
+		float toLinear(float value) const {
+			return linMin + (value - valMin) * reverseAlpha;
+		}
+	};
 }

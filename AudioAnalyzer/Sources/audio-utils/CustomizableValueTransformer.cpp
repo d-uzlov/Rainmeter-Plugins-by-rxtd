@@ -13,6 +13,7 @@
 #include "option-parser/OptionMap.h"
 
 #include "undef.h"
+#include "MyMath.h"
 
 using namespace audio_utils;
 
@@ -21,30 +22,31 @@ CustomizableValueTransformer::CustomizableValueTransformer(std::vector<Transform
 }
 
 double CustomizableValueTransformer::apply(double value) {
+	auto valueF = float(value);
 	for (auto& transform : transforms) {
 		switch (transform.type) {
 		case TransformType::eFILTER: {
-			value = transform.state.filter.next(value);
+			valueF = transform.state.filter.next(valueF);
 			break;
 		}
 		case TransformType::eDB: {
-			value = std::max<double>(value, std::numeric_limits<float>::min());
-			value = 10.0 * std::log10(value);
+			valueF = std::max(valueF, std::numeric_limits<float>::min());
+			valueF = 10.0 * std::log10(valueF);
 			break;
 		}
 		case TransformType::eMAP: {
-			value = transform.state.interpolator.toValue(value);
+			valueF = transform.state.interpolator.toValue(valueF);
 			break;
 		}
 		case TransformType::eCLAMP: {
-			value = std::clamp(value, transform.args[0], transform.args[1]);
+			valueF = std::clamp<double>(valueF, transform.args[0], transform.args[1]);
 			break;
 		}
 		default: std::terminate();
 		}
 	}
 
-	return value;
+	return valueF;
 }
 
 void CustomizableValueTransformer::applyToArray(utils::array2d_span<float> values) {
@@ -54,36 +56,45 @@ void CustomizableValueTransformer::applyToArray(utils::array2d_span<float> value
 		updateFilterBuffers(rowsCount, columnsCount);
 	}
 
-	for (int row = 0; row < rowsCount; ++row) {
-		for (int column = 0; column < columnsCount; ++column) {
-			double value = values[row][column];
+	const float logCoef = std::log(2) / std::log(10);
+	auto flatValue = values.getFlat();
 
-			for (auto& transform : transforms) {
-				switch (transform.type) {
-				case TransformType::eFILTER: {
-					const float prev = transform.pastFilterValues[row][column];
-					value = transform.state.filter.apply(prev, value);
-					transform.pastFilterValues[row][column] = value;
-					break;
-				}
-				case TransformType::eDB: {
-					value = std::max<double>(value, std::numeric_limits<float>::min());
-					value = 10.0 * std::log10(value);
-					break;
-				}
-				case TransformType::eMAP: {
-					value = transform.state.interpolator.toValue(value);
-					break;
-				}
-				case TransformType::eCLAMP: {
-					value = std::clamp(value, transform.args[0], transform.args[1]);
-					break;
-				}
-				default: std::terminate();
-				}
+	for (auto& transform : transforms) {
+		switch (transform.type) {
+		case TransformType::eFILTER: {
+			auto pastFlat = transform.pastFilterValues.getFlat();
+			for (auto valueIter = flatValue.begin(), pastIter = pastFlat.begin();
+				valueIter != flatValue.end();
+				++valueIter, ++pastIter) {
+				float& value = *valueIter;
+				float& prev = *pastIter;
+
+				value = transform.state.filter.apply(prev, value);
+				prev = value;
 			}
-
-			values[row][column] = value;
+			break;
+		}
+		case TransformType::eDB: {
+			for (auto& value : flatValue) {
+				value = std::max(value, std::numeric_limits<float>::min());
+				value = 10.0f * utils::MyMath::fastLog2(value) * logCoef;
+				// value = 10.0 * std::log10(value);
+			}
+			break;
+		}
+		case TransformType::eMAP: {
+			for (auto& value : flatValue) {
+				value = transform.state.interpolator.toValue(value);
+			}
+			break;
+		}
+		case TransformType::eCLAMP: {
+			for (auto& value : flatValue) {
+				value = std::clamp(value, transform.args[0], transform.args[1]);
+			}
+			break;
+		}
+		default: std::terminate();
 		}
 	}
 }

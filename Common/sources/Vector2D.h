@@ -81,5 +81,13 @@ namespace rxtd::utils {
 		constexpr array_view<T> operator[](index bufferNumber) const {
 			return { array.data() + bufferSize * bufferNumber, bufferSize };
 		}
+
+		constexpr array_span<T> getFlat() {
+			return { array.data(), buffersCount * bufferSize };
+		}
+
+		constexpr array_view<T> getFlat() const {
+			return { array.data(), buffersCount * bufferSize };
+		}
 	};
 }

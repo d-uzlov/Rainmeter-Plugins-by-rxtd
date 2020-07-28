@@ -59,6 +59,13 @@ namespace rxtd::utils {
 		constexpr array_view<T> operator[](index bufferNumber) const {
 			return { ptr + bufferSize * bufferNumber, bufferSize };
 		}
+
+		constexpr array_span<T> getFlat() {
+			return { ptr, buffersCount * bufferSize };
+		}
+		constexpr array_view<T> getFlat() const {
+			return { ptr, buffersCount * bufferSize };
+		}
 	};
 
 	template <typename T>
@@ -104,6 +111,10 @@ namespace rxtd::utils {
 
 		constexpr array_view<T> operator[](index bufferNumber) const {
 			return { ptr + bufferSize * bufferNumber, bufferSize };
+		}
+
+		constexpr array_view<T> getFlat() const {
+			return { ptr, buffersCount * bufferSize };
 		}
 	};
 }

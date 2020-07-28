@@ -22,16 +22,16 @@ void LogarithmicIRF::setParams(double attackTime, double decayTime, index sample
 	setParams(attackTime, decayTime, samplesPerSec, 1);
 }
 
-double LogarithmicIRF::next(double value) {
+float LogarithmicIRF::next(float value) {
 	result = value + attackDecayConstants[(value < result)] * (result - value);
 	return result;
 }
 
-double LogarithmicIRF::apply(double prev, double value) {
+float LogarithmicIRF::apply(float prev, float value) {
 	return value + attackDecayConstants[(value < prev)] * (prev - value);
 }
 
-double LogarithmicIRF::getLastResult() const {
+float LogarithmicIRF::getLastResult() const {
 	return result;
 }
 
@@ -39,6 +39,9 @@ void LogarithmicIRF::reset() {
 	result = 0.0;
 }
 
-double LogarithmicIRF::calculateAttackDecayConstant(double time, index samplesPerSec, index stride) {
-	return std::exp(-2.0 * stride / (samplesPerSec * time));
+float LogarithmicIRF::calculateAttackDecayConstant(float time, index samplesPerSec, index stride) {
+	// stride and samplesPerSec are semantically guaranteed to be positive
+	// time can be positive or zero
+	// In case of zero result is exp(-inf) == 0 which is totally fine
+	return std::exp(-2.0f * stride / (samplesPerSec * time));
 }
