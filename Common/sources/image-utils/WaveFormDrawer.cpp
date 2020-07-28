@@ -172,5 +172,5 @@ void WaveFormDrawer::inflateLine(index line, array_span<uint32_t> dest, IntColor
 
 bool WaveFormDrawer::isWaveAt(index i, index line) const {
 	const auto minMax = minMaxBuffer.getPixels()[0][i];
-	return line > minMax.minPixel && line <= minMax.maxPixel;
+	return line >= minMax.minPixel && line < minMax.maxPixel;
 }
