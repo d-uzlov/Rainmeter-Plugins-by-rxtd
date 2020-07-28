@@ -122,19 +122,37 @@ double AudioParent::_update() {
 		using clock = std::chrono::high_resolution_clock;
 		static_assert(clock::is_steady);
 
-		const std::chrono::duration<float, std::milli> duration{ computeTimeout };
-		const auto maxTime = clock::now() + std::chrono::duration_cast<std::chrono::milliseconds>(duration);
-
 		deviceManager.getCaptureManager().capture([&](bool silent, array_view<std::byte> buffer) {
 			if (!silent) {
 				channelMixer.decomposeFramesIntoChannels(buffer, true);
 			} else {
 				channelMixer.writeSilence(buffer.size(), true);
 			}
-			callAllSA([=](SoundAnalyzer& sa) {
-				sa.process();
-			});
-		}, maxTime, computeTimeout);
+		});
+
+		const std::chrono::duration<float, std::milli> duration { computeTimeout };
+		const auto maxTime = clock::now() + std::chrono::duration_cast<std::chrono::milliseconds>(duration);
+
+		const std::chrono::duration<float, std::milli> dur { 10.0 };
+		clock::time_point killTime = maxTime + std::chrono::duration_cast<std::chrono::milliseconds>(dur);
+
+		callAllSA([=](SoundAnalyzer& sa) {
+			sa.process();
+		});
+		channelMixer.reset();
+
+		const auto now = clock::now();
+
+		// if (now >= killTime) {
+		// 	const std::chrono::duration<float, std::milli> overheadTime = now - maxTime;
+		// 	logger.warning(L"killed: {} ms overhead over specified {} ms", overheadTime.count(), duration);
+		// 	return;
+		// }
+
+		if (now >= maxTime) {
+			const std::chrono::duration<float, std::milli> overheadTime = now - maxTime;
+			logger.debug(L"compute timeout: {} ms overhead over specified {} ms", overheadTime.count(), computeTimeout);
+		}
 
 		const auto maxFinishTime = clock::now() + std::chrono::duration_cast<std::chrono::milliseconds>(
 			std::chrono::duration<float, std::milli>{ finishTimeout }
@@ -344,6 +362,7 @@ void AudioParent::patchSA(std::map<istring, ParamParser::ProcessingData> procs) 
 		sa.setHandlers(data.channels, data.handlerInfo);
 		sa.setSourceRate(currentFormat.samplesPerSec);
 		sa.setLayout(currentFormat.channelLayout);
+		sa.setGranularity(data.granularity);
 	}
 }
 

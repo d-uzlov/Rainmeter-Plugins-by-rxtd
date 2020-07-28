@@ -18,6 +18,7 @@
 
 namespace rxtd::audio_analyzer {
 	class SoundAnalyzer;
+
 	class ParamParser {
 	public:
 		using HandlerPatcher = std::function<SoundHandler*(SoundHandler*, Channel)>;
@@ -28,7 +29,8 @@ namespace rxtd::audio_analyzer {
 		};
 
 		struct ProcessingData {
-			index targetRate;
+			index targetRate{ };
+			double granularity{ };
 			audio_utils::FilterCascadeCreator fcc;
 			std::set<Channel> channels;
 			std::vector<HandlerInfo> handlerInfo;

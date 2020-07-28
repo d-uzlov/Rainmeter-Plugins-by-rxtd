@@ -93,7 +93,7 @@ namespace rxtd::audio_analyzer {
 		return recoverable;
 	}
 
-	void CaptureManager::capture(const ProcessingCallback& processingCallback, clock::time_point maxTime, double duration) {
+	void CaptureManager::capture(const ProcessingCallback& processingCallback) {
 		if (!isValid()) {
 			return;
 		}
@@ -103,12 +103,6 @@ namespace rxtd::audio_analyzer {
 
 			const auto queryResult = audioCaptureClient.getLastResult();
 			const auto now = clock::now();
-
-			if (now >= maxTime) {
-				const std::chrono::duration<float, std::milli> overheadTime = now - maxTime;
-				logger.debug(L"compute timeout: {} ms overhead over specified {} ms", overheadTime.count(), duration);
-				return;
-			}
 
 			switch (queryResult) {
 			case S_OK:

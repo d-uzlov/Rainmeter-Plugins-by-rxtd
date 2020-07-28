@@ -41,33 +41,26 @@ void ChannelProcessingHelper::setFCC(audio_utils::FilterCascadeCreator value) {
 	updateFC();
 }
 
-array_view<float> ChannelProcessingHelper::getChannelPCM(Channel channel) const {
-	if (mixer == nullptr) {
-		return { };
+void ChannelProcessingHelper::cacheChannel() const {
+	auto& data = channels[currentChannel];
+	if (data.preprocessed) {
+		return;
 	}
 
-	if (channel == Channel::eAUTO) {
-		channel = mixer->getAutoAlias();
-	}
-
-	auto wave = mixer->getChannelPCM(channel);
+	auto wave = mixer->getChannelPCM(currentChannel);
 	if (wave.empty()) {
-		return { };
+		return;
 	}
 
-	auto& data = channels[channel];
-	if (!data.preprocessed) {
-		data.wave.resize(resampler.calculateFinalWaveSize(wave.size()));
-		resampler.resample(wave, data.wave);
-		data.fc.applyInPlace(data.wave);
-		data.preprocessed = true;
-	}
-
-	return data.wave;
+	auto writeBuffer = data.wave.allocateNext(resampler.calculateFinalWaveSize(wave.size()));
+	resampler.resample(wave, writeBuffer);
+	data.fc.applyInPlace(writeBuffer);
+	data.preprocessed = true;
 }
 
 void ChannelProcessingHelper::reset() const {
 	for (auto& [channel, data] : channels) {
+		data.wave.compact();
 		data.preprocessed = false;
 	}
 }

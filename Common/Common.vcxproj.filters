@@ -208,6 +208,9 @@
     <ClInclude Include="sources\IntMixer.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="sources\GrowingVector.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="array_view.natvis" />

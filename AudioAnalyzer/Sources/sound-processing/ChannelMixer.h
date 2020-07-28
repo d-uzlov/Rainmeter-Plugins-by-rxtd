@@ -10,13 +10,13 @@
 #pragma once
 #include "device-management/MyWaveFormat.h"
 #include "array_view.h"
+#include "GrowingVector.h"
 
 namespace rxtd::audio_analyzer {
 	class ChannelMixer {
 		MyWaveFormat waveFormat;
-		std::map<Channel, std::vector<float>> channels;
+		std::map<Channel, utils::GrowingVector<float>> channels;
 		Channel aliasOfAuto = Channel::eAUTO;
-		bool isSilent = false;
 
 	public:
 		void setFormat(MyWaveFormat waveFormat);
@@ -29,7 +29,13 @@ namespace rxtd::audio_analyzer {
 			return aliasOfAuto;
 		}
 
+		void reset() {
+			for (auto& [channel, buffer] : channels) {
+				buffer.reset();
+			}
+		}
+
 	private:
-		void resampleToAuto();
+		void resampleToAuto(index size);
 	};
 }

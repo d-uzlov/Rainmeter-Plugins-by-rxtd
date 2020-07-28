@@ -52,19 +52,29 @@ void SoundAnalyzer::process() {
 	cph.reset();
 	dataSupplier.logger = logger;
 
-	for (auto& [channel, channelData] : channels) {
-		if (channelData.empty()) {
-			continue;
-		}
+	const double bufferSize = granularity * cph.getResampler().getSampleRate();
+	cph.setGrabBufferSize(bufferSize);
 
+	for (auto& [channel, channelData] : channels) {
 		dataSupplier.setChannelData(&channelData);
 
-		dataSupplier.setWave(cph.getChannelPCM(channel));
-		for (auto&[name, handler] : channelData) {
-			handler->process(dataSupplier);
-			dataSupplier.resetBuffers();
+		cph.setCurrentChannel(channel);
+		while (true) {
+			auto wave = cph.grabNext();
+			if (wave.empty()) {
+				break;
+			}
+
+			dataSupplier.setWave(wave);
+
+			for (auto& [name, handler] : channelData) {
+				handler->process(dataSupplier);
+				dataSupplier.resetBuffers();
+			}
 		}
 	}
+
+	cph.reset();
 }
 
 void SoundAnalyzer::resetValues() noexcept {

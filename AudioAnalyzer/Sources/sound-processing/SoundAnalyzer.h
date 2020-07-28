@@ -30,6 +30,7 @@ namespace rxtd::audio_analyzer {
 		AudioChildHelper audioChildHelper{ };
 
 		index sampleRate{ };
+		double granularity{ };
 		ChannelLayout layout;
 
 	public:
@@ -48,6 +49,9 @@ namespace rxtd::audio_analyzer {
 
 		void setLayout(ChannelLayout layout);
 		void setSourceRate(index value);
+		void setGranularity(double value) {
+			granularity = value;
+		}
 
 		const AudioChildHelper& getAudioChildHelper() const;
 

@@ -183,6 +183,7 @@
     <ClInclude Include="sources\CaseInsensitiveString.h" />
     <ClInclude Include="sources\Color.h" />
     <ClInclude Include="sources\DiscreetInterpolator.h" />
+    <ClInclude Include="sources\GrowingVector.h" />
     <ClInclude Include="sources\image-utils\ImageWriteHelper.h" />
     <ClInclude Include="sources\image-utils\StripedImage.h" />
     <ClInclude Include="sources\image-utils\StripedImageFadeHelper.h" />

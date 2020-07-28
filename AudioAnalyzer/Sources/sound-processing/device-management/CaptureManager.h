@@ -55,7 +55,7 @@ namespace rxtd::audio_analyzer {
 		bool isEmpty() const;
 		bool isValid() const;
 		bool isRecoverable() const;
-		void capture(const ProcessingCallback& processingCallback, clock::time_point maxTime, double duration);
+		void capture(const ProcessingCallback& processingCallback);
 
 	private:
 		void invalidate();

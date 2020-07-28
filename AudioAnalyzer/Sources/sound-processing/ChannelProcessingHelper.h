@@ -18,7 +18,7 @@
 namespace rxtd::audio_analyzer {
 	class ChannelProcessingHelper {
 		struct ChannelData {
-			std::vector<float> wave;
+			utils::GrowingVector<float> wave;
 			audio_utils::FilterCascade fc;
 			bool preprocessed = false;
 		};
@@ -30,6 +30,9 @@ namespace rxtd::audio_analyzer {
 		const ChannelMixer* mixer{ };
 
 		audio_utils::FilterCascadeCreator fcc;
+
+		Channel currentChannel{ };
+		index grabBufferSize = 0;
 
 	public:
 		ChannelProcessingHelper() = default;
@@ -59,7 +62,26 @@ namespace rxtd::audio_analyzer {
 			updateFC();
 		}
 
-		array_view<float> getChannelPCM(Channel channel) const;
+		void setGrabBufferSize(index value) {
+			grabBufferSize = value;
+		}
+
+		void setCurrentChannel(Channel value) {
+			if (mixer == nullptr) {
+				return;
+			}
+
+			if (value == Channel::eAUTO) {
+				value = mixer->getAutoAlias();
+			}
+
+			currentChannel = value;
+		}
+
+		array_view<float> grabNext() {
+			cacheChannel();
+			return channels[currentChannel].wave.takeChunk(grabBufferSize);
+		}
 
 		Resampler& getResampler() {
 			return resampler;
@@ -72,6 +94,8 @@ namespace rxtd::audio_analyzer {
 		void reset() const;
 
 	private:
+		void cacheChannel() const;
+
 		void updateFC();
 	};
 }

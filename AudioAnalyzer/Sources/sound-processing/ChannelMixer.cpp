@@ -39,7 +39,7 @@ void ChannelMixer::setFormat(MyWaveFormat _waveFormat) {
 	}
 
 	std::vector<Channel> toDelete;
-	for (const auto&[channel, _] : channels) {
+	for (const auto& [channel, _] : channels) {
 		const bool exists = channel == Channel::eAUTO || waveFormat.channelLayout.contains(channel);
 		if (!exists) {
 			toDelete.push_back(channel);
@@ -60,35 +60,39 @@ void ChannelMixer::decomposeFramesIntoChannels(array_view<std::byte> frameBuffer
 	const auto channelsCount = waveFormat.channelsCount;
 	const auto framesCount = frameBuffer.size();
 
-	if (waveFormat.format == utils::WaveDataFormat::ePCM_F32) {
-		const auto bufferFloat = reinterpret_cast<const float*>(frameBuffer.data());
-
-		for (auto channel : waveFormat.channelLayout) {
-			auto& waveBuffer = channels[channel];
-			waveBuffer.resize(framesCount);
-			auto bufferTemp = bufferFloat + waveFormat.channelLayout.indexOf(channel).value();
-
-			for (index frame = 0; frame < framesCount; ++frame) {
-				waveBuffer[frame] = *bufferTemp;
-				bufferTemp += channelsCount;
-			}
-		}
-	} else if (waveFormat.format == utils::WaveDataFormat::ePCM_S16) {
+	switch (waveFormat.format) {
+	case utils::WaveDataFormat::ePCM_S16: {
 		const auto bufferInt = reinterpret_cast<const int16_t*>(frameBuffer.data());
 
 		for (auto channel : waveFormat.channelLayout) {
 			auto& waveBuffer = channels[channel];
-			waveBuffer.resize(framesCount);
-			auto bufferTemp = bufferInt + waveFormat.channelLayout.indexOf(channel).value();
+			auto writeBuffer = waveBuffer.allocateNext(framesCount);
+			auto channelSourceBuffer = bufferInt + waveFormat.channelLayout.indexOf(channel).value();
 
 			for (index frame = 0; frame < framesCount; ++frame) {
-				// I don't own anything that produces ePCM_S16 format, so I can't test if it needs same correcting coefficient as ePCM_F32
-				const float value = *bufferTemp * (1.0f / std::numeric_limits<int16_t>::max());
-				waveBuffer[frame] = value;
-				bufferTemp += channelsCount;
+				const float value = *channelSourceBuffer * (1.0f / std::numeric_limits<int16_t>::max());
+				writeBuffer[frame] = value;
+				channelSourceBuffer += channelsCount;
 			}
 		}
-	} else {
+		break;
+	}
+	case utils::WaveDataFormat::ePCM_F32: {
+		const auto sourceBufferFloat = reinterpret_cast<const float*>(frameBuffer.data());
+
+		for (auto channel : waveFormat.channelLayout) {
+			auto& waveBuffer = channels[channel];
+			auto writeBuffer = waveBuffer.allocateNext(framesCount);
+			auto channelSourceBuffer = sourceBufferFloat + waveFormat.channelLayout.indexOf(channel).value();
+
+			for (index frame = 0; frame < framesCount; ++frame) {
+				writeBuffer[frame] = *channelSourceBuffer;
+				channelSourceBuffer += channelsCount;
+			}
+		}
+		break;
+	}
+	default:
 		// If a format is unknown then there should be
 		// no wave data in the first place
 		// so this function should never be called
@@ -96,28 +100,19 @@ void ChannelMixer::decomposeFramesIntoChannels(array_view<std::byte> frameBuffer
 	}
 
 	if (withAuto && aliasOfAuto == Channel::eAUTO) {
-		resampleToAuto();
+		resampleToAuto(framesCount);
 	}
-
-	isSilent = false;
 }
 
 void ChannelMixer::writeSilence(index size, bool withAuto) {
-	if (isSilent) {
-		return;
+	if (withAuto && aliasOfAuto == Channel::eAUTO) {
+		channels[Channel::eAUTO];
 	}
 
 	for (auto& [channel, buffer] : channels) {
-		buffer.resize(size);
-		std::fill(buffer.begin(), buffer.end(), 0.0);
+		auto writeBuffer = buffer.allocateNext(size);
+		std::fill(writeBuffer.begin(), writeBuffer.end(), 0.0);
 	}
-
-	if (withAuto && aliasOfAuto == Channel::eAUTO) {
-		resampleToAuto();
-	}
-
-	isSilent = true;
-
 }
 
 array_view<float> ChannelMixer::getChannelPCM(Channel channel) const {
@@ -130,17 +125,15 @@ array_view<float> ChannelMixer::getChannelPCM(Channel channel) const {
 		return { };
 	}
 
-	return dataIter->second;
+	return dataIter->second.getData();
 }
 
-void ChannelMixer::resampleToAuto() {
-	auto& bufferAuto = channels[Channel::eAUTO];
-	const auto& bufferFirst = channels[Channel::eFRONT_LEFT];
-	const auto& bufferSecond = channels[Channel::eFRONT_RIGHT];
+void ChannelMixer::resampleToAuto(index size) {
+	auto writeBuffer = channels[Channel::eAUTO].allocateNext(size);
+	const auto& bufferFirst = channels[Channel::eFRONT_LEFT].getLast(size);
+	const auto& bufferSecond = channels[Channel::eFRONT_RIGHT].getLast(size);
 
-	const index size = bufferFirst.size();
-	bufferAuto.resize(size);
 	for (index i = 0; i < size; ++i) {
-		bufferAuto[i] = (bufferFirst[i] + bufferSecond[i]) * 0.5f;
+		writeBuffer[i] = (bufferFirst[i] + bufferSecond[i]) * 0.5f;
 	}
 }

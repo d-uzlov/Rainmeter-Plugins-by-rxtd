@@ -15,6 +15,7 @@ namespace rxtd::utils {
 		ePCM_S16,
 		ePCM_F32,
 	};
+
 	struct WaveFormat {
 		index samplesPerSec = 0;
 		index channelsCount = 0;

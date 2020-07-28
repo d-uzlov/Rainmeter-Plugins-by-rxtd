@@ -111,6 +111,8 @@ std::optional<ParamParser::ProcessingData> ParamParser::parseProcessing(sview na
 	}
 
 	const index targetRate = processingMap.get(L"targetRate").asInt(defaultTargetRate);
+	const auto granularity = processingMap.get(L"granularity").asFloat(10.0) / 1000.0;
+
 	auto filterDescription = processingMap.get(L"filter");
 	audio_utils::FilterCascadeCreator ffc{ };
 	if (filterDescription.asIString(L"none") == L"none") {
@@ -118,7 +120,7 @@ std::optional<ParamParser::ProcessingData> ParamParser::parseProcessing(sview na
 	} else if (filterDescription.asIString() == L"replayGain-like") {
 		ffc = audio_utils::FilterCascadeParser::parse(
 			utils::Option{
-				L"bqHighPass[q 0.5, freq 310] " // spaces in the ends of strings are necessary
+				L"bqHighPass[q 0.5, freq 310] " // spaces in the ends of the strings are necessary
 				L"bqPeak[q 4.0, freq 1125, gain -4.1] "
 				L"bqPeak[q 4.0, freq 2665, gain 5.5] "
 				L"bwLowPass[order 5, freq 20000] "
@@ -136,6 +138,7 @@ std::optional<ParamParser::ProcessingData> ParamParser::parseProcessing(sview na
 
 	return ProcessingData{
 		targetRate,
+		granularity,
 		std::move(ffc),
 		channels,
 		handlers

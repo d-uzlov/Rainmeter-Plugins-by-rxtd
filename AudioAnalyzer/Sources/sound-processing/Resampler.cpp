@@ -23,14 +23,6 @@ void Resampler::setTargetRate(index value) {
 	updateValues();
 }
 
-index Resampler::getSampleRate() const {
-	return sampleRate;
-}
-
-index Resampler::calculateFinalWaveSize(index waveSize) const {
-	return waveSize / divide;
-}
-
 void Resampler::resample(array_view<float> from, array_span<float> to) const {
 	if (divide <= 1) {
 		std::copy(from.begin(), from.end(), to.begin());
@@ -45,10 +37,6 @@ void Resampler::resample(array_view<float> from, array_span<float> to) const {
 		}
 		to[i] = static_cast<float>(value / divide);
 	}
-}
-
-void Resampler::resample(array_span<float> values) const {
-	resample(values, values);
 }
 
 void Resampler::updateValues() {

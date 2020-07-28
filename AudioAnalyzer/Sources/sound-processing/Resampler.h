@@ -26,13 +26,26 @@ namespace rxtd::audio_analyzer {
 			return targetRate;
 		}
 
+		index toSourceSize(index resampledSize) const {
+			return resampledSize * divide;
+		}
+
 		void setSourceRate(index value);
 		void setTargetRate(index value);
 
-		index getSampleRate() const;
-		index calculateFinalWaveSize(index waveSize) const;
+		index getSampleRate() const {
+			return sampleRate;
+		}
+
+		index calculateFinalWaveSize(index waveSize) const {
+			return waveSize / divide;
+		}
+
 		void resample(array_view<float> from, array_span<float> to) const;
-		void resample(array_span<float> values) const;
+
+		void resample(array_span<float> values) const {
+			resample(values, values);
+		}
 
 	private:
 		void updateValues();
