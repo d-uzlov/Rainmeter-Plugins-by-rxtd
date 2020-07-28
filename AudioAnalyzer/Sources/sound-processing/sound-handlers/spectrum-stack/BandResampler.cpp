@@ -111,7 +111,7 @@ bool BandResampler::getProp(const isview& prop, utils::BufferPrinter& printer) c
 	if (prop == L"bands count") {
 		printer.print(bandsCount);
 	} else {
-		auto index = parseIndexProp(prop, L"lower bound", bandsCount + 1);
+		auto index = legacy_parseIndexProp(prop, L"lower bound", bandsCount + 1);
 		if (index == -2) {
 			return L"0";
 		}
@@ -123,7 +123,7 @@ bool BandResampler::getProp(const isview& prop, utils::BufferPrinter& printer) c
 			return true;
 		}
 
-		index = parseIndexProp(prop, L"upper bound", bandsCount + 1);
+		index = legacy_parseIndexProp(prop, L"upper bound", bandsCount + 1);
 		if (index == -2) {
 			return L"0";
 		}
@@ -135,7 +135,7 @@ bool BandResampler::getProp(const isview& prop, utils::BufferPrinter& printer) c
 			return true;
 		}
 
-		index = parseIndexProp(prop, L"central frequency", bandsCount + 1);
+		index = legacy_parseIndexProp(prop, L"central frequency", bandsCount + 1);
 		if (index == -2) {
 			return L"0";
 		}

@@ -88,11 +88,11 @@ namespace rxtd::audio_analyzer {
 		// Method can be called several times in a row, handler should check for changes for optimal performance
 		virtual void _finish(const DataSupplier& dataSupplier) { }
 
-		static index parseIndexProp(const isview& request, const isview& propName, index endBound) {
-			return parseIndexProp(request, propName, 0, endBound);
+		static index legacy_parseIndexProp(const isview& request, const isview& propName, index endBound) {
+			return legacy_parseIndexProp(request, propName, 0, endBound);
 		}
 
-		static index parseIndexProp(const isview& request, const isview& propName, index minBound, index endBound) {
+		static index legacy_parseIndexProp(const isview& request, const isview& propName, index minBound, index endBound) {
 			const auto indexPos = request.find(propName);
 
 			if (indexPos != 0) {

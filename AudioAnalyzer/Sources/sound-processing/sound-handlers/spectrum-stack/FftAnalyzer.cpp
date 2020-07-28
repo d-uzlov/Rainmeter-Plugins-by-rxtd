@@ -178,7 +178,7 @@ bool FftAnalyzer::getProp(const isview& prop, utils::BufferPrinter& printer) con
 	} else if (prop == L"overlap") {
 		printer.print(params.overlap);
 	} else {
-		auto cascadeIndex = parseIndexProp(prop, L"nyquist frequency", cascades.size() + 1);
+		auto cascadeIndex = legacy_parseIndexProp(prop, L"nyquist frequency", cascades.size() + 1);
 		if (cascadeIndex == -2) {
 			return L"0";
 		}
@@ -190,7 +190,7 @@ bool FftAnalyzer::getProp(const isview& prop, utils::BufferPrinter& printer) con
 			return true;
 		}
 
-		cascadeIndex = parseIndexProp(prop, L"dc", cascades.size() + 1);
+		cascadeIndex = legacy_parseIndexProp(prop, L"dc", cascades.size() + 1);
 		if (cascadeIndex == -2) {
 			return L"0";
 		}
@@ -202,12 +202,12 @@ bool FftAnalyzer::getProp(const isview& prop, utils::BufferPrinter& printer) con
 			return true;
 		}
 
-		cascadeIndex = parseIndexProp(prop, L"resolution", cascades.size() + 1);
+		cascadeIndex = legacy_parseIndexProp(prop, L"resolution", cascades.size() + 1);
 		if (cascadeIndex == -2) {
 			return L"0";
 		}
 		if (cascadeIndex < 0) {
-			cascadeIndex = parseIndexProp(prop, L"binWidth", cascades.size() + 1);
+			cascadeIndex = legacy_parseIndexProp(prop, L"binWidth", cascades.size() + 1);
 		}
 		if (cascadeIndex >= 0) {
 			if (cascadeIndex > 0) {
