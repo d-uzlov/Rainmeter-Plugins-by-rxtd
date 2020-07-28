@@ -30,19 +30,20 @@ namespace rxtd::audio_utils {
 		void updateState(double next, double nextFiltered);
 	};
 
-	template<index order>
+	template <index order>
 	class InfiniteResponseFilterFixed : public AbstractFilter {
 		// inspired by https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.lfilter.html
 
-		std::array<double, order> a;
-		std::array<double, order> b;
-		std::array<double, order - 1> state;
+		std::array<double, order> a{ };
+		std::array<double, order> b{ };
+		std::array<double, order - 1> state{ };
 
 	public:
 		InfiniteResponseFilterFixed() = default;
+
 		InfiniteResponseFilterFixed(std::vector<double> _a, std::vector<double> _b) {
 			if (_a.size() > order || _b.size() > order) {
-				throw std::exception { };
+				throw std::exception{ };
 			}
 
 			std::copy(_a.begin(), _a.end(), a.begin());

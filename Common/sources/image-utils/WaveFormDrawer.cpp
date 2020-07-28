@@ -96,7 +96,7 @@ void WaveFormDrawer::inflateLine(index line, array_span<uint32_t> dest, IntColor
 
 	const auto lastStripIndex = minMaxBuffer.getLastStripIndex();
 
-	index fadeBeginIndex = lastStripIndex + borderSize;
+	index fadeBeginIndex = lastStripIndex + 1 + borderSize;
 	if (fadeBeginIndex >= width) {
 		fadeBeginIndex -= width;
 	}
