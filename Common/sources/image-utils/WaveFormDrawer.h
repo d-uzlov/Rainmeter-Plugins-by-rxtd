@@ -71,8 +71,8 @@ namespace rxtd::utils {
 		Colors colors{ };
 
 		struct {
-			double min = 0.0;
-			double max = 0.0;
+			index min = 0;
+			index max = 0;
 		} prev;
 
 	public:
@@ -113,21 +113,13 @@ namespace rxtd::utils {
 		}
 
 		bool isEmpty() const {
-			const index lastStripIndex = minMaxBuffer.getLastStripIndex();
-			const bool needMoreUpdates = (fading != 0.0 || borderSize != 0)
-				&& lastStripIndex != width - 1;
-
-			return !needMoreUpdates && minMaxBuffer.isEmpty();
+			return !minMaxBuffer.isForced();
 		}
 
 		void inflate();
 
 	private:
 		void inflateLine(index line, array_span<uint32_t> dest, IntColor backgroundColor) const;
-
-		// uint32_t inflatePixel(array_view<float> source, double backgroundCoef, index i);
-
-		std::pair<double, double> correctMinMaxPixels(double minPixel, double maxPixel) const;
 
 		bool isWaveAt(index i, index line) const;
 	};

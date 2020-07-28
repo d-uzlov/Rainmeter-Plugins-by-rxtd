@@ -27,6 +27,10 @@ void WaveFormDrawer::setDimensions(index width, index height) {
 
 	this->width = width;
 	this->height = height;
+
+	const index centerLineIndex = interpolator.toValueD(0.0);
+	prev.min = centerLineIndex;
+	prev.max = centerLineIndex;
 }
 
 void WaveFormDrawer::fillSilence() {
@@ -40,14 +44,6 @@ void WaveFormDrawer::fillStrip(double min, double max) {
 	min = std::min(min, max);
 	max = std::max(min, max);
 
-	if (connected) {
-		min = std::min(min, prev.max);
-		max = std::max(max, prev.min);
-
-		prev.min = min;
-		prev.max = max;
-	}
-
 	auto minPixel = interpolator.toValueD(min);
 	auto maxPixel = interpolator.toValueD(max);
 	if (minPixel == maxPixel) {
@@ -56,6 +52,14 @@ void WaveFormDrawer::fillStrip(double min, double max) {
 		} else {
 			minPixel--;
 		}
+	}
+
+	if (connected) {
+		minPixel = std::min(minPixel, prev.max);
+		maxPixel = std::max(maxPixel, prev.min);
+
+		prev.min = minPixel;
+		prev.max = maxPixel;
 	}
 
 	minMaxBuffer.pushEmptyLine({ minPixel, maxPixel });
@@ -159,33 +163,6 @@ void WaveFormDrawer::inflateLine(index line, array_span<uint32_t> dest, IntColor
 	for (index i = borderBeginIndex; i < borderEndIndex; i++) {
 		dest[i] = border.full;
 	}
-}
-
-std::pair<double, double> WaveFormDrawer::correctMinMaxPixels(double minPixel, double maxPixel) const {
-	const auto minMaxDelta = maxPixel - minPixel;
-	if (minMaxDelta < 1) {
-		const auto average = (minPixel + maxPixel) * 0.5;
-		minPixel = average - 0.5;
-		maxPixel = minPixel + 1.0; // max should always be >= min + 1
-
-		const auto minD = interpolator.makeDiscreet(minPixel);
-		const auto minDC = interpolator.makeDiscreetClamped(minPixel);
-		if (minD != minDC) {
-			const double shift = 1.0 - interpolator.percentRelativeToNext(minPixel);
-			minPixel += shift;
-			maxPixel += shift;
-		}
-
-		const auto maxD = interpolator.makeDiscreet(maxPixel);
-		const auto maxDC = interpolator.makeDiscreetClamped(maxPixel);
-		if (maxD != maxDC) {
-			const double shift = -interpolator.percentRelativeToNext(maxPixel);
-			minPixel += shift;
-			maxPixel += shift;
-		}
-	}
-
-	return { minPixel, maxPixel };
 }
 
 bool WaveFormDrawer::isWaveAt(index i, index line) const {
