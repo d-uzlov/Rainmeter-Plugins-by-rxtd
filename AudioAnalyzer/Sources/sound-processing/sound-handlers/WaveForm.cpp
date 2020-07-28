@@ -33,6 +33,10 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const OptionMap& optionMap
 		return std::nullopt;
 	}
 
+	if (params.width * params.height > 1000 * 1000) {
+		cl.warning(L"dangerously big width and height: {}, {}", params.width, params.height);
+	}
+
 	params.resolution = optionMap.get(L"resolution"sv).asFloat(50);
 	if (params.resolution <= 0) {
 		cl.warning(L"resolution must be > 0 but {} found. Assume 100", params.resolution);
@@ -62,11 +66,11 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const OptionMap& optionMap
 		params.lineDrawingPolicy = LDP::eALWAYS;
 	}
 
-	params.stationary = optionMap.get(L"Stationary").asBool(false);
+	params.stationary = optionMap.get(L"stationary").asBool(false);
 	params.connected = optionMap.get(L"connected").asBool(true);
 
 	params.borderSize = optionMap.get(L"borderSize").asInt(0);
-	params.borderSize = std::max<index>(params.borderSize, 0);
+	params.borderSize = std::clamp<index>(params.borderSize, 0, params.width / 2);
 
 	params.fading = optionMap.get(L"fadingPercent").asFloat(0.0);
 

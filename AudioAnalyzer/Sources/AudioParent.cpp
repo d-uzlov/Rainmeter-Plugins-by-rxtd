@@ -11,8 +11,6 @@
 
 #include "ParamParser.h"
 
-#include "undef.h"
-
 using namespace audio_analyzer;
 
 AudioParent::AudioParent(utils::Rainmeter&& _rain) :
@@ -88,7 +86,7 @@ void AudioParent::_reload() {
 
 	auto targetRate = rain.read(L"TargetRate").asInt(44100);
 	if (targetRate < 0) {
-		logger.warning(L"Invalid TargetRate {}, must be > 0, assume 0.", targetRate);
+		logger.warning(L"Invalid TargetRate {}, must be > 0. Assume 0.", targetRate);
 		targetRate = 0;
 	}
 
@@ -130,10 +128,10 @@ double AudioParent::_update() {
 			}
 		});
 
-		const std::chrono::duration<float, std::milli> duration { computeTimeout };
+		const std::chrono::duration<float, std::milli> duration{ computeTimeout };
 		const auto maxTime = clock::now() + std::chrono::duration_cast<std::chrono::milliseconds>(duration);
 
-		const std::chrono::duration<float, std::milli> dur { 10.0 };
+		const std::chrono::duration<float, std::milli> dur{ 10.0 };
 		clock::time_point killTime = maxTime + std::chrono::duration_cast<std::chrono::milliseconds>(dur);
 
 		callAllSA([=](SoundAnalyzer& sa) {

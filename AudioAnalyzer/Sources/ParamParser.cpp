@@ -110,8 +110,8 @@ std::optional<ParamParser::ProcessingData> ParamParser::parseProcessing(sview na
 		return { };
 	}
 
-	const index targetRate = processingMap.get(L"targetRate").asInt(defaultTargetRate);
-	const auto granularity = processingMap.get(L"granularity").asFloat(10.0) / 1000.0;
+	const index targetRate = std::max<index>(processingMap.get(L"targetRate").asInt(defaultTargetRate), 0);
+	const auto granularity = std::max(processingMap.get(L"granularity").asFloat(10.0), 1.0) / 1000.0;
 
 	auto filterDescription = processingMap.get(L"filter");
 	audio_utils::FilterCascadeCreator ffc{ };

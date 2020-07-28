@@ -31,7 +31,8 @@ std::optional<BlockHandler::Params> BlockHandler::parseParams(const OptionMap& o
 	params.subtractMean = optionMap.get(L"subtractMean").asBool(true);
 
 	params.transform = optionMap.get(L"transform").asString();
-	params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform"), cl);
+	auto transformLogger = cl.context(L"transform: ");
+	params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform"), transformLogger);
 
 	// legacy
 	if (optionMap.has(L"attack") || optionMap.has(L"decay")) {
@@ -40,7 +41,7 @@ std::optional<BlockHandler::Params> BlockHandler::parseParams(const OptionMap& o
 		params.legacy_decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.legacy_attackTime), 0.0);
 
 		utils::BufferPrinter printer;
-		printer.print(L"filter[a {}, d {}]", params.legacy_attackTime, params.legacy_decayTime);
+		printer.print(L"filter[attack {}, decay {}]", params.legacy_attackTime, params.legacy_decayTime);
 		params.transformer = audio_utils::TransformationParser::parse(utils::Option{ printer.getBufferView() }, cl);
 	}
 
@@ -152,7 +153,7 @@ void BlockRms::_reset() {
 }
 
 sview BlockRms::getDefaultTransform() {
-	return L"db map[from -70 : 0] filter[rise 200, fall 200] clamp"sv;
+	return L"db map[from -70 : 0] filter[attack 200, decay 200] clamp"sv;
 }
 
 void BlockPeak::_process(array_view<float> wave, float average) {
@@ -177,5 +178,5 @@ void BlockPeak::_reset() {
 }
 
 sview BlockPeak::getDefaultTransform() {
-	return L"filter[rise 0, fall 500] clamp"sv;
+	return L"filter[attack 0, decay 500] clamp"sv;
 }

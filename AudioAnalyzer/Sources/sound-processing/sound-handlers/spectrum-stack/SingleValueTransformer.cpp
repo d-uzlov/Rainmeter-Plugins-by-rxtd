@@ -27,7 +27,8 @@ SingleValueTransformer::parseParams(const OptionMap& optionMap, Logger& cl) {
 		return std::nullopt;
 	}
 
-	params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform"), cl);
+	auto transformLogger = cl.context(L"transform: ");
+	params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform"), transformLogger);
 
 	return params;
 }

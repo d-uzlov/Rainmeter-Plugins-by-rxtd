@@ -164,8 +164,8 @@ std::optional<TransformationParser::Transformation> TransformationParser::parseT
 	if (transformName == L"filter") {
 		tr.type = TransformType::eFILTER;
 
-		tr.args[0] = params.get(L"rise").asFloat();
-		tr.args[1] = params.get(L"fall").asFloat(tr.args[0]);
+		tr.args[0] = params.get(L"attack").asFloat();
+		tr.args[1] = params.get(L"decay").asFloat(tr.args[0]);
 	} else if (transformName == L"db") {
 		tr.type = TransformType::eDB;
 	} else if (transformName == L"map") {

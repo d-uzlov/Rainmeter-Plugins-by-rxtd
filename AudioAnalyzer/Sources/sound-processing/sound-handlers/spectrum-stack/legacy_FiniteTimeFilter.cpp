@@ -28,7 +28,7 @@ legacy_FiniteTimeFilter::parseParams(const OptionMap& optionMap, Logger& cl) {
 
 	params.smoothingFactor = optionMap.get(L"smoothingFactor"sv).asInt(4);
 	if (params.smoothingFactor <= 0) {
-		cl.warning(L"smoothingFactor should be >= 1 but {} found, assume 1", params.smoothingFactor);
+		cl.warning(L"smoothingFactor should be >= 1 but {} found. Assume 1", params.smoothingFactor);
 		params.smoothingFactor = 1;
 	}
 
@@ -42,7 +42,7 @@ legacy_FiniteTimeFilter::parseParams(const OptionMap& optionMap, Logger& cl) {
 	} else if (smoothingCurveString == L"linear") {
 		params.smoothingCurve = SmoothingCurve::LINEAR;
 	} else {
-		cl.warning(L"smoothingCurve '{}' now recognized, assume 'flat'", smoothingCurveString);
+		cl.warning(L"smoothingCurve '{}' now recognized. Assume 'flat'", smoothingCurveString);
 		params.smoothingCurve = SmoothingCurve::FLAT;
 	}
 

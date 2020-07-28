@@ -23,13 +23,13 @@ BandResampler::parseParams(const OptionMap& optionMap, Logger& cl, Rainmeter& ra
 	Params params;
 	params.fftId = optionMap.get(L"source"sv).asIString();
 	if (params.fftId.empty()) {
-		cl.error(L"source not found");
+		cl.error(L"source is not found");
 		return std::nullopt;
 	}
 
 	auto freqListIndex = optionMap.get(L"freqList"sv).asString();
 	if (freqListIndex.empty()) {
-		cl.error(L"freqList not found");
+		cl.error(L"freqList is not found");
 		return std::nullopt;
 	}
 

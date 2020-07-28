@@ -36,6 +36,9 @@ Spectrogram::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter
 		cl.error(L"length must be >= 2 but {} found", params.length);
 		return std::nullopt;
 	}
+	if (params.length >= 1500) {
+		cl.warning(L"dangerously large length {}", params.length);
+	}
 
 	params.resolution = optionMap.get(L"resolution"sv).asFloat(50);
 	if (params.resolution <= 0) {
@@ -108,9 +111,9 @@ Spectrogram::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter
 
 	params.borderColor = optionMap.get(L"borderColor"sv).asColor({ 1.0, 0.2, 0.2, 1 });
 
-	params.fading = optionMap.get(L"fadingPercent").asFloat(0.0);
+	params.fading = std::clamp(optionMap.get(L"fadingPercent").asFloat(0.0), 0.0, 1.0);
 
-	params.borderSize = std::max(optionMap.get(L"borderSize"sv).asInt(0), 0);
+	params.borderSize = std::clamp<index>(optionMap.get(L"borderSize"sv).asInt(0), 0, params.length / 2);
 
 	params.stationary = optionMap.get(L"stationary").asBool(false);
 
@@ -136,7 +139,7 @@ void Spectrogram::setParams(const Params& _params, Channel channel) {
 	sifh.setBorderSize(params.borderSize);
 	if (params.colors.empty()) {
 		sifh.setColors(params.baseColor, params.borderColor);
-	} else {
+	} else { // TODO
 		sifh.setColors(params.colors[0].color, params.borderColor);
 	}
 	sifh.setFading(params.fading);
