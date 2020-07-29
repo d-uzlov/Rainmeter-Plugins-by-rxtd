@@ -9,6 +9,8 @@
 
 #include "SoundAnalyzer.h"
 
+#include <chrono>
+
 using namespace audio_analyzer;
 
 void SoundAnalyzer::setLayout(ChannelLayout _layout) {
@@ -32,22 +34,30 @@ void SoundAnalyzer::setSourceRate(index value) {
 }
 
 AudioChildHelper SoundAnalyzer::getAudioChildHelper() const {
-	return AudioChildHelper { channels };
+	return AudioChildHelper{ channels };
 }
 
-void SoundAnalyzer::setHandlers(std::set<Channel> channelSetRequested, ParamParser::HandlerPatcherInfo handlerPatchers) {
+void SoundAnalyzer::setHandlers(std::set<Channel> channelSetRequested,
+                                ParamParser::HandlerPatcherInfo handlerPatchers) {
 	this->channelSetRequested = std::move(channelSetRequested);
 	this->handlerPatchers = std::move(handlerPatchers);
 
 	patch();
 }
 
-void SoundAnalyzer::process(const ChannelMixer& mixer) {
+void SoundAnalyzer::process(const ChannelMixer& mixer, double killTimeoutMs) {
+	cph.reset();
 	cph.setChannelMixer(mixer);
 	dataSupplier.logger = logger;
 
 	const index bufferSize = index(granularity * cph.getResampler().getSampleRate());
 	cph.setGrabBufferSize(bufferSize);
+
+	using clock = std::chrono::high_resolution_clock;
+	static_assert(clock::is_steady);
+
+	const std::chrono::duration<float, std::milli> dur{ killTimeoutMs };
+	const clock::time_point killTime = clock::now() + std::chrono::duration_cast<std::chrono::milliseconds>(dur);
 
 	for (auto& [channel, channelData] : channels) {
 		dataSupplier.setChannelData(&channelData);
@@ -65,24 +75,21 @@ void SoundAnalyzer::process(const ChannelMixer& mixer) {
 				auto& handler = channelData[name];
 				handler->process(dataSupplier);
 				dataSupplier.resetBuffers();
+
+				if (clock::now() > killTime) {
+					logger.error(L"handler processing is killed on timeout");
+					return;
+				}
 			}
 		}
-	}
 
-	cph.reset();
-}
-
-void SoundAnalyzer::resetValues() noexcept {
-	for (auto& [channel, channelData] : channels) {
-		for (auto& [name, handler] : channelData) {
-			handler->reset();
-		}
 	}
 }
 
 void SoundAnalyzer::finishStandalone() noexcept {
 	for (auto& [channel, channelData] : channels) {
-		for (auto& [name, handler] : channelData) {
+		for (auto& name : handlerPatchers.order) {
+			auto& handler = channelData[name];
 			if (handler->isStandalone()) {
 				handler->finish();
 			}
@@ -90,9 +97,19 @@ void SoundAnalyzer::finishStandalone() noexcept {
 	}
 }
 
+void SoundAnalyzer::resetValues() noexcept {
+	for (auto& [channel, channelData] : channels) {
+		for (auto& [name, handler] : channelData) {
+			// order is not important
+			handler->reset();
+		}
+	}
+}
+
 void SoundAnalyzer::updateHandlerSampleRate() noexcept {
 	for (auto& [channel, channelData] : channels) {
 		for (auto& [name, handler] : channelData) {
+			// order is not important
 			handler->setSamplesPerSec(cph.getResampler().getSampleRate());
 		}
 	}

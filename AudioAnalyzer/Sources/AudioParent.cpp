@@ -17,10 +17,10 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 	ParentBase(std::move(_rain)),
 	deviceManager(logger, [this](MyWaveFormat format) {
 		channelMixer.setFormat(format);
-		callAllSA([=](SoundAnalyzer& sa) {
+		for (auto& [name, sa] : saMap) {
 			sa.setSourceRate(format.samplesPerSec);
 			sa.setLayout(format.channelLayout);
-		});
+		}
 		currentFormat = std::move(format);
 	}) {
 	setUseResultString(false);
@@ -81,8 +81,9 @@ void AudioParent::_reload() {
 		}
 	}
 
-	computeTimeout = rain.read(L"computeTimeout").asFloat(4.0);
-	finishTimeout = rain.read(L"finishTimeout").asFloat(2.0);
+	computeTimeout = rain.read(L"computeTimeout").asFloat(-1.0);
+	killTimeout = std::clamp(rain.read(L"killTimeout").asFloat(16.0), 1.0, 33.0);
+	finishTimeout = rain.read(L"finishTimeout").asFloat(-1.0);
 
 	deviceManager.setOptions(sourceEnum, id);
 
@@ -109,13 +110,10 @@ double AudioParent::_update() {
 			logger.error(L"Unrecoverable error");
 		}
 
-		callAllSA([=](SoundAnalyzer& sa) {
+		for (auto& [name, sa] : saMap) {
 			sa.resetValues();
-		});
+		}
 	} else {
-		using clock = std::chrono::high_resolution_clock;
-		static_assert(clock::is_steady);
-
 		deviceManager.getCaptureManager().capture([&](bool silent, array_view<std::byte> buffer) {
 			if (!silent) {
 				channelMixer.decomposeFramesIntoChannels(buffer, true);
@@ -124,43 +122,7 @@ double AudioParent::_update() {
 			}
 		});
 
-		const std::chrono::duration<float, std::milli> duration{ computeTimeout };
-		const auto maxTime = clock::now() + std::chrono::duration_cast<std::chrono::milliseconds>(duration);
-
-		const std::chrono::duration<float, std::milli> dur{ 10.0 };
-		clock::time_point killTime = maxTime + std::chrono::duration_cast<std::chrono::milliseconds>(dur);
-
-		callAllSA([=](SoundAnalyzer& sa) {
-			sa.process(channelMixer);
-		});
-		channelMixer.reset();
-
-		const auto now = clock::now();
-
-		// if (now >= killTime) {
-		// 	const std::chrono::duration<float, std::milli> overheadTime = now - maxTime;
-		// 	logger.warning(L"killed: {} ms overhead over specified {} ms", overheadTime.count(), duration);
-		// 	return;
-		// }
-
-		if (now >= maxTime) {
-			const std::chrono::duration<float, std::milli> overheadTime = now - maxTime;
-			logger.debug(L"compute timeout: {} ms overhead over specified {} ms", overheadTime.count(), computeTimeout);
-		}
-
-		const auto maxFinishTime = clock::now() + std::chrono::duration_cast<std::chrono::milliseconds>(
-			std::chrono::duration<float, std::milli>{ finishTimeout }
-		);
-
-		callAllSA([=](SoundAnalyzer& sa) {
-			sa.finishStandalone();
-		});
-
-		const auto finishTime = clock::now();
-		if (finishTime > maxFinishTime) {
-			const std::chrono::duration<float, std::milli> overheadTime = finishTime - maxFinishTime;
-			logger.notice(L"finish time overhead {} ms over specified {} ms", overheadTime.count(), finishTimeout);
-		}
+		process();
 	}
 
 	return deviceManager.getDeviceStatus();
@@ -331,6 +293,38 @@ double AudioParent::legacy_getValue(isview id, Channel channel, index ind) const
 		return 0.0;
 	}
 	return helper.getValueFrom(handler, channel, ind);
+}
+
+void AudioParent::process() {
+	using clock = std::chrono::high_resolution_clock;
+	static_assert(clock::is_steady);
+
+	const auto processBeginTime = clock::now();
+
+	for (auto& [name, sa] : saMap) {
+		sa.process(channelMixer, killTimeout);
+	}
+	channelMixer.reset();
+
+	const auto processEndTime = clock::now();
+
+	const auto processDuration = std::chrono::duration<double, std::milli>{ processEndTime - processBeginTime }.count();
+
+	if (computeTimeout > 0 && processDuration > computeTimeout) {
+		logger.debug(L"compute overhead {} ms over specified {} ms", processDuration - computeTimeout, computeTimeout);
+	}
+
+	for (auto& [name, sa] : saMap) {
+		sa.finishStandalone();
+	}
+
+	const auto finishEndTime = clock::now();
+
+	const auto finishDuration = std::chrono::duration<double, std::milli>{ finishEndTime - processEndTime }.count();
+
+	if (finishTimeout > 0 && finishDuration > finishTimeout) {
+		logger.debug(L"finish overhead {} ms over specified {} ms", finishDuration - finishTimeout, finishTimeout);
+	}
 }
 
 void AudioParent::patchSA(ParamParser::ProcessingsInfoMap procs) {

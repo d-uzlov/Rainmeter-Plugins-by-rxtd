@@ -61,18 +61,15 @@ namespace rxtd::audio_analyzer {
 		 * This new handler may be completely new if it didn't exist before or if class of handler with this name changed,
 		 * but usually this is the same handler with updated parameters.
 		 */
-		void setHandlers(
-			std::set<Channel> channelSetRequested,
-			ParamParser::HandlerPatcherInfo handlerPatchers
-		);
+		void setHandlers(std::set<Channel> channelSetRequested, ParamParser::HandlerPatcherInfo handlerPatchers);
 
 		ChannelProcessingHelper& getCPH() {
 			return cph;
 		}
 
-		void process(const ChannelMixer& mixer);
-		void resetValues() noexcept;
+		void process(const ChannelMixer& mixer, double killTimeoutMs);
 		void finishStandalone() noexcept;
+		void resetValues() noexcept;
 
 		bool needChannelAuto() const {
 			const auto iter = channels.find(Channel::eAUTO);
