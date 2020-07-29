@@ -274,18 +274,18 @@ void Spectrogram::_finish(const DataSupplier& dataSupplier) {
 
 	if (params.fading != 0.0) {
 		if (!writerHelper.isEmptinessWritten()) {
-			sifh.setLastStripIndex(image.getLastStripIndex());
+			sifh.setPastLastStripIndex(image.getPastLastStripIndex());
 			sifh.inflate(image.getPixels());
 		}
 		writerHelper.write(sifh.getResultBuffer(), !image.isForced(), filepath);
 	} else {
-		if (params.borderSize == 0) {
-			sifh.setLastStripIndex(image.getLastStripIndex());
+		if (params.borderSize != 0) {
+			sifh.setPastLastStripIndex(image.getPastLastStripIndex());
 			sifh.drawBorderInPlace(image.getPixelsWritable());
 		}
 		auto pixels = image.getPixels();
 		utils::array2d_view<uint32_t> buffer { &(pixels[0].data()->full), pixels.getBuffersCount(), pixels.getBufferSize() };
-		writerHelper.write(buffer, image.isEmpty(), filepath);
+		writerHelper.write(buffer, !image.isForced(), filepath);
 	}
 
 	changed = false;

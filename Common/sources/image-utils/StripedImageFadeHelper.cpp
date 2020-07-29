@@ -50,7 +50,7 @@ void StripedImageFadeHelper::inflateLine(array_view<IntColor> source, array_span
 	const double fadeDistanceStep = 1.0 / (realWidth * fading);
 	double fadeDistance = 1.0;
 
-	index fadeBeginIndex = lastStripIndex + 1 + borderSize;
+	index fadeBeginIndex = pastLastStripIndex + borderSize;
 	if (fadeBeginIndex >= width) {
 		fadeBeginIndex -= width;
 	}
@@ -116,7 +116,7 @@ void StripedImageFadeHelper::inflateLine(array_view<IntColor> source, array_span
 void StripedImageFadeHelper::drawBorderInLine(array_span<IntColor> line) const {
 	const index width = line.size();
 
-	index borderBeginIndex = lastStripIndex;
+	index borderBeginIndex = pastLastStripIndex;
 	index borderEndIndex = borderBeginIndex + borderSize;
 	if (borderEndIndex >= width) {
 		for (index i = borderBeginIndex; i < width; i++) {

@@ -90,7 +90,6 @@ namespace rxtd::utils {
 			} else {
 				sameStripsCount++;
 			}
-			
 
 			index nextStripIndex = incrementAndGetIndex();
 			auto imageLines = getCurrentLinesArray(); // must be after #incrementAndGetIndex
@@ -111,7 +110,7 @@ namespace rxtd::utils {
 		}
 
 		bool isForced() const {
-			// should be used to ensure 
+			// should be used to ensure
 			// that when image is stationary it will be cleared fully
 			// instead of stopping in the middle
 
@@ -129,14 +128,23 @@ namespace rxtd::utils {
 		}
 
 		index getLastStripIndex() const {
-			if (stationary) {
-				index offset = stationaryOffset - 1;
-				if (offset < 0) {
-					offset += width;
-				}
-				return offset;
+			if (!stationary) {
+				return width - 1;
 			}
-			return width - 1;
+
+			index offset = stationaryOffset - 1;
+			if (offset < 0) {
+				offset += width;
+			}
+			return offset;
+		}
+
+		index getPastLastStripIndex() const {
+			if (!stationary) {
+				return 0;
+			}
+
+			return stationaryOffset;
 		}
 
 	private:

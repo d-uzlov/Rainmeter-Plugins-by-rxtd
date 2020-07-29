@@ -16,7 +16,7 @@ namespace rxtd::utils {
 		Vector2D<uint32_t> resultBuffer{ };
 
 		index borderSize = 0;
-		index lastStripIndex{ };
+		index pastLastStripIndex{ };
 		double fading = 0.0;
 
 		IntColor background{ };
@@ -27,8 +27,8 @@ namespace rxtd::utils {
 			borderSize = value;
 		}
 
-		void setLastStripIndex(index value) {
-			lastStripIndex = value;
+		void setPastLastStripIndex(index value) {
+			pastLastStripIndex = value;
 		}
 
 		void setFading(double value) {
