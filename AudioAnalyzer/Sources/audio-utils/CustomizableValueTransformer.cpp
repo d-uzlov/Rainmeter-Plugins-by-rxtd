@@ -21,32 +21,31 @@ CustomizableValueTransformer::CustomizableValueTransformer(std::vector<Transform
 	transforms(std::move(transformations)) {
 }
 
-double CustomizableValueTransformer::apply(double value) {
-	auto valueF = float(value);
+float CustomizableValueTransformer::apply(float value) {
 	for (auto& transform : transforms) {
 		switch (transform.type) {
 		case TransformType::eFILTER: {
-			valueF = transform.state.filter.next(valueF);
+			value = transform.state.filter.next(value);
 			break;
 		}
 		case TransformType::eDB: {
-			valueF = std::max(valueF, std::numeric_limits<float>::min());
-			valueF = 10.0 * std::log10(valueF);
+			value = std::max(value, std::numeric_limits<float>::min());
+			value = 10.0f * std::log10(value);
 			break;
 		}
 		case TransformType::eMAP: {
-			valueF = transform.state.interpolator.toValue(valueF);
+			value = transform.state.interpolator.toValue(value);
 			break;
 		}
 		case TransformType::eCLAMP: {
-			valueF = std::clamp<double>(valueF, transform.args[0], transform.args[1]);
+			value = std::clamp(value, transform.args[0], transform.args[1]);
 			break;
 		}
 		default: std::terminate();
 		}
 	}
 
-	return valueF;
+	return value;
 }
 
 void CustomizableValueTransformer::applyToArray(utils::array2d_span<float> values) {
@@ -56,7 +55,7 @@ void CustomizableValueTransformer::applyToArray(utils::array2d_span<float> value
 		updateFilterBuffers(rowsCount, columnsCount);
 	}
 
-	const float logCoef = std::log(2) / std::log(10);
+	const float logCoef = float(std::log10(2)); // == log(2) / log(10)
 	auto flatValue = values.getFlat();
 
 	for (auto& transform : transforms) {
@@ -64,8 +63,8 @@ void CustomizableValueTransformer::applyToArray(utils::array2d_span<float> value
 		case TransformType::eFILTER: {
 			auto pastFlat = transform.pastFilterValues.getFlat();
 			for (auto valueIter = flatValue.begin(), pastIter = pastFlat.begin();
-				valueIter != flatValue.end();
-				++valueIter, ++pastIter) {
+			     valueIter != flatValue.end();
+			     ++valueIter, ++pastIter) {
 				float& value = *valueIter;
 				float& prev = *pastIter;
 
@@ -164,23 +163,23 @@ std::optional<TransformationParser::Transformation> TransformationParser::parseT
 	if (transformName == L"filter") {
 		tr.type = TransformType::eFILTER;
 
-		tr.args[0] = params.get(L"attack").asFloat();
-		tr.args[1] = params.get(L"decay").asFloat(tr.args[0]);
+		tr.args[0] = params.get(L"attack").asFloatF();
+		tr.args[1] = params.get(L"decay").asFloatF(tr.args[0]);
 	} else if (transformName == L"db") {
 		tr.type = TransformType::eDB;
 	} else if (transformName == L"map") {
 		tr.type = TransformType::eMAP;
 
-		double linMin;
-		double linMax;
+		float linMin;
+		float linMax;
 		if (params.has(L"from")) {
 			auto range = params.get(L"from").asList(L':');
 			if (range.size() != 2) {
 				cl.error(L"need 2 params for source range but {} found", range.size());
 				return std::nullopt;
 			}
-			linMin = range.get(0).asFloat();
-			linMax = range.get(1).asFloat();
+			linMin = range.get(0).asFloatF();
+			linMax = range.get(1).asFloatF();
 
 			if (std::abs(linMin - linMax) < std::numeric_limits<float>::epsilon()) {
 				cl.error(L"source range is too small: {} and {}", linMin, linMax);
@@ -191,8 +190,8 @@ std::optional<TransformationParser::Transformation> TransformationParser::parseT
 			return std::nullopt;
 		}
 
-		double valMin = 0.0;
-		double valMax = 1.0;
+		float valMin = 0.0;
+		float valMax = 1.0;
 
 		if (params.has(L"to")) {
 			auto range = params.get(L"to").asList(L':');
@@ -200,8 +199,8 @@ std::optional<TransformationParser::Transformation> TransformationParser::parseT
 				cl.error(L"need 2 params for target range but {} found", range.size());
 				return std::nullopt;
 			}
-			valMin = range.get(0).asFloat();
-			valMax = range.get(1).asFloat();
+			valMin = range.get(0).asFloatF();
+			valMax = range.get(1).asFloatF();
 		}
 
 		tr.state.interpolator.setParams(linMin, linMax, valMin, valMax);
@@ -209,8 +208,8 @@ std::optional<TransformationParser::Transformation> TransformationParser::parseT
 	} else if (transformName == L"clamp") {
 		tr.type = TransformType::eCLAMP;
 
-		tr.args[0] = params.get(L"min").asFloat(0.0);
-		tr.args[1] = params.get(L"min").asFloat(1.0);
+		tr.args[0] = params.get(L"min").asFloatF(0.0f);
+		tr.args[1] = params.get(L"min").asFloatF(1.0f);
 	} else {
 		cl.error(L"'{}' is not recognized as a transform type", transformName);
 		return std::nullopt;

@@ -49,7 +49,7 @@ std::optional<BlockHandler::Params> BlockHandler::parseParams(const OptionMap& o
 }
 
 void BlockHandler::setNextValue(double value) {
-	result = params.transformer.apply(value);
+	result = params.transformer.apply(float(value));
 }
 
 void BlockHandler::setParams(Params _params, Channel channel) {

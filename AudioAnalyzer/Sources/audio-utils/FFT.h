@@ -14,7 +14,7 @@
 namespace rxtd::audio_utils {
 	class FFT {
 		index fftSize{ };
-		double scalar{ };
+		float scalar{ };
 
 		std::vector<float> window;
 
@@ -40,7 +40,7 @@ namespace rxtd::audio_utils {
 		void setSize(index newSize, bool correctScalar);
 
 		double getDC() const;
-		double getBinMagnitude(index binIndex) const;
+		float getBinMagnitude(index binIndex) const;
 
 		void setBuffers(array_span<input_buffer_type> inputBuffer, array_span<output_buffer_type> outputBuffer);
 

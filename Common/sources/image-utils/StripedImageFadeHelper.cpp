@@ -20,7 +20,7 @@ void StripedImageFadeHelper::inflate(array2d_view<IntColor> source) {
 	resultBuffer.setBufferSize(source.getBufferSize());
 	resultBuffer.setBuffersCount(source.getBuffersCount());
 
-	for (int lineIndex = 0; lineIndex < height; ++lineIndex) {
+	for (index lineIndex = 0; lineIndex < height; ++lineIndex) {
 		auto sourceLine = source[lineIndex];
 		auto destLine = resultBuffer[lineIndex];
 
@@ -31,7 +31,7 @@ void StripedImageFadeHelper::inflate(array2d_view<IntColor> source) {
 void StripedImageFadeHelper::drawBorderInPlace(array2d_span<IntColor> source) const {
 	const index height = source.getBuffersCount();
 
-	for (int lineIndex = 0; lineIndex < height; ++lineIndex) {
+	for (index lineIndex = 0; lineIndex < height; ++lineIndex) {
 		drawBorderInLine(source[lineIndex]);
 	}
 }
@@ -39,9 +39,9 @@ void StripedImageFadeHelper::drawBorderInPlace(array2d_span<IntColor> source) co
 void StripedImageFadeHelper::inflateLine(array_view<IntColor> source, array_span<uint32_t> dest) const {
 	const index width = source.size();
 
-	const double realWidth = width - borderSize;
+	const index realWidth = width - borderSize;
 
-	const index fadeWidth = realWidth * fading;
+	const index fadeWidth = index(realWidth * fading);
 	const index flatWidth = realWidth - fadeWidth;
 
 	IntMixer<> mixer;

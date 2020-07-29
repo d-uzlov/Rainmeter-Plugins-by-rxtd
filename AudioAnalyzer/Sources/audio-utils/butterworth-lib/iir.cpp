@@ -400,7 +400,7 @@ int *ccof_bwbp( int n )
     for( i = 0; i < n; ++i)
     {
         ccof[2*i] = tcof[i];
-        ccof[2*i+1] = 0.0;
+        ccof[2*i+1] = 0;
     }
     ccof[2*n] = tcof[n];
 

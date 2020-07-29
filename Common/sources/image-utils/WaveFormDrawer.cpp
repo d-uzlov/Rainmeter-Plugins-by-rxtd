@@ -74,17 +74,17 @@ void WaveFormDrawer::fillStrip(double min, double max) {
 void WaveFormDrawer::inflate() {
 	const index centerLineIndex = interpolator.toValueD(0.0);
 
-	for (int lineIndex = 0; lineIndex < centerLineIndex; ++lineIndex) {
+	for (index lineIndex = 0; lineIndex < centerLineIndex; ++lineIndex) {
 		inflateLine(lineIndex, resultBuffer[lineIndex], colors.background);
 	}
 
-	for (int lineIndex = centerLineIndex + 1; lineIndex < height; ++lineIndex) {
+	for (index lineIndex = centerLineIndex + 1; lineIndex < height; ++lineIndex) {
 		inflateLine(lineIndex, resultBuffer[lineIndex], colors.background);
 	}
 
 	if (lineDrawingPolicy == LineDrawingPolicy::eALWAYS) {
 		auto destCenter = resultBuffer[centerLineIndex];
-		for (int i = 0; i < width; ++i) {
+		for (index i = 0; i < width; ++i) {
 			destCenter[i] = colors.line.full;
 		}
 	} else if (lineDrawingPolicy == LineDrawingPolicy::eBELOW_WAVE) {
@@ -93,9 +93,9 @@ void WaveFormDrawer::inflate() {
 }
 
 void WaveFormDrawer::inflateLine(index line, array_span<uint32_t> dest, IntColor backgroundColor) const {
-	const double realWidth = width - borderSize;
+	const index realWidth = width - borderSize;
 
-	const index fadeWidth = realWidth * fading;
+	const index fadeWidth = index(realWidth * fading);
 	const index flatWidth = realWidth - fadeWidth;
 
 	IntMixer<> mixer;

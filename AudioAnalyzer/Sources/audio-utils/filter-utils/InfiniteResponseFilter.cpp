@@ -40,7 +40,7 @@ void InfiniteResponseFilter::apply(array_span<float> signal) {
 	for (float& value : signal) {
 		const double next = value;
 		const double nextFiltered = b[0] * next + state[0];
-		value = nextFiltered;
+		value = float(nextFiltered);
 		updateState(next, nextFiltered);
 	}
 }

@@ -48,8 +48,8 @@ namespace rxtd::audio_analyzer {
 
 			std::vector<float> colorLevels;
 			std::vector<ColorDescription> colors;
-			double colorMinValue{ };
-			double colorMaxValue{ };
+			float colorMinValue{ };
+			float colorMaxValue{ };
 
 			bool stationary{ };
 
@@ -106,11 +106,11 @@ namespace rxtd::audio_analyzer {
 		void _process(const DataSupplier& dataSupplier) override;
 		void _finish(const DataSupplier& dataSupplier) override;
 
-		array_view<float> getData(layer_t layer) const override {
+		array_view<float> getData(index layer) const override {
 			return { };
 		}
 
-		layer_t getLayersCount() const override {
+		index getLayersCount() const override {
 			return 0;
 		}
 

@@ -53,7 +53,7 @@ std::basic_streambuf<wchar_t>::int_type BufferPrinter::ReadableOutputBuffer::ove
 	buffer.resize(newCapacity);
 
 	resetPointers();
-	pbump(size);
+	pbump(int(size));
 	if (c != int_type(EOF)) {
 		buffer[size] = c;
 		pbump(1);

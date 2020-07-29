@@ -68,7 +68,7 @@ namespace rxtd::utils {
 		}
 
 		static Color mix(float percent, Color c1, Color c2) {
-			return c1 * percent + c2 * (1.0 - percent);
+			return c1 * percent + c2 * (1.0f - percent);
 		}
 
 		Color operator*(float value) const {

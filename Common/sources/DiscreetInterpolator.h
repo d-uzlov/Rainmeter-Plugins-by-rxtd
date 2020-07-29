@@ -12,12 +12,17 @@ namespace rxtd::utils {
 		DiscreetInterpolator() = default;
 
 		DiscreetInterpolator(double linMin, double linMax, double valMin, double valMax) = delete;
+
 		DiscreetInterpolator(double linMin, double linMax, index valMin, index valMax) {
 			setParams(linMin, linMax, valMin, valMax);
 		}
 
 		void setParams(double linMin, double linMax, index valMin, index valMax) {
-			li.setParams(linMin, linMax + std::numeric_limits<float>::epsilon(), valMin, valMax + 1);
+			li.setParams(
+				linMin, linMax + std::numeric_limits<float>::epsilon(),
+				double(valMin),
+				double(valMax + 1) // TODO WFT is +1 here
+			);
 
 			this->valMin = std::min(valMin, valMax);
 			this->valMax = std::max(valMin, valMax);

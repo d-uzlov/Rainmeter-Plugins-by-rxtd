@@ -34,7 +34,7 @@ namespace rxtd::audio_analyzer {
 			double binWidth;
 			double overlap;
 
-			layer_t cascadesCount;
+			index cascadesCount;
 
 			double randomTest;
 			double randomDuration;
@@ -101,8 +101,8 @@ namespace rxtd::audio_analyzer {
 		void _finish(const DataSupplier& dataSupplier) override {
 		}
 
-		layer_t getLayersCount() const override;
-		array_view<float> getData(layer_t layer) const override;
+		index getLayersCount() const override;
+		array_view<float> getData(index layer) const override;
 
 		bool getProp(const isview& prop, utils::BufferPrinter& printer) const override;
 

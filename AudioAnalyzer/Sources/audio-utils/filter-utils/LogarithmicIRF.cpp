@@ -14,8 +14,8 @@
 using namespace audio_utils;
 
 void LogarithmicIRF::setParams(double attackTime, double decayTime, index samplesPerSec, index stride) {
-	attackDecayConstants[0] = calculateAttackDecayConstant(attackTime, samplesPerSec, stride);
-	attackDecayConstants[1] = calculateAttackDecayConstant(decayTime, samplesPerSec, stride);
+	attackDecayConstants[0] = calculateAttackDecayConstant(float(attackTime), samplesPerSec, stride);
+	attackDecayConstants[1] = calculateAttackDecayConstant(float(decayTime), samplesPerSec, stride);
 }
 
 void LogarithmicIRF::setParams(double attackTime, double decayTime, index samplesPerSec) {

@@ -90,7 +90,7 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const OptionMap& optionMap
 
 double WaveForm::WaveformValueTransformer::apply(double value) {
 	const bool positive = value > 0;
-	value = cvt.apply(std::abs(value));
+	value = cvt.apply(float(std::abs(value)));
 
 	if (!positive) {
 		value *= -1;

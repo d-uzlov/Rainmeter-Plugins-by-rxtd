@@ -154,7 +154,7 @@ void legacy_FiniteTimeFilter::copyValues() {
 	if (pastValuesIndex >= params.smoothingFactor) {
 		pastValuesIndex = 0;
 	}
-	for (layer_t layer = 0; layer < layersCount; ++layer) {
+	for (index layer = 0; layer < layersCount; ++layer) {
 		auto& layerPastValues = pastValues[layer];
 		const auto sourceValues = source->getData(layer);
 		for (index i = 0; i < sourceValues.size(); ++i) {
@@ -182,7 +182,7 @@ void legacy_FiniteTimeFilter::applyTimeFiltering() {
 					outValue += currentPastValues[i][band];
 				}
 
-				currentValues[band] = outValue * smoothingNormConstant;
+				currentValues[band] = float(outValue * smoothingNormConstant);
 			}
 			break;
 
@@ -200,7 +200,7 @@ void legacy_FiniteTimeFilter::applyTimeFiltering() {
 					valueWeight++;
 				}
 
-				currentValues[band] = outValue * smoothingNormConstant;
+				currentValues[band] = float(outValue * smoothingNormConstant);
 			}
 			break;
 
@@ -221,7 +221,7 @@ void legacy_FiniteTimeFilter::applyTimeFiltering() {
 					weight *= params.exponentialFactor;
 				}
 
-				currentValues[band] = outValue * smoothingNormConstant;
+				currentValues[band] = float(outValue * smoothingNormConstant);
 			}
 			break;
 

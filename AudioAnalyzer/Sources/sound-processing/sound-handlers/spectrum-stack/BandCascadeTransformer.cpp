@@ -148,8 +148,8 @@ void BandCascadeTransformer::updateValues(const SoundHandler& source, const Band
 
 	for (index band = 0; band < bandsCount; ++band) {
 		double weight = 0.0;
-		layer_t cascadesSummed = 0;
-		const layer_t bandEndCascade = analysis.bandEndCascades[band] - analysis.minCascadeUsed;
+		index cascadesSummed = 0;
+		const index bandEndCascade = analysis.bandEndCascades[band] - analysis.minCascadeUsed;
 
 		double value;
 		if (params.mixFunction == MixFunction::PRODUCT) {
@@ -158,7 +158,7 @@ void BandCascadeTransformer::updateValues(const SoundHandler& source, const Band
 			value = 0.0;
 		}
 
-		for (layer_t cascade = 0; cascade < bandEndCascade; cascade++) {
+		for (index cascade = 0; cascade < bandEndCascade; cascade++) {
 			const auto bandWeight = resampler.getBandWeights(cascade)[band];
 			const auto magnitude = source.getData(cascade)[band];
 			const auto cascadeBandValue = magnitude / bandWeight;
@@ -185,7 +185,7 @@ void BandCascadeTransformer::updateValues(const SoundHandler& source, const Band
 		}
 
 		if (weight < params.weightFallback) {
-			for (layer_t cascade = 0; cascade < bandEndCascade; cascade++) {
+			for (index cascade = 0; cascade < bandEndCascade; cascade++) {
 				const auto bandWeight = resampler.getBandWeights(cascade)[band];
 				const auto magnitude = source.getData(cascade)[band];
 				const auto cascadeBandValue = magnitude / bandWeight;
@@ -229,11 +229,11 @@ void BandCascadeTransformer::updateValues(const SoundHandler& source, const Band
 			value = 0.0;
 		}
 
-		resultValues[band] = value;
+		resultValues[band] = float(value); // TODO float? double?
 	}
 }
 
-void BandCascadeTransformer::computeAnalysis(const BandResampler& resampler, layer_t startCascade, layer_t endCascade) {
+void BandCascadeTransformer::computeAnalysis(const BandResampler& resampler, index startCascade, index endCascade) {
 	if (analysisComputed) {
 		return;
 	}
@@ -253,10 +253,10 @@ void BandCascadeTransformer::computeAnalysis(const BandResampler& resampler, lay
 
 	for (index band = 0; band < bandsCount; ++band) {
 		double weight = 0.0;
-		layer_t bandMinCascade = -1;
-		layer_t bandMaxCascade = -1;
+		index bandMinCascade = -1;
+		index bandMaxCascade = -1;
 
-		for (layer_t cascade = startCascade; cascade < endCascade; ++cascade) {
+		for (index cascade = startCascade; cascade < endCascade; ++cascade) {
 			const auto bandWeight = resampler.getBandWeights(cascade - startCascade)[band];
 
 			if (bandWeight >= params.minWeight) {

@@ -50,12 +50,12 @@ namespace rxtd::audio_analyzer {
 
 		void _process(const DataSupplier& dataSupplier) override;
 
-		array_view<float> getData(layer_t layer) const override {
+		array_view<float> getData(index layer) const override {
 			return values[layer];
 		}
 
-		layer_t getLayersCount() const override {
-			return layer_t(values.getBuffersCount());
+		index getLayersCount() const override {
+			return values.getBuffersCount();
 		}
 	};
 }

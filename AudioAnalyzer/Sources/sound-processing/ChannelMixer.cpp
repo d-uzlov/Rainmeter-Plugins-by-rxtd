@@ -111,7 +111,7 @@ void ChannelMixer::writeSilence(index size, bool withAuto) {
 
 	for (auto& [channel, buffer] : channels) {
 		auto writeBuffer = buffer.allocateNext(size);
-		std::fill(writeBuffer.begin(), writeBuffer.end(), 0.0);
+		std::fill(writeBuffer.begin(), writeBuffer.end(), 0.0f);
 	}
 }
 

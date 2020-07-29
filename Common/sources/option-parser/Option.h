@@ -46,6 +46,9 @@ namespace rxtd::utils {
 		// Parse float, support math operations.
 		double asFloat(double defaultValue = 0.0) const;
 
+		// Parse float, support math operations.
+		float asFloatF(float defaultValue = 0.0) const;
+
 		// Parse integer value, support math operations.
 		template <typename IntType = int32_t>
 		typename std::enable_if<std::is_integral<IntType>::value, IntType>::type

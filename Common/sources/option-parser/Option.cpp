@@ -52,6 +52,10 @@ double Option::asFloat(double defaultValue) const {
 	return parseNumber(view);
 }
 
+float Option::asFloatF(float defaultValue) const {
+	return float(asFloat(defaultValue));
+}
+
 bool Option::asBool(bool defaultValue) const {
 	const isview view = getView() % ciView();
 	if (view.empty()) {
@@ -82,7 +86,7 @@ Color Option::asColor(Color defaultValue) const {
 	float values[4];
 	values[3] = 1.0;
 	for (index i = 0; i < count; ++i) {
-		values[i] = parseNumber(numbers[i].makeView(view));
+		values[i] = float(parseNumber(numbers[i].makeView(view)));
 	}
 
 	return { values[0], values[1], values[2], values[3] };

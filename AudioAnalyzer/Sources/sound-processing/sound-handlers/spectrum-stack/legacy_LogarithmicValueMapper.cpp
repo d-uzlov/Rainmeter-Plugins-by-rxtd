@@ -84,7 +84,7 @@ void legacy_LogarithmicValueMapper::transformToLog(const SoundHandler& source) {
 	const auto layersCount = source.getLayersCount();
 	resultValues.resize(layersCount); // TODO use my vector2D ?
 
-	for (layer_t layer = 0; layer < layersCount; ++layer) {
+	for (index layer = 0; layer < layersCount; ++layer) {
 		const auto values = source.getData(layer);
 
 		resultValues[layer].resize(values.size()); // TODO use my vector2D ?
@@ -95,7 +95,7 @@ void legacy_LogarithmicValueMapper::transformToLog(const SoundHandler& source) {
 			value = utils::MyMath::fastLog2(float(value)) * log10inverse;
 			value = value * logNormalization + 1.0;
 			value += params.offset;
-			resultValues[layer][i] = value;
+			resultValues[layer][i] = float(value);
 		}
 	}
 

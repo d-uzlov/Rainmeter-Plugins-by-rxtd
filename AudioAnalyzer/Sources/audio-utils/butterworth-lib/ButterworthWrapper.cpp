@@ -13,7 +13,8 @@
 using namespace audio_utils;
 
 ButterworthWrapper::AB
-ButterworthWrapper::calcCoefLowPass(index order, double cutoffFrequency, double samplingFrequency) {
+ButterworthWrapper::calcCoefLowPass(index _order, double cutoffFrequency, double samplingFrequency) {
+	const int order = int(_order);
 	if (order < 0) {
 		return { };
 	}
@@ -43,7 +44,8 @@ ButterworthWrapper::calcCoefLowPass(index order, double cutoffFrequency, double 
 }
 
 ButterworthWrapper::AB
-ButterworthWrapper::calcCoefHighPass(index order, double cutoffFrequency, double samplingFrequency) {
+ButterworthWrapper::calcCoefHighPass(index _order, double cutoffFrequency, double samplingFrequency) {
+	const int order = int(_order);
 	const double digitalFreq = cutoffFrequency / samplingFrequency;
 
 	double* aCoef = dcof_bwhp(order, digitalFreq);
@@ -70,10 +72,11 @@ ButterworthWrapper::calcCoefHighPass(index order, double cutoffFrequency, double
 
 ButterworthWrapper::AB
 ButterworthWrapper::calcCoefBandPass(
-	index order,
+	index _order,
 	double lowerCutoffFrequency, double upperCutoffFrequency,
 	double samplingFrequency
 ) {
+	const int order = int(_order);
 	const double digitalFreq1 = lowerCutoffFrequency / samplingFrequency;
 	const double digitalFreq2 = upperCutoffFrequency / samplingFrequency;
 
@@ -100,10 +103,11 @@ ButterworthWrapper::calcCoefBandPass(
 }
 
 ButterworthWrapper::AB ButterworthWrapper::calcCoefBandStop(
-	index order,
+	index _order,
 	double lowerCutoffFrequency, double upperCutoffFrequency,
 	double samplingFrequency
 ) {
+	const int order = int(_order);
 	const double digitalFreq1 = lowerCutoffFrequency / samplingFrequency;
 	const double digitalFreq2 = upperCutoffFrequency / samplingFrequency;
 

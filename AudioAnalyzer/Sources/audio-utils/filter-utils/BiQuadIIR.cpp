@@ -30,7 +30,7 @@ void BiQuadIIR::apply(array_span<float> signal) {
 		const double valueFiltered = b0 * value + state0;
 		state0 = b1 * value - a1 * valueFiltered + state1;
 		state1 = b2 * value - a2 * valueFiltered;
-		value = valueFiltered;
+		value = float(valueFiltered);
 	}
 }
 

@@ -49,8 +49,8 @@ BandResampler::parseParams(const OptionMap& optionMap, Logger& cl, Rainmeter& ra
 	}
 	params.bandFreqs = freqsOpt.value();
 
-	params.minCascade = std::max<layer_t>(optionMap.get(L"minCascade"sv).asInt<layer_t>(0), 0);
-	params.maxCascade = std::max<layer_t>(optionMap.get(L"maxCascade"sv).asInt<layer_t>(0), 0);
+	params.minCascade = std::max(optionMap.get(L"minCascade"sv).asInt(0), 0);
+	params.maxCascade = std::max(optionMap.get(L"maxCascade"sv).asInt(0), 0);
 
 	params.includeDC = optionMap.get(L"includeDC"sv).asBool(true);
 
@@ -93,12 +93,12 @@ void BandResampler::_finish(const DataSupplier& dataSupplier) {
 	}
 }
 
-array_view<float> BandResampler::getData(layer_t layer) const {
+array_view<float> BandResampler::getData(index layer) const {
 	return cascadesInfo[layer].magnitudes;
 }
 
-SoundHandler::layer_t BandResampler::getLayersCount() const {
-	return layer_t(cascadesInfo.size());
+index BandResampler::getLayersCount() const {
+	return index(cascadesInfo.size());
 }
 
 void BandResampler::setSamplesPerSec(index value) {
@@ -158,11 +158,11 @@ void BandResampler::reset() {
 }
 
 
-array_view<float> BandResampler::getBandWeights(layer_t cascade) const {
+array_view<float> BandResampler::getBandWeights(index cascade) const {
 	return cascadesInfo[cascade].weights;
 }
 
-array_view<double> BandResampler::getBaseFreqs() const {
+array_view<float> BandResampler::getBaseFreqs() const {
 	return params.bandFreqs;
 }
 
@@ -251,7 +251,7 @@ void BandResampler::sampleCascade(
 		if (bandMaxFreq >= binUpperFreq) {
 			bin++;
 		} else {
-			result[band] = value;
+			result[band] = float(value);
 			value = 0.0;
 			band++;
 
@@ -265,9 +265,9 @@ void BandResampler::sampleCascade(
 	}
 }
 
-std::optional<std::vector<double>>
+std::optional<std::vector<float>>
 BandResampler::parseFreqList(const utils::OptionList& bounds, Logger& cl, const Rainmeter& rain) {
-	std::vector<double> freqs;
+	std::vector<float> freqs;
 
 	for (auto boundOption : bounds) {
 		auto options = boundOption.asList(L' ');
@@ -286,23 +286,23 @@ BandResampler::parseFreqList(const utils::OptionList& bounds, Logger& cl, const 
 				return std::nullopt;
 			}
 
-			const double min = options.get(2).asFloat();
-			const double max = options.get(3).asFloat();
+			const auto min = options.get(2).asFloatF();
+			const auto max = options.get(3).asFloatF();
 			if (min >= max) {
 				cl.error(L"min must be < max");
 				return std::nullopt;
 			}
 
 			if (type == L"linear") {
-				const double delta = max - min;
+				const auto delta = max - min;
 
 				for (index i = 0; i <= count; ++i) {
 					freqs.push_back(min + delta * i / count);
 				}
 			} else {
 				// log
-				const auto step = std::pow(2.0, std::log2(max / min) / count);
-				double freq = min;
+				const auto step = std::pow(2.0f, std::log2(max / min) / count);
+				auto freq = min;
 				freqs.push_back(freq);
 
 				for (index i = 0; i < count; ++i) {
@@ -318,7 +318,7 @@ BandResampler::parseFreqList(const utils::OptionList& bounds, Logger& cl, const 
 				return std::nullopt;
 			}
 			for (index i = 1; i < options.size(); ++i) {
-				freqs.push_back(options.get(i).asFloat());
+				freqs.push_back(options.get(i).asFloatF());
 			}
 			continue;
 		}
@@ -332,9 +332,9 @@ BandResampler::parseFreqList(const utils::OptionList& bounds, Logger& cl, const 
 	const double threshold = rain.readDouble(L"FreqSimThreshold", 0.07);
 	// 0.07 is a random constant that I feel appropriate
 
-	std::vector<double> result;
+	std::vector<float> result;
 	result.reserve(freqs.size());
-	double lastValue = -1;
+	float lastValue = -1;
 	for (auto value : freqs) {
 		if (value <= 0) {
 			cl.error(L"frequency must be > 0 ({} found)", value);
@@ -420,7 +420,7 @@ void BandResampler::calculateCascadeWeights(array_span<float> result, index fftB
 		if (bandMaxFreq >= binUpperFreq) {
 			bin++;
 		} else {
-			result[band] = bandWeight;
+			result[band] = float(bandWeight);
 			bandWeight = 0.0;
 			band++;
 			if (band >= bandsCount) {
@@ -436,13 +436,13 @@ void BandResampler::legacy_generateBandMultipliers() {
 	bandFreqMultipliers.resize(bandsCount);
 	double multipliersSum{ };
 	for (index i = 0; i < bandsCount; ++i) {
-		bandFreqMultipliers[i] = std::log(params.bandFreqs[i + 1] - params.bandFreqs[i] + 1.0);
+		bandFreqMultipliers[i] = std::log(params.bandFreqs[i + 1] - params.bandFreqs[i] + 1.0f);
 		// bandFreqMultipliers[i] = params.bandFreqs[i + 1] - params.bandFreqs[i];
 		multipliersSum += bandFreqMultipliers[i];
 	}
 	const double bandFreqMultipliersAverage = multipliersSum / bandsCount;
 	const double multiplierCorrectingConstant = 1.0 / bandFreqMultipliersAverage;
-	for (double& multiplier : bandFreqMultipliers) {
-		multiplier *= multiplierCorrectingConstant;
+	for (auto& multiplier : bandFreqMultipliers) {
+		multiplier = float(multiplier * multiplierCorrectingConstant);
 	}
 }

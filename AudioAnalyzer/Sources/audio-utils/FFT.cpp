@@ -19,7 +19,7 @@ FFT::FFT(index fftSize, bool correctScalar) {
 
 void FFT::setSize(index newSize, bool correctScalar) {
 	fftSize = newSize;
-	scalar = correctScalar ? 1.0 / fftSize : 1.0 / std::sqrt(fftSize);
+	scalar = correctScalar ? float(1.0f / fftSize) : float(1.0 / std::sqrt(fftSize));
 	window = createHannWindow(fftSize);
 	kiss.assign(fftSize / 2, false);
 
@@ -31,7 +31,7 @@ double FFT::getDC() const {
 	return outputBuffer[0].real() * scalar;
 }
 
-double FFT::getBinMagnitude(index binIndex) const {
+float FFT::getBinMagnitude(index binIndex) const {
 	const auto& v = outputBuffer[binIndex];
 	const auto square = v.real() * v.real() + v.imag() * v.imag();
 	// return fastSqrt(square); // doesn't seem to improve performance

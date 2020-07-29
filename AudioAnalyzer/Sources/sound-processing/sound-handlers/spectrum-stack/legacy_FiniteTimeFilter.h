@@ -71,7 +71,7 @@ namespace rxtd::audio_analyzer {
 		void _process(const DataSupplier& dataSupplier) override;
 		void _finish(const DataSupplier& dataSupplier) override;
 
-		array_view<float> getData(layer_t layer) const override {
+		array_view<float> getData(index layer) const override {
 			if (params.smoothingFactor <= 1) {
 				return source->getData(layer);
 			}
@@ -79,12 +79,12 @@ namespace rxtd::audio_analyzer {
 			return values[layer];
 		}
 
-		layer_t getLayersCount() const override {
+		index getLayersCount() const override {
 			if (params.smoothingFactor <= 1) {
 				return source->getLayersCount();
 			}
 
-			return layer_t(values.getBuffersCount());
+			return values.getBuffersCount();
 		}
 
 	private:

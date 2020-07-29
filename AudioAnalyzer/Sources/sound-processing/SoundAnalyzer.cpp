@@ -52,7 +52,7 @@ void SoundAnalyzer::process() {
 	cph.reset();
 	dataSupplier.logger = logger;
 
-	const double bufferSize = granularity * cph.getResampler().getSampleRate();
+	const index bufferSize = index(granularity * cph.getResampler().getSampleRate());
 	cph.setGrabBufferSize(bufferSize);
 
 	for (auto& [channel, channelData] : channels) {

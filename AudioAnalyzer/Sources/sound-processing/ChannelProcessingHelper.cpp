@@ -27,7 +27,7 @@ void ChannelProcessingHelper::setChannels(const std::set<Channel>& set) {
 	for (auto channel : set) {
 		if (channels.count(channel) < 1) {
 			const index sampleRate = resampler.getSampleRate();
-			channels[channel].fc = fcc.getInstance(sampleRate);
+			channels[channel].fc = fcc.getInstance(double(sampleRate));
 		}
 	}
 }
@@ -72,6 +72,6 @@ void ChannelProcessingHelper::updateFC() {
 	}
 
 	for (auto&[c, cd] : channels) {
-		cd.fc = fcc.getInstance(sampleRate);
+		cd.fc = fcc.getInstance(double(sampleRate));
 	}
 }

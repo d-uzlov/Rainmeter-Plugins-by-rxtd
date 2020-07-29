@@ -25,8 +25,6 @@ namespace rxtd::audio_analyzer {
 		mutable bool valid = true;
 
 	public:
-		using layer_t = int8_t;
-
 		SoundHandler() = default;
 
 		SoundHandler(const SoundHandler& other) = delete;
@@ -59,13 +57,13 @@ namespace rxtd::audio_analyzer {
 			return valid;
 		}
 
-		virtual array_view<float> getData(layer_t layer) const = 0;
+		virtual array_view<float> getData(index layer) const = 0;
 
-		virtual layer_t getLayersCount() const {
+		virtual index getLayersCount() const {
 			return 1;
 		}
 
-		virtual layer_t getStartingLayer() const {
+		virtual index getStartingLayer() const {
 			return 0;
 		}
 

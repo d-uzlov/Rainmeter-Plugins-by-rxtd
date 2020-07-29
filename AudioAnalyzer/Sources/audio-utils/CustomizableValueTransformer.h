@@ -74,7 +74,7 @@ namespace rxtd::audio_utils {
 			return transforms.empty();
 		}
 
-		double apply(double value);
+		float apply(float value);
 
 		void applyToArray(utils::array2d_span<float> values);
 

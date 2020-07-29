@@ -14,8 +14,6 @@
 
 namespace rxtd::audio_utils {
 	class FftCascade {
-		using layer_t = audio_analyzer::SoundHandler::layer_t;
-
 	public:
 		struct Params {
 			index fftSize;
@@ -41,12 +39,12 @@ namespace rxtd::audio_utils {
 		index filledElements { };
 		index transferredElements { };
 		float odd = 10.0f; // 10.0 is used as "no value" because valid values are in [-1.0; 1.0]
-		double dc { };
+		float dc { };
 		// Fourier transform looses energy due to downsample, so we multiply result of FFT by (2^0.5)^countOfDownsampleIterations
-		double downsampleGain { };
+		float downsampleGain { };
 
 	public:
-		void setParams(Params _params, FFT* fft, FftCascade* successor, layer_t cascadeIndex);
+		void setParams(Params _params, FFT* fft, FftCascade* successor, index cascadeIndex);
 		void process(array_view<float> wave);
 		void processSilence(index waveSize);
 		void reset();

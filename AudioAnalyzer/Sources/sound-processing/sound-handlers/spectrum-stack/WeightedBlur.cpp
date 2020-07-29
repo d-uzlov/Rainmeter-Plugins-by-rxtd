@@ -116,12 +116,12 @@ void WeightedBlur::_finish(const DataSupplier& dataSupplier) {
 	changed = false;
 }
 
-array_view<float> WeightedBlur::getData(layer_t layer) const {
+array_view<float> WeightedBlur::getData(index layer) const {
 	return blurredValues[layer];
 }
 
-SoundHandler::layer_t WeightedBlur::getLayersCount() const {
-	return layer_t(blurredValues.size());
+index WeightedBlur::getLayersCount() const {
+	return index(blurredValues.size());
 }
 
 void WeightedBlur::setSamplesPerSec(index samplesPerSec) {
@@ -145,7 +145,7 @@ void WeightedBlur::blurData(const DataSupplier& dataSupplier) {
 	double minRadius = params.minRadius * std::pow(params.minRadiusAdaptation, resampler.getStartingLayer());
 	double maxRadius = params.maxRadius * std::pow(params.maxRadiusAdaptation, resampler.getStartingLayer());
 
-	for (layer_t cascade = 0; cascade < source->getLayersCount(); ++cascade) {
+	for (index cascade = 0; cascade < source->getLayersCount(); ++cascade) {
 		const auto cascadeMagnitudes = source->getData(cascade);
 		const auto cascadeWeights = resampler.getBandWeights(cascade);
 		const auto bandsCount = cascadeMagnitudes.size();
@@ -191,7 +191,7 @@ void WeightedBlur::blurData(const DataSupplier& dataSupplier) {
 				bandIndex++;
 			}
 
-			cascadeValues[band] = result;
+			cascadeValues[band] = float(result);
 		}
 
 		minRadius *= params.minRadiusAdaptation;

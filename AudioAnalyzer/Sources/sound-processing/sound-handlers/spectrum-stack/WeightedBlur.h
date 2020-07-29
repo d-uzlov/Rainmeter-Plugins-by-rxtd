@@ -86,8 +86,8 @@ namespace rxtd::audio_analyzer {
 		void _process(const DataSupplier& dataSupplier) override;
 		void _finish(const DataSupplier& dataSupplier) override;
 
-		array_view<float> getData(layer_t layer) const override;
-		layer_t getLayersCount() const override;
+		array_view<float> getData(index layer) const override;
+		index getLayersCount() const override;
 
 	private:
 		void blurData(const DataSupplier& dataSupplier);

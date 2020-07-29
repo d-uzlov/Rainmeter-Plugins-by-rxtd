@@ -70,7 +70,7 @@ std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(const OptionMap& opt
 
 	params.overlap = std::clamp(optionMap.get(L"overlap"sv).asFloat(0.5), 0.0, 1.0);
 
-	params.cascadesCount = optionMap.get(L"cascadesCount"sv).asInt<layer_t>(5);
+	params.cascadesCount = optionMap.get(L"cascadesCount"sv).asInt(5);
 	if (params.cascadesCount <= 0) {
 		cl.warning(L"cascadesCount must be in range [1, 20] but {} found. Assume 1", params.cascadesCount);
 		params.cascadesCount = 1;
@@ -120,11 +120,11 @@ void FftAnalyzer::_process(const DataSupplier& dataSupplier) {
 	fft.resetBuffers();
 }
 
-SoundHandler::layer_t FftAnalyzer::getLayersCount() const {
-	return layer_t(cascades.size());
+index FftAnalyzer::getLayersCount() const {
+	return index(cascades.size());
 }
 
-array_view<float> FftAnalyzer::getData(layer_t layer) const {
+array_view<float> FftAnalyzer::getData(index layer) const {
 	return cascades[layer].getValues();
 }
 
@@ -136,7 +136,7 @@ void FftAnalyzer::processRandom(index waveSize) {
 
 	for (index i = 0; i < waveSize; ++i) {
 		if (randomState == RandomState::ON) {
-			wave.push_back(random.next() * params.randomTest);
+			wave.push_back(float(random.next() * params.randomTest));
 		} else {
 			wave.push_back(0.0f);
 		}
@@ -275,8 +275,8 @@ void FftAnalyzer::updateParams() {
 	cascadeParams.inputStride = inputStride;
 	cascadeParams.correctZero = params.correctZero;
 
-	for (layer_t i = 0; i < layer_t(cascades.size()); i++) {
-		const auto next = i + 1 < static_cast<index>(cascades.size()) ? &cascades[i + 1] : nullptr;
+	for (index i = 0; i < index(cascades.size()); i++) {
+		const auto next = i + 1 < index(cascades.size()) ? &cascades[i + 1] : nullptr;
 		cascades[i].setParams(cascadeParams, &fft, next, i);
 	}
 }

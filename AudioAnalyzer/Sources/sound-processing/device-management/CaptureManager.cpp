@@ -41,7 +41,7 @@ namespace rxtd::audio_analyzer {
 		const auto format = audioClient.getFormat();
 		waveFormat.channelsCount = format.channelsCount;
 		waveFormat.samplesPerSec = format.samplesPerSec;
-		waveFormat.channelLayout = ChannelLayouts::layoutFromChannelMask(format.channelMask, true);
+		waveFormat.channelLayout = ChannelLayouts::layoutFromChannelMask(uint32_t(format.channelMask), true);
 		waveFormat.format = format.format;
 		if (waveFormat.format == utils::WaveDataFormat::eINVALID) {
 			logger.error(L"Invalid sample format");

@@ -14,7 +14,7 @@
 
 using namespace audio_utils;
 
-void FftCascade::setParams(Params _params, FFT* fft, FftCascade* successor, layer_t cascadeIndex) {
+void FftCascade::setParams(Params _params, FFT* fft, FftCascade* successor, index cascadeIndex) {
 	params = _params;
 	this->successor = successor;
 	this->fft = fft;
@@ -32,15 +32,15 @@ void FftCascade::setParams(Params _params, FFT* fft, FftCascade* successor, laye
 		if (index(values.size()) < newValuesSize) {
 			values.resize(newValuesSize);
 
-			for (int i = newValuesSize - 1; i >= 1; i--) {
-				index oldIndex = std::clamp<index>(i * coef, 0, values.size() - 1);
+			for (index i = newValuesSize - 1; i >= 1; i--) {
+				const index oldIndex = std::clamp<index>(index(i * coef ), 0, values.size() - 1);
 				values[i] = values[oldIndex];
 			}
 		}
 
 		if (index(values.size()) > newValuesSize) {
-			for (int i = 1; i < newValuesSize; i++) {
-				index oldIndex = std::clamp<index>(i * coef, 0, values.size() - 1);
+			for (index i = 1; i < newValuesSize; i++) {
+				const index oldIndex = std::clamp<index>(index(i * coef), 0, values.size() - 1);
 				values[i] = values[oldIndex];
 			}
 
@@ -48,7 +48,6 @@ void FftCascade::setParams(Params _params, FFT* fft, FftCascade* successor, laye
 		}
 
 		values[0] = 0.0;
-		// std::fill(values.begin(), values.end(), 0.0f);
 	}
 
 	auto samplesPerSec = params.samplesPerSec;
@@ -56,7 +55,7 @@ void FftCascade::setParams(Params _params, FFT* fft, FftCascade* successor, laye
 
 	filter.setParams(params.legacy_attackTime, params.legacy_decayTime, samplesPerSec, params.inputStride);
 
-	downsampleGain = std::pow(2, cascadeIndex * 0.5);
+	downsampleGain = std::pow(2.0f, cascadeIndex * 0.5f);
 }
 
 void FftCascade::process(array_view<float> wave) {
@@ -185,7 +184,7 @@ void FftCascade::doFft() {
 
 	const auto binsCount = params.fftSize / 2;
 
-	const auto newDC = fft->getDC();
+	const auto newDC = float(fft->getDC());
 	dc = filter.apply(dc, newDC);
 
 	auto zerothBin = std::abs(newDC);
@@ -199,8 +198,8 @@ void FftCascade::doFft() {
 
 	if (params.legacy_attackTime != 0.0 || params.legacy_decayTime != 0.0) {
 		for (index bin = 1; bin < binsCount; ++bin) {
-			const double oldValue = values[bin];
-			const double newValue = fft->getBinMagnitude(bin) * downsampleGain;
+			const float oldValue = values[bin];
+			const float newValue = fft->getBinMagnitude(bin) * downsampleGain;
 			values[bin] = filter.apply(oldValue, newValue);
 		}
 	} else {

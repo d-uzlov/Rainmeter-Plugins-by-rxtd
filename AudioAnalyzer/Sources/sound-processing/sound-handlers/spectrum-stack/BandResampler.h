@@ -20,10 +20,10 @@ namespace rxtd::audio_analyzer {
 			friend BandResampler;
 
 			istring fftId;
-			layer_t minCascade;
-			layer_t maxCascade;
+			index minCascade;
+			index maxCascade;
 
-			std::vector<double> bandFreqs;
+			std::vector<float> bandFreqs;
 
 			bool legacy_proportionalValues;
 			bool includeDC;
@@ -58,9 +58,9 @@ namespace rxtd::audio_analyzer {
 
 		index samplesPerSec{ };
 
-		std::vector<double> bandFreqMultipliers{ };
-		layer_t startCascade = 0;
-		layer_t endCascade = 0;
+		std::vector<float> bandFreqMultipliers{ };
+		index startCascade = 0;
+		index endCascade = 0;
 		index bandsCount = 0;
 
 		std::vector<CascadeInfo> cascadesInfo{ };
@@ -83,21 +83,21 @@ namespace rxtd::audio_analyzer {
 		void _process(const DataSupplier& dataSupplier) override;
 		void _finish(const DataSupplier& dataSupplier) override;
 
-		array_view<float> getData(layer_t layer) const override;
-		layer_t getLayersCount() const override;
+		array_view<float> getData(index layer) const override;
+		index getLayersCount() const override;
 
 		bool getProp(const isview& prop, utils::BufferPrinter& printer) const override;
 
-		layer_t getStartingLayer() const override {
+		index getStartingLayer() const override {
 			return startCascade;
 		}
 
-		layer_t getEndCascade() const {
+		index getEndCascade() const {
 			return endCascade;
 		}
 
-		array_view<float> getBandWeights(layer_t cascade) const;
-		array_view<double> getBaseFreqs() const;
+		array_view<float> getBandWeights(index cascade) const;
+		array_view<float> getBaseFreqs() const; // todo unused
 
 		const BandResampler* getResampler(const DataSupplier& dataSupplier) const override {
 			return this;
@@ -107,9 +107,8 @@ namespace rxtd::audio_analyzer {
 		void updateValues(const DataSupplier& dataSupplier);
 		void sampleData(const FftAnalyzer& source);
 		void sampleCascade(array_view<float> fftData, array_span<float> result, double binWidth, index fftBinsCount);
-		void sampleCascadeByDistance(array_view<float> fftData, array_span<float> result, double binWidth, index fftBinsCount);
 
-		static std::optional<std::vector<double>> parseFreqList(
+		static std::optional<std::vector<float>> parseFreqList(
 			const utils::OptionList& bounds,
 			utils::Rainmeter::Logger& cl,
 			const utils::Rainmeter& rain

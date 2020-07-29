@@ -64,9 +64,9 @@ namespace rxtd::audio_analyzer {
 
 		struct {
 			string analysisString{ };
-			layer_t minCascadeUsed = -1;
-			layer_t maxCascadeUsed = -1;
-			std::vector<layer_t> bandEndCascades{ };
+			index minCascadeUsed = -1;
+			index maxCascadeUsed = -1;
+			std::vector<index> bandEndCascades{ };
 			bool weightError = false;
 		} analysis;
 
@@ -81,15 +81,15 @@ namespace rxtd::audio_analyzer {
 		void _process(const DataSupplier& dataSupplier) override;
 		void _finish(const DataSupplier& dataSupplier) override;
 
-		array_view<float> getData(layer_t layer) const override {
+		array_view<float> getData(index layer) const override {
 			return resultValues;
 		}
 
-		layer_t getLayersCount() const override {
+		index getLayersCount() const override {
 			return 1;
 		}
 
-		layer_t getStartingLayer() const override {
+		index getStartingLayer() const override {
 			return analysis.minCascadeUsed;
 		}
 
@@ -97,6 +97,6 @@ namespace rxtd::audio_analyzer {
 
 	private:
 		void updateValues(const SoundHandler& source, const BandResampler& resampler);
-		void computeAnalysis(const BandResampler& resampler, layer_t startCascade, layer_t endCascade);
+		void computeAnalysis(const BandResampler& resampler, index startCascade, index endCascade);
 	};
 }

@@ -93,12 +93,12 @@ void UniformBlur::_finish(const DataSupplier& dataSupplier) {
 	setValid(true);
 }
 
-array_view<float> UniformBlur::getData(layer_t layer) const {
+array_view<float> UniformBlur::getData(index layer) const {
 	return blurredValues[layer];
 }
 
-SoundHandler::layer_t UniformBlur::getLayersCount() const {
-	return layer_t(blurredValues.size());
+index UniformBlur::getLayersCount() const {
+	return blurredValues.size();
 }
 
 void UniformBlur::setSamplesPerSec(index samplesPerSec) {
@@ -114,7 +114,7 @@ void UniformBlur::blurData(const SoundHandler& source) {
 
 	double theoreticalRadius = params.blurRadius * std::pow(params.blurRadiusAdaptation, source.getStartingLayer());
 
-	for (layer_t cascade = 0; cascade < source.getLayersCount(); ++cascade) {
+	for (index cascade = 0; cascade < source.getLayersCount(); ++cascade) {
 		const auto cascadeMagnitudes = source.getData(cascade);
 		const auto bandsCount = cascadeMagnitudes.size();
 
@@ -151,7 +151,7 @@ void UniformBlur::blurData(const SoundHandler& source) {
 					bandIndex++;
 				}
 
-				cascadeValues[band] = result;
+				cascadeValues[band] = float(result);
 			}
 		}
 

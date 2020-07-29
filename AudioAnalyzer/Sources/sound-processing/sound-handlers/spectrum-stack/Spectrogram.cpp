@@ -55,37 +55,37 @@ Spectrogram::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter
 	if (optionMap.has(L"colors"sv)) {
 		auto colorsDescriptionList = optionMap.get(L"colors"sv).asList(L';');
 
-		double prevValue = -std::numeric_limits<double>::infinity();
+		float prevValue = -std::numeric_limits<float>::infinity();
 
 		bool colorsAreBroken = false;
 
-		params.colorMinValue = std::numeric_limits<double>::infinity();
-		params.colorMaxValue = -std::numeric_limits<double>::infinity();
+		params.colorMinValue = std::numeric_limits<float>::infinity();
+		params.colorMaxValue = -std::numeric_limits<float>::infinity();
 
 		for (index i = 0; i < colorsDescriptionList.size(); i++) {
 			auto [valueOpt, colorOpt] = colorsDescriptionList.get(i).breakFirst(L' ');
 
-			float value = valueOpt.asFloat();
+			float value = valueOpt.asFloatF();
 
 			if (value <= prevValue) {
 				cl.error(L"Colors: values {} and {}: values must be increasing", prevValue, value);
 				colorsAreBroken = true;
 				break;
 			}
-			if (value / prevValue < 1.001 && value - prevValue < 0.001) {
+			if (value / prevValue < 1.001f && value - prevValue < 0.001f) {
 				cl.error(L"Colors: values {} and {} are too close, discarding second one", prevValue, value);
 				continue;
 			}
 
 			params.colorLevels.push_back(value);
-			params.colors.push_back(Params::ColorDescription{ 0.0, colorOpt.asColor() });
+			params.colors.push_back(Params::ColorDescription{ 0.0f, colorOpt.asColor() });
 			if (i > 0) {
-				params.colors[i - 1].widthInverted = 1.0 / (value - prevValue);
+				params.colors[i - 1].widthInverted = 1.0f / (value - prevValue);
 			}
 
 			prevValue = value;
-			params.colorMinValue = std::min<double>(params.colorMinValue, value);
-			params.colorMaxValue = std::max<double>(params.colorMaxValue, value);
+			params.colorMinValue = std::min(params.colorMinValue, value);
+			params.colorMaxValue = std::max(params.colorMaxValue, value);
 		}
 
 		if (!colorsAreBroken && params.colors.size() < 2) {
@@ -105,8 +105,8 @@ Spectrogram::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter
 	} else {
 		params.baseColor = optionMap.get(L"baseColor"sv).asColor({ 0, 0, 0, 1 });
 		params.maxColor = optionMap.get(L"maxColor"sv).asColor({ 1, 1, 1, 1 });
-		params.colorMinValue = 0.0;
-		params.colorMaxValue = 1.0;
+		params.colorMinValue = 0.0f;
+		params.colorMaxValue = 1.0f;
 	}
 
 	params.borderColor = optionMap.get(L"borderColor"sv).asColor({ 1.0, 0.2, 0.2, 1 });
@@ -179,11 +179,11 @@ void Spectrogram::fillStrip(array_view<float> data) {
 	utils::LinearInterpolator interpolator{ params.colorMinValue, params.colorMaxValue, 0.0, 1.0 };
 
 	for (index i = 0; i < index(strip.size()); ++i) {
-		double value = data[i];
-		value = interpolator.toValue(value);
-		value = std::clamp(value, 0.0, 1.0);
+		float value = data[i];
+		value = float(interpolator.toValue(value));
+		value = std::clamp(value, 0.0f, 1.0f);
 
-		auto color = params.baseColor * (1.0 - value) + params.maxColor * value;
+		auto color = params.baseColor * (1.0f - value) + params.maxColor * value;
 
 		strip[i] = color.toIntColor();
 	}
@@ -193,25 +193,25 @@ void Spectrogram::fillStripMulticolor(array_view<float> data) {
 	auto& strip = stripBuffer;
 
 	for (index i = 0; i < index(strip.size()); ++i) {
-		const double value = std::clamp<double>(data[i], params.colorMinValue, params.colorMaxValue);
+		const float value = std::clamp(data[i], params.colorMinValue, params.colorMaxValue);
 
 		index lowColorIndex = 0;
 		for (index j = 1; j < index(params.colors.size()); j++) {
-			const double colorHighValue = params.colorLevels[j];
+			const float colorHighValue = params.colorLevels[j];
 			if (value <= colorHighValue) {
 				lowColorIndex = j - 1;
 				break;
 			}
 		}
 
-		const double lowColorValue = params.colorLevels[lowColorIndex];
-		const double intervalCoef = params.colors[lowColorIndex].widthInverted;
+		const float lowColorValue = params.colorLevels[lowColorIndex];
+		const float intervalCoef = params.colors[lowColorIndex].widthInverted;
 		const auto lowColor = params.colors[lowColorIndex].color;
 		const auto highColor = params.colors[lowColorIndex + 1].color;
 
-		const double percentValue = (value - lowColorValue) * intervalCoef;
+		const float percentValue = (value - lowColorValue) * intervalCoef; // TODO int color?
 
-		const auto color = lowColor * (1.0 - percentValue) + highColor * percentValue;
+		const auto color = lowColor * (1.0f - percentValue) + highColor * percentValue;
 
 		strip[i] = color.toIntColor();
 	}
