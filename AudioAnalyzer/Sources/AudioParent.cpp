@@ -77,8 +77,8 @@ void AudioParent::_reload() {
 	}
 
 	computeTimeout = rain.read(L"computeTimeout").asFloat(-1.0);
-	killTimeout = std::clamp(rain.read(L"killTimeout").asFloat(16.0), 1.0, 33.0);
-	finishTimeout = rain.read(L"finishTimeout").asFloat(-1.0);
+
+	killTimeout = std::clamp(rain.read(L"killTimeout").asFloat(33.0), 1.0, 33.0);
 
 	deviceManager.setOptions(sourceEnum, id);
 
@@ -125,8 +125,6 @@ double AudioParent::_update() {
 		if (deviceManager.getState() == DeviceManager::State::eFATAL) {
 			setMeasureState(utils::MeasureState::eBROKEN);
 			logger.error(L"Unrecoverable error");
-		} else {
-			logger.warning(L"deviceManager error state");
 		}
 
 		for (auto& [name, sa] : saMap) {
@@ -310,8 +308,15 @@ void AudioParent::process() {
 
 	const auto processBeginTime = clock::now();
 
+	const std::chrono::duration<float, std::milli> processMaxDuration{ killTimeout };
+	const auto killTime = clock::now() + std::chrono::duration_cast<std::chrono::milliseconds>(processMaxDuration);
+
+	bool killed = false;
 	for (auto& [name, sa] : saMap) {
-		sa.process(channelMixer, killTimeout);
+		killed = sa.process(channelMixer, killTime);
+		if (killed) {
+			break;
+		}
 	}
 	channelMixer.reset();
 
@@ -319,20 +324,28 @@ void AudioParent::process() {
 
 	const auto processDuration = std::chrono::duration<double, std::milli>{ processEndTime - processBeginTime }.count();
 
-	if (computeTimeout > 0 && processDuration > computeTimeout) {
-		logger.debug(L"compute overhead {} ms over specified {} ms", processDuration - computeTimeout, computeTimeout);
+	if (killed) {
+		logger.error(L"handler processing was killed on timeout after {} m, on stage 1", processDuration);
+		return;
 	}
 
 	for (auto& [name, sa] : saMap) {
-		sa.finishStandalone();
+		killed = sa.finishStandalone(killTime);
+		if (killed) {
+			break;
+		}
 	}
 
-	const auto finishEndTime = clock::now();
+	const auto fullEndTime = clock::now();
 
-	const auto finishDuration = std::chrono::duration<double, std::milli>{ finishEndTime - processEndTime }.count();
+	const auto fullDuration = std::chrono::duration<double, std::milli>{ fullEndTime - processBeginTime }.count();
 
-	if (finishTimeout > 0 && finishDuration > finishTimeout) {
-		logger.debug(L"finish overhead {} ms over specified {} ms", finishDuration - finishTimeout, finishTimeout);
+	if (killed) {
+		logger.error(L"handler processing was killed on timeout after {} m, on stage 2", fullDuration);
+		return;
+	}
+	if (computeTimeout > 0 && processDuration > computeTimeout) {
+		logger.debug(L"processing overhead {} ms over specified {} ms", fullDuration - computeTimeout, computeTimeout);
 	}
 }
 

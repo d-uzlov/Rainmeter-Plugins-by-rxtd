@@ -14,9 +14,13 @@
 #include "HelperClasses.h"
 #include "ChannelProcessingHelper.h"
 #include "../ParamParser.h"
+#include <chrono>
 
 namespace rxtd::audio_analyzer {
 	class SoundAnalyzer {
+		using clock = std::chrono::high_resolution_clock;
+		static_assert(clock::is_steady);
+
 		// Following two fields are used for updating .channels field.
 		// They can contain info about handlers that doesn't exist because of channel layout
 		std::set<Channel> channelSetRequested;
@@ -67,8 +71,10 @@ namespace rxtd::audio_analyzer {
 			return cph;
 		}
 
-		void process(const ChannelMixer& mixer, double killTimeoutMs);
-		void finishStandalone() noexcept;
+		// returns true when killed on timeout
+		bool process(const ChannelMixer& mixer, clock::time_point killTime);
+		// returns true when killed on timeout
+		bool finishStandalone(clock::time_point killTime) noexcept;
 		void resetValues() noexcept;
 
 		bool needChannelAuto() const {

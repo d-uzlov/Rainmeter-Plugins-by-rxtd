@@ -9,8 +9,6 @@
 
 #include "SoundAnalyzer.h"
 
-#include <chrono>
-
 using namespace audio_analyzer;
 
 void SoundAnalyzer::setLayout(ChannelLayout _layout) {
@@ -47,19 +45,13 @@ void SoundAnalyzer::setHandlers(
 	patch();
 }
 
-void SoundAnalyzer::process(const ChannelMixer& mixer, double killTimeoutMs) {
+bool SoundAnalyzer::process(const ChannelMixer& mixer, clock::time_point killTime) {
 	cph.reset();
 	cph.setChannelMixer(mixer);
 	dataSupplier.logger = logger;
 
 	const index bufferSize = index(granularity * cph.getResampler().getSampleRate());
 	cph.setGrabBufferSize(bufferSize);
-
-	using clock = std::chrono::high_resolution_clock;
-	static_assert(clock::is_steady);
-
-	const std::chrono::duration<float, std::milli> dur{ killTimeoutMs };
-	const clock::time_point killTime = clock::now() + std::chrono::duration_cast<std::chrono::milliseconds>(dur);
 
 	for (auto& [channel, channelData] : channels) {
 		dataSupplier.setChannelData(&channelData);
@@ -88,28 +80,35 @@ void SoundAnalyzer::process(const ChannelMixer& mixer, double killTimeoutMs) {
 				}
 
 				if (clock::now() > killTime) {
-					logger.error(L"handler processing is killed on timeout");
-					return;
+					return true;
 				}
 			}
 		}
-
 	}
+
+	return false;
 }
 
-void SoundAnalyzer::finishStandalone() noexcept {
+bool SoundAnalyzer::finishStandalone(clock::time_point killTime) noexcept {
 	for (auto& [channel, channelData] : channels) {
 		for (auto& name : handlerPatchers.order) {
 			auto& handler = channelData[name];
 			if (handler.wasValid && handler.ptr->isStandalone()) {
 				handler.ptr->finish();
 				handler.wasValid = handler.ptr->isValid();
+
 				if (!handler.wasValid) {
 					logger.error(L"handler '{}' was invalidated", name);
+				}
+
+				if (clock::now() > killTime) {
+					return true;
 				}
 			}
 		}
 	}
+
+	return false;
 }
 
 void SoundAnalyzer::resetValues() noexcept {

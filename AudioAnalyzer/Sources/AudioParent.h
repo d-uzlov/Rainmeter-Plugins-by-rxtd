@@ -25,7 +25,6 @@ namespace rxtd::audio_analyzer {
 		MyWaveFormat currentFormat{ };
 		double computeTimeout = 0.0;
 		double killTimeout = 0.0;
-		double finishTimeout = 0.0;
 
 		utils::GenericComWrapper<utils::CMMNotificationClient> notificationClient;
 
