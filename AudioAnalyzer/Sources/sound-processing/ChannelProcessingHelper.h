@@ -40,6 +40,10 @@ namespace rxtd::audio_analyzer {
 		ChannelProcessingHelper(const ChannelMixer& mixer) : mixer(&mixer) {
 		}
 
+		void setChannelMixer(const ChannelMixer& value) {
+			mixer = &value;
+		}
+
 		void setChannels(const std::set<Channel>& set);
 
 		void setFCC(audio_utils::FilterCascadeCreator value);

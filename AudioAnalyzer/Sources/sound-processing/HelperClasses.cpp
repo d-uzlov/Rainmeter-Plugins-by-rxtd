@@ -9,8 +9,6 @@
 
 #include "HelperClasses.h"
 
-#include "undef.h"
-
 using namespace audio_analyzer;
 
 void DataSupplierImpl::setWave(array_view<float> value) {

@@ -21,7 +21,7 @@ namespace rxtd::audio_analyzer {
 		ParamParser paramParser;
 		ChannelMixer channelMixer;
 		DeviceManager deviceManager;
-		std::map<istring, std::unique_ptr<SoundAnalyzer>, std::less<>> saMap;
+		std::map<istring, SoundAnalyzer, std::less<>> saMap;
 		MyWaveFormat currentFormat{ };
 		double computeTimeout = 0.0;
 		double finishTimeout = 0.0;
@@ -55,8 +55,7 @@ namespace rxtd::audio_analyzer {
 
 		template <typename Callable>
 		void callAllSA(Callable lambda) {
-			for (auto& [name, analyzerPtr] : saMap) {
-				auto& analyzer = *analyzerPtr;
+			for (auto& [name, analyzer] : saMap) {
 				lambda(analyzer);
 			}
 		}

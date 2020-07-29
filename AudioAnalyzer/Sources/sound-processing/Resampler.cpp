@@ -29,7 +29,7 @@ void Resampler::resample(array_view<float> from, array_span<float> to) const {
 		return;
 	}
 
-	const auto newCount = from.size() / divide;
+	const auto newCount = from.size() / divide; // TODO possibly remaining data?
 	for (index i = 0; i < newCount; ++i) {
 		double value = 0.0;
 		for (index j = 0; j < divide; ++j) {

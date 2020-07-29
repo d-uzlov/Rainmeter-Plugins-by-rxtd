@@ -42,8 +42,8 @@ void SoundAnalyzer::setHandlers(std::set<Channel> channelSetRequested, ParamPars
 	patch();
 }
 
-void SoundAnalyzer::process() {
-	cph.reset();
+void SoundAnalyzer::process(const ChannelMixer& mixer) {
+	cph.setChannelMixer(mixer);
 	dataSupplier.logger = logger;
 
 	const index bufferSize = index(granularity * cph.getResampler().getSampleRate());

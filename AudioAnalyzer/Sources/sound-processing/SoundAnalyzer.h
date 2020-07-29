@@ -35,8 +35,7 @@ namespace rxtd::audio_analyzer {
 	public:
 		SoundAnalyzer() = default;
 
-		SoundAnalyzer(const ChannelMixer& channelMixer, utils::Rainmeter::Logger logger) noexcept :
-			cph(channelMixer), logger(std::move(logger)) {
+		SoundAnalyzer(utils::Rainmeter::Logger logger) noexcept : logger(std::move(logger)) {
 		}
 
 		~SoundAnalyzer() = default;
@@ -48,6 +47,7 @@ namespace rxtd::audio_analyzer {
 
 		void setLayout(ChannelLayout layout);
 		void setSourceRate(index value);
+
 		void setGranularity(double value) {
 			granularity = value;
 		}
@@ -70,7 +70,7 @@ namespace rxtd::audio_analyzer {
 			return cph;
 		}
 
-		void process();
+		void process(const ChannelMixer& mixer);
 		void resetValues() noexcept;
 		void finishStandalone() noexcept;
 

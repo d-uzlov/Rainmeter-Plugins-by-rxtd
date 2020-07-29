@@ -129,7 +129,7 @@ double AudioParent::_update() {
 		clock::time_point killTime = maxTime + std::chrono::duration_cast<std::chrono::milliseconds>(dur);
 
 		callAllSA([=](SoundAnalyzer& sa) {
-			sa.process();
+			sa.process(channelMixer);
 		});
 		channelMixer.reset();
 
@@ -265,7 +265,7 @@ void AudioParent::_resolve(array_view<isview> args, string& resolveBufferString)
 			return;
 		}
 
-		const auto value = procIter->second->getAudioChildHelper().getValue(channelOpt.value(), handlerName, ind);
+		const auto value = procIter->second.getAudioChildHelper().getValue(channelOpt.value(), handlerName, ind);
 		cl.printer.print(value);
 
 		resolveBufferString = cl.printer.getBufferView();
@@ -295,7 +295,7 @@ void AudioParent::_resolve(array_view<isview> args, string& resolveBufferString)
 			return;
 		}
 
-		auto handler = procIter->second->getAudioChildHelper().findHandler(channelOpt.value(), handlerName);
+		auto handler = procIter->second.getAudioChildHelper().findHandler(channelOpt.value(), handlerName);
 		if (handler == nullptr) {
 			cl.error(L"handler '{}:{}:{}' is not found", procName, channelName, handlerName);
 			return;
@@ -320,7 +320,7 @@ double AudioParent::getValue(isview proc, isview id, Channel channel, index ind)
 	if (procIter == saMap.end()) {
 		return 0.0;
 	}
-	return procIter->second->getAudioChildHelper().getValue(channel, id, ind);
+	return procIter->second.getAudioChildHelper().getValue(channel, id, ind);
 }
 
 double AudioParent::legacy_getValue(isview id, Channel channel, index ind) const {
@@ -343,12 +343,7 @@ void AudioParent::patchSA(ParamParser::ProcessingsInfoMap procs) {
 	}
 
 	for (auto& [name, data] : procs) {
-		auto& saPtr = saMap[name];
-		if (saPtr == nullptr) {
-			saPtr = std::make_unique<SoundAnalyzer>(channelMixer, logger);
-		}
-
-		auto& sa = *saPtr;
+		auto& sa = saMap[name];
 		sa.getCPH().setTargetRate(data.targetRate);
 		sa.getCPH().setFCC(std::move(data.fcc));
 		sa.setHandlers(data.channels, data.handlersInfo);
@@ -360,8 +355,7 @@ void AudioParent::patchSA(ParamParser::ProcessingsInfoMap procs) {
 
 std::pair<SoundHandler*, AudioChildHelper>
 AudioParent::findHandlerByName(isview name, Channel channel) const {
-	for (auto& [_, ptr] : saMap) {
-		auto& analyzer = *ptr;
+	for (auto& [_, analyzer] : saMap) {
 		auto handler = analyzer.getAudioChildHelper().findHandler(channel, name);
 		if (handler != nullptr) {
 			return { handler, analyzer.getAudioChildHelper() };
