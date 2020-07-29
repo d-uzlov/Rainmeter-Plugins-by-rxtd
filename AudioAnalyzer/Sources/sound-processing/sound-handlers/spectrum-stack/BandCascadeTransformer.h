@@ -56,6 +56,9 @@ namespace rxtd::audio_analyzer {
 		Params params{ };
 
 		index samplesPerSec{ };
+		
+		const SoundHandler* source = nullptr;
+		const BandResampler* resampler = nullptr;
 
 		std::vector<float> resultValues{ };
 
@@ -79,7 +82,7 @@ namespace rxtd::audio_analyzer {
 		void reset() override;
 
 		void _process(const DataSupplier& dataSupplier) override;
-		void _finish(const DataSupplier& dataSupplier) override;
+		void _finish() override;
 
 		array_view<float> getData(index layer) const override {
 			return resultValues;

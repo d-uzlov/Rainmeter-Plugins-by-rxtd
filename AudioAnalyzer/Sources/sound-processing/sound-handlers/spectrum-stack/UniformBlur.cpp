@@ -72,25 +72,22 @@ void UniformBlur::setParams(const Params& _params, Channel channel) {
 }
 
 void UniformBlur::_process(const DataSupplier& dataSupplier) {
-	changed = true;
-}
-
-void UniformBlur::_finish(const DataSupplier& dataSupplier) {
-	if (!changed) {
+	source = dataSupplier.getHandler(params.source);
+	if (source == nullptr) {
+		setValid(false);
 		return;
 	}
 
-	setValid(false);
+	changed = true;
+}
 
-	const auto source = dataSupplier.getHandler(params.source);
-	if (source == nullptr) {
+void UniformBlur::_finish() {
+	if (!changed) {
 		return;
 	}
 
 	blurData(*source);
 	changed = false;
-
-	setValid(true);
 }
 
 array_view<float> UniformBlur::getData(index layer) const {

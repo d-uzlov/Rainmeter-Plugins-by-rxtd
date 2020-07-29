@@ -98,19 +98,19 @@ void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldHand
 	auto handlersOption = processingMap.get(L"handlers"sv);
 	if (handlersOption.empty()) {
 		cl.error(L"handlers not found");
-		oldHandlers.handlerInfo = { };
+		oldHandlers.handlersInfo = { };
 		return;
 	}
 
 	auto handlersList = handlersOption.asList(L',');
 	if (!checkListUnique(handlersList)) {
 		cl.error(L"found repeating handlers, invalidate processing");
-		oldHandlers.handlerInfo = { };
+		oldHandlers.handlersInfo = { };
 		return;
 	}
 
-	oldHandlers.handlerInfo = parseHandlers(handlersList, std::move(oldHandlers.handlerInfo));
-	if (oldHandlers.handlerInfo.empty()) {
+	oldHandlers.handlersInfo = parseHandlers(handlersList, std::move(oldHandlers.handlersInfo));
+	if (oldHandlers.handlersInfo.map.empty()) {
 		cl.warning(L"no valid handlers found");
 		return;
 	}
@@ -172,24 +172,25 @@ std::set<Channel> ParamParser::parseChannels(const utils::OptionList& channelsSt
 	return set;
 }
 
-ParamParser::HandlerPatcherMap
-ParamParser::parseHandlers(const utils::OptionList& names, HandlerPatcherMap oldHandlers) const {
-	HandlerPatcherMap result;
+ParamParser::HandlerPatcherInfo
+ParamParser::parseHandlers(const utils::OptionList& names, HandlerPatcherInfo oldHandlers) const {
+	HandlerPatcherInfo result;
 
 	for (auto nameOption : names) {
-		auto handler = std::move(oldHandlers[nameOption.asIString() % own()]);
+		auto handler = std::move(oldHandlers.map[nameOption.asIString() % own()]);
 		const auto success = parseHandler(nameOption.asString(), result, handler);
 		if (!success) {
 			continue;
 		}
 
-		result[nameOption.asIString() % own()] = std::move(handler);
+		result.map[nameOption.asIString() % own()] = std::move(handler);
+		result.order.push_back(nameOption.asIString() % own());
 	}
 
 	return result;
 }
 
-bool ParamParser::parseHandler(sview name, const HandlerPatcherMap& prevHandlers, HandlerInfo& handler) const {
+bool ParamParser::parseHandler(sview name, const HandlerPatcherInfo& prevHandlers, HandlerInfo& handler) const {
 	string optionName = L"Handler-"s += name;
 	auto descriptionOption = rain.read(optionName);
 	if (descriptionOption.empty()) {
@@ -231,7 +232,7 @@ bool ParamParser::parseHandler(sview name, const HandlerPatcherMap& prevHandlers
 ParamParser::HandlerPatcher ParamParser::getHandlerPatcher(
 	const utils::OptionMap& optionMap,
 	Logger& cl,
-	const HandlerPatcherMap& prevHandlers
+	const HandlerPatcherInfo& prevHandlers
 ) const {
 	const auto type = optionMap.get(L"type"sv).asIString();
 
@@ -243,7 +244,7 @@ ParamParser::HandlerPatcher ParamParser::getHandlerPatcher(
 	// source must be checked to prevent loops
 	const auto source = optionMap.getUntouched(L"source").asIString();
 	if (!source.empty()) {
-		const bool found = prevHandlers.find(source) != prevHandlers.end();
+		const bool found = prevHandlers.map.find(source) != prevHandlers.map.end();
 		if (!found) {
 			cl.error(L"reverse or unknown dependency '{}'", source);
 			return nullptr;

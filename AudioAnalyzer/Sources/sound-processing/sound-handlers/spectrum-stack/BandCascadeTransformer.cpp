@@ -71,33 +71,35 @@ void BandCascadeTransformer::setParams(const Params& _params, Channel channel) {
 }
 
 void BandCascadeTransformer::_process(const DataSupplier& dataSupplier) {
+	source = dataSupplier.getHandler(params.sourceId);
+	if (source == nullptr) {
+		setValid(false);
+		return;
+	}
+	
+	resampler = dynamic_cast<const BandResampler*>(source);
+	if (resampler == nullptr) {
+		const auto provider = dynamic_cast<const ResamplerProvider*>(source);
+		if (provider == nullptr) {
+			setValid(false);
+			return;
+		}
+		resampler = provider->getResampler(dataSupplier);
+		if (resampler == nullptr) {
+			setValid(false);
+			return;
+		}
+	}
+
 	changed = true;
 }
 
-void BandCascadeTransformer::_finish(const DataSupplier& dataSupplier) {
+void BandCascadeTransformer::_finish() {
 	if (!changed) {
 		return;
 	}
 
 	setValid(false);
-
-	const auto source = dataSupplier.getHandler(params.sourceId);
-	if (source == nullptr) {
-		return;
-	}
-
-	const BandResampler* resampler = nullptr;
-	resampler = dynamic_cast<const BandResampler*>(source);
-	if (resampler == nullptr) {
-		const auto provider = dynamic_cast<const ResamplerProvider*>(source);
-		if (provider == nullptr) {
-			return;
-		}
-		resampler = provider->getResampler(dataSupplier);
-		if (resampler == nullptr) {
-			return;
-		}
-	}
 
 	if (!analysisComputed) {
 		computeAnalysis(*resampler, resampler->getStartingLayer(), resampler->getEndCascade());

@@ -95,20 +95,21 @@ void legacy_FiniteTimeFilter::setParams(const Params& _params, Channel channel) 
 }
 
 void legacy_FiniteTimeFilter::_process(const DataSupplier& dataSupplier) {
+	source = dataSupplier.getHandler<>(params.sourceId);
+	if (source == nullptr) {
+		setValid(false);
+		return;
+	}
+
 	changed = true;
 }
 
-void legacy_FiniteTimeFilter::_finish(const DataSupplier& dataSupplier) {
+void legacy_FiniteTimeFilter::_finish() {
 	if (!changed) {
 		return;
 	}
 
 	setValid(false);
-
-	source = dataSupplier.getHandler<>(params.sourceId);
-	if (source == nullptr) {
-		return;
-	}
 
 	if (params.smoothingFactor > 1) {
 		adjustSize();
@@ -120,8 +121,8 @@ void legacy_FiniteTimeFilter::_finish(const DataSupplier& dataSupplier) {
 	setValid(true);
 }
 
-void legacy_FiniteTimeFilter::setSamplesPerSec(index samplesPerSec) {
-	this->samplesPerSec = samplesPerSec;
+void legacy_FiniteTimeFilter::setSamplesPerSec(index value) {
+	samplesPerSec = value;
 }
 
 void legacy_FiniteTimeFilter::adjustSize() {

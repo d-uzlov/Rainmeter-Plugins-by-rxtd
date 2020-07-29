@@ -83,12 +83,18 @@ void BandResampler::setParams(const Params& _params, Channel channel) {
 }
 
 void BandResampler::_process(const DataSupplier& dataSupplier) {
+	source = dataSupplier.getHandler<FftAnalyzer>(params.fftId);
+	if (source == nullptr) {
+		setValid(false);
+		return;
+	}
+
 	changed = true;
 }
 
-void BandResampler::_finish(const DataSupplier& dataSupplier) {
+void BandResampler::_finish() {
 	if (changed) {
-		updateValues(dataSupplier);
+		updateValues();
 		changed = false;
 	}
 }
@@ -166,13 +172,8 @@ array_view<float> BandResampler::getBaseFreqs() const {
 	return params.bandFreqs;
 }
 
-void BandResampler::updateValues(const DataSupplier& dataSupplier) {
+void BandResampler::updateValues() {
 	setValid(false);
-
-	const auto source = dataSupplier.getHandler<FftAnalyzer>(params.fftId);
-	if (source == nullptr) {
-		return;
-	}
 
 	if (!cascadeInfoIsCalculated) {
 		const auto cascadesCount = source->getLayersCount();

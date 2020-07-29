@@ -31,6 +31,8 @@ namespace rxtd::audio_analyzer {
 
 		double logNormalization{ };
 
+		const SoundHandler* source{ };
+
 		std::vector<std::vector<float>> resultValues;
 
 		bool changed = true;
@@ -45,7 +47,7 @@ namespace rxtd::audio_analyzer {
 		void reset() override;
 
 		void _process(const DataSupplier& dataSupplier) override;
-		void _finish(const DataSupplier& dataSupplier) override;
+		void _finish() override;
 
 		array_view<float> getData(index layer) const override {
 			return resultValues[layer];
@@ -56,7 +58,7 @@ namespace rxtd::audio_analyzer {
 		}
 
 	private:
-		void updateValues(const DataSupplier& dataSupplier);
+		void updateValues();
 		void transformToLog(const SoundHandler& source);
 	};
 }

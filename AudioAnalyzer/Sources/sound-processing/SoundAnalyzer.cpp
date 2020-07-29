@@ -31,11 +31,11 @@ void SoundAnalyzer::setSourceRate(index value) {
 	updateHandlerSampleRate();
 }
 
-const AudioChildHelper& SoundAnalyzer::getAudioChildHelper() const {
-	return audioChildHelper;
+AudioChildHelper SoundAnalyzer::getAudioChildHelper() const {
+	return AudioChildHelper { channels };
 }
 
-void SoundAnalyzer::setHandlers(std::set<Channel> channelSetRequested, ParamParser::HandlerPatcherMap handlerPatchers) {
+void SoundAnalyzer::setHandlers(std::set<Channel> channelSetRequested, ParamParser::HandlerPatcherInfo handlerPatchers) {
 	this->channelSetRequested = std::move(channelSetRequested);
 	this->handlerPatchers = std::move(handlerPatchers);
 
@@ -61,7 +61,8 @@ void SoundAnalyzer::process() {
 
 			dataSupplier.setWave(wave);
 
-			for (auto& [name, handler] : channelData) {
+			for (auto& name : handlerPatchers.order) {
+				auto& handler = channelData[name];
 				handler->process(dataSupplier);
 				dataSupplier.resetBuffers();
 			}
@@ -83,7 +84,7 @@ void SoundAnalyzer::finishStandalone() noexcept {
 	for (auto& [channel, channelData] : channels) {
 		for (auto& [name, handler] : channelData) {
 			if (handler->isStandalone()) {
-				handler->finish(dataSupplier);
+				handler->finish();
 			}
 		}
 	}
@@ -128,7 +129,7 @@ void SoundAnalyzer::patchHandlers() {
 	for (auto& [channel, channelData] : channels) {
 		ChannelData newData;
 
-		for (auto& [handlerName, info] : handlerPatchers) {
+		for (auto& [handlerName, info] : handlerPatchers.map) {
 			auto& handlerPtr = channelData[handlerName];
 			auto& patcher = info.patcher;
 

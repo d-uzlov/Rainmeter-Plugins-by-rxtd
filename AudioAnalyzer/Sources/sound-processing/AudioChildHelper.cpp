@@ -9,14 +9,10 @@
 
 #include "AudioChildHelper.h"
 
-#include "undef.h"
-
 using namespace audio_analyzer;
 
-
-AudioChildHelper::AudioChildHelper(std::map<Channel, ChannelData>& channels, DataSupplierImpl& dataSupplier) {
+AudioChildHelper::AudioChildHelper(const std::map<Channel, ChannelData>& channels) {
 	this->channels = &channels;
-	this->dataSupplier = &dataSupplier;
 }
 
 SoundHandler* AudioChildHelper::findHandler(Channel channel, isview handlerId) const {
@@ -45,9 +41,8 @@ double AudioChildHelper::getValue(Channel channel, isview handlerId, index index
 	if (channelDataIter == channels->end()) {
 		return 0.0;
 	}
-	dataSupplier->setChannelData(&channelDataIter->second);
 
-	handler->finish(*dataSupplier);
+	handler->finish();
 	if (!handler->isValid()) {
 		return 0.0;
 	}
@@ -72,9 +67,8 @@ double AudioChildHelper::getValueFrom(SoundHandler* handler, Channel channel, in
 	if (channelDataIter == channels->end()) {
 		return 0.0;
 	}
-	dataSupplier->setChannelData(&channelDataIter->second);
 
-	handler->finish(*dataSupplier);
+	handler->finish();
 	if (!handler->isValid()) {
 		return 0.0;
 	}

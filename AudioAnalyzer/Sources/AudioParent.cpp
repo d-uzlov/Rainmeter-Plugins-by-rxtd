@@ -328,7 +328,7 @@ double AudioParent::legacy_getValue(isview id, Channel channel, index ind) const
 	if (handler == nullptr) {
 		return 0.0;
 	}
-	return helper->getValueFrom(handler, channel, ind);
+	return helper.getValueFrom(handler, channel, ind);
 }
 
 void AudioParent::patchSA(ParamParser::ProcessingsInfoMap procs) {
@@ -351,20 +351,20 @@ void AudioParent::patchSA(ParamParser::ProcessingsInfoMap procs) {
 		auto& sa = *saPtr;
 		sa.getCPH().setTargetRate(data.targetRate);
 		sa.getCPH().setFCC(std::move(data.fcc));
-		sa.setHandlers(data.channels, data.handlerInfo);
+		sa.setHandlers(data.channels, data.handlersInfo);
 		sa.setSourceRate(currentFormat.samplesPerSec);
 		sa.setLayout(currentFormat.channelLayout);
 		sa.setGranularity(data.granularity);
 	}
 }
 
-std::pair<SoundHandler*, const AudioChildHelper*>
+std::pair<SoundHandler*, AudioChildHelper>
 AudioParent::findHandlerByName(isview name, Channel channel) const {
 	for (auto& [_, ptr] : saMap) {
 		auto& analyzer = *ptr;
 		auto handler = analyzer.getAudioChildHelper().findHandler(channel, name);
 		if (handler != nullptr) {
-			return { handler, &analyzer.getAudioChildHelper() };
+			return { handler, analyzer.getAudioChildHelper() };
 		}
 	}
 

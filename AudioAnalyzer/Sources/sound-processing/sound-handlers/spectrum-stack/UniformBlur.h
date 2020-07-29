@@ -57,6 +57,8 @@ namespace rxtd::audio_analyzer {
 
 		index samplesPerSec{ };
 
+		const SoundHandler* source = nullptr;
+
 		std::vector<std::vector<float>> blurredValues;
 
 		bool changed = true;
@@ -71,7 +73,7 @@ namespace rxtd::audio_analyzer {
 		void reset() override;
 
 		void _process(const DataSupplier& dataSupplier) override;
-		void _finish(const DataSupplier& dataSupplier) override;
+		void _finish() override;
 
 		array_view<float> getData(index layer) const override;
 		index getLayersCount() const override;

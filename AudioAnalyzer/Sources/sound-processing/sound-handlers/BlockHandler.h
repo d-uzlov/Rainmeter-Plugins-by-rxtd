@@ -60,9 +60,6 @@ namespace rxtd::audio_analyzer {
 
 		void _process(const DataSupplier& dataSupplier) final;
 
-		void _finish(const DataSupplier& dataSupplier) final {
-		}
-
 		array_view<float> getData(index layer) const final {
 			return { &result, 1 };
 		}

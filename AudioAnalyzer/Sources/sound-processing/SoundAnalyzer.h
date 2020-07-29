@@ -20,14 +20,13 @@ namespace rxtd::audio_analyzer {
 		// Following two fields are used for updating .channels field.
 		// They can contain info about handlers that doesn't exist because of channel layout
 		std::set<Channel> channelSetRequested;
-		ParamParser::HandlerPatcherMap handlerPatchers;
+		ParamParser::HandlerPatcherInfo handlerPatchers;
 
 		std::map<Channel, ChannelData> channels;
 		DataSupplierImpl dataSupplier;
 
 		ChannelProcessingHelper cph;
 		utils::Rainmeter::Logger logger;
-		AudioChildHelper audioChildHelper{ };
 
 		index sampleRate{ };
 		double granularity{ };
@@ -37,7 +36,7 @@ namespace rxtd::audio_analyzer {
 		SoundAnalyzer() = default;
 
 		SoundAnalyzer(const ChannelMixer& channelMixer, utils::Rainmeter::Logger logger) noexcept :
-			cph(channelMixer), logger(std::move(logger)), audioChildHelper(channels, dataSupplier) {
+			cph(channelMixer), logger(std::move(logger)) {
 		}
 
 		~SoundAnalyzer() = default;
@@ -53,7 +52,7 @@ namespace rxtd::audio_analyzer {
 			granularity = value;
 		}
 
-		const AudioChildHelper& getAudioChildHelper() const;
+		AudioChildHelper getAudioChildHelper() const;
 
 		/**
 		 * Handlers aren't completely recreated when measure is reloaded.
@@ -64,7 +63,7 @@ namespace rxtd::audio_analyzer {
 		 */
 		void setHandlers(
 			std::set<Channel> channelSetRequested,
-			ParamParser::HandlerPatcherMap handlerPatchers
+			ParamParser::HandlerPatcherInfo handlerPatchers
 		);
 
 		ChannelProcessingHelper& getCPH() {

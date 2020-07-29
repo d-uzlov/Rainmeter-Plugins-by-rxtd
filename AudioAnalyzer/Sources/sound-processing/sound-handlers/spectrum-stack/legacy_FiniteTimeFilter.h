@@ -50,6 +50,8 @@ namespace rxtd::audio_analyzer {
 
 		index samplesPerSec{ };
 
+		const SoundHandler* source = nullptr;
+		
 		// pastValues[Layer][FilterSize][Band]
 		std::vector<utils::Vector2D<float>> pastValues;
 		utils::Vector2D<float> values;
@@ -58,7 +60,6 @@ namespace rxtd::audio_analyzer {
 		double smoothingNormConstant{ };
 
 		bool changed = true;
-		const SoundHandler* source = nullptr;
 
 	public:
 		static std::optional<Params> parseParams(const OptionMap& optionMap, Logger& cl);
@@ -69,7 +70,7 @@ namespace rxtd::audio_analyzer {
 		void reset() override;
 
 		void _process(const DataSupplier& dataSupplier) override;
-		void _finish(const DataSupplier& dataSupplier) override;
+		void _finish() override;
 
 		array_view<float> getData(index layer) const override {
 			if (params.smoothingFactor <= 1) {

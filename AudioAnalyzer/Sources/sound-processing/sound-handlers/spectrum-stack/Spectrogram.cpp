@@ -249,7 +249,7 @@ void Spectrogram::_process(const DataSupplier& dataSupplier) {
 	}
 }
 
-void Spectrogram::_finish(const DataSupplier& dataSupplier) {
+void Spectrogram::_finish() {
 	if (!changed) {
 		return;
 	}

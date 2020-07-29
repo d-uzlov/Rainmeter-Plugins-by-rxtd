@@ -98,11 +98,9 @@ void WeightedBlur::setParams(const Params& _params, Channel channel) {
 }
 
 void WeightedBlur::_process(const DataSupplier& dataSupplier) {
-	changed = true;
-}
-
-void WeightedBlur::_finish(const DataSupplier& dataSupplier) {
-	if (!changed) {
+	const BandResampler* resamplerPtr = getResampler(dataSupplier);
+	if (resamplerPtr == nullptr) {
+		setValid(false);
 		return;
 	}
 
@@ -112,7 +110,15 @@ void WeightedBlur::_finish(const DataSupplier& dataSupplier) {
 		return;
 	}
 
-	blurData(dataSupplier);
+	changed = true;
+}
+
+void WeightedBlur::_finish() {
+	if (!changed) {
+		return;
+	}
+
+	blurData();
 	changed = false;
 }
 
@@ -132,13 +138,7 @@ void WeightedBlur::reset() {
 	changed = true;
 }
 
-void WeightedBlur::blurData(const DataSupplier& dataSupplier) {
-	const BandResampler* resamplerPtr = getResampler(dataSupplier);
-	if (resamplerPtr == nullptr) {
-		setValid(false);
-		return;
-	}
-
+void WeightedBlur::blurData() {
 	const BandResampler& resampler = *resamplerPtr;
 	blurredValues.resize(source->getLayersCount());
 

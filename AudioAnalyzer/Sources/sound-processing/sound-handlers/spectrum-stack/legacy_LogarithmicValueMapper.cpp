@@ -46,12 +46,18 @@ void legacy_LogarithmicValueMapper::setParams(const Params& _params, Channel cha
 }
 
 void legacy_LogarithmicValueMapper::_process(const DataSupplier& dataSupplier) {
+	source = dataSupplier.getHandler(params.sourceId);
+	if (source == nullptr) {
+		setValid(false);
+		return;
+	}
+
 	changed = true;
 }
 
-void legacy_LogarithmicValueMapper::_finish(const DataSupplier& dataSupplier) {
+void legacy_LogarithmicValueMapper::_finish() {
 	if (changed) {
-		updateValues(dataSupplier);
+		updateValues();
 		changed = false;
 	}
 }
@@ -64,14 +70,8 @@ void legacy_LogarithmicValueMapper::reset() {
 	changed = true;
 }
 
-
-void legacy_LogarithmicValueMapper::updateValues(const DataSupplier& dataSupplier) {
+void legacy_LogarithmicValueMapper::updateValues() {
 	setValid(false);
-
-	const auto source = dataSupplier.getHandler(params.sourceId);
-	if (source == nullptr) {
-		return;
-	}
 
 	transformToLog(*source);
 

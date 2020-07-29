@@ -212,7 +212,7 @@ void WaveForm::_process(const DataSupplier& dataSupplier) {
 	}
 }
 
-void WaveForm::_finish(const DataSupplier& dataSupplier) {
+void WaveForm::_finish() {
 	if (changed) {
 		const bool forced = !drawer.isEmpty();
 		if (forced || !writerHelper.isEmptinessWritten()) {

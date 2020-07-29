@@ -13,12 +13,11 @@
 
 namespace rxtd::audio_analyzer {
 	class AudioChildHelper {
-		std::map<Channel, ChannelData>* channels;
-		DataSupplierImpl* dataSupplier;
+		const std::map<Channel, ChannelData>* channels;
 
 	public:
 		AudioChildHelper() = default;
-		explicit AudioChildHelper(std::map<Channel, ChannelData>& channels, DataSupplierImpl& dataSupplier);
+		explicit AudioChildHelper(const std::map<Channel, ChannelData>& channels);
 
 		SoundHandler* findHandler(Channel channel, isview handlerId) const;
 		double getValue(Channel channel, isview handlerId, index index) const;

@@ -61,7 +61,7 @@ namespace rxtd::audio_analyzer {
 			}
 		}
 
-		std::pair<SoundHandler*, const AudioChildHelper*> findHandlerByName(isview name, Channel channel) const;
+		std::pair<SoundHandler*, AudioChildHelper> findHandlerByName(isview name, Channel channel) const;
 
 		void legacy_resolve(array_view<isview> args, string& resolveBufferString);
 

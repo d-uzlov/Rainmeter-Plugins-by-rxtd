@@ -32,7 +32,10 @@ namespace rxtd::audio_analyzer {
 			HandlerPatcher patcher;
 		};
 
-		using HandlerPatcherMap = std::map<istring, HandlerInfo, std::less<>>;
+		struct HandlerPatcherInfo {
+			std::map<istring, HandlerInfo, std::less<>> map;
+			std::vector<istring> order;
+		};
 
 		struct ProcessingData {
 			index targetRate{ };
@@ -40,7 +43,7 @@ namespace rxtd::audio_analyzer {
 			string rawFccDescription;
 			audio_utils::FilterCascadeCreator fcc;
 			std::set<Channel> channels;
-			HandlerPatcherMap handlerInfo;
+			HandlerPatcherInfo handlersInfo;
 		};
 
 		using ProcessingsInfoMap = std::map<istring, ProcessingData, std::less<>>;
@@ -76,13 +79,13 @@ namespace rxtd::audio_analyzer {
 
 		void parseProcessing(sview name, Logger cl, ProcessingData& oldHandlers) const;
 		std::set<Channel> parseChannels(const utils::OptionList& channelsStringList, Logger& logger) const;
-		HandlerPatcherMap parseHandlers(const utils::OptionList& indices, HandlerPatcherMap oldHandlers) const;
+		HandlerPatcherInfo parseHandlers(const utils::OptionList& indices, HandlerPatcherInfo oldHandlers) const;
 
-		bool parseHandler(sview name, const HandlerPatcherMap& prevHandlers, HandlerInfo& handler) const;
+		bool parseHandler(sview name, const HandlerPatcherInfo& prevHandlers, HandlerInfo& handler) const;
 		HandlerPatcher getHandlerPatcher(
 			const utils::OptionMap& optionMap,
 			Logger& cl,
-			const HandlerPatcherMap& prevHandlers
+			const HandlerPatcherInfo& prevHandlers
 		) const;
 
 		void readRawDescription2(isview type, const utils::OptionMap& optionMap, string& rawDescription2) const;

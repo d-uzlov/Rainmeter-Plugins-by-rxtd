@@ -45,12 +45,12 @@ namespace rxtd::audio_analyzer {
 			_process(dataSupplier);
 		}
 
-		void finish(const DataSupplier& dataSupplier) {
+		void finish() {
 			if (!valid) {
 				return;
 			}
 
-			_finish(dataSupplier);
+			_finish();
 		}
 
 		virtual bool isValid() const {
@@ -84,7 +84,7 @@ namespace rxtd::audio_analyzer {
 		virtual void _process(const DataSupplier& dataSupplier) = 0;
 
 		// Method can be called several times in a row, handler should check for changes for optimal performance
-		virtual void _finish(const DataSupplier& dataSupplier) { }
+		virtual void _finish() { }
 
 		static index legacy_parseIndexProp(const isview& request, const isview& propName, index endBound) {
 			return legacy_parseIndexProp(request, propName, 0, endBound);
