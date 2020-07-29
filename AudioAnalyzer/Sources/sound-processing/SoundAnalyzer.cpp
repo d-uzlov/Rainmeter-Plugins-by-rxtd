@@ -37,8 +37,10 @@ AudioChildHelper SoundAnalyzer::getAudioChildHelper() const {
 	return AudioChildHelper{ channels };
 }
 
-void SoundAnalyzer::setHandlers(std::set<Channel> channelSetRequested,
-                                ParamParser::HandlerPatcherInfo handlerPatchers) {
+void SoundAnalyzer::setHandlers(
+	std::set<Channel> channelSetRequested,
+	ParamParser::HandlerPatcherInfo handlerPatchers
+) {
 	this->channelSetRequested = std::move(channelSetRequested);
 	this->handlerPatchers = std::move(handlerPatchers);
 
@@ -73,8 +75,17 @@ void SoundAnalyzer::process(const ChannelMixer& mixer, double killTimeoutMs) {
 
 			for (auto& name : handlerPatchers.order) {
 				auto& handler = channelData[name];
-				handler->process(dataSupplier);
+				if (!handler.wasValid) {
+					continue;
+				}
+
+				handler.ptr->process(dataSupplier);
 				dataSupplier.resetBuffers();
+
+				handler.wasValid = handler.ptr->isValid();
+				if (!handler.wasValid) {
+					logger.error(L"handler '{}' was invalidated", name);
+				}
 
 				if (clock::now() > killTime) {
 					logger.error(L"handler processing is killed on timeout");
@@ -90,8 +101,12 @@ void SoundAnalyzer::finishStandalone() noexcept {
 	for (auto& [channel, channelData] : channels) {
 		for (auto& name : handlerPatchers.order) {
 			auto& handler = channelData[name];
-			if (handler->isStandalone()) {
-				handler->finish();
+			if (handler.wasValid && handler.ptr->isStandalone()) {
+				handler.ptr->finish();
+				handler.wasValid = handler.ptr->isValid();
+				if (!handler.wasValid) {
+					logger.error(L"handler '{}' was invalidated", name);
+				}
 			}
 		}
 	}
@@ -101,7 +116,7 @@ void SoundAnalyzer::resetValues() noexcept {
 	for (auto& [channel, channelData] : channels) {
 		for (auto& [name, handler] : channelData) {
 			// order is not important
-			handler->reset();
+			handler.ptr->reset();
 		}
 	}
 }
@@ -110,7 +125,8 @@ void SoundAnalyzer::updateHandlerSampleRate() noexcept {
 	for (auto& [channel, channelData] : channels) {
 		for (auto& [name, handler] : channelData) {
 			// order is not important
-			handler->setSamplesPerSec(cph.getResampler().getSampleRate());
+			handler.ptr->setSamplesPerSec(cph.getResampler().getSampleRate());
+			handler.wasValid = handler.ptr->isValid();
 		}
 	}
 }
@@ -147,15 +163,16 @@ void SoundAnalyzer::patchHandlers() {
 		ChannelData newData;
 
 		for (auto& [handlerName, info] : handlerPatchers.map) {
-			auto& handlerPtr = channelData[handlerName];
+			auto& handlerInfo = channelData[handlerName];
 			auto& patcher = info.patcher;
 
-			SoundHandler* res = patcher(handlerPtr.get(), channel);
-			if (res != handlerPtr.get()) {
-				handlerPtr = std::unique_ptr<SoundHandler>(res);
+			SoundHandler* res = patcher(handlerInfo.ptr.get(), channel);
+			if (res != handlerInfo.ptr.get()) {
+				handlerInfo.ptr = std::unique_ptr<SoundHandler>(res);
 			}
 
-			newData[handlerName] = std::move(handlerPtr);
+			handlerInfo.wasValid = true;
+			newData[handlerName] = std::move(handlerInfo);
 		}
 
 		channelData = std::move(newData);

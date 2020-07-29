@@ -28,7 +28,7 @@ const SoundHandler* DataSupplierImpl::getHandlerRaw(isview id) const {
 	if (iter == channelData->end()) {
 		return nullptr;
 	}
-	auto handler = iter->second.get();
+	auto handler = iter->second.ptr.get();
 	handler->finish(); // endless loop is impossible because of "source" checking in ParamParser
 
 	if (!handler->isValid()) {
