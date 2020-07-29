@@ -53,6 +53,7 @@ namespace rxtd::audio_analyzer {
 		bool unusedOptionsWarning = true;
 		index defaultTargetRate = 44100;
 		ProcessingsInfoMap parseResult;
+		mutable bool anythingChanged = false;
 
 	public:
 		ParamParser() = default;
@@ -72,6 +73,10 @@ namespace rxtd::audio_analyzer {
 
 		const ProcessingsInfoMap& getParseResult() const {
 			return parseResult;
+		}
+
+		bool isAnythingChanged() const {
+			return anythingChanged;
 		}
 
 	private:

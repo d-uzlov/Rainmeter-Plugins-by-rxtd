@@ -88,7 +88,9 @@ void AudioParent::_reload() {
 
 	paramParser.parse();
 
-	patchSA(paramParser.getParseResult());
+	if (paramParser.isAnythingChanged()) {
+		patchSA(paramParser.getParseResult());
+	}
 }
 
 double AudioParent::_update() {

@@ -35,26 +35,26 @@ using namespace std::literals::string_view_literals;
 using namespace audio_analyzer;
 
 void ParamParser::parse() {
-	ProcessingsInfoMap result;
+	anythingChanged = false;
 
 	auto& logger = rain.getLogger();
 
-	auto targetRate = rain.read(L"TargetRate").asInt(44100);
-	if (targetRate < 0) {
-		logger.warning(L"Invalid TargetRate {}, must be > 0. Assume 0.", targetRate);
-		targetRate = 0;
+	auto defaultTargetRate = rain.read(L"TargetRate").asInt(44100);
+	if (defaultTargetRate < 0) {
+		logger.warning(L"Invalid TargetRate {}, must be > 0. Assume 0.", defaultTargetRate);
+		defaultTargetRate = 0;
 	}
 
 	unusedOptionsWarning = rain.read(L"UnusedOptionsWarning").asBool(true);
-	defaultTargetRate = targetRate;
 
 	auto processingIndices = rain.read(L"Processing").asList(L'|');
 	if (!checkListUnique(processingIndices)) {
 		rain.getLogger().error(L"Found repeating processings, aborting");
+		anythingChanged = true;
 		parseResult = { };
 	}
 
-
+	ProcessingsInfoMap result;
 	for (const auto& nameOption : processingIndices) {
 		const auto name = nameOption.asIString() % own();
 
@@ -78,6 +78,7 @@ void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldHand
 	if (processingDescriptionOption.empty()) {
 		cl.error(L"processing description not found");
 		oldHandlers = { };
+		anythingChanged = true;
 		return;
 	}
 
@@ -87,9 +88,14 @@ void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldHand
 	if (channelsList.empty()) {
 		cl.error(L"channels not found");
 		oldHandlers.channels = { };
+		anythingChanged = true;
 		return;
 	}
-	oldHandlers.channels = parseChannels(channelsList, cl);
+	auto channels = parseChannels(channelsList, cl);
+	if (channels != oldHandlers.channels) {
+		anythingChanged = true;
+	}
+	oldHandlers.channels = std::move(channels);
 	if (oldHandlers.channels.empty()) {
 		cl.error(L"no valid channels found");
 		return;
@@ -99,6 +105,7 @@ void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldHand
 	if (handlersOption.empty()) {
 		cl.error(L"handlers not found");
 		oldHandlers.handlersInfo = { };
+		anythingChanged = true;
 		return;
 	}
 
@@ -106,20 +113,28 @@ void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldHand
 	if (!checkListUnique(handlersList)) {
 		cl.error(L"found repeating handlers, invalidate processing");
 		oldHandlers.handlersInfo = { };
+		anythingChanged = true;
 		return;
 	}
 
 	oldHandlers.handlersInfo = parseHandlers(handlersList, std::move(oldHandlers.handlersInfo));
 	if (oldHandlers.handlersInfo.map.empty()) {
 		cl.warning(L"no valid handlers found");
+		anythingChanged = true;
 		return;
 	}
 
-	oldHandlers.targetRate = std::max<index>(processingMap.get(L"targetRate").asInt(defaultTargetRate), 0);
-	oldHandlers.granularity = std::max(processingMap.get(L"granularity").asFloat(10.0), 1.0) / 1000.0;
+	const auto targetRate = std::max<index>(processingMap.get(L"targetRate").asInt(defaultTargetRate), 0);
+	const auto granularity = std::max(processingMap.get(L"granularity").asFloat(10.0), 1.0) / 1000.0;
+	if (targetRate != oldHandlers.targetRate || granularity != oldHandlers.granularity) {
+		anythingChanged = true;
+	}
+	oldHandlers.targetRate = targetRate;
+	oldHandlers.granularity = granularity;
 
 	auto filterDescription = processingMap.get(L"filter");
 	if (filterDescription.asString() != oldHandlers.rawFccDescription) {
+		anythingChanged = true;
 		oldHandlers.rawFccDescription = filterDescription.asString();
 
 		if (filterDescription.asIString(L"none") == L"none") {
@@ -212,6 +227,7 @@ bool ParamParser::parseHandler(sview name, const HandlerPatcherInfo& prevHandler
 	if (handler.rawDescription == descriptionOption.asString() && handler.rawDescription2 == rawDescription2) {
 		return true;
 	}
+	anythingChanged = true;
 
 	handler.patcher = getHandlerPatcher(optionMap, cl, prevHandlers);
 	if (handler.patcher == nullptr) {
