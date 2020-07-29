@@ -52,12 +52,12 @@ void BlockHandler::setNextValue(double value) {
 	result = params.transformer.apply(float(value));
 }
 
-void BlockHandler::setParams(Params _params, Channel channel) {
+void BlockHandler::setParams(const Params& _params, Channel channel) {
 	if (params == _params) {
 		return;
 	}
 
-	params = std::move(_params);
+	params = _params;
 
 	recalculateConstants();
 

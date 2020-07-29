@@ -91,8 +91,8 @@ std::vector<double> WeightedBlur::GaussianCoefficientsManager::generateGaussianK
 	return kernel;
 }
 
-void WeightedBlur::setParams(Params _params, Channel channel) {
-	params = std::move(_params);
+void WeightedBlur::setParams(const Params& _params, Channel channel) {
+	params = _params;
 	setResamplerID(params.sourceId);
 	setValid(true);
 }

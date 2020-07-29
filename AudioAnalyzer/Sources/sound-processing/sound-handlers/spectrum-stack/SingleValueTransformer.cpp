@@ -33,12 +33,12 @@ SingleValueTransformer::parseParams(const OptionMap& optionMap, Logger& cl) {
 	return params;
 }
 
-void SingleValueTransformer::setParams(Params _params, Channel channel) {
+void SingleValueTransformer::setParams(const Params& _params, Channel channel) {
 	if (params == _params) {
 		return;
 	}
 
-	params = std::move(_params);
+	params = _params;
 	params.transformer.setParams(samplesPerSec, 1);
 
 	setResamplerID(params.sourceId);

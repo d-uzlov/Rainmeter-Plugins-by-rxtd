@@ -44,22 +44,21 @@ Spectrogram::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter
 
 	params.resolution = optionMap.get(L"resolution"sv).asFloat(50);
 	if (params.resolution <= 0) {
-		cl.warning(L"resolution must be > 0 but {} found. Assume 100", params.resolution);
+		cl.warning(L"resolution must be > 0 but {} found. Assume 50", params.resolution);
 		params.resolution = 100;
 	}
 	params.resolution *= 0.001;
 
-	params.folder = utils::FileWrapper::getAbsolutePath(
+	params.prefix = utils::FileWrapper::getAbsolutePath(
 		optionMap.get(L"folder"sv).asString() % own(),
 		rain.replaceVariables(L"[#CURRENTPATH]") % own()
 	);
+	params.prefix += L"spectrogram-";
 
 	if (optionMap.has(L"colors"sv)) {
 		auto colorsDescriptionList = optionMap.get(L"colors"sv).asList(L';');
 
 		float prevValue = -std::numeric_limits<float>::infinity();
-
-		bool colorsAreBroken = false;
 
 		params.colorMinValue = std::numeric_limits<float>::infinity();
 		params.colorMaxValue = -std::numeric_limits<float>::infinity();
@@ -70,12 +69,11 @@ Spectrogram::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter
 			float value = valueOpt.asFloatF();
 
 			if (value <= prevValue) {
-				cl.error(L"Colors: values {} and {}: values must be increasing", prevValue, value);
-				colorsAreBroken = true;
-				break;
+				cl.error(L"colors: values {} and {}: values must be increasing", prevValue, value);
+				return std::nullopt;
 			}
 			if (value / prevValue < 1.001f && value - prevValue < 0.001f) {
-				cl.error(L"Colors: values {} and {} are too close, discarding second one", prevValue, value);
+				cl.error(L"colors: values {} and {} are too close, discarding second one", prevValue, value);
 				continue;
 			}
 
@@ -90,23 +88,14 @@ Spectrogram::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter
 			params.colorMaxValue = std::max(params.colorMaxValue, value);
 		}
 
-		if (!colorsAreBroken && params.colors.size() < 2) {
-			cl.error(L"Not enough colors found: {}", params.colors.size());
+		if (params.colors.size() < 2) {
+			cl.error(L"need at least 2 colors but {} found", params.colors.size());
 			params.colors = { };
-		}
-
-		if (params.colors.size() == 2) {
-			// optimize for 2-colors case
-			params.baseColor = params.colors[0].color;
-			params.maxColor = params.colors[1].color;
-			params.colors = { };
-		} else {
-			// base color is used for background
-			params.baseColor = params.colors[0].color;
 		}
 	} else {
-		params.baseColor = optionMap.get(L"baseColor"sv).asColor({ 0, 0, 0, 1 });
-		params.maxColor = optionMap.get(L"maxColor"sv).asColor({ 1, 1, 1, 1 });
+		params.colors.resize(2);
+		params.colors[0].color = optionMap.get(L"baseColor"sv).asColor({ 0, 0, 0, 1 }).toIntColor();
+		params.colors[1].color = optionMap.get(L"maxColor"sv).asColor({ 1, 1, 1, 1 }).toIntColor();
 		params.colorMinValue = 0.0f;
 		params.colorMaxValue = 1.0f;
 	}
@@ -129,33 +118,27 @@ void Spectrogram::setParams(const Params& _params, Channel channel) {
 
 	params = _params;
 
-	filepath = params.folder;
-	filepath += L"spectrogram-";
+	filepath = params.prefix;
 	filepath += channel.technicalName();
 	filepath += L".bmp"sv;
 
-	image.setBackground(params.baseColor.toIntColor());
+	image.setBackground(params.colors[0].color);
 	image.setWidth(params.length);
 	image.setStationary(params.stationary);
 
 	sifh.setBorderSize(params.borderSize);
-	if (params.colors.empty()) {
-		sifh.setColors(params.baseColor, params.borderColor);
-	} else {
-		// TODO
-		sifh.setColors(params.colors[0].color, params.borderColor);
-	}
+	sifh.setColors(params.colors[0].color, params.borderColor);
 	sifh.setFading(params.fading);
 
 	updateParams();
 }
 
-void Spectrogram::setSamplesPerSec(index samplesPerSec) {
-	if (this->samplesPerSec == samplesPerSec) {
+void Spectrogram::setSamplesPerSec(index value) {
+	if (samplesPerSec == value) {
 		return;
 	}
 
-	this->samplesPerSec = samplesPerSec;
+	samplesPerSec = value;
 
 	updateParams();
 }
@@ -179,15 +162,14 @@ void Spectrogram::updateParams() {
 
 void Spectrogram::fillStrip(array_view<float> data, array_span<utils::IntColor> buffer) const {
 	utils::LinearInterpolatorF interpolator{ params.colorMinValue, params.colorMaxValue, 0.0, 1.0 };
-	utils::IntColor baseColor = params.baseColor.toIntColor();
-	utils::IntColor maxColor = params.maxColor.toIntColor();
+	utils::IntColor baseColor = params.colors[0].color;
+	utils::IntColor maxColor = params.colors[1].color;
 
 	for (index i = 0; i < index(buffer.size()); ++i) {
 		auto value = interpolator.toValue(data[i]);
 		value = std::clamp(value, 0.0f, 1.0f);
-		utils::IntMixer mixer{ value };
 
-		// auto color = params.baseColor * (1.0f - value) + params.maxColor * value;
+		utils::IntMixer mixer{ value };
 		buffer[i] = maxColor.mixWith(baseColor, mixer);
 	}
 }
@@ -211,8 +193,8 @@ void Spectrogram::fillStripMulticolor(array_view<float> data, array_span<utils::
 		const auto highColor = params.colors[lowColorIndex + 1].color;
 
 		const float percentValue = (value - lowColorValue) * intervalCoef;
-		
-		utils::IntMixer mixer { percentValue };
+
+		utils::IntMixer mixer{ percentValue };
 		buffer[i] = highColor.mixWith(lowColor, mixer);
 	}
 }
@@ -250,9 +232,9 @@ void Spectrogram::_process(const DataSupplier& dataSupplier) {
 		changed = true;
 
 		if (dataIsZero) {
-			image.pushEmptyStrip(params.baseColor.toIntColor());
+			image.pushEmptyStrip(params.colors[0].color);
 		} else {
-			if (params.colors.empty()) {
+			if (params.colors.size() == 2) {
 				// only use 2 colors
 				fillStrip(data, stripBuffer);
 			} else {
@@ -273,7 +255,7 @@ void Spectrogram::_finish(const DataSupplier& dataSupplier) {
 	}
 
 	if (params.fading != 0.0) {
-		if (!writerHelper.isEmptinessWritten()) {
+		if (image.isForced() || !writerHelper.isEmptinessWritten()) {
 			sifh.setPastLastStripIndex(image.getPastLastStripIndex());
 			sifh.inflate(image.getPixels());
 		}

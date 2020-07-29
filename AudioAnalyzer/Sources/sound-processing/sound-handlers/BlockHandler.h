@@ -53,7 +53,7 @@ namespace rxtd::audio_analyzer {
 		float result = 0.0;
 
 	public:
-		void setParams(Params params, Channel channel);
+		void setParams(const Params& params, Channel channel);
 
 		void setSamplesPerSec(index samplesPerSec) final;
 		void reset() final;

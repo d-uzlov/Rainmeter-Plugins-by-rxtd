@@ -26,9 +26,7 @@ namespace rxtd::audio_analyzer {
 			index length{ };
 			index borderSize{ };
 			istring sourceName{ };
-			string folder = { };
-			utils::Color baseColor{ };
-			utils::Color maxColor{ };
+			string prefix = { };
 			utils::Color borderColor{ };
 			double fading { };
 
@@ -59,9 +57,7 @@ namespace rxtd::audio_analyzer {
 					&& lhs.length == rhs.length
 					&& lhs.borderSize == rhs.borderSize
 					&& lhs.sourceName == rhs.sourceName
-					&& lhs.folder == rhs.folder
-					&& lhs.baseColor == rhs.baseColor
-					&& lhs.maxColor == rhs.maxColor
+					&& lhs.prefix == rhs.prefix
 					&& lhs.borderColor == rhs.borderColor
 					&& lhs.fading == rhs.fading
 					&& lhs.colorLevels == rhs.colorLevels
@@ -98,7 +94,7 @@ namespace rxtd::audio_analyzer {
 
 		static std::optional<Params> parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain);
 
-		void setSamplesPerSec(index samplesPerSec) override;
+		void setSamplesPerSec(index value) override;
 
 		void reset() override {
 		}

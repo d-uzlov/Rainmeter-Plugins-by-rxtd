@@ -75,7 +75,7 @@ namespace rxtd::audio_analyzer {
 			utils::Rainmeter& rain
 		);
 
-		void setParams(Params _params, Channel channel);
+		void setParams(const Params& params, Channel channel);
 
 		void setSamplesPerSec(index value) override;
 		void reset() override;

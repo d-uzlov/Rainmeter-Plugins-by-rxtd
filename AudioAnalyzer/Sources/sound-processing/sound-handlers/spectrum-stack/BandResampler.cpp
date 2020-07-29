@@ -59,12 +59,12 @@ BandResampler::parseParams(const OptionMap& optionMap, Logger& cl, Rainmeter& ra
 	return params;
 }
 
-void BandResampler::setParams(Params _params, Channel channel) {
+void BandResampler::setParams(const Params& _params, Channel channel) {
 	if (params == _params) {
 		return;
 	}
 
-	params = std::move(_params);
+	params = _params;
 
 	setValid(false);
 

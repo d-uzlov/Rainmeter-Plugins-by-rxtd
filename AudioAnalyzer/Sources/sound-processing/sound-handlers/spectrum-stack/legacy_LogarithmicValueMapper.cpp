@@ -37,8 +37,8 @@ legacy_LogarithmicValueMapper::parseParams(const OptionMap& optionMap, Logger& c
 	return params;
 }
 
-void legacy_LogarithmicValueMapper::setParams(Params _params, Channel channel) {
-	this->params = std::move(_params);
+void legacy_LogarithmicValueMapper::setParams(const Params& _params, Channel channel) {
+	params = _params;
 
 	logNormalization = 20.0 / params.sensitivity;
 

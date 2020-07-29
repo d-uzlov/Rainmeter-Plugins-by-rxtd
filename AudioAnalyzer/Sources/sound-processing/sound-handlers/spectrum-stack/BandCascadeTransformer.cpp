@@ -59,12 +59,12 @@ BandCascadeTransformer::parseParams(const OptionMap& optionMap, Logger& cl) {
 	return params;
 }
 
-void BandCascadeTransformer::setParams(Params _params, Channel channel) {
-	if (this->params == _params) {
+void BandCascadeTransformer::setParams(const Params& _params, Channel channel) {
+	if (params == _params) {
 		return;
 	}
 
-	this->params = std::move(_params);
+	params = _params;
 
 	analysisComputed = false;
 	setValid(true);

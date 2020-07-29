@@ -65,8 +65,8 @@ std::vector<double> UniformBlur::GaussianCoefficientsManager::generateGaussianKe
 	return kernel;
 }
 
-void UniformBlur::setParams(Params _params, Channel channel) {
-	params = std::move(_params);
+void UniformBlur::setParams(const Params& _params, Channel channel) {
+	params = _params;
 	setResamplerID(params.source);
 	setValid(true);
 }
