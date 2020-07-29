@@ -98,11 +98,11 @@ void WaveFormDrawer::inflateLine(index line, array_span<uint32_t> dest, IntColor
 	const index fadeWidth = index(realWidth * fading);
 	const index flatWidth = realWidth - fadeWidth;
 
-	IntMixer<> mixer;
-	const auto border = colors.border;
-
-	const double fadeDistanceStep = 1.0 / (realWidth * fading);
-	double fadeDistance = 1.0;
+	constexpr uint32_t halfPrecision = 8;
+	IntMixer<int_fast32_t, halfPrecision * 2> mixer;
+	
+	int_fast32_t fadeDistance = 1 << halfPrecision;
+	const int_fast32_t fadeDistanceStep = int_fast32_t(std::round(fadeDistance / (realWidth * fading)));
 
 	index fadeBeginIndex = minMaxBuffer.getPastLastStripIndex() + borderSize;
 	if (fadeBeginIndex >= width) {
@@ -113,7 +113,7 @@ void WaveFormDrawer::inflateLine(index line, array_span<uint32_t> dest, IntColor
 
 	if (flatBeginIndex >= width) {
 		for (index i = fadeBeginIndex; i < width; i++) {
-			mixer.setParams(fadeDistance * fadeDistance);
+			mixer.setFactorWarped(fadeDistance * fadeDistance);
 			auto sc = isWaveAt(i, line) ? colors.wave : backgroundColor;
 			sc.a = mixer.mix(backgroundColor.a, sc.a);
 			sc.r = mixer.mix(backgroundColor.r, sc.r);
@@ -129,7 +129,7 @@ void WaveFormDrawer::inflateLine(index line, array_span<uint32_t> dest, IntColor
 	}
 
 	for (index i = fadeBeginIndex; i < flatBeginIndex; i++) {
-		mixer.setParams(fadeDistance * fadeDistance);
+		mixer.setFactorWarped(fadeDistance * fadeDistance);
 		auto sc = isWaveAt(i, line) ? colors.wave : backgroundColor;
 		sc.a = mixer.mix(backgroundColor.a, sc.a);
 		sc.r = mixer.mix(backgroundColor.r, sc.r);
@@ -156,6 +156,7 @@ void WaveFormDrawer::inflateLine(index line, array_span<uint32_t> dest, IntColor
 		dest[i] = sc.full;
 	}
 
+	const auto border = colors.border;
 	index borderEndIndex = borderBeginIndex + borderSize;
 	if (borderEndIndex >= width) {
 		for (index i = borderBeginIndex; i < width; i++) {

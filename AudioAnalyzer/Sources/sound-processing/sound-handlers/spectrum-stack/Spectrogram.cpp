@@ -9,6 +9,8 @@
 
 #include "Spectrogram.h"
 #include <filesystem>
+
+#include "IntMixer.h"
 #include "windows-wrappers/FileWrapper.h"
 #include "option-parser/OptionMap.h"
 #include "option-parser/OptionList.h"
@@ -177,6 +179,8 @@ void Spectrogram::updateParams() {
 void Spectrogram::fillStrip(array_view<float> data) {
 	auto& strip = stripBuffer;
 	utils::LinearInterpolator interpolator{ params.colorMinValue, params.colorMaxValue, 0.0, 1.0 };
+	// utils::IntMixer mixer;
+	// mixer.setParams();
 
 	for (index i = 0; i < index(strip.size()); ++i) {
 		float value = data[i];

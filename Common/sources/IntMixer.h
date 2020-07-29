@@ -16,11 +16,16 @@ namespace rxtd::utils {
 		IntMixer() = default;
 
 		IntMixer(double factor) {
-			setParams(factor);
+			setFactor(factor);
 		}
 
-		void setParams(double factor) {
+		void setFactor(double factor) {
 			fi = MixType(factor * (1 << precision));
+		}
+
+		// range is from 0 to (1 << precision), which maps to [0.0, 1.0] in floating pointer
+		void setFactorWarped(MixType factor) {
+			fi = factor;
 		}
 
 		MixType mix(MixType v1, MixType v2) const {

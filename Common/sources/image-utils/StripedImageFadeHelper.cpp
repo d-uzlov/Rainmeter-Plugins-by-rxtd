@@ -59,7 +59,7 @@ void StripedImageFadeHelper::inflateLine(array_view<IntColor> source, array_span
 
 	if (flatBeginIndex >= width) {
 		for (index i = fadeBeginIndex; i < width; i++) {
-			mixer.setParams(fadeDistance * fadeDistance);
+			mixer.setFactor(fadeDistance * fadeDistance);
 			auto sc = source[i];
 			sc.a = mixer.mix(back.a, sc.a);
 			sc.r = mixer.mix(back.r, sc.r);
@@ -75,7 +75,7 @@ void StripedImageFadeHelper::inflateLine(array_view<IntColor> source, array_span
 	}
 
 	for (index i = fadeBeginIndex; i < flatBeginIndex; i++) {
-		mixer.setParams(fadeDistance * fadeDistance);
+		mixer.setFactor(fadeDistance * fadeDistance);
 		auto sc = source[i];
 		sc.a = mixer.mix(back.a, sc.a);
 		sc.r = mixer.mix(back.r, sc.r);
