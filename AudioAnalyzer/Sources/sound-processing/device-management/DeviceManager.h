@@ -18,6 +18,11 @@
 
 namespace rxtd::audio_analyzer {
 	class DeviceManager {
+		using clock = std::chrono::high_resolution_clock;
+		static_assert(clock::is_steady);
+
+		using Logger = utils::Rainmeter::Logger;
+
 	public:
 		enum class State {
 			// usual operating mode
@@ -32,31 +37,31 @@ namespace rxtd::audio_analyzer {
 		};
 
 	private:
-		using clock = std::chrono::high_resolution_clock;
-		static_assert(clock::is_steady);
-
 		State state = State::eERROR_MANUAL;
 
-		utils::Rainmeter::Logger& logger;
+		Logger logger;
 
-		DataSource source { };
-		utils::MediaDeviceType sourceType { };
-		string deviceID;
+		struct {
+			DataSource type{ };
+			string id;
+		} requestedDevice;
 
-		mutable utils::MediaDeviceWrapper audioDeviceHandle { };
+		utils::MediaDeviceType sourceDeviceType{ };
+
+		mutable utils::MediaDeviceWrapper audioDeviceHandle{ };
 
 		AudioEnumeratorHelper enumerator;
 		CaptureManager captureManager;
 
 		utils::MediaDeviceWrapper::DeviceInfo deviceInfo;
 
-		clock::time_point lastDevicePollTime { };
+		clock::time_point lastDevicePollTime{ };
 		static constexpr clock::duration DEVICE_POLL_TIMEOUT = std::chrono::milliseconds(250);
 
 		const std::function<void(MyWaveFormat waveFormat)> waveFormatUpdateCallback;
 
 	public:
-		DeviceManager(utils::Rainmeter::Logger& logger, std::function<void(MyWaveFormat waveFormat)> waveFormatUpdateCallback);
+		DeviceManager(Logger logger, std::function<void(MyWaveFormat waveFormat)> waveFormatUpdateCallback);
 
 		~DeviceManager();
 		/** This class is non copyable */
@@ -68,8 +73,17 @@ namespace rxtd::audio_analyzer {
 		utils::MediaDeviceType getCurrentDeviceType() const;
 		State getState() const;
 
+		void forceReconnect();
+
+		DataSource getRequesterSourceType() const {
+			return requestedDevice.type;
+		}
+
+		sview getRequestedSourceId() const {
+			return requestedDevice.id;
+		}
+
 		void setOptions(DataSource port, sview deviceID);
-		void deviceInit();
 
 		const utils::MediaDeviceWrapper::DeviceInfo& getDeviceInfo() const;
 		bool getDeviceStatus() const;
@@ -82,11 +96,7 @@ namespace rxtd::audio_analyzer {
 		const AudioEnumeratorHelper& getDeviceEnumerator() const;
 
 	private:
-		bool isDeviceChanged();
-
-		utils::MediaDeviceType determineDeviceType(DataSource source, const string& deviceID);
-
-		void readDeviceInfo();
+		void deviceInit();
 
 		void deviceRelease();
 	};

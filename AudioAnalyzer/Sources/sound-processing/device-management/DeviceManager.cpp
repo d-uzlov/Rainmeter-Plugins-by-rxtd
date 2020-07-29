@@ -11,17 +11,15 @@
 
 #include <utility>
 
-#include "undef.h"
-
-
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
 
-DeviceManager::DeviceManager(utils::Rainmeter::Logger& logger, std::function<void(MyWaveFormat waveFormat)> waveFormatUpdateCallback)
-	: logger(logger), enumerator(logger), waveFormatUpdateCallback(std::move(waveFormatUpdateCallback)) {
+DeviceManager::DeviceManager(Logger _logger, std::function<void(MyWaveFormat waveFormat)> waveFormatUpdateCallback)
+	: enumerator(_logger), waveFormatUpdateCallback(std::move(waveFormatUpdateCallback)) {
+	logger = std::move(_logger);
 	if (!enumerator.isValid()) {
 		state = State::eFATAL;
 		return;
@@ -45,40 +43,53 @@ void DeviceManager::deviceInit() {
 	state = State::eOK;
 
 	std::optional<utils::MediaDeviceWrapper> deviceOpt;
-	switch(source) {
+	switch (requestedDevice.type) {
 	case DataSource::eDEFAULT_INPUT:
 		deviceOpt = enumerator.getDefaultDevice(utils::MediaDeviceType::eINPUT);
+		if (!deviceOpt) {
+			logger.error(L"can't connect to default input device");
+			state = State::eERROR_MANUAL;
+			return;
+		}
 		break;
 
-	case DataSource::eDEFAULT_OUTPUT: 
+	case DataSource::eDEFAULT_OUTPUT:
 		deviceOpt = enumerator.getDefaultDevice(utils::MediaDeviceType::eOUTPUT);
+		if (!deviceOpt) {
+			logger.error(L"can't connect to default output device");
+			state = State::eERROR_MANUAL;
+			return;
+		}
 		break;
 
 	case DataSource::eID:
-		deviceOpt = enumerator.getDevice(deviceID);
+		deviceOpt = enumerator.getDevice(requestedDevice.id);
+		if (!deviceOpt) {
+			logger.error(L"can't connect to specified device '{}'", requestedDevice.id);
+			state = State::eERROR_MANUAL;
+			return;
+		}
 		break;
 	default: ;
 	}
 
-	if (!deviceOpt) {
-		deviceRelease();
-		return;
-	}
-
 	audioDeviceHandle = std::move(deviceOpt.value());
+	deviceInfo = audioDeviceHandle.readDeviceInfo();
+	sourceDeviceType = audioDeviceHandle.getType();
 
 	captureManager = CaptureManager{ logger, audioDeviceHandle };
 
 	if (!captureManager.isValid()) {
 		if (!captureManager.isRecoverable()) {
 			state = State::eFATAL;
+			logger.debug(L"device manager fatal");
+		} else {
+			logger.debug(L"device manager recoverable, but won't try this time");
 		}
 
 		deviceRelease();
 		return;
 	}
-
-	readDeviceInfo();
 
 	waveFormatUpdateCallback(captureManager.getWaveFormat());
 }
@@ -90,32 +101,28 @@ void DeviceManager::deviceRelease() {
 	state = State::eERROR_AUTO;
 }
 
-void DeviceManager::readDeviceInfo() {
-	deviceInfo = audioDeviceHandle.readDeviceInfo();
-}
-
 utils::MediaDeviceType DeviceManager::getCurrentDeviceType() const {
-	return sourceType;
+	return sourceDeviceType;
 }
 
 DeviceManager::State DeviceManager::getState() const {
 	return state;
 }
 
-void DeviceManager::setOptions(DataSource source, sview deviceID) {
-	// TODO this depends on function call order with deviceInit()
+void DeviceManager::forceReconnect() {
+	state = State::eERROR_AUTO;
+	deviceInit();
+}
 
-	if (this->deviceID == deviceID && this->source == source) {
+void DeviceManager::setOptions(DataSource source, sview deviceID) {
+	if (requestedDevice.id == deviceID && requestedDevice.type == source) {
 		return;
 	}
 
-	state = State::eERROR_AUTO;
+	requestedDevice.id = deviceID;
+	requestedDevice.type = source;
 
-	this->deviceID = deviceID;
-	this->source = source;
-	sourceType = determineDeviceType(source, this->deviceID);
-
-	deviceInit();
+	forceReconnect();
 }
 
 const utils::MediaDeviceWrapper::DeviceInfo& DeviceManager::getDeviceInfo() const {
@@ -131,17 +138,13 @@ void DeviceManager::checkAndRepair() {
 		return;
 	}
 
-	if (!captureManager.isRecoverable() || !enumerator.isValid()) {
+	if (!captureManager.isRecoverable()) {
 		state = State::eFATAL;
 		deviceRelease();
 		return;
 	}
 
 	if (!captureManager.isValid()) {
-		state = State::eERROR_AUTO;
-	}
-
-	if (isDeviceChanged()) {
 		state = State::eERROR_AUTO;
 	}
 
@@ -170,32 +173,4 @@ AudioEnumeratorHelper& DeviceManager::getDeviceEnumerator() {
 
 const AudioEnumeratorHelper& DeviceManager::getDeviceEnumerator() const {
 	return enumerator;
-}
-
-bool DeviceManager::isDeviceChanged() {
-	if (source == DataSource::eID) {
-		return false; // only default device can change
-	}
-
-	const auto defaultDeviceId = enumerator.getDefaultDeviceId(sourceType);
-
-	return defaultDeviceId != deviceInfo.id;
-}
-
-utils::MediaDeviceType DeviceManager::determineDeviceType(DataSource source, const string& deviceID) {
-	if (source == DataSource::eDEFAULT_INPUT) {
-		return utils::MediaDeviceType::eINPUT;
-	}
-	if (source == DataSource::eDEFAULT_OUTPUT) {
-		return utils::MediaDeviceType::eOUTPUT;
-	}
-
-	auto typeOpt = enumerator.getDeviceType(deviceID);
-	if (!typeOpt.has_value()) {
-		state = State::eERROR_MANUAL;
-		logger.error(L"Device with id '{}' not found", deviceID);
-		return { };
-	}
-
-	return typeOpt.value();
 }

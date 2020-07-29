@@ -15,8 +15,8 @@ using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
 
 namespace rxtd::audio_analyzer {
-	AudioEnumeratorHelper::AudioEnumeratorHelper(utils::Rainmeter::Logger& logger) :
-		logger(logger) {
+	AudioEnumeratorHelper::AudioEnumeratorHelper(utils::Rainmeter::Logger _logger) :
+		logger(std::move(_logger)) {
 
 		if (!enumeratorWrapper.isValid()) {
 			logger.error(L"Can't create device enumerator");
@@ -66,19 +66,9 @@ namespace rxtd::audio_analyzer {
 		return audioDeviceHandle;
 	}
 
-	string AudioEnumeratorHelper::getDefaultDeviceId(utils::MediaDeviceType type) {
-		utils::MediaDeviceWrapper audioDeviceHandle = enumeratorWrapper.getDefaultDevice(type);
-
-		if (!audioDeviceHandle.isValid()) {
-			return { };
-		}
-
-		return audioDeviceHandle.readDeviceId();
-	}
-
 	std::optional<utils::MediaDeviceType> AudioEnumeratorHelper::getDeviceType(const string& deviceID) {
 		if (outputDevicesIDs.find(deviceID) != outputDevicesIDs.end()) {
-			return utils::MediaDeviceType::eOUTPUT;
+			return utils::MediaDeviceType::eOUTPUT; // TODO read list here, to accomodate for new devices?
 		}
 		if (inputDevicesIDs.find(deviceID) != inputDevicesIDs.end()) {
 			return utils::MediaDeviceType::eINPUT;
@@ -96,19 +86,19 @@ namespace rxtd::audio_analyzer {
 	}
 
 	void AudioEnumeratorHelper::updateDeviceStrings() {
-		deviceStringInput = makeDeviceString(utils::MediaDeviceType::eINPUT);
-		deviceStringOutput = makeDeviceString(utils::MediaDeviceType::eOUTPUT);
+		makeDeviceString(utils::MediaDeviceType::eINPUT, deviceStringInput);
+		makeDeviceString(utils::MediaDeviceType::eOUTPUT, deviceStringOutput);
 	}
 
-	string AudioEnumeratorHelper::makeDeviceString(utils::MediaDeviceType type) {
+	void AudioEnumeratorHelper::makeDeviceString(utils::MediaDeviceType type, string& result) {
+		result.clear();
+
 		auto collection = enumeratorWrapper.getActiveDevices(type);
 		if (collection.empty()) {
-			logger.debug(L"No {} devices found", type == utils::MediaDeviceType::eINPUT ? L"input" : L"output");
-			return { };
+			return;
 		}
 
-		string result;
-		result.reserve(120 * collection.size());
+		result.reserve(collection.size() * 100);
 
 		for (auto& device : collection) {
 			const auto deviceInfo = device.readDeviceInfo();
@@ -122,19 +112,16 @@ namespace rxtd::audio_analyzer {
 		}
 
 		result.resize(result.size() - 1);
-
-		return result;
 	}
 
 	void AudioEnumeratorHelper::updateDeviceLists() {
-		inputDevicesIDs = readDeviceList(utils::MediaDeviceType::eINPUT);
-		outputDevicesIDs = readDeviceList(utils::MediaDeviceType::eOUTPUT);
+		inputDevicesIDs = readDeviceIdList(utils::MediaDeviceType::eINPUT);
+		outputDevicesIDs = readDeviceIdList(utils::MediaDeviceType::eOUTPUT);
 	}
 
-	std::set<string> AudioEnumeratorHelper::readDeviceList(utils::MediaDeviceType type) {
+	std::set<string> AudioEnumeratorHelper::readDeviceIdList(utils::MediaDeviceType type) {
 		auto collection = enumeratorWrapper.getAllDevices(type);
 		if (collection.empty()) {
-			logger.debug(L"No {} devices found", type == utils::MediaDeviceType::eINPUT ? L"input" : L"output");
 			return { };
 		}
 
@@ -154,7 +141,7 @@ namespace rxtd::audio_analyzer {
 			return;
 		}
 
-		deviceStringLegacy.reserve(collection.size() * 120);
+		deviceStringLegacy.reserve(collection.size() * 100);
 
 		for (auto& device : collection) {
 			const auto deviceInfo = device.readDeviceInfo();

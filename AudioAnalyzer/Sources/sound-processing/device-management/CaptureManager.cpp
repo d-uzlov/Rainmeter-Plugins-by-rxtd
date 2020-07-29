@@ -80,7 +80,7 @@ namespace rxtd::audio_analyzer {
 		return formatString;
 	}
 
-	bool CaptureManager::isEmpty() const {
+	bool CaptureManager::isEmpty() const { // TODO unused
 		return !audioCaptureClient.isValid() || !audioClient.isValid();
 	}
 
@@ -124,7 +124,6 @@ namespace rxtd::audio_analyzer {
 			case AUDCLNT_E_BUFFER_ERROR:
 			case AUDCLNT_E_DEVICE_INVALIDATED:
 			case AUDCLNT_E_SERVICE_NOT_RUNNING:
-				logger.debug(L"Audio device disconnected");
 				invalidate();
 				return;
 

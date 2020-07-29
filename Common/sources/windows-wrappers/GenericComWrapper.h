@@ -38,6 +38,10 @@ namespace rxtd::utils {
 		}
 
 		GenericComWrapper& operator=(GenericComWrapper&& other) noexcept {
+			if (this == &other) {
+				return *this;
+			}
+
 			release();
 
 			ptr = other.ptr;
@@ -52,6 +56,10 @@ namespace rxtd::utils {
 		}
 
 		GenericComWrapper& operator=(const GenericComWrapper& other) {
+			if (this == &other) {
+				return *this;
+			}
+
 			release();
 			ptr = other.ptr;
 			ptr->AddRef();

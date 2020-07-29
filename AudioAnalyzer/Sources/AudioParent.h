@@ -8,13 +8,13 @@
  */
 
 #pragma once
+
 #include "TypeHolder.h"
 #include "RainmeterWrappers.h"
 #include "sound-processing/SoundAnalyzer.h"
 #include "sound-processing/device-management/DeviceManager.h"
 #include "sound-processing/ChannelProcessingHelper.h"
 #include "windows-wrappers/IMMNotificationClientImpl.h"
-#include <mutex>
 
 namespace rxtd::audio_analyzer {
 	class AudioParent : public utils::ParentBase {
@@ -27,9 +27,7 @@ namespace rxtd::audio_analyzer {
 		double killTimeout = 0.0;
 		double finishTimeout = 0.0;
 
-		utils::GenericComWrapper<IMMNotificationClient> notificationClient;
-		std::mutex notificationClientMutex;
-		bool deviceListChanged = false;
+		utils::GenericComWrapper<utils::CMMNotificationClient> notificationClient;
 
 	public:
 		explicit AudioParent(utils::Rainmeter&& rain);
@@ -59,17 +57,5 @@ namespace rxtd::audio_analyzer {
 		std::pair<SoundHandler*, AudioChildHelper> findHandlerByName(isview name, Channel channel) const;
 
 		void legacy_resolve(array_view<isview> args, string& resolveBufferString);
-
-		void notificationCallback(sview deviceId) {
-			std::lock_guard<std::mutex> lock{ notificationClientMutex };
-			deviceListChanged = true;
-		}
-
-		bool notificationCheck() {
-			std::lock_guard<std::mutex> lock{ notificationClientMutex };
-			const auto result = deviceListChanged;
-			deviceListChanged = false;
-			return result;
-		}
 	};
 }

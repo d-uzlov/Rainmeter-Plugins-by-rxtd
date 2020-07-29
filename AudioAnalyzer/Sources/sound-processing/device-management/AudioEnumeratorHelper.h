@@ -14,16 +14,15 @@
 #include <set>
 #include "windows-wrappers/IMMDeviceEnumeratorWrapper.h"
 
-
 namespace rxtd::audio_analyzer {
 	class AudioEnumeratorHelper {
 		bool valid = true;
 
-		utils::Rainmeter::Logger& logger;
+		utils::Rainmeter::Logger logger;
 
 		utils::IMMDeviceEnumeratorWrapper enumeratorWrapper;
 
-		// IDs of all available devices
+		// IDs of all existing devices
 		std::set<string> inputDevicesIDs;
 		std::set<string> outputDevicesIDs;
 
@@ -33,19 +32,18 @@ namespace rxtd::audio_analyzer {
 		string deviceStringLegacy;
 
 	public:
-		AudioEnumeratorHelper(utils::Rainmeter::Logger& logger);
+		AudioEnumeratorHelper(utils::Rainmeter::Logger logger);
 
 		bool isValid() const;
 
 		std::optional<utils::MediaDeviceWrapper> getDevice(const string& deviceID);
 		std::optional<utils::MediaDeviceWrapper> getDefaultDevice(utils::MediaDeviceType type);
-		string getDefaultDeviceId(utils::MediaDeviceType type);
 
 		std::optional<utils::MediaDeviceType> getDeviceType(const string& deviceID);
 		const string& getDeviceListInput() const;
 		const string& getDeviceListOutput() const;
 		void updateDeviceStrings();
-		string makeDeviceString(utils::MediaDeviceType type);
+		void makeDeviceString(utils::MediaDeviceType type, string& result);
 
 		void updateDeviceStringLegacy(utils::MediaDeviceType type);
 		const string& getDeviceListLegacy() const {
@@ -57,6 +55,6 @@ namespace rxtd::audio_analyzer {
 		}
 	private:
 		void updateDeviceLists();
-		std::set<string> readDeviceList(utils::MediaDeviceType type);
+		std::set<string> readDeviceIdList(utils::MediaDeviceType type);
 	};
 }

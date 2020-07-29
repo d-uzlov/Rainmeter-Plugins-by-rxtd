@@ -32,12 +32,7 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 
 	notificationClient = {
 		[=](auto ptr) {
-			*ptr = new utils::CMMNotificationClient{
-				[=](sview id) {
-					notificationCallback(id);
-				},
-				deviceManager.getDeviceEnumerator().getWrapper()
-			};
+			*ptr = new utils::CMMNotificationClient{ deviceManager.getDeviceEnumerator().getWrapper() };
 			return true;
 		}
 	};
@@ -95,25 +90,24 @@ void AudioParent::_reload() {
 }
 
 double AudioParent::_update() {
-	const bool eventHappened = notificationCheck();
-	if (eventHappened) {
-		deviceManager.checkAndRepair();
+	const auto changes = notificationClient.getPointer()->takeChanges();
 
-		if (deviceManager.getState() == DeviceManager::State::eOK) {
-			deviceManager.getDeviceEnumerator().updateDeviceStrings();
-		}
+	const auto source = deviceManager.getRequesterSourceType();
+	if (source == DataSource::eDEFAULT_INPUT && changes.defaultCapture
+		|| source == DataSource::eDEFAULT_OUTPUT && changes.defaultRender) {
+		deviceManager.forceReconnect();
 	}
 
-	if (deviceManager.getState() != DeviceManager::State::eOK) {
-		if (deviceManager.getState() == DeviceManager::State::eFATAL) {
-			setMeasureState(utils::MeasureState::eBROKEN);
-			logger.error(L"Unrecoverable error");
+	if (!changes.devices.empty()) {
+		const auto requestedSourceId = deviceManager.getRequestedSourceId();
+		if (changes.devices.count(requestedSourceId) > 0) {
+			deviceManager.checkAndRepair();
 		}
 
-		for (auto& [name, sa] : saMap) {
-			sa.resetValues();
-		}
-	} else {
+		deviceManager.getDeviceEnumerator().updateDeviceStrings();
+	}
+
+	if (deviceManager.getState() == DeviceManager::State::eOK) {
 		deviceManager.getCaptureManager().capture([&](bool silent, array_view<std::byte> buffer) {
 			if (!silent) {
 				channelMixer.decomposeFramesIntoChannels(buffer, true);
@@ -123,6 +117,21 @@ double AudioParent::_update() {
 		});
 
 		process();
+	}
+
+	deviceManager.checkAndRepair();
+
+	if (deviceManager.getState() != DeviceManager::State::eOK) {
+		if (deviceManager.getState() == DeviceManager::State::eFATAL) {
+			setMeasureState(utils::MeasureState::eBROKEN);
+			logger.error(L"Unrecoverable error");
+		} else {
+			logger.warning(L"deviceManager error state");
+		}
+
+		for (auto& [name, sa] : saMap) {
+			sa.resetValues();
+		}
 	}
 
 	return deviceManager.getDeviceStatus();
