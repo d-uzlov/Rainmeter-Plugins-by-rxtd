@@ -34,7 +34,7 @@ namespace rxtd::audio_analyzer {
 
 			struct ColorDescription {
 				float widthInverted;
-				utils::Color color;
+				utils::IntColor color;
 
 				friend bool operator==(const ColorDescription& lhs, const ColorDescription& rhs) {
 					return lhs.widthInverted == rhs.widthInverted
@@ -122,7 +122,7 @@ namespace rxtd::audio_analyzer {
 
 	private:
 		void updateParams();
-		void fillStrip(array_view<float> data);
-		void fillStripMulticolor(array_view<float> data);
+		void fillStrip(array_view<float> data, array_span<utils::IntColor> buffer) const;
+		void fillStripMulticolor(array_view<float> data, array_span<utils::IntColor> buffer) const;
 	};
 }

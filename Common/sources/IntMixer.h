@@ -19,7 +19,15 @@ namespace rxtd::utils {
 			setFactor(factor);
 		}
 
+		IntMixer(float factor) {
+			setFactor(factor);
+		}
+
 		void setFactor(double factor) {
+			fi = MixType(factor * (1 << precision));
+		}
+
+		void setFactor(float factor) {
 			fi = MixType(factor * (1 << precision));
 		}
 

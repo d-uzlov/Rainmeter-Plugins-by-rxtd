@@ -114,12 +114,8 @@ void WaveFormDrawer::inflateLine(index line, array_span<uint32_t> dest, IntColor
 	if (flatBeginIndex >= width) {
 		for (index i = fadeBeginIndex; i < width; i++) {
 			mixer.setFactorWarped(fadeDistance * fadeDistance);
-			auto sc = isWaveAt(i, line) ? colors.wave : backgroundColor;
-			sc.a = mixer.mix(backgroundColor.a, sc.a);
-			sc.r = mixer.mix(backgroundColor.r, sc.r);
-			sc.g = mixer.mix(backgroundColor.g, sc.g);
-			sc.b = mixer.mix(backgroundColor.b, sc.b);
-			dest[i] = sc.full;
+			const auto sc = isWaveAt(i, line) ? colors.wave : backgroundColor;
+			dest[i] = backgroundColor.mixWith(sc, mixer).full;
 
 			fadeDistance -= fadeDistanceStep;
 		}
@@ -130,12 +126,8 @@ void WaveFormDrawer::inflateLine(index line, array_span<uint32_t> dest, IntColor
 
 	for (index i = fadeBeginIndex; i < flatBeginIndex; i++) {
 		mixer.setFactorWarped(fadeDistance * fadeDistance);
-		auto sc = isWaveAt(i, line) ? colors.wave : backgroundColor;
-		sc.a = mixer.mix(backgroundColor.a, sc.a);
-		sc.r = mixer.mix(backgroundColor.r, sc.r);
-		sc.g = mixer.mix(backgroundColor.g, sc.g);
-		sc.b = mixer.mix(backgroundColor.b, sc.b);
-		dest[i] = sc.full;
+		const auto sc = isWaveAt(i, line) ? colors.wave : backgroundColor;
+		dest[i] = backgroundColor.mixWith(sc, mixer).full;
 
 		fadeDistance -= fadeDistanceStep;
 	}

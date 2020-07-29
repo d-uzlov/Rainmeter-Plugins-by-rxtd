@@ -80,7 +80,7 @@ Spectrogram::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter
 			}
 
 			params.colorLevels.push_back(value);
-			params.colors.push_back(Params::ColorDescription{ 0.0f, colorOpt.asColor() });
+			params.colors.push_back(Params::ColorDescription{ 0.0f, colorOpt.asColor().toIntColor() });
 			if (i > 0) {
 				params.colors[i - 1].widthInverted = 1.0f / (value - prevValue);
 			}
@@ -141,7 +141,8 @@ void Spectrogram::setParams(const Params& _params, Channel channel) {
 	sifh.setBorderSize(params.borderSize);
 	if (params.colors.empty()) {
 		sifh.setColors(params.baseColor, params.borderColor);
-	} else { // TODO
+	} else {
+		// TODO
 		sifh.setColors(params.colors[0].color, params.borderColor);
 	}
 	sifh.setFading(params.fading);
@@ -176,48 +177,43 @@ void Spectrogram::updateParams() {
 	blockSize = index(samplesPerSec * params.resolution);
 }
 
-void Spectrogram::fillStrip(array_view<float> data) {
-	auto& strip = stripBuffer;
-	utils::LinearInterpolator interpolator{ params.colorMinValue, params.colorMaxValue, 0.0, 1.0 };
-	// utils::IntMixer mixer;
-	// mixer.setParams();
+void Spectrogram::fillStrip(array_view<float> data, array_span<utils::IntColor> buffer) const {
+	utils::LinearInterpolatorF interpolator{ params.colorMinValue, params.colorMaxValue, 0.0, 1.0 };
+	utils::IntColor baseColor = params.baseColor.toIntColor();
+	utils::IntColor maxColor = params.maxColor.toIntColor();
 
-	for (index i = 0; i < index(strip.size()); ++i) {
-		float value = data[i];
-		value = float(interpolator.toValue(value));
+	for (index i = 0; i < index(buffer.size()); ++i) {
+		auto value = interpolator.toValue(data[i]);
 		value = std::clamp(value, 0.0f, 1.0f);
+		utils::IntMixer mixer{ value };
 
-		auto color = params.baseColor * (1.0f - value) + params.maxColor * value;
-
-		strip[i] = color.toIntColor();
+		// auto color = params.baseColor * (1.0f - value) + params.maxColor * value;
+		buffer[i] = maxColor.mixWith(baseColor, mixer);
 	}
 }
 
-void Spectrogram::fillStripMulticolor(array_view<float> data) {
-	auto& strip = stripBuffer;
-
-	for (index i = 0; i < index(strip.size()); ++i) {
-		const float value = std::clamp(data[i], params.colorMinValue, params.colorMaxValue);
+void Spectrogram::fillStripMulticolor(array_view<float> data, array_span<utils::IntColor> buffer) const {
+	for (index i = 0; i < index(buffer.size()); ++i) {
+		const auto value = std::clamp(data[i], params.colorMinValue, params.colorMaxValue);
 
 		index lowColorIndex = 0;
 		for (index j = 1; j < index(params.colors.size()); j++) {
-			const float colorHighValue = params.colorLevels[j];
+			const auto colorHighValue = params.colorLevels[j];
 			if (value <= colorHighValue) {
 				lowColorIndex = j - 1;
 				break;
 			}
 		}
 
-		const float lowColorValue = params.colorLevels[lowColorIndex];
-		const float intervalCoef = params.colors[lowColorIndex].widthInverted;
+		const auto lowColorValue = params.colorLevels[lowColorIndex];
+		const auto intervalCoef = params.colors[lowColorIndex].widthInverted;
 		const auto lowColor = params.colors[lowColorIndex].color;
 		const auto highColor = params.colors[lowColorIndex + 1].color;
 
-		const float percentValue = (value - lowColorValue) * intervalCoef; // TODO int color?
-
-		const auto color = lowColor * (1.0f - percentValue) + highColor * percentValue;
-
-		strip[i] = color.toIntColor();
+		const float percentValue = (value - lowColorValue) * intervalCoef;
+		
+		utils::IntMixer mixer { percentValue };
+		buffer[i] = highColor.mixWith(lowColor, mixer);
 	}
 }
 
@@ -258,10 +254,10 @@ void Spectrogram::_process(const DataSupplier& dataSupplier) {
 		} else {
 			if (params.colors.empty()) {
 				// only use 2 colors
-				fillStrip(data);
+				fillStrip(data, stripBuffer);
 			} else {
 				// many colors, but slightly slower
-				fillStripMulticolor(data);
+				fillStripMulticolor(data, stripBuffer);
 			}
 
 			image.pushStrip(stripBuffer);
@@ -288,7 +284,9 @@ void Spectrogram::_finish(const DataSupplier& dataSupplier) {
 			sifh.drawBorderInPlace(image.getPixelsWritable());
 		}
 		auto pixels = image.getPixels();
-		utils::array2d_view<uint32_t> buffer { &(pixels[0].data()->full), pixels.getBuffersCount(), pixels.getBufferSize() };
+		utils::array2d_view<uint32_t> buffer{
+			&(pixels[0].data()->full), pixels.getBuffersCount(), pixels.getBufferSize()
+		};
 		writerHelper.write(buffer, !image.isForced(), filepath);
 	}
 

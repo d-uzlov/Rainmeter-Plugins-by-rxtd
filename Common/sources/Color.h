@@ -8,6 +8,7 @@
  */
 
 #pragma once
+#include "IntMixer.h"
 
 namespace rxtd::utils {
 	// TODO check endianness at compile time
@@ -20,6 +21,16 @@ namespace rxtd::utils {
 		};
 
 		uint32_t full;
+
+		template<typename MixType, uint8_t precision>
+		IntColor mixWith(IntColor other, IntMixer<MixType, precision> mixer) const {
+			IntColor result;
+			result.a = mixer.mix(a, other.a);
+			result.r = mixer.mix(r, other.r);
+			result.g = mixer.mix(g, other.g);
+			result.b = mixer.mix(b, other.b);
+			return result;
+		}
 
 		friend bool operator==(const IntColor& lhs, const IntColor& rhs) {
 			return lhs.full == rhs.full;
