@@ -9,8 +9,6 @@
 
 #include "SoundAnalyzer.h"
 
-#include "undef.h"
-
 using namespace audio_analyzer;
 
 void SoundAnalyzer::setLayout(ChannelLayout _layout) {
@@ -37,11 +35,7 @@ const AudioChildHelper& SoundAnalyzer::getAudioChildHelper() const {
 	return audioChildHelper;
 }
 
-void SoundAnalyzer::setHandlers(
-	std::set<Channel> channelSetRequested,
-	std::vector<ParamParser::HandlerInfo> handlerPatchers
-) {
-
+void SoundAnalyzer::setHandlers(std::set<Channel> channelSetRequested, ParamParser::HandlerPatcherMap handlerPatchers) {
 	this->channelSetRequested = std::move(channelSetRequested);
 	this->handlerPatchers = std::move(handlerPatchers);
 
@@ -134,8 +128,9 @@ void SoundAnalyzer::patchHandlers() {
 	for (auto& [channel, channelData] : channels) {
 		ChannelData newData;
 
-		for (auto& [handlerName, patcher] : handlerPatchers) {
+		for (auto& [handlerName, info] : handlerPatchers) {
 			auto& handlerPtr = channelData[handlerName];
+			auto& patcher = info.patcher;
 
 			SoundHandler* res = patcher(handlerPtr.get(), channel);
 			if (res != handlerPtr.get()) {

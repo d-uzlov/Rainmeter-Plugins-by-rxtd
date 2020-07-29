@@ -69,11 +69,7 @@ namespace rxtd::audio_analyzer {
 		bool changed = true;
 
 	public:
-		static std::optional<Params> parseParams(
-			const utils::OptionMap& optionMap,
-			utils::Rainmeter::Logger& cl,
-			utils::Rainmeter& rain
-		);
+		static std::optional<Params> parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain);
 
 		void setParams(const Params& params, Channel channel);
 

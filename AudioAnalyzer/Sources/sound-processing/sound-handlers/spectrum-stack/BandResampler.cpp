@@ -19,7 +19,7 @@ using namespace std::literals::string_view_literals;
 using namespace audio_analyzer;
 
 std::optional<BandResampler::Params>
-BandResampler::parseParams(const OptionMap& optionMap, Logger& cl, Rainmeter& rain) {
+BandResampler::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain) {
 	Params params;
 	params.fftId = optionMap.get(L"source"sv).asIString();
 	if (params.fftId.empty()) {

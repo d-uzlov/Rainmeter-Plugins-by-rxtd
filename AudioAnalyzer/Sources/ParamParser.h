@@ -20,30 +20,39 @@ namespace rxtd::audio_analyzer {
 	class SoundAnalyzer;
 
 	class ParamParser {
+		using Logger = utils::Rainmeter::Logger;
+		using Rainmeter = utils::Rainmeter;
+
 	public:
 		using HandlerPatcher = std::function<SoundHandler*(SoundHandler*, Channel)>;
 
 		struct HandlerInfo {
-			istring name;
+			string rawDescription;
+			string rawDescription2;
 			HandlerPatcher patcher;
 		};
+
+		using HandlerPatcherMap = std::map<istring, HandlerInfo, std::less<>>;
 
 		struct ProcessingData {
 			index targetRate{ };
 			double granularity{ };
+			string rawFccDescription;
 			audio_utils::FilterCascadeCreator fcc;
 			std::set<Channel> channels;
-			std::vector<HandlerInfo> handlerInfo;
+			HandlerPatcherMap handlerInfo;
 		};
 
+		using ProcessingsInfoMap = std::map<istring, ProcessingData, std::less<>>;
+
 	private:
-		utils::Rainmeter& rain;
-		utils::Rainmeter::Logger& log;
-		bool unusedOptionsWarning;
-		index defaultTargetRate{ };
+		Rainmeter rain;
+		bool unusedOptionsWarning = true;
+		index defaultTargetRate = 44100;
+		ProcessingsInfoMap parseResult;
 
 	public:
-		explicit ParamParser(utils::Rainmeter& rain, bool unusedOptionsWarning);
+		ParamParser() = default;
 
 		~ParamParser() = default;
 		/** This class is non copyable */
@@ -52,31 +61,34 @@ namespace rxtd::audio_analyzer {
 		ParamParser& operator=(const ParamParser& other) = delete;
 		ParamParser& operator=(ParamParser&& other) = delete;
 
-		void setTargetRate(index value) {
-			defaultTargetRate = value;
+		void setRainmeter(Rainmeter value) {
+			rain = std::move(value);
 		}
 
-		std::map<istring, ProcessingData> parse();
+		void parse();
+
+		const ProcessingsInfoMap& getParseResult() const {
+			return parseResult;
+		}
 
 	private:
 		static bool checkListUnique(const utils::OptionList& list);
 
-		std::optional<ProcessingData> parseProcessing(sview name);
-		std::set<Channel> parseChannels(utils::OptionList channelsStringList) const;
-		std::vector<HandlerInfo> parseHandlers(const utils::OptionList& indices);
+		void parseProcessing(sview name, Logger cl, ProcessingData& oldHandlers) const;
+		std::set<Channel> parseChannels(const utils::OptionList& channelsStringList, Logger& logger) const;
+		HandlerPatcherMap parseHandlers(const utils::OptionList& indices, HandlerPatcherMap oldHandlers) const;
 
-		HandlerPatcher parseHandler(sview name, array_view<HandlerInfo> prevHandlers);
+		bool parseHandler(sview name, const HandlerPatcherMap& prevHandlers, HandlerInfo& handler) const;
 		HandlerPatcher getHandlerPatcher(
 			const utils::OptionMap& optionMap,
-			utils::Rainmeter::Logger& cl,
-			array_view<HandlerInfo> prevHandlers
-		);
+			Logger& cl,
+			const HandlerPatcherMap& prevHandlers
+		) const;
+
+		void readRawDescription2(isview type, const utils::OptionMap& optionMap, string& rawDescription2) const;
 
 		template <typename T>
-		HandlerPatcher parseHandlerT(
-			const utils::OptionMap& optionMap,
-			utils::Rainmeter::Logger& cl
-		) {
+		HandlerPatcher parseHandlerT(const utils::OptionMap& optionMap, Logger& cl) const {
 			auto paramsOpt = T::parseParams(optionMap, cl);
 			if (!paramsOpt.has_value()) {
 				return nullptr;
@@ -95,10 +107,7 @@ namespace rxtd::audio_analyzer {
 		}
 
 		template <typename T>
-		HandlerPatcher parseHandlerT2(
-			const utils::OptionMap& optionMap,
-			utils::Rainmeter::Logger& cl
-		) {
+		HandlerPatcher parseHandlerT2(const utils::OptionMap& optionMap, Logger& cl) const {
 			auto paramsOpt = T::parseParams(optionMap, cl, rain);
 			if (!paramsOpt.has_value()) {
 				return nullptr;

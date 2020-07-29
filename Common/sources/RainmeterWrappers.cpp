@@ -16,28 +16,16 @@
 
 using namespace utils;
 
-Rainmeter::Logger::Logger(void* rm, string prefix): rm(rm), prefix(prefix) {
-}
-
-void Rainmeter::Logger::logRainmeter(LogLevel logLevel, const wchar_t* string) {
+void Rainmeter::Logger::logRainmeter(LogLevel logLevel, const wchar_t* string) const {
 	RmLog(rm, static_cast<int>(logLevel), string);
 }
 
-Rainmeter::Skin::Skin(void* skin) : skin(skin) { }
-
-void* Rainmeter::Skin::getRawPointer() const {
-	return skin;
-}
-
-bool Rainmeter::Skin::operator<(Skin other) const {
-	return skin < other.skin;
-}
-
 Rainmeter::Rainmeter(void* rm) :
-	rm(rm),
-	skin(RmGetSkin(rm)),
-	measureName(RmGetMeasureName(rm)),
-	logger(rm, { }) { }
+	rm(rm) {
+	skin = Skin{ RmGetSkin(rm) };
+	measureName = RmGetMeasureName(rm);
+	logger = { rm, { } };
+}
 
 Option Rainmeter::read(sview optionName) const {
 	return Option{ readString(optionName) }.own();
@@ -67,7 +55,7 @@ void Rainmeter::executeCommand(sview command, Skin skin) {
 	RmExecute(skin.getRawPointer(), makeNullTerminated(command));
 }
 
-Rainmeter::Logger& Rainmeter::getLogger() {
+Rainmeter::Logger& Rainmeter::getLogger() const {
 	return logger;
 }
 

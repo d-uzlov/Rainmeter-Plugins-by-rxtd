@@ -43,6 +43,8 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 	};
 
 	deviceManager.getDeviceEnumerator().updateDeviceStrings();
+
+	paramParser.setRainmeter(rain);
 }
 
 void AudioParent::_reload() {
@@ -84,17 +86,9 @@ void AudioParent::_reload() {
 
 	deviceManager.setOptions(sourceEnum, id);
 
-	auto targetRate = rain.read(L"TargetRate").asInt(44100);
-	if (targetRate < 0) {
-		logger.warning(L"Invalid TargetRate {}, must be > 0. Assume 0.", targetRate);
-		targetRate = 0;
-	}
+	paramParser.parse();
 
-	ParamParser paramParser(rain, rain.read(L"UnusedOptionsWarning").asBool(true));
-	paramParser.setTargetRate(targetRate);
-	auto processings = paramParser.parse();
-
-	patchSA(std::move(processings));
+	patchSA(paramParser.getParseResult());
 }
 
 double AudioParent::_update() {
@@ -330,14 +324,14 @@ double AudioParent::getValue(isview proc, isview id, Channel channel, index ind)
 }
 
 double AudioParent::legacy_getValue(isview id, Channel channel, index ind) const {
-	auto [handler, helper ] = findHandlerByName(id, channel);
+	auto [handler, helper] = findHandlerByName(id, channel);
 	if (handler == nullptr) {
 		return 0.0;
 	}
 	return helper->getValueFrom(handler, channel, ind);
 }
 
-void AudioParent::patchSA(std::map<istring, ParamParser::ProcessingData> procs) {
+void AudioParent::patchSA(ParamParser::ProcessingsInfoMap procs) {
 	std::set<istring> toDelete;
 	for (auto& [name, ptr] : saMap) {
 		if (procs.find(name) == procs.end()) {

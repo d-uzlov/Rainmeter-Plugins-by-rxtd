@@ -13,15 +13,16 @@
 
 using namespace utils;
 
-std::map<Rainmeter::Skin, std::map<istring, ParentBase*, std::less<>>> ParentBase::globalMeasuresMap { };
+std::map<Rainmeter::Skin, std::map<istring, ParentBase*, std::less<>>> ParentBase::globalMeasuresMap{ };
 
 TypeHolder::TypeHolder(Rainmeter&& rain) : rain(std::move(rain)), logger(this->rain.getLogger()) {
 
 }
 
-void TypeHolder::_command(isview  bangArgs) {
+void TypeHolder::_command(isview bangArgs) {
 	logger.warning(L"Measure does not have commands");
 }
+
 void TypeHolder::setMeasureState(MeasureState brokenState) {
 	this->measureState = brokenState;
 }
@@ -44,7 +45,8 @@ double TypeHolder::update() {
 }
 
 void TypeHolder::reload() {
-	if (measureState == MeasureState::eBROKEN) { // skip reload only if the measure is unrecoverable
+	if (measureState == MeasureState::eBROKEN) {
+		// skip reload only if the measure is unrecoverable
 		return;
 	}
 
@@ -52,7 +54,7 @@ void TypeHolder::reload() {
 	_reload();
 }
 
-void TypeHolder::command(const wchar_t *bangArgs) {
+void TypeHolder::command(const wchar_t* bangArgs) {
 	if (measureState != MeasureState::eWORKING) {
 		logger.warning(L"Skipping bang on a broken measure");
 		return;

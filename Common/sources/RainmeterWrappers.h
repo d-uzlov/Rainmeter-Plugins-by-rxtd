@@ -25,37 +25,41 @@ namespace rxtd::utils {
 				eDEBUG = 4
 			};
 
-			void *rm { };
-			string prefix { };
+			void* rm{ };
+			string prefix{ };
 
 		public:
-			BufferPrinter printer;
+			mutable BufferPrinter printer;
 
 			Logger() = default;
 
 		private:
-			Logger(void* rm, string prefix);
+			Logger(void* rm, string prefix) : rm(rm), prefix(prefix) {
+			}
 
 		public:
-			template<typename... Args>
-			void error(const wchar_t *formatString, const Args&... args) {
+			template <typename... Args>
+			void error(const wchar_t* formatString, const Args&... args) const {
 				log(LogLevel::eERROR, formatString, args...);
 			}
-			template<typename... Args>
-			void warning(const wchar_t *formatString, const Args&... args) {
+
+			template <typename... Args>
+			void warning(const wchar_t* formatString, const Args&... args) const {
 				log(LogLevel::eWARNING, formatString, args...);
 			}
-			template<typename... Args>
-			void notice(const wchar_t *formatString, const Args&... args) {
+
+			template <typename... Args>
+			void notice(const wchar_t* formatString, const Args&... args) const {
 				log(LogLevel::eNOTICE, formatString, args...);
 			}
-			template<typename... Args>
-			void debug(const wchar_t *formatString, const Args&... args) {
+
+			template <typename... Args>
+			void debug(const wchar_t* formatString, const Args&... args) const {
 				log(LogLevel::eDEBUG, formatString, args...);
 			}
 
-			template<typename... Args>
-			Logger context(const wchar_t *formatString, const Args&... args) {
+			template <typename... Args>
+			Logger context(const wchar_t* formatString, const Args&... args) const {
 				printer.print(formatString, args...);
 				string newPrefix = prefix + printer.getBufferPtr();
 				printer.reset();
@@ -64,8 +68,8 @@ namespace rxtd::utils {
 			}
 
 		private:
-			template<typename... Args>
-			void log(LogLevel logLevel, const wchar_t *formatString, const Args&... args) {
+			template <typename... Args>
+			void log(LogLevel logLevel, const wchar_t* formatString, const Args&... args) const {
 				printer.print(prefix.c_str());
 
 				printer.append(formatString, args...);
@@ -75,7 +79,7 @@ namespace rxtd::utils {
 				printer.reset();
 			}
 
-			void logRainmeter(LogLevel logLevel, const wchar_t *string);
+			void logRainmeter(LogLevel logLevel, const wchar_t* string) const;
 		};
 
 		/**
@@ -85,29 +89,34 @@ namespace rxtd::utils {
 		class Skin {
 			friend Rainmeter;
 
-			void *skin { };
+			void* skin{ };
 
 		public:
 			Skin() = default;
 
-			bool operator<(Skin other) const;
+			bool operator<(Skin other) const {
+				return skin < other.skin;
+			}
 
 		private:
-			explicit Skin(void* skin);
+			explicit Skin(void* skin) : skin(skin) {
+			}
 
-			void* getRawPointer() const;
+			void* getRawPointer() const {
+				return skin;
+			}
 		};
 
 	private:
-		void *rm { };
-		Skin skin;
+		void* rm{ };
+		Skin skin{ };
 		string measureName;
-		Logger logger;
+		mutable Logger logger;
 		mutable string optionNameBuffer;
 
 	public:
 		Rainmeter() = default;
-		explicit Rainmeter(void *rm);
+		explicit Rainmeter(void* rm);
 
 		Option read(sview optionName) const;
 		sview readString(sview optionName, const wchar_t* defaultValue = L"") const;
@@ -123,7 +132,7 @@ namespace rxtd::utils {
 
 		void executeCommand(sview command, Skin skin);
 
-		Logger& getLogger();
+		Logger& getLogger() const;
 
 		Skin getSkin() const;
 		const string& getMeasureName() const;

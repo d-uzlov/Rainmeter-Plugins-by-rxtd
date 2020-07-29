@@ -34,39 +34,40 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-ParamParser::ParamParser(utils::Rainmeter& rain, bool unusedOptionsWarning) :
-	rain(rain),
-	log(rain.getLogger()),
-	unusedOptionsWarning(unusedOptionsWarning) {
-}
+void ParamParser::parse() {
+	ProcessingsInfoMap result;
 
-std::map<istring, ParamParser::ProcessingData> ParamParser::parse() {
-	std::map<istring, ProcessingData> result;
+	auto& logger = rain.getLogger();
+
+	auto targetRate = rain.read(L"TargetRate").asInt(44100);
+	if (targetRate < 0) {
+		logger.warning(L"Invalid TargetRate {}, must be > 0. Assume 0.", targetRate);
+		targetRate = 0;
+	}
+
+	unusedOptionsWarning = rain.read(L"UnusedOptionsWarning").asBool(true);
+	defaultTargetRate = targetRate;
 
 	auto processingIndices = rain.read(L"Processing").asList(L'|');
 	if (!checkListUnique(processingIndices)) {
 		rain.getLogger().error(L"Found repeating processings, aborting");
-		return { };
+		parseResult = { };
 	}
+
 
 	for (const auto& nameOption : processingIndices) {
-		const auto name = nameOption.asIString();
+		const auto name = nameOption.asIString() % own();
 
-		auto procOpt = parseProcessing(name % csView());
-		if (!procOpt.has_value()) {
-			rain.getLogger().error(L"Invalid processing '{}'", name);
-			continue;
-		}
+		auto oldData = std::move(parseResult[name]);
+		parseProcessing(name % csView(), logger.context(L"Processing {}: ", name), oldData);
 
-		result[name % own()] = procOpt.value();
+		result[name] = std::move(oldData);
 	}
 
-	return result;
+	parseResult = std::move(result);
 }
 
-std::optional<ParamParser::ProcessingData> ParamParser::parseProcessing(sview name) {
-	auto cl = rain.getLogger().context(L"Processing {}: ", name);
-
+void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldHandlers) const {
 	string processingOptionIndex = L"Processing-"s += name;
 	auto processingDescriptionOption = rain.read(processingOptionIndex);
 	if (processingDescriptionOption.empty()) {
@@ -76,7 +77,8 @@ std::optional<ParamParser::ProcessingData> ParamParser::parseProcessing(sview na
 
 	if (processingDescriptionOption.empty()) {
 		cl.error(L"processing description not found");
-		return { };
+		oldHandlers = { };
+		return;
 	}
 
 	auto processingMap = processingDescriptionOption.asMap(L'|', L' ');
@@ -84,65 +86,63 @@ std::optional<ParamParser::ProcessingData> ParamParser::parseProcessing(sview na
 	auto channelsList = processingMap.get(L"channels"sv).asList(L',');
 	if (channelsList.empty()) {
 		cl.error(L"channels not found");
-		return { };
+		oldHandlers.channels = { };
+		return;
 	}
-	auto channels = parseChannels(channelsList);
-	if (channels.empty()) {
+	oldHandlers.channels = parseChannels(channelsList, cl);
+	if (oldHandlers.channels.empty()) {
 		cl.error(L"no valid channels found");
-		return { };
+		return;
 	}
 
 	auto handlersOption = processingMap.get(L"handlers"sv);
 	if (handlersOption.empty()) {
 		cl.error(L"handlers not found");
-		return { };
+		oldHandlers.handlerInfo = { };
+		return;
 	}
 
 	auto handlersList = handlersOption.asList(L',');
 	if (!checkListUnique(handlersList)) {
 		cl.error(L"found repeating handlers, invalidate processing");
-		return { };
+		oldHandlers.handlerInfo = { };
+		return;
 	}
 
-	auto handlers = parseHandlers(handlersList);
-	if (handlers.empty()) {
+	oldHandlers.handlerInfo = parseHandlers(handlersList, std::move(oldHandlers.handlerInfo));
+	if (oldHandlers.handlerInfo.empty()) {
 		cl.warning(L"no valid handlers found");
-		return { };
+		return;
 	}
 
-	const index targetRate = std::max<index>(processingMap.get(L"targetRate").asInt(defaultTargetRate), 0);
-	const auto granularity = std::max(processingMap.get(L"granularity").asFloat(10.0), 1.0) / 1000.0;
+	oldHandlers.targetRate = std::max<index>(processingMap.get(L"targetRate").asInt(defaultTargetRate), 0);
+	oldHandlers.granularity = std::max(processingMap.get(L"granularity").asFloat(10.0), 1.0) / 1000.0;
 
 	auto filterDescription = processingMap.get(L"filter");
-	audio_utils::FilterCascadeCreator ffc{ };
-	if (filterDescription.asIString(L"none") == L"none") {
-		ffc = { };
-	} else if (filterDescription.asIString() == L"replayGain-like") {
-		ffc = audio_utils::FilterCascadeParser::parse(
-			utils::Option{
-				L"bqHighPass[q 0.5, freq 310] " // spaces in the ends of the strings are necessary
-				L"bqPeak[q 4.0, freq 1125, gain -4.1] "
-				L"bqPeak[q 4.0, freq 2665, gain 5.5] "
-				L"bwLowPass[order 5, freq 20000] "
-			}
-		);
-	} else {
-		auto [name, desc] = filterDescription.breakFirst(' ');
-		if (name.asIString() == L"custom") {
-			ffc = audio_utils::FilterCascadeParser::parse(desc);
+	if (filterDescription.asString() != oldHandlers.rawFccDescription) {
+		oldHandlers.rawFccDescription = filterDescription.asString();
+
+		if (filterDescription.asIString(L"none") == L"none") {
+			oldHandlers.fcc = { };
+		} else if (filterDescription.asIString() == L"replayGain-like") {
+			oldHandlers.fcc = audio_utils::FilterCascadeParser::parse(
+				utils::Option{
+					L"bqHighPass[q 0.5, freq 310] " // spaces in the ends of the strings are necessary
+					L"bqPeak[q 4.0, freq 1125, gain -4.1] "
+					L"bqPeak[q 4.0, freq 2665, gain 5.5] "
+					L"bwLowPass[order 5, freq 20000] "
+				}
+			);
 		} else {
-			cl.error(L"filter '{}' is not supported", name);
-			ffc = { };
+			auto [name, desc] = filterDescription.breakFirst(' ');
+			if (name.asIString() == L"custom") {
+				oldHandlers.fcc = audio_utils::FilterCascadeParser::parse(desc);
+			} else {
+				cl.error(L"filter '{}' is not supported", name);
+				oldHandlers.fcc = { };
+			}
 		}
 	}
-
-	return ProcessingData{
-		targetRate,
-		granularity,
-		std::move(ffc),
-		channels,
-		handlers
-	};
 }
 
 bool ParamParser::checkListUnique(const utils::OptionList& list) {
@@ -157,13 +157,13 @@ bool ParamParser::checkListUnique(const utils::OptionList& list) {
 	return true;
 }
 
-std::set<Channel> ParamParser::parseChannels(utils::OptionList channelsStringList) const {
+std::set<Channel> ParamParser::parseChannels(const utils::OptionList& channelsStringList, Logger& logger) const {
 	std::set<Channel> set;
 
 	for (auto channelOption : channelsStringList) {
 		auto opt = Channel::channelParser.find(channelOption.asIString());
 		if (!opt.has_value()) {
-			log.error(L"Can't parse '{}' as channel", channelOption.asString());
+			logger.error(L"can't parse '{}' as channel", channelOption.asString());
 			continue;
 		}
 		set.insert(opt.value());
@@ -172,26 +172,24 @@ std::set<Channel> ParamParser::parseChannels(utils::OptionList channelsStringLis
 	return set;
 }
 
-std::vector<ParamParser::HandlerInfo> ParamParser::parseHandlers(const utils::OptionList& names) {
-	std::vector<HandlerInfo> result;
+ParamParser::HandlerPatcherMap
+ParamParser::parseHandlers(const utils::OptionList& names, HandlerPatcherMap oldHandlers) const {
+	HandlerPatcherMap result;
 
 	for (auto nameOption : names) {
-		auto name = nameOption.asString();
-		auto patcher = parseHandler(name, result);
-		if (patcher == nullptr) {
+		auto handler = std::move(oldHandlers[nameOption.asIString() % own()]);
+		const auto success = parseHandler(nameOption.asString(), result, handler);
+		if (!success) {
 			continue;
 		}
 
-		HandlerInfo info{ };
-		info.name = nameOption.asIString();
-		info.patcher = patcher;
-		result.push_back(info);
+		result[nameOption.asIString() % own()] = std::move(handler);
 	}
 
 	return result;
 }
 
-ParamParser::HandlerPatcher ParamParser::parseHandler(sview name, array_view<HandlerInfo> prevHandlers) {
+bool ParamParser::parseHandler(sview name, const HandlerPatcherMap& prevHandlers, HandlerInfo& handler) const {
 	string optionName = L"Handler-"s += name;
 	auto descriptionOption = rain.read(optionName);
 	if (descriptionOption.empty()) {
@@ -203,14 +201,20 @@ ParamParser::HandlerPatcher ParamParser::parseHandler(sview name, array_view<Han
 
 	if (descriptionOption.empty()) {
 		cl.error(L"description is not found", name);
-		return { };
+		return false;
 	}
 
-	auto optionMap = descriptionOption.asMap(L'|', L' ');
+	utils::OptionMap optionMap = descriptionOption.asMap(L'|', L' ');
+	string rawDescription2;
+	readRawDescription2(optionMap.get(L"type").asIString(), optionMap, rawDescription2);
 
-	auto patcher = getHandlerPatcher(optionMap, cl, prevHandlers);
-	if (patcher == nullptr) {
-		return { };
+	if (handler.rawDescription == descriptionOption.asString() && handler.rawDescription2 == rawDescription2) {
+		return true;
+	}
+
+	handler.patcher = getHandlerPatcher(optionMap, cl, prevHandlers);
+	if (handler.patcher == nullptr) {
+		return false;
 	}
 
 	const auto unusedOptions = optionMap.getListOfUntouched();
@@ -218,14 +222,17 @@ ParamParser::HandlerPatcher ParamParser::parseHandler(sview name, array_view<Han
 		cl.warning(L"unused options: '{}'", unusedOptions);
 	}
 
-	return patcher;
+	handler.rawDescription2 = std::move(rawDescription2);
+	handler.rawDescription = descriptionOption.asString();
+
+	return true;
 }
 
 ParamParser::HandlerPatcher ParamParser::getHandlerPatcher(
 	const utils::OptionMap& optionMap,
-	utils::Rainmeter::Logger& cl,
-	array_view<HandlerInfo> prevHandlers
-) {
+	Logger& cl,
+	const HandlerPatcherMap& prevHandlers
+) const {
 	const auto type = optionMap.get(L"type"sv).asIString();
 
 	if (type.empty()) {
@@ -236,13 +243,7 @@ ParamParser::HandlerPatcher ParamParser::getHandlerPatcher(
 	// source must be checked to prevent loops
 	const auto source = optionMap.getUntouched(L"source").asIString();
 	if (!source.empty()) {
-		bool found = false;
-		for (auto& info : prevHandlers) {
-			if (info.name == source) {
-				found = true;
-				break;
-			}
-		}
+		const bool found = prevHandlers.find(source) != prevHandlers.end();
 		if (!found) {
 			cl.error(L"reverse or unknown dependency '{}'", source);
 			return nullptr;
@@ -291,4 +292,19 @@ ParamParser::HandlerPatcher ParamParser::getHandlerPatcher(
 
 	cl.error(L"unknown type '{}'", type);
 	return nullptr;
+}
+
+void ParamParser::readRawDescription2(isview type, const utils::OptionMap& optionMap, string& rawDescription2) const {
+	if (type == L"BandResampler") {
+		auto freqListIndex = optionMap.getUntouched(L"freqList"sv).asString();
+		if (!freqListIndex.empty()) {
+			auto freqListOptionName = L"FreqList-"s += freqListIndex;
+			auto freqListOption = rain.read(freqListOptionName);
+			if (freqListOption.empty()) {
+				freqListOptionName = L"FreqList_"s += freqListIndex;
+				freqListOption = rain.read(freqListOptionName);
+			}
+			rawDescription2 = freqListOption.asString();
+		}
+	}
 }

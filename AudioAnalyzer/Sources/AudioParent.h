@@ -18,6 +18,7 @@
 
 namespace rxtd::audio_analyzer {
 	class AudioParent : public utils::ParentBase {
+		ParamParser paramParser;
 		ChannelMixer channelMixer;
 		DeviceManager deviceManager;
 		std::map<istring, std::unique_ptr<SoundAnalyzer>, std::less<>> saMap;
@@ -50,7 +51,7 @@ namespace rxtd::audio_analyzer {
 		double legacy_getValue(isview id, Channel channel, index ind) const;
 
 	private:
-		void patchSA(std::map<istring, ParamParser::ProcessingData> procs);
+		void patchSA(ParamParser::ProcessingsInfoMap procs);
 
 		template <typename Callable>
 		void callAllSA(Callable lambda) {

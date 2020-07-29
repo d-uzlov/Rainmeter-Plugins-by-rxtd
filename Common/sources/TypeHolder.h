@@ -17,6 +17,7 @@ namespace rxtd::utils {
 		eTEMP_BROKEN,
 		eBROKEN
 	};
+
 	class TypeHolder {
 	protected:
 		Rainmeter rain;
@@ -26,8 +27,8 @@ namespace rxtd::utils {
 		MeasureState measureState = MeasureState::eWORKING;
 
 		double resultDouble = 0.0;
-		string resultString { };
-		string resolveString { };
+		string resultString{ };
+		string resolveString{ };
 		bool useResultString = false;
 
 		istring resolveBuffer;
@@ -44,7 +45,7 @@ namespace rxtd::utils {
 		double update();
 		void reload();
 		const wchar_t* getString() const;
-		void command(const wchar_t *bangArgs);
+		void command(const wchar_t* bangArgs);
 		const wchar_t* resolve(int argc, const wchar_t* argv[]);
 		const wchar_t* resolve(array_view<isview> args);
 
@@ -53,9 +54,14 @@ namespace rxtd::utils {
 	protected:
 		virtual void _reload() = 0;
 		virtual double _update() = 0;
-		virtual void _updateString(string& resultStringBuffer) { }
+
+		virtual void _updateString(string& resultStringBuffer) {
+		}
+
 		virtual void _command(isview bangArgs);
-		virtual void _resolve(array_view<isview> args, string& resolveBufferString) { }
+
+		virtual void _resolve(array_view<isview> args, string& resolveBufferString) {
+		}
 
 		void setMeasureState(MeasureState brokenState);
 		void setUseResultString(bool value);
@@ -77,7 +83,7 @@ namespace rxtd::utils {
 		ParentBase& operator=(const ParentBase& other) = delete;
 		ParentBase& operator=(ParentBase&& other) noexcept = delete;
 
-		template<typename T>
+		template <typename T>
 		static T* find(Rainmeter::Skin skin, isview measureName) {
 			static_assert(std::is_base_of<ParentBase, T>::value, "only parent measures can be searched for");
 
