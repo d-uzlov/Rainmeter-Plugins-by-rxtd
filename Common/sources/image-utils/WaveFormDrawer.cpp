@@ -67,7 +67,8 @@ void WaveFormDrawer::fillStrip(double min, double max) {
 		}
 	}
 
-	minMaxBuffer.pushEmptyStrip({ minPixel, maxPixel });
+	MinMax mm{ minPixel, maxPixel };
+	minMaxBuffer.pushStrip({ &mm, 1 });
 }
 
 void WaveFormDrawer::inflate() {
