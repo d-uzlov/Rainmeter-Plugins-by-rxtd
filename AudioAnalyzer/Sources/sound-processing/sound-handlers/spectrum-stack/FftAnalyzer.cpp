@@ -267,7 +267,8 @@ void FftAnalyzer::updateParams() {
 	fft.setSize(fftSize, !params.legacyAmplification);
 
 	inputStride = static_cast<index>(fftSize * (1 - params.overlap));
-	inputStride = inputStride & 0; // only even strides are allowed due to downsampling in cascades
+	const index inputStrideLastBit = inputStride & 1;
+	inputStride += inputStrideLastBit; // only even strides are allowed due to downsampling in cascades
 	inputStride = std::clamp<index>(inputStride, std::min<index>(16, fftSize), fftSize);
 
 	randomBlockSize = index(params.randomDuration * samplesPerSec * fftSize / inputStride);
