@@ -27,17 +27,57 @@ namespace rxtd::audio_utils {
 		};
 
 	private:
-		// FftAnalyzer* parent { };
+		class RingBuffer {
+			std::vector<float> buffer;
+			index endOffset = 0;
+			index takenOffset = 0;
+
+		public:
+			// returns part of the wave that didn't fit info the buffer
+			[[nodiscard]]
+			array_view<float> fill(array_view<float> wave);
+
+			// returns part of the wave that didn't fit info the buffer
+			[[nodiscard]]
+			array_view<float> fillResampled(array_view<float> wave);
+
+			void pushOne(float value);
+
+			void shift(index stride);
+
+			[[nodiscard]]
+			bool isFull() const {
+				return endOffset == index(buffer.size());
+			}
+
+			[[nodiscard]]
+			array_view<float> getBuffer() const {
+				return buffer;
+			}
+
+			[[nodiscard]]
+			array_view<float> take() {
+				array_view<float> result = buffer;
+				result.remove_prefix(takenOffset);
+				takenOffset = endOffset;
+				return result;
+			}
+
+			void setSize(index value) {
+				buffer.resize(value);
+				endOffset = 0;
+				takenOffset = 0;
+			}
+		};
+
 		FftCascade* successor{ };
 		FFT* fft{ };
 
 		Params params{ };
 
+		RingBuffer buffer;
 		LogarithmicIRF filter{ };
-		std::vector<float> ringBuffer;
 		std::vector<float> values;
-		index ringBufferOffset{ };
-		index transferredElements{ };
 		float odd{ };
 		float dc{ };
 		// Fourier transform looses energy due to downsample, so we multiply result of FFT by (2^0.5)^countOfDownsampleIterations
@@ -45,7 +85,7 @@ namespace rxtd::audio_utils {
 
 	public:
 		void setParams(Params _params, FFT* fft, FftCascade* successor, index cascadeIndex);
-		void process(array_view<float> wave);
+		void process(array_view<float> wave, bool resample = false);
 		void reset();
 
 		[[nodiscard]]
@@ -59,7 +99,7 @@ namespace rxtd::audio_utils {
 		}
 
 	private:
+		void resampleResult();
 		void doFft();
-		void processResampled(array_view<float> wave);
 	};
 }

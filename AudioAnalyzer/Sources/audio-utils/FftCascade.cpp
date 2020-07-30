@@ -14,143 +14,98 @@
 
 using namespace audio_utils;
 
+static float invalidOddValue = std::numeric_limits<float>::infinity();
+
 void FftCascade::setParams(Params _params, FFT* fft, FftCascade* successor, index cascadeIndex) {
 	params = _params;
 	this->successor = successor;
 	this->fft = fft;
 
-	ringBufferOffset = 0;
-	transferredElements = 0;
-	ringBuffer.resize(params.fftSize);
+	odd = invalidOddValue;
+	buffer.setSize(params.fftSize);
 
-	const index newValuesSize = params.fftSize / 2;
-	if (values.empty()) {
-		values.resize(newValuesSize);
-	} else if (index(values.size()) != newValuesSize) {
-		utils::DiscreetInterpolator inter;
-		inter.setParams(0.0, double(newValuesSize - 1), 0, values.size() - 1);
-		// double coef = double(values.size()) / newValuesSize;
+	resampleResult();
 
-		if (index(values.size()) < newValuesSize) {
-			values.resize(newValuesSize);
+	const auto cascadeSampleRate = index(params.samplesPerSec / std::pow(2, cascadeIndex));
 
-			for (index i = newValuesSize - 1; i >= 1; i--) {
-				// const index oldIndex = std::clamp<index>(index(i * coef ), 0, values.size() - 1);
-				const index oldIndex = inter.toValueD(i);
-				values[i] = values[oldIndex];
-			}
-		}
-
-		if (index(values.size()) > newValuesSize) {
-			for (index i = 1; i < newValuesSize; i++) {
-				// const index oldIndex = std::clamp<index>(index(i * coef), 0, values.size() - 1);
-				const index oldIndex = inter.toValueD(i);
-				values[i] = values[oldIndex];
-			}
-
-			values.resize(newValuesSize);
-		}
-
-		values[0] = 0.0;
-	}
-
-	auto samplesPerSec = params.samplesPerSec;
-	samplesPerSec = index(samplesPerSec / std::pow(2, cascadeIndex));
-
-	filter.setParams(params.legacy_attackTime, params.legacy_decayTime, samplesPerSec, params.inputStride);
+	filter.setParams(params.legacy_attackTime, params.legacy_decayTime, cascadeSampleRate, params.inputStride);
 
 	downsampleGain = std::pow(2.0f, cascadeIndex * 0.5f);
 }
 
-void FftCascade::process(array_view<float> wave) {
-	index waveProcessed = 0;
-	const auto tmpIn = ringBuffer.data();
-
-	while (waveProcessed != wave.size()) {
-		const auto copySize = params.fftSize - ringBufferOffset;
-
-		if (waveProcessed + copySize <= wave.size()) {
-			const auto copyStartPlace = wave.data() + waveProcessed;
-			std::copy(copyStartPlace, copyStartPlace + copySize, tmpIn + ringBufferOffset);
-
-			if (successor != nullptr) {
-				array_view<float> subBuffer = ringBuffer;
-				subBuffer.remove_prefix(transferredElements);
-				successor->processResampled(subBuffer);
-			}
-
-			waveProcessed += copySize;
-
-			doFft();
-			std::copy(tmpIn + params.inputStride, tmpIn + params.fftSize, tmpIn);
-			ringBufferOffset = params.fftSize - params.inputStride;
-			transferredElements = ringBufferOffset;
-		} else {
-			std::copy(wave.data() + waveProcessed, wave.data() + wave.size(), tmpIn + ringBufferOffset);
-
-			ringBufferOffset = ringBufferOffset + wave.size() - waveProcessed;
-			waveProcessed = wave.size();
-		}
-	}
-}
-
-void FftCascade::processResampled(array_view<float> wave) {
+void FftCascade::process(array_view<float> wave, bool resample) {
 	if (wave.empty()) {
 		return;
 	}
 
-	index waveProcessed = 0;
-	const auto tmpIn = ringBuffer.data();
-	if (std::abs(odd) <= 1.0f) {
-		tmpIn[ringBufferOffset] = (odd + wave[0]) * 0.5f;
-		odd = 10.0f;
-		ringBufferOffset++;
-		waveProcessed = 1;
+	if (odd != invalidOddValue) {
+		buffer.pushOne((odd + wave[0]) * 0.5f);
+		odd = invalidOddValue;
+		wave.remove_prefix(1);
 	}
 
-	while (waveProcessed != wave.size()) {
-		const auto ringBufferRemainingSize = params.fftSize - ringBufferOffset;
-		const auto elementPairsLeft = (wave.size() - waveProcessed) / 2;
-		const auto copyStartPlace = wave.data() + waveProcessed;
+	while (!wave.empty()) {
+		if (resample) {
+			wave = buffer.fillResampled(wave);
+		} else {
+			wave = buffer.fill(wave);
+		}
 
-		if (ringBufferRemainingSize <= elementPairsLeft) {
-			for (index i = 0; i < ringBufferRemainingSize; i++) {
-				tmpIn[ringBufferOffset + i] = (copyStartPlace[i * 2] + copyStartPlace[i * 2 + 1]) * 0.5f;
-			}
-
+		if (buffer.isFull()) {
 			if (successor != nullptr) {
-				array_view<float> subBuffer = ringBuffer;
-				subBuffer.remove_prefix(transferredElements);
-				successor->processResampled(subBuffer);
+				successor->process(buffer.take(), true);
 			}
-
-			waveProcessed += ringBufferRemainingSize * 2;
 
 			doFft();
-			std::copy(tmpIn + params.inputStride, tmpIn + params.fftSize, tmpIn);
-			ringBufferOffset = params.fftSize - params.inputStride;
-			transferredElements = ringBufferOffset;
-		} else {
-			for (index i = 0; i < elementPairsLeft; i++) {
-				tmpIn[ringBufferOffset + i] = (copyStartPlace[i * 2] + copyStartPlace[i * 2 + 1]) * 0.5f;
-			}
 
-			ringBufferOffset = ringBufferOffset + elementPairsLeft;
-			waveProcessed += elementPairsLeft * 2;
+			buffer.shift(params.inputStride);
+		}
 
-			if (waveProcessed != wave.size()) {
-				// we should have exactly one element left
-				odd = wave[waveProcessed];
-				waveProcessed = wave.size();
-			} else {
-				odd = 10.0f;
-			}
+		if (wave.size() == 1) {
+			odd = wave.back();
+			wave = { };
 		}
 	}
 }
 
+void FftCascade::resampleResult() {
+	const index newValuesSize = params.fftSize / 2;
+
+	if (values.empty()) {
+		values.resize(newValuesSize);
+		return;
+	}
+
+	if (index(values.size()) == newValuesSize) {
+		return;
+	}
+
+	utils::DiscreetInterpolator inter;
+	inter.setParams(0.0, double(newValuesSize - 1), 0, values.size() - 1);
+
+	if (index(values.size()) < newValuesSize) {
+		values.resize(newValuesSize);
+
+		for (index i = newValuesSize - 1; i >= 1; i--) {
+			const index oldIndex = inter.toValueD(i);
+			values[i] = values[oldIndex];
+		}
+	}
+
+	if (index(values.size()) > newValuesSize) {
+		for (index i = 1; i < newValuesSize; i++) {
+			const index oldIndex = inter.toValueD(i);
+			values[i] = values[oldIndex];
+		}
+
+		values.resize(newValuesSize);
+	}
+
+	values[0] = 0.0;
+}
+
 void FftCascade::doFft() {
-	fft->process(ringBuffer);
+	fft->process(buffer.getBuffer());
 
 	const auto binsCount = params.fftSize / 2;
 
@@ -181,4 +136,42 @@ void FftCascade::doFft() {
 
 void FftCascade::reset() {
 	std::fill(values.begin(), values.end(), 0.0f);
+}
+
+array_view<float> FftCascade::RingBuffer::fill(array_view<float> wave) {
+	const auto ringBufferRemainingSize = index(buffer.size()) - endOffset;
+	const auto copySize = std::min(ringBufferRemainingSize, wave.size());
+
+	std::copy(wave.begin(), wave.begin() + copySize, buffer.begin() + endOffset);
+	endOffset += copySize;
+
+	wave.remove_prefix(copySize);
+	return wave;
+}
+
+array_view<float> FftCascade::RingBuffer::fillResampled(array_view<float> wave) {
+	const auto ringBufferRemainingSize = index(buffer.size()) - endOffset;
+	const auto waveElementPairs = wave.size() / 2;
+	const auto copySize = std::min(ringBufferRemainingSize, waveElementPairs);
+
+	for (index i = 0; i < copySize; i++) {
+		buffer[endOffset + i] = (wave[i * 2] + wave[i * 2 + 1]) * 0.5f;
+	}
+	endOffset += copySize;
+
+	wave.remove_prefix(copySize * 2);
+	return wave;
+}
+
+void FftCascade::RingBuffer::pushOne(float value) {
+	buffer[endOffset] = value;
+	endOffset++;
+}
+
+void FftCascade::RingBuffer::shift(index stride) {
+	assert(endOffset >= stride);
+
+	std::copy(buffer.begin() + stride, buffer.end(), buffer.begin());
+	endOffset -= stride;
+	takenOffset -= stride;
 }
