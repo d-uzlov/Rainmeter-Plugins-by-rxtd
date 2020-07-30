@@ -18,6 +18,7 @@ namespace rxtd::utils {
 		index offset = 0;
 
 	public:
+		[[nodiscard]]
 		index getRemainingSize() const {
 			return size - offset;
 		}
@@ -41,18 +42,22 @@ namespace rxtd::utils {
 			return result;
 		}
 
+		[[nodiscard]]
 		array_span<T> getLast(index chunkSize) {
 			return { array.data() + size - chunkSize, chunkSize };
 		}
 
+		[[nodiscard]]
 		array_view<T> getLast(index chunkSize) const {
 			return { array.data() + size - chunkSize, chunkSize };
 		}
 
+		[[nodiscard]]
 		array_span<T> getData() {
 			return { array.data(), size };
 		}
 
+		[[nodiscard]]
 		array_view<T> getData() const {
 			return { array.data(), size };
 		}

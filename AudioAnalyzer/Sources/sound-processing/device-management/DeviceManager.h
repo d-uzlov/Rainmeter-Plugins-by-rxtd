@@ -14,7 +14,6 @@
 
 #include "CaptureManager.h"
 #include "AudioEnumeratorHelper.h"
-#include "DataSource.h"
 
 namespace rxtd::audio_analyzer {
 	class DeviceManager {
@@ -24,6 +23,12 @@ namespace rxtd::audio_analyzer {
 		using Logger = utils::Rainmeter::Logger;
 
 	public:
+		enum class DataSource {
+			eDEFAULT_INPUT,
+			eDEFAULT_OUTPUT,
+			eID,
+		};
+		
 		enum class State {
 			// usual operating mode
 			eOK,
@@ -70,29 +75,39 @@ namespace rxtd::audio_analyzer {
 		DeviceManager& operator=(const DeviceManager& other) = delete;
 		DeviceManager& operator=(DeviceManager&& other) = delete;
 
+		[[nodiscard]]
 		utils::MediaDeviceType getCurrentDeviceType() const;
+		[[nodiscard]]
 		State getState() const;
 
 		void forceReconnect();
 
+		[[nodiscard]]
 		DataSource getRequesterSourceType() const {
 			return requestedDevice.type;
 		}
 
+		[[nodiscard]]
 		sview getRequestedSourceId() const {
 			return requestedDevice.id;
 		}
 
 		void setOptions(DataSource port, sview deviceID);
 
+		[[nodiscard]]
 		const utils::MediaDeviceWrapper::DeviceInfo& getDeviceInfo() const;
+		[[nodiscard]]
 		bool getDeviceStatus() const;
 
 		void checkAndRepair();
 
+		[[nodiscard]]
 		CaptureManager& getCaptureManager();
+		[[nodiscard]]
 		const CaptureManager& getCaptureManager() const;
+		[[nodiscard]]
 		AudioEnumeratorHelper& getDeviceEnumerator();
+		[[nodiscard]]
 		const AudioEnumeratorHelper& getDeviceEnumerator() const;
 
 	private:

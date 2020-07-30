@@ -17,7 +17,7 @@
 
 using namespace audio_utils;
 
-CustomizableValueTransformer::CustomizableValueTransformer(std::vector<Transformation> transformations):
+CustomizableValueTransformer::CustomizableValueTransformer(std::vector<TransformationInfo> transformations):
 	transforms(std::move(transformations)) {
 }
 

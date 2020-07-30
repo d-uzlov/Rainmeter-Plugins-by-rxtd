@@ -28,6 +28,7 @@ namespace rxtd::utils {
 			emptinessWritten = empty;
 		}
 
+		[[nodiscard]]
 		bool isEmptinessWritten() const {
 			return emptinessWritten;
 		}

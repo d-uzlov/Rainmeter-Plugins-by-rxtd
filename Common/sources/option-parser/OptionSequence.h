@@ -10,7 +10,8 @@
 #pragma once
 #include "StringUtils.h"
 #include "AbstractOption.h"
-#include "Option.h"
+#include "OptionList.h"
+#include "Tokenizer.h"
 
 namespace rxtd::utils {
 	class OptionSequence : public AbstractOption<OptionSequence> {
@@ -18,28 +19,49 @@ namespace rxtd::utils {
 
 	public:
 		OptionSequence() = default;
-		OptionSequence(sview view, std::vector<wchar_t> &&source, wchar_t optionBegin, wchar_t optionEnd, wchar_t optionDelimiter);
+
+		OptionSequence(
+			sview view, std::vector<wchar_t>&& source,
+			wchar_t optionBegin, wchar_t optionEnd,
+			wchar_t optionDelimiter
+		) : AbstractOption(view, std::move(source)) {
+			list = Tokenizer::parseSequence(getView(), optionBegin, optionEnd, optionDelimiter);
+		}
 
 		class iterator {
 			sview view;
-			const std::vector<std::vector<SubstringViewInfo>> &list;
+			const std::vector<std::vector<SubstringViewInfo>>& list;
 			index ind;
 
 		public:
-			iterator(sview view, const std::vector<std::vector<SubstringViewInfo>> &list, index _index);
+			iterator(sview view, const std::vector<std::vector<SubstringViewInfo>>& list, index _index) :
+				view(view), list(list), ind(_index) {
+			}
 
-			iterator& operator++();
+			iterator& operator++() {
+				ind++;
+				return *this;
+			}
 
-			bool operator !=(const iterator& other) const;
+			bool operator !=(const iterator& other) const {
+				return &list != &other.list || ind != other.ind;
+			}
 
-			OptionList operator*() const;
+			[[nodiscard]]
+			OptionList operator*() const {
+				auto list_ = list[ind];
+				return { view, { }, std::move(list_) };
+			}
 		};
 
-		iterator begin() const;
+		[[nodiscard]]
+		iterator begin() const {
+			return { getView(), list, 0 };
+		}
 
-		iterator end() const;
-
-	private:
-		static void emitToken(std::vector<SubstringViewInfo>& description, index begin, index end);
+		[[nodiscard]]
+		iterator end() const {
+			return { getView(), list, index(list.size()) };
+		}
 	};
 }

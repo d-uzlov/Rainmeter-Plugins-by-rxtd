@@ -94,6 +94,7 @@ namespace rxtd::utils {
 		public:
 			Skin() = default;
 
+			[[nodiscard]]
 			bool operator<(Skin other) const {
 				return skin < other.skin;
 			}
@@ -102,6 +103,7 @@ namespace rxtd::utils {
 			explicit Skin(void* skin) : skin(skin) {
 			}
 
+			[[nodiscard]]
 			void* getRawPointer() const {
 				return skin;
 			}
@@ -118,12 +120,18 @@ namespace rxtd::utils {
 		Rainmeter() = default;
 		explicit Rainmeter(void* rm);
 
+		[[nodiscard]]
 		Option read(sview optionName) const;
+		[[nodiscard]]
 		sview readString(sview optionName, const wchar_t* defaultValue = L"") const;
+		[[nodiscard]]
 		sview readPath(sview optionName, const wchar_t* defaultValue = L"") const;
+		[[nodiscard]]
 		double readDouble(sview optionName, double defaultValue = 0.0) const;
 
+		[[nodiscard]]
 		sview replaceVariables(sview string) const;
+		[[nodiscard]]
 		sview transformPathToAbsolute(sview path) const;
 
 		void executeCommand(sview command) {
@@ -132,13 +140,18 @@ namespace rxtd::utils {
 
 		void executeCommand(sview command, Skin skin);
 
+		[[nodiscard]]
 		Logger& getLogger() const;
 
+		[[nodiscard]]
 		Skin getSkin() const;
+		[[nodiscard]]
 		const string& getMeasureName() const;
+		[[nodiscard]]
 		void* getWindowHandle();
 
 	private:
+		[[nodiscard]]
 		const wchar_t* makeNullTerminated(sview view) const;
 	};
 }

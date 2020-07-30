@@ -11,6 +11,7 @@ namespace rxtd::utils {
 
 		using MixType = IntType;
 		MixType fi = 0;
+		static constexpr MixType shift = 1 << precision;
 
 	public:
 		IntMixer() = default;
@@ -24,11 +25,11 @@ namespace rxtd::utils {
 		}
 
 		void setFactor(double factor) {
-			fi = MixType(factor * (1 << precision));
+			fi = MixType(factor * shift);
 		}
 
 		void setFactor(float factor) {
-			fi = MixType(factor * (1 << precision));
+			fi = MixType(factor * shift);
 		}
 
 		// range is from 0 to (1 << precision), which maps to [0.0, 1.0] in floating pointer
@@ -36,8 +37,9 @@ namespace rxtd::utils {
 			fi = factor;
 		}
 
+		[[nodiscard]]
 		MixType mix(MixType v1, MixType v2) const {
-			return (v1 * fi + v2 * ((1 << precision) - fi)) >> precision;
+			return (v1 * fi + v2 * (shift - fi)) >> precision;
 		}
 	};
 }

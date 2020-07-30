@@ -9,8 +9,6 @@
 
 #include "FFT.h"
 
-#include "undef.h"
-
 using namespace audio_utils;
 
 FFT::FFT(index fftSize, bool correctScalar) {
@@ -23,8 +21,8 @@ void FFT::setSize(index newSize, bool correctScalar) {
 	window = createHannWindow(fftSize);
 	kiss.assign(fftSize / 2, false);
 
-	inputBufferSize = fftSize;
-	outputBufferSize = fftSize / 2;
+	inputBuffer.resize(fftSize);
+	outputBuffer.resize(fftSize / 2);
 }
 
 double FFT::getDC() const {
@@ -38,29 +36,12 @@ float FFT::getBinMagnitude(index binIndex) const {
 	return std::sqrt(square) * scalar;
 }
 
-void FFT::setBuffers(array_span<input_buffer_type> inputBuffer, array_span<output_buffer_type> outputBuffer) {
-	if (inputBuffer.size() < inputBufferSize || outputBuffer.size() < outputBufferSize) {
-		throw std::exception{ };
-	}
-
-	this->inputBuffer = inputBuffer;
-	this->outputBuffer = outputBuffer;
-}
-
 void FFT::process(array_view<float> wave) {
 	for (index iBin = 0; iBin < fftSize; ++iBin) {
 		inputBuffer[iBin] = wave[iBin] * window[iBin];
 	}
 
 	kiss.transform_real(inputBuffer.data(), outputBuffer.data());
-}
-
-index FFT::getInputBufferSize() const {
-	return inputBufferSize;
-}
-
-index FFT::getOutputBufferSize() const {
-	return outputBufferSize;
 }
 
 std::vector<float> FFT::createHannWindow(index fftSize) {

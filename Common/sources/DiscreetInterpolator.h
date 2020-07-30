@@ -21,7 +21,7 @@ namespace rxtd::utils {
 			li.setParams(
 				linMin, linMax + std::numeric_limits<float>::epsilon(),
 				double(valMin),
-				double(valMax + 1) // TODO WFT is +1 here
+				double(valMax + 1) // +1 is counteracted by std::floor in #makeDiscreet
 			);
 
 			this->valMin = std::min(valMin, valMax);
@@ -29,30 +29,36 @@ namespace rxtd::utils {
 		}
 
 		// Values are not clamped
+		[[nodiscard]]
 		double toValue(double linear) const {
 			return li.toValue(linear);
 		}
 
 		// Values are clamped to [valMin, valMax] range
+		[[nodiscard]]
 		index toValueD(double linear) const {
 			return makeDiscreetClamped(toValue(linear));
 		}
 
 		// Values are not clamped
+		[[nodiscard]]
 		index makeDiscreet(double value) const {
 			return static_cast<index>(std::floor(value));
 		}
 
 		// Values are clamped to [valMin, valMax] range
+		[[nodiscard]]
 		index makeDiscreetClamped(double value) const {
 			return clamp(makeDiscreet(value));
 		}
 
 		// Values are clamped to [valMin, valMax] range
+		[[nodiscard]]
 		index clamp(index value) const {
 			return std::clamp(value, valMin, valMax);
 		}
 
+		[[nodiscard]]
 		double percentRelativeToNext(double value) const {
 			return value - makeDiscreet(value);
 		}

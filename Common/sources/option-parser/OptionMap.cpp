@@ -10,8 +10,6 @@
 #include "OptionMap.h"
 #include "Tokenizer.h"
 
-#include "undef.h"
-
 using namespace utils;
 
 OptionMap::OptionMap(sview view, std::vector<wchar_t> &&source, std::map<SubstringViewInfo, SubstringViewInfo>&& paramsInfo) :

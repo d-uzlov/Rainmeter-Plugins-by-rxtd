@@ -9,8 +9,6 @@
 
 #include "MyMath.h"
 
-#include "undef.h"
-
 const double utils::MyMath::pi = std::acos(-1.0);
 
 double utils::MyMath::fastPow(double a, double b) {

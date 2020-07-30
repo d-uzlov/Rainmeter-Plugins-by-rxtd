@@ -13,7 +13,7 @@
 namespace rxtd::utils {
 	namespace {
 		class PropVariantWrapper {
-			PROPVARIANT	handle { };
+			PROPVARIANT handle{ };
 
 		public:
 
@@ -30,9 +30,12 @@ namespace rxtd::utils {
 				PropVariantClear(&handle);
 			}
 
+			[[nodiscard]]
 			PROPVARIANT* getMetaPointer() {
 				return &handle;
 			}
+
+			[[nodiscard]]
 			const wchar_t* getCString() const {
 				return handle.pwszVal;
 			}
@@ -46,10 +49,9 @@ namespace rxtd::utils {
 		PropVariantWrapper prop;
 
 		if (getPointer()->GetValue(key, prop.getMetaPointer()) != S_OK) {
-			return {};
+			return { };
 		}
 
 		return { prop.getCString() };
 	}
 }
-

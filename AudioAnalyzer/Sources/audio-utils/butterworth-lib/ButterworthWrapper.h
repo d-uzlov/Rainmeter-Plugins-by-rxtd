@@ -20,23 +20,28 @@ namespace rxtd::audio_utils {
 			std::vector<double> b;
 		};
 
+		[[nodiscard]]
 		static AB calcCoefLowPass(index order, double cutoffFrequency, double samplingFrequency);
 
 		template <index order>
+		[[nodiscard]]
 		static InfiniteResponseFilterFixed<order + 1> createLowPass(double centralFrequency, double samplingFrequency) {
 			auto [a, b] = calcCoefLowPass(order, centralFrequency, samplingFrequency);
 			return { a, b };
 		}
 
+		[[nodiscard]]
 		static AB calcCoefHighPass(index order, double cutoffFrequency, double samplingFrequency);
 
 		template <index order>
+		[[nodiscard]]
 		static InfiniteResponseFilterFixed<order + 1>
 		createHighPass(double centralFrequency, double samplingFrequency) {
 			auto [a, b] = calcCoefHighPass(order, centralFrequency, samplingFrequency);
 			return { a, b };
 		}
 
+		[[nodiscard]]
 		static AB calcCoefBandPass(
 			index order,
 			double lowerCutoffFrequency, double upperCutoffFrequency,
@@ -44,16 +49,24 @@ namespace rxtd::audio_utils {
 		);
 
 		template <index order>
+		[[nodiscard]]
 		static InfiniteResponseFilterFixed<order + 1> createBandPass(
 			double lowerCutoffFrequency, double upperCutoffFrequency,
-			double samplingFrequency) {
+			double samplingFrequency
+		) {
 			auto [a, b] = calcCoefBandPass(order, lowerCutoffFrequency, upperCutoffFrequency, samplingFrequency);
 			return { a, b };
 		}
 
-		static AB calcCoefBandStop(index order, double lowerCutoffFrequency, double upperCutoffFrequency, double samplingFrequency);
+		[[nodiscard]]
+		static AB calcCoefBandStop(
+			index order,
+			double lowerCutoffFrequency, double upperCutoffFrequency,
+			double samplingFrequency
+		);
 
 		template <index order>
+		[[nodiscard]]
 		static InfiniteResponseFilterFixed<order + 1>
 		createBandStop(double lowerCutoffFrequency, double upperCutoffFrequency, double samplingFrequency) {
 			auto [a, b] = calcCoefBandStop(order, lowerCutoffFrequency, upperCutoffFrequency, samplingFrequency);

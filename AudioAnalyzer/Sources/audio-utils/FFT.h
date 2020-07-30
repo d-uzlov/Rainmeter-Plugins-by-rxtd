@@ -13,25 +13,18 @@
 
 namespace rxtd::audio_utils {
 	class FFT {
+		using FftImpl = kiss_fft::KissFft<float>;
+
 		index fftSize{ };
 		float scalar{ };
 
 		std::vector<float> window;
 
-		kiss_fft::KissFft<float> kiss;
+		FftImpl kiss;
 
-		index inputBufferSize{ };
-		index outputBufferSize{ };
-		// std::vector<float> inputBuffer;
-		// std::vector<decltype(kiss)::cpx_t> outputBuffer;
-
-	public:
-		using input_buffer_type = float;
-		using output_buffer_type = decltype(kiss)::cpx_t;
-
-	private:
-		array_span<input_buffer_type> inputBuffer{ };
-		array_span<output_buffer_type> outputBuffer{ };
+		// TODO process everything in place in cascades?
+		std::vector<FftImpl::scalar_type> inputBuffer;
+		std::vector<FftImpl::complex_type> outputBuffer;
 
 	public:
 		FFT() = default;
@@ -39,10 +32,11 @@ namespace rxtd::audio_utils {
 
 		void setSize(index newSize, bool correctScalar);
 
+		[[nodiscard]]
 		double getDC() const;
+		
+		[[nodiscard]]
 		float getBinMagnitude(index binIndex) const;
-
-		void setBuffers(array_span<input_buffer_type> inputBuffer, array_span<output_buffer_type> outputBuffer);
 
 		void resetBuffers() {
 			inputBuffer = { };
@@ -50,10 +44,9 @@ namespace rxtd::audio_utils {
 		}
 
 		void process(array_view<float> wave);
-		index getInputBufferSize() const;
-		index getOutputBufferSize() const;
-
+		
 	private:
+		[[nodiscard]]
 		static std::vector<float> createHannWindow(index fftSize);
 	};
 }

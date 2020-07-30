@@ -11,12 +11,11 @@
 #include "my-windows.h"
 #include <filesystem>
 
-#include "undef.h"
-
 using namespace utils;
 
-FileWrapper::FileWrapper(const wchar_t *path) {
-	fileHandle = CreateFileW(path,
+FileWrapper::FileWrapper(const wchar_t* path) {
+	fileHandle = CreateFileW(
+		path,
 		0
 		| GENERIC_WRITE
 		,
@@ -27,7 +26,8 @@ FileWrapper::FileWrapper(const wchar_t *path) {
 		0
 		// |FILE_ATTRIBUTE_NORMAL
 		// | FILE_ATTRIBUTE_TEMPORARY
-		, nullptr);
+		, nullptr
+	);
 }
 
 FileWrapper::~FileWrapper() {
@@ -38,15 +38,17 @@ bool FileWrapper::isValid() const {
 	return fileHandle != INVALID_HANDLE_VALUE;
 }
 
-void FileWrapper::write(const void *data, index count) {
+void FileWrapper::write(const void* data, index count) {
 	if (!isValid()) {
 		return;
 	}
 
 	DWORD bytesWritten;
-	const bool success = WriteFile(fileHandle, data,
-		DWORD(count),  // number of bytes to write
-		&bytesWritten, nullptr);
+	const bool success = WriteFile(
+		fileHandle, data,
+		DWORD(count), // number of bytes to write
+		&bytesWritten, nullptr
+	);
 
 	if (!success || index(bytesWritten) != count) {
 		close();
@@ -54,7 +56,7 @@ void FileWrapper::write(const void *data, index count) {
 }
 
 string FileWrapper::getAbsolutePath(string folder, sview currentPath) {
-	std::filesystem::path path { folder };
+	std::filesystem::path path{ folder };
 	if (!path.is_absolute()) {
 		folder = currentPath;
 		folder += folder;

@@ -17,27 +17,19 @@ namespace rxtd::audio_analyzer {
 	class DataSupplier {
 	public:
 		virtual ~DataSupplier() = default;
+		[[nodiscard]]
 		virtual array_view<float> getWave() const = 0;
 
 		template <typename T = SoundHandler>
+		[[nodiscard]]
 		const T* getHandler(isview id) const {
 			return dynamic_cast<const T*>(getHandlerRaw(id));
-		}
-
-		/**
-		 * returns array of size @code size.
-		 * Can be called several times, each time buffer will be different.
-		 * Released automatically after end of process() and processSilent().
-		 */
-		template <typename T>
-		array_span<T> getBuffer(index size) const {
-			return { reinterpret_cast<T*>(getBufferRaw(size * sizeof(T))), size };
 		}
 
 		virtual void log(wchar_t* message) const = 0;
 
 	protected:
-		virtual std::byte* getBufferRaw(index size) const = 0;
+		[[nodiscard]]
 		virtual const SoundHandler* getHandlerRaw(isview id) const = 0;
 	};
 }

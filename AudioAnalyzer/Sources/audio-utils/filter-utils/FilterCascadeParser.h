@@ -38,6 +38,7 @@ namespace rxtd::audio_utils {
 			return !(lhs == rhs);
 		}
 
+		[[nodiscard]]
 		FilterCascade getInstance(double samplingFrequency) const;
 	};
 
@@ -45,17 +46,23 @@ namespace rxtd::audio_utils {
 	public:
 		using FCF = FilterCascadeCreator::FilterCreationFunction;
 
+		[[nodiscard]]
 		static FilterCascadeCreator parse(const utils::Option& description);
 
 	private:
+		[[nodiscard]]
 		static FCF parseFilter(const utils::OptionList& description);
 
+		[[nodiscard]]
 		static FCF parseBWLowPass(index order, double cutoff);
 
+		[[nodiscard]]
 		static FCF parseBWHighPass(index order, double cutoff);
 
+		[[nodiscard]]
 		static FCF parseBWBandPass(index order, double cutoffLow, double cutoffHigh);
 
+		[[nodiscard]]
 		static FCF parseBWBandStop(index order, double cutoffLow, double cutoffHigh);
 	};
 }

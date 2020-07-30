@@ -20,14 +20,20 @@ namespace rxtd::utils {
 	public:
 		IMMDeviceEnumeratorWrapper();
 
+		[[nodiscard]]
 		MediaDeviceWrapper getDeviceByID(MediaDeviceType type, const string& id);
-		
+
+		[[nodiscard]]
 		MediaDeviceWrapper getDefaultDevice(MediaDeviceType type);
 
+		[[nodiscard]]
 		std::vector<MediaDeviceWrapper> getActiveDevices(MediaDeviceType type);
+		
+		[[nodiscard]]
 		std::vector<MediaDeviceWrapper> getAllDevices(MediaDeviceType type);
 
 	private:
+		[[nodiscard]]
 		std::vector<MediaDeviceWrapper> getCollection(MediaDeviceType type, uint32_t deviceStateMask);
 	};
 }

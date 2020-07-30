@@ -51,6 +51,7 @@ namespace rxtd::audio_analyzer {
 
 	private:
 		void legacy_readOptions();
+		[[nodiscard]]
 		double legacy_update();
 	};
 }

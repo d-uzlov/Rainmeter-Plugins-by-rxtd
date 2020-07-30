@@ -77,10 +77,12 @@ namespace rxtd::utils {
 			}
 		}
 
+		[[nodiscard]]
 		bool isValid() const {
 			return ptr != nullptr;
 		}
 
+		[[nodiscard]]
 		T* getPointer() {
 			return ptr;
 		}

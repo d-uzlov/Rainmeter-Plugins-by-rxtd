@@ -27,10 +27,12 @@ namespace rxtd::audio_utils {
 
 		void applyInPlace(array_span<float> wave) const;
 
+		[[nodiscard]]
 		array_view<float> getProcessed() const {
 			return processed;
 		}
 
+		[[nodiscard]]
 		bool isEmpty() const {
 			return filters.empty();
 		}

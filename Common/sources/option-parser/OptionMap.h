@@ -16,65 +16,84 @@ namespace rxtd::utils {
 	class OptionMap : public AbstractOption<OptionMap> {
 	public:
 		struct MapOptionInfo {
-			SubstringViewInfo substringInfo { };
+			SubstringViewInfo substringInfo{ };
 			bool touched = false;
 
 			MapOptionInfo() = default;
-			MapOptionInfo(SubstringViewInfo substringInfo) : substringInfo(substringInfo) { }
+
+			MapOptionInfo(SubstringViewInfo substringInfo) : substringInfo(substringInfo) {
+			}
 		};
 
 	private:
-		// For move and copy operations. 
+		// For move and copy operations.
 		// String view would require much more hustle when moved with source than SubstringViewInfo
-		std::map<SubstringViewInfo, SubstringViewInfo> paramsInfo { };
+		std::map<SubstringViewInfo, SubstringViewInfo> paramsInfo{ };
 
 		// For fast search.
-		mutable std::map<isview, MapOptionInfo> params { };
+		mutable std::map<isview, MapOptionInfo> params{ };
 
 	public:
 		OptionMap() = default;
-		OptionMap(sview view, std::vector<wchar_t> &&source, std::map<SubstringViewInfo, SubstringViewInfo>&& paramsInfo);
+		OptionMap(
+			sview view, std::vector<wchar_t>&& source,
+			std::map<SubstringViewInfo, SubstringViewInfo>&& paramsInfo
+		);
 
 		// Returns named option, search is case-insensitive.
 		// Doesn't raise the "touched" flag on the option
+		[[nodiscard]]
 		Option getUntouched(sview name) const;
 
+		[[nodiscard]]
 		GhostOption get(sview name) const & {
 			return get(name % ciView());
 		}
 
+		[[nodiscard]]
 		GhostOption get(isview name) const &;
 
+		[[nodiscard]]
 		GhostOption get(const wchar_t* name) const & {
-			return get(isview { name });
+			return get(isview{ name });
 		}
 
+		[[nodiscard]]
 		Option get(sview name) const && {
 			return get(name);
 		}
-		
+
+		[[nodiscard]]
 		Option get(isview name) const && {
 			return get(name);
 		}
-		
+
+		[[nodiscard]]
 		Option get(const wchar_t* name) const && {
 			return get(name);
 		}
 
 		// returns true if option with such name exists.
+		[[nodiscard]]
 		bool has(sview name) const {
 			return has(name % ciView());
 		}
+
 		// returns true if option with such name exists.
+		[[nodiscard]]
 		bool has(isview name) const;
 		// returns true if option with such name exists.
+		[[nodiscard]]
 		bool has(const wchar_t* name) const {
-			return has(isview { name });
+			return has(isview{ name });
 		}
 
+		[[nodiscard]]
 		std::vector<isview> getListOfUntouched() const;
 	private:
 		void fillParams() const;
+
+		[[nodiscard]]
 		MapOptionInfo* find(isview name) const;
 	};
 }

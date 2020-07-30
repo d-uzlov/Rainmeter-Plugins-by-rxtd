@@ -69,22 +69,26 @@ namespace rxtd {
 
 		}
 		inline struct {
+			[[nodiscard]]
 			struct conversion_details::caseInsensitiveObject operator()() const {
 				return { };
 			}
 		} ciString { };
 
+		[[nodiscard]]
 		inline istring operator%(string&& str, conversion_details::caseInsensitiveObject) {
 			istring result { reinterpret_cast<istring&&>(str) };
 			return result;
 		}
 
 		inline struct {
+			[[nodiscard]]
 			struct conversion_details::caseSensitiveObject operator()() const {
 				return { };
 			}
 		} csString { };
 
+		[[nodiscard]]
 		inline string operator%(istring&& str, conversion_details::caseSensitiveObject) {
 			string result { reinterpret_cast<string&&>(str) };
 			return result;
@@ -92,38 +96,43 @@ namespace rxtd {
 
 
 		inline struct {
+			[[nodiscard]]
 			conversion_details::caseInsensitiveViewObject operator()() const {
 				return { };
 			}
 		} ciView { };
 
+		[[nodiscard]]
 		inline isview operator%(sview view, conversion_details::caseInsensitiveViewObject) {
 			return { view.data(), view.length() };
 		}
 
 		inline struct {
+			[[nodiscard]]
 			conversion_details::caseSensitiveViewObject operator()() const {
 				return { };
 			}
 		} csView { };
 
+		[[nodiscard]]
 		inline sview operator%(isview view, conversion_details::caseSensitiveViewObject) {
 			return { view.data(), view.length() };
 		}
 
 
 		inline struct {
+			[[nodiscard]]
 			struct conversion_details::stringCreationObject operator()() const {
 				return { };
 			}
 		} own { };
 
-
+		[[nodiscard]]
 		inline string operator%(sview view, conversion_details::stringCreationObject) {
 			return { view.data(), view.length() };
 		}
 
-
+		[[nodiscard]]
 		inline istring operator%(isview view, conversion_details::stringCreationObject) {
 			return { view.data(), view.length() };
 		}

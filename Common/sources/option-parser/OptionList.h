@@ -26,25 +26,30 @@ namespace rxtd::utils {
 		}
 
 		// Allows you to steal inner resources.
+		[[nodiscard]]
 		std::pair<sview, std::vector<SubstringViewInfo>> consume() && {
 			return { getView(), std::move(list) };
 		}
 
 		// Count of elements in list.
+		[[nodiscard]]
 		index size() const {
 			return list.size();
 		}
 
 		// Alias to "size() == 0".
+		[[nodiscard]]
 		bool empty() const {
 			return list.empty();
 		}
 
 		// Parseable view of Nth option.
+		[[nodiscard]]
 		GhostOption get(index ind) const & {
 			return GhostOption { list[ind].makeView(getView()) };
 		}
 
+		[[nodiscard]]
 		Option get(index ind) const && {
 			return get(ind);
 		}
@@ -68,15 +73,18 @@ namespace rxtd::utils {
 				return &container != &other.container || ind != other.ind;
 			}
 
+			[[nodiscard]]
 			GhostOption operator*() const {
 				return container.get(ind);
 			}
 		};
 
+		[[nodiscard]]
 		ghost_iterator begin() const & {
 			return { *this, 0 };
 		}
 
+		[[nodiscard]]
 		ghost_iterator end() const & {
 			return { *this, size() };
 		}
@@ -100,15 +108,18 @@ namespace rxtd::utils {
 				return &container != &other.container || ind != other.ind;
 			}
 
+			[[nodiscard]]
 			Option operator*() const {
 				return container.get(ind);
 			}
 		};
 
+		[[nodiscard]]
 		iterator begin() const && {
 			return { *this, 0 };
 		}
 
+		[[nodiscard]]
 		iterator end() const && {
 			return { *this, size() };
 		}

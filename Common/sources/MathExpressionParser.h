@@ -90,7 +90,9 @@ namespace rxtd::utils {
 		explicit MathExpressionParser(sview source);
 
 		void parse();
+		[[nodiscard]]
 		bool isError() const;
+		[[nodiscard]]
 		ExpressionTreeNode getExpression() const;
 
 	private:
@@ -101,7 +103,9 @@ namespace rxtd::utils {
 		ExpressionTreeNode parsePower();
 		ExpressionTreeNode parseAtom();
 
-		static int64_t parseInt(sview view);
+		[[nodiscard]]
+		static index parseInt(sview view);
+		[[nodiscard]]
 		static double parseFractional(sview view);
 	};
 }

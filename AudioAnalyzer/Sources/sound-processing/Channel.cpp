@@ -11,8 +11,6 @@
 #include <my-windows.h>
 #include <Audioclient.h>
 
-#include "undef.h"
-
 using namespace audio_analyzer;
 
 Channel::ChannelParser Channel::channelParser{ };
@@ -118,21 +116,6 @@ std::optional<Channel> Channel::ChannelParser::find(const isview str) {
 	return iter->second;
 }
 
-void Channel::ChannelParser::addElement(isview name, Channel value) {
-	map[name % own()] = value;
-}
-
-Channel::Channel(Value value) : value(value) {
-}
-
-bool Channel::operator==(Channel a) const {
-	return value == a.value;
-}
-
-bool Channel::operator!=(Channel a) const {
-	return value != a.value;
-}
-
 sview Channel::technicalName() const {
 	switch (value) {
 	case eFRONT_LEFT: return L"FRONT_LEFT";
@@ -148,14 +131,6 @@ sview Channel::technicalName() const {
 	}
 }
 
-bool audio_analyzer::operator<(Channel left, Channel right) {
-	return left.value < right.value;
-}
-
-
-sview ChannelLayout::getName() const {
-	return name;
-}
 
 std::optional<index> ChannelLayout::indexOf(Channel channel) const {
 	const auto iter = channelMap.find(channel);
@@ -165,27 +140,12 @@ std::optional<index> ChannelLayout::indexOf(Channel channel) const {
 	return iter->second;
 }
 
-bool ChannelLayout::contains(Channel channel) const {
-	return channelMap.find(channel) != channelMap.end();
-}
-
-const std::vector<Channel>& ChannelLayout::getChannelsOrderView() const {
-	return channelOrder;
-}
-
-const std::unordered_map<Channel, index>& ChannelLayout::getChannelsMapView() const {
-	return channelMap;
-}
 
 LayoutBuilder& LayoutBuilder::add(Channel channel) {
 	layout.channelMap[channel] = nextIndex;
 	nextIndex++;
 
 	return *this;
-}
-
-ChannelLayout LayoutBuilder::finish() const {
-	return layout;
 }
 
 ChannelLayout ChannelLayouts::getMono() {

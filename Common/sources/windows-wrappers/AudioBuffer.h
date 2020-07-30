@@ -25,10 +25,12 @@ namespace rxtd::utils {
 
 		~AudioBuffer();
 
+		[[nodiscard]]
 		bool isSilent() const {
 			return silent;
 		}
 
+		[[nodiscard]]
 		array_view<std::byte> getBuffer() const {
 			return buffer;
 		}

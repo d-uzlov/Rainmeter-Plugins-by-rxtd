@@ -6,10 +6,10 @@ namespace rxtd::utils {
 		parent(parent),
 		id(id),
 		silent(silent),
-		buffer(buffer) { }
+		buffer(buffer) {
+	}
 
 	AudioBuffer::~AudioBuffer() {
 		parent.releaseBuffer(id);
 	}
 }
-

@@ -37,32 +37,39 @@ namespace rxtd::utils {
 		array2d_span& operator=(const array2d_span& other) = default;
 		array2d_span& operator=(array2d_span&& other) noexcept = default;
 
-		void init(const T value = {}) {
+		void fill(const T value = {}) {
 			std::fill_n(ptr, buffersCount * bufferSize, value);
 		}
 
+		[[nodiscard]]
 		constexpr index getBuffersCount() const {
 			return buffersCount;
 		}
 
+		[[nodiscard]]
 		constexpr index getBufferSize() const {
 			return bufferSize;
 		}
 
+		[[nodiscard]]
 		constexpr bool isEmpty() const {
 			return bufferSize == 0;
 		}
 
+		[[nodiscard]]
 		constexpr array_span<T> operator[](index bufferNumber) {
 			return { ptr + bufferSize * bufferNumber, bufferSize };
 		}
+		[[nodiscard]]
 		constexpr array_view<T> operator[](index bufferNumber) const {
 			return { ptr + bufferSize * bufferNumber, bufferSize };
 		}
 
+		[[nodiscard]]
 		constexpr array_span<T> getFlat() {
 			return { ptr, buffersCount * bufferSize };
 		}
+		[[nodiscard]]
 		constexpr array_view<T> getFlat() const {
 			return { ptr, buffersCount * bufferSize };
 		}
@@ -93,26 +100,31 @@ namespace rxtd::utils {
 		array2d_view& operator=(const array2d_view& other) = default;
 		array2d_view& operator=(array2d_view&& other) noexcept = default;
 
-		void init(const T value = {}) {
+		void fill(const T value = {}) {
 			std::fill_n(ptr, buffersCount * bufferSize, value);
 		}
 
+		[[nodiscard]]
 		constexpr index getBuffersCount() const {
 			return buffersCount;
 		}
 
+		[[nodiscard]]
 		constexpr index getBufferSize() const {
 			return bufferSize;
 		}
 
+		[[nodiscard]]
 		constexpr bool isEmpty() const {
 			return bufferSize == 0;
 		}
 
+		[[nodiscard]]
 		constexpr array_view<T> operator[](index bufferNumber) const {
 			return { ptr + bufferSize * bufferNumber, bufferSize };
 		}
 
+		[[nodiscard]]
 		constexpr array_view<T> getFlat() const {
 			return { ptr, buffersCount * bufferSize };
 		}

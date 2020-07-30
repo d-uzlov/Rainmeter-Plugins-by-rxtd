@@ -55,7 +55,7 @@ namespace rxtd::utils {
 			pixelData.reserve(vectorSize + maxOffset);
 
 			auto imageLines = getCurrentLinesArray();
-			imageLines.init(backgroundValue);
+			imageLines.fill(backgroundValue);
 
 			lastFillValue = backgroundValue;
 			sameStripsCount = width - 1;
@@ -105,10 +105,12 @@ namespace rxtd::utils {
 			line[lastStripIndex] = value;
 		}
 
+		[[nodiscard]]
 		bool isEmpty() const {
 			return sameStripsCount >= width;
 		}
 
+		[[nodiscard]]
 		bool isForced() const {
 			// should be used to ensure
 			// that when image is stationary it will be cleared fully
@@ -119,14 +121,17 @@ namespace rxtd::utils {
 			return forced || !isEmpty();
 		}
 
+		[[nodiscard]]
 		array2d_view<PixelValueType> getPixels() const {
 			return getCurrentLinesArray();
 		}
 
+		[[nodiscard]]
 		array2d_span<PixelValueType> getPixelsWritable() {
 			return getCurrentLinesArray();
 		}
 
+		[[nodiscard]]
 		index getLastStripIndex() const {
 			if (!stationary) {
 				return width - 1;
@@ -139,6 +144,7 @@ namespace rxtd::utils {
 			return offset;
 		}
 
+		[[nodiscard]]
 		index getPastLastStripIndex() const {
 			if (!stationary) {
 				return 0;
@@ -160,6 +166,7 @@ namespace rxtd::utils {
 			return width - 1;
 		}
 
+		[[nodiscard]]
 		index getReserveSize(index size) const {
 			if (stationary) {
 				return 0;
@@ -169,10 +176,12 @@ namespace rxtd::utils {
 			return static_cast<index>(std::ceil(size * reserveCoef));
 		}
 
+		[[nodiscard]]
 		array2d_span<PixelValueType> getCurrentLinesArray() {
 			return { pixelData.data() + beginningOffset, height, width };
 		}
 
+		[[nodiscard]]
 		array2d_view<PixelValueType> getCurrentLinesArray() const {
 			return { pixelData.data() + beginningOffset, height, width };
 		}

@@ -156,11 +156,13 @@ namespace rxtd::utils {
 			buffer.resetPointers();
 		}
 
+		[[nodiscard]]
 		const wchar_t* getBufferPtr() {
 			buffer.appendEOL();
 			return buffer.getBuffer();
 		}
 
+		[[nodiscard]]
 		sview getBufferView() {
 			buffer.appendEOL();
 			return buffer.getBuffer();

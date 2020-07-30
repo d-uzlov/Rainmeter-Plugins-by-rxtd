@@ -20,7 +20,7 @@ namespace rxtd::utils {
 	class IAudioClientWrapper : public GenericComWrapper<IAudioClient> {
 		index lastResult = { };
 		WaveFormat format;
-		MediaDeviceType type { };
+		MediaDeviceType type{ };
 
 	public:
 		IAudioClientWrapper() = default;
@@ -28,9 +28,12 @@ namespace rxtd::utils {
 
 		IAudioCaptureClientWrapper openCapture();
 
+		[[nodiscard]]
 		WaveFormat getFormat() const;
+
 		void initShared();
 
+		[[nodiscard]]
 		index getLastResult() const;
 	};
 }

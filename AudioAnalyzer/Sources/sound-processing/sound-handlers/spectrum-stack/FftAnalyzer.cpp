@@ -106,11 +106,6 @@ void FftAnalyzer::_process(const DataSupplier& dataSupplier) {
 
 	const auto wave = dataSupplier.getWave();
 
-	fft.setBuffers(
-		dataSupplier.getBuffer<audio_utils::FFT::input_buffer_type>(fft.getInputBufferSize()),
-		dataSupplier.getBuffer<audio_utils::FFT::output_buffer_type>(fft.getOutputBufferSize())
-	);
-
 	if (params.randomTest != 0.0) {
 		processRandom(wave.size());
 	} else {

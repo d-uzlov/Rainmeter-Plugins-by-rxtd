@@ -10,7 +10,7 @@
 #pragma once
 
 namespace rxtd::utils {
-	template<typename T>
+	template <typename T>
 	class AbstractOption {
 		// View of string containing data for this option
 		// There are a view and a source, because source may be empty while view points to data in some other object
@@ -22,7 +22,9 @@ namespace rxtd::utils {
 
 	public:
 		explicit AbstractOption() = default;
-		AbstractOption(sview view, std::vector<wchar_t> &&source) : _view(view), source(std::move(source)) { }
+
+		AbstractOption(sview view, std::vector<wchar_t>&& source) : _view(view), source(std::move(source)) {
+		}
 
 		T& own() {
 			if (source.empty()) {
@@ -40,14 +42,16 @@ namespace rxtd::utils {
 			source.resize(0);
 		}
 
+		[[nodiscard]]
 		sview getView() const {
 			if (source.empty()) {
 				return _view;
 			}
 
-			return sview { source.data(), source.size() };
+			return sview{ source.data(), source.size() };
 		}
 
+		[[nodiscard]]
 		std::vector<wchar_t>&& consumeSource() && {
 			return std::move(source);
 		}

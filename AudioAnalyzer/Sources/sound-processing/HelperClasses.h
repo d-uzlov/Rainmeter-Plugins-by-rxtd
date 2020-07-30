@@ -24,7 +24,6 @@ namespace rxtd::audio_analyzer {
 		const ChannelData* channelData = nullptr;
 
 		mutable index nextBufferIndex = 0;
-		mutable std::vector<std::vector<std::byte>> buffers;
 
 	public:
 		mutable utils::Rainmeter::Logger logger;
@@ -32,9 +31,6 @@ namespace rxtd::audio_analyzer {
 		void setChannelData(const ChannelData* channelData);
 
 		array_view<float> getWave() const override;
-		std::byte* getBufferRaw(index size) const override;
-
-		void resetBuffers();
 
 		void log(wchar_t* message) const override {
 			logger.error(message);

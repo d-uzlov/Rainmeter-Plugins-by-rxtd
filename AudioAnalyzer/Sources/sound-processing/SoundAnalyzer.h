@@ -56,6 +56,7 @@ namespace rxtd::audio_analyzer {
 			granularity = value;
 		}
 
+		[[nodiscard]]
 		AudioChildHelper getAudioChildHelper() const;
 
 		/**
@@ -67,6 +68,7 @@ namespace rxtd::audio_analyzer {
 		 */
 		void setHandlers(std::set<Channel> channelSetRequested, ParamParser::HandlerPatcherInfo handlerPatchers);
 
+		[[nodiscard]]
 		ChannelProcessingHelper& getCPH() {
 			return cph;
 		}
@@ -76,14 +78,6 @@ namespace rxtd::audio_analyzer {
 		// returns true when killed on timeout
 		bool finishStandalone(clock::time_point killTime) noexcept;
 		void resetValues() noexcept;
-
-		bool needChannelAuto() const {
-			const auto iter = channels.find(Channel::eAUTO);
-			if (iter == channels.end()) {
-				return false;
-			}
-			return !iter->second.empty();
-		}
 
 	private:
 		void patch() {

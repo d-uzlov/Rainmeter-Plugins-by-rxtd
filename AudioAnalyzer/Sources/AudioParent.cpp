@@ -45,6 +45,8 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 void AudioParent::_reload() {
 	const auto source = rain.read(L"Source").asIString();
 	string id = { };
+
+	using DataSource = DeviceManager::DataSource;
 	DataSource sourceEnum;
 	if (!source.empty()) {
 		if (source == L"Output") {
@@ -93,8 +95,8 @@ double AudioParent::_update() {
 	const auto changes = notificationClient.getPointer()->takeChanges();
 
 	const auto source = deviceManager.getRequesterSourceType();
-	if (source == DataSource::eDEFAULT_INPUT && changes.defaultCapture
-		|| source == DataSource::eDEFAULT_OUTPUT && changes.defaultRender) {
+	if (source == DeviceManager::DataSource::eDEFAULT_INPUT && changes.defaultCapture
+		|| source == DeviceManager::DataSource::eDEFAULT_OUTPUT && changes.defaultRender) {
 		deviceManager.forceReconnect();
 	}
 
@@ -349,7 +351,7 @@ void AudioParent::process() {
 	}
 }
 
-void AudioParent::patchSA(ParamParser::ProcessingsInfoMap procs) {
+void AudioParent::patchSA(const ParamParser::ProcessingsInfoMap& procs) {
 	std::set<istring> toDelete;
 	for (auto& [name, ptr] : saMap) {
 		if (procs.find(name) == procs.end()) {

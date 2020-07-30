@@ -43,6 +43,9 @@ namespace kiss_fft {
 	public:
 		using cpx_t = std::complex<scalar_t>;
 
+		using scalar_type = scalar_t;
+		using complex_type = cpx_t;
+
 		KissFft() : KissFft(0, false) { }
 
 		KissFft(const std::size_t nfft, const bool inverse);

@@ -45,14 +45,17 @@ namespace rxtd::audio_analyzer {
 		void _resolve(array_view<isview> args, string& resolveBufferString) override;
 
 	public:
+		[[nodiscard]]
 		double getValue(isview proc, isview id, Channel channel, index ind) const;
+		[[nodiscard]]
 		double legacy_getValue(isview id, Channel channel, index ind) const;
 
 	private:
 		void process();
 
-		void patchSA(ParamParser::ProcessingsInfoMap procs);
+		void patchSA(const ParamParser::ProcessingsInfoMap& procs);
 
+		[[nodiscard]]
 		std::pair<SoundHandler*, AudioChildHelper> findHandlerByName(isview name, Channel channel) const;
 
 		void legacy_resolve(array_view<isview> args, string& resolveBufferString);

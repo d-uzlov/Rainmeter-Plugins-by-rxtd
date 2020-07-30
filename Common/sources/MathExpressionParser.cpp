@@ -428,7 +428,7 @@ ExpressionTreeNode MathExpressionParser::parseAtom() {
 	return ExpressionTreeNode();
 }
 
-int64_t MathExpressionParser::parseInt(sview view) {
+index MathExpressionParser::parseInt(sview view) {
 	return StringUtils::parseInt(view);
 }
 

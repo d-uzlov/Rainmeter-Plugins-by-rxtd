@@ -14,12 +14,17 @@ namespace rxtd::audio_utils {
 	// Based on formulas from Audio-EQ-Cookbook
 	class BQFilterBuilder {
 	public:
+		[[nodiscard]]
 		static BiQuadIIR createHighShelf(double dbGain, double q, double centralFrequency, double samplingFrequency);
+		[[nodiscard]]
 		static BiQuadIIR createLowShelf(double dbGain, double q, double centralFrequency, double samplingFrequency);
 
+		[[nodiscard]]
 		static BiQuadIIR createHighPass(double q, double centralFrequency, double samplingFrequency);
+		[[nodiscard]]
 		static BiQuadIIR createLowPass(double q, double centralFrequency, double samplingFrequency);
 
+		[[nodiscard]]
 		static BiQuadIIR createPeak(double dbGain, double q, double centralFrequency, double samplingFrequency);
 	};
 }

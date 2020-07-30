@@ -40,6 +40,7 @@ namespace rxtd::utils {
 			border = _border.toIntColor();
 		}
 
+		[[nodiscard]]
 		array2d_view<uint32_t> getResultBuffer() const {
 			return resultBuffer;
 		}

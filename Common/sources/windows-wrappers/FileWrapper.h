@@ -11,7 +11,7 @@
 
 namespace rxtd::utils {
 	class FileWrapper {
-		void *fileHandle { };
+		void* fileHandle{ };
 
 	public:
 		FileWrapper(const wchar_t* path);
@@ -23,9 +23,11 @@ namespace rxtd::utils {
 
 		~FileWrapper();
 
+		[[nodiscard]]
 		bool isValid() const;
-		void write(const void *data, index count);
+		void write(const void* data, index count);
 
+		[[nodiscard]]
 		static string getAbsolutePath(string folder, sview currentPath);
 
 		static void createDirectories(string path);

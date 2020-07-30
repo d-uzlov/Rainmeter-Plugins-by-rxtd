@@ -34,27 +34,47 @@ namespace rxtd::audio_analyzer {
 	public:
 		AudioEnumeratorHelper(utils::Rainmeter::Logger logger);
 
-		bool isValid() const;
+		[[nodiscard]]
+		bool isValid() const {
+			return valid;
+		}
 
+		[[nodiscard]]
 		std::optional<utils::MediaDeviceWrapper> getDevice(const string& deviceID);
+		[[nodiscard]]
 		std::optional<utils::MediaDeviceWrapper> getDefaultDevice(utils::MediaDeviceType type);
 
+		[[nodiscard]]
 		std::optional<utils::MediaDeviceType> getDeviceType(const string& deviceID);
-		const string& getDeviceListInput() const;
-		const string& getDeviceListOutput() const;
+
+		[[nodiscard]]
+		const string& getDeviceListInput() const {
+			return deviceStringInput;
+		}
+
+		[[nodiscard]]
+		const string& getDeviceListOutput() const {
+			return deviceStringOutput;
+		}
+
 		void updateDeviceStrings();
 		void makeDeviceString(utils::MediaDeviceType type, string& result);
 
 		void updateDeviceStringLegacy(utils::MediaDeviceType type);
+
+		[[nodiscard]]
 		const string& getDeviceListLegacy() const {
 			return deviceStringLegacy;
 		}
 
+		[[nodiscard]]
 		utils::IMMDeviceEnumeratorWrapper& getWrapper() {
 			return enumeratorWrapper;
 		}
+
 	private:
 		void updateDeviceLists();
+		[[nodiscard]]
 		std::set<string> readDeviceIdList(utils::MediaDeviceType type);
 	};
 }

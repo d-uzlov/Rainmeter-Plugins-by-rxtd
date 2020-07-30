@@ -18,16 +18,18 @@ namespace rxtd::utils {
 		friend AudioBuffer;
 
 		index lastBufferID = 0;
-		uint32_t lastBufferSize { };
-		index lastResult { };
+		uint32_t lastBufferSize{ };
+		index lastResult{ };
 
 	public:
 		IAudioCaptureClientWrapper() = default;
 		explicit IAudioCaptureClientWrapper(InitFunction initFunction);
 
 		// Be careful, call to this function invalidates all previous buffers
+		[[nodiscard]]
 		AudioBuffer readBuffer();
 
+		[[nodiscard]]
 		index getLastResult() const;
 
 	private:

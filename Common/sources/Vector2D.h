@@ -18,7 +18,7 @@ namespace rxtd::utils {
 	 */
 	template <typename T>
 	class Vector2D {
-		std::vector<T> array { };
+		std::vector<T> array{ };
 		index buffersCount = 0;
 		index bufferSize = 0;
 
@@ -33,6 +33,7 @@ namespace rxtd::utils {
 			other.buffersCount = 0;
 			other.bufferSize = 0;
 		}
+
 		Vector2D& operator=(Vector2D&& other) noexcept {
 			if (this == &other)
 				return *this;
@@ -51,7 +52,7 @@ namespace rxtd::utils {
 		Vector2D(const Vector2D& other) = default;
 		Vector2D& operator=(const Vector2D& other) = default;
 
-		void init(const T value = {}) {
+		void init(const T value = { }) {
 			std::fill_n(array.data(), buffersCount * bufferSize, value);
 		}
 
@@ -59,6 +60,8 @@ namespace rxtd::utils {
 			buffersCount = count;
 			setBufferSize(bufferSize);
 		}
+
+		[[nodiscard]]
 		constexpr index getBuffersCount() const {
 			return buffersCount;
 		}
@@ -67,25 +70,33 @@ namespace rxtd::utils {
 			bufferSize = size;
 			array.resize(buffersCount * size);
 		}
+
+		[[nodiscard]]
 		constexpr index getBufferSize() const {
 			return bufferSize;
 		}
 
+		[[nodiscard]]
 		constexpr bool isEmpty() const {
 			return bufferSize == 0;
 		}
 
+		[[nodiscard]]
 		constexpr array_span<T> operator[](index bufferNumber) {
 			return { array.data() + bufferSize * bufferNumber, bufferSize };
 		}
+		
+		[[nodiscard]]
 		constexpr array_view<T> operator[](index bufferNumber) const {
 			return { array.data() + bufferSize * bufferNumber, bufferSize };
 		}
 
+		[[nodiscard]]
 		constexpr array_span<T> getFlat() {
 			return { array.data(), buffersCount * bufferSize };
 		}
 
+		[[nodiscard]]
 		constexpr array_view<T> getFlat() const {
 			return { array.data(), buffersCount * bufferSize };
 		}

@@ -18,6 +18,7 @@ namespace rxtd::utils {
 		explicit PropertyStoreWrapper(InitFunction initFunction);
 
 		// I got bored of manually creating and freeing prop wrappers, so I created this function
+		[[nodiscard]]
 		string readProperty(const PROPERTYKEY& key);
 	};
 }

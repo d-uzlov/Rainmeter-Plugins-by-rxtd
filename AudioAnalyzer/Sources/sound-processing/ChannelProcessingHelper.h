@@ -82,15 +82,18 @@ namespace rxtd::audio_analyzer {
 			currentChannel = value;
 		}
 
+		[[nodiscard]]
 		array_view<float> grabNext() {
 			cacheChannel();
 			return channels[currentChannel].wave.takeChunk(grabBufferSize);
 		}
 
+		[[nodiscard]]
 		Resampler& getResampler() {
 			return resampler;
 		}
 
+		[[nodiscard]]
 		const Resampler& getResampler() const {
 			return resampler;
 		}

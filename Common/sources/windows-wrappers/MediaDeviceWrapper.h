@@ -15,7 +15,6 @@
 #include "MediaDeviceType.h"
 
 namespace rxtd::utils {
-	class IMMDeviceEnumeratorWrapper;
 	class MediaDeviceWrapper : public GenericComWrapper<IMMDevice> {
 	public:
 		struct DeviceInfo {
@@ -26,7 +25,7 @@ namespace rxtd::utils {
 		};
 
 	private:
-		MediaDeviceType type { };
+		MediaDeviceType type{ };
 		index lastResult = { };
 
 	public:
@@ -34,15 +33,22 @@ namespace rxtd::utils {
 
 		explicit MediaDeviceWrapper(MediaDeviceType type, InitFunction initFunction);
 
+		[[nodiscard]]
 		DeviceInfo readDeviceInfo();
+		
+		[[nodiscard]]
 		string readDeviceId();
 
+		[[nodiscard]]
 		IAudioClientWrapper openAudioClient();
 
+		[[nodiscard]]
 		index getLastResult() const;
 
+		[[nodiscard]]
 		MediaDeviceType getType() const;
 
+		[[nodiscard]]
 		bool isDeviceActive();
 	};
 }

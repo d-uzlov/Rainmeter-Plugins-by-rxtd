@@ -22,31 +22,41 @@ namespace rxtd::utils {
 	class Option : public AbstractOption<Option> {
 	public:
 		Option() = default;
-		explicit Option(sview view);
+
+		explicit Option(sview view) : AbstractOption(view, { }) {
+		}
 
 		explicit Option(isview view) : Option(view % csView()) {
 		}
 
-		explicit Option(wchar_t* view);
+		explicit Option(wchar_t* view) : Option(sview{ view }) {
+			own();
+		}
 
 		// Raw view of option.
+		[[nodiscard]]
 		sview asString(sview defaultValue = { }) const &;
 
+		[[nodiscard]]
 		string asString(sview defaultValue = { }) const && {
 			return string{ asString(defaultValue) };
 		}
 
 		// Raw case-insensitive view of option.
+		[[nodiscard]]
 		isview asIString(isview defaultValue = { }) const &;
 
+		[[nodiscard]]
 		istring asIString(isview defaultValue = { }) const && {
 			return istring{ asIString(defaultValue) };
 		}
 
 		// Parse float, support math operations.
+		[[nodiscard]]
 		double asFloat(double defaultValue = 0.0) const;
 
 		// Parse float, support math operations.
+		[[nodiscard]]
 		float asFloatF(float defaultValue = 0.0) const;
 
 		// Parse integer value, support math operations.
@@ -61,29 +71,44 @@ namespace rxtd::utils {
 			return static_cast<IntType>(dVal);
 		}
 
+		[[nodiscard]]
 		bool asBool(bool defaultValue = false) const;
 		// Parse Color, support math operations per color component.
+		[[nodiscard]]
 		Color asColor(Color defaultValue = { }) const;
 
+		[[nodiscard]]
 		OptionSeparated breakFirst(wchar_t separator) const;
 
+		[[nodiscard]]
 		OptionMap asMap(wchar_t optionDelimiter, wchar_t nameDelimiter) const &;
+		[[nodiscard]]
 		OptionMap asMap(wchar_t optionDelimiter, wchar_t nameDelimiter) &&;
+		[[nodiscard]]
 		OptionList asList(wchar_t delimiter) const &;
+		[[nodiscard]]
 		OptionList asList(wchar_t delimiter) &&;
+		[[nodiscard]]
 		OptionSequence asSequence(
 			wchar_t optionBegin = L'[', wchar_t optionEnd = L']',
 			wchar_t optionDelimiter = L' '
 		) const &;
+		[[nodiscard]]
 		OptionSequence asSequence(
 			wchar_t optionBegin = L'[', wchar_t optionEnd = L']',
 			wchar_t optionDelimiter = L' '
 		) &&;
 
-		bool empty() const;
+		[[nodiscard]]
+		bool empty() const {
+			return getView().empty();
+		}
 
 	private:
+		[[nodiscard]]
 		static double parseNumber(sview source);
+
+		[[nodiscard]]
 		static std::map<SubstringViewInfo, SubstringViewInfo> parseMapParams(
 			sview source,
 			wchar_t optionDelimiter,
@@ -106,10 +131,12 @@ namespace rxtd::utils {
 		explicit GhostOption(wchar_t* view) : Option(view) {
 		}
 
+		[[nodiscard]]
 		sview asString(sview defaultValue = { }) const {
 			return Option::asString(defaultValue);
 		}
 
+		[[nodiscard]]
 		isview asIString(isview defaultValue = { }) const {
 			return Option::asIString(defaultValue);
 		}

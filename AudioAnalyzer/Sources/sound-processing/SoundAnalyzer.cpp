@@ -72,7 +72,6 @@ bool SoundAnalyzer::process(const ChannelMixer& mixer, clock::time_point killTim
 				}
 
 				handler.ptr->process(dataSupplier);
-				dataSupplier.resetBuffers();
 
 				handler.wasValid = handler.ptr->isValid();
 				if (!handler.wasValid) {

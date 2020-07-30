@@ -15,14 +15,14 @@ namespace rxtd::audio_utils {
 	class BiQuadIIR : public AbstractFilter {
 		// inspired by https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.lfilter.html
 
-		double a1;
-		double a2;
-		double b0;
-		double b1;
-		double b2;
+		double a1{ };
+		double a2{ };
+		double b0{ };
+		double b1{ };
+		double b2{ };
 
-		double state0;
-		double state1;
+		double state0{ };
+		double state1{ };
 
 	public:
 		BiQuadIIR() = default;

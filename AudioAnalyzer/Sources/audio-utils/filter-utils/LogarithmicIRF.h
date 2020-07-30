@@ -12,21 +12,46 @@
 
 namespace rxtd::audio_utils {
 	class LogarithmicIRF {
-		float attackDecayConstants[2] { };
+		float attackDecayConstants[2]{ };
 		float result = 0.0;
 
 	public:
-		void setParams(double attackTime, double decayTime, index samplesPerSec, index stride);
-		void setParams(double attackTime, double decayTime, index samplesPerSec);
+		void setParams(double attackTime, double decayTime, index samplesPerSec, index stride) {
+			attackDecayConstants[0] = calculateAttackDecayConstant(float(attackTime), samplesPerSec, stride);
+			attackDecayConstants[1] = calculateAttackDecayConstant(float(decayTime), samplesPerSec, stride);
+		}
 
-		float next(float value);
-		float apply(float prev, float value);
-		float getLastResult() const;
+		void setParams(double attackTime, double decayTime, index samplesPerSec) {
+			setParams(attackTime, decayTime, samplesPerSec, 1);
+		}
 
-		void reset();
+		float next(float value) {
+			result = value + attackDecayConstants[(value < result)] * (result - value);
+			return result;
+		}
+
+		[[nodiscard]]
+		float apply(float prev, float value) {
+			return value + attackDecayConstants[(value < prev)] * (prev - value);
+		}
+
+		[[nodiscard]]
+		float getLastResult() const {
+			return result;
+		}
+
+		void reset() {
+			result = 0.0;
+		}
 
 	private:
-		static float calculateAttackDecayConstant(float time, index samplesPerSec, index stride);
+		[[nodiscard]]
+		static float calculateAttackDecayConstant(float time, index samplesPerSec, index stride) {
+			// stride and samplesPerSec are semantically guaranteed to be positive
+			// time can be positive or zero
+			// In case of zero result is exp(-inf) == 0 which is totally fine
+			return std::exp(-2.0f * stride / (samplesPerSec * time));
+		}
 	};
 
 }

@@ -21,10 +21,12 @@ namespace rxtd::utils {
 			this->reverseAlpha = 1 / alpha;
 		}
 
+		[[nodiscard]]
 		double toValue(double linear) const {
 			return valMin + (linear - linMin) * alpha;
 		}
 
+		[[nodiscard]]
 		double toLinear(double value) const {
 			return linMin + (value - valMin) * reverseAlpha;
 		}
@@ -50,10 +52,12 @@ namespace rxtd::utils {
 			this->reverseAlpha = 1 / alpha;
 		}
 
+		[[nodiscard]]
 		float toValue(float linear) const {
 			return valMin + (linear - linMin) * alpha;
 		}
 
+		[[nodiscard]]
 		float toLinear(float value) const {
 			return linMin + (value - valMin) * reverseAlpha;
 		}

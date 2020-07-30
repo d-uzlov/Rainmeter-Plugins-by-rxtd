@@ -15,16 +15,7 @@
 #include "OptionList.h"
 #include "OptionSequence.h"
 
-#include "undef.h"
-
 using namespace utils;
-
-Option::Option(sview view) : AbstractOption(view, { }) {
-}
-
-Option::Option(wchar_t* view) : Option(sview{ view }) {
-	own();
-}
 
 sview Option::asString(sview defaultValue) const & {
 	sview view = getView();
@@ -144,10 +135,6 @@ OptionSequence Option::asSequence(
 	// so we need to everything we want with the view before calling .consumeSource()
 	const sview view = getView();
 	return { view, std::move(*this).consumeSource(), optionBegin, optionEnd, optionDelimiter };
-}
-
-bool Option::empty() const {
-	return getView().empty();
 }
 
 double Option::parseNumber(sview source) {

@@ -23,8 +23,10 @@ namespace rxtd::audio_analyzer {
 		void decomposeFramesIntoChannels(array_view<std::byte> frameBuffer, bool withAuto);
 		void writeSilence(index size, bool withAuto);
 
+		[[nodiscard]]
 		array_view<float> getChannelPCM(Channel channel) const;
 
+		[[nodiscard]]
 		Channel getAutoAlias() const {
 			return aliasOfAuto;
 		}

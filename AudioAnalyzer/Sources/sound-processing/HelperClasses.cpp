@@ -37,17 +37,3 @@ const SoundHandler* DataSupplierImpl::getHandlerRaw(isview id) const {
 
 	return handler;
 }
-
-std::byte* DataSupplierImpl::getBufferRaw(index size) const {
-	if (nextBufferIndex >= index(buffers.size())) {
-		buffers.emplace_back();
-	}
-	auto& buffer = buffers[nextBufferIndex];
-	nextBufferIndex++;
-	buffer.resize(size);
-	return buffer.data();
-}
-
-void DataSupplierImpl::resetBuffers() {
-	nextBufferIndex = 0;
-}

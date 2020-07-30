@@ -28,20 +28,20 @@ namespace rxtd::audio_utils {
 
 	private:
 		// FftAnalyzer* parent { };
-		FftCascade* successor { };
-		FFT* fft { };
+		FftCascade* successor{ };
+		FFT* fft{ };
 
-		Params params { };
+		Params params{ };
 
-		LogarithmicIRF filter { };
+		LogarithmicIRF filter{ };
 		std::vector<float> ringBuffer;
 		std::vector<float> values;
-		index filledElements { };
-		index transferredElements { };
+		index filledElements{ };
+		index transferredElements{ };
 		float odd = 10.0f; // 10.0 is used as "no value" because valid values are in [-1.0; 1.0]
-		float dc { };
+		float dc{ };
 		// Fourier transform looses energy due to downsample, so we multiply result of FFT by (2^0.5)^countOfDownsampleIterations
-		float downsampleGain { };
+		float downsampleGain{ };
 
 	public:
 		void setParams(Params _params, FFT* fft, FftCascade* successor, index cascadeIndex);
@@ -49,9 +49,12 @@ namespace rxtd::audio_utils {
 		void processSilence(index waveSize);
 		void reset();
 
+		[[nodiscard]]
 		array_view<float> getValues() const {
 			return values;
 		}
+
+		[[nodiscard]]
 		double getDC() const {
 			return dc;
 		}

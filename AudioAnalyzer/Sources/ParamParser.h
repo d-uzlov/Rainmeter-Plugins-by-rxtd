@@ -71,22 +71,29 @@ namespace rxtd::audio_analyzer {
 
 		void parse();
 
+		[[nodiscard]]
 		const ProcessingsInfoMap& getParseResult() const {
 			return parseResult;
 		}
 
+		[[nodiscard]]
 		bool isAnythingChanged() const {
 			return anythingChanged;
 		}
 
 	private:
+		[[nodiscard]]
 		static bool checkListUnique(const utils::OptionList& list);
 
 		void parseProcessing(sview name, Logger cl, ProcessingData& oldHandlers) const;
+		[[nodiscard]]
 		std::set<Channel> parseChannels(const utils::OptionList& channelsStringList, Logger& logger) const;
+		[[nodiscard]]
 		HandlerPatcherInfo parseHandlers(const utils::OptionList& indices, HandlerPatcherInfo oldHandlers) const;
 
+		[[nodiscard]]
 		bool parseHandler(sview name, const HandlerPatcherInfo& prevHandlers, HandlerInfo& handler) const;
+		[[nodiscard]]
 		HandlerPatcher getHandlerPatcher(
 			const utils::OptionMap& optionMap,
 			Logger& cl,
@@ -96,6 +103,7 @@ namespace rxtd::audio_analyzer {
 		void readRawDescription2(isview type, const utils::OptionMap& optionMap, string& rawDescription2) const;
 
 		template <typename T>
+		[[nodiscard]]
 		HandlerPatcher parseHandlerT(const utils::OptionMap& optionMap, Logger& cl) const {
 			auto paramsOpt = T::parseParams(optionMap, cl);
 			if (!paramsOpt.has_value()) {
@@ -115,6 +123,7 @@ namespace rxtd::audio_analyzer {
 		}
 
 		template <typename T>
+		[[nodiscard]]
 		HandlerPatcher parseHandlerT2(const utils::OptionMap& optionMap, Logger& cl) const {
 			auto paramsOpt = T::parseParams(optionMap, cl, rain);
 			if (!paramsOpt.has_value()) {

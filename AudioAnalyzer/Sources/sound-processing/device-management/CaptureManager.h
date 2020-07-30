@@ -50,16 +50,21 @@ namespace rxtd::audio_analyzer {
 		CaptureManager(const CaptureManager& other) = delete;
 		CaptureManager& operator=(const CaptureManager& other) = delete;
 
+		[[nodiscard]]
 		MyWaveFormat getWaveFormat() const;
+		[[nodiscard]]
 		const string& getFormatString() const;
 		bool isEmpty() const;
+		[[nodiscard]]
 		bool isValid() const;
+		[[nodiscard]]
 		bool isRecoverable() const;
 		void capture(const ProcessingCallback& processingCallback);
 
 	private:
 		void invalidate();
 
+		[[nodiscard]]
 		static string makeFormatString(MyWaveFormat waveFormat);
 	};
 }

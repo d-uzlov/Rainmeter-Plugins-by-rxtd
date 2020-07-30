@@ -18,14 +18,17 @@ namespace rxtd::audio_analyzer {
 		index divide = 1;
 
 	public:
+		[[nodiscard]]
 		index getSourceRate() const {
 			return sourceRate;
 		}
 
+		[[nodiscard]]
 		index getTargetRate() const {
 			return targetRate;
 		}
 
+		[[nodiscard]]
 		index toSourceSize(index resampledSize) const {
 			return resampledSize * divide;
 		}
@@ -33,10 +36,12 @@ namespace rxtd::audio_analyzer {
 		void setSourceRate(index value);
 		void setTargetRate(index value);
 
+		[[nodiscard]]
 		index getSampleRate() const {
 			return sampleRate;
 		}
 
+		[[nodiscard]]
 		index calculateFinalWaveSize(index waveSize) const {
 			return waveSize / divide;
 		}

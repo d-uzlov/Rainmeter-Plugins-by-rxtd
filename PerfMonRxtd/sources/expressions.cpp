@@ -500,15 +500,15 @@ Reference ExpressionParser::parseReference() {
 	}
 	Reference ref;
 	const isview name = next.value % ciView();
-	if (name == L"COUNTERRAW" || name == L"CR") {
+	if (name == L"counterRaw" || name == L"CR") {
 		ref.type = ReferenceType::COUNTER_RAW;
-	} else if (name == L"COUNTERFORMATED" || name == L"CF") {
+	} else if (name == L"counterFormated" || name == L"CF") { // TODO typo
 		ref.type = ReferenceType::COUNTER_FORMATTED;
-	} else if (name == L"EXPRESSION" || name == L"E") {
+	} else if (name == L"expression" || name == L"E") {
 		ref.type = ReferenceType::EXPRESSION;
-	} else if (name == L"ROLLUPEXPRESSION" || name == L"R") {
+	} else if (name == L"rollupExpression" || name == L"R") {
 		ref.type = ReferenceType::ROLLUP_EXPRESSION;
-	} else if (name == L"COUNT" || name == L"C") {
+	} else if (name == L"count" || name == L"C") {
 		ref.type = ReferenceType::COUNT;
 	} else {
 		error = true;
@@ -523,7 +523,7 @@ Reference ExpressionParser::parseReference() {
 			error = true;
 			return Reference();
 		}
-		ref.counter = utils::StringUtils::parseInt(next.value);
+		ref.counter = counter_t(utils::StringUtils::parseInt(next.value));
 		readNext();
 		if (error) {
 			return Reference();

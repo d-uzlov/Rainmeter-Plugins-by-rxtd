@@ -100,7 +100,7 @@ void WaveFormDrawer::inflateLine(index line, array_span<uint32_t> dest, IntColor
 
 	constexpr uint32_t halfPrecision = 8;
 	IntMixer<int_fast32_t, halfPrecision * 2> mixer;
-	
+
 	int_fast32_t fadeDistance = 1 << halfPrecision;
 	const int_fast32_t fadeDistanceStep = int_fast32_t(std::round(fadeDistance / (realWidth * fading)));
 

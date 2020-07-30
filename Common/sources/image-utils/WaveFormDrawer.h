@@ -105,10 +105,12 @@ namespace rxtd::utils {
 
 		void fillStrip(double min, double max);
 
+		[[nodiscard]]
 		array2d_view<uint32_t> getResultBuffer() const {
 			return resultBuffer;
 		}
 
+		[[nodiscard]]
 		bool isEmpty() const {
 			return !minMaxBuffer.isForced();
 		}
@@ -118,6 +120,7 @@ namespace rxtd::utils {
 	private:
 		void inflateLine(index line, array_span<uint32_t> dest, IntColor backgroundColor) const;
 
+		[[nodiscard]]
 		bool isWaveAt(index i, index line) const;
 	};
 }

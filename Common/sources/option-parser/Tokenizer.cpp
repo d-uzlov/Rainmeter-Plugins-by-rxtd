@@ -9,8 +9,6 @@
 
 #include "Tokenizer.h"
 
-#include "undef.h"
-
 using namespace utils;
 
 std::vector<SubstringViewInfo> Tokenizer::parse(sview view, wchar_t delimiter) {
@@ -20,7 +18,7 @@ std::vector<SubstringViewInfo> Tokenizer::parse(sview view, wchar_t delimiter) {
 		return { };
 	}
 
-	std::vector<SubstringViewInfo> tempList { };
+	std::vector<SubstringViewInfo> tempList{ };
 
 	tokenize(tempList, view, delimiter);
 
@@ -29,8 +27,8 @@ std::vector<SubstringViewInfo> Tokenizer::parse(sview view, wchar_t delimiter) {
 	return tempList;
 }
 
-std::vector<std::vector<SubstringViewInfo>> Tokenizer::parseSequence(sview view, wchar_t optionBegin,
-	wchar_t optionEnd, wchar_t optionDelimiter) {
+std::vector<std::vector<SubstringViewInfo>>
+Tokenizer::parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wchar_t optionDelimiter) {
 	enum class State {
 		eSEARCH,
 		eOPTION,
@@ -130,7 +128,7 @@ void Tokenizer::trimSpaces(std::vector<SubstringViewInfo>& list, sview string) {
 	}
 
 	list.erase(
-		std::remove_if(list.begin(), list.end(), [](SubstringViewInfo svi) {return svi.empty(); }),
+		std::remove_if(list.begin(), list.end(), [](SubstringViewInfo svi) { return svi.empty(); }),
 		list.end()
 	);
 }

@@ -21,11 +21,12 @@ namespace rxtd::utils {
 			IID_IMMDeviceEnumerator,
 			reinterpret_cast<void**>(ptr)
 		);
-	}) { }
+	}) {
+	}
 
 	MediaDeviceWrapper IMMDeviceEnumeratorWrapper::getDeviceByID(MediaDeviceType type, const string& id) {
 		return MediaDeviceWrapper{
-			type, 
+			type,
 			[&](auto ptr) {
 				return S_OK == getPointer()->GetDevice(id.c_str(), ptr);
 			}
@@ -52,7 +53,8 @@ namespace rxtd::utils {
 		return getCollection(type, DEVICE_STATEMASK_ALL);
 	}
 
-	std::vector<MediaDeviceWrapper> IMMDeviceEnumeratorWrapper::getCollection(MediaDeviceType type, uint32_t deviceStateMask) {
+	std::vector<MediaDeviceWrapper> IMMDeviceEnumeratorWrapper::getCollection(
+		MediaDeviceType type, uint32_t deviceStateMask) {
 		GenericComWrapper<IMMDeviceCollection> collection{
 			[&](auto ptr) {
 				return S_OK == getPointer()->EnumAudioEndpoints(

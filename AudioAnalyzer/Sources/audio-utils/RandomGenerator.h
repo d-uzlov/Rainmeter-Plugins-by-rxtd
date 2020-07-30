@@ -20,6 +20,7 @@ namespace rxtd::audio_utils {
 		RandomGenerator() : e2(rd()), dist(-1.0, 1.0) {
 		}
 
+		[[nodiscard]]
 		double next() {
 			return dist(e2);
 		}

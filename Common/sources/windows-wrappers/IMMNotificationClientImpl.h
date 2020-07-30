@@ -74,6 +74,7 @@ namespace rxtd::utils {
 			registered = false;
 		}
 
+		[[nodiscard]]
 		Changes takeChanges() {
 			std::lock_guard<std::mutex> lock{ mut };
 			Changes result{ };

@@ -12,15 +12,20 @@
 namespace rxtd::utils {
 	class MyMath {
 	public:
+		// TODO remove this pi?
 		static const double pi;
 
 		// return approximately a**b
+		[[nodiscard]]
 		static double fastPow(double a, double b);
 
+		[[nodiscard]]
 		static float fastLog2(float val);
 
+		[[nodiscard]]
 		static float fastSqrt(float value);
 
+		[[nodiscard]]
 		static double db2amplitude(double value);
 	};
 }

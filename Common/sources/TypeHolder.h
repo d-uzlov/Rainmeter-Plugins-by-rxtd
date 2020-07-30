@@ -84,6 +84,7 @@ namespace rxtd::utils {
 		ParentBase& operator=(ParentBase&& other) noexcept = delete;
 
 		template <typename T>
+		[[nodiscard]]
 		static T* find(Rainmeter::Skin skin, isview measureName) {
 			static_assert(std::is_base_of<ParentBase, T>::value, "only parent measures can be searched for");
 
@@ -91,6 +92,7 @@ namespace rxtd::utils {
 		}
 
 	private:
+		[[nodiscard]]
 		static ParentBase* findParent(Rainmeter::Skin skin, isview measureName);
 	};
 }

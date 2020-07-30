@@ -8,7 +8,7 @@
  */
 
 #include "BlacklistManager.h"
-#include "Windows.h"
+#include "my-windows.h"
 #include "option-parser/Option.h"
 #include "option-parser/OptionList.h"
 
