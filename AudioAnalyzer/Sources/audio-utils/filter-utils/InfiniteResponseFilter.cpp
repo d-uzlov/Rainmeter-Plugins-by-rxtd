@@ -9,8 +9,6 @@
 
 #include "InfiniteResponseFilter.h"
 
-#include "undef.h"
-
 using namespace audio_utils;
 
 InfiniteResponseFilter::InfiniteResponseFilter(std::vector<double> a, std::vector<double> b, double gainAmp) {

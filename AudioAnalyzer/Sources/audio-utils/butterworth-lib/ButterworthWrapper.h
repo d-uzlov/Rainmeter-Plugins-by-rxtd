@@ -17,7 +17,12 @@ namespace rxtd::audio_utils {
 
 	public:
 		[[nodiscard]]
-		static FilterParameters calcCoefLowPass(index order, double samplingFrequency, double cutoffFrequency);
+		static FilterParameters calcCoefLowPass(index order, double digitalCutoff);
+
+		[[nodiscard]]
+		static FilterParameters calcCoefLowPass(index order, double samplingFrequency, double cutoffFrequency) {
+			return calcCoefLowPass(order, cutoffFrequency / samplingFrequency);
+		}
 
 		[[nodiscard]]
 		static FilterParameters
@@ -26,7 +31,12 @@ namespace rxtd::audio_utils {
 		}
 
 		[[nodiscard]]
-		static FilterParameters calcCoefHighPass(index order, double samplingFrequency, double cutoffFrequency);
+		static FilterParameters calcCoefHighPass(index order, double digitalCutoff);
+
+		[[nodiscard]]
+		static FilterParameters calcCoefHighPass(index order, double samplingFrequency, double cutoffFrequency) {
+			return calcCoefHighPass(order, cutoffFrequency / samplingFrequency);
+		}
 
 		[[nodiscard]]
 		static FilterParameters
@@ -37,8 +47,26 @@ namespace rxtd::audio_utils {
 		[[nodiscard]]
 		static FilterParameters calcCoefBandPass(
 			index order,
+			double digitalCutoffLow, double digitalCutoffHigh
+		);
+
+		[[nodiscard]]
+		static FilterParameters calcCoefBandPass(
+			index order,
 			double samplingFrequency,
 			double lowerCutoffFrequency, double upperCutoffFrequency
+		) {
+			return calcCoefBandPass(
+				order,
+				lowerCutoffFrequency / samplingFrequency,
+				upperCutoffFrequency / samplingFrequency
+			);
+		}
+
+		[[nodiscard]]
+		static FilterParameters calcCoefBandStop(
+			index order,
+			double digitalCutoffLow, double digitalCutoffHigh
 		);
 
 		[[nodiscard]]
@@ -46,6 +74,12 @@ namespace rxtd::audio_utils {
 			index order,
 			double samplingFrequency,
 			double lowerCutoffFrequency, double upperCutoffFrequency
-		);
+		) {
+			return calcCoefBandStop(
+				order,
+				lowerCutoffFrequency / samplingFrequency,
+				upperCutoffFrequency / samplingFrequency
+			);
+		}
 	};
 }

@@ -12,18 +12,17 @@
 
 using namespace audio_utils;
 
-FilterParameters ButterworthWrapper::calcCoefLowPass(index _order, double samplingFrequency, double cutoffFrequency) {
+FilterParameters ButterworthWrapper::calcCoefLowPass(index _order, double digitalCutoff) {
 	const int order = int(_order);
 	if (order < 0) {
 		return { };
 	}
 
-	cutoffFrequency = std::min(cutoffFrequency, samplingFrequency * 0.5);
-	const double digitalFreq = cutoffFrequency / samplingFrequency;
+	digitalCutoff = std::clamp(digitalCutoff, 0.0, 0.5);
 
-	double* aCoef = dcof_bwlp(order, digitalFreq);
+	double* aCoef = dcof_bwlp(order, digitalCutoff);
 	int* bCoef = ccof_bwlp(order);
-	const double scalingFactor = sf_bwlp(order, digitalFreq);
+	const double scalingFactor = sf_bwlp(order, digitalCutoff);
 
 	std::vector<double> b;
 	b.resize(order + 1);
@@ -43,18 +42,17 @@ FilterParameters ButterworthWrapper::calcCoefLowPass(index _order, double sampli
 	return { a, b, scalingFactor };
 }
 
-FilterParameters ButterworthWrapper::calcCoefHighPass(index _order, double samplingFrequency, double cutoffFrequency) {
+FilterParameters ButterworthWrapper::calcCoefHighPass(index _order, double digitalCutoff) {
 	const int order = int(_order);
 	if (order < 0) {
 		return { };
 	}
 
-	cutoffFrequency = std::min(cutoffFrequency, samplingFrequency * 0.5);
-	const double digitalFreq = cutoffFrequency / samplingFrequency;
+	digitalCutoff = std::clamp(digitalCutoff, 0.0, 0.5);
 
-	double* aCoef = dcof_bwhp(order, digitalFreq);
+	double* aCoef = dcof_bwhp(order, digitalCutoff);
 	int* bCoef = ccof_bwhp(order);
-	const double scalingFactor = sf_bwhp(order, digitalFreq);
+	const double scalingFactor = sf_bwhp(order, digitalCutoff);
 
 	std::vector<double> b;
 	b.resize(order + 1);
@@ -74,24 +72,18 @@ FilterParameters ButterworthWrapper::calcCoefHighPass(index _order, double sampl
 	return { a, b, scalingFactor };
 }
 
-FilterParameters ButterworthWrapper::calcCoefBandPass(
-	index _order,
-	double samplingFrequency,
-	double lowerCutoffFrequency, double upperCutoffFrequency
-) {
+FilterParameters ButterworthWrapper::calcCoefBandPass(index _order, double digitalCutoffLow, double digitalCutoffHigh) {
 	const int order = int(_order);
 	if (order < 0) {
 		return { };
 	}
 
-	lowerCutoffFrequency = std::min(lowerCutoffFrequency, samplingFrequency * 0.5);
-	upperCutoffFrequency = std::min(upperCutoffFrequency, samplingFrequency * 0.5);
-	const double digitalFreq1 = lowerCutoffFrequency / samplingFrequency;
-	const double digitalFreq2 = upperCutoffFrequency / samplingFrequency;
+	digitalCutoffLow = std::clamp(digitalCutoffLow, 0.0, 0.5);
+	digitalCutoffHigh = std::clamp(digitalCutoffHigh, 0.0, 0.5);
 
-	double* aCoef = dcof_bwbp(order, digitalFreq1, digitalFreq2);
+	double* aCoef = dcof_bwbp(order, digitalCutoffLow, digitalCutoffHigh);
 	int* bCoef = ccof_bwbp(order);
-	const double scalingFactor = sf_bwbp(order, digitalFreq1, digitalFreq2);
+	const double scalingFactor = sf_bwbp(order, digitalCutoffLow, digitalCutoffHigh);
 
 	std::vector<double> b;
 	b.resize(order + 1);
@@ -111,24 +103,18 @@ FilterParameters ButterworthWrapper::calcCoefBandPass(
 	return { a, b, scalingFactor };
 }
 
-FilterParameters ButterworthWrapper::calcCoefBandStop(
-	index _order,
-	double samplingFrequency,
-	double lowerCutoffFrequency, double upperCutoffFrequency
-) {
+FilterParameters ButterworthWrapper::calcCoefBandStop(index _order, double digitalCutoffLow, double digitalCutoffHigh) {
 	const int order = int(_order);
 	if (order < 0) {
 		return { };
 	}
 
-	lowerCutoffFrequency = std::min(lowerCutoffFrequency, samplingFrequency * 0.5);
-	upperCutoffFrequency = std::min(upperCutoffFrequency, samplingFrequency * 0.5);
-	const double digitalFreq1 = lowerCutoffFrequency / samplingFrequency;
-	const double digitalFreq2 = upperCutoffFrequency / samplingFrequency;
+	digitalCutoffLow = std::clamp(digitalCutoffLow, 0.0, 0.5);
+	digitalCutoffHigh = std::clamp(digitalCutoffHigh, 0.0, 0.5);
 
-	double* aCoef = dcof_bwbs(order, digitalFreq1, digitalFreq2);
-	double* bCoef = ccof_bwbs(order, digitalFreq1, digitalFreq2);
-	const double scalingFactor = sf_bwbs(order, digitalFreq1, digitalFreq2);
+	double* aCoef = dcof_bwbs(order, digitalCutoffLow, digitalCutoffHigh);
+	double* bCoef = ccof_bwbs(order, digitalCutoffLow, digitalCutoffHigh);
+	const double scalingFactor = sf_bwbs(order, digitalCutoffLow, digitalCutoffHigh);
 
 	std::vector<double> b;
 	b.resize(order + 1);
