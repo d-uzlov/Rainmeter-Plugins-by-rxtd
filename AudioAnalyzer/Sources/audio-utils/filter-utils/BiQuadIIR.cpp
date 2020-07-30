@@ -10,8 +10,6 @@
 #include "BiQuadIIR.h"
 #include "MyMath.h"
 
-#include "undef.h"
-
 using namespace audio_utils;
 
 BiQuadIIR::BiQuadIIR(double _a0, double _a1, double _a2, double _b0, double _b1, double _b2) {
@@ -30,13 +28,11 @@ void BiQuadIIR::apply(array_span<float> signal) {
 		const double valueFiltered = b0 * value + state0;
 		state0 = b1 * value - a1 * valueFiltered + state1;
 		state1 = b2 * value - a2 * valueFiltered;
-		value = float(valueFiltered);
+		value = float(valueFiltered * gainAmp);
 	}
 }
 
 void BiQuadIIR::addGain(double gainDB) {
 	const double gain = utils::MyMath::db2amplitude(gainDB);
-	b0 *= gain;
-	b1 *= gain;
-	b2 *= gain;
+	gainAmp *= gain;
 }

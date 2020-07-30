@@ -13,7 +13,8 @@
 
 using namespace audio_utils;
 
-InfiniteResponseFilter::InfiniteResponseFilter(std::vector<double> a, std::vector<double> b) {
+InfiniteResponseFilter::InfiniteResponseFilter(std::vector<double> a, std::vector<double> b, double gainAmp) {
+	this->gainAmp = gainAmp;
 	const double a0 = a[0];
 	for (auto& value : a) {
 		value /= a0;
@@ -40,7 +41,7 @@ void InfiniteResponseFilter::apply(array_span<float> signal) {
 	for (float& value : signal) {
 		const double next = value;
 		const double nextFiltered = b[0] * next + state[0];
-		value = float(nextFiltered);
+		value = float(nextFiltered * gainAmp);
 		updateState(next, nextFiltered);
 	}
 }

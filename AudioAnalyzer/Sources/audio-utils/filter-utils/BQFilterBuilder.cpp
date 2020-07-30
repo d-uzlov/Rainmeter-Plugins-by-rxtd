@@ -14,7 +14,7 @@ using namespace audio_utils;
 
 // Based on formulas from Audio-EQ-Cookbook
 
-BiQuadIIR BQFilterBuilder::createHighShelf(double dbGain, double q, double centralFrequency, double samplingFrequency) {
+BiQuadIIR BQFilterBuilder::createHighShelf(double samplingFrequency, double q, double centralFrequency, double dbGain) {
 	if (samplingFrequency == 0.0 || q == 0) {
 		return { };
 	}
@@ -35,7 +35,7 @@ BiQuadIIR BQFilterBuilder::createHighShelf(double dbGain, double q, double centr
 	};
 }
 
-BiQuadIIR BQFilterBuilder::createLowShelf(double dbGain, double q, double centralFrequency, double samplingFrequency) {
+BiQuadIIR BQFilterBuilder::createLowShelf(double samplingFrequency, double q, double centralFrequency, double dbGain) {
 	if (samplingFrequency == 0.0 || q == 0) {
 		return { };
 	}
@@ -56,7 +56,7 @@ BiQuadIIR BQFilterBuilder::createLowShelf(double dbGain, double q, double centra
 	};
 }
 
-BiQuadIIR BQFilterBuilder::createHighPass(double q, double centralFrequency, double samplingFrequency) {
+BiQuadIIR BQFilterBuilder::createHighPass(double samplingFrequency, double q, double centralFrequency) {
 	if (samplingFrequency == 0.0 || q == 0) {
 		return { };
 	}
@@ -76,7 +76,7 @@ BiQuadIIR BQFilterBuilder::createHighPass(double q, double centralFrequency, dou
 	};
 }
 
-BiQuadIIR BQFilterBuilder::createLowPass(double q, double centralFrequency, double samplingFrequency) {
+BiQuadIIR BQFilterBuilder::createLowPass(double samplingFrequency, double q, double centralFrequency) {
 	if (samplingFrequency == 0.0 || q == 0) {
 		return { };
 	}
@@ -96,7 +96,7 @@ BiQuadIIR BQFilterBuilder::createLowPass(double q, double centralFrequency, doub
 	};
 }
 
-BiQuadIIR BQFilterBuilder::createPeak(double dbGain, double q, double centralFrequency, double samplingFrequency) {
+BiQuadIIR BQFilterBuilder::createPeak(double samplingFrequency, double q, double centralFrequency, double dbGain) {
 	if (samplingFrequency == 0.0 || q == 0) {
 		return { };
 	}

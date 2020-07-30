@@ -11,8 +11,8 @@
 #include <functional>
 #include <utility>
 #include "AbstractFilter.h"
-#include "option-parser/OptionList.h"
 #include "FilterCascade.h"
+#include "RainmeterWrappers.h"
 
 namespace rxtd::audio_utils {
 	class FilterCascadeCreator {
@@ -45,24 +45,24 @@ namespace rxtd::audio_utils {
 	class FilterCascadeParser {
 	public:
 		using FCF = FilterCascadeCreator::FilterCreationFunction;
+		using ButterworthParamsFunc = FilterParameters(*)(
+			index order, double samplingFrequency, double freq1, double freq2
+		);
 
 		[[nodiscard]]
-		static FilterCascadeCreator parse(const utils::Option& description);
+		static FilterCascadeCreator parse(const utils::Option& description, utils::Rainmeter::Logger& logger);
 
 	private:
 		[[nodiscard]]
-		static FCF parseFilter(const utils::OptionList& description);
+		static FCF parseFilter(const utils::OptionList& description, utils::Rainmeter::Logger& logger);
 
 		[[nodiscard]]
-		static FCF parseBWLowPass(index order, double cutoff);
+		static FCF parseBQ(isview name, const utils::OptionMap& description, utils::Rainmeter::Logger& cl);
 
 		[[nodiscard]]
-		static FCF parseBWHighPass(index order, double cutoff);
+		static FCF parseBW(isview name, const utils::OptionMap& description, utils::Rainmeter::Logger& cl);
 
 		[[nodiscard]]
-		static FCF parseBWBandPass(index order, double cutoffLow, double cutoffHigh);
-
-		[[nodiscard]]
-		static FCF parseBWBandStop(index order, double cutoffLow, double cutoffHigh);
+		static FCF createButterworth(index order, double freq1, double freq2, ButterworthParamsFunc func);
 	};
 }

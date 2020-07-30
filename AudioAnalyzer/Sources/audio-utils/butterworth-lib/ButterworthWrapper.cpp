@@ -12,8 +12,7 @@
 
 using namespace audio_utils;
 
-ButterworthWrapper::AB
-ButterworthWrapper::calcCoefLowPass(index _order, double cutoffFrequency, double samplingFrequency) {
+FilterParameters ButterworthWrapper::calcCoefLowPass(index _order, double samplingFrequency, double cutoffFrequency) {
 	const int order = int(_order);
 	if (order < 0) {
 		return { };
@@ -29,7 +28,7 @@ ButterworthWrapper::calcCoefLowPass(index _order, double cutoffFrequency, double
 	std::vector<double> b;
 	b.resize(order + 1);
 	for (index i = 0; i < index(b.size()); ++i) {
-		b[i] = bCoef[i] * scalingFactor;
+		b[i] = bCoef[i];
 	}
 
 	std::vector<double> a;
@@ -41,11 +40,10 @@ ButterworthWrapper::calcCoefLowPass(index _order, double cutoffFrequency, double
 	free(aCoef);
 	free(bCoef);
 
-	return { a, b };
+	return { a, b, scalingFactor };
 }
 
-ButterworthWrapper::AB
-ButterworthWrapper::calcCoefHighPass(index _order, double cutoffFrequency, double samplingFrequency) {
+FilterParameters ButterworthWrapper::calcCoefHighPass(index _order, double samplingFrequency, double cutoffFrequency) {
 	const int order = int(_order);
 	if (order < 0) {
 		return { };
@@ -61,7 +59,7 @@ ButterworthWrapper::calcCoefHighPass(index _order, double cutoffFrequency, doubl
 	std::vector<double> b;
 	b.resize(order + 1);
 	for (index i = 0; i < index(b.size()); ++i) {
-		b[i] = bCoef[i] * scalingFactor;
+		b[i] = bCoef[i];
 	}
 
 	std::vector<double> a;
@@ -73,14 +71,13 @@ ButterworthWrapper::calcCoefHighPass(index _order, double cutoffFrequency, doubl
 	free(aCoef);
 	free(bCoef);
 
-	return { a, b };
+	return { a, b, scalingFactor };
 }
 
-ButterworthWrapper::AB
-ButterworthWrapper::calcCoefBandPass(
+FilterParameters ButterworthWrapper::calcCoefBandPass(
 	index _order,
-	double lowerCutoffFrequency, double upperCutoffFrequency,
-	double samplingFrequency
+	double samplingFrequency,
+	double lowerCutoffFrequency, double upperCutoffFrequency
 ) {
 	const int order = int(_order);
 	if (order < 0) {
@@ -99,7 +96,7 @@ ButterworthWrapper::calcCoefBandPass(
 	std::vector<double> b;
 	b.resize(order + 1);
 	for (index i = 0; i < index(b.size()); ++i) {
-		b[i] = bCoef[i] * scalingFactor;
+		b[i] = bCoef[i];
 	}
 
 	std::vector<double> a;
@@ -111,13 +108,13 @@ ButterworthWrapper::calcCoefBandPass(
 	free(aCoef);
 	free(bCoef);
 
-	return { a, b };
+	return { a, b, scalingFactor };
 }
 
-ButterworthWrapper::AB ButterworthWrapper::calcCoefBandStop(
+FilterParameters ButterworthWrapper::calcCoefBandStop(
 	index _order,
-	double lowerCutoffFrequency, double upperCutoffFrequency,
-	double samplingFrequency
+	double samplingFrequency,
+	double lowerCutoffFrequency, double upperCutoffFrequency
 ) {
 	const int order = int(_order);
 	if (order < 0) {
@@ -136,7 +133,7 @@ ButterworthWrapper::AB ButterworthWrapper::calcCoefBandStop(
 	std::vector<double> b;
 	b.resize(order + 1);
 	for (index i = 0; i < index(b.size()); ++i) {
-		b[i] = bCoef[i] * scalingFactor;
+		b[i] = bCoef[i];
 	}
 
 	std::vector<double> a;
@@ -148,5 +145,5 @@ ButterworthWrapper::AB ButterworthWrapper::calcCoefBandStop(
 	free(aCoef);
 	free(bCoef);
 
-	return { a, b };
+	return { a, b, scalingFactor };
 }

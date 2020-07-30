@@ -13,16 +13,27 @@
 #include "AbstractFilter.h"
 
 namespace rxtd::audio_utils {
+	struct FilterParameters {
+		std::vector<double> a;
+		std::vector<double> b;
+		double gainAmp;
+	};
+
 	class InfiniteResponseFilter : public AbstractFilter {
 		// inspired by https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.lfilter.html
 
 		std::vector<double> a;
 		std::vector<double> b;
 		std::vector<double> state;
+		double gainAmp{ };
 
 	public:
 		InfiniteResponseFilter() = default;
-		InfiniteResponseFilter(std::vector<double> a, std::vector<double> b);
+		InfiniteResponseFilter(std::vector<double> a, std::vector<double> b, double gainAmp);
+
+		InfiniteResponseFilter(FilterParameters params) : InfiniteResponseFilter(
+			std::move(params.a), std::move(params.b), params.gainAmp) {
+		}
 
 		void apply(array_span<float> signal) override;
 
@@ -37,14 +48,21 @@ namespace rxtd::audio_utils {
 		std::array<double, order> a{ };
 		std::array<double, order> b{ };
 		std::array<double, order - 1> state{ };
+		double gainAmp{ };
 
 	public:
 		InfiniteResponseFilterFixed() = default;
 
-		InfiniteResponseFilterFixed(std::vector<double> _a, std::vector<double> _b) {
+		InfiniteResponseFilterFixed(FilterParameters params) : InfiniteResponseFilterFixed(
+			std::move(params.a), std::move(params.b), params.gainAmp) {
+		}
+
+		InfiniteResponseFilterFixed(std::vector<double> _a, std::vector<double> _b, double gainAmp) {
 			if (_a.size() > order || _b.size() > order) {
 				throw std::exception{ };
 			}
+
+			this->gainAmp = gainAmp;
 
 			std::copy(_a.begin(), _a.end(), a.begin());
 			std::copy(_b.begin(), _b.end(), b.begin());
@@ -62,7 +80,7 @@ namespace rxtd::audio_utils {
 			for (float& value : signal) {
 				const double next = value;
 				const double nextFiltered = b[0] * next + state[0];
-				value = float(nextFiltered);
+				value = float(nextFiltered * gainAmp);
 				updateState(next, nextFiltered);
 			}
 		}

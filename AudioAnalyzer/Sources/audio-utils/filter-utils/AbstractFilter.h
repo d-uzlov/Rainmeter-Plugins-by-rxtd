@@ -17,5 +17,4 @@ namespace rxtd::audio_utils {
 
 		virtual void apply(array_span<float> signal) = 0;
 	};
-
 }

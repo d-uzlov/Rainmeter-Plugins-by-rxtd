@@ -136,6 +136,7 @@ void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldHand
 	if (filterDescription.asString() != oldHandlers.rawFccDescription) {
 		anythingChanged = true;
 		oldHandlers.rawFccDescription = filterDescription.asString();
+		auto filterLogger = cl.context(L"filter: ");
 
 		if (filterDescription.asIString(L"none") == L"none") {
 			oldHandlers.fcc = { };
@@ -146,12 +147,12 @@ void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldHand
 					L"bqPeak[q 4.0, freq 1125, gain -4.1] "
 					L"bqPeak[q 4.0, freq 2665, gain 5.5] "
 					L"bwLowPass[order 5, freq 20000] "
-				}
+				}, filterLogger
 			);
 		} else {
 			auto [name, desc] = filterDescription.breakFirst(' ');
 			if (name.asIString() == L"custom") {
-				oldHandlers.fcc = audio_utils::FilterCascadeParser::parse(desc);
+				oldHandlers.fcc = audio_utils::FilterCascadeParser::parse(desc, filterLogger);
 			} else {
 				cl.error(L"filter '{}' is not supported", name);
 				oldHandlers.fcc = { };

@@ -13,64 +13,39 @@
 namespace rxtd::audio_utils {
 	class ButterworthWrapper {
 		// https://stackoverflow.com/questions/10373184/bandpass-butterworth-filter-implementation-in-c
+		// http://www.exstrom.com/journal/sigproc/
 
 	public:
-		struct AB {
-			std::vector<double> a;
-			std::vector<double> b;
-		};
+		[[nodiscard]]
+		static FilterParameters calcCoefLowPass(index order, double samplingFrequency, double cutoffFrequency);
 
 		[[nodiscard]]
-		static AB calcCoefLowPass(index order, double cutoffFrequency, double samplingFrequency);
-
-		template <index order>
-		[[nodiscard]]
-		static InfiniteResponseFilterFixed<order + 1> createLowPass(double centralFrequency, double samplingFrequency) {
-			auto [a, b] = calcCoefLowPass(order, centralFrequency, samplingFrequency);
-			return { a, b };
+		static FilterParameters
+		calcCoefLowPass(index order, double samplingFrequency, double cutoffFrequency, double unused) {
+			return calcCoefLowPass(order, samplingFrequency, cutoffFrequency);
 		}
 
 		[[nodiscard]]
-		static AB calcCoefHighPass(index order, double cutoffFrequency, double samplingFrequency);
+		static FilterParameters calcCoefHighPass(index order, double samplingFrequency, double cutoffFrequency);
 
-		template <index order>
 		[[nodiscard]]
-		static InfiniteResponseFilterFixed<order + 1>
-		createHighPass(double centralFrequency, double samplingFrequency) {
-			auto [a, b] = calcCoefHighPass(order, centralFrequency, samplingFrequency);
-			return { a, b };
+		static FilterParameters
+		calcCoefHighPass(index order, double samplingFrequency, double cutoffFrequency, double unused) {
+			return calcCoefHighPass(order, samplingFrequency, cutoffFrequency);
 		}
 
 		[[nodiscard]]
-		static AB calcCoefBandPass(
+		static FilterParameters calcCoefBandPass(
 			index order,
-			double lowerCutoffFrequency, double upperCutoffFrequency,
-			double samplingFrequency
+			double samplingFrequency,
+			double lowerCutoffFrequency, double upperCutoffFrequency
 		);
 
-		template <index order>
 		[[nodiscard]]
-		static InfiniteResponseFilterFixed<order + 1> createBandPass(
-			double lowerCutoffFrequency, double upperCutoffFrequency,
-			double samplingFrequency
-		) {
-			auto [a, b] = calcCoefBandPass(order, lowerCutoffFrequency, upperCutoffFrequency, samplingFrequency);
-			return { a, b };
-		}
-
-		[[nodiscard]]
-		static AB calcCoefBandStop(
+		static FilterParameters calcCoefBandStop(
 			index order,
-			double lowerCutoffFrequency, double upperCutoffFrequency,
-			double samplingFrequency
+			double samplingFrequency,
+			double lowerCutoffFrequency, double upperCutoffFrequency
 		);
-
-		template <index order>
-		[[nodiscard]]
-		static InfiniteResponseFilterFixed<order + 1>
-		createBandStop(double lowerCutoffFrequency, double upperCutoffFrequency, double samplingFrequency) {
-			auto [a, b] = calcCoefBandStop(order, lowerCutoffFrequency, upperCutoffFrequency, samplingFrequency);
-			return { a, b };
-		}
 	};
 }

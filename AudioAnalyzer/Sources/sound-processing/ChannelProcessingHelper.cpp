@@ -23,7 +23,7 @@ void ChannelProcessingHelper::setChannels(const std::set<Channel>& set) {
 	}
 	for (auto channel : toDelete) {
 		channels.erase(channel);
-	}
+	}// TODO check sample rate != 0
 	for (auto channel : set) {
 		if (channels.count(channel) < 1) {
 			const index sampleRate = resampler.getSampleRate();

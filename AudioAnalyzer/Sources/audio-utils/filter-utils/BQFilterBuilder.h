@@ -15,16 +15,28 @@ namespace rxtd::audio_utils {
 	class BQFilterBuilder {
 	public:
 		[[nodiscard]]
-		static BiQuadIIR createHighShelf(double dbGain, double q, double centralFrequency, double samplingFrequency);
-		[[nodiscard]]
-		static BiQuadIIR createLowShelf(double dbGain, double q, double centralFrequency, double samplingFrequency);
+		static BiQuadIIR createHighShelf(double samplingFrequency, double q, double centralFrequency, double dbGain);
 
 		[[nodiscard]]
-		static BiQuadIIR createHighPass(double q, double centralFrequency, double samplingFrequency);
-		[[nodiscard]]
-		static BiQuadIIR createLowPass(double q, double centralFrequency, double samplingFrequency);
+		static BiQuadIIR createLowShelf(double samplingFrequency, double q, double centralFrequency, double dbGain);
 
 		[[nodiscard]]
-		static BiQuadIIR createPeak(double dbGain, double q, double centralFrequency, double samplingFrequency);
+		static BiQuadIIR createHighPass(double samplingFrequency, double q, double centralFrequency);
+
+		[[nodiscard]]
+		static BiQuadIIR createHighPass(double samplingFrequency, double q, double centralFrequency, double unused) {
+			return createHighPass(samplingFrequency, q, centralFrequency);
+		}
+
+		[[nodiscard]]
+		static BiQuadIIR createLowPass(double samplingFrequency, double q, double centralFrequency);
+
+		[[nodiscard]]
+		static BiQuadIIR createLowPass(double samplingFrequency, double q, double centralFrequency, double unused) {
+			return createLowPass(samplingFrequency, q, centralFrequency);
+		}
+
+		[[nodiscard]]
+		static BiQuadIIR createPeak(double samplingFrequency, double q, double centralFrequency, double dbGain);
 	};
 }

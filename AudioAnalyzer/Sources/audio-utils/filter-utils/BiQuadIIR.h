@@ -24,6 +24,8 @@ namespace rxtd::audio_utils {
 		double state0{ };
 		double state1{ };
 
+		double gainAmp = 1.0;
+
 	public:
 		BiQuadIIR() = default;
 		BiQuadIIR(double a0, double a1, double a2, double b0, double b1, double b2);
