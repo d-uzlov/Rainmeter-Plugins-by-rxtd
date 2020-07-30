@@ -16,13 +16,13 @@ namespace rxtd::audio_utils {
 		float result = 0.0;
 
 	public:
-		void setParams(double attackTime, double decayTime, index samplesPerSec, index stride) {
-			attackDecayConstants[0] = calculateAttackDecayConstant(float(attackTime), samplesPerSec, stride);
-			attackDecayConstants[1] = calculateAttackDecayConstant(float(decayTime), samplesPerSec, stride);
+		void setParams(double attackTime, double decayTime, index sampleRate, index stride) {
+			attackDecayConstants[0] = calculateAttackDecayConstant(float(attackTime), sampleRate, stride);
+			attackDecayConstants[1] = calculateAttackDecayConstant(float(decayTime), sampleRate, stride);
 		}
 
-		void setParams(double attackTime, double decayTime, index samplesPerSec) {
-			setParams(attackTime, decayTime, samplesPerSec, 1);
+		void setParams(double attackTime, double decayTime, index sampleRate) {
+			setParams(attackTime, decayTime, sampleRate, 1);
 		}
 
 		float next(float value) {
@@ -46,11 +46,11 @@ namespace rxtd::audio_utils {
 
 	private:
 		[[nodiscard]]
-		static float calculateAttackDecayConstant(float time, index samplesPerSec, index stride) {
+		static float calculateAttackDecayConstant(float time, index sampleRate, index stride) {
 			// stride and samplesPerSec are semantically guaranteed to be positive
 			// time can be positive or zero
 			// In case of zero result is exp(-inf) == 0 which is totally fine
-			return std::exp(-2.0f * stride / (samplesPerSec * time));
+			return std::exp(-2.0f * stride / (sampleRate * time));
 		}
 	};
 

@@ -47,6 +47,11 @@ void FftCascade::process(array_view<float> wave, bool resample) {
 	while (!wave.empty()) {
 		if (resample) {
 			wave = buffer.fillResampled(wave);
+
+			if (wave.size() == 1) {
+				odd = wave.back();
+				wave = { };
+			}
 		} else {
 			wave = buffer.fill(wave);
 		}
@@ -59,11 +64,6 @@ void FftCascade::process(array_view<float> wave, bool resample) {
 			doFft();
 
 			buffer.shift(params.inputStride);
-		}
-
-		if (wave.size() == 1) {
-			odd = wave.back();
-			wave = { };
 		}
 	}
 }

@@ -19,6 +19,8 @@ BiQuadIIR BQFilterBuilder::createHighShelf(double dbGain, double q, double centr
 		return { };
 	}
 
+	centralFrequency = std::min(centralFrequency, samplingFrequency * 0.5);
+
 	const double a = std::pow(10, dbGain / 40);
 	const double w0 = 2 * utils::MyMath::pi * centralFrequency / samplingFrequency;
 	const double alpha = std::sin(w0) / (2 * q);
@@ -38,6 +40,8 @@ BiQuadIIR BQFilterBuilder::createLowShelf(double dbGain, double q, double centra
 		return { };
 	}
 
+	centralFrequency = std::min(centralFrequency, samplingFrequency * 0.5);
+	
 	const double a = std::pow(10, dbGain / 40);
 	const double w0 = 2 * utils::MyMath::pi * centralFrequency / samplingFrequency;
 	const double alpha = std::sin(w0) / (2 * q);
@@ -57,6 +61,8 @@ BiQuadIIR BQFilterBuilder::createHighPass(double q, double centralFrequency, dou
 		return { };
 	}
 
+	centralFrequency = std::min(centralFrequency, samplingFrequency * 0.5);
+
 	const double w0 = 2 * utils::MyMath::pi * centralFrequency / samplingFrequency;
 	const double alpha = std::sin(w0) / (2 * q);
 
@@ -75,6 +81,8 @@ BiQuadIIR BQFilterBuilder::createLowPass(double q, double centralFrequency, doub
 		return { };
 	}
 
+	centralFrequency = std::min(centralFrequency, samplingFrequency * 0.5);
+
 	const double w0 = 2 * utils::MyMath::pi * centralFrequency / samplingFrequency;
 	const double alpha = std::sin(w0) / (2 * q);
 
@@ -92,6 +100,8 @@ BiQuadIIR BQFilterBuilder::createPeak(double dbGain, double q, double centralFre
 	if (samplingFrequency == 0.0 || q == 0) {
 		return { };
 	}
+
+	centralFrequency = std::min(centralFrequency, samplingFrequency * 0.5);
 
 	const double a = std::pow(10, dbGain / 40);
 	const double w0 = 2 * utils::MyMath::pi * centralFrequency / samplingFrequency;

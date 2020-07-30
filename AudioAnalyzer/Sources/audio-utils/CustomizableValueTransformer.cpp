@@ -163,8 +163,8 @@ std::optional<TransformationParser::Transformation> TransformationParser::parseT
 	if (transformName == L"filter") {
 		tr.type = TransformType::eFILTER;
 
-		tr.args[0] = params.get(L"attack").asFloatF();
-		tr.args[1] = params.get(L"decay").asFloatF(tr.args[0]);
+		tr.args[0] = std::max(params.get(L"attack").asFloatF(), 0.0f);
+		tr.args[1] = std::max(params.get(L"decay").asFloatF(tr.args[0]), 0.0f);
 	} else if (transformName == L"db") {
 		tr.type = TransformType::eDB;
 	} else if (transformName == L"map") {
@@ -210,6 +210,9 @@ std::optional<TransformationParser::Transformation> TransformationParser::parseT
 
 		tr.args[0] = params.get(L"min").asFloatF(0.0f);
 		tr.args[1] = params.get(L"min").asFloatF(1.0f);
+
+		tr.args[0] = std::min(tr.args[0], tr.args[1]);
+		tr.args[1] = std::max(tr.args[0], tr.args[1]);
 	} else {
 		cl.error(L"'{}' is not recognized as a transform type", transformName);
 		return std::nullopt;

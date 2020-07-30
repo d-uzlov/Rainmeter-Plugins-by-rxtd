@@ -19,6 +19,7 @@ ButterworthWrapper::calcCoefLowPass(index _order, double cutoffFrequency, double
 		return { };
 	}
 
+	cutoffFrequency = std::min(cutoffFrequency, samplingFrequency * 0.5);
 	const double digitalFreq = cutoffFrequency / samplingFrequency;
 
 	double* aCoef = dcof_bwlp(order, digitalFreq);
@@ -46,6 +47,11 @@ ButterworthWrapper::calcCoefLowPass(index _order, double cutoffFrequency, double
 ButterworthWrapper::AB
 ButterworthWrapper::calcCoefHighPass(index _order, double cutoffFrequency, double samplingFrequency) {
 	const int order = int(_order);
+	if (order < 0) {
+		return { };
+	}
+
+	cutoffFrequency = std::min(cutoffFrequency, samplingFrequency * 0.5);
 	const double digitalFreq = cutoffFrequency / samplingFrequency;
 
 	double* aCoef = dcof_bwhp(order, digitalFreq);
@@ -77,6 +83,12 @@ ButterworthWrapper::calcCoefBandPass(
 	double samplingFrequency
 ) {
 	const int order = int(_order);
+	if (order < 0) {
+		return { };
+	}
+
+	lowerCutoffFrequency = std::min(lowerCutoffFrequency, samplingFrequency * 0.5);
+	upperCutoffFrequency = std::min(upperCutoffFrequency, samplingFrequency * 0.5);
 	const double digitalFreq1 = lowerCutoffFrequency / samplingFrequency;
 	const double digitalFreq2 = upperCutoffFrequency / samplingFrequency;
 
@@ -108,6 +120,12 @@ ButterworthWrapper::AB ButterworthWrapper::calcCoefBandStop(
 	double samplingFrequency
 ) {
 	const int order = int(_order);
+	if (order < 0) {
+		return { };
+	}
+
+	lowerCutoffFrequency = std::min(lowerCutoffFrequency, samplingFrequency * 0.5);
+	upperCutoffFrequency = std::min(upperCutoffFrequency, samplingFrequency * 0.5);
 	const double digitalFreq1 = lowerCutoffFrequency / samplingFrequency;
 	const double digitalFreq2 = upperCutoffFrequency / samplingFrequency;
 
