@@ -8,9 +8,9 @@
  */
 
 #include "FftCascade.h"
-#include "RandomGenerator.h"
 
-#include "undef.h"
+#include "DiscreetInterpolator.h"
+#include "RandomGenerator.h"
 
 using namespace audio_utils;
 
@@ -19,7 +19,7 @@ void FftCascade::setParams(Params _params, FFT* fft, FftCascade* successor, inde
 	this->successor = successor;
 	this->fft = fft;
 
-	filledElements = 0;
+	ringBufferOffset = 0;
 	transferredElements = 0;
 	ringBuffer.resize(params.fftSize);
 
@@ -27,20 +27,24 @@ void FftCascade::setParams(Params _params, FFT* fft, FftCascade* successor, inde
 	if (values.empty()) {
 		values.resize(newValuesSize);
 	} else if (index(values.size()) != newValuesSize) {
-		double coef = double(values.size()) / newValuesSize;
+		utils::DiscreetInterpolator inter;
+		inter.setParams(0.0, double(newValuesSize - 1), 0, values.size() - 1);
+		// double coef = double(values.size()) / newValuesSize;
 
 		if (index(values.size()) < newValuesSize) {
 			values.resize(newValuesSize);
 
 			for (index i = newValuesSize - 1; i >= 1; i--) {
-				const index oldIndex = std::clamp<index>(index(i * coef ), 0, values.size() - 1);
+				// const index oldIndex = std::clamp<index>(index(i * coef ), 0, values.size() - 1);
+				const index oldIndex = inter.toValueD(i);
 				values[i] = values[oldIndex];
 			}
 		}
 
 		if (index(values.size()) > newValuesSize) {
 			for (index i = 1; i < newValuesSize; i++) {
-				const index oldIndex = std::clamp<index>(index(i * coef), 0, values.size() - 1);
+				// const index oldIndex = std::clamp<index>(index(i * coef), 0, values.size() - 1);
+				const index oldIndex = inter.toValueD(i);
 				values[i] = values[oldIndex];
 			}
 
@@ -59,42 +63,38 @@ void FftCascade::setParams(Params _params, FFT* fft, FftCascade* successor, inde
 }
 
 void FftCascade::process(array_view<float> wave) {
-	const auto fftSize = params.fftSize;
-	const auto inputStride = params.inputStride;
-
 	index waveProcessed = 0;
 	const auto tmpIn = ringBuffer.data();
 
 	while (waveProcessed != wave.size()) {
-		const auto copySize = fftSize - filledElements;
+		const auto copySize = params.fftSize - ringBufferOffset;
 
 		if (waveProcessed + copySize <= wave.size()) {
 			const auto copyStartPlace = wave.data() + waveProcessed;
-			std::copy(copyStartPlace, copyStartPlace + copySize, tmpIn + filledElements);
+			std::copy(copyStartPlace, copyStartPlace + copySize, tmpIn + ringBufferOffset);
 
 			if (successor != nullptr) {
-				successor->processResampled({ tmpIn + transferredElements, index(ringBuffer.size()) - transferredElements });
+				array_view<float> subBuffer = ringBuffer;
+				subBuffer.remove_prefix(transferredElements);
+				successor->processResampled(subBuffer);
 			}
 
 			waveProcessed += copySize;
 
 			doFft();
-			std::copy(tmpIn + inputStride, tmpIn + fftSize, tmpIn);
-			filledElements = fftSize - inputStride;
-			transferredElements = filledElements;
+			std::copy(tmpIn + params.inputStride, tmpIn + params.fftSize, tmpIn);
+			ringBufferOffset = params.fftSize - params.inputStride;
+			transferredElements = ringBufferOffset;
 		} else {
-			std::copy(wave.data() + waveProcessed, wave.data() + wave.size(), tmpIn + filledElements);
+			std::copy(wave.data() + waveProcessed, wave.data() + wave.size(), tmpIn + ringBufferOffset);
 
-			filledElements = filledElements + wave.size() - waveProcessed;
+			ringBufferOffset = ringBufferOffset + wave.size() - waveProcessed;
 			waveProcessed = wave.size();
 		}
 	}
 }
 
 void FftCascade::processResampled(array_view<float> wave) {
-	const auto fftSize = params.fftSize;
-	const auto inputStride = params.inputStride;
-
 	if (wave.empty()) {
 		return;
 	}
@@ -102,38 +102,40 @@ void FftCascade::processResampled(array_view<float> wave) {
 	index waveProcessed = 0;
 	const auto tmpIn = ringBuffer.data();
 	if (std::abs(odd) <= 1.0f) {
-		tmpIn[filledElements] = (odd + wave[0]) * 0.5f;
+		tmpIn[ringBufferOffset] = (odd + wave[0]) * 0.5f;
 		odd = 10.0f;
-		filledElements++;
+		ringBufferOffset++;
 		waveProcessed = 1;
 	}
 
 	while (waveProcessed != wave.size()) {
-		const auto elementPairsNeeded = fftSize - filledElements;
+		const auto ringBufferRemainingSize = params.fftSize - ringBufferOffset;
 		const auto elementPairsLeft = (wave.size() - waveProcessed) / 2;
 		const auto copyStartPlace = wave.data() + waveProcessed;
 
-		if (elementPairsNeeded <= elementPairsLeft) {
-			for (index i = 0; i < elementPairsNeeded; i++) {
-				tmpIn[filledElements + i] = (copyStartPlace[i * 2] + copyStartPlace[i * 2 + 1]) * 0.5f;
+		if (ringBufferRemainingSize <= elementPairsLeft) {
+			for (index i = 0; i < ringBufferRemainingSize; i++) {
+				tmpIn[ringBufferOffset + i] = (copyStartPlace[i * 2] + copyStartPlace[i * 2 + 1]) * 0.5f;
 			}
 
 			if (successor != nullptr) {
-				successor->processResampled({ tmpIn + transferredElements, index(ringBuffer.size()) - transferredElements });
+				array_view<float> subBuffer = ringBuffer;
+				subBuffer.remove_prefix(transferredElements);
+				successor->processResampled(subBuffer);
 			}
 
-			waveProcessed += elementPairsNeeded * 2;
+			waveProcessed += ringBufferRemainingSize * 2;
 
 			doFft();
-			std::copy(tmpIn + inputStride, tmpIn + fftSize, tmpIn);
-			filledElements = fftSize - inputStride;
-			transferredElements = filledElements;
+			std::copy(tmpIn + params.inputStride, tmpIn + params.fftSize, tmpIn);
+			ringBufferOffset = params.fftSize - params.inputStride;
+			transferredElements = ringBufferOffset;
 		} else {
 			for (index i = 0; i < elementPairsLeft; i++) {
-				tmpIn[filledElements + i] = (copyStartPlace[i * 2] + copyStartPlace[i * 2 + 1]) * 0.5f;
+				tmpIn[ringBufferOffset + i] = (copyStartPlace[i * 2] + copyStartPlace[i * 2 + 1]) * 0.5f;
 			}
 
-			filledElements = filledElements + elementPairsLeft;
+			ringBufferOffset = ringBufferOffset + elementPairsLeft;
 			waveProcessed += elementPairsLeft * 2;
 
 			if (waveProcessed != wave.size()) {
@@ -143,38 +145,6 @@ void FftCascade::processResampled(array_view<float> wave) {
 			} else {
 				odd = 10.0f;
 			}
-		}
-	}
-}
-
-void FftCascade::processSilence(index waveSize) {
-	const auto fftSize = params.fftSize;
-	const auto inputStride = params.inputStride;
-
-	index waveProcessed = 0;
-	const auto tmpIn = ringBuffer.data();
-
-	while (waveProcessed != waveSize) {
-		const auto copySize = fftSize - filledElements;
-
-		if (waveProcessed + copySize <= waveSize) {
-			std::fill_n(tmpIn + filledElements, copySize, 0.0f);
-
-			if (successor != nullptr) {
-				successor->processResampled({ tmpIn + transferredElements, index(ringBuffer.size()) - transferredElements });
-			}
-
-			waveProcessed += copySize;
-
-			doFft();
-			std::copy(tmpIn + inputStride, tmpIn + fftSize, tmpIn);
-			filledElements = fftSize - inputStride;
-			transferredElements = filledElements;
-		} else {
-			std::fill_n(tmpIn + filledElements, waveSize - waveProcessed, 0.0f);
-
-			filledElements = filledElements + waveSize - waveProcessed;
-			waveProcessed = waveSize;
 		}
 	}
 }
