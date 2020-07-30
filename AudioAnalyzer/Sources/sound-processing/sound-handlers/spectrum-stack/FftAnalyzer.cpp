@@ -10,6 +10,9 @@
 #include <random>
 
 #include "FftAnalyzer.h"
+
+#include <chrono>
+
 #include "option-parser/OptionMap.h"
 
 #include "../../../audio-utils/RandomGenerator.h"
@@ -106,11 +109,22 @@ void FftAnalyzer::_process(const DataSupplier& dataSupplier) {
 
 	const auto wave = dataSupplier.getWave();
 
+	using clock = std::chrono::high_resolution_clock;
+	static_assert(clock::is_steady);
+
+	const auto processBeginTime = clock::now();
+
 	if (params.randomTest != 0.0) {
 		processRandom(wave.size());
 	} else {
 		cascades[0].process(wave);
 	}
+
+	const auto processEndTime = clock::now();
+
+	const auto processDuration = std::chrono::duration<double, std::milli> { processEndTime - processBeginTime }.count();
+
+	dataSupplier.log(L"fft time: {} ms", processDuration);
 }
 
 index FftAnalyzer::getLayersCount() const {

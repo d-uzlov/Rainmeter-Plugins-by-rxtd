@@ -32,7 +32,7 @@ namespace rxtd::audio_analyzer {
 
 		array_view<float> getWave() const override;
 
-		void log(wchar_t* message) const override {
+		void _log(const wchar_t* message) const override {
 			logger.error(message);
 		}
 

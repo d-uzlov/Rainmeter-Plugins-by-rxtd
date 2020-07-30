@@ -10,11 +10,15 @@
 #pragma once
 #include "Channel.h"
 #include "array_view.h"
+#include "BufferPrinter.h"
 
 namespace rxtd::audio_analyzer {
 	class SoundHandler;
 
 	class DataSupplier {
+		// TODO remove mutable
+		mutable utils::BufferPrinter printer;
+
 	public:
 		virtual ~DataSupplier() = default;
 		[[nodiscard]]
@@ -26,10 +30,16 @@ namespace rxtd::audio_analyzer {
 			return dynamic_cast<const T*>(getHandlerRaw(id));
 		}
 
-		virtual void log(wchar_t* message) const = 0;
+		template <typename ...Args>
+		void log(const wchar_t* message, const Args&... args) const {
+			printer.print(message, args...);
+			_log(printer.getBufferPtr());
+		}
 
 	protected:
 		[[nodiscard]]
 		virtual const SoundHandler* getHandlerRaw(isview id) const = 0;
+
+		virtual void _log(const wchar_t* message) const = 0;
 	};
 }
