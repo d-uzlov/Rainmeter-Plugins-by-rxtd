@@ -12,6 +12,10 @@
 using namespace audio_utils;
 
 InfiniteResponseFilter::InfiniteResponseFilter(std::vector<double> a, std::vector<double> b, double gainAmp) {
+	if (a.empty()) {
+		throw std::exception{ };
+	}
+
 	this->gainAmp = gainAmp;
 	const double a0 = a[0];
 	for (auto& value : a) {
@@ -31,26 +35,18 @@ InfiniteResponseFilter::InfiniteResponseFilter(std::vector<double> a, std::vecto
 	this->b = std::move(b);
 }
 
-void InfiniteResponseFilter::apply(array_span<float> signal) {
-	if (a.empty()) {
-		return;
-	}
+double InfiniteResponseFilter::updateState(double value) {
+	const double filtered = b[0] * value + state[0];
 
-	for (float& value : signal) {
-		const double next = value;
-		const double nextFiltered = b[0] * next + state[0];
-		value = float(nextFiltered * gainAmp);
-		updateState(next, nextFiltered);
-	}
-}
-
-void InfiniteResponseFilter::updateState(double next, double nextFiltered) {
 	const index lastIndex = state.size() - 1;
 	for (index i = 0; i < lastIndex; ++i) {
 		const double ai = a[i + 1];
 		const double bi = b[i + 1];
-		const double prevD = state[i + 1];
-		state[i] = bi * next - ai * nextFiltered + prevD;
+		const double prevState = state[i + 1];
+		state[i] = bi * value - ai * filtered + prevState;
 	}
-	state[lastIndex] = b[lastIndex + 1] * next - a[lastIndex + 1] * nextFiltered;
+
+	state[lastIndex] = b[lastIndex + 1] * value - a[lastIndex + 1] * filtered;
+
+	return filtered;
 }

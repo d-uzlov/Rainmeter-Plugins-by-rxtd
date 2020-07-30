@@ -10,6 +10,7 @@
 #pragma once
 #include "filter-utils/LogarithmicIRF.h"
 #include "FFT.h"
+#include "filter-utils/InfiniteResponseFilter.h"
 
 namespace rxtd::audio_utils {
 	class FftCascade {
@@ -31,7 +32,13 @@ namespace rxtd::audio_utils {
 			index endOffset = 0;
 			index takenOffset = 0;
 
+			static constexpr index filterOrder = 5;
+			InfiniteResponseFilterFixed<filterOrder + 1> filter;
+			bool isOdd = false;
+
 		public:
+			RingBuffer();
+
 			// returns part of the wave that didn't fit info the buffer
 			[[nodiscard]]
 			array_view<float> fill(array_view<float> wave);
@@ -55,12 +62,7 @@ namespace rxtd::audio_utils {
 			}
 
 			[[nodiscard]]
-			array_view<float> take() {
-				array_view<float> result = buffer;
-				result.remove_prefix(takenOffset);
-				takenOffset = endOffset;
-				return result;
-			}
+			array_view<float> take();
 
 			void setSize(index value) {
 				buffer.resize(value);
@@ -73,18 +75,16 @@ namespace rxtd::audio_utils {
 		FFT* fft{ };
 
 		Params params{ };
+		index cascadeIndex{ };
 
 		RingBuffer buffer;
 		LogarithmicIRF filter{ };
 		std::vector<float> values;
-		float odd{ };
 		float dc{ };
-		// Fourier transform looses energy due to downsample, so we multiply result of FFT by (2^0.5)^countOfDownsampleIterations
-		float downsampleGain{ };
 
 	public:
 		void setParams(Params _params, FFT* fft, FftCascade* successor, index cascadeIndex);
-		void process(array_view<float> wave, bool resample = false);
+		void process(array_view<float> wave);
 		void reset();
 
 		[[nodiscard]]

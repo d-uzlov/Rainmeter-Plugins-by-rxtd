@@ -109,10 +109,10 @@ void FftAnalyzer::_process(const DataSupplier& dataSupplier) {
 
 	const auto wave = dataSupplier.getWave();
 
-	using clock = std::chrono::high_resolution_clock;
-	static_assert(clock::is_steady);
-
-	const auto processBeginTime = clock::now();
+	// using clock = std::chrono::high_resolution_clock;
+	// static_assert(clock::is_steady);
+	//
+	// const auto processBeginTime = clock::now();
 
 	if (params.randomTest != 0.0) {
 		processRandom(wave.size());
@@ -120,11 +120,11 @@ void FftAnalyzer::_process(const DataSupplier& dataSupplier) {
 		cascades[0].process(wave);
 	}
 
-	const auto processEndTime = clock::now();
-
-	const auto processDuration = std::chrono::duration<double, std::milli> { processEndTime - processBeginTime }.count();
-
-	dataSupplier.log(L"fft time: {} ms", processDuration);
+	// const auto processEndTime = clock::now();
+	//
+	// const auto processDuration = std::chrono::duration<double, std::milli> { processEndTime - processBeginTime }.count();
+	//
+	// dataSupplier.log(L"fft time: {} ms", processDuration);
 }
 
 index FftAnalyzer::getLayersCount() const {

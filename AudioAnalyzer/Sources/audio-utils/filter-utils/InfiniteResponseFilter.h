@@ -35,10 +35,19 @@ namespace rxtd::audio_utils {
 			std::move(params.a), std::move(params.b), params.gainAmp) {
 		}
 
-		void apply(array_span<float> signal) override;
+		// updates the state of the filter and returns filtered value
+		double next(double value) {
+			return updateState(value) * gainAmp;
+		}
+
+		void apply(array_span<float> signal) override {
+			for (float& value : signal) {
+				value = float(next(value));
+			}
+		}
 
 	private:
-		void updateState(double next, double nextFiltered);
+		double updateState(double value);
 	};
 
 	template <index order>
@@ -76,25 +85,33 @@ namespace rxtd::audio_utils {
 			}
 		}
 
+		// updates the state of the filter and returns filtered value
+		double next(double value) {
+			// no [[nodiscard]] on the function because it may be used to just update state
+			return updateState(value) * gainAmp;
+		}
+
 		void apply(array_span<float> signal) override {
 			for (float& value : signal) {
-				const double next = value;
-				const double nextFiltered = b[0] * next + state[0];
-				value = float(nextFiltered * gainAmp);
-				updateState(next, nextFiltered);
+				value = float(next(value));
 			}
 		}
 
 	private:
-		void updateState(double next, double nextFiltered) {
+		double updateState(const double value) {
+			const double filtered = b[0] * value + state[0];
+
 			const index lastIndex = state.size() - 1;
 			for (index i = 0; i < lastIndex; ++i) {
 				const double ai = a[i + 1];
 				const double bi = b[i + 1];
-				const double prevD = state[i + 1];
-				state[i] = bi * next - ai * nextFiltered + prevD;
+				const double prevState = state[i + 1];
+				state[i] = bi * value - ai * filtered + prevState;
 			}
-			state[lastIndex] = b[lastIndex + 1] * next - a[lastIndex + 1] * nextFiltered;
+
+			state[lastIndex] = b[lastIndex + 1] * value - a[lastIndex + 1] * filtered;
+
+			return filtered;
 		}
 	};
 }
