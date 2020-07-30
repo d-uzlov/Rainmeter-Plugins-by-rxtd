@@ -111,8 +111,6 @@ void FftAnalyzer::_process(const DataSupplier& dataSupplier) {
 	} else {
 		cascades[0].process(wave);
 	}
-
-	fft.resetBuffers();
 }
 
 index FftAnalyzer::getLayersCount() const {

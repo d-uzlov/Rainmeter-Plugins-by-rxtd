@@ -8,7 +8,6 @@
  */
 
 #pragma once
-#include "../sound-processing/sound-handlers/SoundHandler.h"
 #include "filter-utils/LogarithmicIRF.h"
 #include "FFT.h"
 

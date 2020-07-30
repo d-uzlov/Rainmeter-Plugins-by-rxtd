@@ -22,7 +22,7 @@ namespace rxtd::audio_utils {
 
 		FftImpl kiss;
 
-		// TODO process everything in place in cascades?
+		// need separate input buffer because of window application
 		std::vector<FftImpl::scalar_type> inputBuffer;
 		std::vector<FftImpl::complex_type> outputBuffer;
 
@@ -37,11 +37,6 @@ namespace rxtd::audio_utils {
 		
 		[[nodiscard]]
 		float getBinMagnitude(index binIndex) const;
-
-		void resetBuffers() {
-			inputBuffer = { };
-			outputBuffer = { };
-		}
 
 		void process(array_view<float> wave);
 		
