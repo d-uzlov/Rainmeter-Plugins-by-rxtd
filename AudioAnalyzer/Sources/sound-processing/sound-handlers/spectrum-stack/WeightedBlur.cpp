@@ -93,23 +93,9 @@ std::vector<double> WeightedBlur::GaussianCoefficientsManager::generateGaussianK
 
 void WeightedBlur::setParams(const Params& _params, Channel channel) {
 	params = _params;
-	setResamplerID(params.sourceId);
-	setValid(true);
 }
 
 void WeightedBlur::_process(const DataSupplier& dataSupplier) {
-	const BandResampler* resamplerPtr = getResampler(dataSupplier);
-	if (resamplerPtr == nullptr) {
-		setValid(false);
-		return;
-	}
-
-	source = dataSupplier.getHandler<ResamplerProvider>(params.sourceId);
-	if (source == nullptr) {
-		setValid(false);
-		return;
-	}
-
 	changed = true;
 }
 
@@ -118,6 +104,7 @@ void WeightedBlur::_finish() {
 		return;
 	}
 
+	source->finish();
 	blurData();
 	changed = false;
 }
@@ -136,6 +123,22 @@ void WeightedBlur::setSamplesPerSec(index samplesPerSec) {
 
 void WeightedBlur::reset() {
 	changed = true;
+}
+
+bool WeightedBlur::vCheckSources(Logger& cl) {
+	resamplerPtr = getResampler();
+	if (resamplerPtr == nullptr) {
+		cl.error(L"BandResampler is not found in the source chain");
+		return false;
+	}
+
+	source = getSource();
+	if (source == nullptr) {
+		cl.error(L"source is not found");
+		return false;
+	}
+
+	return true;
 }
 
 void WeightedBlur::blurData() {

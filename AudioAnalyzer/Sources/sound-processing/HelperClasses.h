@@ -8,7 +8,6 @@
  */
 
 #pragma once
-#include "Channel.h"
 #include "sound-handlers/SoundHandler.h"
 #include "RainmeterWrappers.h"
 
@@ -17,26 +16,38 @@ namespace rxtd::audio_analyzer {
 		std::unique_ptr<SoundHandler> ptr;
 		bool wasValid;
 	};
+
 	using ChannelData = std::map<istring, HandlerValidityInfo, std::less<>>;
 
 	class DataSupplierImpl : public DataSupplier {
 		array_view<float> wave{ };
-		const ChannelData* channelData = nullptr;
-
-		mutable index nextBufferIndex = 0;
 
 	public:
 		mutable utils::Rainmeter::Logger logger;
-		void setWave(array_view<float> wave);
-		void setChannelData(const ChannelData* channelData);
 
-		array_view<float> getWave() const override;
+		void setWave(array_view<float> value) {
+			wave = value;
+		}
+
+		array_view<float> getWave() const override {
+			return wave;
+		}
 
 		void _log(const wchar_t* message) const override {
 			logger.error(message);
 		}
+	};
+
+	class HandlerFinderImpl : public HandlerFinder {
+		const ChannelData* channelData = nullptr;
+
+	public:
+		void setChannelData(const ChannelData& value) {
+			channelData = &value;
+		}
 
 	protected:
-		const SoundHandler* getHandlerRaw(isview id) const override;
+		[[nodiscard]]
+		SoundHandler* getHandlerRaw(isview id) const override;
 	};
 }

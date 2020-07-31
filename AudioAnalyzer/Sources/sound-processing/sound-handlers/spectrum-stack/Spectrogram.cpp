@@ -156,6 +156,16 @@ bool Spectrogram::getProp(const isview& prop, utils::BufferPrinter& printer) con
 	return false;
 }
 
+bool Spectrogram::vCheckSources(Logger& cl) {
+	const auto source = getSource();
+	if (source == nullptr) {
+		cl.error(L"source is not found");
+		return false;
+	}
+
+	return true;
+}
+
 void Spectrogram::updateParams() {
 	blockSize = index(samplesPerSec * params.resolution);
 }
@@ -211,14 +221,16 @@ void Spectrogram::_process(const DataSupplier& dataSupplier) {
 		return;
 	}
 
-	const auto source = dataSupplier.getHandler(params.sourceName);
-	if (source == nullptr) {
+	const auto source = getSource();
+	source->finish();
+
+	const auto data = source->getData(0);
+	const auto dataSize = data.size();
+	if (dataSize <= 0) {
 		setValid(false);
 		return;
 	}
 
-	const auto data = source->getData(0);
-	const auto dataSize = data.size();
 	image.setHeight(dataSize);
 	stripBuffer.resize(dataSize);
 

@@ -57,7 +57,7 @@ namespace rxtd::audio_analyzer {
 		Params params{ };
 
 		index samplesPerSec{ };
-		
+
 		const FftAnalyzer* source = nullptr;
 
 		std::vector<float> bandFreqMultipliers{ };
@@ -97,9 +97,16 @@ namespace rxtd::audio_analyzer {
 		array_view<float> getBandWeights(index cascade) const;
 		array_view<float> getBaseFreqs() const; // todo unused
 
-		const BandResampler* getResampler(const DataSupplier& dataSupplier) const override {
+		BandResampler* getResampler() override {
 			return this;
 		}
+
+	protected:
+		isview getSourceName() const override {
+			return params.fftId;
+		}
+
+		bool vCheckSources(Logger& cl) override;
 
 	private:
 		void updateValues();

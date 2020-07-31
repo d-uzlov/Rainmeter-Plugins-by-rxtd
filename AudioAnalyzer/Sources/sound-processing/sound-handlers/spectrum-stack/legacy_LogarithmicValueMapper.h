@@ -31,7 +31,7 @@ namespace rxtd::audio_analyzer {
 
 		double logNormalization{ };
 
-		const SoundHandler* source{ };
+		SoundHandler* source{ };
 
 		std::vector<std::vector<float>> resultValues;
 
@@ -56,6 +56,15 @@ namespace rxtd::audio_analyzer {
 		index getLayersCount() const override {
 			return index(resultValues.size());
 		}
+
+	protected:
+		[[nodiscard]]
+		isview getSourceName() const override {
+			return params.sourceId;
+		}
+
+		[[nodiscard]]
+		bool vCheckSources(Logger& cl) override;
 
 	private:
 		void updateValues();

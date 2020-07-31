@@ -50,8 +50,8 @@ namespace rxtd::audio_analyzer {
 
 		index samplesPerSec{ };
 
-		const SoundHandler* source = nullptr;
-		
+		SoundHandler* source = nullptr;
+
 		// pastValues[Layer][FilterSize][Band]
 		std::vector<utils::Vector2D<float>> pastValues;
 		utils::Vector2D<float> values;
@@ -87,6 +87,15 @@ namespace rxtd::audio_analyzer {
 
 			return values.getBuffersCount();
 		}
+
+	protected:
+		[[nodiscard]]
+		isview getSourceName() const override {
+			return params.sourceId;
+		}
+
+		[[nodiscard]]
+		bool vCheckSources(Logger& cl) override;
 
 	private:
 		void adjustSize();

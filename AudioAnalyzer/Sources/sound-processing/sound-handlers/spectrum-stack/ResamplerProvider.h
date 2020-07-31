@@ -14,16 +14,9 @@ namespace rxtd::audio_analyzer {
 	class BandResampler;
 
 	class ResamplerProvider : public SoundHandler {
-		istring resamplerId{ };
-
 	public:
 		virtual ~ResamplerProvider() = default;
 
-		void setResamplerID(isview value) {
-			resamplerId = value;
-		}
-
-		virtual const BandResampler* getResampler(const DataSupplier& dataSupplier) const;
+		virtual BandResampler* getResampler();
 	};
-
 }

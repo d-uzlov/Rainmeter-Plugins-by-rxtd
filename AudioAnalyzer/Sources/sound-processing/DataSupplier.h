@@ -13,8 +13,6 @@
 #include "BufferPrinter.h"
 
 namespace rxtd::audio_analyzer {
-	class SoundHandler;
-
 	class DataSupplier {
 		// TODO remove mutable
 		mutable utils::BufferPrinter printer;
@@ -24,12 +22,6 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		virtual array_view<float> getWave() const = 0;
 
-		template <typename T = SoundHandler>
-		[[nodiscard]]
-		const T* getHandler(isview id) const {
-			return dynamic_cast<const T*>(getHandlerRaw(id));
-		}
-
 		template <typename ...Args>
 		void log(const wchar_t* message, const Args&... args) const {
 			printer.print(message, args...);
@@ -37,9 +29,6 @@ namespace rxtd::audio_analyzer {
 		}
 
 	protected:
-		[[nodiscard]]
-		virtual const SoundHandler* getHandlerRaw(isview id) const = 0;
-
 		virtual void _log(const wchar_t* message) const = 0;
 	};
 }

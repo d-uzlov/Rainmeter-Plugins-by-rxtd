@@ -103,6 +103,16 @@ namespace rxtd::audio_analyzer {
 
 		bool getProp(const isview& prop, utils::BufferPrinter& printer) const override;
 
+	protected:
+		isview getSourceName() const override {
+			return { };
+		}
+
+		[[nodiscard]]
+		bool vCheckSources(Logger& cl) override {
+			return true;
+		}
+
 	private:
 		void processRandom(index waveSize);
 

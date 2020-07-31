@@ -15,6 +15,26 @@
 #include "RainmeterWrappers.h"
 
 namespace rxtd::audio_analyzer {
+	class SoundHandler;
+
+	class HandlerFinder {
+		// NOLINT(cppcoreguidelines-special-member-functions)
+	public:
+		virtual ~HandlerFinder() = default;
+
+		template <typename T = SoundHandler>
+		[[nodiscard]]
+		T* getHandler(isview id) const {
+			// TODO remove template?
+			return dynamic_cast<const T*>(getHandlerRaw(id));
+		}
+
+	protected:
+		[[nodiscard]]
+		virtual SoundHandler* getHandlerRaw(isview id) const = 0;
+	};
+
+
 	class SoundHandler {
 	protected:
 		using OptionMap = utils::OptionMap;
@@ -22,6 +42,7 @@ namespace rxtd::audio_analyzer {
 		using Logger = utils::Rainmeter::Logger;
 
 	private:
+		SoundHandler* source = nullptr;
 		mutable bool valid = true;
 
 	public:
@@ -37,8 +58,24 @@ namespace rxtd::audio_analyzer {
 		virtual void setSamplesPerSec(index value) = 0;
 		virtual void reset() = 0;
 
+		void prePatch() {
+			// this function exists because there is no united #patch() function: patchers are unique to handler type
+			setValid(true);
+		}
+
+		void linkSources(HandlerFinder& hf, Logger& cl) {
+			if (!isValid()) {
+				return;
+			}
+
+			source = hf.getHandler(getSourceName());
+
+			const bool success = vCheckSources(cl);
+			setValid(success);
+		}
+
 		void process(const DataSupplier& dataSupplier) {
-			if (!valid) {
+			if (!isValid()) {
 				return;
 			}
 
@@ -46,23 +83,27 @@ namespace rxtd::audio_analyzer {
 		}
 
 		void finish() {
-			if (!valid) {
+			if (!isValid()) {
 				return;
 			}
 
 			_finish();
 		}
 
-		virtual bool isValid() const {
+		[[nodiscard]]
+		bool isValid() const {
 			return valid;
 		}
 
+		[[nodiscard]]
 		virtual array_view<float> getData(index layer) const = 0;
 
+		[[nodiscard]]
 		virtual index getLayersCount() const {
 			return 1;
 		}
 
+		[[nodiscard]]
 		virtual index getStartingLayer() const {
 			return 0;
 		}
@@ -81,16 +122,29 @@ namespace rxtd::audio_analyzer {
 			valid = value;
 		}
 
+		SoundHandler* getSource() const {
+			return source;
+		}
+
+		[[nodiscard]]
+		virtual isview getSourceName() const = 0;
+
+		// method should return false if check failed, true otherwise
+		[[nodiscard]]
+		virtual bool vCheckSources(Logger& cl) = 0;
+
 		virtual void _process(const DataSupplier& dataSupplier) = 0;
 
 		// Method can be called several times in a row, handler should check for changes for optimal performance
-		virtual void _finish() { }
+		virtual void _finish() {
+		}
 
 		static index legacy_parseIndexProp(const isview& request, const isview& propName, index endBound) {
 			return legacy_parseIndexProp(request, propName, 0, endBound);
 		}
 
-		static index legacy_parseIndexProp(const isview& request, const isview& propName, index minBound, index endBound) {
+		static index legacy_parseIndexProp(const isview& request, const isview& propName, index minBound,
+		                                   index endBound) {
 			const auto indexPos = request.find(propName);
 
 			if (indexPos != 0) {

@@ -60,37 +60,12 @@ BandCascadeTransformer::parseParams(const OptionMap& optionMap, Logger& cl) {
 }
 
 void BandCascadeTransformer::setParams(const Params& _params, Channel channel) {
-	if (params == _params) {
-		return;
-	}
-
 	params = _params;
 
-	analysisComputed = false;
-	setValid(true);
+	analysisComputed = false; // todo compute?
 }
 
 void BandCascadeTransformer::_process(const DataSupplier& dataSupplier) {
-	source = dataSupplier.getHandler(params.sourceId);
-	if (source == nullptr) {
-		setValid(false);
-		return;
-	}
-	
-	resampler = dynamic_cast<const BandResampler*>(source);
-	if (resampler == nullptr) {
-		const auto provider = dynamic_cast<const ResamplerProvider*>(source);
-		if (provider == nullptr) {
-			setValid(false);
-			return;
-		}
-		resampler = provider->getResampler(dataSupplier);
-		if (resampler == nullptr) {
-			setValid(false);
-			return;
-		}
-	}
-
 	changed = true;
 }
 
@@ -99,20 +74,20 @@ void BandCascadeTransformer::_finish() {
 		return;
 	}
 
-	setValid(false);
+	resampler->finish();
+	source->finish();
 
 	if (!analysisComputed) {
 		computeAnalysis(*resampler, resampler->getStartingLayer(), resampler->getEndCascade());
 	}
 
 	if (analysis.minCascadeUsed < 0) {
+		setValid(false);
 		return;
 	}
 
 	updateValues(*source, *resampler);
 	changed = false;
-
-	setValid(true);
 }
 
 void BandCascadeTransformer::setSamplesPerSec(index samplesPerSec) {
@@ -142,7 +117,29 @@ void BandCascadeTransformer::reset() {
 	changed = true;
 }
 
-void BandCascadeTransformer::updateValues(const SoundHandler& source, const BandResampler& resampler) {
+bool BandCascadeTransformer::vCheckSources(Logger& cl) {
+	source = getSource();
+	if (source == nullptr) {
+		cl.error(L"source is not found");
+		return false;
+	}
+
+	const auto provider = dynamic_cast<ResamplerProvider*>(source);
+	if (provider == nullptr) {
+		cl.error(L"invalid source");
+		return false;
+	}
+
+	resampler = provider->getResampler();
+	if (resampler == nullptr) {
+		cl.error(L"BandResampler is not found in the source chain");
+		return false;
+	}
+
+	return true;
+}
+
+void BandCascadeTransformer::updateValues(SoundHandler& source, BandResampler& resampler) {
 
 	const index bandsCount = resampler.getData(0).size();
 
@@ -235,7 +232,7 @@ void BandCascadeTransformer::updateValues(const SoundHandler& source, const Band
 	}
 }
 
-void BandCascadeTransformer::computeAnalysis(const BandResampler& resampler, index startCascade, index endCascade) {
+void BandCascadeTransformer::computeAnalysis(BandResampler& resampler, index startCascade, index endCascade) {
 	if (analysisComputed) {
 		return;
 	}

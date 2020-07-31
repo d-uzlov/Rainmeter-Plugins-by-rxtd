@@ -55,10 +55,6 @@ void legacy_FiniteTimeFilter::setParams(const Params& _params, Channel channel) 
 	}
 
 	params = _params;
-	setResamplerID(params.sourceId);
-
-	setValid(false);
-	source = nullptr;
 
 	if (params.smoothingFactor <= 1) {
 		smoothingNormConstant = 1.0;
@@ -90,17 +86,9 @@ void legacy_FiniteTimeFilter::setParams(const Params& _params, Channel channel) 
 		default: std::terminate();
 		}
 	}
-
-	setValid(true);
 }
 
 void legacy_FiniteTimeFilter::_process(const DataSupplier& dataSupplier) {
-	source = dataSupplier.getHandler<>(params.sourceId);
-	if (source == nullptr) {
-		setValid(false);
-		return;
-	}
-
 	changed = true;
 }
 
@@ -109,7 +97,7 @@ void legacy_FiniteTimeFilter::_finish() {
 		return;
 	}
 
-	setValid(false);
+	source->finish();
 
 	if (params.smoothingFactor > 1) {
 		adjustSize();
@@ -118,11 +106,20 @@ void legacy_FiniteTimeFilter::_finish() {
 	}
 
 	changed = false;
-	setValid(true);
 }
 
 void legacy_FiniteTimeFilter::setSamplesPerSec(index value) {
 	samplesPerSec = value;
+}
+
+bool legacy_FiniteTimeFilter::vCheckSources(Logger& cl) {
+	source = getSource();
+	if (source == nullptr) {
+		cl.error(L"source is not found");
+		return false;
+	}
+
+	return true;
 }
 
 void legacy_FiniteTimeFilter::adjustSize() {

@@ -10,24 +10,22 @@
 #include "ResamplerProvider.h"
 #include "BandResampler.h"
 
-#include "undef.h"
-
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-const BandResampler* ResamplerProvider::getResampler(const DataSupplier& dataSupplier) const {
-	const auto source = dataSupplier.getHandler(resamplerId);
+BandResampler* ResamplerProvider::getResampler() {
+	const auto source = getSource();
 	if (source == nullptr) {
-		setValid(false);
+		setValid(false); // todo is this even needed?
 		return nullptr;
 	}
 
-	const auto provider = dynamic_cast<const ResamplerProvider*>(source);
+	const auto provider = dynamic_cast<ResamplerProvider*>(source);
 	if (provider == nullptr) {
 		return nullptr;
 	}
 
-	return provider->getResampler(dataSupplier);
+	return provider->getResampler();
 }

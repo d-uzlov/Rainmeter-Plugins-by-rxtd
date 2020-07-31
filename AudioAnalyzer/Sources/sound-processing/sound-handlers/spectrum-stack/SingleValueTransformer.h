@@ -57,5 +57,14 @@ namespace rxtd::audio_analyzer {
 		index getLayersCount() const override {
 			return values.getBuffersCount();
 		}
+
+	protected:
+		[[nodiscard]]
+		isview getSourceName() const override {
+			return params.sourceId;
+		}
+
+		[[nodiscard]]
+		bool vCheckSources(Logger& cl) override;
 	};
 }

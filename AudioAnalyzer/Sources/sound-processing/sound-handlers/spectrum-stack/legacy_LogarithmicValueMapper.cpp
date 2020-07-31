@@ -41,22 +41,16 @@ void legacy_LogarithmicValueMapper::setParams(const Params& _params, Channel cha
 	params = _params;
 
 	logNormalization = 20.0 / params.sensitivity;
-
-	setValid(true);
 }
 
 void legacy_LogarithmicValueMapper::_process(const DataSupplier& dataSupplier) {
-	source = dataSupplier.getHandler(params.sourceId);
-	if (source == nullptr) {
-		setValid(false);
-		return;
-	}
-
 	changed = true;
 }
 
 void legacy_LogarithmicValueMapper::_finish() {
 	if (changed) {
+		source->finish();
+
 		updateValues();
 		changed = false;
 	}
@@ -70,12 +64,18 @@ void legacy_LogarithmicValueMapper::reset() {
 	changed = true;
 }
 
+bool legacy_LogarithmicValueMapper::vCheckSources(Logger& cl) {
+	source = getSource();
+	if (source == nullptr) {
+		cl.error(L"source is not found");
+		return false;
+	}
+
+	return true;
+}
+
 void legacy_LogarithmicValueMapper::updateValues() {
-	setValid(false);
-
 	transformToLog(*source);
-
-	setValid(true);
 }
 
 void legacy_LogarithmicValueMapper::transformToLog(const SoundHandler& source) {

@@ -11,26 +11,13 @@
 
 using namespace audio_analyzer;
 
-void DataSupplierImpl::setWave(array_view<float> value) {
-	wave = value;
-}
-
-void DataSupplierImpl::setChannelData(const ChannelData* value) {
-	channelData = value;
-}
-
-array_view<float> DataSupplierImpl::getWave() const {
-	return wave;
-}
-
-const SoundHandler* DataSupplierImpl::getHandlerRaw(isview id) const {
+SoundHandler* HandlerFinderImpl::getHandlerRaw(isview id) const {
 	const auto iter = channelData->find(id);
 	if (iter == channelData->end()) {
 		return nullptr;
 	}
-	auto handler = iter->second.ptr.get();
-	handler->finish(); // endless loop is impossible because of "source" checking in ParamParser
 
+	const auto handler = iter->second.ptr.get();
 	if (!handler->isValid()) {
 		return nullptr;
 	}

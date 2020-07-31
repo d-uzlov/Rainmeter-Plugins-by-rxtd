@@ -49,8 +49,6 @@ bool SoundAnalyzer::process(const ChannelMixer& mixer, clock::time_point killTim
 	cph.setGrabBufferSize(bufferSize);
 
 	for (auto& [channel, channelData] : channels) {
-		dataSupplier.setChannelData(&channelData);
-
 		cph.setCurrentChannel(channel);
 		while (true) {
 			auto wave = cph.grabNext();
@@ -154,13 +152,28 @@ void SoundAnalyzer::patchChannels() {
 void SoundAnalyzer::patchHandlers() {
 	for (auto& [channel, channelData] : channels) {
 		ChannelData newData;
+		HandlerFinderImpl hf;
+		hf.setChannelData(newData);
 
-		for (auto& [handlerName, info] : handlerPatchers.map) {
+		for (auto& handlerName : handlerPatchers.order) {
+			auto& patcher = handlerPatchers.map[handlerName].patcher;
 			auto& handlerInfo = channelData[handlerName];
 
-			SoundHandler* res = info.patcher(handlerInfo.ptr.get(), channel);
-			if (res != handlerInfo.ptr.get()) {
-				handlerInfo.ptr = std::unique_ptr<SoundHandler>(res);
+			SoundHandler* ptr = handlerInfo.ptr.get();
+			if (ptr != nullptr) {
+				ptr->prePatch();
+			}
+
+			ptr = patcher(ptr, channel);
+			if (ptr != handlerInfo.ptr.get()) {
+				handlerInfo.ptr = std::unique_ptr<SoundHandler>(ptr);
+			}
+
+			auto cl = logger.context(L"Handler {}: ", handlerName);
+			ptr->linkSources(hf, cl);
+			if (!ptr->isValid()) {
+				cl.error(L"invalid handler");
+				continue;
 			}
 
 			handlerInfo.wasValid = true;

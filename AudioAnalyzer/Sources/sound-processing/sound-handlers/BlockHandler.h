@@ -69,6 +69,17 @@ namespace rxtd::audio_analyzer {
 		static std::optional<Params> parseParams(const OptionMap& optionMap, Logger& cl);
 
 	protected:
+		[[nodiscard]]
+		isview getSourceName() const override {
+			return { };
+		}
+
+		[[nodiscard]]
+		bool vCheckSources(Logger& cl) override {
+			return true;
+		}
+
+	protected:
 		void setNextValue(double value);
 
 		index getBlockSize() const {

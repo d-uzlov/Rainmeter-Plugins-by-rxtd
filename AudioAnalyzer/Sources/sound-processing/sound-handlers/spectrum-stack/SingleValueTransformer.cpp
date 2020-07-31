@@ -40,8 +40,6 @@ void SingleValueTransformer::setParams(const Params& _params, Channel channel) {
 
 	params = _params;
 	params.transformer.setParams(samplesPerSec, 1);
-
-	setResamplerID(params.sourceId);
 }
 
 void SingleValueTransformer::setSamplesPerSec(index value) {
@@ -53,11 +51,9 @@ void SingleValueTransformer::reset() {
 }
 
 void SingleValueTransformer::_process(const DataSupplier& dataSupplier) {
-	const auto source = dataSupplier.getHandler(params.sourceId);
-	if (source == nullptr) {
-		setValid(false);
-		return;
-	}
+	const auto source = getSource();
+
+	source->finish();
 
 	const index layersCount = source->getLayersCount();
 	const index layerSize = source->getData(0).size();
@@ -74,4 +70,14 @@ void SingleValueTransformer::_process(const DataSupplier& dataSupplier) {
 
 	params.transformer.setParams(samplesPerSec, dataSupplier.getWave().size());
 	params.transformer.applyToArray(values);
+}
+
+bool SingleValueTransformer::vCheckSources(Logger& cl) {
+	const auto source = getSource();
+	if (source == nullptr) {
+		cl.error(L"source is not found");
+		return false;
+	}
+
+	return true;
 }

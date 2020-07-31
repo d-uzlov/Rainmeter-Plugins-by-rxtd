@@ -56,9 +56,9 @@ namespace rxtd::audio_analyzer {
 		Params params{ };
 
 		index samplesPerSec{ };
-		
-		const SoundHandler* source = nullptr;
-		const BandResampler* resampler = nullptr;
+
+		SoundHandler* source = nullptr;
+		BandResampler* resampler = nullptr;
 
 		std::vector<float> resultValues{ };
 
@@ -98,8 +98,16 @@ namespace rxtd::audio_analyzer {
 
 		bool getProp(const isview& prop, utils::BufferPrinter& printer) const override;
 
+	protected:
+		isview getSourceName() const override {
+			return params.sourceId;
+		}
+
+		[[nodiscard]]
+		bool vCheckSources(Logger& cl) override;
+
 	private:
-		void updateValues(const SoundHandler& source, const BandResampler& resampler);
-		void computeAnalysis(const BandResampler& resampler, index startCascade, index endCascade);
+		void updateValues(SoundHandler& source, BandResampler& resampler);
+		void computeAnalysis(BandResampler& resampler, index startCascade, index endCascade);
 	};
 }

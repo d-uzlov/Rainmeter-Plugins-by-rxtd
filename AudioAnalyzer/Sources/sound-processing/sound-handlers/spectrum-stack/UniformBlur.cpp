@@ -19,8 +19,8 @@ using namespace audio_analyzer;
 
 std::optional<UniformBlur::Params> UniformBlur::parseParams(const OptionMap& optionMap, Logger& cl) {
 	Params params;
-	params.source = optionMap.get(L"source"sv).asIString();
-	if (params.source.empty()) {
+	params.sourceId = optionMap.get(L"source"sv).asIString();
+	if (params.sourceId.empty()) {
 		cl.error(L"source not found");
 		return std::nullopt;
 	}
@@ -67,17 +67,9 @@ std::vector<double> UniformBlur::GaussianCoefficientsManager::generateGaussianKe
 
 void UniformBlur::setParams(const Params& _params, Channel channel) {
 	params = _params;
-	setResamplerID(params.source);
-	setValid(true);
 }
 
 void UniformBlur::_process(const DataSupplier& dataSupplier) {
-	source = dataSupplier.getHandler(params.source);
-	if (source == nullptr) {
-		setValid(false);
-		return;
-	}
-
 	changed = true;
 }
 
@@ -86,6 +78,7 @@ void UniformBlur::_finish() {
 		return;
 	}
 
+	source->finish();
 	blurData(*source);
 	changed = false;
 }
@@ -104,6 +97,16 @@ void UniformBlur::setSamplesPerSec(index samplesPerSec) {
 
 void UniformBlur::reset() {
 	changed = true;
+}
+
+bool UniformBlur::vCheckSources(Logger& cl) {
+	source = getSource();
+	if (source == nullptr) {
+		cl.error(L"source is not found");
+		return false;
+	}
+
+	return true;
 }
 
 void UniformBlur::blurData(const SoundHandler& source) {

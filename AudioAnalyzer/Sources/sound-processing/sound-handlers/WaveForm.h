@@ -121,6 +121,17 @@ namespace rxtd::audio_analyzer {
 			return true;
 		}
 
+	protected:
+		[[nodiscard]]
+		isview getSourceName() const override {
+			return { };
+		}
+
+		[[nodiscard]]
+		bool vCheckSources(Logger& cl) override {
+			return true;
+		}
+
 	private:
 		void updateParams();
 

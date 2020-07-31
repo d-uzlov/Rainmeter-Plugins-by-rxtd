@@ -66,11 +66,10 @@ void BandResampler::setParams(const Params& _params, Channel channel) {
 
 	params = _params;
 
-	setValid(false);
-
 	bandsCount = index(params.bandFreqs.size() - 1);
 
 	if (bandsCount < 1) {
+		setValid(false);
 		return;
 	}
 
@@ -79,18 +78,9 @@ void BandResampler::setParams(const Params& _params, Channel channel) {
 	}
 
 	cascadeInfoIsCalculated = false;
-	setValid(true);
 }
 
 void BandResampler::_process(const DataSupplier& dataSupplier) {
-	// todo what if there were no _process before other methods?
-	// object would be in the invalid state because it woudn't have source pointer
-	source = dataSupplier.getHandler<FftAnalyzer>(params.fftId);
-	if (source == nullptr) {
-		setValid(false);
-		return;
-	}
-
 	changed = true;
 }
 
@@ -174,9 +164,26 @@ array_view<float> BandResampler::getBaseFreqs() const {
 	return params.bandFreqs;
 }
 
-void BandResampler::updateValues() {
-	setValid(false);
+bool BandResampler::vCheckSources(Logger& cl) {
+	// todo what if user want to filter values between fft and resampler?
+	// todo use getSource everywhere instead of saving source field
 
+	const auto source = getSource();
+	if (source == nullptr) {
+		cl.error(L"source is not found");
+		return false;
+	}
+
+	this->source = dynamic_cast<const FftAnalyzer*>(source);
+	if (this->source == nullptr) {
+		cl.error(L"invalid source, need FftAnalyzer");
+		return false;
+	}
+
+	return true;
+}
+
+void BandResampler::updateValues() {
 	if (!cascadeInfoIsCalculated) {
 		const auto cascadesCount = source->getLayersCount();
 		computeCascadesInfo(source->getFftSize(), cascadesCount);
@@ -184,8 +191,6 @@ void BandResampler::updateValues() {
 	}
 
 	sampleData(*source);
-
-	setValid(true);
 }
 
 void BandResampler::sampleData(const FftAnalyzer& source) {

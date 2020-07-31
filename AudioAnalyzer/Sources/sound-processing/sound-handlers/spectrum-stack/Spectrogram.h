@@ -28,7 +28,7 @@ namespace rxtd::audio_analyzer {
 			istring sourceName{ };
 			string prefix = { };
 			utils::Color borderColor{ };
-			double fading { };
+			double fading{ };
 
 			struct ColorDescription {
 				float widthInverted;
@@ -115,6 +115,15 @@ namespace rxtd::audio_analyzer {
 		bool isStandalone() override {
 			return true;
 		}
+
+	protected:
+		[[nodiscard]]
+		isview getSourceName() const override {
+			return params.sourceName;
+		}
+
+		[[nodiscard]]
+		bool vCheckSources(Logger& cl) override;
 
 	private:
 		void updateParams();

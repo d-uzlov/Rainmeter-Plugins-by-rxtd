@@ -19,7 +19,7 @@ namespace rxtd::audio_analyzer {
 		private:
 			friend UniformBlur;
 
-			istring source;
+			istring sourceId;
 
 			double blurRadius;
 			double blurRadiusAdaptation;
@@ -57,14 +57,13 @@ namespace rxtd::audio_analyzer {
 
 		index samplesPerSec{ };
 
-		const SoundHandler* source = nullptr;
+		SoundHandler* source = nullptr;
 
 		std::vector<std::vector<float>> blurredValues;
 
 		bool changed = true;
 
 	public:
-
 		static std::optional<Params> parseParams(const OptionMap& optionMap, Logger& cl);
 
 		void setParams(const Params& params, Channel channel);
@@ -77,6 +76,15 @@ namespace rxtd::audio_analyzer {
 
 		array_view<float> getData(index layer) const override;
 		index getLayersCount() const override;
+
+	protected:
+		[[nodiscard]]
+		isview getSourceName() const override {
+			return params.sourceId;
+		}
+
+		[[nodiscard]]
+		bool vCheckSources(Logger& cl) override;
 
 	private:
 		void blurData(const SoundHandler& resampler);
