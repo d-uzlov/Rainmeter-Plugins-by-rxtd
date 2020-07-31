@@ -135,6 +135,13 @@ void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldData
 	}
 
 	parseFilters(processingMap, oldData, cl);
+
+	if (unusedOptionsWarning) {
+		const auto untouched = processingMap.getListOfUntouched();
+		if (!untouched.empty()) {
+			cl.warning(L"unused options: {}", untouched);
+		}
+	}
 }
 
 void ParamParser::parseFilters(const utils::OptionMap& optionMap, ProcessingData& data, Logger& cl) const {

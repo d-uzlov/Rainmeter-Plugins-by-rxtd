@@ -10,14 +10,12 @@
 #include "RainmeterWrappers.h"
 #include "RainmeterAPI.h"
 
-#include "undef.h"
-
 #pragma comment(lib, "Rainmeter.lib")
 
 using namespace utils;
 
-void Rainmeter::Logger::logRainmeter(LogLevel logLevel, const wchar_t* string) const {
-	RmLog(rm, static_cast<int>(logLevel), string);
+void Rainmeter::Logger::logRainmeter(LogLevel logLevel, const wchar_t* message) const {
+	RmLog(rm, static_cast<int>(logLevel), message);
 }
 
 Rainmeter::Rainmeter(void* rm) :
@@ -69,6 +67,10 @@ const string& Rainmeter::getMeasureName() const {
 
 void* Rainmeter::getWindowHandle() {
 	return RmGetSkinWindow(rm);
+}
+
+void Rainmeter::sourcelessLog(const wchar_t* message) {
+	RmLog(nullptr, static_cast<int>(Logger::LogLevel::eDEBUG), message);
 }
 
 const wchar_t* Rainmeter::makeNullTerminated(sview view) const {

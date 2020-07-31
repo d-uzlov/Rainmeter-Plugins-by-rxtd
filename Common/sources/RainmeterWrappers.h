@@ -79,7 +79,7 @@ namespace rxtd::utils {
 				printer.reset();
 			}
 
-			void logRainmeter(LogLevel logLevel, const wchar_t* string) const;
+			void logRainmeter(LogLevel logLevel, const wchar_t* message) const;
 		};
 
 		/**
@@ -149,6 +149,8 @@ namespace rxtd::utils {
 		const string& getMeasureName() const;
 		[[nodiscard]]
 		void* getWindowHandle();
+
+		static void sourcelessLog(const wchar_t* message);
 
 	private:
 		[[nodiscard]]

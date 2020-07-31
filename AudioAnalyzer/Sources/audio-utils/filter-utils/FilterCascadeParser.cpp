@@ -138,10 +138,11 @@ FilterCascadeParser::parseBW(isview name, const utils::OptionMap& description, u
 	}
 
 	const index order = description.get(L"order").asInt();
-	if (order <= 0) {
-		cl.error(L"order must be > 0 but {} found", order);
+	if (order <= 0 || order > 15) {
+		cl.error(L"order must be in range [1, 15] but {} found", order);
 		return { };
 	}
+
 	const double cutoff = std::max<double>(description.get(L"freq").asFloat(), std::numeric_limits<float>::epsilon());
 	const double cutoffLow = std::max<double>(
 		description.get(L"freqLow").asFloat(),
