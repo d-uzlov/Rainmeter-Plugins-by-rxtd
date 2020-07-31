@@ -28,7 +28,9 @@ namespace rxtd::audio_utils {
 
 	public:
 		FFT() = default;
-		FFT(index fftSize, bool correctScalar);
+		FFT(index fftSize, bool correctScalar) {
+			setSize(fftSize, correctScalar);
+		}
 
 		void setSize(index newSize, bool correctScalar);
 

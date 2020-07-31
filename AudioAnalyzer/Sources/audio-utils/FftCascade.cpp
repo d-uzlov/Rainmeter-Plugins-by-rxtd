@@ -10,7 +10,6 @@
 #include "FftCascade.h"
 
 #include "DiscreetInterpolator.h"
-#include "butterworth-lib/ButterworthWrapper.h"
 
 using namespace audio_utils;
 
@@ -96,10 +95,10 @@ void FftCascade::doFft() {
 	const auto binsCount = params.fftSize / 2;
 
 	const auto newDC = float(fft->getDC());
-	dc = filter.apply(dc, newDC);
+	legacy_dc = filter.apply(legacy_dc, newDC);
 
 	auto zerothBin = std::abs(newDC);
-	if (params.correctZero) {
+	if (params.legacy_correctZero) {
 		constexpr double root2 = 1.4142135623730950488;
 		zerothBin *= root2;
 	}
@@ -121,12 +120,7 @@ void FftCascade::doFft() {
 
 void FftCascade::reset() {
 	std::fill(values.begin(), values.end(), 0.0f);
-}
-
-FftCascade::RingBuffer::RingBuffer() {
-	// 0.4535 is just below nyquist freq, to ensure strong cutoff
-	// for example, when sample rate is 44100 Hz, then 0.4535 correspond to 20000 Hz
-	filter = { ButterworthWrapper::calcCoefLowPass(filterOrder, 0.4535) };
+	buffer.reset();
 }
 
 array_view<float> FftCascade::RingBuffer::fill(array_view<float> wave) {
@@ -141,39 +135,14 @@ array_view<float> FftCascade::RingBuffer::fill(array_view<float> wave) {
 }
 
 array_view<float> FftCascade::RingBuffer::fillResampled(array_view<float> wave) {
-	if (isOdd) {
-		buffer[endOffset] = filter.next(wave[0]);
-		endOffset++;
-		wave.remove_prefix(1);
-		isOdd = false;
-	}
+	array_span<float> bufferPart = buffer;
+	bufferPart.remove_prefix(endOffset);
+	auto [waveConsumed, bufferFilled] = downsampleHelper.resample(wave, bufferPart);
+	
+	endOffset += bufferFilled;
+	wave.remove_prefix(waveConsumed);
 
-	// we downsample by 2, so every one spot in the buffer correspond to 2 values of a wave
-	const index ringBufferRemainingSize = (index(buffer.size()) - endOffset) * 2;
-	const index copySize = std::min(ringBufferRemainingSize, wave.size());
-	const index copyResultSize = copySize / 2;
-
-	array_span<float> subBuffer = buffer;
-	subBuffer.remove_prefix(endOffset);
-	for (index i = 0; i < copyResultSize; ++i) {
-		filter.next(wave[2 * i]); // skip first value, only use it to update state of the filter
-		subBuffer[i] = filter.next(wave[2 * i + 1]);
-	}
-
-	endOffset += copyResultSize;
-
-	if (copySize & 1) {
-		filter.next(wave[copySize - 1]);
-		isOdd = true;
-	}
-
-	wave.remove_prefix(copySize);
 	return wave;
-}
-
-void FftCascade::RingBuffer::pushOne(float value) {
-	buffer[endOffset] = value;
-	endOffset++;
 }
 
 void FftCascade::RingBuffer::shift(index stride) {

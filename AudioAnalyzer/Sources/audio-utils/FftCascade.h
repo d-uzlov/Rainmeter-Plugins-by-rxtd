@@ -8,9 +8,9 @@
  */
 
 #pragma once
+#include "DownsampleHelper.h"
 #include "filter-utils/LogarithmicIRF.h"
 #include "FFT.h"
-#include "filter-utils/InfiniteResponseFilter.h"
 
 namespace rxtd::audio_utils {
 	class FftCascade {
@@ -23,7 +23,7 @@ namespace rxtd::audio_utils {
 			double legacy_decayTime;
 
 			index inputStride;
-			bool correctZero;
+			bool legacy_correctZero;
 		};
 
 	private:
@@ -32,13 +32,9 @@ namespace rxtd::audio_utils {
 			index endOffset = 0;
 			index takenOffset = 0;
 
-			static constexpr index filterOrder = 5;
-			InfiniteResponseFilterFixed<filterOrder + 1> filter;
-			bool isOdd = false;
+			DownsampleHelperFixed<5, 2> downsampleHelper;
 
 		public:
-			RingBuffer();
-
 			// returns part of the wave that didn't fit info the buffer
 			[[nodiscard]]
 			array_view<float> fill(array_view<float> wave);
@@ -46,8 +42,6 @@ namespace rxtd::audio_utils {
 			// returns part of the wave that didn't fit info the buffer
 			[[nodiscard]]
 			array_view<float> fillResampled(array_view<float> wave);
-
-			void pushOne(float value);
 
 			void shift(index stride);
 
@@ -66,8 +60,13 @@ namespace rxtd::audio_utils {
 
 			void setSize(index value) {
 				buffer.resize(value);
+				reset();
+			}
+
+			void reset() {
 				endOffset = 0;
 				takenOffset = 0;
+				downsampleHelper.reset();
 			}
 		};
 
@@ -80,7 +79,7 @@ namespace rxtd::audio_utils {
 		RingBuffer buffer;
 		LogarithmicIRF filter{ };
 		std::vector<float> values;
-		float dc{ };
+		float legacy_dc{ };
 
 	public:
 		void setParams(Params _params, FFT* fft, FftCascade* successor, index cascadeIndex);
@@ -93,8 +92,8 @@ namespace rxtd::audio_utils {
 		}
 
 		[[nodiscard]]
-		double getDC() const {
-			return dc;
+		double legacy_getDC() const {
+			return legacy_dc;
 		}
 
 	private:

@@ -8,16 +8,10 @@
  */
 
 #include <random>
-
-#include "FftAnalyzer.h"
-
-#include <chrono>
-
-#include "option-parser/OptionMap.h"
-
 #include "../../../audio-utils/RandomGenerator.h"
 
-#include "undef.h"
+#include "FftAnalyzer.h"
+#include "option-parser/OptionMap.h"
 
 using namespace std::literals::string_view_literals;
 
@@ -85,10 +79,20 @@ std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(const OptionMap& opt
 	params.randomTest = std::abs(optionMap.get(L"testRandom"sv).asFloat(0.0));
 	params.randomDuration = std::abs(optionMap.get(L"randomDuration"sv).asFloat(1000.0)) * 0.001;
 
-	params.correctZero = optionMap.get(L"correctZero"sv).asBool(true);
+	params.legacy_correctZero = optionMap.get(L"correctZero"sv).asBool(true);
 	params.legacyAmplification = optionMap.get(L"legacyAmplification"sv).asBool(true);
 
 	return params;
+}
+
+void FftAnalyzer::setParams(Params params, Channel channel) {
+	if (this->params == params) {
+		return;
+	}
+
+	this->params = params;
+
+	updateParams();
 }
 
 double FftAnalyzer::getFftFreq(index fft) const {
@@ -103,28 +107,17 @@ index FftAnalyzer::getFftSize() const {
 }
 
 void FftAnalyzer::_process(const DataSupplier& dataSupplier) {
-	if (fftSize <= 0) {
+	if (fftSize <= 0) { // effectively checks that sample rate is not 0
 		return;
 	}
 
 	const auto wave = dataSupplier.getWave();
-
-	// using clock = std::chrono::high_resolution_clock;
-	// static_assert(clock::is_steady);
-	//
-	// const auto processBeginTime = clock::now();
 
 	if (params.randomTest != 0.0) {
 		processRandom(wave.size());
 	} else {
 		cascades[0].process(wave);
 	}
-
-	// const auto processEndTime = clock::now();
-	//
-	// const auto processDuration = std::chrono::duration<double, std::milli> { processEndTime - processBeginTime }.count();
-	//
-	// dataSupplier.log(L"fft time: {} ms", processDuration);
 }
 
 index FftAnalyzer::getLayersCount() const {
@@ -204,7 +197,7 @@ bool FftAnalyzer::getProp(const isview& prop, utils::BufferPrinter& printer) con
 			if (cascadeIndex > 0) {
 				cascadeIndex--;
 			}
-			printer.print(cascades[cascadeIndex].getDC());
+			printer.print(cascades[cascadeIndex].legacy_getDC());
 			return true;
 		}
 
@@ -236,16 +229,6 @@ void FftAnalyzer::reset() {
 	}
 }
 
-void FftAnalyzer::setParams(Params params, Channel channel) {
-	if (this->params == params) {
-		return;
-	}
-
-	this->params = params;
-
-	updateParams();
-}
-
 void FftAnalyzer::updateParams() {
 	switch (params.legacy_sizeBy) {
 	case SizeBy::BIN_WIDTH:
@@ -267,8 +250,6 @@ void FftAnalyzer::updateParams() {
 	fft.setSize(fftSize, !params.legacyAmplification);
 
 	inputStride = static_cast<index>(fftSize * (1 - params.overlap));
-	const index inputStrideLastBit = inputStride & 1;
-	inputStride += inputStrideLastBit; // only even strides are allowed due to downsampling in cascades
 	inputStride = std::clamp<index>(inputStride, std::min<index>(16, fftSize), fftSize);
 
 	randomBlockSize = index(params.randomDuration * samplesPerSec * fftSize / inputStride);
@@ -282,7 +263,7 @@ void FftAnalyzer::updateParams() {
 	cascadeParams.legacy_attackTime = params.legacy_attackTime;
 	cascadeParams.legacy_decayTime = params.legacy_decayTime;
 	cascadeParams.inputStride = inputStride;
-	cascadeParams.correctZero = params.correctZero;
+	cascadeParams.legacy_correctZero = params.legacy_correctZero;
 
 	for (index i = 0; i < index(cascades.size()); i++) {
 		const auto next = i + 1 < index(cascades.size()) ? &cascades[i + 1] : nullptr;

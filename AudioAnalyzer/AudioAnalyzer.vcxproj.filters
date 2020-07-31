@@ -167,6 +167,9 @@
     <ClInclude Include="Sources\audio-utils\FFT.h">
       <Filter>Source Files\audio-utils</Filter>
     </ClInclude>
+    <ClInclude Include="Sources\audio-utils\DownsampleHelper.h">
+      <Filter>Source Files\audio-utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sources\AudioChild.cpp">

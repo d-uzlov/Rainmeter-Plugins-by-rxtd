@@ -46,6 +46,10 @@ namespace rxtd::audio_utils {
 			}
 		}
 
+		void reset() {
+			std::fill(state.begin(), state.end(), 0.0);
+		}
+
 	private:
 		double updateState(double value);
 	};
@@ -95,6 +99,10 @@ namespace rxtd::audio_utils {
 			for (float& value : signal) {
 				value = float(next(value));
 			}
+		}
+
+		void reset() {
+			std::fill(state.begin(), state.end(), 0.0);
 		}
 
 	private:

@@ -147,6 +147,7 @@
     <ClInclude Include="Sources\audio-utils\butterworth-lib\ButterworthWrapper.h" />
     <ClInclude Include="Sources\audio-utils\butterworth-lib\iir.h" />
     <ClInclude Include="Sources\audio-utils\CustomizableValueTransformer.h" />
+    <ClInclude Include="Sources\audio-utils\DownsampleHelper.h" />
     <ClInclude Include="Sources\audio-utils\FFT.h" />
     <ClInclude Include="Sources\audio-utils\FftCascade.h" />
     <ClInclude Include="Sources\audio-utils\filter-utils\AbstractFilter.h" />

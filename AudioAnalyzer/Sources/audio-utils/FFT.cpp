@@ -11,10 +11,6 @@
 
 using namespace audio_utils;
 
-FFT::FFT(index fftSize, bool correctScalar) {
-	setSize(fftSize, correctScalar);
-}
-
 void FFT::setSize(index newSize, bool correctScalar) {
 	fftSize = newSize;
 	scalar = correctScalar ? float(1.0f / fftSize) : float(1.0 / std::sqrt(fftSize));
@@ -30,8 +26,8 @@ double FFT::getDC() const {
 }
 
 float FFT::getBinMagnitude(index binIndex) const {
-	const auto& v = outputBuffer[binIndex];
-	const auto square = v.real() * v.real() + v.imag() * v.imag();
+	const auto v = outputBuffer[binIndex];
+	const float square = v.real() * v.real() + v.imag() * v.imag();
 	// return fastSqrt(square); // doesn't seem to improve performance
 	return std::sqrt(square) * scalar;
 }
