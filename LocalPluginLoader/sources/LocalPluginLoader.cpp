@@ -10,10 +10,8 @@
 #include "LocalPluginLoader.h"
 #include "StringUtils.h"
 
-#include "undef.h"
-
 LocalPluginLoader::LocalPluginLoader(void* rm) {
-	rain = utils::Rainmeter { rm };
+	rain = utils::Rainmeter{ rm };
 
 	string pluginPath = rain.readPath(L"PluginPath") % own();
 	if (pluginPath.empty()) {
@@ -22,19 +20,34 @@ LocalPluginLoader::LocalPluginLoader(void* rm) {
 	}
 	const wchar_t lastSymbol = pluginPath[pluginPath.length() - 1];
 	if (lastSymbol != L'/' && lastSymbol != L'\\') {
-		pluginPath += L'/';
+		pluginPath += L'\\';
 	}
 #ifdef _WIN64
-	pluginPath += L"_64";
+	pluginPath += L"64-bit";
 #else // win32
-	pluginPath += L"_32";
+	pluginPath += L"32-bit";
 #endif // end ifdef _WIN64
 
 	pluginPath += L".dll";
-	
+
 	hLib = LoadLibraryW(pluginPath.c_str());
 	if (hLib == nullptr) {
-		rain.getLogger().error(L"Can't load library in path '{}' (error {})", pluginPath, GetLastError());
+		const auto errorCode = GetLastError();
+		wchar_t* receiveBuffer = nullptr;
+		FormatMessageW(
+			FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
+			nullptr,
+			errorCode,
+			0,
+			reinterpret_cast<LPWSTR>(&receiveBuffer),
+			0,
+			nullptr
+		);
+
+		rain.getLogger().error(L"Can't load library in path '{}' (error {})", pluginPath, errorCode);
+		rain.getLogger().error(L"More info: {}", receiveBuffer);
+
+		LocalFree(receiveBuffer);
 		return;
 	}
 	if (GetProcAddress(hLib, "LocalPluginLoaderRecursionPrevention_123_") != nullptr) {
@@ -57,7 +70,7 @@ LocalPluginLoader::~LocalPluginLoader() {
 	if (hLib != nullptr) {
 		const auto finalizeFunc = GetProcAddress(hLib, "Finalize");
 		if (finalizeFunc != nullptr) {
-			reinterpret_cast<void(*)(void *)>(finalizeFunc)(pluginData);
+			reinterpret_cast<void(*)(void*)>(finalizeFunc)(pluginData);
 		}
 
 		pluginData = nullptr;
@@ -118,9 +131,10 @@ const wchar_t* LocalPluginLoader::solveSectionVariable(const int count, const wc
 		funcName == L"GetString" ||
 		funcName == L"ExecuteBang" ||
 		funcName == L"Finalize" ||
-		funcName == L"Update2" ||				// Old API
-		funcName == L"GetPluginAuthor" ||		// Old API
-		funcName == L"GetPluginVersion") {		// Old API
+		funcName == L"Update2" || // Old API
+		funcName == L"GetPluginAuthor" || // Old API
+		funcName == L"GetPluginVersion") {
+		// Old API
 		return nullptr;
 	}
 
@@ -137,7 +151,8 @@ const wchar_t* LocalPluginLoader::solveSectionVariable(const int count, const wc
 		byteFuncName[i] = c;
 	}
 
-	const auto funcPtr = reinterpret_cast<const wchar_t* (*)(void* data, int argc, const wchar_t* argv[])>(GetProcAddress(hLib, byteFuncName.c_str()));
+	const auto funcPtr = reinterpret_cast<const wchar_t* (*)(void* data, int argc, const wchar_t* argv[])>(
+		GetProcAddress(hLib, byteFuncName.c_str()));
 	if (funcPtr == nullptr) {
 		rain.getLogger().error(L"Can not find function '{}'", funcName);
 		return nullptr;
