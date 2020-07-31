@@ -10,8 +10,6 @@
 #include "AudioChild.h"
 #include "option-parser/OptionList.h"
 
-#include "undef.h"
-
 using namespace audio_analyzer;
 
 AudioChild::AudioChild(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rain)) {

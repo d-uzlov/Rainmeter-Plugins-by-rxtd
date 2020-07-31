@@ -84,6 +84,12 @@ FilterCascadeParser::parseBQ(isview name, const utils::OptionMap& description, u
 		std::numeric_limits<float>::epsilon()
 	);
 	double gain = description.get(L"gain").asFloat();
+	const double forcedGain = description.get(L"forcedGain").asFloat();
+
+	const auto unused = description.getListOfUntouched();
+	if (!unused.empty()) {
+		cl.warning(L"unused options: {}", unused);
+	}
 
 	using FilterCreationFunc = BiQuadIIR (*)(double samplingFrequency, double Q, double freq, double dbGain);
 	FilterCreationFunc filterCreationFunc;
@@ -126,6 +132,7 @@ FilterCascadeParser::parseBQ(isview name, const utils::OptionMap& description, u
 		if (gain > 0.0) {
 			filter->addGain(-gain);
 		}
+		filter->addGain(forcedGain);
 		return std::unique_ptr<AbstractFilter>{ filter };
 	};
 }
@@ -153,6 +160,13 @@ FilterCascadeParser::parseBW(isview name, const utils::OptionMap& description, u
 		std::numeric_limits<float>::epsilon()
 	);
 
+	const double forcedGain = description.get(L"forcedGain").asFloat();
+
+	const auto unused = description.getListOfUntouched();
+	if (!unused.empty()) {
+		cl.warning(L"unused options: {}", unused);
+	}
+
 	if (name == L"bwLowPass" || name == L"bwHighPass") {
 		if (!description.has(L"freq")) {
 			cl.error(L"freq is not found");
@@ -160,9 +174,9 @@ FilterCascadeParser::parseBW(isview name, const utils::OptionMap& description, u
 		}
 
 		if (name == L"bwLowPass") {
-			return createButterworth(order, cutoff, 0.0, ButterworthWrapper::calcCoefLowPass);
+			return createButterworth(order, forcedGain, cutoff, 0.0, ButterworthWrapper::calcCoefLowPass);
 		} else {
-			return createButterworth(order, cutoff, 0.0, ButterworthWrapper::calcCoefHighPass);
+			return createButterworth(order, forcedGain, cutoff, 0.0, ButterworthWrapper::calcCoefHighPass);
 		}
 
 	}
@@ -178,9 +192,9 @@ FilterCascadeParser::parseBW(isview name, const utils::OptionMap& description, u
 		}
 
 		if (name == L"bwBandPass") {
-			return createButterworth(order, cutoffLow, cutoffHigh, ButterworthWrapper::calcCoefBandPass);
+			return createButterworth(order, forcedGain, cutoffLow, cutoffHigh, ButterworthWrapper::calcCoefBandPass);
 		} else {
-			return createButterworth(order, cutoffLow, cutoffHigh, ButterworthWrapper::calcCoefBandStop);
+			return createButterworth(order, forcedGain, cutoffLow, cutoffHigh, ButterworthWrapper::calcCoefBandStop);
 		}
 	}
 
@@ -189,41 +203,55 @@ FilterCascadeParser::parseBW(isview name, const utils::OptionMap& description, u
 }
 
 FilterCascadeParser::FCF FilterCascadeParser::
-createButterworth(index order, double freq1, double freq2, ButterworthParamsFunc func) {
+createButterworth(index order, double forcedGain, double freq1, double freq2, ButterworthParamsFunc func) {
 	switch (order) {
 	case 1: return [=](double sampleFrequency) {
+			auto ptr = new InfiniteResponseFilterFixed<2>{ func(order, sampleFrequency, freq1, freq2) };
+			ptr->addGain(forcedGain);
 			return std::unique_ptr<AbstractFilter>{
-				new InfiniteResponseFilterFixed<2>{ func(order, sampleFrequency, freq1, freq2) }
+				ptr
 			};
 		};
 	case 2: return [=](double sampleFrequency) {
+			auto ptr = new InfiniteResponseFilterFixed<3>{ func(order, sampleFrequency, freq1, freq2) };
+			ptr->addGain(forcedGain);
 			return std::unique_ptr<AbstractFilter>{
-				new InfiniteResponseFilterFixed<3>{ func(order, sampleFrequency, freq1, freq2) }
+				ptr
 			};
 		};
 	case 3: return [=](double sampleFrequency) {
+			auto ptr = new InfiniteResponseFilterFixed<4>{ func(order, sampleFrequency, freq1, freq2) };
+			ptr->addGain(forcedGain);
 			return std::unique_ptr<AbstractFilter>{
-				new InfiniteResponseFilterFixed<4>{ func(order, sampleFrequency, freq1, freq2) }
+				ptr
 			};
 		};
 	case 4: return [=](double sampleFrequency) {
+			auto ptr = new InfiniteResponseFilterFixed<5>{ func(order, sampleFrequency, freq1, freq2) };
+			ptr->addGain(forcedGain);
 			return std::unique_ptr<AbstractFilter>{
-				new InfiniteResponseFilterFixed<5>{ func(order, sampleFrequency, freq1, freq2) }
+				ptr
 			};
 		};
 	case 5: return [=](double sampleFrequency) {
+			auto ptr = new InfiniteResponseFilterFixed<6>{ func(order, sampleFrequency, freq1, freq2) };
+			ptr->addGain(forcedGain);
 			return std::unique_ptr<AbstractFilter>{
-				new InfiniteResponseFilterFixed<6>{ func(order, sampleFrequency, freq1, freq2) }
+				ptr
 			};
 		};
 	case 10: return [=](double sampleFrequency) {
+			auto ptr = new InfiniteResponseFilterFixed<11>{ func(order, sampleFrequency, freq1, freq2) };
+			ptr->addGain(forcedGain);
 			return std::unique_ptr<AbstractFilter>{
-				new InfiniteResponseFilterFixed<11>{ func(order, sampleFrequency, freq1, freq2) }
+				ptr
 			};
 		};
 	default: return [=](double sampleFrequency) {
+			auto ptr = new InfiniteResponseFilter{ func(order, sampleFrequency, freq1, freq2) };
+			ptr->addGain(forcedGain);
 			return std::unique_ptr<AbstractFilter>{
-				new InfiniteResponseFilter{ func(order, sampleFrequency, freq1, freq2) }
+				ptr
 			};
 		};
 	}

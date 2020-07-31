@@ -11,6 +11,7 @@
 #include "array_view.h"
 #include <array>
 #include "AbstractFilter.h"
+#include "MyMath.h"
 
 namespace rxtd::audio_utils {
 	struct FilterParameters {
@@ -48,6 +49,10 @@ namespace rxtd::audio_utils {
 
 		void reset() {
 			std::fill(state.begin(), state.end(), 0.0);
+		}
+
+		void addGain(double gainDB) {
+			gainAmp *= utils::MyMath::db2amplitude(gainDB);
 		}
 
 	private:
@@ -103,6 +108,10 @@ namespace rxtd::audio_utils {
 
 		void reset() {
 			std::fill(state.begin(), state.end(), 0.0);
+		}
+
+		void addGain(double gainDB) {
+			gainAmp *= utils::MyMath::db2amplitude(gainDB);
 		}
 
 	private:

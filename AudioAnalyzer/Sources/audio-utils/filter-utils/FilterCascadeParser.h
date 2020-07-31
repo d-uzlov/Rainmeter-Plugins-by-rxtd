@@ -63,6 +63,11 @@ namespace rxtd::audio_utils {
 		static FCF parseBW(isview name, const utils::OptionMap& description, utils::Rainmeter::Logger& cl);
 
 		[[nodiscard]]
-		static FCF createButterworth(index order, double freq1, double freq2, ButterworthParamsFunc func);
+		static FCF createButterworth(
+			index order,
+			double forcedGain,
+			double freq1, double freq2,
+			ButterworthParamsFunc func
+		);
 	};
 }

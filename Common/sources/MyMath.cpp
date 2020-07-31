@@ -44,7 +44,7 @@ float utils::MyMath::fastLog2(float val) {
 
 	u.fl = ((-1.0f / 3.0f) * u.fl + 2.0f) * u.fl - 2.0f * (1.0f / 3.0f);
 
-	return u.fl + log_2;
+	return u.fl + float(log_2);
 }
 
 float utils::MyMath::fastSqrt(float value) {
@@ -63,5 +63,5 @@ float utils::MyMath::fastSqrt(float value) {
 }
 
 double utils::MyMath::db2amplitude(double value) {
-	return std::pow(10.0, value / 20.0);
+	return std::pow(10.0, value / 10.0);
 }
