@@ -69,30 +69,31 @@ namespace rxtd::audio_analyzer {
 			rain = std::move(value);
 		}
 
-		void parse();
+		// return true is there were any changes since last update, false if there were none
+		bool parse();
 
 		[[nodiscard]]
 		const ProcessingsInfoMap& getParseResult() const {
 			return parseResult;
 		}
 
-		[[nodiscard]]
-		bool isAnythingChanged() const {
-			return anythingChanged;
-		}
-
 	private:
+		void parseFilters(const utils::OptionMap& optionMap, ProcessingData& data, Logger& cl) const;
+
 		[[nodiscard]]
 		static bool checkListUnique(const utils::OptionList& list);
 
-		void parseProcessing(sview name, Logger cl, ProcessingData& oldHandlers) const;
+		void parseProcessing(sview name, Logger cl, ProcessingData& oldData) const;
+
 		[[nodiscard]]
 		std::set<Channel> parseChannels(const utils::OptionList& channelsStringList, Logger& logger) const;
+
 		[[nodiscard]]
 		HandlerPatcherInfo parseHandlers(const utils::OptionList& indices, HandlerPatcherInfo oldHandlers) const;
 
 		[[nodiscard]]
 		bool parseHandler(sview name, const HandlerPatcherInfo& prevHandlers, HandlerInfo& handler) const;
+
 		[[nodiscard]]
 		HandlerPatcher getHandlerPatcher(
 			const utils::OptionMap& optionMap,

@@ -18,8 +18,7 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 	deviceManager(logger, [this](MyWaveFormat format) {
 		channelMixer.setFormat(format);
 		for (auto& [name, sa] : saMap) {
-			sa.setSourceRate(format.samplesPerSec);
-			sa.setLayout(format.channelLayout);
+			sa.setFormat(format.samplesPerSec, format.channelLayout);
 		}
 		currentFormat = std::move(format);
 	}) {
@@ -84,9 +83,9 @@ void AudioParent::_reload() {
 
 	deviceManager.setOptions(sourceEnum, id);
 
-	paramParser.parse();
+	const bool anythingChanged = paramParser.parse();
 
-	if (paramParser.isAnythingChanged()) {
+	if (anythingChanged) {
 		patchSA(paramParser.getParseResult());
 	}
 }
@@ -364,12 +363,9 @@ void AudioParent::patchSA(const ParamParser::ProcessingsInfoMap& procs) {
 
 	for (auto& [name, data] : procs) {
 		auto& sa = saMap[name];
-		sa.getCPH().setTargetRate(data.targetRate);
-		sa.getCPH().setFCC(std::move(data.fcc));
-		sa.setHandlers(data.channels, data.handlersInfo);
-		sa.setSourceRate(currentFormat.samplesPerSec);
-		sa.setLayout(currentFormat.channelLayout);
-		sa.setGranularity(data.granularity);
+		sa.getCPH().setParams(std::move(data.fcc), data.targetRate);
+		sa.setParams(data.channels, data.handlersInfo, data.granularity);
+		sa.setFormat(currentFormat.samplesPerSec, currentFormat.channelLayout);
 	}
 }
 

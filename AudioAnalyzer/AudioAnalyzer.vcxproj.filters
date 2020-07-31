@@ -65,9 +65,6 @@
     <ClInclude Include="Sources\sound-processing\device-management\CaptureManager.h">
       <Filter>Source Files\sound-processing\device-management</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\Resampler.h">
-      <Filter>Source Files\sound-processing</Filter>
-    </ClInclude>
     <ClInclude Include="Sources\sound-processing\ChannelMixer.h">
       <Filter>Source Files\sound-processing</Filter>
     </ClInclude>
@@ -195,9 +192,6 @@
     </ClCompile>
     <ClCompile Include="Sources\sound-processing\device-management\CaptureManager.cpp">
       <Filter>Source Files\sound-processing\device-management</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\sound-processing\Resampler.cpp">
-      <Filter>Source Files\sound-processing</Filter>
     </ClCompile>
     <ClCompile Include="Sources\sound-processing\ChannelMixer.cpp">
       <Filter>Source Files\sound-processing</Filter>

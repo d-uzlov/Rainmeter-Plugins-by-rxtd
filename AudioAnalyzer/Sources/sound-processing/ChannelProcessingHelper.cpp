@@ -10,8 +10,6 @@
 #include "ChannelProcessingHelper.h"
 #include "Channel.h"
 
-#include "undef.h"
-
 using namespace audio_analyzer;
 
 void ChannelProcessingHelper::setChannels(const std::set<Channel>& set) {
@@ -23,22 +21,44 @@ void ChannelProcessingHelper::setChannels(const std::set<Channel>& set) {
 	}
 	for (auto channel : toDelete) {
 		channels.erase(channel);
-	}// TODO check sample rate != 0
+	}
+
 	for (auto channel : set) {
 		if (channels.count(channel) < 1) {
-			const index sampleRate = resampler.getSampleRate();
-			channels[channel].fc = fcc.getInstance(double(sampleRate));
+			channels[channel];
 		}
 	}
+
+	updateFC();
 }
 
-void ChannelProcessingHelper::setFCC(audio_utils::FilterCascadeCreator value) {
-	if (fcc == value) {
+void ChannelProcessingHelper::setParams(audio_utils::FilterCascadeCreator _fcc, index targetRate) {
+	if (fcc == _fcc && resamplingData.targetRate == targetRate) {
 		return;
 	}
 
-	fcc = std::move(value);
+	fcc = std::move(_fcc);
+	resamplingData.targetRate = targetRate;
+
+	recalculateResamplingData();
 	updateFC();
+}
+
+void ChannelProcessingHelper::setSourceRate(index value) {
+	if (value == 0 || value == resamplingData.sourceRate) {
+		return;
+	}
+
+	resamplingData.sourceRate = value;
+	recalculateResamplingData();
+	updateFC();
+}
+
+void ChannelProcessingHelper::reset() const {
+	for (auto& [channel, data] : channels) {
+		data.wave.compact();
+		data.preprocessed = false;
+	}
 }
 
 void ChannelProcessingHelper::cacheChannel() const {
@@ -52,26 +72,44 @@ void ChannelProcessingHelper::cacheChannel() const {
 		return;
 	}
 
-	auto writeBuffer = data.wave.allocateNext(resampler.calculateFinalWaveSize(wave.size()));
-	resampler.resample(wave, writeBuffer);
+	const index nextBufferSize = (data.decimationCounter + wave.size()) / resamplingData.divider;
+	auto writeBuffer = data.wave.allocateNext(nextBufferSize);
+
+	if (resamplingData.divider <= 1) {
+		std::copy(wave.begin(), wave.end(), writeBuffer.begin());
+	} else {
+		wave.remove_prefix(data.decimationCounter);
+		const index divider = resamplingData.divider;
+
+		const index newCount = wave.size() / divider;
+		for (index i = 0; i < newCount; ++i) {
+			writeBuffer[i] = wave[i * divider + divider - 1];
+		}
+
+		data.decimationCounter = wave.size() - newCount * divider;
+	}
+
+
 	data.fc.applyInPlace(writeBuffer);
 	data.preprocessed = true;
 }
 
-void ChannelProcessingHelper::reset() const {
-	for (auto& [channel, data] : channels) {
-		data.wave.compact();
-		data.preprocessed = false;
+void ChannelProcessingHelper::recalculateResamplingData() {
+	if (resamplingData.targetRate == 0 || resamplingData.sourceRate == 0) {
+		resamplingData.divider = 1;
+	} else {
+		const auto ratio = static_cast<double>(resamplingData.sourceRate) / resamplingData.targetRate;
+		resamplingData.divider = ratio > 1 ? static_cast<index>(ratio) : 1;
 	}
+	resamplingData.finalSampleRate = resamplingData.sourceRate / resamplingData.divider;
 }
 
 void ChannelProcessingHelper::updateFC() {
-	const index sampleRate = resampler.getSampleRate();
-	if (sampleRate == 0) {
+	if (resamplingData.finalSampleRate == 0) {
 		return;
 	}
 
-	for (auto&[c, cd] : channels) {
-		cd.fc = fcc.getInstance(double(sampleRate));
+	for (auto& [c, cd] : channels) {
+		cd.fc = fcc.getInstance(double(resamplingData.finalSampleRate));
 	}
 }

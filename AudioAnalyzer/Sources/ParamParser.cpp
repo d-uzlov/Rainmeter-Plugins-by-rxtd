@@ -25,7 +25,6 @@
 
 #include "option-parser/OptionMap.h"
 #include "option-parser/OptionList.h"
-#include "option-parser/OptionSequence.h"
 
 #include "undef.h"
 
@@ -34,7 +33,7 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-void ParamParser::parse() {
+bool ParamParser::parse() {
 	anythingChanged = false;
 
 	auto& logger = rain.getLogger();
@@ -60,14 +59,19 @@ void ParamParser::parse() {
 
 		auto oldData = std::move(parseResult[name]);
 		parseProcessing(name % csView(), logger.context(L"Processing {}: ", name), oldData);
+		if (oldData.channels.empty() || oldData.handlersInfo.order.empty()) {
+			continue;
+		}
 
 		result[name] = std::move(oldData);
 	}
 
 	parseResult = std::move(result);
+
+	return anythingChanged;
 }
 
-void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldHandlers) const {
+void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldData) const {
 	string processingOptionIndex = L"Processing-"s += name;
 	auto processingDescriptionOption = rain.read(processingOptionIndex);
 	if (processingDescriptionOption.empty()) {
@@ -77,7 +81,7 @@ void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldHand
 
 	if (processingDescriptionOption.empty()) {
 		cl.error(L"processing description not found");
-		oldHandlers = { };
+		oldData = { };
 		anythingChanged = true;
 		return;
 	}
@@ -87,16 +91,16 @@ void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldHand
 	auto channelsList = processingMap.get(L"channels"sv).asList(L',');
 	if (channelsList.empty()) {
 		cl.error(L"channels not found");
-		oldHandlers.channels = { };
+		oldData.channels = { };
 		anythingChanged = true;
 		return;
 	}
 	auto channels = parseChannels(channelsList, cl);
-	if (channels != oldHandlers.channels) {
+	if (channels != oldData.channels) {
 		anythingChanged = true;
 	}
-	oldHandlers.channels = std::move(channels);
-	if (oldHandlers.channels.empty()) {
+	oldData.channels = std::move(channels);
+	if (oldData.channels.empty()) {
 		cl.error(L"no valid channels found");
 		return;
 	}
@@ -104,7 +108,7 @@ void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldHand
 	auto handlersOption = processingMap.get(L"handlers"sv);
 	if (handlersOption.empty()) {
 		cl.error(L"handlers not found");
-		oldHandlers.handlersInfo = { };
+		oldData.handlersInfo = { };
 		anythingChanged = true;
 		return;
 	}
@@ -112,52 +116,76 @@ void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldHand
 	auto handlersList = handlersOption.asList(L',');
 	if (!checkListUnique(handlersList)) {
 		cl.error(L"found repeating handlers, invalidate processing");
-		oldHandlers.handlersInfo = { };
+		oldData.handlersInfo = { };
 		anythingChanged = true;
 		return;
 	}
 
-	oldHandlers.handlersInfo = parseHandlers(handlersList, std::move(oldHandlers.handlersInfo));
-	if (oldHandlers.handlersInfo.map.empty()) {
+	oldData.handlersInfo = parseHandlers(handlersList, std::move(oldData.handlersInfo));
+	if (oldData.handlersInfo.map.empty()) {
 		cl.warning(L"no valid handlers found");
 		anythingChanged = true;
 		return;
 	}
 
-	const auto targetRate = std::max<index>(processingMap.get(L"targetRate").asInt(defaultTargetRate), 0);
-	const auto granularity = std::max(processingMap.get(L"granularity").asFloat(10.0), 1.0) / 1000.0;
-	if (targetRate != oldHandlers.targetRate || granularity != oldHandlers.granularity) {
+	if (const auto granularity = std::max(processingMap.get(L"granularity").asFloat(10.0), 1.0) / 1000.0;
+		granularity != oldData.granularity) {
 		anythingChanged = true;
+		oldData.granularity = granularity;
 	}
-	oldHandlers.targetRate = targetRate;
-	oldHandlers.granularity = granularity;
 
-	auto filterDescription = processingMap.get(L"filter");
-	if (filterDescription.asString() != oldHandlers.rawFccDescription) {
-		anythingChanged = true;
-		oldHandlers.rawFccDescription = filterDescription.asString();
-		auto filterLogger = cl.context(L"filter: ");
+	parseFilters(processingMap, oldData, cl);
+}
 
-		if (filterDescription.asIString(L"none") == L"none") {
-			oldHandlers.fcc = { };
-		} else if (filterDescription.asIString() == L"replayGain-like") {
-			oldHandlers.fcc = audio_utils::FilterCascadeParser::parse(
-				utils::Option{
-					L"bqHighPass[q 0.5, freq 310] " // spaces in the ends of the strings are necessary
-					L"bqPeak[q 4.0, freq 1125, gain -4.1] "
-					L"bqPeak[q 4.0, freq 2665, gain 5.5] "
-					L"bwLowPass[order 5, freq 20000] "
-				}, filterLogger
-			);
+void ParamParser::parseFilters(const utils::OptionMap& optionMap, ProcessingData& data, Logger& cl) const {
+	const auto targetRate = std::max<index>(optionMap.get(L"targetRate").asInt(defaultTargetRate), 0);
+	const auto filterDescription = optionMap.get(L"filter").asIString(L"auto");
+
+	if (filterDescription % csView() == data.rawFccDescription && targetRate == data.targetRate) {
+		return;
+	}
+
+	anythingChanged = true;
+	data.targetRate = targetRate;
+
+	data.rawFccDescription = filterDescription % csView();
+	auto filterLogger = cl.context(L"filter: ");
+
+	if (filterDescription == L"none") {
+		data.fcc = { };
+		return;
+	}
+
+	if (filterDescription == L"auto") {
+		if (targetRate == 0) {
+			data.fcc = { };
 		} else {
-			auto [name, desc] = filterDescription.breakFirst(' ');
-			if (name.asIString() == L"custom") {
-				oldHandlers.fcc = audio_utils::FilterCascadeParser::parse(desc, filterLogger);
-			} else {
-				cl.error(L"filter '{}' is not supported", name);
-				oldHandlers.fcc = { };
-			}
+			utils::BufferPrinter printer;
+			const double cutoffFreq = data.targetRate * 0.5;
+			printer.print(L"bwLowPass[order 10, freq {}]", cutoffFreq);
+			data.fcc = audio_utils::FilterCascadeParser::parse(utils::Option{ printer.getBufferView() }, filterLogger);
 		}
+		return;
+	}
+
+	if (filterDescription == L"replayGain") {
+		data.fcc = audio_utils::FilterCascadeParser::parse(
+			utils::Option{
+				L"bqHighPass[q 0.5, freq 310] " // spaces in the ends of the strings are necessary
+				L"bqPeak[q 4.0, freq 1125, gain -4.1] "
+				L"bqPeak[q 4.0, freq 2665, gain 5.5] "
+				L"bwLowPass[order 5, freq 20000] "
+			}, filterLogger
+		);
+		return;
+	}
+
+	auto [name, desc] = optionMap.get(L"filter").breakFirst(' ');
+	if (name.asIString() == L"custom") {
+		data.fcc = audio_utils::FilterCascadeParser::parse(desc, filterLogger);
+	} else {
+		cl.error(L"filter '{}' is not supported", name);
+		data.fcc = { };
 	}
 }
 

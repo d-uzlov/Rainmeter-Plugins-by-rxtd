@@ -32,7 +32,7 @@ namespace rxtd::audio_analyzer {
 		ChannelProcessingHelper cph;
 		utils::Rainmeter::Logger logger;
 
-		index sampleRate{ };
+		index sourceSampleRate{ };
 		double granularity{ };
 		ChannelLayout layout;
 
@@ -49,12 +49,8 @@ namespace rxtd::audio_analyzer {
 		SoundAnalyzer& operator=(const SoundAnalyzer& other) = delete;
 		SoundAnalyzer& operator=(SoundAnalyzer&& other) = default;
 
-		void setLayout(ChannelLayout layout);
-		void setSourceRate(index value);
-
-		void setGranularity(double value) {
-			granularity = value;
-		}
+		// depends on system format only
+		void setFormat(index sampleRate, ChannelLayout layout);
 
 		[[nodiscard]]
 		AudioChildHelper getAudioChildHelper() const;
@@ -66,7 +62,8 @@ namespace rxtd::audio_analyzer {
 		 * This new handler may be completely new if it didn't exist before or if class of handler with this name changed,
 		 * but usually this is the same handler with updated parameters.
 		 */
-		void setHandlers(std::set<Channel> channelSetRequested, ParamParser::HandlerPatcherInfo handlerPatchers);
+		 // depends on options only
+		void setParams(std::set<Channel> channelSetRequested, ParamParser::HandlerPatcherInfo handlerPatchers, double granularity);
 
 		[[nodiscard]]
 		ChannelProcessingHelper& getCPH() {
@@ -76,11 +73,11 @@ namespace rxtd::audio_analyzer {
 		// returns true when killed on timeout
 		bool process(const ChannelMixer& mixer, clock::time_point killTime);
 		// returns true when killed on timeout
-		bool finishStandalone(clock::time_point killTime) noexcept;
+		bool finishStandalone(clock::time_point killTime);
 		void resetValues() noexcept;
 
 	private:
-		void patch() {
+		void patchCH() {
 			patchChannels();
 			patchHandlers();
 		}
