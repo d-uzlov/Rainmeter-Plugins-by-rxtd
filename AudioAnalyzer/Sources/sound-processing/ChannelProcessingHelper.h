@@ -13,14 +13,14 @@
 #include "../audio-utils/filter-utils/FilterCascadeParser.h"
 #include "ChannelMixer.h"
 #include <set>
+#include "../audio-utils/DownsampleHelper.h"
 
 namespace rxtd::audio_analyzer {
 	class ChannelProcessingHelper {
 		struct ChannelData {
 			utils::GrowingVector<float> wave;
 			audio_utils::FilterCascade fc;
-			index decimationCounter = 0;
-			// Resampler resampler;
+			audio_utils::DownsampleHelper<10> downsampleHelper;
 			bool preprocessed = false;
 		};
 
@@ -90,6 +90,6 @@ namespace rxtd::audio_analyzer {
 		void cacheChannel() const;
 
 		void recalculateResamplingData();
-		void updateFC();
+		void updateFilters();
 	};
 }

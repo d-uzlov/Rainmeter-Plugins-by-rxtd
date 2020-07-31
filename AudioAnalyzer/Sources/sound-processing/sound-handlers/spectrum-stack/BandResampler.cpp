@@ -83,6 +83,8 @@ void BandResampler::setParams(const Params& _params, Channel channel) {
 }
 
 void BandResampler::_process(const DataSupplier& dataSupplier) {
+	// todo what if there were no _process before other methods?
+	// object would be in the invalid state because it woudn't have source pointer
 	source = dataSupplier.getHandler<FftAnalyzer>(params.fftId);
 	if (source == nullptr) {
 		setValid(false);

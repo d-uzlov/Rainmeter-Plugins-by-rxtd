@@ -29,11 +29,13 @@ void ChannelProcessingHelper::setChannels(const std::set<Channel>& set) {
 		}
 	}
 
-	updateFC();
+	// TODO check if it is even needed?
+	updateFilters();
 }
 
 void ChannelProcessingHelper::setParams(audio_utils::FilterCascadeCreator _fcc, index targetRate) {
-	if (fcc == _fcc && resamplingData.targetRate == targetRate) {
+	if (fcc == _fcc
+		&& resamplingData.targetRate == targetRate) {
 		return;
 	}
 
@@ -41,7 +43,7 @@ void ChannelProcessingHelper::setParams(audio_utils::FilterCascadeCreator _fcc, 
 	resamplingData.targetRate = targetRate;
 
 	recalculateResamplingData();
-	updateFC();
+	updateFilters();
 }
 
 void ChannelProcessingHelper::setSourceRate(index value) {
@@ -51,7 +53,7 @@ void ChannelProcessingHelper::setSourceRate(index value) {
 
 	resamplingData.sourceRate = value;
 	recalculateResamplingData();
-	updateFC();
+	updateFilters();
 }
 
 void ChannelProcessingHelper::reset() const {
@@ -72,23 +74,15 @@ void ChannelProcessingHelper::cacheChannel() const {
 		return;
 	}
 
-	const index nextBufferSize = (data.decimationCounter + wave.size()) / resamplingData.divider;
-	auto writeBuffer = data.wave.allocateNext(nextBufferSize);
-
+	array_span<float> writeBuffer;
 	if (resamplingData.divider <= 1) {
+		writeBuffer = data.wave.allocateNext(wave.size());
 		std::copy(wave.begin(), wave.end(), writeBuffer.begin());
 	} else {
-		wave.remove_prefix(data.decimationCounter);
-		const index divider = resamplingData.divider;
-
-		const index newCount = wave.size() / divider;
-		for (index i = 0; i < newCount; ++i) {
-			writeBuffer[i] = wave[i * divider + divider - 1];
-		}
-
-		data.decimationCounter = wave.size() - newCount * divider;
+		const index nextBufferSize = data.downsampleHelper.calcBufferSizeFor(wave.size());
+		writeBuffer = data.wave.allocateNext(nextBufferSize);
+		(void)data.downsampleHelper.resample(wave, writeBuffer);
 	}
-
 
 	data.fc.applyInPlace(writeBuffer);
 	data.preprocessed = true;
@@ -104,12 +98,13 @@ void ChannelProcessingHelper::recalculateResamplingData() {
 	resamplingData.finalSampleRate = resamplingData.sourceRate / resamplingData.divider;
 }
 
-void ChannelProcessingHelper::updateFC() {
+void ChannelProcessingHelper::updateFilters() {
 	if (resamplingData.finalSampleRate == 0) {
 		return;
 	}
 
 	for (auto& [c, cd] : channels) {
 		cd.fc = fcc.getInstance(double(resamplingData.finalSampleRate));
+		cd.downsampleHelper.setFactor(resamplingData.divider);
 	}
 }

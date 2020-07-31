@@ -21,7 +21,7 @@ namespace rxtd::audio_utils {
 
 		[[nodiscard]]
 		static FilterParameters calcCoefLowPass(index order, double samplingFrequency, double cutoffFrequency) {
-			return calcCoefLowPass(order, cutoffFrequency / samplingFrequency);
+			return calcCoefLowPass(order, 2.0 * cutoffFrequency / samplingFrequency);
 		}
 
 		[[nodiscard]]
@@ -35,7 +35,7 @@ namespace rxtd::audio_utils {
 
 		[[nodiscard]]
 		static FilterParameters calcCoefHighPass(index order, double samplingFrequency, double cutoffFrequency) {
-			return calcCoefHighPass(order, cutoffFrequency / samplingFrequency);
+			return calcCoefHighPass(order, 2.0 * cutoffFrequency / samplingFrequency);
 		}
 
 		[[nodiscard]]
@@ -58,8 +58,8 @@ namespace rxtd::audio_utils {
 		) {
 			return calcCoefBandPass(
 				order,
-				lowerCutoffFrequency / samplingFrequency,
-				upperCutoffFrequency / samplingFrequency
+				2.0 * lowerCutoffFrequency / samplingFrequency,
+				2.0 * upperCutoffFrequency / samplingFrequency
 			);
 		}
 
@@ -77,8 +77,8 @@ namespace rxtd::audio_utils {
 		) {
 			return calcCoefBandStop(
 				order,
-				lowerCutoffFrequency / samplingFrequency,
-				upperCutoffFrequency / samplingFrequency
+				2.0 * lowerCutoffFrequency / samplingFrequency,
+				2.0 * upperCutoffFrequency / samplingFrequency
 			);
 		}
 	};

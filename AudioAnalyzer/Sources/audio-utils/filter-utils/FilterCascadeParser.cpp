@@ -150,15 +150,9 @@ FilterCascadeParser::parseBW(isview name, const utils::OptionMap& description, u
 		return { };
 	}
 
-	const double cutoff = std::max<double>(description.get(L"freq").asFloat(), std::numeric_limits<float>::epsilon());
-	const double cutoffLow = std::max<double>(
-		description.get(L"freqLow").asFloat(),
-		std::numeric_limits<float>::epsilon()
-	);
-	const double cutoffHigh = std::max<double>(
-		description.get(L"freqHigh").asFloat(),
-		std::numeric_limits<float>::epsilon()
-	);
+	const double cutoff = description.get(L"freq").asFloat();
+	const double cutoffLow = description.get(L"freqLow").asFloat();
+	const double cutoffHigh = description.get(L"freqHigh").asFloat();
 
 	const double forcedGain = description.get(L"forcedGain").asFloat();
 

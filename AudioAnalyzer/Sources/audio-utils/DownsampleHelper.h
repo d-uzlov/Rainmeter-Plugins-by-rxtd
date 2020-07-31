@@ -21,18 +21,29 @@ namespace rxtd::audio_utils {
 		};
 
 	private:
-		index decimateFactor = 3;
+		index decimateFactor = 0;
 		InfiniteResponseFilterFixed<filterOrder + 1> filter;
 		index counter = 0;
 
 	public:
 		DownsampleHelper() {
-			// digital frequency of 0.907 / decimateFactor ensures strong cutoff at new nyquist frequency
-			filter = { ButterworthWrapper::calcCoefLowPass(filterOrder, 0.907 / decimateFactor) };
+			setFactor(2);
 		}
 
 		void setFactor(index value) {
+			if (value == decimateFactor) {
+				return;
+			}
+
 			decimateFactor = value;
+			// digital frequency of (0.907 / decimateFactor) ensures strong cutoff at new nyquist frequency
+			filter = { ButterworthWrapper::calcCoefLowPass(filterOrder, 0.907 / decimateFactor) };
+			counter = 0;
+		}
+
+		[[nodiscard]]
+		index calcBufferSizeFor(index sourceSize) const {
+			return (counter + sourceSize) / decimateFactor;
 		}
 
 		// returns part of the wave that didn't fit info the buffer
@@ -40,10 +51,21 @@ namespace rxtd::audio_utils {
 		ResampleResultInfo resample(array_view<float> source, array_span<float> buffer) {
 			ResampleResultInfo result{ };
 
-			const index initialUpdateLength = std::min(decimateFactor - counter, source.size());
+			const index loopLengthTillNextSample = decimateFactor - counter;
+			const index initialUpdateLength = std::min(loopLengthTillNextSample, source.size());
 			for (index i = 0; i < initialUpdateLength - 1; i++) {
 				filter.next(source[i]);
 			}
+
+			if (initialUpdateLength != loopLengthTillNextSample) {
+				filter.next(source[initialUpdateLength - 1]);
+				counter += initialUpdateLength;
+
+				result.sourceConsumedSize = initialUpdateLength;
+				result.bufferFilledSize = 0;
+				return result;
+			}
+
 			buffer[0] = filter.next(source[initialUpdateLength - 1]);
 
 			buffer.remove_prefix(1);
@@ -86,7 +108,7 @@ namespace rxtd::audio_utils {
 	template <index filterOrder, index decimateFactor>
 	class DownsampleHelperFixed {
 		static_assert(decimateFactor > 1);
-		
+
 	public:
 		struct ResampleResultInfo {
 			index sourceConsumedSize = 0;
@@ -108,10 +130,21 @@ namespace rxtd::audio_utils {
 		ResampleResultInfo resample(array_view<float> source, array_span<float> buffer) {
 			ResampleResultInfo result{ };
 
-			const index initialUpdateLength = std::min(decimateFactor - counter, source.size());
+			const index loopLengthTillNextSample = decimateFactor - counter;
+			const index initialUpdateLength = std::min(loopLengthTillNextSample, source.size());
 			for (index i = 0; i < initialUpdateLength - 1; i++) {
 				filter.next(source[i]);
 			}
+
+			if (initialUpdateLength != loopLengthTillNextSample) {
+				filter.next(source[initialUpdateLength - 1]);
+				counter += initialUpdateLength;
+
+				result.sourceConsumedSize = initialUpdateLength;
+				result.bufferFilledSize = 0;
+				return result;
+			}
+
 			buffer[0] = filter.next(source[initialUpdateLength - 1]);
 
 			buffer.remove_prefix(1);
@@ -140,7 +173,7 @@ namespace rxtd::audio_utils {
 				filter.next(source[i]);
 			}
 			result.sourceConsumedSize += remainderSize;
-			
+
 			counter = remainderSize;
 
 			return result;

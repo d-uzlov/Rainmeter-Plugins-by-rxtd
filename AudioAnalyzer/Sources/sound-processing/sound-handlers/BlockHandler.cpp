@@ -113,7 +113,7 @@ void BlockHandler::_process(const DataSupplier& dataSupplier) {
 	auto wave = dataSupplier.getWave();
 
 	float mean = 0.0;
-	if (isAverageNeeded()) {
+	if (params.subtractMean && isAverageNeeded()) {
 		mean = std::accumulate(wave.begin(), wave.end(), 0.0f) / wave.size();
 	}
 

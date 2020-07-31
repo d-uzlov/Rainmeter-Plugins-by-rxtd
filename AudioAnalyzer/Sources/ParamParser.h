@@ -38,10 +38,13 @@ namespace rxtd::audio_analyzer {
 		};
 
 		struct ProcessingData {
-			index targetRate{ };
 			double granularity{ };
+
 			string rawFccDescription;
 			audio_utils::FilterCascadeCreator fcc;
+
+			index targetRate{ };
+
 			std::set<Channel> channels;
 			HandlerPatcherInfo handlersInfo;
 		};
@@ -79,6 +82,7 @@ namespace rxtd::audio_analyzer {
 
 	private:
 		void parseFilters(const utils::OptionMap& optionMap, ProcessingData& data, Logger& cl) const;
+		void parseTargetRate(const utils::OptionMap& optionMap, ProcessingData& data, Logger& cl) const;
 
 		[[nodiscard]]
 		static bool checkListUnique(const utils::OptionList& list);

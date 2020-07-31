@@ -135,6 +135,7 @@ void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldData
 	}
 
 	parseFilters(processingMap, oldData, cl);
+	parseTargetRate(processingMap, oldData, cl);
 
 	if (unusedOptionsWarning) {
 		const auto untouched = processingMap.getListOfUntouched();
@@ -145,37 +146,25 @@ void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldData
 }
 
 void ParamParser::parseFilters(const utils::OptionMap& optionMap, ProcessingData& data, Logger& cl) const {
-	const auto targetRate = std::max<index>(optionMap.get(L"targetRate").asInt(defaultTargetRate), 0);
-	const auto filterDescription = optionMap.get(L"filter").asIString(L"auto");
+	const auto filterDescription = optionMap.get(L"filter");
 
-	if (filterDescription % csView() == data.rawFccDescription && targetRate == data.targetRate) {
+	if (filterDescription.asString() == data.rawFccDescription) {
 		return;
 	}
 
 	anythingChanged = true;
-	data.targetRate = targetRate;
+	data.rawFccDescription = filterDescription.asString();
 
-	data.rawFccDescription = filterDescription % csView();
+	const auto [filterTypeOpt, filterParams] = filterDescription.breakFirst(L' ');
+	const auto filterType = filterTypeOpt.asIString(L"none");
 	auto filterLogger = cl.context(L"filter: ");
 
-	if (filterDescription == L"none") {
+	if (filterType == L"none") {
 		data.fcc = { };
 		return;
 	}
 
-	if (filterDescription == L"auto") {
-		if (targetRate == 0) {
-			data.fcc = { };
-		} else {
-			utils::BufferPrinter printer;
-			const double cutoffFreq = data.targetRate * 0.5;
-			printer.print(L"bwLowPass[order 10, freq {}]", cutoffFreq);
-			data.fcc = audio_utils::FilterCascadeParser::parse(utils::Option{ printer.getBufferView() }, filterLogger);
-		}
-		return;
-	}
-
-	if (filterDescription == L"replayGain") {
+	if (filterType == L"replayGain") {
 		data.fcc = audio_utils::FilterCascadeParser::parse(
 			utils::Option{
 				L"bqHighPass[q 0.5, freq 310] " // spaces in the ends of the strings are necessary
@@ -187,13 +176,22 @@ void ParamParser::parseFilters(const utils::OptionMap& optionMap, ProcessingData
 		return;
 	}
 
-	auto [name, desc] = optionMap.get(L"filter").breakFirst(' ');
-	if (name.asIString() == L"custom") {
-		data.fcc = audio_utils::FilterCascadeParser::parse(desc, filterLogger);
+	if (filterType == L"custom") {
+		data.fcc = audio_utils::FilterCascadeParser::parse(filterParams, filterLogger);
 	} else {
-		cl.error(L"filter '{}' is not supported", name);
+		filterLogger.error(L"filter class '{}' is not supported", filterType);
 		data.fcc = { };
 	}
+}
+
+void ParamParser::parseTargetRate(const utils::OptionMap& optionMap, ProcessingData& data, Logger& cl) const {
+	const auto targetRate = optionMap.get(L"targetRate").asInt(defaultTargetRate);
+	if (targetRate == data.targetRate) {
+		return;
+	}
+
+	anythingChanged = true;
+	data.targetRate = targetRate;
 }
 
 bool ParamParser::checkListUnique(const utils::OptionList& list) {
