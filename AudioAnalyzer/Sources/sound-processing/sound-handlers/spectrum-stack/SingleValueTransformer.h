@@ -40,6 +40,8 @@ namespace rxtd::audio_analyzer {
 
 		utils::Vector2D<float> values;
 
+		std::vector<LayerData> layers;
+
 	public:
 		static std::optional<Params> parseParams(const OptionMap& optionMap, Logger& cl);
 
@@ -50,12 +52,8 @@ namespace rxtd::audio_analyzer {
 
 		void _process(const DataSupplier& dataSupplier) override;
 
-		array_view<float> getData(index layer) const override {
-			return values[layer];
-		}
-
-		index getLayersCount() const override {
-			return values.getBuffersCount();
+		LayeredData getData() const override {
+			return layers;
 		}
 
 	protected:

@@ -140,10 +140,13 @@ bool BandCascadeTransformer::vCheckSources(Logger& cl) {
 }
 
 void BandCascadeTransformer::updateValues(SoundHandler& source, BandResampler& resampler) {
-
-	const index bandsCount = resampler.getData(0).size();
+	const auto sourceData = source.getData();
+	
+	const index bandsCount = sourceData[0].values.size();
 
 	resultValues.resize(bandsCount);
+	layerData.values = resultValues;
+	layerData.id++;
 
 	for (index band = 0; band < bandsCount; ++band) {
 		double weight = 0.0;
@@ -159,7 +162,7 @@ void BandCascadeTransformer::updateValues(SoundHandler& source, BandResampler& r
 
 		for (index cascade = 0; cascade < bandEndCascade; cascade++) {
 			const auto bandWeight = resampler.getBandWeights(cascade)[band];
-			const auto magnitude = source.getData(cascade)[band];
+			const auto magnitude = sourceData[cascade].values[band];
 			const auto cascadeBandValue = magnitude / bandWeight;
 
 			if (cascadeBandValue < params.zeroLevelHard) {
@@ -186,7 +189,7 @@ void BandCascadeTransformer::updateValues(SoundHandler& source, BandResampler& r
 		if (weight < params.weightFallback) {
 			for (index cascade = 0; cascade < bandEndCascade; cascade++) {
 				const auto bandWeight = resampler.getBandWeights(cascade)[band];
-				const auto magnitude = source.getData(cascade)[band];
+				const auto magnitude = sourceData[cascade].values[band];
 				const auto cascadeBandValue = magnitude / bandWeight;
 
 				if (cascadeBandValue < params.zeroLevelHard) {
@@ -232,6 +235,7 @@ void BandCascadeTransformer::updateValues(SoundHandler& source, BandResampler& r
 	}
 }
 
+// todo check source data size
 void BandCascadeTransformer::computeAnalysis(BandResampler& resampler, index startCascade, index endCascade) {
 	if (analysisComputed) {
 		return;
@@ -247,7 +251,7 @@ void BandCascadeTransformer::computeAnalysis(BandResampler& resampler, index sta
 
 	analysis.weightError = false;
 
-	const index bandsCount = resampler.getData(0).size();
+	const index bandsCount = resampler.getData()[0].values.size();
 	analysis.bandEndCascades.resize(bandsCount);
 
 	for (index band = 0; band < bandsCount; ++band) {

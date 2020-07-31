@@ -102,12 +102,8 @@ namespace rxtd::audio_analyzer {
 		void _process(const DataSupplier& dataSupplier) override;
 		void _finish() override;
 
-		array_view<float> getData(index layer) const override {
+		LayeredData getData() const override {
 			return { };
-		}
-
-		index getLayersCount() const override {
-			return 0;
 		}
 
 		bool getProp(const isview& prop, utils::BufferPrinter& printer) const override;

@@ -86,17 +86,10 @@ void BandResampler::_process(const DataSupplier& dataSupplier) {
 
 void BandResampler::_finish() {
 	if (changed) {
+		source->finish();
 		updateValues();
 		changed = false;
 	}
-}
-
-array_view<float> BandResampler::getData(index layer) const {
-	return cascadesInfo[layer].magnitudes;
-}
-
-index BandResampler::getLayersCount() const {
-	return index(cascadesInfo.size());
 }
 
 void BandResampler::setSamplesPerSec(index value) {
@@ -174,7 +167,7 @@ bool BandResampler::vCheckSources(Logger& cl) {
 		return false;
 	}
 
-	this->source = dynamic_cast<const FftAnalyzer*>(source);
+	this->source = dynamic_cast<FftAnalyzer*>(source);
 	if (this->source == nullptr) {
 		cl.error(L"invalid source, need FftAnalyzer");
 		return false;
@@ -184,8 +177,9 @@ bool BandResampler::vCheckSources(Logger& cl) {
 }
 
 void BandResampler::updateValues() {
+	// todo move this to somewhere else
 	if (!cascadeInfoIsCalculated) {
-		const auto cascadesCount = source->getLayersCount();
+		const auto cascadesCount = source->getData().size();
 		computeCascadesInfo(source->getFftSize(), cascadesCount);
 		cascadeInfoIsCalculated = true;
 	}
@@ -194,12 +188,13 @@ void BandResampler::updateValues() {
 }
 
 void BandResampler::sampleData(const FftAnalyzer& source) {
-	const auto fftBinsCount = source.getData(0).size();
+	const auto sourceData = source.getData();
+	const auto fftBinsCount = sourceData[0].values.size();
 	double binWidth = static_cast<double>(samplesPerSec) / (source.getFftSize() * std::pow(2, startCascade));
 
 	for (auto cascade = startCascade; cascade < endCascade; ++cascade) {
 
-		const auto fftData = source.getData(cascade);
+		const auto fftData = sourceData[cascade].values;
 
 		auto& cascadeMagnitudes = cascadesInfo[cascade - startCascade].magnitudes;
 		std::fill(cascadeMagnitudes.begin(), cascadeMagnitudes.end(), 0.0f);
@@ -381,8 +376,11 @@ void BandResampler::computeCascadesInfo(index fftSize, index cascadesCount) {
 	endCascade--;
 
 	cascadesInfo.resize(endCascade - startCascade);
-	for (auto& cascadeInfo : cascadesInfo) {
-		cascadeInfo.setSize(bandsCount);
+	layers.resize(endCascade - startCascade);
+	for (index i = 0; i < index(cascadesInfo.size()); ++i) {
+		cascadesInfo[i].setSize(bandsCount);
+		layers[i].id++;
+		layers[i].values = cascadesInfo[i].magnitudes;
 	}
 
 	const auto fftBinsCount = fftSize / 2;

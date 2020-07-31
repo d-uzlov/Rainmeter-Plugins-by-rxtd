@@ -55,17 +55,22 @@ void SingleValueTransformer::_process(const DataSupplier& dataSupplier) {
 
 	source->finish();
 
-	const index layersCount = source->getLayersCount();
-	const index layerSize = source->getData(0).size();
+	const auto sourceData = source->getData();
+	const auto layersCount = sourceData.size();
+	const index layerSize = sourceData[0].values.size();
 
 	values.setBuffersCount(layersCount);
 	values.setBufferSize(layerSize);
+	layers.resize(layersCount);
 
 	for (index layerIndex = 0; layerIndex < layersCount; ++layerIndex) {
-		auto layerData = source->getData(layerIndex);
+		auto layerData = sourceData[layerIndex];
 		auto dest = values[layerIndex];
 
-		std::copy(layerData.begin(), layerData.end(), dest.begin());
+		std::copy(layerData.values.begin(), layerData.values.end(), dest.begin());
+
+		layers[layerIndex].id++;
+		layers[layerIndex].values = dest;
 	}
 
 	params.transformer.setParams(samplesPerSec, dataSupplier.getWave().size());

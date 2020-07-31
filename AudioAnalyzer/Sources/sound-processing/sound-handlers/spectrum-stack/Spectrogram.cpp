@@ -224,7 +224,13 @@ void Spectrogram::_process(const DataSupplier& dataSupplier) {
 	const auto source = getSource();
 	source->finish();
 
-	const auto data = source->getData(0);
+	const auto layers = source->getData();
+	if (layers.empty()) {
+		setValid(false);
+		return;
+	}
+
+	const auto data = layers[0].values;
 	const auto dataSize = data.size();
 	if (dataSize <= 0) {
 		setValid(false);

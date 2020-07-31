@@ -12,6 +12,9 @@
 #include "filter-utils/LogarithmicIRF.h"
 #include "FFT.h"
 
+// todo fix mess of dependencies
+#include "../sound-processing/sound-handlers/SoundHandler.h"
+
 namespace rxtd::audio_utils {
 	class FftCascade {
 	public:
@@ -80,6 +83,7 @@ namespace rxtd::audio_utils {
 		LogarithmicIRF filter{ };
 		std::vector<float> values;
 		float legacy_dc{ };
+		audio_analyzer::LayerData layerData;
 
 	public:
 		void setParams(Params _params, FFT* fft, FftCascade* successor, index cascadeIndex);
@@ -87,8 +91,8 @@ namespace rxtd::audio_utils {
 		void reset();
 
 		[[nodiscard]]
-		array_view<float> getValues() const {
-			return values;
+		audio_analyzer::LayerData getLayerData() const {
+			return layerData;
 		}
 
 		[[nodiscard]]

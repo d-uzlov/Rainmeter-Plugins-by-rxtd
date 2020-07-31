@@ -73,6 +73,7 @@ namespace rxtd::audio_analyzer {
 		enum class RandomState { ON, OFF } randomState{ RandomState::ON };
 
 		std::vector<audio_utils::FftCascade> cascades{ };
+		std::vector<LayerData> layers;
 
 		audio_utils::FFT fft{ };
 
@@ -98,8 +99,9 @@ namespace rxtd::audio_analyzer {
 
 		void _process(const DataSupplier& dataSupplier) override;
 
-		index getLayersCount() const override;
-		array_view<float> getData(index layer) const override;
+		LayeredData getData() const override {
+			return layers;
+		}
 
 		bool getProp(const isview& prop, utils::BufferPrinter& printer) const override;
 

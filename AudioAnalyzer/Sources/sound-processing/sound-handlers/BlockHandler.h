@@ -46,11 +46,11 @@ namespace rxtd::audio_analyzer {
 		index samplesPerSec{ };
 		index blockSize{ };
 
+		float result = 0.0;
+		LayerData resultL;
+
 	protected:
 		index counter = 0;
-
-	private:
-		float result = 0.0;
 
 	public:
 		void setParams(const Params& params, Channel channel);
@@ -60,8 +60,8 @@ namespace rxtd::audio_analyzer {
 
 		void _process(const DataSupplier& dataSupplier) final;
 
-		array_view<float> getData(index layer) const final {
-			return { &result, 1 };
+		LayeredData getData() const override {
+			return { &resultL, 1 };
 		}
 
 		bool getProp(const isview& prop, utils::BufferPrinter& printer) const override;

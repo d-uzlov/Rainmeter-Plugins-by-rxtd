@@ -58,6 +58,7 @@ void BlockHandler::setParams(const Params& _params, Channel channel) {
 	}
 
 	params = _params;
+	resultL.values = { &result, 1 };
 
 	recalculateConstants();
 
@@ -102,9 +103,9 @@ bool BlockHandler::getProp(const isview& prop, utils::BufferPrinter& printer) co
 	return false;
 }
 
+// todo update reset everywhere
 void BlockHandler::reset() {
 	counter = 0;
-	result = 0.0;
 	params.transformer.resetState();
 	_reset();
 }

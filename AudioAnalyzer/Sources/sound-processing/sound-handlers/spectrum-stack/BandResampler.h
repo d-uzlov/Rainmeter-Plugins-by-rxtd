@@ -58,7 +58,7 @@ namespace rxtd::audio_analyzer {
 
 		index samplesPerSec{ };
 
-		const FftAnalyzer* source = nullptr;
+		FftAnalyzer* source = nullptr;
 
 		std::vector<float> bandFreqMultipliers{ };
 		index startCascade = 0;
@@ -66,6 +66,7 @@ namespace rxtd::audio_analyzer {
 		index bandsCount = 0;
 
 		std::vector<CascadeInfo> cascadesInfo{ };
+		std::vector<LayerData> layers;
 
 		bool cascadeInfoIsCalculated = false;
 		bool changed = true;
@@ -81,8 +82,9 @@ namespace rxtd::audio_analyzer {
 		void _process(const DataSupplier& dataSupplier) override;
 		void _finish() override;
 
-		array_view<float> getData(index layer) const override;
-		index getLayersCount() const override;
+		LayeredData getData() const override {
+			return layers;
+		}
 
 		bool getProp(const isview& prop, utils::BufferPrinter& printer) const override;
 

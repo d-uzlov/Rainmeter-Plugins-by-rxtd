@@ -11,8 +11,6 @@
 #include "MyMath.h"
 #include "option-parser/OptionMap.h"
 
-#include "undef.h"
-
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
 
@@ -78,14 +76,15 @@ void legacy_LogarithmicValueMapper::updateValues() {
 	transformToLog(*source);
 }
 
-void legacy_LogarithmicValueMapper::transformToLog(const SoundHandler& source) {
+void legacy_LogarithmicValueMapper::transformToLog(SoundHandler& source) {
 	constexpr double log10inverse = 0.30102999566398119521; // 1.0 / log2(10)
 
-	const auto layersCount = source.getLayersCount();
+	const auto sourceData = source.getData();
+	const auto layersCount = sourceData.size();
 	resultValues.resize(layersCount); // TODO use my vector2D ?
 
 	for (index layer = 0; layer < layersCount; ++layer) {
-		const auto values = source.getData(layer);
+		const auto values = sourceData[layer].values;
 
 		resultValues[layer].resize(values.size()); // TODO use my vector2D ?
 
@@ -99,4 +98,9 @@ void legacy_LogarithmicValueMapper::transformToLog(const SoundHandler& source) {
 		}
 	}
 
+	layers.resize(layersCount);
+	for (index i = 0; i < layersCount; ++i) {
+		layers[i].id++;
+		layers[i].values = resultValues[i];
+	}
 }

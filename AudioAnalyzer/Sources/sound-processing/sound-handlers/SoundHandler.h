@@ -34,6 +34,12 @@ namespace rxtd::audio_analyzer {
 		virtual SoundHandler* getHandlerRaw(isview id) const = 0;
 	};
 
+	struct LayerData {
+		array_view<float> values;
+		uint32_t id{ };
+	};
+
+	using LayeredData = array_view<LayerData>;
 
 	class SoundHandler {
 	protected:
@@ -96,12 +102,7 @@ namespace rxtd::audio_analyzer {
 		}
 
 		[[nodiscard]]
-		virtual array_view<float> getData(index layer) const = 0;
-
-		[[nodiscard]]
-		virtual index getLayersCount() const {
-			return 1;
-		}
+		virtual LayeredData getData() const = 0;
 
 		[[nodiscard]]
 		virtual index getStartingLayer() const {

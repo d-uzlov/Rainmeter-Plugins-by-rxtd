@@ -37,29 +37,7 @@ double AudioChildHelper::getValue(Channel channel, isview handlerId, index index
 		return 0.0;
 	}
 
-	const auto channelDataIter = channels->find(channel);
-	if (channelDataIter == channels->end()) {
-		return 0.0;
-	}
-
-	handler->finish();
-	if (!handler->isValid()) {
-		return 0.0;
-	}
-
-	const auto layersCount = handler->getLayersCount();
-	if (layersCount <= 0) {
-		return 0.0;
-	}
-
-	const auto data = handler->getData(0);
-	if (data.empty()) {
-		return 0.0;
-	}
-	if (index >= data.size()) {
-		return 0.0;
-	}
-	return data[index];
+	return getValueFrom(handler, channel, index);
 }
 
 double AudioChildHelper::getValueFrom(SoundHandler* handler, Channel channel, index index) const {
@@ -73,17 +51,20 @@ double AudioChildHelper::getValueFrom(SoundHandler* handler, Channel channel, in
 		return 0.0;
 	}
 
-	const auto layersCount = handler->getLayersCount();
+	const auto data = handler->getData();
+
+	const auto layersCount = data.size();
+	
 	if (layersCount <= 0) {
 		return 0.0;
 	}
 
-	const auto data = handler->getData(0);
-	if (data.empty()) {
+	const auto data0 = data[0].values;
+	if (data0.empty()) {
 		return 0.0;
 	}
-	if (index >= data.size()) {
+	if (index >= data0.size()) {
 		return 0.0;
 	}
-	return data[index];
+	return data0[index];
 }

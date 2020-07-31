@@ -10,8 +10,6 @@
 #include "legacy_FiniteTimeFilter.h"
 #include "option-parser/OptionMap.h"
 
-#include "undef.h"
-
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
 
@@ -123,8 +121,9 @@ bool legacy_FiniteTimeFilter::vCheckSources(Logger& cl) {
 }
 
 void legacy_FiniteTimeFilter::adjustSize() {
-	const auto layersCount = source->getLayersCount();
-	const auto valuesCount = source->getData(0).size();
+	const auto sourceData = source->getData();
+	const auto layersCount = sourceData.size();
+	const auto valuesCount = sourceData[0].values.size();
 
 	if (layersCount == index(pastValues.size()) && valuesCount == values.getBufferSize()) {
 		return;
@@ -139,6 +138,11 @@ void legacy_FiniteTimeFilter::adjustSize() {
 	values.setBuffersCount(layersCount);
 	values.setBufferSize(valuesCount);
 
+	layers.resize(layersCount);
+	for (index i = 0; i < layersCount; ++i) {
+		layers[i].id++;
+		layers[i].values = values[i];
+	}
 }
 
 void legacy_FiniteTimeFilter::reset() {
@@ -146,7 +150,8 @@ void legacy_FiniteTimeFilter::reset() {
 }
 
 void legacy_FiniteTimeFilter::copyValues() {
-	const auto layersCount = source->getLayersCount();
+	const auto sourceData = source->getData();
+	const auto layersCount = sourceData.size();
 
 	pastValuesIndex++;
 	if (pastValuesIndex >= params.smoothingFactor) {
@@ -154,7 +159,7 @@ void legacy_FiniteTimeFilter::copyValues() {
 	}
 	for (index layer = 0; layer < layersCount; ++layer) {
 		auto& layerPastValues = pastValues[layer];
-		const auto sourceValues = source->getData(layer);
+		const auto sourceValues = sourceData[layer].values;
 		for (index i = 0; i < sourceValues.size(); ++i) {
 			layerPastValues[pastValuesIndex][i] = sourceValues[i];
 		}
@@ -167,7 +172,8 @@ void legacy_FiniteTimeFilter::applyTimeFiltering() {
 		startPastIndex = 0;
 	}
 
-	const auto layersCount = source->getLayersCount();
+	const auto sourceData = source->getData();
+	const auto layersCount = sourceData.size();
 	for (index layer = 0; layer < layersCount; ++layer) {
 		auto& currentPastValues = pastValues[layer];
 		auto currentValues = values[layer];
