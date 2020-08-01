@@ -62,8 +62,6 @@ namespace rxtd::audio_analyzer {
 	private:
 		Params params{ };
 
-		index samplesPerSec{ };
-
 		index fftSize = 0;
 		index inputStride = 0;
 
@@ -78,42 +76,41 @@ namespace rxtd::audio_analyzer {
 		audio_utils::FFT fft{ };
 
 	public:
-		FftAnalyzer() = default;
-		~FftAnalyzer() = default;
+		bool parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr) const override;
 
-		/** This class is non copyable */
-		FftAnalyzer(const FftAnalyzer& other) = delete;
-		FftAnalyzer(FftAnalyzer&& other) = delete;
-		FftAnalyzer& operator=(const FftAnalyzer& other) = delete;
-		FftAnalyzer& operator=(FftAnalyzer&& other) = delete;
-
-		static std::optional<Params> parseParams(const OptionMap& optionMap, Logger& cl);
-		void setParams(Params params, Channel channel);
-
-		double getFftFreq(index fft) const;
-
-		index getFftSize() const;
-
-		void setSamplesPerSec(index samplesPerSec) override;
-		void reset() override;
-
-		void _process(const DataSupplier& dataSupplier) override;
-
-		LayeredData getData() const override {
-			return layers;
+		const Params& getParams() const {
+			return params;
 		}
 
-		bool getProp(const isview& prop, utils::BufferPrinter& printer) const override;
+		void setParams(const Params& value);
 
 	protected:
-		isview getSourceName() const override {
+		isview vGetSourceName() const override {
 			return { };
 		}
 
 		[[nodiscard]]
-		bool vCheckSources(Logger& cl) override {
-			return true;
+		bool vFinishLinking(Logger& cl) override;
+
+	public:
+		double getFftFreq(index fft) const;
+
+		index getFftSize() const;
+
+		void vReset() override;
+
+		void vProcess(const DataSupplier& dataSupplier) override;
+
+		LayeredData vGetData() const override {
+			return layers;
 		}
+
+		[[nodiscard]]
+		DataSize getDataSize() const override {
+			return { params.cascadesCount, fftSize / 2 };
+		}
+
+		bool vGetProp(const isview& prop, utils::BufferPrinter& printer) const override;
 
 	private:
 		void processRandom(index waveSize);

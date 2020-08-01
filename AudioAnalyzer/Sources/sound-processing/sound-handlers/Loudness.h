@@ -16,7 +16,6 @@ namespace rxtd::audio_analyzer {
 
 	public:
 		void _process(array_view<float> wave, float average) override;
-		void _setSamplesPerSec(index samplesPerSec) override;
 
 	protected:
 		void _reset() override;

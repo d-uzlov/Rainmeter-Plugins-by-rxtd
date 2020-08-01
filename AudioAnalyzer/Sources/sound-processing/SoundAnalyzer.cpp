@@ -21,7 +21,6 @@ void SoundAnalyzer::setFormat(index sampleRate, ChannelLayout _layout) {
 
 	cph.setSourceRate(sampleRate);
 	patchCH();
-	updateHandlerSampleRate();
 }
 
 AudioChildHelper SoundAnalyzer::getAudioChildHelper() const {
@@ -30,11 +29,11 @@ AudioChildHelper SoundAnalyzer::getAudioChildHelper() const {
 
 void SoundAnalyzer::setParams(
 	std::set<Channel> channelSetRequested,
-	ParamParser::HandlerPatcherInfo handlerPatchers,
+	const ParamParser::HandlerPatcherInfo& handlerPatchers,
 	double granularity
 ) {
 	this->channelSetRequested = std::move(channelSetRequested);
-	this->handlerPatchers = std::move(handlerPatchers);
+	this->handlerPatchers = &handlerPatchers;
 	this->granularity = granularity;
 
 	patchCH();
@@ -58,7 +57,11 @@ bool SoundAnalyzer::process(const ChannelMixer& mixer, clock::time_point killTim
 
 			dataSupplier.setWave(wave);
 
-			for (auto& name : handlerPatchers.order) {
+			for (auto& name : handlerPatchers->order) {
+				if (channelData.count(name) < 1) {
+					continue;
+				}
+
 				auto& handler = channelData[name];
 				if (!handler.wasValid) {
 					continue;
@@ -83,9 +86,13 @@ bool SoundAnalyzer::process(const ChannelMixer& mixer, clock::time_point killTim
 
 bool SoundAnalyzer::finishStandalone(clock::time_point killTime) {
 	for (auto& [channel, channelData] : channels) {
-		for (auto& name : handlerPatchers.order) {
+		for (auto& name : handlerPatchers->order) {
+			if (channelData.count(name) < 1) {
+				continue;
+			}
+
 			auto& handler = channelData[name];
-			if (handler.wasValid && handler.ptr->isStandalone()) {
+			if (handler.wasValid && handler.ptr->vIsStandalone()) {
 				handler.ptr->finish();
 				handler.wasValid = handler.ptr->isValid();
 
@@ -107,17 +114,7 @@ void SoundAnalyzer::resetValues() noexcept {
 	for (auto& [channel, channelData] : channels) {
 		for (auto& [name, handler] : channelData) {
 			// order is not important
-			handler.ptr->reset();
-		}
-	}
-}
-
-void SoundAnalyzer::updateHandlerSampleRate() noexcept {
-	for (auto& [channel, channelData] : channels) {
-		for (auto& [name, handler] : channelData) {
-			// order is not important
-			handler.ptr->setSamplesPerSec(cph.getSampleRate());
-			handler.wasValid = handler.ptr->isValid();
+			handler.ptr->vReset();
 		}
 	}
 }
@@ -155,22 +152,20 @@ void SoundAnalyzer::patchHandlers() {
 		HandlerFinderImpl hf;
 		hf.setChannelData(newData);
 
-		for (auto& handlerName : handlerPatchers.order) {
-			auto& patcher = handlerPatchers.map[handlerName].patcher;
+		for (auto& handlerName : handlerPatchers->order) {
+			auto& patcher = *handlerPatchers->map.find(handlerName)->second.patcher;
 			auto& handlerInfo = channelData[handlerName];
 
-			SoundHandler* ptr = handlerInfo.ptr.get();
-			if (ptr != nullptr) {
-				ptr->prePatch();
-			}
-
-			ptr = patcher(ptr, channel);
+			auto cl = logger.context(L"Handler {}: ", handlerName);
+			SoundHandler* ptr = SoundHandler::patch(
+				handlerInfo.ptr.get(), patcher,
+				channel, cph.getSampleRate(),
+				hf, cl
+			);
 			if (ptr != handlerInfo.ptr.get()) {
 				handlerInfo.ptr = std::unique_ptr<SoundHandler>(ptr);
 			}
 
-			auto cl = logger.context(L"Handler {}: ", handlerName);
-			ptr->linkSources(hf, cl);
 			if (!ptr->isValid()) {
 				cl.error(L"invalid handler");
 				continue;
@@ -182,6 +177,4 @@ void SoundAnalyzer::patchHandlers() {
 
 		channelData = std::move(newData);
 	}
-
-	updateHandlerSampleRate();
 }

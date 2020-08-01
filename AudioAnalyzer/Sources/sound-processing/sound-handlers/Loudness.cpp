@@ -9,15 +9,10 @@
 
 #include "Loudness.h"
 
-#include "undef.h"
-
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
-
-void Loudness::_setSamplesPerSec(index samplesPerSec) {
-}
 
 void Loudness::_reset() {
 	counter = 0;

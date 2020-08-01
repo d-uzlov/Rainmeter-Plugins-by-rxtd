@@ -51,7 +51,7 @@ double AudioChildHelper::getValueFrom(SoundHandler* handler, Channel channel, in
 		return 0.0;
 	}
 
-	const auto data = handler->getData();
+	const auto data = handler->vGetData();
 
 	const auto layersCount = data.size();
 	

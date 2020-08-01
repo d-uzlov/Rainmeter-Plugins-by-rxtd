@@ -10,79 +10,75 @@
 #include "SingleValueTransformer.h"
 #include "option-parser/OptionMap.h"
 
-#include "undef.h"
-
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-std::optional<SingleValueTransformer::Params>
-SingleValueTransformer::parseParams(const OptionMap& optionMap, Logger& cl) {
-	Params params;
+bool SingleValueTransformer::parseParams(
+	const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr
+) const {
+	auto& params = *static_cast<Params*>(paramsPtr);
 
 	params.sourceId = optionMap.get(L"source"sv).asIString();
 	if (params.sourceId.empty()) {
 		cl.error(L"source not found");
-		return std::nullopt;
+		return {};
 	}
 
 	auto transformLogger = cl.context(L"transform: ");
 	params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform"), transformLogger);
 
-	return params;
+	return true;
 }
 
-void SingleValueTransformer::setParams(const Params& _params, Channel channel) {
-	if (params == _params) {
-		return;
-	}
-
-	params = _params;
-	params.transformer.setParams(samplesPerSec, 1);
+void SingleValueTransformer::setParams(const Params& value) {
+	params = value;
 }
 
-void SingleValueTransformer::setSamplesPerSec(index value) {
-	samplesPerSec = value;
-}
-
-void SingleValueTransformer::reset() {
-	params.transformer.resetState();
-}
-
-void SingleValueTransformer::_process(const DataSupplier& dataSupplier) {
-	const auto source = getSource();
-
-	source->finish();
-
-	const auto sourceData = source->getData();
-	const auto layersCount = sourceData.size();
-	const index layerSize = sourceData[0].values.size();
-
-	values.setBuffersCount(layersCount);
-	values.setBufferSize(layerSize);
-	layers.resize(layersCount);
-
-	for (index layerIndex = 0; layerIndex < layersCount; ++layerIndex) {
-		auto layerData = sourceData[layerIndex];
-		auto dest = values[layerIndex];
-
-		std::copy(layerData.values.begin(), layerData.values.end(), dest.begin());
-
-		layers[layerIndex].id++;
-		layers[layerIndex].values = dest;
-	}
-
-	params.transformer.setParams(samplesPerSec, dataSupplier.getWave().size());
-	params.transformer.applyToArray(values);
-}
-
-bool SingleValueTransformer::vCheckSources(Logger& cl) {
+bool SingleValueTransformer::vFinishLinking(Logger& cl) {
 	const auto source = getSource();
 	if (source == nullptr) {
 		cl.error(L"source is not found");
 		return false;
 	}
 
+	// todo check for zero size
+	const auto [layersCount, layerSize] = source->getDataSize();
+
+	values.setBuffersCount(layersCount);
+	values.setBufferSize(layerSize);
+	layers.resize(layersCount);
+
+	for (index layerIndex = 0; layerIndex < layersCount; ++layerIndex) {
+		// layers[layerIndex].id = 0;
+		layers[layerIndex].values = values[layerIndex];
+	}
+
 	return true;
+}
+
+void SingleValueTransformer::vReset() {
+	params.transformer.resetState();
+}
+
+void SingleValueTransformer::vProcess(const DataSupplier& dataSupplier) {
+	auto& source = *getSource();
+
+	source.finish();
+	const auto sourceData = source.vGetData();
+	const auto [layersCount, layerSize] = source.getDataSize();
+
+	for (index layerIndex = 0; layerIndex < layersCount; ++layerIndex) {
+		auto layerData = sourceData[layerIndex];
+		auto dest = values[layerIndex];
+
+		// todo check if transform is stateless and then check .id
+		std::copy(layerData.values.begin(), layerData.values.end(), dest.begin());
+
+		layers[layerIndex].id++;
+	}
+
+	params.transformer.setParams(getSampleRate(), dataSupplier.getWave().size());
+	params.transformer.applyToArray(values);
 }

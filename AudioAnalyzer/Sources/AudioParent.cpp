@@ -273,7 +273,7 @@ void AudioParent::_resolve(array_view<isview> args, string& resolveBufferString)
 			return;
 		}
 
-		const bool found = handler->getProp(propName, cl.printer);
+		const bool found = handler->vGetProp(propName, cl.printer);
 		if (!found) {
 			cl.error(L"prop '{}:{}' is not found", handlerName, propName);
 			return;
@@ -364,8 +364,8 @@ void AudioParent::patchSA(const ParamParser::ProcessingsInfoMap& procs) {
 	for (auto& [name, data] : procs) {
 		auto& sa = saMap[name];
 		sa.getCPH().setParams(std::move(data.fcc), data.targetRate);
-		sa.setParams(data.channels, data.handlersInfo, data.granularity);
 		sa.setFormat(currentFormat.samplesPerSec, currentFormat.channelLayout);
+		sa.setParams(data.channels, data.handlersInfo, data.granularity);
 	}
 }
 
@@ -412,7 +412,7 @@ void AudioParent::legacy_resolve(array_view<isview> args, string& resolveBufferS
 			return;
 		}
 
-		const bool found = handler->getProp(propName, cl.printer);
+		const bool found = handler->vGetProp(propName, cl.printer);
 		if (!found) {
 			cl.error(L"prop '{}:{}' is not found", handlerName, propName);
 			return;

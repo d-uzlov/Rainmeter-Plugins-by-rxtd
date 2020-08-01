@@ -36,33 +36,39 @@ namespace rxtd::audio_analyzer {
 	private:
 		Params params{ };
 
-		index samplesPerSec{ };
-
 		utils::Vector2D<float> values;
 
 		std::vector<LayerData> layers;
 
 	public:
-		static std::optional<Params> parseParams(const OptionMap& optionMap, Logger& cl);
+		bool parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr) const override;
 
-		void setParams(const Params& params, Channel channel);
-
-		void setSamplesPerSec(index value) override;
-		void reset() override;
-
-		void _process(const DataSupplier& dataSupplier) override;
-
-		LayeredData getData() const override {
-			return layers;
+		const Params& getParams() const {
+			return params;
 		}
+
+		void setParams(const Params& value);
 
 	protected:
 		[[nodiscard]]
-		isview getSourceName() const override {
+		isview vGetSourceName() const override {
 			return params.sourceId;
 		}
 
 		[[nodiscard]]
-		bool vCheckSources(Logger& cl) override;
+		bool vFinishLinking(Logger& cl) override;
+
+	public:
+		void vReset() override;
+		void vProcess(const DataSupplier& dataSupplier) override;
+
+		LayeredData vGetData() const override {
+			return layers;
+		}
+
+		[[nodiscard]]
+		DataSize getDataSize() const override {
+			return { values.getBuffersCount(), values.getBufferSize() };
+		}
 	};
 }

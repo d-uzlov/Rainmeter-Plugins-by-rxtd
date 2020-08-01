@@ -9,28 +9,26 @@
 
 #include "WaveForm.h"
 #include <filesystem>
-#include "windows-wrappers/FileWrapper.h"
-
-#include "undef.h"
+#include "option-parser/OptionMap.h"
 
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-std::optional<WaveForm::Params> WaveForm::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain) {
-	Params params;
+bool WaveForm::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr) const {
+	auto& params = *static_cast<Params*>(paramsPtr);
 
 	params.width = optionMap.get(L"width"sv).asInt(100);
 	if (params.width < 2) {
 		cl.error(L"width must be >= 2 but {} found", params.width);
-		return std::nullopt;
+		return { };
 	}
 
 	params.height = optionMap.get(L"height"sv).asInt(100);
 	if (params.height < 2) {
 		cl.error(L"height must be >= 2 but {} found", params.height);
-		return std::nullopt;
+		return { };
 	}
 
 	if (params.width * params.height > 1000 * 1000) {
@@ -76,7 +74,8 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const OptionMap& optionMap
 
 	if (optionMap.has(L"transform"sv)) {
 		params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform"), cl);
-	} else if (optionMap.has(L"gain")) { // legacy
+	} else if (optionMap.has(L"gain")) {
+		// legacy
 		const auto gain = optionMap.get(L"gain"sv).asFloat(1.0);
 		utils::BufferPrinter printer;
 		printer.print(L"map[from 0 ; 1][to 0 ; {}]", gain);
@@ -85,39 +84,13 @@ std::optional<WaveForm::Params> WaveForm::parseParams(const OptionMap& optionMap
 		params.transformer = { };
 	}
 
-	return params;
+	return true;
 }
 
-double WaveForm::WaveformValueTransformer::apply(double value) {
-	const bool positive = value > 0;
-	value = cvt.apply(float(std::abs(value)));
+void WaveForm::setParams(const Params& value) {
+	this->params = value;
 
-	if (!positive) {
-		value *= -1;
-	}
-
-	return value;
-}
-
-void WaveForm::WaveformValueTransformer::updateTransformations(index samplesPerSec, index blockSize) {
-	cvt.setParams(samplesPerSec, blockSize);
-}
-
-void WaveForm::WaveformValueTransformer::reset() {
-	cvt.resetState();
-}
-
-void WaveForm::setParams(const Params& _params, Channel channel) {
-	if (params == _params) {
-		return;
-	}
-
-	this->params = _params;
-
-	if (_params.width <= 0 || _params.height <= 0) {
-		return;
-	}
-
+	// todo this is not correct when transforms are applied
 	minDistinguishableValue = 1.0 / params.height / 2.0; // below half pixel
 
 	drawer.setDimensions(params.width, params.height);
@@ -128,38 +101,32 @@ void WaveForm::setParams(const Params& _params, Channel channel) {
 	drawer.setFading(params.fading);
 	drawer.setConnected(params.connected);
 	drawer.setBorderSize(params.borderSize);
+}
 
+bool WaveForm::vFinishLinking(Logger& cl) {
 	filepath = params.folder;
 	filepath += L"wave-";
-	filepath += channel.technicalName();
+	filepath += getChannel().technicalName();
 	filepath += L".bmp"sv;
+	// todo check that can write ro this file
 
 	minTransformer = { params.transformer };
 	maxTransformer = { params.transformer };
 
-	updateParams();
+	const index sampleRate = getSampleRate();
+	blockSize = index(sampleRate * params.resolution);
+	blockSize = std::max<index>(blockSize, 1);
+
+	minTransformer.updateTransformations(sampleRate, blockSize);
+	maxTransformer.updateTransformations(sampleRate, blockSize);
+
+	// todo remove?
+	vReset();
+
+	return true;
 }
 
-void WaveForm::setSamplesPerSec(index samplesPerSec) {
-	this->samplesPerSec = samplesPerSec;
-
-	updateParams();
-}
-
-bool WaveForm::getProp(const isview& prop, utils::BufferPrinter& printer) const {
-	if (prop == L"file") {
-		printer.print(filepath);
-		return true;
-	}
-	if (prop == L"block size") {
-		printer.print(blockSize);
-		return true;
-	}
-
-	return false;
-}
-
-void WaveForm::reset() {
+void WaveForm::vReset() {
 	counter = 0;
 	min = 10.0;
 	max = -10.0;
@@ -168,30 +135,7 @@ void WaveForm::reset() {
 	maxTransformer.reset();
 }
 
-void WaveForm::updateParams() {
-	blockSize = index(samplesPerSec * params.resolution);
-	blockSize = std::max<index>(blockSize, 1);
-
-	minTransformer.updateTransformations(samplesPerSec, blockSize);
-	maxTransformer.updateTransformations(samplesPerSec, blockSize);
-
-	reset();
-}
-
-void WaveForm::pushStrip(double min, double max) {
-	min = minTransformer.apply(min);
-	max = maxTransformer.apply(max);
-
-	if (std::abs(min) < minDistinguishableValue && std::abs(max) < minDistinguishableValue) {
-		drawer.fillSilence();
-	} else {
-		drawer.fillStrip(min, max);
-	}
-
-	changed = true;
-}
-
-void WaveForm::_process(const DataSupplier& dataSupplier) {
+void WaveForm::vProcess(const DataSupplier& dataSupplier) {
 	if (blockSize <= 0 || params.width <= 0 || params.height <= 0) {
 		return;
 	}
@@ -212,7 +156,7 @@ void WaveForm::_process(const DataSupplier& dataSupplier) {
 	}
 }
 
-void WaveForm::_finish() {
+void WaveForm::vFinish() {
 	if (changed) {
 		const bool forced = !drawer.isEmpty();
 		if (forced || !writerHelper.isEmptinessWritten()) {
@@ -221,4 +165,30 @@ void WaveForm::_finish() {
 		writerHelper.write(drawer.getResultBuffer(), drawer.isEmpty(), filepath);
 		changed = false;
 	}
+}
+
+bool WaveForm::vGetProp(const isview& prop, utils::BufferPrinter& printer) const {
+	if (prop == L"file") {
+		printer.print(filepath);
+		return true;
+	}
+	if (prop == L"block size") {
+		printer.print(blockSize);
+		return true;
+	}
+
+	return false;
+}
+
+void WaveForm::pushStrip(double min, double max) {
+	min = minTransformer.apply(min);
+	max = maxTransformer.apply(max);
+
+	if (std::abs(min) < minDistinguishableValue && std::abs(max) < minDistinguishableValue) {
+		drawer.fillSilence();
+	} else {
+		drawer.fillStrip(min, max);
+	}
+
+	changed = true;
 }

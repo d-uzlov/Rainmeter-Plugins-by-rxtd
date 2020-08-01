@@ -11,15 +11,13 @@
 #include <numeric>
 #include "option-parser/OptionMap.h"
 
-#include "undef.h"
-
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-std::optional<BlockHandler::Params> BlockHandler::parseParams(const OptionMap& optionMap, Logger& cl) {
-	Params params;
+bool BlockHandler::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr) const {
+	auto& params = *static_cast<Params*>(paramsPtr);
 
 	params.resolution = optionMap.get(L"resolution"sv).asFloat(1000.0 / 60.0);
 	if (params.resolution <= 0) {
@@ -42,25 +40,15 @@ std::optional<BlockHandler::Params> BlockHandler::parseParams(const OptionMap& o
 
 		utils::BufferPrinter printer;
 		printer.print(L"filter[attack {}, decay {}]", params.legacy_attackTime, params.legacy_decayTime);
-		params.transformer = audio_utils::TransformationParser::parse(utils::Option{ printer.getBufferView() }, cl);
+		params.transformer = audio_utils::TransformationParser::parse(utils::Option { printer.getBufferView() }, cl);
 	}
 
-	return params;
+	return true;
 }
 
-void BlockHandler::setNextValue(double value) {
-	result = params.transformer.apply(float(value));
-}
-
-void BlockHandler::setParams(const Params& _params, Channel channel) {
-	if (params == _params) {
-		return;
-	}
-
-	params = _params;
+void BlockHandler::setParams(const Params& value) {
+	params = value;
 	resultL.values = { &result, 1 };
-
-	recalculateConstants();
 
 	if (params.transformer.isEmpty()) {
 		params.transform = getDefaultTransform();
@@ -69,19 +57,36 @@ void BlockHandler::setParams(const Params& _params, Channel channel) {
 	}
 }
 
-void BlockHandler::setSamplesPerSec(index samplesPerSec) {
-	if (this->samplesPerSec == samplesPerSec) {
-		return;
+bool BlockHandler::vFinishLinking(Logger& cl) {
+	blockSize = static_cast<decltype(blockSize)>(getSampleRate() * params.resolution);
+	if (blockSize < 1) {
+		blockSize = 1;
 	}
 
-	this->samplesPerSec = samplesPerSec;
-
-	recalculateConstants();
-
-	_setSamplesPerSec(samplesPerSec);
+	params.transformer.setParams(getSampleRate(), blockSize);
+	
+	return true;
 }
 
-bool BlockHandler::getProp(const isview& prop, utils::BufferPrinter& printer) const {
+// todo update reset everywhere
+void BlockHandler::vReset() {
+	counter = 0;
+	params.transformer.resetState();
+	_reset();
+}
+
+void BlockHandler::vProcess(const DataSupplier& dataSupplier) {
+	auto wave = dataSupplier.getWave();
+
+	float mean = 0.0;
+	if (params.subtractMean && isAverageNeeded()) {
+		mean = std::accumulate(wave.begin(), wave.end(), 0.0f) / wave.size();
+	}
+
+	_process(wave, mean);
+}
+
+bool BlockHandler::vGetProp(const isview& prop, utils::BufferPrinter& printer) const {
 	if (prop == L"block size") {
 		printer.print(blockSize);
 		return true;
@@ -103,32 +108,8 @@ bool BlockHandler::getProp(const isview& prop, utils::BufferPrinter& printer) co
 	return false;
 }
 
-// todo update reset everywhere
-void BlockHandler::reset() {
-	counter = 0;
-	params.transformer.resetState();
-	_reset();
-}
-
-void BlockHandler::_process(const DataSupplier& dataSupplier) {
-	auto wave = dataSupplier.getWave();
-
-	float mean = 0.0;
-	if (params.subtractMean && isAverageNeeded()) {
-		mean = std::accumulate(wave.begin(), wave.end(), 0.0f) / wave.size();
-	}
-
-	_process(wave, mean);
-}
-
-void BlockHandler::recalculateConstants() {
-	auto test = samplesPerSec * params.resolution;
-	blockSize = static_cast<decltype(blockSize)>(test);
-	if (blockSize < 1) {
-		blockSize = 1;
-	}
-
-	params.transformer.setParams(samplesPerSec, blockSize);
+void BlockHandler::setNextValue(double value) {
+	result = params.transformer.apply(float(value));
 }
 
 void BlockRms::_process(array_view<float> wave, float average) {

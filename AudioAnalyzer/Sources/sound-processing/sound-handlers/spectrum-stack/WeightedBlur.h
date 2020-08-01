@@ -11,42 +11,40 @@
 #include "../SoundHandler.h"
 #include "BandResampler.h"
 #include "ResamplerProvider.h"
+#include "Vector2D.h"
 
 namespace rxtd::audio_analyzer {
 	class WeightedBlur : public ResamplerProvider {
 	public:
 		struct Params {
-		private:
-			friend WeightedBlur;
-
 			istring sourceId;
 
-			double radiusMultiplier;
+			double radiusMultiplier{ };
 
-			double minRadius;
-			double maxRadius;
-			double minRadiusAdaptation;
-			double maxRadiusAdaptation;
+			double minRadius{ };
+			double maxRadius{ };
+			double minRadiusAdaptation{ };
+			double maxRadiusAdaptation{ };
 
-			double minWeight;
-		};
+			double minWeight{ };
 
-	private:
-		struct CascadeInfo {
-			struct BandInfo {
-				float weight{ };
-				float blurSigma{ };
-			};
+			friend bool operator==(const Params& lhs, const Params& rhs) {
+				return lhs.sourceId == rhs.sourceId
+					&& lhs.radiusMultiplier == rhs.radiusMultiplier
+					&& lhs.minRadius == rhs.minRadius
+					&& lhs.maxRadius == rhs.maxRadius
+					&& lhs.minRadiusAdaptation == rhs.minRadiusAdaptation
+					&& lhs.maxRadiusAdaptation == rhs.maxRadiusAdaptation
+					&& lhs.minWeight == rhs.minWeight;
+			}
 
-			std::vector<float> magnitudes;
-			std::vector<BandInfo> bandsInfo;
-
-			void setSize(index size) {
-				magnitudes.resize(size);
-				bandsInfo.resize(size);
+			friend bool operator!=(const Params& lhs, const Params& rhs) {
+				return !(lhs == rhs);
 			}
 		};
 
+	private:
+		// todo unite with uniform blur GCM
 		class GaussianCoefficientsManager {
 			// radius -> coefs vector
 			std::unordered_map<index, std::vector<double>> blurCoefficients;
@@ -55,9 +53,30 @@ namespace rxtd::audio_analyzer {
 			index maxRadius{ };
 
 		public:
-			const std::vector<double>& forSigma(double sigma);
-			const std::vector<double>& forMaximumRadius();
-			void setRadiusBounds(index min, index max);
+			array_view<double> forSigma(double sigma) {
+				const auto radius = std::clamp<index>(std::lround(sigma * 3.0), minRadius, maxRadius);
+
+				auto& vec = blurCoefficients[radius];
+				if (vec.empty()) {
+					vec = generateGaussianKernel(radius);
+				}
+
+				return vec;
+			}
+
+			array_view<double> forMaximumRadius() {
+				auto& vec = blurCoefficients[maxRadius];
+				if (vec.empty()) {
+					vec = generateGaussianKernel(maxRadius);
+				}
+
+				return vec;
+			}
+
+			void setRadiusBounds(index min, index max) {
+				minRadius = min;
+				maxRadius = max;
+			}
 
 		private:
 			static std::vector<double> generateGaussianKernel(index radius);
@@ -67,43 +86,49 @@ namespace rxtd::audio_analyzer {
 
 		Params params{ };
 
-		index samplesPerSec{ };
-
-		SoundHandler* source = nullptr;
 		BandResampler* resamplerPtr{ };
 
-		std::vector<std::vector<float>> blurredValues;
+		utils::Vector2D<float> values;
 
 		bool changed = true;
 
 		std::vector<LayerData> layers;
 
 	public:
+		bool parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr) const override;
 
-		static std::optional<Params> parseParams(const OptionMap& optionMap, Logger& cl);
+		const Params& getParams() const {
+			return params;
+		}
 
-		void setParams(const Params& params, Channel channel);
-
-		void setSamplesPerSec(index samplesPerSec) override;
-		void reset() override;
-
-		void _process(const DataSupplier& dataSupplier) override;
-		void _finish() override;
-
-		LayeredData getData() const override {
-			return layers;
+		void setParams(const Params& value) {
+			params = value;
 		}
 
 	protected:
 		[[nodiscard]]
-		isview getSourceName() const override {
+		isview vGetSourceName() const override {
 			return params.sourceId;
 		}
 
 		[[nodiscard]]
-		bool vCheckSources(Logger& cl) override;
+		bool vFinishLinking(Logger& cl) override;
+
+	public:
+		void vReset() override;
+		void vProcess(const DataSupplier& dataSupplier) override;
+		void vFinish() override;
+
+		LayeredData vGetData() const override {
+			return layers;
+		}
+
+		[[nodiscard]]
+		DataSize getDataSize() const override {
+			return { values.getBuffersCount(), values.getBufferSize() };
+		}
 
 	private:
-		void blurData();
+		void blurCascade(array_view<float> source, array_view<float> weights, array_span<float> dest);
 	};
 }

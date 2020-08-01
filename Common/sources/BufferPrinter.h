@@ -214,41 +214,45 @@ namespace rxtd::utils {
 				return;
 			}
 
-			if (current == L'{') {
-				stream << sview(begin, formatString - begin);
-
+			if (current != L'{') {
 				formatString++;
-				begin = formatString;
-				auto end = begin;
-				while (true) {
-					current = formatString[0];
+				continue;
+			}
 
-					if (current == L'\0') {
-						stream << L'{';
-						stream << begin;
+			// current == L'{'
+			stream << sview(begin, formatString - begin);
 
-						if (!skipUnlistedArgs) {
-							writeUnlisted(t, args...);
-						}
-						return;
+			formatString++;
+			begin = formatString;
+			auto end = begin;
+			while (true) {
+				current = formatString[0];
+
+				if (current == L'\0') {
+					stream << L'{';
+					stream << begin;
+
+					if (!skipUnlistedArgs) {
+						writeUnlisted(t, args...);
 					}
-
-					if (current == L'}') {
-						end = formatString;
-						formatString++;
-						break;
-					}
-					formatString++;
+					return;
 				}
 
-				const auto view = sview(begin, end - begin);
-
-				if (view == L"!"sv) {
-					stream << L'{';
-				} else {
-					option = view;
+				if (current == L'}') {
+					end = formatString;
+					formatString++;
 					break;
 				}
+				formatString++;
+			}
+
+			const auto view = sview(begin, end - begin);
+
+			if (view == L"!"sv) {
+				stream << L'{';
+			} else {
+				option = view;
+				break;
 			}
 
 			formatString++;

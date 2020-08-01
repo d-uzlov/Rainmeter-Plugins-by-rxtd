@@ -7,6 +7,24 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
+/*
+ Handler life cycle
+ First of all, handler should parse its parameters. It happens in the static method #parseParams().
+ Then the main life cycle happens, which consists of several phases.
+ 1. Function #patchMe function is called.
+		Handler should assume that any external resources that it could potentially have links to don't exist anymore
+ 2. Function #vFinishLinking is called
+		At this point:
+			- Channel and sample rate are known, and handler may use these values.
+			- Source is also known and either valid or doesn't exist.
+			  If handler relies on source, then it should check it
+		Handler is recalculating data that depend on values above.
+		If something fails, handler is invalidated until next params change
+ 3. vProcess happens in the loop
+ 4. Data is accessed from other handlers and child measures.
+		Before data is accessed vFinish method is called. // todo remove
+ */
+
 #pragma once
 #include "../DataSupplier.h"
 #include "StringUtils.h"
@@ -18,37 +36,86 @@ namespace rxtd::audio_analyzer {
 	class SoundHandler;
 
 	class HandlerFinder {
-		// NOLINT(cppcoreguidelines-special-member-functions)
 	public:
 		virtual ~HandlerFinder() = default;
 
-		template <typename T = SoundHandler>
 		[[nodiscard]]
-		T* getHandler(isview id) const {
-			// TODO remove template?
-			return dynamic_cast<const T*>(getHandlerRaw(id));
-		}
+		virtual SoundHandler* getHandler(isview id) const = 0;
+	};
 
-	protected:
-		[[nodiscard]]
-		virtual SoundHandler* getHandlerRaw(isview id) const = 0;
+	class HandlerPatcher {
+	public:
+		virtual ~HandlerPatcher() = default;
+
+		// takes old pointer and returns new
+		//	- if returned pointer is different from the old, then new object was created,
+		//		and the caller must release resources associated with old pointer
+		//		
+		//	- if returned pointer is the same, then the old object was reused
+		virtual SoundHandler* patch(SoundHandler* handlerPtr) const = 0;
 	};
 
 	struct LayerData {
 		array_view<float> values;
-		uint32_t id{ };
+		uint32_t id{ }; // todo what if source changed and new source has the same id but different data?
 	};
 
 	using LayeredData = array_view<LayerData>;
 
 	class SoundHandler {
+	public:
+		struct DataSize {
+			index layersCount{ };
+			index valuesCount{ };
+		};
+
 	protected:
 		using OptionMap = utils::OptionMap;
 		using Rainmeter = utils::Rainmeter;
 		using Logger = utils::Rainmeter::Logger;
 
+	public:
+		template <typename HandlerType>
+		class HandlerPatcherImpl : public HandlerPatcher {
+			typename HandlerType::Params params{ };
+			bool valid = false;
+
+		public:
+			HandlerPatcherImpl(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain) {
+				HandlerType temp1{ };
+				SoundHandler& temp2 = temp1;
+				valid = temp2.parseParams(optionMap, cl, rain, &params);
+			}
+
+			[[nodiscard]]
+			bool isValid() const {
+				return valid;
+			}
+
+			virtual ~HandlerPatcherImpl() = default;
+
+		private:
+			friend SoundHandler;
+
+			[[nodiscard]]
+			SoundHandler* patch(SoundHandler* handlerPtr) const override {
+				auto ptr = dynamic_cast<HandlerType*>(handlerPtr);
+				if (ptr == nullptr) {
+					ptr = new HandlerType();
+				}
+
+				if (ptr->getParams() != params) {
+					ptr->setParams(params);
+				}
+
+				return ptr;
+			}
+		};
+
 	private:
-		SoundHandler* source = nullptr;
+		SoundHandler* _sourceHandler = nullptr;
+		index _sampleRate{ };
+		Channel _channel{ };
 		mutable bool valid = true;
 
 	public:
@@ -61,31 +128,50 @@ namespace rxtd::audio_analyzer {
 
 		virtual ~SoundHandler() = default;
 
-		virtual void setSamplesPerSec(index value) = 0;
-		virtual void reset() = 0;
+	private:
+		template <typename>
+		friend class HandlerPatcherImpl;
 
-		void prePatch() {
-			// this function exists because there is no united #patch() function: patchers are unique to handler type
-			setValid(true);
+		// must return true if all options are valid, false otherwise
+		virtual bool parseParams(
+			const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr
+		) const = 0;
+
+	public:
+		[[nodiscard]]
+		static SoundHandler* patch(
+			SoundHandler* old, HandlerPatcher& patcher,
+			Channel channel, index sampleRate,
+			HandlerFinder& hf,
+			Logger& cl
+		) {
+			auto& result = *patcher.patch(old);
+			result._sourceHandler = hf.getHandler(result.vGetSourceName());
+			result._sampleRate = sampleRate;
+			result._channel = channel;
+
+			const bool success = result.vFinishLinking(cl);
+			result.setValid(success);
+			return &result;
 		}
 
-		void linkSources(HandlerFinder& hf, Logger& cl) {
-			if (!isValid()) {
-				return;
-			}
+		/*
+		 * All derived classes should have methods with following signatures
+		 * I can't declare these as pure virtual functions
+		 * because Params class is defined in derived class,
+		 * and C++ doesn't support template virtual functions
 
-			source = hf.getHandler(getSourceName());
-
-			const bool success = vCheckSources(cl);
-			setValid(success);
-		}
+		const Params& getParams() const;
+		void patchMe(const Params& _params);
+		
+		 */
 
 		void process(const DataSupplier& dataSupplier) {
 			if (!isValid()) {
 				return;
 			}
 
-			_process(dataSupplier);
+			vProcess(dataSupplier);
 		}
 
 		void finish() {
@@ -93,7 +179,7 @@ namespace rxtd::audio_analyzer {
 				return;
 			}
 
-			_finish();
+			vFinish();
 		}
 
 		[[nodiscard]]
@@ -101,20 +187,26 @@ namespace rxtd::audio_analyzer {
 			return valid;
 		}
 
+		virtual void vReset() = 0;
+
 		[[nodiscard]]
-		virtual LayeredData getData() const = 0;
+		virtual LayeredData vGetData() const = 0;
 
 		[[nodiscard]]
 		virtual index getStartingLayer() const {
+			// todo remove
 			return 0;
 		}
 
+		[[nodiscard]]
+		virtual DataSize getDataSize() const = 0;
+
 		// return true if such prop exists, false otherwise
-		virtual bool getProp(const isview& prop, utils::BufferPrinter& printer) const {
+		virtual bool vGetProp(const isview& prop, utils::BufferPrinter& printer) const {
 			return false;
 		}
 
-		virtual bool isStandalone() {
+		virtual bool vIsStandalone() {
 			return false;
 		}
 
@@ -123,29 +215,43 @@ namespace rxtd::audio_analyzer {
 			valid = value;
 		}
 
+		[[nodiscard]]
 		SoundHandler* getSource() const {
-			return source;
+			return _sourceHandler;
 		}
 
 		[[nodiscard]]
-		virtual isview getSourceName() const = 0;
+		index getSampleRate() const {
+			return _sampleRate;
+		}
+
+		[[nodiscard]]
+		Channel getChannel() const {
+			return _channel;
+		}
+
+		[[nodiscard]]
+		virtual isview vGetSourceName() const = 0;
 
 		// method should return false if check failed, true otherwise
 		[[nodiscard]]
-		virtual bool vCheckSources(Logger& cl) = 0;
+		virtual bool vFinishLinking(Logger& cl) = 0;
 
-		virtual void _process(const DataSupplier& dataSupplier) = 0;
+		virtual void vProcess(const DataSupplier& dataSupplier) = 0;
 
 		// Method can be called several times in a row, handler should check for changes for optimal performance
-		virtual void _finish() {
+		virtual void vFinish() {
 		}
 
 		static index legacy_parseIndexProp(const isview& request, const isview& propName, index endBound) {
 			return legacy_parseIndexProp(request, propName, 0, endBound);
 		}
 
-		static index legacy_parseIndexProp(const isview& request, const isview& propName, index minBound,
-		                                   index endBound) {
+		static index legacy_parseIndexProp(
+			const isview& request,
+			const isview& propName,
+			index minBound, index endBound
+		) {
 			const auto indexPos = request.find(propName);
 
 			if (indexPos != 0) {

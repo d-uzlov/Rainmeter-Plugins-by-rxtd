@@ -8,10 +8,7 @@
  */
 
 #pragma once
-#include <utility>
 #include "SoundHandler.h"
-#include "option-parser/OptionMap.h"
-#include "RainmeterWrappers.h"
 #include "image-utils/WaveFormDrawer.h"
 #include "image-utils/ImageWriteHelper.h"
 #include "../../audio-utils/CustomizableValueTransformer.h"
@@ -24,9 +21,6 @@ namespace rxtd::audio_analyzer {
 
 	public:
 		struct Params {
-		private:
-			friend WaveForm;
-
 			double resolution{ };
 			index width{ };
 			index height{ };
@@ -69,14 +63,25 @@ namespace rxtd::audio_analyzer {
 			WaveformValueTransformer(CVT cvt) : cvt(std::move(cvt)) {
 			}
 
-			double apply(double value);
+			double apply(double value) {
+				const bool positive = value > 0;
+				value = cvt.apply(float(std::abs(value)));
 
-			void updateTransformations(index samplesPerSec, index blockSize);
+				if (!positive) {
+					value *= -1;
+				}
 
-			void reset();
+				return value;
+			}
+
+			void updateTransformations(index sampleRate, index blockSize) {
+				cvt.setParams(sampleRate, blockSize);
+			}
+
+			void reset() {
+				cvt.resetState();
+			}
 		};
-
-		index samplesPerSec{ };
 
 		Params params;
 
@@ -97,40 +102,44 @@ namespace rxtd::audio_analyzer {
 		string filepath{ };
 
 	public:
-		void setParams(const Params& _params, Channel channel);
+		bool parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr) const override;
 
-		static std::optional<Params> parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain);
-
-		void setSamplesPerSec(index samplesPerSec) override;
-		void reset() override;
-
-		void _process(const DataSupplier& dataSupplier) override;
-		void _finish() override;
-
-		LayeredData getData() const override {
-			return { };
+		const Params& getParams() const {
+			return params;
 		}
 
-		bool getProp(const isview& prop, utils::BufferPrinter& printer) const override;
-
-		bool isStandalone() override {
-			return true;
-		}
+		void setParams(const Params& value);
 
 	protected:
 		[[nodiscard]]
-		isview getSourceName() const override {
+		isview vGetSourceName() const override {
 			return { };
 		}
 
 		[[nodiscard]]
-		bool vCheckSources(Logger& cl) override {
+		bool vFinishLinking(Logger& cl) override;
+
+	public:
+		void vReset() override;
+		void vProcess(const DataSupplier& dataSupplier) override;
+		void vFinish() override;
+
+		LayeredData vGetData() const override {
+			return { };
+		}
+
+		[[nodiscard]]
+		DataSize getDataSize() const override {
+			return { };
+		}
+
+		bool vGetProp(const isview& prop, utils::BufferPrinter& printer) const override;
+
+		bool vIsStandalone() override {
 			return true;
 		}
 
 	private:
-		void updateParams();
-
 		void pushStrip(double min, double max);
 	};
 }

@@ -16,27 +16,37 @@
 #include "option-parser/OptionList.h"
 #include "LinearInterpolator.h"
 
-#include "undef.h"
-
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-std::optional<Spectrogram::Params>
-Spectrogram::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain) {
-	Params params;
+bool Spectrogram::vGetProp(const isview& prop, utils::BufferPrinter& printer) const {
+	if (prop == L"file") {
+		printer.print(filepath);
+		return true;
+	}
+	if (prop == L"block size") {
+		printer.print(blockSize);
+		return true;
+	}
 
+	return false;
+}
+
+bool Spectrogram::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr) const {
+	auto& params = *static_cast<Params*>(paramsPtr);
+	
 	params.sourceName = optionMap.get(L"source"sv).asIString();
 	if (params.sourceName.empty()) {
 		cl.error(L"source not found");
-		return std::nullopt;
+		return {};
 	}
 
 	params.length = optionMap.get(L"length"sv).asInt(100);
 	if (params.length < 2) {
 		cl.error(L"length must be >= 2 but {} found", params.length);
-		return std::nullopt;
+		return {};
 	}
 	if (params.length >= 1500) {
 		cl.warning(L"dangerously large length {}", params.length);
@@ -70,7 +80,7 @@ Spectrogram::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter
 
 			if (value <= prevValue) {
 				cl.error(L"colors: values {} and {}: values must be increasing", prevValue, value);
-				return std::nullopt;
+				return {};
 			}
 			if (value / prevValue < 1.001f && value - prevValue < 0.001f) {
 				cl.error(L"colors: values {} and {} are too close, discarding second one", prevValue, value);
@@ -108,19 +118,11 @@ Spectrogram::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter
 
 	params.stationary = optionMap.get(L"stationary").asBool(false);
 
-	return params;
+	return true;
 }
 
-void Spectrogram::setParams(const Params& _params, Channel channel) {
-	if (params == _params) {
-		return;
-	}
-
-	params = _params;
-
-	filepath = params.prefix;
-	filepath += channel.technicalName();
-	filepath += L".bmp"sv;
+void Spectrogram::setParams(const Params& value) {
+	params = value;
 
 	image.setBackground(params.colors[0].color);
 	image.setWidth(params.length);
@@ -129,51 +131,28 @@ void Spectrogram::setParams(const Params& _params, Channel channel) {
 	sifh.setBorderSize(params.borderSize);
 	sifh.setColors(params.colors[0].color, params.borderColor);
 	sifh.setFading(params.fading);
-
-	updateParams();
 }
 
-void Spectrogram::setSamplesPerSec(index value) {
-	if (samplesPerSec == value) {
-		return;
-	}
-
-	samplesPerSec = value;
-
-	updateParams();
-}
-
-bool Spectrogram::getProp(const isview& prop, utils::BufferPrinter& printer) const {
-	if (prop == L"file") {
-		printer.print(filepath);
-		return true;
-	}
-	if (prop == L"block size") {
-		printer.print(blockSize);
-		return true;
-	}
-
-	return false;
-}
-
-bool Spectrogram::vCheckSources(Logger& cl) {
+bool Spectrogram::vFinishLinking(Logger& cl) {
 	const auto source = getSource();
 	if (source == nullptr) {
 		cl.error(L"source is not found");
 		return false;
 	}
 
+	filepath = params.prefix;
+	filepath += getChannel().technicalName();
+	filepath += L".bmp"sv;
+
+	blockSize = index(getSampleRate() * params.resolution);
+
 	return true;
 }
 
-void Spectrogram::updateParams() {
-	blockSize = index(samplesPerSec * params.resolution);
-}
-
 void Spectrogram::fillStrip(array_view<float> data, array_span<utils::IntColor> buffer) const {
-	utils::LinearInterpolatorF interpolator{ params.colorMinValue, params.colorMaxValue, 0.0, 1.0 };
-	utils::IntColor baseColor = params.colors[0].color;
-	utils::IntColor maxColor = params.colors[1].color;
+	const utils::LinearInterpolatorF interpolator{ params.colorMinValue, params.colorMaxValue, 0.0, 1.0 };
+	const utils::IntColor baseColor = params.colors[0].color;
+	const utils::IntColor maxColor = params.colors[1].color;
 
 	for (index i = 0; i < index(buffer.size()); ++i) {
 		auto value = interpolator.toValue(data[i]);
@@ -185,7 +164,7 @@ void Spectrogram::fillStrip(array_view<float> data, array_span<utils::IntColor> 
 }
 
 void Spectrogram::fillStripMulticolor(array_view<float> data, array_span<utils::IntColor> buffer) const {
-	for (index i = 0; i < index(buffer.size()); ++i) {
+	for (index i = 0; i < buffer.size(); ++i) {
 		const auto value = std::clamp(data[i], params.colorMinValue, params.colorMaxValue);
 
 		index lowColorIndex = 0;
@@ -209,7 +188,7 @@ void Spectrogram::fillStripMulticolor(array_view<float> data, array_span<utils::
 	}
 }
 
-void Spectrogram::_process(const DataSupplier& dataSupplier) {
+void Spectrogram::vProcess(const DataSupplier& dataSupplier) {
 	if (blockSize <= 0) {
 		return;
 	}
@@ -221,21 +200,18 @@ void Spectrogram::_process(const DataSupplier& dataSupplier) {
 		return;
 	}
 
-	const auto source = getSource();
-	source->finish();
+	auto& source = *getSource();
 
-	const auto layers = source->getData();
-	if (layers.empty()) {
-		setValid(false);
-		return;
-	}
+	source.finish();
+	const auto sd = source.vGetData();
 
-	const auto data = layers[0].values;
+	// todo check id
+	const auto data = sd[0].values;
 	const auto dataSize = data.size();
-	if (dataSize <= 0) {
-		setValid(false);
-		return;
-	}
+	// if (dataSize <= 0) { // todo move this check to linking
+	// 	setValid(false);
+	// 	return;
+	// }
 
 	image.setHeight(dataSize);
 	stripBuffer.resize(dataSize);
@@ -267,7 +243,7 @@ void Spectrogram::_process(const DataSupplier& dataSupplier) {
 	}
 }
 
-void Spectrogram::_finish() {
+void Spectrogram::vFinish() {
 	if (!changed) {
 		return;
 	}

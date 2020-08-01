@@ -48,6 +48,6 @@ namespace rxtd::audio_analyzer {
 
 	protected:
 		[[nodiscard]]
-		SoundHandler* getHandlerRaw(isview id) const override;
+		SoundHandler* getHandler(isview id) const override;
 	};
 }

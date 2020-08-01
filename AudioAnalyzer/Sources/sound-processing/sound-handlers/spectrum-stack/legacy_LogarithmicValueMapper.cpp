@@ -16,91 +16,89 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-std::optional<legacy_LogarithmicValueMapper::Params>
-legacy_LogarithmicValueMapper::parseParams(const OptionMap& optionMap, Logger& cl) {
-	Params params;
+bool legacy_LogarithmicValueMapper::parseParams(
+	const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr
+) const {
+	auto& params = *static_cast<Params*>(paramsPtr);
+
 	params.sourceId = optionMap.get(L"source"sv).asIString();
 	if (params.sourceId.empty()) {
 		cl.error(L"source not found");
-		return std::nullopt;
+		return {};
 	}
 
-	params.sensitivity = std::clamp<double>(
-		optionMap.get(L"sensitivity"sv).asFloat(35.0),
-		std::numeric_limits<float>::epsilon(),
-		1000.0
-	);
-	params.offset = optionMap.get(L"offset"sv).asFloat(0.0);
+	params.sensitivity = optionMap.get(L"sensitivity"sv).asFloat(35.0);
+	params.sensitivity = std::clamp<double>(params.sensitivity, std::numeric_limits<float>::epsilon(), 1000.0);
+	params.offset = optionMap.get(L"offset"sv).asFloatF(0.0);
 
-	return params;
+	return true;
 }
 
-void legacy_LogarithmicValueMapper::setParams(const Params& _params, Channel channel) {
-	params = _params;
+void legacy_LogarithmicValueMapper::setParams(const Params& value) {
+	params = value;
 
-	logNormalization = 20.0 / params.sensitivity;
+	logNormalization = float(20.0 / params.sensitivity);
 }
 
-void legacy_LogarithmicValueMapper::_process(const DataSupplier& dataSupplier) {
-	changed = true;
-}
-
-void legacy_LogarithmicValueMapper::_finish() {
-	if (changed) {
-		source->finish();
-
-		updateValues();
-		changed = false;
-	}
-}
-
-void legacy_LogarithmicValueMapper::setSamplesPerSec(index samplesPerSec) {
-	this->samplesPerSec = samplesPerSec;
-}
-
-void legacy_LogarithmicValueMapper::reset() {
-	changed = true;
-}
-
-bool legacy_LogarithmicValueMapper::vCheckSources(Logger& cl) {
-	source = getSource();
-	if (source == nullptr) {
+bool legacy_LogarithmicValueMapper::vFinishLinking(Logger& cl) {
+	sourcePtr = getSource();
+	if (sourcePtr == nullptr) {
 		cl.error(L"source is not found");
 		return false;
+	}
+
+	const auto [layersCount, valuesCount] = sourcePtr->getDataSize();
+	values.setBuffersCount(layersCount);
+	values.setBufferSize(valuesCount);
+
+	layers.resize(layersCount);
+	for (index i = 0; i < layersCount; ++i) {
+		layers[i].values = values[i];
 	}
 
 	return true;
 }
 
-void legacy_LogarithmicValueMapper::updateValues() {
-	transformToLog(*source);
+void legacy_LogarithmicValueMapper::vProcess(const DataSupplier& dataSupplier) {
+	changed = true;
 }
 
-void legacy_LogarithmicValueMapper::transformToLog(SoundHandler& source) {
-	constexpr double log10inverse = 0.30102999566398119521; // 1.0 / log2(10)
+void legacy_LogarithmicValueMapper::vFinish() {
+	if (!changed) {
+		return;
+	}
 
-	const auto sourceData = source.getData();
-	const auto layersCount = sourceData.size();
-	resultValues.resize(layersCount); // TODO use my vector2D ?
+	changed = false;
+
+	constexpr float log10inverse = 0.30102999566398119521; // 1.0 / log2(10)
+
+	auto& source = *sourcePtr;
+	source.finish();
+	const auto [layersCount, valuesCount] = sourcePtr->getDataSize();
+
+	const auto sourceData = source.vGetData();
 
 	for (index layer = 0; layer < layersCount; ++layer) {
-		const auto values = sourceData[layer].values;
+		// const auto values = sourceData[layer].values;
+		auto sd = sourceData[layer];
 
-		resultValues[layer].resize(values.size()); // TODO use my vector2D ?
+		if (sd.id == layers[layer].id) {
+			continue;
+		}
 
-		for (index i = 0; i < values.size(); ++i) {
-			double value = values[i];
+		layers[layer].id = sd.id;
 
-			value = utils::MyMath::fastLog2(float(value)) * log10inverse;
-			value = value * logNormalization + 1.0;
-			value += params.offset;
-			resultValues[layer][i] = float(value);
+		auto sourceValues = sd.values;
+		auto resultValues = values[layer];
+
+		for (index i = 0; i < valuesCount; ++i) {
+			float value = utils::MyMath::fastLog2(sourceValues[i]) * log10inverse;
+			value = value * logNormalization + 1.0f + params.offset;
+			resultValues[i] = float(value);
 		}
 	}
+}
 
-	layers.resize(layersCount);
-	for (index i = 0; i < layersCount; ++i) {
-		layers[i].id++;
-		layers[i].values = resultValues[i];
-	}
+void legacy_LogarithmicValueMapper::vReset() {
+	changed = true;
 }

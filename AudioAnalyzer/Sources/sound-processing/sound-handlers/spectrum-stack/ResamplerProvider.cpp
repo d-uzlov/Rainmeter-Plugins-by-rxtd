@@ -18,7 +18,6 @@ using namespace audio_analyzer;
 BandResampler* ResamplerProvider::getResampler() {
 	const auto source = getSource();
 	if (source == nullptr) {
-		setValid(false); // todo is this even needed?
 		return nullptr;
 	}
 

@@ -75,8 +75,6 @@ namespace rxtd::audio_analyzer {
 	private:
 		Params params;
 
-		index samplesPerSec{ };
-
 		index blockSize{ };
 
 		std::vector<utils::IntColor> stripBuffer{ };
@@ -90,39 +88,46 @@ namespace rxtd::audio_analyzer {
 		string filepath{ };
 
 	public:
-		void setParams(const Params& _params, Channel channel);
+		bool parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr) const override;
 
-		static std::optional<Params> parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain);
-
-		void setSamplesPerSec(index value) override;
-
-		void reset() override {
+		const Params& getParams() const {
+			return params;
 		}
 
-		void _process(const DataSupplier& dataSupplier) override;
-		void _finish() override;
-
-		LayeredData getData() const override {
-			return { };
-		}
-
-		bool getProp(const isview& prop, utils::BufferPrinter& printer) const override;
-
-		bool isStandalone() override {
-			return true;
-		}
+		void setParams(const Params& value);
 
 	protected:
 		[[nodiscard]]
-		isview getSourceName() const override {
+		isview vGetSourceName() const override {
 			return params.sourceName;
 		}
 
 		[[nodiscard]]
-		bool vCheckSources(Logger& cl) override;
+		bool vFinishLinking(Logger& cl) override;
+
+	public:
+		void vReset() override {
+		}
+
+		void vProcess(const DataSupplier& dataSupplier) override;
+		void vFinish() override;
+
+		LayeredData vGetData() const override {
+			return { };
+		}
+
+		[[nodiscard]]
+		DataSize getDataSize() const override {
+			return { 0, 0 };
+		}
+
+		bool vGetProp(const isview& prop, utils::BufferPrinter& printer) const override;
+
+		bool vIsStandalone() override {
+			return true;
+		}
 
 	private:
-		void updateParams();
 		void fillStrip(array_view<float> data, array_span<utils::IntColor> buffer) const;
 		void fillStripMulticolor(array_view<float> data, array_span<utils::IntColor> buffer) const;
 	};

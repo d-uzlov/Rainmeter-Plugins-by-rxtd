@@ -24,12 +24,10 @@ namespace rxtd::audio_analyzer {
 		using Rainmeter = utils::Rainmeter;
 
 	public:
-		using HandlerPatcher = std::function<SoundHandler*(SoundHandler*, Channel)>;
-
 		struct HandlerInfo {
 			string rawDescription;
 			string rawDescription2;
-			HandlerPatcher patcher;
+			std::shared_ptr<HandlerPatcher> patcher;
 		};
 
 		struct HandlerPatcherInfo {
@@ -99,52 +97,21 @@ namespace rxtd::audio_analyzer {
 		bool parseHandler(sview name, const HandlerPatcherInfo& prevHandlers, HandlerInfo& handler) const;
 
 		[[nodiscard]]
-		HandlerPatcher getHandlerPatcher(
+		std::shared_ptr<HandlerPatcher> getHandlerPatcher(
 			const utils::OptionMap& optionMap,
 			Logger& cl,
 			const HandlerPatcherInfo& prevHandlers
 		) const;
 
+		template<typename T>
+		[[nodiscard]]
+		std::shared_ptr<HandlerPatcher> createPatcher(
+			const utils::OptionMap& optionMap,
+			Logger& cl
+		) const {
+			return std::make_shared<SoundHandler::HandlerPatcherImpl<T>>(optionMap, cl, rain);
+		}
+		
 		void readRawDescription2(isview type, const utils::OptionMap& optionMap, string& rawDescription2) const;
-
-		template <typename T>
-		[[nodiscard]]
-		HandlerPatcher parseHandlerT(const utils::OptionMap& optionMap, Logger& cl) const {
-			auto paramsOpt = T::parseParams(optionMap, cl);
-			if (!paramsOpt.has_value()) {
-				return nullptr;
-			}
-
-			return [params = paramsOpt.value()](SoundHandler* old, Channel channel) {
-				auto* handler = dynamic_cast<T*>(old);
-				if (handler == nullptr) {
-					handler = new T();
-				}
-
-				handler->setParams(params, channel);
-
-				return handler;
-			};
-		}
-
-		template <typename T>
-		[[nodiscard]]
-		HandlerPatcher parseHandlerT2(const utils::OptionMap& optionMap, Logger& cl) const {
-			auto paramsOpt = T::parseParams(optionMap, cl, rain);
-			if (!paramsOpt.has_value()) {
-				return nullptr;
-			}
-
-			return [params = paramsOpt.value()](SoundHandler* old, Channel channel) {
-				auto* handler = dynamic_cast<T*>(old);
-				if (handler == nullptr) {
-					handler = new T();
-				}
-
-				handler->setParams(params, channel);
-
-				return handler;
-			};
-		}
 	};
 }

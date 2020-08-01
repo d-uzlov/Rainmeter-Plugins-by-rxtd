@@ -10,37 +10,10 @@
 #include "UniformBlur.h"
 #include "option-parser/OptionMap.h"
 
-#include "undef.h"
-
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
-
-std::optional<UniformBlur::Params> UniformBlur::parseParams(const OptionMap& optionMap, Logger& cl) {
-	Params params;
-	params.sourceId = optionMap.get(L"source"sv).asIString();
-	if (params.sourceId.empty()) {
-		cl.error(L"source not found");
-		return std::nullopt;
-	}
-
-	//                                                        ?? ↓↓ looks best ?? at 0.25 ↓↓ ?? // TODO
-	params.blurRadius = std::max<double>(optionMap.get(L"Radius"sv).asFloat(1.0) * 0.25, 0.0);
-	params.blurRadiusAdaptation = std::max<double>(optionMap.get(L"RadiusAdaptation"sv).asFloat(2.0), 0.0);
-
-	return params;
-}
-
-const std::vector<double>& UniformBlur::GaussianCoefficientsManager::forRadius(index radius) {
-	auto& vec = blurCoefficients[radius];
-	if (!vec.empty()) {
-		return vec;
-	}
-
-	vec = generateGaussianKernel(radius);
-	return vec;
-}
 
 std::vector<double> UniformBlur::GaussianCoefficientsManager::generateGaussianKernel(index radius) {
 
@@ -50,7 +23,7 @@ std::vector<double> UniformBlur::GaussianCoefficientsManager::generateGaussianKe
 	const double restoredSigma = radius * (1.0 / 3.0);
 	const double powerFactor = 1.0 / (2.0 * restoredSigma * restoredSigma);
 
-	index r = -radius;
+	double r = -double(radius);
 	double sum = 0.0;
 	for (double& k : kernel) {
 		k = std::exp(-r * r * powerFactor);
@@ -65,97 +38,110 @@ std::vector<double> UniformBlur::GaussianCoefficientsManager::generateGaussianKe
 	return kernel;
 }
 
-void UniformBlur::setParams(const Params& _params, Channel channel) {
-	params = _params;
-}
+bool UniformBlur::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr) const {
+	auto& params = *static_cast<Params*>(paramsPtr);
 
-void UniformBlur::_process(const DataSupplier& dataSupplier) {
-	changed = true;
-}
-
-void UniformBlur::_finish() {
-	if (!changed) {
-		return;
+	params.sourceId = optionMap.get(L"source"sv).asIString();
+	if (params.sourceId.empty()) {
+		cl.error(L"source not found");
+		return { };
 	}
 
-	source->finish();
-	blurData(*source);
-	changed = false;
+	//                                                        ?? ↓↓ looks best ?? at 0.25 ↓↓ ?? // TODO
+	params.blurRadius = std::max<double>(optionMap.get(L"Radius"sv).asFloat(1.0) * 0.25, 0.0);
+	params.blurRadiusAdaptation = std::max<double>(optionMap.get(L"RadiusAdaptation"sv).asFloat(2.0), 0.0);
+
+	return true;
 }
 
-void UniformBlur::setSamplesPerSec(index samplesPerSec) {
-	this->samplesPerSec = samplesPerSec;
-}
-
-void UniformBlur::reset() {
-	changed = true;
-}
-
-bool UniformBlur::vCheckSources(Logger& cl) {
-	source = getSource();
+bool UniformBlur::vFinishLinking(Logger& cl) {
+	const auto source = getSource();
 	if (source == nullptr) {
 		cl.error(L"source is not found");
 		return false;
 	}
 
+	const auto [layersCount, valuesCount] = source->getDataSize();
+
+	values.setBuffersCount(layersCount);
+	values.setBufferSize(valuesCount);
+
+	layers.resize(layersCount);
+	for (index i = 0; i < layersCount; ++i) {
+		layers[i].id = 0;
+		layers[i].values = values[i];
+	}
+
 	return true;
 }
 
-void UniformBlur::blurData(const SoundHandler& source) {
-	const auto sourceData = source.getData();
-	const auto layersCount = sourceData.size();
-	
-	blurredValues.resize(layersCount);
+void UniformBlur::vReset() {
+	values.init(0.0f);
+}
+
+void UniformBlur::vProcess(const DataSupplier& dataSupplier) {
+	changed = true;
+}
+
+void UniformBlur::vFinish() {
+	if (!changed) {
+		return;
+	}
+	changed = false;
+
+	auto& source = *getSource();
+	source.finish();
+	const auto sourceData = source.vGetData();
 
 	double theoreticalRadius = params.blurRadius * std::pow(params.blurRadiusAdaptation, source.getStartingLayer());
 
-	for (index cascade = 0; cascade < layersCount; ++cascade) {
-		const auto cascadeMagnitudes = sourceData[cascade].values;
-		const auto bandsCount = cascadeMagnitudes.size();
+	const index cascadesCount = sourceData.size();
+	for (index i = 0; i < cascadesCount; ++i) {
+		const auto cascadeSource = sourceData[i];
+		auto cascadeResult = values[i];
 
-		auto& cascadeValues = blurredValues[cascade];
-		cascadeValues.resize(bandsCount);
-
-		const index radius = std::llround(theoreticalRadius);
-		if (radius < 1) {
-			std::copy(cascadeMagnitudes.begin(), cascadeMagnitudes.end(), cascadeValues.begin());
-		} else {
-			auto& kernel = gcm.forRadius(radius);
-
-			for (index band = 0; band < bandsCount; ++band) {
-
-				index bandStartIndex = band - radius;
-				index kernelStartIndex = 0;
-
-				if (bandStartIndex < 0) {
-					kernelStartIndex = -bandStartIndex;
-					bandStartIndex = 0;
-				}
-
-				double result = 0.0;
-				index kernelIndex = kernelStartIndex;
-				index bandIndex = bandStartIndex;
-
-				while (true) {
-					if (bandIndex >= bandsCount || kernelIndex >= index(kernel.size())) {
-						break;
-					}
-					result += kernel[kernelIndex] * cascadeMagnitudes[bandIndex];
-
-					kernelIndex++;
-					bandIndex++;
-				}
-
-				cascadeValues[band] = float(result);
+		if (cascadeSource.id != layers[i].id) {
+			const index radius = std::llround(theoreticalRadius);
+			if (radius < 1) {
+				std::copy(cascadeSource.values.begin(), cascadeSource.values.end(), cascadeResult.begin());
+			} else {
+				blurCascade(cascadeSource.values, cascadeResult, radius);
 			}
+			layers[i].id = cascadeSource.id;
 		}
 
 		theoreticalRadius *= params.blurRadiusAdaptation;
 	}
-	
-	layers.resize(layersCount);
-	for (index i = 0; i < layersCount; ++i) {
-		layers[i].id++;
-		layers[i].values = blurredValues[i];
+}
+
+void UniformBlur::blurCascade(array_view<float> source, array_span<float> dest, index radius) {
+	auto& kernel = gcm.forRadius(radius);
+
+	const auto bandsCount = source.size();
+	for (index i = 0; i < bandsCount; ++i) {
+
+		index bandStartIndex = i - radius;
+		index kernelStartIndex = 0;
+
+		if (bandStartIndex < 0) {
+			kernelStartIndex = -bandStartIndex;
+			bandStartIndex = 0;
+		}
+
+		double result = 0.0;
+		index kernelIndex = kernelStartIndex;
+		index bandIndex = bandStartIndex;
+
+		while (true) {
+			if (bandIndex >= bandsCount || kernelIndex >= index(kernel.size())) {
+				break;
+			}
+			result += kernel[kernelIndex] * source[bandIndex];
+
+			kernelIndex++;
+			bandIndex++;
+		}
+
+		dest[i] = float(result);
 	}
 }

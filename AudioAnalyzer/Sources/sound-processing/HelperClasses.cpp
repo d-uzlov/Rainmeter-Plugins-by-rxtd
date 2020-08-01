@@ -11,7 +11,7 @@
 
 using namespace audio_analyzer;
 
-SoundHandler* HandlerFinderImpl::getHandlerRaw(isview id) const {
+SoundHandler* HandlerFinderImpl::getHandler(isview id) const {
 	const auto iter = channelData->find(id);
 	if (iter == channelData->end()) {
 		return nullptr;

@@ -17,8 +17,8 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(const OptionMap& optionMap, Logger& cl) {
-	Params params{ };
+bool FftAnalyzer::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr) const {
+	auto& params = *static_cast<Params*>(paramsPtr);
 
 	params.legacy_attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.0);
 	params.legacy_decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.legacy_attackTime), 0.0);
@@ -35,7 +35,7 @@ std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(const OptionMap& opt
 		params.binWidth = optionMap.get(L"binWidth"sv).asFloat(100.0);
 		if (params.binWidth <= 0.0) {
 			cl.error(L"Resolution must be > 0 but {} found", params.binWidth);
-			return std::nullopt;
+			return { };
 		}
 		if (params.binWidth <= 1.0) {
 			cl.warning(L"BinWidth {} is dangerously small, use values > 1", params.binWidth);
@@ -56,12 +56,12 @@ std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(const OptionMap& opt
 			params.binWidth = optionMap.get(L"size"sv).asInt(1000);
 			if (params.binWidth < 2) {
 				cl.error(L"Size must be >= 2, must be even, but {} found", params.binWidth);
-				return std::nullopt;
+				return { };
 			}
 			params.legacy_sizeBy = SizeBy::SIZE_EXACT;
 		} else {
 			cl.error(L"Unknown fft sizeBy '{}'", sizeBy);
-			return std::nullopt;
+			return { };
 		}
 	}
 
@@ -82,32 +82,33 @@ std::optional<FftAnalyzer::Params> FftAnalyzer::parseParams(const OptionMap& opt
 	params.legacy_correctZero = optionMap.get(L"correctZero"sv).asBool(true);
 	params.legacyAmplification = optionMap.get(L"legacyAmplification"sv).asBool(true);
 
-	return params;
+	return true;
 }
 
-void FftAnalyzer::setParams(Params params, Channel channel) {
-	if (this->params == params) {
-		return;
-	}
+void FftAnalyzer::setParams(const Params& value) {
+	this->params = value;
+}
 
-	this->params = params;
-
+bool FftAnalyzer::vFinishLinking(Logger& cl) {
 	updateParams();
+
+	return true; // todo
 }
 
 double FftAnalyzer::getFftFreq(index fft) const {
 	if (fft > fftSize / 2) {
 		return 0.0;
 	}
-	return static_cast<double>(fft) * samplesPerSec / fftSize;
+	return static_cast<double>(fft) * getSampleRate() / fftSize;
 }
 
 index FftAnalyzer::getFftSize() const {
 	return fftSize;
 }
 
-void FftAnalyzer::_process(const DataSupplier& dataSupplier) {
-	if (fftSize <= 0) { // effectively checks that sample rate is not 0
+void FftAnalyzer::vProcess(const DataSupplier& dataSupplier) {
+	if (fftSize <= 0) {
+		// effectively checks that sample rate is not 0
 		return;
 	}
 
@@ -151,17 +152,7 @@ void FftAnalyzer::processRandom(index waveSize) {
 	cascades[0].process(wave);
 }
 
-void FftAnalyzer::setSamplesPerSec(index samplesPerSec) {
-	if (this->samplesPerSec == samplesPerSec) {
-		return;
-	}
-
-	this->samplesPerSec = samplesPerSec;
-
-	updateParams();
-}
-
-bool FftAnalyzer::getProp(const isview& prop, utils::BufferPrinter& printer) const {
+bool FftAnalyzer::vGetProp(const isview& prop, utils::BufferPrinter& printer) const {
 	if (prop == L"size") {
 		printer.print(fftSize);
 	} else if (prop == L"attack") {
@@ -181,7 +172,7 @@ bool FftAnalyzer::getProp(const isview& prop, utils::BufferPrinter& printer) con
 			if (cascadeIndex > 0) {
 				cascadeIndex--;
 			}
-			printer.print(static_cast<index>(samplesPerSec / 2.0 / std::pow(2, cascadeIndex)));
+			printer.print(static_cast<index>(getSampleRate() / 2.0 / std::pow(2, cascadeIndex)));
 			return true;
 		}
 
@@ -208,7 +199,7 @@ bool FftAnalyzer::getProp(const isview& prop, utils::BufferPrinter& printer) con
 			if (cascadeIndex > 0) {
 				cascadeIndex--;
 			}
-			const auto resolution = static_cast<double>(samplesPerSec) / fftSize / std::pow(2, cascadeIndex);
+			const auto resolution = static_cast<double>(getSampleRate()) / fftSize / std::pow(2, cascadeIndex);
 			printer.print(resolution);
 			return true;
 		}
@@ -219,7 +210,7 @@ bool FftAnalyzer::getProp(const isview& prop, utils::BufferPrinter& printer) con
 	return true;
 }
 
-void FftAnalyzer::reset() {
+void FftAnalyzer::vReset() {
 	for (auto& cascade : cascades) {
 		cascade.reset();
 	}
@@ -228,7 +219,7 @@ void FftAnalyzer::reset() {
 void FftAnalyzer::updateParams() {
 	switch (params.legacy_sizeBy) {
 	case SizeBy::BIN_WIDTH:
-		fftSize = kiss_fft::calculateNextFastSize(index(samplesPerSec / params.binWidth), true);
+		fftSize = kiss_fft::calculateNextFastSize(index(getSampleRate() / params.binWidth), true);
 		break;
 	case SizeBy::SIZE:
 		fftSize = kiss_fft::calculateNextFastSize(index(params.binWidth), true);
@@ -248,7 +239,7 @@ void FftAnalyzer::updateParams() {
 	inputStride = static_cast<index>(fftSize * (1 - params.overlap));
 	inputStride = std::clamp<index>(inputStride, std::min<index>(16, fftSize), fftSize);
 
-	randomBlockSize = index(params.randomDuration * samplesPerSec * fftSize / inputStride);
+	randomBlockSize = index(params.randomDuration * getSampleRate() * fftSize / inputStride);
 	randomCurrentOffset = 0;
 
 	cascades.resize(params.cascadesCount);
@@ -256,7 +247,7 @@ void FftAnalyzer::updateParams() {
 
 	audio_utils::FftCascade::Params cascadeParams{ };
 	cascadeParams.fftSize = fftSize;
-	cascadeParams.samplesPerSec = samplesPerSec;
+	cascadeParams.samplesPerSec = getSampleRate();
 	cascadeParams.legacy_attackTime = params.legacy_attackTime;
 	cascadeParams.legacy_decayTime = params.legacy_decayTime;
 	cascadeParams.inputStride = inputStride;

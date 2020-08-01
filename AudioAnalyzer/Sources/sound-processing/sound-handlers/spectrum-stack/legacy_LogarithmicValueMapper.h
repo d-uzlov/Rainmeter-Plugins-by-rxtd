@@ -10,62 +10,72 @@
 #pragma once
 #include "../SoundHandler.h"
 #include "RainmeterWrappers.h"
+#include "Vector2D.h"
 
 namespace rxtd::audio_analyzer {
 	class legacy_LogarithmicValueMapper : public SoundHandler {
 	public:
 		struct Params {
-		private:
-			friend legacy_LogarithmicValueMapper;
-
 			istring sourceId;
 
-			double offset;
-			double sensitivity;
+			float offset{ };
+			double sensitivity{ };
+
+			friend bool operator==(const Params& lhs, const Params& rhs) {
+				return lhs.sourceId == rhs.sourceId
+					&& lhs.offset == rhs.offset
+					&& lhs.sensitivity == rhs.sensitivity;
+			}
+
+			friend bool operator!=(const Params& lhs, const Params& rhs) {
+				return !(lhs == rhs);
+			}
 		};
 
 	private:
 		Params params{ };
 
-		index samplesPerSec{ };
+		float logNormalization{ };
 
-		double logNormalization{ };
+		SoundHandler* sourcePtr{ };
 
-		SoundHandler* source{ };
-
-		std::vector<std::vector<float>> resultValues;
+		utils::Vector2D<float> values;
 
 		bool changed = true;
 
 		std::vector<LayerData> layers;
 
 	public:
+		bool parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr) const override;
 
-		static std::optional<Params> parseParams(const OptionMap& optionMap, Logger& cl);
-
-		void setParams(const Params& params, Channel channel);
-
-		void setSamplesPerSec(index samplesPerSec) override;
-		void reset() override;
-
-		void _process(const DataSupplier& dataSupplier) override;
-		void _finish() override;
-
-		LayeredData getData() const override {
-			return layers;
+		const Params& getParams() const {
+			return params;
 		}
+
+		void setParams(const Params& value);
 
 	protected:
 		[[nodiscard]]
-		isview getSourceName() const override {
+		isview vGetSourceName() const override {
 			return params.sourceId;
 		}
 
 		[[nodiscard]]
-		bool vCheckSources(Logger& cl) override;
+		bool vFinishLinking(Logger& cl) override;
 
-	private:
-		void updateValues();
-		void transformToLog(SoundHandler& source);
+	public:
+		void vReset() override;
+
+		void vProcess(const DataSupplier& dataSupplier) override;
+		void vFinish() override;
+
+		LayeredData vGetData() const override {
+			return layers;
+		}
+
+		[[nodiscard]]
+		DataSize getDataSize() const override {
+			return { values.getBuffersCount(), values.getBufferSize() };
+		}
 	};
 }

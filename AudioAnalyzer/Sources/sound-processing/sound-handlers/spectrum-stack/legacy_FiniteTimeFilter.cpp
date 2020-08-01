@@ -15,13 +15,15 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-std::optional<legacy_FiniteTimeFilter::Params>
-legacy_FiniteTimeFilter::parseParams(const OptionMap& optionMap, Logger& cl) {
-	Params params;
+bool legacy_FiniteTimeFilter::parseParams(
+	const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr
+) const {
+	auto& params = *static_cast<Params*>(paramsPtr);
+	
 	params.sourceId = optionMap.get(L"source"sv).asIString();
 	if (params.sourceId.empty()) {
 		cl.error(L"source not found");
-		return std::nullopt;
+		return {};
 	}
 
 	params.smoothingFactor = optionMap.get(L"smoothingFactor"sv).asInt(4);
@@ -44,15 +46,11 @@ legacy_FiniteTimeFilter::parseParams(const OptionMap& optionMap, Logger& cl) {
 		params.smoothingCurve = SmoothingCurve::FLAT;
 	}
 
-	return params;
+	return true;
 }
 
-void legacy_FiniteTimeFilter::setParams(const Params& _params, Channel channel) {
-	if (params == _params) {
-		return;
-	}
-
-	params = _params;
+void legacy_FiniteTimeFilter::setParams(const Params& value) {
+	params = value;
 
 	if (params.smoothingFactor <= 1) {
 		smoothingNormConstant = 1.0;
@@ -62,13 +60,15 @@ void legacy_FiniteTimeFilter::setParams(const Params& _params, Channel channel) 
 			smoothingNormConstant = 1.0 / params.smoothingFactor;
 			break;
 
-		case SmoothingCurve::LINEAR: {
+		case SmoothingCurve::LINEAR:
+		{
 			const index smoothingWeight = params.smoothingFactor * (params.smoothingFactor + 1) / 2;
 			smoothingNormConstant = 1.0 / smoothingWeight;
 			break;
 		}
 
-		case SmoothingCurve::EXPONENTIAL: {
+		case SmoothingCurve::EXPONENTIAL:
+		{
 			double smoothingWeight = 0;
 			double weight = 1;
 
@@ -86,48 +86,16 @@ void legacy_FiniteTimeFilter::setParams(const Params& _params, Channel channel) 
 	}
 }
 
-void legacy_FiniteTimeFilter::_process(const DataSupplier& dataSupplier) {
-	changed = true;
-}
-
-void legacy_FiniteTimeFilter::_finish() {
-	if (!changed) {
-		return;
-	}
-
-	source->finish();
-
-	if (params.smoothingFactor > 1) {
-		adjustSize();
-		copyValues();
-		applyTimeFiltering();
-	}
-
-	changed = false;
-}
-
-void legacy_FiniteTimeFilter::setSamplesPerSec(index value) {
-	samplesPerSec = value;
-}
-
-bool legacy_FiniteTimeFilter::vCheckSources(Logger& cl) {
-	source = getSource();
-	if (source == nullptr) {
+bool legacy_FiniteTimeFilter::vFinishLinking(Logger& cl) {
+	auto sourcePtr = getSource();
+	if (sourcePtr == nullptr) {
 		cl.error(L"source is not found");
 		return false;
 	}
 
-	return true;
-}
+	auto& source = *sourcePtr;
 
-void legacy_FiniteTimeFilter::adjustSize() {
-	const auto sourceData = source->getData();
-	const auto layersCount = sourceData.size();
-	const auto valuesCount = sourceData[0].values.size();
-
-	if (layersCount == index(pastValues.size()) && valuesCount == values.getBufferSize()) {
-		return;
-	}
+	const auto [layersCount, valuesCount] = source.getDataSize();
 
 	pastValues.resize(layersCount);
 	for (auto& vec : pastValues) {
@@ -143,27 +111,49 @@ void legacy_FiniteTimeFilter::adjustSize() {
 		layers[i].id++;
 		layers[i].values = values[i];
 	}
+
+	return true;
 }
 
-void legacy_FiniteTimeFilter::reset() {
+void legacy_FiniteTimeFilter::vProcess(const DataSupplier& dataSupplier) {
 	changed = true;
 }
 
-void legacy_FiniteTimeFilter::copyValues() {
-	const auto sourceData = source->getData();
+void legacy_FiniteTimeFilter::vFinish() {
+	if (!changed) {
+		return;
+	}
+
+	changed = false;
+
+	if (params.smoothingFactor <= 1) {
+		return;
+	}
+
+	auto& source = *getSource();
+
+	source.finish();
+	const auto sourceData = source.vGetData();
 	const auto layersCount = sourceData.size();
 
 	pastValuesIndex++;
 	if (pastValuesIndex >= params.smoothingFactor) {
 		pastValuesIndex = 0;
 	}
+
+	// todo update id
+
 	for (index layer = 0; layer < layersCount; ++layer) {
 		auto& layerPastValues = pastValues[layer];
 		const auto sourceValues = sourceData[layer].values;
-		for (index i = 0; i < sourceValues.size(); ++i) {
-			layerPastValues[pastValuesIndex][i] = sourceValues[i];
-		}
+		std::copy(sourceValues.begin(), sourceValues.end(), layerPastValues[pastValuesIndex].begin());
 	}
+
+	applyTimeFiltering();
+}
+
+void legacy_FiniteTimeFilter::vReset() {
+	changed = true;
 }
 
 void legacy_FiniteTimeFilter::applyTimeFiltering() {
@@ -172,9 +162,7 @@ void legacy_FiniteTimeFilter::applyTimeFiltering() {
 		startPastIndex = 0;
 	}
 
-	const auto sourceData = source->getData();
-	const auto layersCount = sourceData.size();
-	for (index layer = 0; layer < layersCount; ++layer) {
+	for (index layer = 0; layer < index(pastValues.size()); ++layer) {
 		auto& currentPastValues = pastValues[layer];
 		auto currentValues = values[layer];
 

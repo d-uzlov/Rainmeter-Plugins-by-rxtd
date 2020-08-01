@@ -24,7 +24,7 @@ namespace rxtd::audio_analyzer {
 		// Following two fields are used for updating .channels field.
 		// They can contain info about handlers that doesn't exist because of channel layout
 		std::set<Channel> channelSetRequested;
-		ParamParser::HandlerPatcherInfo handlerPatchers;
+		const ParamParser::HandlerPatcherInfo *handlerPatchers;
 
 		std::map<Channel, ChannelData> channels;
 		DataSupplierImpl dataSupplier;
@@ -63,7 +63,7 @@ namespace rxtd::audio_analyzer {
 		 * but usually this is the same handler with updated parameters.
 		 */
 		 // depends on options only
-		void setParams(std::set<Channel> channelSetRequested, ParamParser::HandlerPatcherInfo handlerPatchers, double granularity);
+		void setParams(std::set<Channel> channelSetRequested, const ParamParser::HandlerPatcherInfo &handlerPatchers, double granularity);
 
 		[[nodiscard]]
 		ChannelProcessingHelper& getCPH() {
@@ -82,7 +82,6 @@ namespace rxtd::audio_analyzer {
 			patchHandlers();
 		}
 
-		void updateHandlerSampleRate() noexcept;
 		void patchChannels();
 		void patchHandlers();
 	};

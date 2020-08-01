@@ -26,8 +26,6 @@
 #include "option-parser/OptionMap.h"
 #include "option-parser/OptionList.h"
 
-#include "undef.h"
-
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;
 
@@ -279,7 +277,7 @@ bool ParamParser::parseHandler(sview name, const HandlerPatcherInfo& prevHandler
 	return true;
 }
 
-ParamParser::HandlerPatcher ParamParser::getHandlerPatcher(
+std::shared_ptr<HandlerPatcher> ParamParser::getHandlerPatcher(
 	const utils::OptionMap& optionMap,
 	Logger& cl,
 	const HandlerPatcherInfo& prevHandlers
@@ -302,43 +300,43 @@ ParamParser::HandlerPatcher ParamParser::getHandlerPatcher(
 	}
 
 	if (type == L"rms") {
-		return parseHandlerT<BlockRms>(optionMap, cl);
+		return createPatcher<BlockRms>(optionMap, cl);
 	}
 	if (type == L"peak") {
-		return parseHandlerT<BlockPeak>(optionMap, cl);
+		return createPatcher<BlockPeak>(optionMap, cl);
 	}
 	if (type == L"fft") {
-		return parseHandlerT<FftAnalyzer>(optionMap, cl);
+		return createPatcher<FftAnalyzer>(optionMap, cl);
 	}
 	if (type == L"BandResampler") {
-		return parseHandlerT2<BandResampler>(optionMap, cl);
+		return createPatcher<BandResampler>(optionMap, cl);
 	}
 	if (type == L"BandCascadeTransformer") {
-		return parseHandlerT<BandCascadeTransformer>(optionMap, cl);
+		return createPatcher<BandCascadeTransformer>(optionMap, cl);
 	}
 	if (type == L"WeightedBlur") {
-		return parseHandlerT<WeightedBlur>(optionMap, cl);
+		return createPatcher<WeightedBlur>(optionMap, cl);
 	}
 	if (type == L"UniformBlur") {
-		return parseHandlerT<UniformBlur>(optionMap, cl);
+		return createPatcher<UniformBlur>(optionMap, cl);
 	}
 	if (type == L"FiniteTimeFilter") {
-		return parseHandlerT<legacy_FiniteTimeFilter>(optionMap, cl);
+		return createPatcher<legacy_FiniteTimeFilter>(optionMap, cl);
 	}
 	if (type == L"LogarithmicValueMapper") {
-		return parseHandlerT<legacy_LogarithmicValueMapper>(optionMap, cl);
+		return createPatcher<legacy_LogarithmicValueMapper>(optionMap, cl);
 	}
 	if (type == L"spectrogram") {
-		return parseHandlerT2<Spectrogram>(optionMap, cl);
+		return createPatcher<Spectrogram>(optionMap, cl);
 	}
 	if (type == L"waveform") {
-		return parseHandlerT2<WaveForm>(optionMap, cl);
+		return createPatcher<WaveForm>(optionMap, cl);
 	}
 	if (type == L"loudness") {
-		return parseHandlerT<Loudness>(optionMap, cl);
+		return createPatcher<Loudness>(optionMap, cl);
 	}
 	if (type == L"ValueTransformer") {
-		return parseHandlerT<SingleValueTransformer>(optionMap, cl);
+		return createPatcher<SingleValueTransformer>(optionMap, cl);
 	}
 
 	cl.error(L"unknown type '{}'", type);
