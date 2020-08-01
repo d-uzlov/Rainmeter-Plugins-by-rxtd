@@ -99,13 +99,13 @@ void FftCascade::doFft() {
 	const auto newDC = float(fft->getDC());
 	legacy_dc = filter.apply(legacy_dc, newDC);
 
-	auto zerothBin = std::abs(newDC);
+	auto legacy_zerothBin = std::abs(newDC);
 	if (params.legacy_correctZero) {
 		constexpr double root2 = 1.4142135623730950488;
-		zerothBin *= root2;
+		legacy_zerothBin *= root2;
 	}
 
-	values[0] = filter.apply(values[0], zerothBin);
+	values[0] = filter.apply(values[0], legacy_zerothBin);
 
 	if (params.legacy_attackTime != 0.0 || params.legacy_decayTime != 0.0) {
 		for (index bin = 1; bin < binsCount; ++bin) {
@@ -118,6 +118,8 @@ void FftCascade::doFft() {
 			values[bin] = fft->getBinMagnitude(bin);
 		}
 	}
+
+	layerData.id++;
 }
 
 void FftCascade::reset() {

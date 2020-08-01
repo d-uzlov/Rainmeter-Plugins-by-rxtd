@@ -118,6 +118,10 @@ void FftAnalyzer::_process(const DataSupplier& dataSupplier) {
 	} else {
 		cascades[0].process(wave);
 	}
+
+	for (index i = 0; i < index(cascades.size()); i++) {
+		layers[i] = cascades[i].getLayerData();
+	}
 }
 
 void FftAnalyzer::processRandom(index waveSize) {
@@ -248,6 +252,7 @@ void FftAnalyzer::updateParams() {
 	randomCurrentOffset = 0;
 
 	cascades.resize(params.cascadesCount);
+	layers.resize(params.cascadesCount);
 
 	audio_utils::FftCascade::Params cascadeParams{ };
 	cascadeParams.fftSize = fftSize;
@@ -257,10 +262,8 @@ void FftAnalyzer::updateParams() {
 	cascadeParams.inputStride = inputStride;
 	cascadeParams.legacy_correctZero = params.legacy_correctZero;
 
-	layers.clear();
 	for (index i = 0; i < index(cascades.size()); i++) {
 		const auto next = i + 1 < index(cascades.size()) ? &cascades[i + 1] : nullptr;
 		cascades[i].setParams(cascadeParams, &fft, next, i);
-		layers.push_back(cascades[i].getLayerData());
 	}
 }

@@ -76,7 +76,7 @@ std::vector<double> WeightedBlur::GaussianCoefficientsManager::generateGaussianK
 	const double restoredSigma = radius * (1.0 / 3.0);
 	const double powerFactor = 1.0 / (2.0 * restoredSigma * restoredSigma);
 
-	index r = -radius;
+	double r = -double(radius);
 	double sum = 0.0;
 	for (double& k : kernel) {
 		k = std::exp(-r * r * powerFactor);

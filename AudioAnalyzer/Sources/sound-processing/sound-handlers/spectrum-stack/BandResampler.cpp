@@ -193,13 +193,17 @@ void BandResampler::sampleData(const FftAnalyzer& source) {
 	double binWidth = static_cast<double>(samplesPerSec) / (source.getFftSize() * std::pow(2, startCascade));
 
 	for (auto cascade = startCascade; cascade < endCascade; ++cascade) {
+		const auto data = sourceData[cascade];
+		const index localCascadeIndex = cascade - startCascade;
+		auto& cascadeData = cascadesInfo[localCascadeIndex];
 
-		const auto fftData = sourceData[cascade].values;
+		if (data.id != layers[localCascadeIndex].id) {
+			const auto fftData = sourceData[cascade].values;
+			auto& cascadeMagnitudes = cascadeData.magnitudes;
+			sampleCascade(fftData, cascadeMagnitudes, binWidth, fftBinsCount);
 
-		auto& cascadeMagnitudes = cascadesInfo[cascade - startCascade].magnitudes;
-		std::fill(cascadeMagnitudes.begin(), cascadeMagnitudes.end(), 0.0f);
-
-		sampleCascade(fftData, cascadeMagnitudes, binWidth, fftBinsCount);
+			layers[localCascadeIndex].id = data.id;
+		}
 
 		binWidth *= 0.5;
 	}
@@ -229,6 +233,7 @@ void BandResampler::sampleCascade(
 	double bandMaxFreq = params.bandFreqs[1];
 
 	double value = 0.0;
+	std::fill(result.begin(), result.end(), 0.0f);
 
 	while (bin < fftBinsCount && band < bandsCount) {
 		const double binUpperFreq = (bin + 0.5) * binWidth;
