@@ -157,26 +157,25 @@ float BandCascadeTransformer::computeForBand(index band, utils::array2d_view<flo
 	index cascadesSummed = 0;
 	const index bandEndCascade = analysis.bandEndCascades[band] - analysis.minCascadeUsed;
 
-	double value = params.mixFunction == MixFunction::PRODUCT ? 1.0 : 0.0;
+	double valueProduct = 1.0;
+	double valueSum = 0.0;
+
+	const auto bandWeights = resampler.getBandWeights(band);
 
 	for (index cascade = 0; cascade < bandEndCascade; cascade++) {
-		// todo change  getBandWeights to return array for all cascades
-		const auto bandWeight = resampler.getBandWeights(cascade)[band];
+		const auto bandWeight = bandWeights[cascade];
 		const auto magnitude = sourceData[cascade][band];
 		const auto cascadeBandValue = magnitude / bandWeight;
 
-		if (cascadeBandValue < params.zeroLevelHard) {
+		if (cascadeBandValue < params.zeroLevelHard) { // todo read all of this and try to understand
 			break;
 		}
 		if (bandWeight < params.minWeight) {
 			continue;
 		}
 
-		if (params.mixFunction == MixFunction::PRODUCT) {
-			value *= cascadeBandValue;
-		} else {
-			value += cascadeBandValue;
-		}
+		valueProduct *= cascadeBandValue;
+		valueSum += cascadeBandValue;
 
 		weight += bandWeight;
 		cascadesSummed++;
@@ -188,7 +187,7 @@ float BandCascadeTransformer::computeForBand(index band, utils::array2d_view<flo
 
 	if (weight < params.weightFallback) {
 		for (index cascade = 0; cascade < bandEndCascade; cascade++) {
-			const auto bandWeight = resampler.getBandWeights(cascade)[band];
+			const auto bandWeight = bandWeights[cascade];
 			const auto magnitude = sourceData[cascade][band];
 			const auto cascadeBandValue = magnitude / bandWeight;
 
@@ -202,12 +201,8 @@ float BandCascadeTransformer::computeForBand(index band, utils::array2d_view<flo
 				continue;
 			}
 
-
-			if (params.mixFunction == MixFunction::PRODUCT) {
-				value *= cascadeBandValue;
-			} else {
-				value += cascadeBandValue;
-			}
+			valueProduct *= cascadeBandValue;
+			valueSum += cascadeBandValue;
 
 			weight += bandWeight;
 			cascadesSummed++;
@@ -221,18 +216,14 @@ float BandCascadeTransformer::computeForBand(index band, utils::array2d_view<flo
 		}
 	}
 
-	if (cascadesSummed > 0) {
-		if (params.mixFunction == MixFunction::PRODUCT) {
-			value = utils::MyMath::fastPow(value, 1.0 / cascadesSummed);
-		} else {
-			value /= cascadesSummed;
-		}
-	} else {
-		value = 0.0;
+	if (cascadesSummed <= 0) {
+		return 0.0f;
 	}
 
-	// TODO float? double?
-	return float(value);
+	valueProduct = utils::MyMath::fastPow(valueProduct, 1.0 / cascadesSummed);
+	valueSum /= cascadesSummed;
+
+	return float(params.mixFunction == MixFunction::PRODUCT ? valueProduct : valueSum);
 }
 
 BandCascadeTransformer::AnalysisInfo
@@ -258,8 +249,10 @@ BandCascadeTransformer::computeAnalysis(BandResampler& resampler, double minWeig
 		index bandMaxCascade = -1;
 		bool anyCascadeUsed = false;
 
+		const auto bandWeights = resampler.getBandWeights(band);
+
 		for (index cascade = startCascade; cascade < endCascade; ++cascade) {
-			const auto bandWeight = resampler.getBandWeights(cascade - startCascade)[band];
+			const auto bandWeight = bandWeights[cascade - startCascade];
 
 			if (bandWeight < minWeight) {
 				continue;

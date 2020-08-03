@@ -88,9 +88,8 @@ bool WaveForm::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmet
 }
 
 void WaveForm::setParams(const Params& value) {
-	this->params = value;
+	params = value;
 
-	// todo this is not correct when transforms are applied
 	minDistinguishableValue = 1.0 / params.height / 2.0; // below half pixel
 
 	drawer.setDimensions(params.width, params.height);
@@ -120,7 +119,6 @@ SoundHandler::LinkingResult WaveForm::vFinishLinking(Logger& cl) {
 	minTransformer.updateTransformations(sampleRate, blockSize);
 	maxTransformer.updateTransformations(sampleRate, blockSize);
 
-	// todo remove?
 	vReset();
 
 	return { 0, 0 };

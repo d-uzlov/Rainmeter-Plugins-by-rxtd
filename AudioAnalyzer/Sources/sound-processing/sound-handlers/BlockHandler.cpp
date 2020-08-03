@@ -67,7 +67,6 @@ SoundHandler::LinkingResult BlockHandler::vFinishLinking(Logger& cl) {
 	return { 1, 1 };
 }
 
-// todo update reset everywhere
 void BlockHandler::vReset() {
 	counter = 0;
 	params.transformer.resetState();

@@ -49,6 +49,7 @@ namespace rxtd::audio_analyzer {
 		FftAnalyzer* fftSource = nullptr;
 
 		std::vector<float> legacy_bandFreqMultipliers{ };
+		utils::Vector2D<float> layerWeights;
 		utils::Vector2D<float> bandWeights;
 
 		index startCascade = 0;
@@ -82,17 +83,25 @@ namespace rxtd::audio_analyzer {
 		void vProcess(const DataSupplier& dataSupplier) override;
 		void vFinish() override;
 
+		[[nodiscard]]
 		index getStartingLayer() const override {
 			return startCascade;
 		}
 
+		[[nodiscard]]
 		index getEndCascade() const {
 			return endCascade;
 		}
 
-		array_view<float> getBandWeights(index cascade) const;
+		[[nodiscard]]
+		array_view<float> getLayerWeights(index cascade) const {
+			return layerWeights[cascade];
+		}
 
-		array_view<float> getBaseFreqs() const; // todo unused
+		[[nodiscard]]
+		array_view<float> getBandWeights(index band) const {
+			return bandWeights[band];
+		}
 
 		BandResampler* getResampler() override {
 			return this;

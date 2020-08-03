@@ -8,6 +8,7 @@
  */
 
 #include "UniformBlur.h"
+#include "BandResampler.h"
 #include "option-parser/OptionMap.h"
 
 using namespace std::string_literals;
@@ -32,13 +33,24 @@ bool UniformBlur::parseParams(const OptionMap& optionMap, Logger& cl, const Rain
 }
 
 SoundHandler::LinkingResult UniformBlur::vFinishLinking(Logger& cl) {
-	const auto source = getSource();
-	if (source == nullptr) {
+	const auto sourcePtr = getSource();
+	if (sourcePtr == nullptr) {
 		cl.error(L"source is not found");
 		return { };
 	}
 
-	const auto dataSize = source->getDataSize();
+	index startingLayer = 0;
+	if (const auto provider = dynamic_cast<ResamplerProvider*>(sourcePtr);
+		provider != nullptr) {
+		const BandResampler* resamplerPtr = provider->getResampler();
+		if (resamplerPtr != nullptr) {
+			startingLayer = resamplerPtr->getStartingLayer();
+		}
+	}
+
+	startingRadius = params.blurRadius * std::pow(params.blurRadiusAdaptation, startingLayer);
+
+	const auto dataSize = sourcePtr->getDataSize();
 	return dataSize;
 }
 
@@ -56,7 +68,7 @@ void UniformBlur::vFinish() {
 	source.finish();
 	const auto sourceData = source.getData();
 
-	double theoreticalRadius = params.blurRadius * std::pow(params.blurRadiusAdaptation, source.getStartingLayer());
+	double theoreticalRadius = startingRadius;
 
 	const auto refIds = getRefIds();
 

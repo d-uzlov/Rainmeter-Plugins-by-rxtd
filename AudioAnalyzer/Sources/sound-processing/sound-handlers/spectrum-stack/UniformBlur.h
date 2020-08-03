@@ -36,6 +36,7 @@ namespace rxtd::audio_analyzer {
 	private:
 		Params params{ };
 		audio_utils::GaussianCoefficientsManager gcm;
+		double startingRadius{ };
 
 		bool changed = true;
 

@@ -295,7 +295,6 @@ namespace rxtd::audio_analyzer {
 
 		[[nodiscard]]
 		virtual index getStartingLayer() const {
-			// todo remove
 			return 0;
 		}
 

@@ -171,9 +171,6 @@ std::vector<float> BandResampler::parseFreqList(sview listId, const Rainmeter& r
 }
 
 SoundHandler::LinkingResult BandResampler::vFinishLinking(Logger& cl) {
-	// todo what if user want to filter values between fft and resampler?
-	// todo use getSource everywhere instead of saving source field
-
 	const auto source = getSource();
 	if (source == nullptr) {
 		cl.error(L"source is not found");
@@ -207,10 +204,18 @@ SoundHandler::LinkingResult BandResampler::vFinishLinking(Logger& cl) {
 
 	const index realCascadesCount = endCascade - startCascade;
 
-	bandWeights.setBuffersCount(realCascadesCount);
-	bandWeights.setBufferSize(bandsCount);
+	layerWeights.setBuffersCount(realCascadesCount);
+	layerWeights.setBufferSize(bandsCount);
 
 	computeWeights(fftSource->getFftSize());
+
+	bandWeights.setBuffersCount(bandsCount);
+	bandWeights.setBufferSize(realCascadesCount);
+	for (index i = 0; i < bandsCount; ++i) {
+		for (index j = 0; j < realCascadesCount; ++j) {
+			bandWeights[i][j] = layerWeights[j][i];
+		}
+	}
 
 	return { realCascadesCount, bandsCount };
 }
@@ -303,14 +308,6 @@ bool BandResampler::vGetProp(const isview& prop, utils::BufferPrinter& printer) 
 	return false;
 }
 
-array_view<float> BandResampler::getBandWeights(index cascade) const {
-	return bandWeights[cascade];
-}
-
-array_view<float> BandResampler::getBaseFreqs() const {
-	return params.bandFreqs;
-}
-
 void BandResampler::sampleCascade(array_view<float> source, array_span<float> dest, double binWidth) {
 	const index fftBinsCount = source.size();
 	const double binWidthInverse = 1.0 / binWidth;
@@ -366,8 +363,8 @@ void BandResampler::computeWeights(index fftSize) {
 	const auto fftBinsCount = fftSize / 2;
 	double binWidth = static_cast<double>(getSampleRate()) / (fftSize * std::pow(2, startCascade));
 
-	for (index i = 0; i < bandWeights.getBuffersCount(); ++i) {
-		computeCascadeWeights(bandWeights[i], fftBinsCount, binWidth);
+	for (index i = 0; i < layerWeights.getBuffersCount(); ++i) {
+		computeCascadeWeights(layerWeights[i], fftBinsCount, binWidth);
 		binWidth *= 0.5;
 	}
 }
