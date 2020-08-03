@@ -54,29 +54,15 @@ bool UniformBlur::parseParams(const OptionMap& optionMap, Logger& cl, const Rain
 	return true;
 }
 
-bool UniformBlur::vFinishLinking(Logger& cl) {
+SoundHandler::LinkingResult UniformBlur::vFinishLinking(Logger& cl) {
 	const auto source = getSource();
 	if (source == nullptr) {
 		cl.error(L"source is not found");
-		return false;
+		return { };
 	}
 
-	const auto [layersCount, valuesCount] = source->getDataSize();
-
-	values.setBuffersCount(layersCount);
-	values.setBufferSize(valuesCount);
-
-	layers.resize(layersCount);
-	for (index i = 0; i < layersCount; ++i) {
-		layers[i].id = 0;
-		layers[i].values = values[i];
-	}
-
-	return true;
-}
-
-void UniformBlur::vReset() {
-	values.init(0.0f);
+	const auto dataSize = source->getDataSize();
+	return dataSize;
 }
 
 void UniformBlur::vProcess(const DataSupplier& dataSupplier) {
@@ -91,23 +77,26 @@ void UniformBlur::vFinish() {
 
 	auto& source = *getSource();
 	source.finish();
-	const auto sourceData = source.vGetData();
+	const auto sourceData = source.getData();
 
 	double theoreticalRadius = params.blurRadius * std::pow(params.blurRadiusAdaptation, source.getStartingLayer());
 
-	const index cascadesCount = sourceData.size();
-	for (index i = 0; i < cascadesCount; ++i) {
-		const auto cascadeSource = sourceData[i];
-		auto cascadeResult = values[i];
+	const auto refIds = getRefIds();
 
-		if (cascadeSource.id != layers[i].id) {
+	const index cascadesCount = source.getDataSize().layersCount;
+	for (index i = 0; i < cascadesCount; ++i) {
+		const auto sid = sourceData.ids[i];
+
+		if (sid != refIds[i]) {
+			const auto cascadeSource = sourceData.values[i];
+			auto cascadeResult = updateLayerData(i, sid);
+
 			const index radius = std::llround(theoreticalRadius);
 			if (radius < 1) {
-				std::copy(cascadeSource.values.begin(), cascadeSource.values.end(), cascadeResult.begin());
+				std::copy(cascadeSource.begin(), cascadeSource.end(), cascadeResult.begin());
 			} else {
-				blurCascade(cascadeSource.values, cascadeResult, radius);
+				blurCascade(cascadeSource, cascadeResult, radius);
 			}
-			layers[i].id = cascadeSource.id;
 		}
 
 		theoreticalRadius *= params.blurRadiusAdaptation;

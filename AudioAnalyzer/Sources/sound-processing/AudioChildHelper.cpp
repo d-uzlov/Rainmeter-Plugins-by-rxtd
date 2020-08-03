@@ -18,13 +18,13 @@ AudioChildHelper::AudioChildHelper(const std::map<Channel, ChannelData>& channel
 SoundHandler* AudioChildHelper::findHandler(Channel channel, isview handlerId) const {
 	const auto channelIter = channels->find(channel);
 	if (channelIter == channels->end()) {
-		return {};
+		return { };
 	}
 
 	const auto& channelData = channelIter->second;
 	const auto iter = channelData.find(handlerId);
 	if (iter == channelData.end()) {
-		return {};
+		return { };
 	}
 
 	auto& handler = iter->second;
@@ -46,25 +46,23 @@ double AudioChildHelper::getValueFrom(SoundHandler* handler, Channel channel, in
 		return 0.0;
 	}
 
+	const auto layersCount = handler->getDataSize().layersCount;
+
+	if (layersCount <= 0) {
+		return 0.0;
+	}
+
 	handler->finish();
 	if (!handler->isValid()) {
 		return 0.0;
 	}
 
-	const auto data = handler->vGetData();
-
-	const auto layersCount = data.size();
-	
-	if (layersCount <= 0) {
+	const auto values = handler->getData().values[0];
+	if (values.empty()) {
 		return 0.0;
 	}
-
-	const auto data0 = data[0].values;
-	if (data0.empty()) {
+	if (index >= values.size()) {
 		return 0.0;
 	}
-	if (index >= data0.size()) {
-		return 0.0;
-	}
-	return data0[index];
+	return values[index];
 }

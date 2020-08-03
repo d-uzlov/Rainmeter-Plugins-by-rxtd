@@ -19,11 +19,11 @@ bool legacy_FiniteTimeFilter::parseParams(
 	const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr
 ) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
-	
+
 	params.sourceId = optionMap.get(L"source"sv).asIString();
 	if (params.sourceId.empty()) {
 		cl.error(L"source not found");
-		return {};
+		return { };
 	}
 
 	params.smoothingFactor = optionMap.get(L"smoothingFactor"sv).asInt(4);
@@ -60,15 +60,13 @@ void legacy_FiniteTimeFilter::setParams(const Params& value) {
 			smoothingNormConstant = 1.0 / params.smoothingFactor;
 			break;
 
-		case SmoothingCurve::LINEAR:
-		{
+		case SmoothingCurve::LINEAR: {
 			const index smoothingWeight = params.smoothingFactor * (params.smoothingFactor + 1) / 2;
 			smoothingNormConstant = 1.0 / smoothingWeight;
 			break;
 		}
 
-		case SmoothingCurve::EXPONENTIAL:
-		{
+		case SmoothingCurve::EXPONENTIAL: {
 			double smoothingWeight = 0;
 			double weight = 1;
 
@@ -86,33 +84,25 @@ void legacy_FiniteTimeFilter::setParams(const Params& value) {
 	}
 }
 
-bool legacy_FiniteTimeFilter::vFinishLinking(Logger& cl) {
-	auto sourcePtr = getSource();
+SoundHandler::LinkingResult legacy_FiniteTimeFilter::vFinishLinking(Logger& cl) {
+	const auto sourcePtr = getSource();
 	if (sourcePtr == nullptr) {
 		cl.error(L"source is not found");
-		return false;
+		return { };
 	}
 
 	auto& source = *sourcePtr;
 
-	const auto [layersCount, valuesCount] = source.getDataSize();
+	const auto dataSize = source.getDataSize();
 
-	pastValues.resize(layersCount);
+	pastValues.resize(dataSize.layersCount);
 	for (auto& vec : pastValues) {
 		vec.setBuffersCount(params.smoothingFactor);
-		vec.setBufferSize(valuesCount);
+		vec.setBufferSize(dataSize.valuesCount);
 		vec.init();
 	}
-	values.setBuffersCount(layersCount);
-	values.setBufferSize(valuesCount);
 
-	layers.resize(layersCount);
-	for (index i = 0; i < layersCount; ++i) {
-		layers[i].id++;
-		layers[i].values = values[i];
-	}
-
-	return true;
+	return dataSize;
 }
 
 void legacy_FiniteTimeFilter::vProcess(const DataSupplier& dataSupplier) {
@@ -126,98 +116,92 @@ void legacy_FiniteTimeFilter::vFinish() {
 
 	changed = false;
 
-	if (params.smoothingFactor <= 1) {
-		return;
-	}
-
 	auto& source = *getSource();
 
 	source.finish();
-	const auto sourceData = source.vGetData();
-	const auto layersCount = sourceData.size();
+	const auto sourceData = source.getData();
+	const index layersCount = source.getDataSize().layersCount;
+
+	if (params.smoothingFactor <= 1) {
+		return;
+	}
 
 	pastValuesIndex++;
 	if (pastValuesIndex >= params.smoothingFactor) {
 		pastValuesIndex = 0;
 	}
 
-	// todo update id
-
 	for (index layer = 0; layer < layersCount; ++layer) {
 		auto& layerPastValues = pastValues[layer];
-		const auto sourceValues = sourceData[layer].values;
+		const auto sourceValues = sourceData.values[layer];
 		std::copy(sourceValues.begin(), sourceValues.end(), layerPastValues[pastValuesIndex].begin());
-	}
 
-	applyTimeFiltering();
+		const auto dest = generateLayerData(layer);
+		applyToLayer(layerPastValues, dest);
+	}
 }
 
 void legacy_FiniteTimeFilter::vReset() {
 	changed = true;
 }
 
-void legacy_FiniteTimeFilter::applyTimeFiltering() {
-	auto startPastIndex = pastValuesIndex + 1;
-	if (startPastIndex >= params.smoothingFactor) {
-		startPastIndex = 0;
+void legacy_FiniteTimeFilter::applyToLayer(utils::array2d_view<float> layerPastValues, array_span<float> dest) const {
+	auto pastValuesStartIndex = pastValuesIndex + 1;
+	if (pastValuesStartIndex >= params.smoothingFactor) {
+		pastValuesStartIndex = 0;
 	}
-
-	for (index layer = 0; layer < index(pastValues.size()); ++layer) {
-		auto& currentPastValues = pastValues[layer];
-		auto currentValues = values[layer];
-
-		switch (params.smoothingCurve) {
-		case SmoothingCurve::FLAT:
-			for (index band = 0; band < index(currentValues.size()); ++band) {
-				double outValue = 0.0;
-				for (index i = 0; i < params.smoothingFactor; ++i) {
-					outValue += currentPastValues[i][band];
-				}
-
-				currentValues[band] = float(outValue * smoothingNormConstant);
+	
+	switch (params.smoothingCurve) {
+	case SmoothingCurve::FLAT:
+		for (index band = 0; band < index(dest.size()); ++band) {
+			double outValue = 0.0;
+			for (index i = 0; i < params.smoothingFactor; ++i) {
+				outValue += layerPastValues[i][band];
 			}
-			break;
 
-		case SmoothingCurve::LINEAR:
-			for (index band = 0; band < index(currentValues.size()); ++band) {
-				double outValue = 0.0;
-				index valueWeight = 1;
-
-				for (index i = startPastIndex; i < params.smoothingFactor; ++i) {
-					outValue += currentPastValues[i][band] * valueWeight;
-					valueWeight++;
-				}
-				for (index i = 0; i < startPastIndex; ++i) {
-					outValue += currentPastValues[i][band] * valueWeight;
-					valueWeight++;
-				}
-
-				currentValues[band] = float(outValue * smoothingNormConstant);
-			}
-			break;
-
-		case SmoothingCurve::EXPONENTIAL:
-			for (index band = 0; band < index(currentValues.size()); ++band) {
-				double outValue = 0.0;
-				double smoothingWeight = 0;
-				double weight = 1;
-
-				for (index i = startPastIndex; i < params.smoothingFactor; ++i) {
-					outValue += currentPastValues[i][band] * weight;
-					smoothingWeight += weight;
-					weight *= params.exponentialFactor;
-				}
-				for (index i = 0; i < startPastIndex; ++i) {
-					outValue += currentPastValues[i][band] * weight;
-					smoothingWeight += weight;
-					weight *= params.exponentialFactor;
-				}
-
-				currentValues[band] = float(outValue * smoothingNormConstant);
-			}
-			break;
-
-		default: std::terminate(); // should be unreachable statement
+			dest[band] = float(outValue * smoothingNormConstant);
 		}
+		break;
+
+	case SmoothingCurve::LINEAR:
+		for (index band = 0; band < index(dest.size()); ++band) {
+			double outValue = 0.0;
+			index valueWeight = 1;
+
+			for (index i = pastValuesStartIndex; i < params.smoothingFactor; ++i) {
+				outValue += layerPastValues[i][band] * valueWeight;
+				valueWeight++;
+			}
+			for (index i = 0; i < pastValuesStartIndex; ++i) {
+				outValue += layerPastValues[i][band] * valueWeight;
+				valueWeight++;
+			}
+
+			dest[band] = float(outValue * smoothingNormConstant);
+		}
+		break;
+
+	case SmoothingCurve::EXPONENTIAL:
+		for (index band = 0; band < index(dest.size()); ++band) {
+			double outValue = 0.0;
+			double smoothingWeight = 0;
+			double weight = 1;
+
+			for (index i = pastValuesStartIndex; i < params.smoothingFactor; ++i) {
+				outValue += layerPastValues[i][band] * weight;
+				smoothingWeight += weight;
+				weight *= params.exponentialFactor;
+			}
+			for (index i = 0; i < pastValuesStartIndex; ++i) {
+				outValue += layerPastValues[i][band] * weight;
+				smoothingWeight += weight;
+				weight *= params.exponentialFactor;
+			}
+
+			dest[band] = float(outValue * smoothingNormConstant);
+		}
+		break;
+
+	default: std::terminate(); // should be unreachable statement
 	}
 }

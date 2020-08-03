@@ -24,8 +24,6 @@ void FftCascade::setParams(Params _params, FFT* fft, FftCascade* successor, inde
 	buffer.setSize(params.fftSize);
 
 	resampleResult();
-	layerData.values = values;
-	layerData.id++;
 
 	const auto cascadeSampleRate = index(params.samplesPerSec / std::pow(2, cascadeIndex));
 	filter.setParams(params.legacy_attackTime, params.legacy_decayTime, cascadeSampleRate, params.inputStride);
@@ -119,7 +117,7 @@ void FftCascade::doFft() {
 		}
 	}
 
-	layerData.id++;
+	hasChanges = true;
 }
 
 void FftCascade::reset() {

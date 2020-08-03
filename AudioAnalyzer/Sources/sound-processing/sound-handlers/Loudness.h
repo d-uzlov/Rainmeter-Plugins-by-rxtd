@@ -20,6 +20,8 @@ namespace rxtd::audio_analyzer {
 	protected:
 		void _reset() override;
 		void finishBlock() override;
-		sview getDefaultTransform() override;
+
+		[[nodiscard]]
+		sview getDefaultTransform() const override;
 	};
 }

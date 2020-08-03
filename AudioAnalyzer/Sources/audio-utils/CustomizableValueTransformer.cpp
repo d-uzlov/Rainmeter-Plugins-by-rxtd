@@ -8,6 +8,7 @@
  */
 
 #include "CustomizableValueTransformer.h"
+
 #include "option-parser/OptionList.h"
 #include "option-parser/OptionSequence.h"
 #include "option-parser/OptionMap.h"
@@ -19,6 +20,12 @@ using namespace audio_utils;
 
 CustomizableValueTransformer::CustomizableValueTransformer(std::vector<TransformationInfo> transformations):
 	transforms(std::move(transformations)) {
+	for (const auto& tr : transforms) {
+		if (tr.type == TransformType::eFILTER) {
+			_hasState = true;
+			break;
+		}
+	}
 }
 
 float CustomizableValueTransformer::apply(float value) {
@@ -48,53 +55,82 @@ float CustomizableValueTransformer::apply(float value) {
 	return value;
 }
 
-void CustomizableValueTransformer::applyToArray(utils::array2d_span<float> values) {
-	const index rowsCount = values.getBuffersCount();
-	const index columnsCount = values.getBufferSize();
-	if (filterBuffersRows != rowsCount || filterBuffersColumns != columnsCount) {
-		updateFilterBuffers(rowsCount, columnsCount);
-	}
-
-	const float logCoef = float(std::log10(2)); // == log(2) / log(10)
-	auto flatValue = values.getFlat();
+void CustomizableValueTransformer::applyToArray(array_view<float> source, array_span<float> dest) {
+	const auto logCoef = float(std::log10(2)); // == log(2) / log(10)
 
 	for (auto& transform : transforms) {
 		switch (transform.type) {
 		case TransformType::eFILTER: {
-			auto pastFlat = transform.pastFilterValues.getFlat();
-			for (auto valueIter = flatValue.begin(), pastIter = pastFlat.begin();
-			     valueIter != flatValue.end();
-			     ++valueIter, ++pastIter) {
-				float& value = *valueIter;
-				float& prev = *pastIter;
+			auto sourceIter = source.begin();
+			auto pastIter = transform.pastFilterValues.begin();
+			auto destIter = dest.begin();
 
-				value = transform.state.filter.apply(prev, value);
-				prev = value;
+			for (; sourceIter != source.end();
+			       ++sourceIter, ++pastIter, ++destIter) {
+				const float sourceValue = *sourceIter;
+				float& prev = *pastIter;
+				float& destValue = *destIter;
+
+				destValue = transform.state.filter.apply(prev, sourceValue);
+				prev = destValue;
 			}
+			
 			break;
 		}
 		case TransformType::eDB: {
-			for (auto& value : flatValue) {
+			auto sourceIter = source.begin();
+			auto destIter = dest.begin();
+
+			for (; sourceIter != source.end();
+				++sourceIter, ++destIter) {
+				float value = *sourceIter;
+				float& destValue = *destIter;
+
 				value = std::max(value, std::numeric_limits<float>::min());
 				value = 10.0f * utils::MyMath::fastLog2(value) * logCoef;
 				// value = 10.0 * std::log10(value);
+
+				destValue = value;
 			}
+			
 			break;
 		}
 		case TransformType::eMAP: {
-			for (auto& value : flatValue) {
+			auto sourceIter = source.begin();
+			auto destIter = dest.begin();
+
+			for (; sourceIter != source.end();
+				++sourceIter, ++destIter) {
+				float value = *sourceIter;
+				float& destValue = *destIter;
+
 				value = transform.state.interpolator.toValue(value);
+				
+				destValue = value;
 			}
+
 			break;
 		}
 		case TransformType::eCLAMP: {
-			for (auto& value : flatValue) {
+			auto sourceIter = source.begin();
+			auto destIter = dest.begin();
+
+			for (; sourceIter != source.end();
+				++sourceIter, ++destIter) {
+				float value = *sourceIter;
+				float& destValue = *destIter;
+
 				value = std::clamp(value, transform.args[0], transform.args[1]);
+
+				destValue = value;
 			}
+
 			break;
 		}
 		default: std::terminate();
 		}
+		
+		source = dest;
 	}
 }
 
@@ -119,17 +155,19 @@ void CustomizableValueTransformer::resetState() {
 	}
 }
 
-void CustomizableValueTransformer::updateFilterBuffers(index rows, index columns) {
+void CustomizableValueTransformer::setHistoryWidth(index value) {
+	if (historyWidth == value) {
+		return;
+	}
+
 	for (auto& transform : transforms) {
 		if (transform.type == TransformType::eFILTER) {
-			transform.pastFilterValues.setBuffersCount(rows);
-			transform.pastFilterValues.setBufferSize(columns);
-			transform.pastFilterValues.init(0.0);
+			transform.pastFilterValues.resize(value);
+			std::fill(transform.pastFilterValues.begin(), transform.pastFilterValues.end(), 0.0f);
 		}
 	}
 
-	filterBuffersRows = rows;
-	filterBuffersColumns = columns;
+	historyWidth = value;
 }
 
 CustomizableValueTransformer TransformationParser::parse(utils::Option transform, utils::Rainmeter::Logger& cl) {

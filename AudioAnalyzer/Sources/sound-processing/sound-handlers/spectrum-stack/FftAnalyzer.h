@@ -71,7 +71,6 @@ namespace rxtd::audio_analyzer {
 		enum class RandomState { ON, OFF } randomState{ RandomState::ON };
 
 		std::vector<audio_utils::FftCascade> cascades{ };
-		std::vector<LayerData> layers;
 
 		audio_utils::FFT fft{ };
 
@@ -85,12 +84,13 @@ namespace rxtd::audio_analyzer {
 		void setParams(const Params& value);
 
 	protected:
+		[[nodiscard]]
 		isview vGetSourceName() const override {
 			return { };
 		}
 
 		[[nodiscard]]
-		bool vFinishLinking(Logger& cl) override;
+		LinkingResult vFinishLinking(Logger& cl) override;
 
 	public:
 		double getFftFreq(index fft) const;
@@ -101,20 +101,9 @@ namespace rxtd::audio_analyzer {
 
 		void vProcess(const DataSupplier& dataSupplier) override;
 
-		LayeredData vGetData() const override {
-			return layers;
-		}
-
-		[[nodiscard]]
-		DataSize getDataSize() const override {
-			return { params.cascadesCount, fftSize / 2 };
-		}
-
 		bool vGetProp(const isview& prop, utils::BufferPrinter& printer) const override;
 
 	private:
 		void processRandom(index waveSize);
-
-		void updateParams();
 	};
 }

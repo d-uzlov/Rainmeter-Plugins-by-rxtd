@@ -23,7 +23,7 @@ bool SingleValueTransformer::parseParams(
 	params.sourceId = optionMap.get(L"source"sv).asIString();
 	if (params.sourceId.empty()) {
 		cl.error(L"source not found");
-		return {};
+		return { };
 	}
 
 	auto transformLogger = cl.context(L"transform: ");
@@ -36,26 +36,24 @@ void SingleValueTransformer::setParams(const Params& value) {
 	params = value;
 }
 
-bool SingleValueTransformer::vFinishLinking(Logger& cl) {
+SoundHandler::LinkingResult SingleValueTransformer::vFinishLinking(Logger& cl) {
 	const auto source = getSource();
 	if (source == nullptr) {
 		cl.error(L"source is not found");
-		return false;
+		return { };
 	}
 
 	// todo check for zero size
-	const auto [layersCount, layerSize] = source->getDataSize();
+	const auto dataSize = source->getDataSize();
 
-	values.setBuffersCount(layersCount);
-	values.setBufferSize(layerSize);
-	layers.resize(layersCount);
+	params.transformer.setHistoryWidth(dataSize.valuesCount);
 
-	for (index layerIndex = 0; layerIndex < layersCount; ++layerIndex) {
-		// layers[layerIndex].id = 0;
-		layers[layerIndex].values = values[layerIndex];
+	transformers.resize(dataSize.layersCount);
+	for (auto& tr : transformers) {
+		tr = params.transformer;
 	}
 
-	return true;
+	return dataSize;
 }
 
 void SingleValueTransformer::vReset() {
@@ -63,22 +61,46 @@ void SingleValueTransformer::vReset() {
 }
 
 void SingleValueTransformer::vProcess(const DataSupplier& dataSupplier) {
-	auto& source = *getSource();
-
-	source.finish();
-	const auto sourceData = source.vGetData();
-	const auto [layersCount, layerSize] = source.getDataSize();
-
-	for (index layerIndex = 0; layerIndex < layersCount; ++layerIndex) {
-		auto layerData = sourceData[layerIndex];
-		auto dest = values[layerIndex];
-
-		// todo check if transform is stateless and then check .id
-		std::copy(layerData.values.begin(), layerData.values.end(), dest.begin());
-
-		layers[layerIndex].id++;
+	if (params.transformer.hasState()) {
+		processStateful(dataSupplier.getWave().size());
+	} else {
+		processStateless();
 	}
+}
 
-	params.transformer.setParams(getSampleRate(), dataSupplier.getWave().size());
-	params.transformer.applyToArray(values);
+void SingleValueTransformer::processStateless() {
+	auto& source = *getSource();
+	source.finish();
+	const auto sourceData = source.getData();
+	const index layersCount = source.getDataSize().layersCount;
+
+	const auto refIds = getRefIds();
+
+	for (index i = 0; i < layersCount; ++i) {
+		const auto sid = sourceData.ids[i];
+
+		if (sid == refIds[i]) {
+			continue;
+		}
+
+		auto layerData = sourceData.values[i];
+		auto dest = updateLayerData(i, sid);
+
+		params.transformer.applyToArray(layerData, dest);
+	}
+}
+
+void SingleValueTransformer::processStateful(index waveSize) {
+	auto& source = *getSource();
+	source.finish();
+	const auto sourceData = source.getData();
+	const index layersCount = source.getDataSize().layersCount;
+
+	for (index i = 0; i < layersCount; ++i) {
+		auto layerData = sourceData.values[i];
+		auto dest = generateLayerData(i);
+
+		transformers[i].setParams(getSampleRate(), waveSize);
+		transformers[i].applyToArray(layerData, dest);
+	}
 }

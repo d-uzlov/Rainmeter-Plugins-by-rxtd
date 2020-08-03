@@ -16,19 +16,19 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-bool BandResampler::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr)const {
+bool BandResampler::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
-	
+
 	params.fftId = optionMap.get(L"source"sv).asIString();
 	if (params.fftId.empty()) {
 		cl.error(L"source is not found");
-		return {};
+		return { };
 	}
 
 	const auto freqListIndex = optionMap.get(L"freqList"sv).asString();
 	if (freqListIndex.empty()) {
 		cl.error(L"freqList is not found");
-		return {};
+		return { };
 	}
 
 	params.bandFreqs = parseFreqList(freqListIndex, rain);
@@ -50,7 +50,7 @@ bool BandResampler::parseParams(const OptionMap& optionMap, Logger& cl, const Ra
 	params.includeDC = optionMap.get(L"includeDC"sv).asBool(true);
 
 	params.legacy_proportionalValues = optionMap.get(L"proportionalValues"sv).asBool(true);
-	if (optionMap.has(L"proportionalValues"sv)) {
+	if (params.legacy_proportionalValues == true) {
 		cl.notice(
 			L"for better results set 'proportionalValues false' and use 'filter replayGain' in processing description instead");
 	}
@@ -170,27 +170,27 @@ std::vector<float> BandResampler::parseFreqList(sview listId, const Rainmeter& r
 	return result;
 }
 
-bool BandResampler::vFinishLinking(Logger& cl) {
+SoundHandler::LinkingResult BandResampler::vFinishLinking(Logger& cl) {
 	// todo what if user want to filter values between fft and resampler?
 	// todo use getSource everywhere instead of saving source field
 
 	const auto source = getSource();
 	if (source == nullptr) {
 		cl.error(L"source is not found");
-		return false;
+		return { };
 	}
 
 	fftSource = dynamic_cast<FftAnalyzer*>(source);
 	if (fftSource == nullptr) {
 		cl.error(L"invalid source, need FftAnalyzer");
-		return false;
+		return { };
 	}
 
 	const auto cascadesCount = fftSource->getDataSize().layersCount;
 
 	if (params.minCascade > cascadesCount) {
 		cl.error(L"minCascade is more than number of cascades");
-		return false;
+		return { };
 	}
 
 	startCascade = 1;
@@ -206,17 +206,13 @@ bool BandResampler::vFinishLinking(Logger& cl) {
 	endCascade--;
 
 	const index realCascadesCount = endCascade - startCascade;
-	cascadesInfo.resize(realCascadesCount);
-	layers.resize(realCascadesCount);
-	for (index i = 0; i < realCascadesCount; ++i) {
-		cascadesInfo[i].setSize(bandsCount);
-		layers[i].id++;
-		layers[i].values = cascadesInfo[i].magnitudes;
-	}
+
+	bandWeights.setBuffersCount(realCascadesCount);
+	bandWeights.setBufferSize(bandsCount);
 
 	computeWeights(fftSource->getFftSize());
 
-	return true;
+	return { realCascadesCount, bandsCount };
 }
 
 void BandResampler::vProcess(const DataSupplier& dataSupplier) {
@@ -232,29 +228,31 @@ void BandResampler::vFinish() {
 	auto& source = *fftSource;
 
 	source.finish();
-	const auto sourceData = source.vGetData();
+	const auto sourceData = source.getData();
 	double binWidth = static_cast<double>(getSampleRate()) / (source.getFftSize() * std::pow(2, startCascade));
 
+	const auto refIds = getRefIds();
+
 	for (index cascadeIndex = startCascade; cascadeIndex < endCascade; ++cascadeIndex) {
-		const auto cascade = sourceData[cascadeIndex];
+		const auto sid = sourceData.ids[cascadeIndex];
 		const index localCascadeIndex = cascadeIndex - startCascade;
 
-		if (cascade.id != layers[localCascadeIndex].id) {
-			sampleCascade(cascade.values, cascadesInfo[localCascadeIndex].magnitudes, binWidth);
-			layers[localCascadeIndex].id = cascade.id;
+		if (sid != refIds[localCascadeIndex]) {
+			const auto cascade = sourceData.values[cascadeIndex];
+			auto dest = updateLayerData(localCascadeIndex, sid);
+			sampleCascade(cascade, dest, binWidth);
+
+			if (params.legacy_proportionalValues) {
+				for (index band = 0; band < bandsCount; ++band) {
+					dest[band] *= legacy_bandFreqMultipliers[band];
+				}
+			}
 		}
 
 		binWidth *= 0.5;
 	}
 
 	// legacy
-	if (params.legacy_proportionalValues) {
-		for (auto& [cascadeMagnitudes, cascadeWeights] : cascadesInfo) {
-			for (index band = 0; band < bandsCount; ++band) {
-				cascadeMagnitudes[band] *= legacy_bandFreqMultipliers[band];
-			}
-		}
-	}
 }
 
 bool BandResampler::vGetProp(const isview& prop, utils::BufferPrinter& printer) const {
@@ -262,7 +260,7 @@ bool BandResampler::vGetProp(const isview& prop, utils::BufferPrinter& printer) 
 		printer.print(bandsCount);
 		return true;
 	}
-	
+
 	auto index = legacy_parseIndexProp(prop, L"lower bound", bandsCount + 1);
 	if (index == -2) {
 		printer.print(L"0");
@@ -305,16 +303,8 @@ bool BandResampler::vGetProp(const isview& prop, utils::BufferPrinter& printer) 
 	return false;
 }
 
-void BandResampler::vReset() {
-	changed = false;
-
-	for (auto& [mag, weights] : cascadesInfo) {
-		std::fill(mag.begin(), mag.end(), 0.0f);
-	}
-}
-
 array_view<float> BandResampler::getBandWeights(index cascade) const {
-	return cascadesInfo[cascade].weights;
+	return bandWeights[cascade];
 }
 
 array_view<float> BandResampler::getBaseFreqs() const {
@@ -376,8 +366,8 @@ void BandResampler::computeWeights(index fftSize) {
 	const auto fftBinsCount = fftSize / 2;
 	double binWidth = static_cast<double>(getSampleRate()) / (fftSize * std::pow(2, startCascade));
 
-	for (auto& [_, cascadeWeights] : cascadesInfo) {
-		computeCascadeWeights(cascadeWeights, fftBinsCount, binWidth);
+	for (index i = 0; i < bandWeights.getBuffersCount(); ++i) {
+		computeCascadeWeights(bandWeights[i], fftBinsCount, binWidth);
 		binWidth *= 0.5;
 	}
 }

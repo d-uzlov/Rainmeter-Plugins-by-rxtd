@@ -10,7 +10,6 @@
 #pragma once
 #include "../SoundHandler.h"
 #include "RainmeterWrappers.h"
-#include "Vector2D.h"
 
 namespace rxtd::audio_analyzer {
 	class legacy_LogarithmicValueMapper : public SoundHandler {
@@ -37,17 +36,13 @@ namespace rxtd::audio_analyzer {
 
 		float logNormalization{ };
 
-		SoundHandler* sourcePtr{ };
-
-		utils::Vector2D<float> values;
-
 		bool changed = true;
 
-		std::vector<LayerData> layers;
-
 	public:
+		[[nodiscard]]
 		bool parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr) const override;
 
+		[[nodiscard]]
 		const Params& getParams() const {
 			return params;
 		}
@@ -61,21 +56,11 @@ namespace rxtd::audio_analyzer {
 		}
 
 		[[nodiscard]]
-		bool vFinishLinking(Logger& cl) override;
+		LinkingResult vFinishLinking(Logger& cl) override;
 
 	public:
-		void vReset() override;
-
 		void vProcess(const DataSupplier& dataSupplier) override;
 		void vFinish() override;
 
-		LayeredData vGetData() const override {
-			return layers;
-		}
-
-		[[nodiscard]]
-		DataSize getDataSize() const override {
-			return { values.getBuffersCount(), values.getBufferSize() };
-		}
 	};
 }

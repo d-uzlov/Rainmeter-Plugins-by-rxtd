@@ -36,17 +36,17 @@ bool Spectrogram::vGetProp(const isview& prop, utils::BufferPrinter& printer) co
 
 bool Spectrogram::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
-	
+
 	params.sourceName = optionMap.get(L"source"sv).asIString();
 	if (params.sourceName.empty()) {
 		cl.error(L"source not found");
-		return {};
+		return { };
 	}
 
 	params.length = optionMap.get(L"length"sv).asInt(100);
 	if (params.length < 2) {
 		cl.error(L"length must be >= 2 but {} found", params.length);
-		return {};
+		return { };
 	}
 	if (params.length >= 1500) {
 		cl.warning(L"dangerously large length {}", params.length);
@@ -80,7 +80,7 @@ bool Spectrogram::parseParams(const OptionMap& optionMap, Logger& cl, const Rain
 
 			if (value <= prevValue) {
 				cl.error(L"colors: values {} and {}: values must be increasing", prevValue, value);
-				return {};
+				return { };
 			}
 			if (value / prevValue < 1.001f && value - prevValue < 0.001f) {
 				cl.error(L"colors: values {} and {} are too close, discarding second one", prevValue, value);
@@ -133,11 +133,11 @@ void Spectrogram::setParams(const Params& value) {
 	sifh.setFading(params.fading);
 }
 
-bool Spectrogram::vFinishLinking(Logger& cl) {
+SoundHandler::LinkingResult Spectrogram::vFinishLinking(Logger& cl) {
 	const auto source = getSource();
 	if (source == nullptr) {
 		cl.error(L"source is not found");
-		return false;
+		return { };
 	}
 
 	filepath = params.prefix;
@@ -146,7 +146,7 @@ bool Spectrogram::vFinishLinking(Logger& cl) {
 
 	blockSize = index(getSampleRate() * params.resolution);
 
-	return true;
+	return { 0, 0 };
 }
 
 void Spectrogram::fillStrip(array_view<float> data, array_span<utils::IntColor> buffer) const {
@@ -203,11 +203,11 @@ void Spectrogram::vProcess(const DataSupplier& dataSupplier) {
 	auto& source = *getSource();
 
 	source.finish();
-	const auto sd = source.vGetData();
+	const auto sd = source.getData();
 
 	// todo check id
-	const auto data = sd[0].values;
-	const auto dataSize = data.size();
+	const auto data = source.getData().values[0];
+	const auto dataSize = source.getDataSize().valuesCount;
 	// if (dataSize <= 0) { // todo move this check to linking
 	// 	setValid(false);
 	// 	return;

@@ -88,15 +88,13 @@ namespace rxtd::audio_analyzer {
 
 		BandResampler* resamplerPtr{ };
 
-		utils::Vector2D<float> values;
-
 		bool changed = true;
 
-		std::vector<LayerData> layers;
-
 	public:
+		[[nodiscard]]
 		bool parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr) const override;
 
+		[[nodiscard]]
 		const Params& getParams() const {
 			return params;
 		}
@@ -112,21 +110,11 @@ namespace rxtd::audio_analyzer {
 		}
 
 		[[nodiscard]]
-		bool vFinishLinking(Logger& cl) override;
+		LinkingResult vFinishLinking(Logger& cl) override;
 
 	public:
-		void vReset() override;
 		void vProcess(const DataSupplier& dataSupplier) override;
 		void vFinish() override;
-
-		LayeredData vGetData() const override {
-			return layers;
-		}
-
-		[[nodiscard]]
-		DataSize getDataSize() const override {
-			return { values.getBuffersCount(), values.getBufferSize() };
-		}
 
 	private:
 		void blurCascade(array_view<float> source, array_view<float> weights, array_span<float> dest);

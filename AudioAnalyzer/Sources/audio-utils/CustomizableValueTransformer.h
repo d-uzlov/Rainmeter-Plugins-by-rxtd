@@ -12,8 +12,7 @@
 #include "RainmeterWrappers.h"
 #include "filter-utils/LogarithmicIRF.h"
 #include "LinearInterpolator.h"
-#include "Vector2D.h"
-#include "array2d_view.h"
+#include "array_view.h"
 
 namespace rxtd::audio_utils {
 	class CustomizableValueTransformer {
@@ -28,7 +27,7 @@ namespace rxtd::audio_utils {
 		struct TransformationInfo {
 			TransformType type{ };
 			std::array<float, 2> args{ };
-			utils::Vector2D<float> pastFilterValues;
+			std::vector<float> pastFilterValues;
 
 			union {
 				LogarithmicIRF filter{ };
@@ -47,8 +46,8 @@ namespace rxtd::audio_utils {
 
 	private:
 		std::vector<TransformationInfo> transforms;
-		index filterBuffersRows = 0;
-		index filterBuffersColumns = 0;
+		index historyWidth = 0;
+		bool _hasState = false;
 
 	public:
 		CustomizableValueTransformer() = default;
@@ -71,6 +70,11 @@ namespace rxtd::audio_utils {
 		}
 
 		[[nodiscard]]
+		bool hasState() const {
+			return _hasState;
+		}
+
+		[[nodiscard]]
 		bool isEmpty() const {
 			return transforms.empty();
 		}
@@ -78,14 +82,13 @@ namespace rxtd::audio_utils {
 		[[nodiscard]]
 		float apply(float value);
 
-		void applyToArray(utils::array2d_span<float> values);
+		void applyToArray(array_view<float> source, array_span<float> dest);
 
 		void setParams(index samplesPerSec, index blockSize);
 
 		void resetState();
 
-	private:
-		void updateFilterBuffers(index rows, index columns);
+		void setHistoryWidth(index value);
 	};
 
 	class TransformationParser {

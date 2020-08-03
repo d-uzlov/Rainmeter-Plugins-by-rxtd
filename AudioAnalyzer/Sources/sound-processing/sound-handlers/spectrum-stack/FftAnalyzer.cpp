@@ -86,13 +86,53 @@ bool FftAnalyzer::parseParams(const OptionMap& optionMap, Logger& cl, const Rain
 }
 
 void FftAnalyzer::setParams(const Params& value) {
-	this->params = value;
+	params = value;
 }
 
-bool FftAnalyzer::vFinishLinking(Logger& cl) {
-	updateParams();
+SoundHandler::LinkingResult FftAnalyzer::vFinishLinking(Logger& cl) {
+	switch (params.legacy_sizeBy) {
+	case SizeBy::BIN_WIDTH:
+		fftSize = kiss_fft::calculateNextFastSize(index(getSampleRate() / params.binWidth), true);
+		break;
+	case SizeBy::SIZE:
+		fftSize = kiss_fft::calculateNextFastSize(index(params.binWidth), true);
+		break;
+	case SizeBy::SIZE_EXACT:
+		fftSize = static_cast<index>(static_cast<size_t>(params.binWidth) & ~1); // only even sizes are allowed
+		break;
+	default: // must be unreachable statement
+		std::abort();
+	}
 
-	return true; // todo
+	if (fftSize <= 1) {
+		cl.error(L"fft size is too small");
+		return { };
+	}
+
+	fft.setSize(fftSize, !params.legacyAmplification);
+
+	inputStride = static_cast<index>(fftSize * (1 - params.overlap));
+	inputStride = std::clamp<index>(inputStride, std::min<index>(16, fftSize), fftSize);
+
+	randomBlockSize = index(params.randomDuration * getSampleRate() * fftSize / inputStride);
+	randomCurrentOffset = 0;
+
+	cascades.resize(params.cascadesCount);
+
+	audio_utils::FftCascade::Params cascadeParams{ };
+	cascadeParams.fftSize = fftSize;
+	cascadeParams.samplesPerSec = getSampleRate();
+	cascadeParams.legacy_attackTime = params.legacy_attackTime;
+	cascadeParams.legacy_decayTime = params.legacy_decayTime;
+	cascadeParams.inputStride = inputStride;
+	cascadeParams.legacy_correctZero = params.legacy_correctZero;
+
+	for (index i = 0; i < index(cascades.size()); i++) {
+		const auto next = i + 1 < index(cascades.size()) ? &cascades[i + 1] : nullptr;
+		cascades[i].setParams(cascadeParams, &fft, next, i);
+	}
+
+	return { params.cascadesCount, fftSize / 2 };
 }
 
 double FftAnalyzer::getFftFreq(index fft) const {
@@ -106,12 +146,13 @@ index FftAnalyzer::getFftSize() const {
 	return fftSize;
 }
 
-void FftAnalyzer::vProcess(const DataSupplier& dataSupplier) {
-	if (fftSize <= 0) {
-		// effectively checks that sample rate is not 0
-		return;
+void FftAnalyzer::vReset() {
+	for (auto& cascade : cascades) {
+		cascade.reset();
 	}
+}
 
+void FftAnalyzer::vProcess(const DataSupplier& dataSupplier) {
 	const auto wave = dataSupplier.getWave();
 
 	if (params.randomTest != 0.0) {
@@ -121,7 +162,14 @@ void FftAnalyzer::vProcess(const DataSupplier& dataSupplier) {
 	}
 
 	for (index i = 0; i < index(cascades.size()); i++) {
-		layers[i] = cascades[i].getLayerData();
+		const auto hasChanges = cascades[i].grabChanges();
+		if (!hasChanges) {
+			continue;
+		}
+
+		auto source = cascades[i].getValues();
+		auto dest = generateLayerData(i);
+		std::copy(source.begin(), source.end(), dest.begin());
 	}
 }
 
@@ -208,53 +256,4 @@ bool FftAnalyzer::vGetProp(const isview& prop, utils::BufferPrinter& printer) co
 	}
 
 	return true;
-}
-
-void FftAnalyzer::vReset() {
-	for (auto& cascade : cascades) {
-		cascade.reset();
-	}
-}
-
-void FftAnalyzer::updateParams() {
-	switch (params.legacy_sizeBy) {
-	case SizeBy::BIN_WIDTH:
-		fftSize = kiss_fft::calculateNextFastSize(index(getSampleRate() / params.binWidth), true);
-		break;
-	case SizeBy::SIZE:
-		fftSize = kiss_fft::calculateNextFastSize(index(params.binWidth), true);
-		break;
-	case SizeBy::SIZE_EXACT:
-		fftSize = static_cast<index>(static_cast<size_t>(params.binWidth) & ~1); // only even sizes are allowed
-		break;
-	default: // must be unreachable statement
-		std::abort();
-	}
-	if (fftSize <= 1) {
-		fftSize = 0;
-		return;
-	}
-	fft.setSize(fftSize, !params.legacyAmplification);
-
-	inputStride = static_cast<index>(fftSize * (1 - params.overlap));
-	inputStride = std::clamp<index>(inputStride, std::min<index>(16, fftSize), fftSize);
-
-	randomBlockSize = index(params.randomDuration * getSampleRate() * fftSize / inputStride);
-	randomCurrentOffset = 0;
-
-	cascades.resize(params.cascadesCount);
-	layers.resize(params.cascadesCount);
-
-	audio_utils::FftCascade::Params cascadeParams{ };
-	cascadeParams.fftSize = fftSize;
-	cascadeParams.samplesPerSec = getSampleRate();
-	cascadeParams.legacy_attackTime = params.legacy_attackTime;
-	cascadeParams.legacy_decayTime = params.legacy_decayTime;
-	cascadeParams.inputStride = inputStride;
-	cascadeParams.legacy_correctZero = params.legacy_correctZero;
-
-	for (index i = 0; i < index(cascades.size()); i++) {
-		const auto next = i + 1 < index(cascades.size()) ? &cascades[i + 1] : nullptr;
-		cascades[i].setParams(cascadeParams, &fft, next, i);
-	}
 }

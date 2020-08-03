@@ -40,7 +40,7 @@ bool BlockHandler::parseParams(const OptionMap& optionMap, Logger& cl, const Rai
 
 		utils::BufferPrinter printer;
 		printer.print(L"filter[attack {}, decay {}]", params.legacy_attackTime, params.legacy_decayTime);
-		params.transformer = audio_utils::TransformationParser::parse(utils::Option { printer.getBufferView() }, cl);
+		params.transformer = audio_utils::TransformationParser::parse(utils::Option{ printer.getBufferView() }, cl);
 	}
 
 	return true;
@@ -48,7 +48,6 @@ bool BlockHandler::parseParams(const OptionMap& optionMap, Logger& cl, const Rai
 
 void BlockHandler::setParams(const Params& value) {
 	params = value;
-	resultL.values = { &result, 1 };
 
 	if (params.transformer.isEmpty()) {
 		params.transform = getDefaultTransform();
@@ -57,15 +56,15 @@ void BlockHandler::setParams(const Params& value) {
 	}
 }
 
-bool BlockHandler::vFinishLinking(Logger& cl) {
+SoundHandler::LinkingResult BlockHandler::vFinishLinking(Logger& cl) {
 	blockSize = static_cast<decltype(blockSize)>(getSampleRate() * params.resolution);
 	if (blockSize < 1) {
 		blockSize = 1;
 	}
 
 	params.transformer.setParams(getSampleRate(), blockSize);
-	
-	return true;
+
+	return { 1, 1 };
 }
 
 // todo update reset everywhere
@@ -109,7 +108,7 @@ bool BlockHandler::vGetProp(const isview& prop, utils::BufferPrinter& printer) c
 }
 
 void BlockHandler::setNextValue(double value) {
-	result = params.transformer.apply(float(value));
+	generateLayerData(0)[0] = params.transformer.apply(float(value));
 }
 
 void BlockRms::_process(array_view<float> wave, float average) {
@@ -134,7 +133,7 @@ void BlockRms::_reset() {
 	intermediateResult = 0.0;
 }
 
-sview BlockRms::getDefaultTransform() {
+sview BlockRms::getDefaultTransform() const {
 	return L"db map[from -70 : 0] filter[attack 200, decay 200] clamp"sv;
 }
 
@@ -159,6 +158,6 @@ void BlockPeak::_reset() {
 	intermediateResult = 0.0;
 }
 
-sview BlockPeak::getDefaultTransform() {
+sview BlockPeak::getDefaultTransform() const {
 	return L"filter[attack 0, decay 500] clamp"sv;
 }

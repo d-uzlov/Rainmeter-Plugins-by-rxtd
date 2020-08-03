@@ -63,23 +63,23 @@ bool BandCascadeTransformer::parseParams(
 	return true;
 }
 
-bool BandCascadeTransformer::vFinishLinking(Logger& cl) {
+SoundHandler::LinkingResult BandCascadeTransformer::vFinishLinking(Logger& cl) {
 	const auto sourcePtr = getSource();
 	if (sourcePtr == nullptr) {
 		cl.error(L"source is not found");
-		return false;
+		return { };
 	}
 
 	const auto provider = dynamic_cast<ResamplerProvider*>(sourcePtr);
 	if (provider == nullptr) {
 		cl.error(L"invalid source");
-		return false;
+		return { };
 	}
 
 	resamplerPtr = provider->getResampler();
 	if (resamplerPtr == nullptr) {
 		cl.error(L"BandResampler is not found in the source chain");
-		return false;
+		return { };
 	}
 
 	analysis = computeAnalysis(
@@ -88,17 +88,14 @@ bool BandCascadeTransformer::vFinishLinking(Logger& cl) {
 	);
 	if (!analysis.anyCascadeUsed) {
 		cl.error(L"no input data could be used because of too strict weight constraints");
-		return false;
+		return { };
 	}
 
 	savedIds.resize(sourcePtr->getDataSize().layersCount);
 
 	const index bandsCount = sourcePtr->getDataSize().valuesCount;
 
-	values.resize(bandsCount);
-	layerData.values = values;
-
-	return true;
+	return { 1, bandsCount };
 }
 
 void BandCascadeTransformer::vReset() {
@@ -118,22 +115,24 @@ void BandCascadeTransformer::vFinish() {
 	auto& source = *getSource();
 
 	source.finish();
-	const auto sourceData = source.vGetData();
+	const auto sourceData = source.getData();
 
-	const bool anyChanged = checkAnyChanged(sourceData);
+	bool anyChanged = false;
+	for (index i = 0; i < sourceData.ids.size(); i++) {
+		if (savedIds[i] != sourceData.ids[i]) {
+			savedIds[i] = sourceData.ids[i];
+			anyChanged = true;
+		}
+	}
 	if (!anyChanged) {
 		return;
 	}
 
-	for (index i = 0; i < sourceData.size(); i++) {
-		savedIds[i] = sourceData[i].id;
-	}
-	layerData.id++;
-
 	const index bandsCount = source.getDataSize().valuesCount;
+	auto dest = generateLayerData(0);
 
 	for (index band = 0; band < bandsCount; ++band) {
-		values[band] = computeForBand(band, sourceData);
+		dest[band] = computeForBand(band, sourceData.values);
 	}
 }
 
@@ -151,17 +150,7 @@ bool BandCascadeTransformer::vGetProp(const isview& prop, utils::BufferPrinter& 
 	return true;
 }
 
-bool BandCascadeTransformer::checkAnyChanged(const LayeredData& sourceData) {
-	for (index i = 0; i < sourceData.size(); i++) {
-		if (sourceData[i].id != savedIds[i]) {
-			return true;
-		}
-	}
-
-	return false;
-}
-
-float BandCascadeTransformer::computeForBand(index band, const LayeredData& sourceData) const {
+float BandCascadeTransformer::computeForBand(index band, utils::array2d_view<float> sourceData) const {
 	const BandResampler& resampler = *resamplerPtr;
 
 	double weight = 0.0;
@@ -171,8 +160,9 @@ float BandCascadeTransformer::computeForBand(index band, const LayeredData& sour
 	double value = params.mixFunction == MixFunction::PRODUCT ? 1.0 : 0.0;
 
 	for (index cascade = 0; cascade < bandEndCascade; cascade++) {
+		// todo change  getBandWeights to return array for all cascades
 		const auto bandWeight = resampler.getBandWeights(cascade)[band];
-		const auto magnitude = sourceData[cascade].values[band];
+		const auto magnitude = sourceData[cascade][band];
 		const auto cascadeBandValue = magnitude / bandWeight;
 
 		if (cascadeBandValue < params.zeroLevelHard) {
@@ -199,7 +189,7 @@ float BandCascadeTransformer::computeForBand(index band, const LayeredData& sour
 	if (weight < params.weightFallback) {
 		for (index cascade = 0; cascade < bandEndCascade; cascade++) {
 			const auto bandWeight = resampler.getBandWeights(cascade)[band];
-			const auto magnitude = sourceData[cascade].values[band];
+			const auto magnitude = sourceData[cascade][band];
 			const auto cascadeBandValue = magnitude / bandWeight;
 
 			if (cascadeBandValue < params.zeroLevelHard) {

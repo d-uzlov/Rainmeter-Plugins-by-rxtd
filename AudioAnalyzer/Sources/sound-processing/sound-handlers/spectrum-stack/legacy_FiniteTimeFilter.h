@@ -47,18 +47,17 @@ namespace rxtd::audio_analyzer {
 
 		// pastValues[Layer][FilterSize][Band]
 		std::vector<utils::Vector2D<float>> pastValues;
-		utils::Vector2D<float> values;
 		index pastValuesIndex = 0;
 
 		double smoothingNormConstant{ };
 
 		bool changed = true;
 
-		std::vector<LayerData> layers;
-
 	public:
+		[[nodiscard]]
 		bool parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr) const override;
 
+		[[nodiscard]]
 		const Params& getParams() const {
 			return params;
 		}
@@ -72,23 +71,14 @@ namespace rxtd::audio_analyzer {
 		}
 
 		[[nodiscard]]
-		bool vFinishLinking(Logger& cl) override;
+		LinkingResult vFinishLinking(Logger& cl) override;
 
 	public:
 		void vReset() override;
 		void vProcess(const DataSupplier& dataSupplier) override;
 		void vFinish() override;
 
-		LayeredData vGetData() const override {
-			return layers;
-		}
-
-		[[nodiscard]]
-		DataSize getDataSize() const override {
-			return { values.getBuffersCount(), values.getBufferSize() };
-		}
-
 	private:
-		void applyTimeFiltering();
+		void applyToLayer(utils::array2d_view<float> layerPastValues, array_span<float> dest) const;
 	};
 }

@@ -221,6 +221,7 @@
     <ClCompile Include="Sources\sound-processing\HelperClasses.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\BlockHandler.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\Loudness.cpp" />
+    <ClCompile Include="Sources\sound-processing\sound-handlers\SoundHandler.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\BandCascadeTransformer.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\BandResampler.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\FftAnalyzer.cpp" />

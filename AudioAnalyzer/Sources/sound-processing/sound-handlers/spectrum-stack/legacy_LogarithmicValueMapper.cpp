@@ -24,7 +24,7 @@ bool legacy_LogarithmicValueMapper::parseParams(
 	params.sourceId = optionMap.get(L"source"sv).asIString();
 	if (params.sourceId.empty()) {
 		cl.error(L"source not found");
-		return {};
+		return { };
 	}
 
 	params.sensitivity = optionMap.get(L"sensitivity"sv).asFloat(35.0);
@@ -40,23 +40,16 @@ void legacy_LogarithmicValueMapper::setParams(const Params& value) {
 	logNormalization = float(20.0 / params.sensitivity);
 }
 
-bool legacy_LogarithmicValueMapper::vFinishLinking(Logger& cl) {
-	sourcePtr = getSource();
+SoundHandler::LinkingResult legacy_LogarithmicValueMapper::vFinishLinking(Logger& cl) {
+	const auto sourcePtr = getSource();
 	if (sourcePtr == nullptr) {
 		cl.error(L"source is not found");
-		return false;
+		return { };
 	}
 
-	const auto [layersCount, valuesCount] = sourcePtr->getDataSize();
-	values.setBuffersCount(layersCount);
-	values.setBufferSize(valuesCount);
+	const auto dataSize = sourcePtr->getDataSize();
 
-	layers.resize(layersCount);
-	for (index i = 0; i < layersCount; ++i) {
-		layers[i].values = values[i];
-	}
-
-	return true;
+	return dataSize;
 }
 
 void legacy_LogarithmicValueMapper::vProcess(const DataSupplier& dataSupplier) {
@@ -72,33 +65,28 @@ void legacy_LogarithmicValueMapper::vFinish() {
 
 	constexpr float log10inverse = 0.30102999566398119521; // 1.0 / log2(10)
 
-	auto& source = *sourcePtr;
+	auto& source = *getSource();
 	source.finish();
-	const auto [layersCount, valuesCount] = sourcePtr->getDataSize();
+	const index layersCount = source.getDataSize().layersCount;
 
-	const auto sourceData = source.vGetData();
+	const auto sourceData = source.getData();
 
-	for (index layer = 0; layer < layersCount; ++layer) {
-		// const auto values = sourceData[layer].values;
-		auto sd = sourceData[layer];
+	const auto refIds = getRefIds();
 
-		if (sd.id == layers[layer].id) {
+	for (index i = 0; i < layersCount; ++i) {
+		const auto sid = sourceData.ids[i];
+
+		if (sid == refIds[i]) {
 			continue;
 		}
 
-		layers[layer].id = sd.id;
+		auto sd = sourceData.values[i];
+		auto dest = updateLayerData(i, sid);
 
-		auto sourceValues = sd.values;
-		auto resultValues = values[layer];
-
-		for (index i = 0; i < valuesCount; ++i) {
-			float value = utils::MyMath::fastLog2(sourceValues[i]) * log10inverse;
+		for (index j = 0; j < sd.size(); ++j) {
+			float value = utils::MyMath::fastLog2(sd[j]) * log10inverse;
 			value = value * logNormalization + 1.0f + params.offset;
-			resultValues[i] = float(value);
+			dest[j] = float(value);
 		}
 	}
-}
-
-void legacy_LogarithmicValueMapper::vReset() {
-	changed = true;
 }

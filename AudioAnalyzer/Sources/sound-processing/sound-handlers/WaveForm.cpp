@@ -103,7 +103,7 @@ void WaveForm::setParams(const Params& value) {
 	drawer.setBorderSize(params.borderSize);
 }
 
-bool WaveForm::vFinishLinking(Logger& cl) {
+SoundHandler::LinkingResult WaveForm::vFinishLinking(Logger& cl) {
 	filepath = params.folder;
 	filepath += L"wave-";
 	filepath += getChannel().technicalName();
@@ -123,7 +123,7 @@ bool WaveForm::vFinishLinking(Logger& cl) {
 	// todo remove?
 	vReset();
 
-	return true;
+	return { 0, 0 };
 }
 
 void WaveForm::vReset() {

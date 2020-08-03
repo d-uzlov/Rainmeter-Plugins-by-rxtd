@@ -39,11 +39,11 @@ std::vector<double> WeightedBlur::GaussianCoefficientsManager::generateGaussianK
 
 bool WeightedBlur::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
-	
+
 	params.sourceId = optionMap.get(L"source"sv).asIString();
 	if (params.sourceId.empty()) {
 		cl.error(L"source not found");
-		return {};
+		return { };
 	}
 
 	//                                                                      ?? ↓↓ looks best ?? at 0.25 ↓↓ ?? // TODO
@@ -62,34 +62,22 @@ bool WeightedBlur::parseParams(const OptionMap& optionMap, Logger& cl, const Rai
 	return true;
 }
 
-bool WeightedBlur::vFinishLinking(Logger& cl) {
+SoundHandler::LinkingResult WeightedBlur::vFinishLinking(Logger& cl) {
+
 	resamplerPtr = getResampler();
 	if (resamplerPtr == nullptr) {
 		cl.error(L"BandResampler is not found in the source chain");
-		return false;
+		return { };
 	}
 
 	const auto source = getSource();
 	if (source == nullptr) {
 		cl.error(L"source is not found");
-		return false;
+		return { };
 	}
 
-	const auto[layersCount, valuesCount] = source->getDataSize();
-	values.setBuffersCount(layersCount);
-	values.setBufferSize(valuesCount);
-
-	layers.resize(layersCount);
-	for (index i = 0; i < layersCount; ++i) {
-		layers[i].id++;
-		layers[i].values = values[i];
-	}
-
-	return true;
-}
-
-void WeightedBlur::vReset() {
-	changed = true; // todo
+	const auto dataSize = source->getDataSize();
+	return dataSize;
 }
 
 void WeightedBlur::vProcess(const DataSupplier& dataSupplier) {
@@ -106,27 +94,29 @@ void WeightedBlur::vFinish() {
 	auto& source = *getSource();
 	source.finish();
 	const BandResampler& resampler = *resamplerPtr;
-	const auto sourceData = source.vGetData();
+	const index layersCount = source.getDataSize().layersCount;
+	const auto sourceData = source.getData();
 
 	double minRadius = params.minRadius * std::pow(params.minRadiusAdaptation, resampler.getStartingLayer());
 	double maxRadius = params.maxRadius * std::pow(params.maxRadiusAdaptation, resampler.getStartingLayer());
 
-	for (index i = 0; i < sourceData.size(); ++i) {
-		const auto sd = sourceData[i];
+	const auto refIds = getRefIds();
 
-		if (sd.id != layers[i].id) {
-			layers[i].id = sd.id;
+	for (index i = 0; i < layersCount; ++i) {
+		const auto sid = sourceData.ids[i];
 
-			const auto cascadeMagnitudes = sd.values;
+		if (sid != refIds[i]) {
+			const auto cascadeMagnitudes = sourceData.values[i];
 			const auto cascadeWeights = resampler.getBandWeights(i);
-			const auto bandsCount = cascadeMagnitudes.size();
+			const index bandsCount = cascadeMagnitudes.size();
 
 			gcm.setRadiusBounds(
 				std::min<index>(std::lround(minRadius), bandsCount),
 				std::min<index>(std::lround(maxRadius), bandsCount)
 			);
 
-			blurCascade(cascadeMagnitudes, cascadeWeights, values[i]);
+			const auto result = updateLayerData(i, sid);
+			blurCascade(cascadeMagnitudes, cascadeWeights, result);
 		}
 
 		minRadius *= params.minRadiusAdaptation;

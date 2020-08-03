@@ -88,8 +88,10 @@ namespace rxtd::audio_analyzer {
 		string filepath{ };
 
 	public:
+		[[nodiscard]]
 		bool parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr) const override;
 
+		[[nodiscard]]
 		const Params& getParams() const {
 			return params;
 		}
@@ -103,26 +105,16 @@ namespace rxtd::audio_analyzer {
 		}
 
 		[[nodiscard]]
-		bool vFinishLinking(Logger& cl) override;
+		LinkingResult vFinishLinking(Logger& cl) override;
 
 	public:
-		void vReset() override {
-		}
-
 		void vProcess(const DataSupplier& dataSupplier) override;
 		void vFinish() override;
 
-		LayeredData vGetData() const override {
-			return { };
-		}
-
 		[[nodiscard]]
-		DataSize getDataSize() const override {
-			return { 0, 0 };
-		}
-
 		bool vGetProp(const isview& prop, utils::BufferPrinter& printer) const override;
 
+		[[nodiscard]]
 		bool vIsStandalone() override {
 			return true;
 		}

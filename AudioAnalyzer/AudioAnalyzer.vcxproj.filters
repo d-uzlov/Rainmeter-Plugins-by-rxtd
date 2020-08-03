@@ -280,6 +280,9 @@
     <ClCompile Include="Sources\audio-utils\FFT.cpp">
       <Filter>Source Files\audio-utils</Filter>
     </ClCompile>
+    <ClCompile Include="Sources\sound-processing\sound-handlers\SoundHandler.cpp">
+      <Filter>Source Files\sound-processing\sound-handlers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\Common\resources\version.rc">

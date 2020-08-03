@@ -44,27 +44,16 @@ namespace rxtd::audio_analyzer {
 		};
 
 	private:
-		struct CascadeInfo {
-			std::vector<float> magnitudes;
-			std::vector<float> weights;
-
-			void setSize(index size) {
-				magnitudes.resize(size);
-				weights.resize(size);
-			}
-		};
-
 		Params params{ };
 
 		FftAnalyzer* fftSource = nullptr;
 
 		std::vector<float> legacy_bandFreqMultipliers{ };
+		utils::Vector2D<float> bandWeights;
+
 		index startCascade = 0;
 		index endCascade = 0;
 		index bandsCount = 0;
-
-		std::vector<CascadeInfo> cascadesInfo{ };
-		std::vector<LayerData> layers;
 
 		bool changed = true;
 
@@ -81,24 +70,17 @@ namespace rxtd::audio_analyzer {
 		static std::vector<float> parseFreqList(sview listId, const Rainmeter& rain);
 
 	protected:
+		[[nodiscard]]
 		isview vGetSourceName() const override {
 			return params.fftId;
 		}
 
-		bool vFinishLinking(Logger& cl) override;
+		[[nodiscard]]
+		LinkingResult vFinishLinking(Logger& cl) override;
 
 	public:
 		void vProcess(const DataSupplier& dataSupplier) override;
 		void vFinish() override;
-
-		LayeredData vGetData() const override {
-			return layers;
-		}
-
-		[[nodiscard]]
-		DataSize getDataSize() const override {
-			return { endCascade - startCascade, bandsCount };
-		}
 
 		index getStartingLayer() const override {
 			return startCascade;
@@ -109,6 +91,7 @@ namespace rxtd::audio_analyzer {
 		}
 
 		array_view<float> getBandWeights(index cascade) const;
+
 		array_view<float> getBaseFreqs() const; // todo unused
 
 		BandResampler* getResampler() override {
@@ -116,8 +99,6 @@ namespace rxtd::audio_analyzer {
 		}
 
 		bool vGetProp(const isview& prop, utils::BufferPrinter& printer) const override;
-
-		void vReset() override;
 
 	private:
 		void sampleCascade(array_view<float> source, array_span<float> dest, double binWidth);

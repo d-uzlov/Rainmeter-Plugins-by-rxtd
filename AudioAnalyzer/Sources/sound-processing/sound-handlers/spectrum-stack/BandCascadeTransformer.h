@@ -57,8 +57,6 @@ namespace rxtd::audio_analyzer {
 
 		BandResampler* resamplerPtr = nullptr;
 
-		std::vector<float> values{ };
-
 		bool changed = true;
 
 		struct AnalysisInfo {
@@ -69,12 +67,13 @@ namespace rxtd::audio_analyzer {
 			bool anyCascadeUsed{ };
 		} analysis;
 
-		LayerData layerData;
-		std::vector<uint32_t> savedIds;
+		std::vector<LayerDataId> savedIds;
 
 	public:
+		[[nodiscard]]
 		bool parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr) const override;
 
+		[[nodiscard]]
 		const Params& getParams() const {
 			return params;
 		}
@@ -84,27 +83,20 @@ namespace rxtd::audio_analyzer {
 		}
 
 	protected:
+		[[nodiscard]]
 		isview vGetSourceName() const override {
 			return params.sourceId;
 		}
 
 		[[nodiscard]]
-		bool vFinishLinking(Logger& cl) override;
+		LinkingResult vFinishLinking(Logger& cl) override;
 
 	public:
 		void vReset() override;
 		void vProcess(const DataSupplier& dataSupplier) override;
 		void vFinish() override;
 
-		LayeredData vGetData() const override {
-			return { &layerData, 1 };
-		}
-
 		[[nodiscard]]
-		DataSize getDataSize() const override {
-			return { 1, index(values.size()) };
-		}
-
 		index getStartingLayer() const override {
 			return analysis.minCascadeUsed;
 		}
@@ -112,8 +104,8 @@ namespace rxtd::audio_analyzer {
 		bool vGetProp(const isview& prop, utils::BufferPrinter& printer) const override;
 
 	private:
-		bool checkAnyChanged(const LayeredData& sourceData);
-		float computeForBand(index band, const LayeredData& sourceData) const;
+		[[nodiscard]]
+		float computeForBand(index band, utils::array2d_view<float> sourceData) const;
 
 		[[nodiscard]]
 		static AnalysisInfo computeAnalysis(BandResampler& resampler, double minWeight, double targetWeight);

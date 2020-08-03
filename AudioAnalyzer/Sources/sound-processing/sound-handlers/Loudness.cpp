@@ -40,6 +40,6 @@ void Loudness::finishBlock() {
 	intermediateRmsResult = 0.0;
 }
 
-sview Loudness::getDefaultTransform() {
+sview Loudness::getDefaultTransform() const {
 	return L"db map[from -70 + 0.691 : 0.691] filter[attack 100, attack 500] clamp"sv;
 }
