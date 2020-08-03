@@ -15,28 +15,6 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-std::vector<double> WeightedBlur::GaussianCoefficientsManager::generateGaussianKernel(index radius) {
-	std::vector<double> kernel;
-	kernel.resize(radius * 2ll + 1);
-
-	const double restoredSigma = radius * (1.0 / 3.0);
-	const double powerFactor = 1.0 / (2.0 * restoredSigma * restoredSigma);
-
-	double r = -double(radius);
-	double sum = 0.0;
-	for (double& k : kernel) {
-		k = std::exp(-r * r * powerFactor);
-		sum += k;
-		r++;
-	}
-	const double sumInverse = 1.0 / sum;
-	for (auto& c : kernel) {
-		c *= sumInverse;
-	}
-
-	return kernel;
-}
-
 bool WeightedBlur::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
 
@@ -108,15 +86,9 @@ void WeightedBlur::vFinish() {
 		if (sid != refIds[i]) {
 			const auto cascadeMagnitudes = sourceData.values[i];
 			const auto cascadeWeights = resampler.getBandWeights(i);
-			const index bandsCount = cascadeMagnitudes.size();
-
-			gcm.setRadiusBounds(
-				std::min<index>(std::lround(minRadius), bandsCount),
-				std::min<index>(std::lround(maxRadius), bandsCount)
-			);
 
 			const auto result = updateLayerData(i, sid);
-			blurCascade(cascadeMagnitudes, cascadeWeights, result);
+			blurCascade(cascadeMagnitudes, cascadeWeights, result, minRadius, maxRadius);
 		}
 
 		minRadius *= params.minRadiusAdaptation;
@@ -124,18 +96,22 @@ void WeightedBlur::vFinish() {
 	}
 }
 
-void WeightedBlur::blurCascade(array_view<float> source, array_view<float> weights, array_span<float> dest) {
+void WeightedBlur::blurCascade(
+	array_view<float> source, array_view<float> weights, array_span<float> dest,
+	index minRadius, index maxRadius
+) {
 	for (index centralBand = 0; centralBand < source.size(); ++centralBand) {
-		const auto weight = weights[centralBand];
-		auto kernel = weight > std::numeric_limits<float>::epsilon()
-			              ? gcm.forSigma(params.radiusMultiplier / weight)
-			              : gcm.forMaximumRadius(); // todo better check for max radius
-		if (kernel.size() < 2) {
+		const double sigma = params.radiusMultiplier / weights[centralBand];
+		index radius = std::clamp<index>(std::lround(sigma * 3.0), minRadius, maxRadius);
+		radius = std::min<index>(std::lround(minRadius), source.size());
+
+		if (radius < 2) {
 			dest[centralBand] = source[centralBand];
 			continue;
 		}
 
-		const index radius = kernel.size() / 2;
+		auto kernel = gcm.forRadius(radius);
+
 		index bandStartIndex = centralBand - radius;
 		index kernelStartIndex = 0;
 

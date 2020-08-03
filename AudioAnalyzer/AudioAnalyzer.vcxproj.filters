@@ -167,6 +167,9 @@
     <ClInclude Include="Sources\audio-utils\DownsampleHelper.h">
       <Filter>Source Files\audio-utils</Filter>
     </ClInclude>
+    <ClInclude Include="Sources\audio-utils\GaussianCoefficientsManager.h">
+      <Filter>Source Files\audio-utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sources\AudioChild.cpp">
@@ -282,6 +285,9 @@
     </ClCompile>
     <ClCompile Include="Sources\sound-processing\sound-handlers\SoundHandler.cpp">
       <Filter>Source Files\sound-processing\sound-handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\audio-utils\GaussianCoefficientsManager.cpp">
+      <Filter>Source Files\audio-utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -15,29 +15,6 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-std::vector<double> UniformBlur::GaussianCoefficientsManager::generateGaussianKernel(index radius) {
-
-	std::vector<double> kernel;
-	kernel.resize(radius * 2ll + 1);
-
-	const double restoredSigma = radius * (1.0 / 3.0);
-	const double powerFactor = 1.0 / (2.0 * restoredSigma * restoredSigma);
-
-	double r = -double(radius);
-	double sum = 0.0;
-	for (double& k : kernel) {
-		k = std::exp(-r * r * powerFactor);
-		sum += k;
-		r++;
-	}
-	const double sumInverse = 1.0 / sum;
-	for (auto& c : kernel) {
-		c *= sumInverse;
-	}
-
-	return kernel;
-}
-
 bool UniformBlur::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
 

@@ -11,6 +11,7 @@
 #include "../SoundHandler.h"
 #include "ResamplerProvider.h"
 #include "Vector2D.h"
+#include "../../../audio-utils/GaussianCoefficientsManager.h"
 
 namespace rxtd::audio_analyzer {
 	class UniformBlur : public ResamplerProvider {
@@ -33,25 +34,8 @@ namespace rxtd::audio_analyzer {
 		};
 
 	private:
-		class GaussianCoefficientsManager {
-			// radius -> coefs vector
-			std::unordered_map<index, std::vector<double>> blurCoefficients;
-		public:
-			const std::vector<double>& forRadius(index radius) {
-				auto& vec = blurCoefficients[radius];
-				if (vec.empty()) {
-					vec = generateGaussianKernel(radius);
-				}
-
-				return vec;
-			}
-
-		private:
-			static std::vector<double> generateGaussianKernel(index radius);
-		};
-
 		Params params{ };
-		GaussianCoefficientsManager gcm;
+		audio_utils::GaussianCoefficientsManager gcm;
 
 		bool changed = true;
 

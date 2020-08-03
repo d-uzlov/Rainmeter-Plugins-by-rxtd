@@ -11,7 +11,7 @@
 #include "../SoundHandler.h"
 #include "BandResampler.h"
 #include "ResamplerProvider.h"
-#include "Vector2D.h"
+#include "../../../audio-utils/GaussianCoefficientsManager.h"
 
 namespace rxtd::audio_analyzer {
 	class WeightedBlur : public ResamplerProvider {
@@ -44,45 +44,7 @@ namespace rxtd::audio_analyzer {
 		};
 
 	private:
-		// todo unite with uniform blur GCM
-		class GaussianCoefficientsManager {
-			// radius -> coefs vector
-			std::unordered_map<index, std::vector<double>> blurCoefficients;
-
-			index minRadius{ };
-			index maxRadius{ };
-
-		public:
-			array_view<double> forSigma(double sigma) {
-				const auto radius = std::clamp<index>(std::lround(sigma * 3.0), minRadius, maxRadius);
-
-				auto& vec = blurCoefficients[radius];
-				if (vec.empty()) {
-					vec = generateGaussianKernel(radius);
-				}
-
-				return vec;
-			}
-
-			array_view<double> forMaximumRadius() {
-				auto& vec = blurCoefficients[maxRadius];
-				if (vec.empty()) {
-					vec = generateGaussianKernel(maxRadius);
-				}
-
-				return vec;
-			}
-
-			void setRadiusBounds(index min, index max) {
-				minRadius = min;
-				maxRadius = max;
-			}
-
-		private:
-			static std::vector<double> generateGaussianKernel(index radius);
-		};
-
-		GaussianCoefficientsManager gcm;
+		audio_utils::GaussianCoefficientsManager gcm;
 
 		Params params{ };
 
@@ -117,6 +79,7 @@ namespace rxtd::audio_analyzer {
 		void vFinish() override;
 
 	private:
-		void blurCascade(array_view<float> source, array_view<float> weights, array_span<float> dest);
+		void blurCascade(array_view<float> source, array_view<float> weights, array_span<float> dest, index minRadius,
+		                 index maxRadius);
 	};
 }
