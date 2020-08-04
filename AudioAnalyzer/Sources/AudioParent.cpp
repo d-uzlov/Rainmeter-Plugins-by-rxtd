@@ -365,7 +365,7 @@ void AudioParent::patchSA(const ParamParser::ProcessingsInfoMap& procs) {
 		auto& sa = saMap[name];
 		sa.getCPH().setParams(std::move(data.fcc), data.targetRate);
 		sa.setFormat(currentFormat.samplesPerSec, currentFormat.channelLayout);
-		sa.setParams(data.channels, data.handlersInfo, data.granularity);
+		sa.setParams(data.channels, data.handlersInfo, data.granularity, paramParser.getLegacyNumber());
 	}
 }
 

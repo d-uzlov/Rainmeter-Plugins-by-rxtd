@@ -26,12 +26,14 @@ void SoundAnalyzer::setFormat(index sampleRate, ChannelLayout _layout) {
 void SoundAnalyzer::setParams(
 	std::set<Channel> channelSetRequested,
 	const ParamParser::HandlerPatcherInfo& patchersInfo,
-	double granularity
+	double _granularity,
+	index _legacyNumber
 ) {
 	this->channelSetRequested = std::move(channelSetRequested);
 	handlerPatchers = &patchersInfo.map;
 	handlerOrder = patchersInfo.order;
-	this->granularity = granularity;
+	granularity = _granularity;
+	legacyNumber = _legacyNumber;
 
 	patchCH();
 }
@@ -159,8 +161,15 @@ void SoundAnalyzer::patchHandlers() {
 
 			if (!ptr->isValid()) {
 				cl.error(L"invalid handler");
-				iter = handlerOrder.erase(iter);
-				continue;
+
+				if (legacyNumber < 104) {
+					iter = handlerOrder.erase(iter);
+					continue;
+				} else {
+					handlerOrder.clear();
+					newData.clear();
+					break;
+				}
 			}
 			
 			newData[handlerName] = std::move(handlerInfo);

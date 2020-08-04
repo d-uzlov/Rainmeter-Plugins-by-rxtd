@@ -16,7 +16,11 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-bool BlockHandler::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr) const {
+bool BlockHandler::parseParams(
+	const OptionMap& optionMap, Logger& cl, const Rainmeter& rain,
+	void* paramsPtr,
+	index legacyNumber
+) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
 
 	params.resolution = optionMap.get(L"resolution"sv).asFloat(1000.0 / 60.0);
@@ -28,20 +32,19 @@ bool BlockHandler::parseParams(const OptionMap& optionMap, Logger& cl, const Rai
 
 	params.subtractMean = optionMap.get(L"subtractMean").asBool(true);
 
-	params.transform = optionMap.get(L"transform").asString();
-	auto transformLogger = cl.context(L"transform: ");
-	params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform"), transformLogger);
-
-	params.legacy_attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.0);
-	params.legacy_decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.legacy_attackTime), 0.0);
-	
-	// legacy
-	if (params.legacy_attackTime != 0.0 || params.legacy_decayTime != 0.0) {
-		cl.notice(L"Using deprecated 'attack'/'decay' options. Transforms are ignored");
+	if (legacyNumber < 104) {
+		params.legacy_attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.0);
+		params.legacy_decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.legacy_attackTime), 0.0);
 
 		utils::BufferPrinter printer;
 		printer.print(L"filter[attack {}, decay {}]", params.legacy_attackTime, params.legacy_decayTime);
 		params.transformer = audio_utils::TransformationParser::parse(utils::Option{ printer.getBufferView() }, cl);
+	} else {
+		params.legacy_attackTime = 0.0;
+		params.legacy_decayTime = 0.0;
+
+		auto transformLogger = cl.context(L"transform: ");
+		params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform"), transformLogger);
 	}
 
 	return true;
@@ -51,17 +54,16 @@ void BlockHandler::setParams(const Params& value) {
 	params = value;
 
 	if (params.transformer.isEmpty()) {
-		params.transform = getDefaultTransform();
 		utils::Rainmeter::Logger dummyLogger;
-		params.transformer = audio_utils::TransformationParser::parse(utils::Option{ params.transform }, dummyLogger);
+		params.transformer = audio_utils::TransformationParser::parse(
+			utils::Option{ getDefaultTransform() }, dummyLogger
+		);
 	}
 }
 
 SoundHandler::LinkingResult BlockHandler::vFinishLinking(Logger& cl) {
 	blockSize = static_cast<decltype(blockSize)>(getSampleRate() * params.resolution);
-	if (blockSize < 1) {
-		blockSize = 1;
-	}
+	blockSize = std::max<index>(blockSize, 1);
 
 	params.transformer.setParams(getSampleRate(), blockSize);
 
@@ -94,11 +96,6 @@ bool BlockHandler::vGetProp(const isview& prop, utils::BufferPrinter& printer) c
 	}
 	if (prop == L"decay") {
 		printer.print(params.legacy_decayTime);
-		return true;
-	}
-
-	if (prop == L"transformString") {
-		printer.print(params.transform);
 		return true;
 	}
 

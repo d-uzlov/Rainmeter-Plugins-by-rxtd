@@ -70,8 +70,8 @@ namespace rxtd::audio_utils {
 			}
 		};
 
-		FftCascade* successor{ };
-		FFT* fft{ };
+		FftCascade* successorPtr{ };
+		FFT* fftPtr{ };
 
 		Params params{ };
 		index cascadeIndex{ };
@@ -83,7 +83,7 @@ namespace rxtd::audio_utils {
 		bool hasChanges = false;
 
 	public:
-		void setParams(Params _params, FFT* fft, FftCascade* successor, index cascadeIndex);
+		void setParams(Params _params, FFT* _fftPtr, FftCascade* _successorPtr, index _cascadeIndex);
 		void process(array_view<float> wave);
 		void reset();
 

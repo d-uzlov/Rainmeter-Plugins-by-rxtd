@@ -13,19 +13,19 @@
 
 using namespace audio_utils;
 
-void FftCascade::setParams(Params _params, FFT* fft, FftCascade* successor, index cascadeIndex) {
+void FftCascade::setParams(Params _params, FFT* _fftPtr, FftCascade* _successorPtr, index _cascadeIndex) {
 	// check for unchanged params should be done in FftAnalyzer handler
 
 	params = _params;
-	this->successor = successor;
-	this->fft = fft;
-	this->cascadeIndex = cascadeIndex;
+	successorPtr = _successorPtr;
+	fftPtr = _fftPtr;
+	cascadeIndex = _cascadeIndex;
 
 	buffer.setSize(params.fftSize);
 
 	resampleResult();
 
-	const auto cascadeSampleRate = index(params.samplesPerSec / std::pow(2, cascadeIndex));
+	const auto cascadeSampleRate = index(params.samplesPerSec / std::pow(2, _cascadeIndex));
 	filter.setParams(params.legacy_attackTime, params.legacy_decayTime, cascadeSampleRate, params.inputStride);
 }
 
@@ -43,8 +43,8 @@ void FftCascade::process(array_view<float> wave) {
 			continue;
 		}
 
-		if (successor != nullptr) {
-			successor->process(buffer.take());
+		if (successorPtr != nullptr) {
+			successorPtr->process(buffer.take());
 		}
 
 		doFft();
@@ -90,11 +90,11 @@ void FftCascade::resampleResult() {
 }
 
 void FftCascade::doFft() {
-	fft->process(buffer.getBuffer());
+	fftPtr->process(buffer.getBuffer());
 
 	const auto binsCount = params.fftSize / 2;
 
-	const auto newDC = float(fft->getDC());
+	const auto newDC = float(fftPtr->getDC());
 	legacy_dc = filter.apply(legacy_dc, newDC);
 
 	auto legacy_zerothBin = std::abs(newDC);
@@ -108,12 +108,12 @@ void FftCascade::doFft() {
 	if (params.legacy_attackTime != 0.0 || params.legacy_decayTime != 0.0) {
 		for (index bin = 1; bin < binsCount; ++bin) {
 			const float oldValue = values[bin];
-			const float newValue = fft->getBinMagnitude(bin);
+			const float newValue = fftPtr->getBinMagnitude(bin);
 			values[bin] = filter.apply(oldValue, newValue);
 		}
 	} else {
 		for (index bin = 1; bin < binsCount; ++bin) {
-			values[bin] = fft->getBinMagnitude(bin);
+			values[bin] = fftPtr->getBinMagnitude(bin);
 		}
 	}
 

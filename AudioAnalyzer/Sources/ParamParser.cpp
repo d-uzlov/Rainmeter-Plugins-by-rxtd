@@ -33,6 +33,7 @@ using namespace audio_analyzer;
 
 bool ParamParser::parse() {
 	anythingChanged = false;
+	legacyNumber = rain.read(L"LegacyNumber").asInt(0);
 
 	auto& logger = rain.getLogger();
 
@@ -162,6 +163,11 @@ void ParamParser::parseFilters(const utils::OptionMap& optionMap, ProcessingData
 		return;
 	}
 
+	if (legacyNumber < 104) {
+		filterLogger.error(L"filter class '{}' is not supported", filterType);
+		data.fcc = { };
+	}
+
 	if (filterType == L"replayGain") {
 		data.fcc = audio_utils::FilterCascadeParser::parse(
 			utils::Option{
@@ -237,9 +243,14 @@ ParamParser::parseHandlers(const utils::OptionList& names, HandlerPatcherInfo ol
 
 	for (auto nameOption : names) {
 		auto handler = std::move(oldHandlers.map[nameOption.asIString() % own()]);
+
 		const auto success = parseHandler(nameOption.asString(), result, handler);
 		if (!success) {
-			continue;
+			if (legacyNumber < 104) {
+				continue;
+			} else {
+				return result;
+			}
 		}
 
 		result.map[nameOption.asIString() % own()] = std::move(handler);
@@ -332,12 +343,6 @@ std::shared_ptr<HandlerPatcher> ParamParser::getHandlerPatcher(
 	if (type == L"UniformBlur") {
 		return createPatcher<UniformBlur>(optionMap, cl);
 	}
-	if (type == L"FiniteTimeFilter") {
-		return createPatcher<legacy_FiniteTimeFilter>(optionMap, cl);
-	}
-	if (type == L"LogarithmicValueMapper") {
-		return createPatcher<legacy_LogarithmicValueMapper>(optionMap, cl);
-	}
 	if (type == L"spectrogram") {
 		return createPatcher<Spectrogram>(optionMap, cl);
 	}
@@ -347,8 +352,20 @@ std::shared_ptr<HandlerPatcher> ParamParser::getHandlerPatcher(
 	if (type == L"loudness") {
 		return createPatcher<Loudness>(optionMap, cl);
 	}
-	if (type == L"ValueTransformer") {
-		return createPatcher<SingleValueTransformer>(optionMap, cl);
+
+	if (legacyNumber >= 104) {
+		if (type == L"ValueTransformer") {
+			return createPatcher<SingleValueTransformer>(optionMap, cl);
+		}
+	}
+
+	if (legacyNumber < 104) {
+		if (type == L"FiniteTimeFilter") {
+			return createPatcher<legacy_FiniteTimeFilter>(optionMap, cl);
+		}
+		if (type == L"LogarithmicValueMapper") {
+			return createPatcher<legacy_LogarithmicValueMapper>(optionMap, cl);
+		}
 	}
 
 	cl.error(L"unknown type '{}'", type);

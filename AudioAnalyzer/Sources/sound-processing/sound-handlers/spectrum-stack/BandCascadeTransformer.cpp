@@ -19,7 +19,7 @@ using namespace std::literals::string_view_literals;
 using namespace audio_analyzer;
 
 bool BandCascadeTransformer::parseParams(
-	const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr
+	const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber
 ) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
 

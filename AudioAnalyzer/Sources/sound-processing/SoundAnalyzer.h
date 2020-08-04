@@ -26,7 +26,7 @@ namespace rxtd::audio_analyzer {
 		// Following two fields are used for updating .channels field.
 		// They can contain info about handlers that doesn't exist because of channel layout
 		std::set<Channel> channelSetRequested;
-		const ParamParser::HandlerPatcherMap *handlerPatchers = nullptr;
+		const ParamParser::HandlerPatcherMap* handlerPatchers = nullptr;
 		std::vector<istring> handlerOrder;
 
 		std::map<Channel, ChannelData> channels;
@@ -38,12 +38,14 @@ namespace rxtd::audio_analyzer {
 		double granularity{ };
 		ChannelLayout layout;
 
-		
+		index legacyNumber = 0;
+
 		class HandlerFinderImpl : public HandlerFinder {
 			const ChannelData& channelData;
 
 		public:
-			explicit HandlerFinderImpl(const ChannelData& channelData) : channelData(channelData) { }
+			explicit HandlerFinderImpl(const ChannelData& channelData) : channelData(channelData) {
+			}
 
 			[[nodiscard]]
 			SoundHandler* getHandler(isview id) const override {
@@ -51,7 +53,7 @@ namespace rxtd::audio_analyzer {
 				return iter == channelData.end() ? nullptr : iter->second.get();
 			}
 		};
-		
+
 	public:
 		SoundAnalyzer() = default;
 
@@ -70,7 +72,7 @@ namespace rxtd::audio_analyzer {
 
 		[[nodiscard]]
 		AudioChildHelper getAudioChildHelper() const {
-			return AudioChildHelper { channels };
+			return AudioChildHelper{ channels };
 		}
 
 		/**
@@ -80,8 +82,13 @@ namespace rxtd::audio_analyzer {
 		 * This new handler may be completely new if it didn't exist before or if class of handler with this name changed,
 		 * but usually this is the same handler with updated parameters.
 		 */
-		 // depends on options only
-		void setParams(std::set<Channel> channelSetRequested, const ParamParser::HandlerPatcherInfo &patchersInfo, double granularity);
+		// depends on options only
+		void setParams(
+			std::set<Channel> channelSetRequested,
+			const ParamParser::HandlerPatcherInfo& patchersInfo,
+			double _granularity,
+			index _legacyNumber
+		);
 
 		[[nodiscard]]
 		ChannelProcessingHelper& getCPH() {

@@ -151,10 +151,10 @@ namespace rxtd::audio_analyzer {
 			bool valid = false;
 
 		public:
-			HandlerPatcherImpl(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain) {
+			HandlerPatcherImpl(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, index legacyNumber) {
 				HandlerType temp1{ };
 				SoundHandler& temp2 = temp1;
-				valid = temp2.parseParams(optionMap, cl, rain, &params);
+				valid = temp2.parseParams(optionMap, cl, rain, &params, legacyNumber);
 			}
 
 			[[nodiscard]]
@@ -221,7 +221,7 @@ namespace rxtd::audio_analyzer {
 
 		// must return true if all options are valid, false otherwise
 		virtual bool parseParams(
-			const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr
+			const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber
 		) const = 0;
 
 	public:

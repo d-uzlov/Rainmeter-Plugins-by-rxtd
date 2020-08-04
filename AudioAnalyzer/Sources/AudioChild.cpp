@@ -76,13 +76,12 @@ void AudioChild::vReload() {
 	}
 	valueIndex = static_cast<decltype(valueIndex)>(signedIndex);
 
-	// legacy
-	if (!rain.read(L"NumberTransform").empty()
-		|| !rain.read(L"Clamp01").empty()
-		|| !rain.read(L"Gain").empty()
-	) {
+	const index legacyNumber = rain.read(L"LegacyNumber").asInt();
+	if (legacyNumber < 104) {
 		legacy_readOptions();
 		legacy.use = true;
+	} else {
+		legacy.use = false;
 	}
 }
 
@@ -100,9 +99,6 @@ double AudioChild::vUpdate() {
 		return legacy_update();
 	}
 
-	if (procId.empty()) {
-		return parent->legacy_getValue(valueId, channel, valueIndex);
-	}
 	return parent->getValue(procId, valueId, channel, valueIndex);
 }
 
@@ -124,7 +120,7 @@ void AudioChild::legacy_readOptions() {
 	}
 	legacy.clamp01 = rain.read(L"Clamp01").asBool(true);
 
-	legacy.correctingConstant = rain.readDouble(L"Gain");
+	legacy.correctingConstant = rain.read(L"Gain").asFloat();
 	if (legacy.correctingConstant <= 0) {
 		legacy.correctingConstant = 1.0;
 	}

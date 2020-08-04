@@ -34,7 +34,7 @@ bool Spectrogram::vGetProp(const isview& prop, utils::BufferPrinter& printer) co
 	return false;
 }
 
-bool Spectrogram::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr) const {
+bool Spectrogram::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
 
 	params.sourceName = optionMap.get(L"source"sv).asIString();

@@ -16,7 +16,7 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-bool WaveForm::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr) const {
+bool WaveForm::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
 
 	params.width = optionMap.get(L"width"sv).asInt(100);

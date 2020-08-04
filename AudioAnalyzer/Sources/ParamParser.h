@@ -56,6 +56,7 @@ namespace rxtd::audio_analyzer {
 		bool unusedOptionsWarning = true;
 		index defaultTargetRate = 44100;
 		ProcessingsInfoMap parseResult;
+		index legacyNumber = 0;
 		mutable bool anythingChanged = false;
 
 	public:
@@ -78,6 +79,11 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		const ProcessingsInfoMap& getParseResult() const {
 			return parseResult;
+		}
+
+		[[nodiscard]]
+		index getLegacyNumber() const {
+			return legacyNumber;
 		}
 
 	private:
@@ -111,7 +117,7 @@ namespace rxtd::audio_analyzer {
 			const utils::OptionMap& optionMap,
 			Logger& cl
 		) const {
-			return std::make_shared<SoundHandler::HandlerPatcherImpl<T>>(optionMap, cl, rain);
+			return std::make_shared<SoundHandler::HandlerPatcherImpl<T>>(optionMap, cl, rain, legacyNumber);
 		}
 		
 		void readRawDescription2(isview type, const utils::OptionMap& optionMap, string& rawDescription2) const;

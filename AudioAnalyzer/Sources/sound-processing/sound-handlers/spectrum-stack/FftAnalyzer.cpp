@@ -17,52 +17,68 @@ using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
-bool FftAnalyzer::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr) const {
+bool FftAnalyzer::parseParams(
+	const OptionMap& optionMap,
+	Logger& cl, const Rainmeter& rain,
+	void* paramsPtr,
+	index legacyNumber
+) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
 
-	params.legacy_attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.0);
-	params.legacy_decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.legacy_attackTime), 0.0);
+	if (legacyNumber < 104) {
+		params.legacy_attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.0);
+		params.legacy_decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.legacy_attackTime), 0.0);
 
-	if (params.legacy_attackTime != 0 || params.legacy_decayTime != 0) {
-		cl.warning(L"attack/decay options on FftAnalyzer are deprecated, use SingleValueTransformer instead");
+		params.legacy_attackTime *= 0.001;
+		params.legacy_decayTime *= 0.001;
+	} else {
+		params.legacy_attackTime = 0.0;
+		params.legacy_decayTime = 0.0;
 	}
 
-	params.legacy_attackTime *= 0.001;
-	params.legacy_decayTime *= 0.001;
+	if (legacyNumber < 104) {
+		if (const auto sizeBy = optionMap.get(L"sizeBy"sv).asIString(L"binWidth");
+			sizeBy == L"binWidth") {
+			params.binWidth = optionMap.get(L"binWidth"sv).asFloat(100.0);
+			if (params.binWidth <= 0.0) {
+				cl.error(L"binWidth must be > 0 but {} found", params.binWidth);
+				return { };
+			}
+			if (params.binWidth <= 1.0) {
+				cl.warning(L"BinWidth {} is dangerously small, use values > 1", params.binWidth);
+			}
+			params.legacy_sizeBy = SizeBy::BIN_WIDTH;
+		} else {
+			if (sizeBy == L"size") {
+				params.binWidth = optionMap.get(L"size"sv).asInt(1000);
+				if (params.binWidth < 2) {
+					cl.warning(L"Size must be >= 2 but {} found. Assume 1000", params.binWidth);
+					params.binWidth = 1000;
+				}
+				params.legacy_sizeBy = SizeBy::SIZE;
 
-	if (const auto sizeBy = optionMap.get(L"sizeBy"sv).asIString(L"binWidth");
-		sizeBy == L"binWidth") {
+			} else if (sizeBy == L"sizeExact") {
+				params.binWidth = optionMap.get(L"size"sv).asInt(1000);
+				if (params.binWidth < 2) {
+					cl.error(L"Size must be >= 2, must be even, but {} found", params.binWidth);
+					return { };
+				}
+				params.legacy_sizeBy = SizeBy::SIZE_EXACT;
+			} else {
+				cl.error(L"Unknown fft sizeBy '{}'", sizeBy);
+				return { };
+			}
+		}
+	} else {
 		params.binWidth = optionMap.get(L"binWidth"sv).asFloat(100.0);
 		if (params.binWidth <= 0.0) {
-			cl.error(L"Resolution must be > 0 but {} found", params.binWidth);
+			cl.error(L"binWidth must be > 0 but {} found", params.binWidth);
 			return { };
 		}
 		if (params.binWidth <= 1.0) {
 			cl.warning(L"BinWidth {} is dangerously small, use values > 1", params.binWidth);
 		}
 		params.legacy_sizeBy = SizeBy::BIN_WIDTH;
-	} else {
-		cl.warning(L"Options 'sizeBy' is deprecated");
-
-		if (sizeBy == L"size") {
-			params.binWidth = optionMap.get(L"size"sv).asInt(1000);
-			if (params.binWidth < 2) {
-				cl.warning(L"Size must be >= 2 but {} found. Assume 1000", params.binWidth);
-				params.binWidth = 1000;
-			}
-			params.legacy_sizeBy = SizeBy::SIZE;
-
-		} else if (sizeBy == L"sizeExact") {
-			params.binWidth = optionMap.get(L"size"sv).asInt(1000);
-			if (params.binWidth < 2) {
-				cl.error(L"Size must be >= 2, must be even, but {} found", params.binWidth);
-				return { };
-			}
-			params.legacy_sizeBy = SizeBy::SIZE_EXACT;
-		} else {
-			cl.error(L"Unknown fft sizeBy '{}'", sizeBy);
-			return { };
-		}
 	}
 
 	params.overlap = std::clamp(optionMap.get(L"overlap"sv).asFloat(0.5), 0.0, 1.0);
@@ -79,8 +95,13 @@ bool FftAnalyzer::parseParams(const OptionMap& optionMap, Logger& cl, const Rain
 	params.randomTest = std::abs(optionMap.get(L"testRandom"sv).asFloat(0.0));
 	params.randomDuration = std::abs(optionMap.get(L"randomDuration"sv).asFloat(1000.0)) * 0.001;
 
-	params.legacy_correctZero = optionMap.get(L"correctZero"sv).asBool(true);
-	params.legacyAmplification = optionMap.get(L"legacyAmplification"sv).asBool(true);
+	if (legacyNumber < 104) {
+		params.legacy_correctZero = optionMap.get(L"correctZero"sv).asBool(true);
+		params.legacyAmplification = true;
+	} else {
+		params.legacy_correctZero = false;
+		params.legacyAmplification = false;
+	}
 
 	return true;
 }
@@ -96,23 +117,34 @@ SoundHandler::LinkingResult FftAnalyzer::vFinishLinking(Logger& cl) {
 		break;
 	case SizeBy::SIZE:
 		fftSize = kiss_fft::calculateNextFastSize(index(params.binWidth), true);
+
+		if (fftSize <= 1) {
+			cl.error(L"fft size is too small");
+			return { };
+		}
+
 		break;
 	case SizeBy::SIZE_EXACT:
 		fftSize = static_cast<index>(static_cast<size_t>(params.binWidth) & ~1); // only even sizes are allowed
+
+		if (fftSize <= 1) {
+			cl.error(L"fft size is too small");
+			return { };
+		}
+
 		break;
 	default: // must be unreachable statement
 		std::abort();
 	}
 
-	if (fftSize <= 1) {
-		cl.error(L"fft size is too small");
-		return { };
-	}
+	constexpr index minFftSize = 16;
+
+	fftSize = std::max<index>(fftSize, minFftSize);
 
 	fft.setSize(fftSize, !params.legacyAmplification);
 
 	inputStride = static_cast<index>(fftSize * (1 - params.overlap));
-	inputStride = std::clamp<index>(inputStride, std::min<index>(16, fftSize), fftSize);
+	inputStride = std::clamp<index>(inputStride, minFftSize, fftSize);
 
 	randomBlockSize = index(params.randomDuration * getSampleRate() * fftSize / inputStride);
 	randomCurrentOffset = 0;

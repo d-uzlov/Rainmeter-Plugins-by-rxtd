@@ -75,7 +75,7 @@ namespace rxtd::audio_analyzer {
 		audio_utils::FFT fft{ };
 
 	public:
-		bool parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr) const override;
+		bool parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber) const override;
 
 		const Params& getParams() const {
 			return params;
