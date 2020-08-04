@@ -28,7 +28,7 @@ SoundHandler* AudioChildHelper::findHandler(Channel channel, isview handlerId) c
 	}
 
 	auto& handler = iter->second;
-	return handler.ptr.get();
+	return handler.get();
 }
 
 double AudioChildHelper::getValue(Channel channel, isview handlerId, index index) const {
@@ -53,9 +53,6 @@ double AudioChildHelper::getValueFrom(SoundHandler* handler, Channel channel, in
 	}
 
 	handler->finish();
-	if (!handler->isValid()) {
-		return 0.0;
-	}
 
 	const auto values = handler->getData().values[0];
 	if (values.empty()) {

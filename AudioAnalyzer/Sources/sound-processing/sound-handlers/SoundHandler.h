@@ -35,6 +35,7 @@
 #include "BufferPrinter.h"
 #include "RainmeterWrappers.h"
 #include "Vector2D.h"
+#include "../Channel.h"
 
 namespace rxtd::audio_analyzer {
 	class SoundHandler;

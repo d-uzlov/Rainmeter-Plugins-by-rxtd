@@ -71,9 +71,6 @@
     <ClInclude Include="Sources\sound-processing\AudioChildHelper.h">
       <Filter>Source Files\sound-processing</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\HelperClasses.h">
-      <Filter>Source Files\sound-processing</Filter>
-    </ClInclude>
     <ClInclude Include="Sources\sound-processing\device-management\AudioEnumeratorHelper.h">
       <Filter>Source Files\sound-processing\device-management</Filter>
     </ClInclude>
@@ -200,9 +197,6 @@
       <Filter>Source Files\sound-processing</Filter>
     </ClCompile>
     <ClCompile Include="Sources\sound-processing\AudioChildHelper.cpp">
-      <Filter>Source Files\sound-processing</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\sound-processing\HelperClasses.cpp">
       <Filter>Source Files\sound-processing</Filter>
     </ClCompile>
     <ClCompile Include="Sources\dllmain.cpp">

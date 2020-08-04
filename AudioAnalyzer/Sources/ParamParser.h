@@ -30,8 +30,10 @@ namespace rxtd::audio_analyzer {
 			std::shared_ptr<HandlerPatcher> patcher;
 		};
 
+		using HandlerPatcherMap = std::map<istring, HandlerInfo, std::less<>>;
+		
 		struct HandlerPatcherInfo {
-			std::map<istring, HandlerInfo, std::less<>> map;
+			HandlerPatcherMap map;
 			std::vector<istring> order;
 		};
 

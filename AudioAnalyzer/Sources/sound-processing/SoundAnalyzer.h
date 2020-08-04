@@ -11,35 +11,72 @@
 #include <utility>
 #include "Channel.h"
 #include "AudioChildHelper.h"
-#include "HelperClasses.h"
 #include "ChannelProcessingHelper.h"
 #include "../ParamParser.h"
 #include <chrono>
 
 namespace rxtd::audio_analyzer {
+
+	class DataSupplierImpl : public DataSupplier {
+		array_view<float> wave { };
+
+	public:
+		mutable utils::Rainmeter::Logger logger;
+
+		void setWave(array_view<float> value) {
+			wave = value;
+		}
+
+		array_view<float> getWave() const override {
+			return wave;
+		}
+
+		void _log(const wchar_t* message) const override {
+			logger.error(message);
+		}
+	};
+
 	class SoundAnalyzer {
 		using clock = std::chrono::high_resolution_clock;
 		static_assert(clock::is_steady);
 
+		using ChannelData = std::map<istring, std::unique_ptr<SoundHandler>, std::less<>>;
+		using Logger = utils::Rainmeter::Logger;
+
 		// Following two fields are used for updating .channels field.
 		// They can contain info about handlers that doesn't exist because of channel layout
 		std::set<Channel> channelSetRequested;
-		const ParamParser::HandlerPatcherInfo *handlerPatchers;
+		const ParamParser::HandlerPatcherMap *handlerPatchers = nullptr;
+		std::vector<istring> handlerOrder;
 
 		std::map<Channel, ChannelData> channels;
 		DataSupplierImpl dataSupplier;
 
 		ChannelProcessingHelper cph;
-		utils::Rainmeter::Logger logger;
+		Logger logger;
 
 		index sourceSampleRate{ };
 		double granularity{ };
 		ChannelLayout layout;
 
+		
+		class HandlerFinderImpl : public HandlerFinder {
+			const ChannelData& channelData;
+
+		public:
+			explicit HandlerFinderImpl(const ChannelData& channelData) : channelData(channelData) { }
+
+			[[nodiscard]]
+			SoundHandler* getHandler(isview id) const override {
+				const auto iter = channelData.find(id);
+				return iter == channelData.end() ? nullptr : iter->second.get();
+			}
+		};
+		
 	public:
 		SoundAnalyzer() = default;
 
-		SoundAnalyzer(utils::Rainmeter::Logger logger) noexcept : logger(std::move(logger)) {
+		SoundAnalyzer(Logger logger) noexcept : logger(std::move(logger)) {
 		}
 
 		~SoundAnalyzer() = default;
@@ -53,7 +90,9 @@ namespace rxtd::audio_analyzer {
 		void setFormat(index sampleRate, ChannelLayout layout);
 
 		[[nodiscard]]
-		AudioChildHelper getAudioChildHelper() const;
+		AudioChildHelper getAudioChildHelper() const {
+			return AudioChildHelper { channels };
+		}
 
 		/**
 		 * Handlers aren't completely recreated when measure is reloaded.
@@ -63,7 +102,7 @@ namespace rxtd::audio_analyzer {
 		 * but usually this is the same handler with updated parameters.
 		 */
 		 // depends on options only
-		void setParams(std::set<Channel> channelSetRequested, const ParamParser::HandlerPatcherInfo &handlerPatchers, double granularity);
+		void setParams(std::set<Channel> channelSetRequested, const ParamParser::HandlerPatcherInfo &patchersInfo, double granularity);
 
 		[[nodiscard]]
 		ChannelProcessingHelper& getCPH() {

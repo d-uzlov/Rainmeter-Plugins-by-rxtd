@@ -13,14 +13,8 @@
 using namespace audio_analyzer;
 
 void ChannelProcessingHelper::setChannels(const std::set<Channel>& set) {
-	std::vector<Channel> toDelete;
-	for (auto& [channel, data] : channels) {
-		if (set.count(channel) < 1) {
-			toDelete.push_back(channel);
-		}
-	}
-	for (auto channel : toDelete) {
-		channels.erase(channel);
+	for (auto iter = channels.begin(); iter != channels.end();) {
+		iter = set.count(iter->first) < 1 ? channels.erase(iter) : ++iter;
 	}
 
 	for (auto channel : set) {
@@ -56,20 +50,24 @@ void ChannelProcessingHelper::setSourceRate(index value) {
 	updateFilters();
 }
 
-void ChannelProcessingHelper::reset() const {
+void ChannelProcessingHelper::processDataFrom(const ChannelMixer& mixer) {
+	autoAlias = mixer.getAutoAlias();
+
 	for (auto& [channel, data] : channels) {
-		data.wave.compact();
-		data.preprocessed = false;
+		processChannel(channel, mixer);
 	}
 }
 
-void ChannelProcessingHelper::cacheChannel() const {
-	auto& data = channels[currentChannel];
-	if (data.preprocessed) {
-		return;
+void ChannelProcessingHelper::reset() {
+	for (auto& [channel, data] : channels) {
+		data.wave.compact();
 	}
+}
 
-	auto wave = mixer->getChannelPCM(currentChannel);
+void ChannelProcessingHelper::processChannel(Channel channel, const ChannelMixer& mixer) {
+	auto& data = channels[channel];
+
+	auto wave = mixer.getChannelPCM(currentChannel);
 	if (wave.empty()) {
 		return;
 	}
@@ -85,7 +83,6 @@ void ChannelProcessingHelper::cacheChannel() const {
 	}
 
 	data.fc.applyInPlace(writeBuffer);
-	data.preprocessed = true;
 }
 
 void ChannelProcessingHelper::recalculateResamplingData() {
@@ -100,6 +97,7 @@ void ChannelProcessingHelper::recalculateResamplingData() {
 
 void ChannelProcessingHelper::updateFilters() {
 	if (resamplingData.finalSampleRate == 0) {
+		utils::Rainmeter::sourcelessLog(L"sample rate 0");
 		return;
 	}
 

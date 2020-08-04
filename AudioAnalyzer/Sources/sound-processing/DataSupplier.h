@@ -8,7 +8,6 @@
  */
 
 #pragma once
-#include "Channel.h"
 #include "array_view.h"
 #include "BufferPrinter.h"
 

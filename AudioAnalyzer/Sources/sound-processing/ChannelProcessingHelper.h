@@ -21,13 +21,10 @@ namespace rxtd::audio_analyzer {
 			utils::GrowingVector<float> wave;
 			audio_utils::FilterCascade fc;
 			audio_utils::DownsampleHelper<10> downsampleHelper;
-			bool preprocessed = false;
 		};
 
 		MyWaveFormat waveFormat;
-		mutable std::map<Channel, ChannelData> channels;
-
-		const ChannelMixer* mixer{ };
+		std::map<Channel, ChannelData> channels;
 
 		audio_utils::FilterCascadeCreator fcc;
 
@@ -39,14 +36,11 @@ namespace rxtd::audio_analyzer {
 		} resamplingData;
 
 		Channel currentChannel{ };
+		Channel autoAlias{ };
 		index grabBufferSize = 0;
 
 	public:
 		ChannelProcessingHelper() = default;
-
-		void setChannelMixer(const ChannelMixer& value) {
-			mixer = &value;
-		}
 
 		// depends on both system format and options
 		void setChannels(const std::set<Channel>& set);
@@ -54,7 +48,7 @@ namespace rxtd::audio_analyzer {
 		// depends on options only
 		void setParams(audio_utils::FilterCascadeCreator _fcc, index targetRate);
 
-		// depends on both system format only
+		// depends on system format only
 		void setSourceRate(index value);
 
 		[[nodiscard]]
@@ -67,27 +61,26 @@ namespace rxtd::audio_analyzer {
 		}
 
 		void setCurrentChannel(Channel value) {
-			if (mixer == nullptr) {
-				return;
-			}
-
-			if (value == Channel::eAUTO) {
-				value = mixer->getAutoAlias();
-			}
-
-			currentChannel = value;
+			currentChannel = value == Channel::eAUTO ? autoAlias : value;
 		}
 
+		void processDataFrom(const ChannelMixer& mixer);
+
 		[[nodiscard]]
-		array_view<float> grabNext() const {
-			cacheChannel();
+		array_view<float> grabNext() {
 			return channels[currentChannel].wave.takeChunk(grabBufferSize);
 		}
 
-		void reset() const;
+		[[nodiscard]]
+		array_view<float> grabRest() {
+			auto& waveBuffer = channels[currentChannel].wave;
+			return waveBuffer.takeChunk(waveBuffer.getRemainingSize());
+		}
+
+		void reset();
 
 	private:
-		void cacheChannel() const;
+		void processChannel(Channel channel, const ChannelMixer& mixer);
 
 		void recalculateResamplingData();
 		void updateFilters();

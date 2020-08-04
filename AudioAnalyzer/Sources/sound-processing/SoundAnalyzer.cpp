@@ -23,17 +23,14 @@ void SoundAnalyzer::setFormat(index sampleRate, ChannelLayout _layout) {
 	patchCH();
 }
 
-AudioChildHelper SoundAnalyzer::getAudioChildHelper() const {
-	return AudioChildHelper{ channels };
-}
-
 void SoundAnalyzer::setParams(
 	std::set<Channel> channelSetRequested,
-	const ParamParser::HandlerPatcherInfo& handlerPatchers,
+	const ParamParser::HandlerPatcherInfo& patchersInfo,
 	double granularity
 ) {
 	this->channelSetRequested = std::move(channelSetRequested);
-	this->handlerPatchers = &handlerPatchers;
+	handlerPatchers = &patchersInfo.map;
+	handlerOrder = patchersInfo.order;
 	this->granularity = granularity;
 
 	patchCH();
@@ -41,37 +38,36 @@ void SoundAnalyzer::setParams(
 
 bool SoundAnalyzer::process(const ChannelMixer& mixer, clock::time_point killTime) {
 	cph.reset();
-	cph.setChannelMixer(mixer);
+	cph.processDataFrom(mixer);
 	dataSupplier.logger = logger;
 
-	const index bufferSize = index(granularity * cph.getSampleRate());
-	cph.setGrabBufferSize(bufferSize);
+	cph.setGrabBufferSize(index(granularity * cph.getSampleRate()));
 
 	for (auto& [channel, channelData] : channels) {
 		cph.setCurrentChannel(channel);
 		while (true) {
 			auto wave = cph.grabNext();
 			if (wave.empty()) {
+				wave = cph.grabRest();
+			}
+			if (wave.empty()) {
 				break;
 			}
 
 			dataSupplier.setWave(wave);
 
-			for (auto& name : handlerPatchers->order) {
-				if (channelData.count(name) < 1) {
-					continue;
-				}
+			for (auto iter = handlerOrder.begin();
+				iter != handlerOrder.end();) {
+				auto& handlerName = *iter;
+				
+				auto& handler = *channelData[handlerName];
+				handler.process(dataSupplier);
 
-				auto& handler = channelData[name];
-				if (!handler.wasValid) {
-					continue;
-				}
-
-				handler.ptr->process(dataSupplier);
-
-				handler.wasValid = handler.ptr->isValid();
-				if (!handler.wasValid) {
-					logger.error(L"handler '{}' was invalidated", name);
+				if (!handler.isValid()) {
+					logger.error(L"handler '{}' was invalidated", handlerName);
+					iter = handlerOrder.erase(iter);
+				} else {
+					++iter;
 				}
 
 				if (clock::now() > killTime) {
@@ -86,23 +82,28 @@ bool SoundAnalyzer::process(const ChannelMixer& mixer, clock::time_point killTim
 
 bool SoundAnalyzer::finishStandalone(clock::time_point killTime) {
 	for (auto& [channel, channelData] : channels) {
-		for (auto& name : handlerPatchers->order) {
-			if (channelData.count(name) < 1) {
+		for (auto iter = handlerOrder.begin();
+			iter != handlerOrder.end();) {
+			auto& handlerName = *iter;
+			
+			auto& handler = *channelData[handlerName];
+			
+			if (!handler.vIsStandalone()) {
+				++iter;
 				continue;
 			}
+			
+			handler.finish();
+				
+			if (!handler.isValid()) {
+				logger.error(L"handler '{}' was invalidated", handlerName);
+				iter = handlerOrder.erase(iter);
+			} else {
+				++iter;
+			}
 
-			auto& handler = channelData[name];
-			if (handler.wasValid && handler.ptr->vIsStandalone()) {
-				handler.ptr->finish();
-				handler.wasValid = handler.ptr->isValid();
-
-				if (!handler.wasValid) {
-					logger.error(L"handler '{}' was invalidated", name);
-				}
-
-				if (clock::now() > killTime) {
-					return true;
-				}
+			if (clock::now() > killTime) {
+				return true;
 			}
 		}
 	}
@@ -114,24 +115,15 @@ void SoundAnalyzer::resetValues() noexcept {
 	for (auto& [channel, channelData] : channels) {
 		for (auto& [name, handler] : channelData) {
 			// order is not important
-			handler.ptr->reset();
+			handler.reset();
 		}
 	}
 }
 
 void SoundAnalyzer::patchChannels() {
-	// Delete not needed channels
-	std::vector<Channel> toDelete;
-	for (const auto& [channel, _] : channels) {
-		const bool exists = channel == Channel::eAUTO || layout.contains(channel);
-		const bool isRequested = channelSetRequested.count(channel) >= 1;
-
-		if (!exists || !isRequested) {
-			toDelete.push_back(channel);
-		}
-	}
-	for (auto c : toDelete) {
-		channels.erase(c);
+	for (auto iter = channels.begin(); iter != channels.end();) {
+		const auto channel = iter->first;
+		iter = channel == Channel::eAUTO || layout.contains(channel) ? channels.erase(iter) : ++iter;
 	}
 
 	std::set<Channel> channelsSet;
@@ -149,30 +141,34 @@ void SoundAnalyzer::patchChannels() {
 void SoundAnalyzer::patchHandlers() {
 	for (auto& [channel, channelData] : channels) {
 		ChannelData newData;
-		HandlerFinderImpl hf;
-		hf.setChannelData(newData);
+		HandlerFinderImpl hf { newData };
 
-		for (auto& handlerName : handlerPatchers->order) {
-			auto& patcher = *handlerPatchers->map.find(handlerName)->second.patcher;
+		for (auto iter = handlerOrder.begin();
+			iter != handlerOrder.end();) {
+			auto& handlerName = *iter;
+			
+			auto& patcher = *handlerPatchers->find(handlerName)->second.patcher;
 			auto& handlerInfo = channelData[handlerName];
 
 			auto cl = logger.context(L"Handler {}: ", handlerName);
 			SoundHandler* ptr = SoundHandler::patch(
-				handlerInfo.ptr.get(), patcher,
+				handlerInfo.get(), patcher,
 				channel, cph.getSampleRate(),
 				hf, cl
 			);
-			if (ptr != handlerInfo.ptr.get()) {
-				handlerInfo.ptr = std::unique_ptr<SoundHandler>(ptr);
+			if (ptr != handlerInfo.get()) {
+				handlerInfo = std::unique_ptr<SoundHandler>(ptr);
 			}
 
 			if (!ptr->isValid()) {
 				cl.error(L"invalid handler");
+				iter = handlerOrder.erase(iter);
 				continue;
 			}
-
-			handlerInfo.wasValid = true;
+			
 			newData[handlerName] = std::move(handlerInfo);
+
+			++iter;
 		}
 
 		channelData = std::move(newData);

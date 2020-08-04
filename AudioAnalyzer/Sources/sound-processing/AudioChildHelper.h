@@ -9,10 +9,12 @@
 
 #pragma once
 #include "Channel.h"
-#include "HelperClasses.h"
+#include "sound-handlers/SoundHandler.h"
 
 namespace rxtd::audio_analyzer {
 	class AudioChildHelper {
+		using ChannelData = std::map<istring, std::unique_ptr<SoundHandler>, std::less<>>;
+		
 		const std::map<Channel, ChannelData>* channels;
 
 	public:

@@ -43,12 +43,12 @@ namespace rxtd::utils {
 		}
 
 		[[nodiscard]]
-		array_span<T> getLast(index chunkSize) {
+		array_span<T> getFromTheEnd(index chunkSize) {
 			return { array.data() + size - chunkSize, chunkSize };
 		}
 
 		[[nodiscard]]
-		array_view<T> getLast(index chunkSize) const {
+		array_view<T> getFromTheEnd(index chunkSize) const {
 			return { array.data() + size - chunkSize, chunkSize };
 		}
 
