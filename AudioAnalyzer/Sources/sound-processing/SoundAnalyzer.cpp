@@ -114,7 +114,7 @@ void SoundAnalyzer::resetValues() noexcept {
 	for (auto& [channel, channelData] : channels) {
 		for (auto& [name, handler] : channelData) {
 			// order is not important
-			handler.reset();
+			handler->reset();
 		}
 	}
 }

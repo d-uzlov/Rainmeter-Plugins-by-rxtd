@@ -92,10 +92,6 @@ SoundHandler::LinkingResult BandCascadeTransformer::vFinishLinking(Logger& cl) {
 	return { 1, dataSize.valuesCount };
 }
 
-void BandCascadeTransformer::vReset() {
-	changed = true;
-}
-
 void BandCascadeTransformer::vProcess(array_view<float> wave) {
 	changed = true;
 }
@@ -147,12 +143,12 @@ bool BandCascadeTransformer::vGetProp(const isview& prop, utils::BufferPrinter& 
 float BandCascadeTransformer::computeForBand(index band, utils::array2d_view<float> sourceData) const {
 	const BandResampler& resampler = *resamplerPtr;
 
-	double weight = 0.0;
+	float weight = 0.0;
 	index cascadesSummed = 0;
 	const index bandEndCascade = analysis.bandEndCascades[band] - analysis.minCascadeUsed;
 
-	double valueProduct = 1.0;
-	double valueSum = 0.0;
+	float valueProduct = 1.0;
+	float valueSum = 0.0;
 
 	const auto bandWeights = resampler.getBandWeights(band);
 
@@ -214,7 +210,7 @@ float BandCascadeTransformer::computeForBand(index band, utils::array2d_view<flo
 		return 0.0f;
 	}
 
-	valueProduct = utils::MyMath::fastPow(valueProduct, 1.0 / cascadesSummed);
+	valueProduct = std::powf(valueProduct, 1.0f / cascadesSummed);
 	valueSum /= cascadesSummed;
 
 	return float(params.mixFunction == MixFunction::PRODUCT ? valueProduct : valueSum);
