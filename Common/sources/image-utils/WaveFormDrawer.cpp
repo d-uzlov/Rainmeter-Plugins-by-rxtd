@@ -38,7 +38,7 @@ void WaveFormDrawer::setDimensions(index width, index height) {
 
 void WaveFormDrawer::fillSilence() {
 	const index centerLineIndex = interpolator.toValueD(0.0);
-	minMaxBuffer.pushEmptyStrip({ centerLineIndex, centerLineIndex + 1 });
+	minMaxBuffer.pushEmptyStrip({ centerLineIndex, centerLineIndex });
 }
 
 void WaveFormDrawer::fillStrip(double min, double max) {
@@ -88,6 +88,8 @@ void WaveFormDrawer::inflate() {
 		}
 	} else if (lineDrawingPolicy == LineDrawingPolicy::eBELOW_WAVE) {
 		inflateLine(centerLineIndex, resultBuffer[centerLineIndex], colors.line);
+	} else {
+		inflateLine(centerLineIndex, resultBuffer[centerLineIndex], colors.background);
 	}
 }
 
@@ -163,5 +165,5 @@ void WaveFormDrawer::inflateLine(index line, array_span<uint32_t> dest, IntColor
 
 bool WaveFormDrawer::isWaveAt(index i, index line) const {
 	const auto minMax = minMaxBuffer.getPixels()[0][i];
-	return line >= minMax.minPixel && line < minMax.maxPixel;
+	return line >= minMax.minPixel && line <= minMax.maxPixel;
 }
