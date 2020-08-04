@@ -9,8 +9,6 @@
 
 #include "BufferPrinter.h"
 
-#include "undef.h"
-
 using namespace utils;
 
 void utils::writeObject(std::wostream& stream, const Option& t, sview options) {

@@ -45,9 +45,9 @@ namespace rxtd::audio_analyzer {
 		AudioChild& operator=(AudioChild&& other) = delete;
 
 	protected:
-		void _reload() override;
-		double _update() override;
-		void _updateString(string& resultStringBuffer) override;
+		void vReload() override;
+		double vUpdate() override;
+		void vUpdateString(string& resultStringBuffer) override;
 
 	private:
 		void legacy_readOptions();

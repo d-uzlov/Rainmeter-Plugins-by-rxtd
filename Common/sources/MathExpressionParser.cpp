@@ -13,8 +13,6 @@
 
 #include "StringUtils.h"
 
-#include "undef.h"
-
 using namespace utils;
 
 void ExpressionTreeNode::solve() {

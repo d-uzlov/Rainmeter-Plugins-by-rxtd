@@ -13,7 +13,6 @@
 #include "option-parser/OptionSequence.h"
 #include "option-parser/OptionMap.h"
 
-#include "undef.h"
 #include "MyMath.h"
 
 using namespace audio_utils;

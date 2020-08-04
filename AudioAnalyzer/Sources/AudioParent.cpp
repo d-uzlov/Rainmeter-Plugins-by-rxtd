@@ -41,7 +41,7 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 	paramParser.setRainmeter(rain);
 }
 
-void AudioParent::_reload() {
+void AudioParent::vReload() {
 	const auto source = rain.read(L"Source").asIString();
 	string id = { };
 
@@ -90,7 +90,7 @@ void AudioParent::_reload() {
 	}
 }
 
-double AudioParent::_update() {
+double AudioParent::vUpdate() {
 	const auto changes = notificationClient.getPointer()->takeChanges();
 
 	const auto source = deviceManager.getRequesterSourceType();
@@ -136,7 +136,7 @@ double AudioParent::_update() {
 	return deviceManager.getDeviceStatus();
 }
 
-void AudioParent::_command(isview bangArgs) {
+void AudioParent::vCommand(isview bangArgs) {
 	if (bangArgs == L"updateDevList") {
 		deviceManager.getDeviceEnumerator().updateDeviceStringLegacy(deviceManager.getCurrentDeviceType());
 		return;
@@ -145,7 +145,7 @@ void AudioParent::_command(isview bangArgs) {
 	logger.error(L"unknown command '{}'", bangArgs);
 }
 
-void AudioParent::_resolve(array_view<isview> args, string& resolveBufferString) {
+void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString) {
 	if (args.empty()) {
 		logger.error(L"Invalid section variable: args needed");
 		return;

@@ -100,11 +100,11 @@ namespace rxtd::perfmon {
 		PerfmonParent& operator=(PerfmonParent&& other) = delete;
 
 	protected:
-		void _reload() override;
-		double _update() override;
-		void _updateString(string& resultStringBuffer) override;
-		void _command(isview bangArgs) override;
-		void _resolve(array_view<isview> args, string& resolveBufferString) override;
+		void vReload() override;
+		double vUpdate() override;
+		void vUpdateString(string& resultStringBuffer) override;
+		void vCommand(isview bangArgs) override;
+		void vResolve(array_view<isview> args, string& resolveBufferString) override;
 
 	public:
 		/** Parent measure can be stopped.

@@ -28,7 +28,7 @@ namespace rxtd::audio_analyzer {
 			eDEFAULT_OUTPUT,
 			eID,
 		};
-		
+
 		enum class State {
 			// usual operating mode
 			eOK,
@@ -68,7 +68,10 @@ namespace rxtd::audio_analyzer {
 	public:
 		DeviceManager(Logger logger, std::function<void(MyWaveFormat waveFormat)> waveFormatUpdateCallback);
 
-		~DeviceManager();
+		~DeviceManager() {
+			deviceRelease();
+		}
+
 		/** This class is non copyable */
 		DeviceManager(const DeviceManager& other) = delete;
 		DeviceManager(DeviceManager&& other) = delete;
@@ -92,7 +95,7 @@ namespace rxtd::audio_analyzer {
 			return requestedDevice.id;
 		}
 
-		void setOptions(DataSource port, sview deviceID);
+		void setOptions(DataSource source, sview deviceID);
 
 		[[nodiscard]]
 		const utils::MediaDeviceWrapper::DeviceInfo& getDeviceInfo() const;

@@ -9,7 +9,6 @@
 
 #include "WaveFormDrawer.h"
 
-#include "undef.h"
 #include "IntMixer.h"
 
 using namespace utils;

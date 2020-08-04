@@ -65,7 +65,7 @@ std::optional<utils::MediaDeviceWrapper> AudioEnumeratorHelper::getDefaultDevice
 
 std::optional<utils::MediaDeviceType> AudioEnumeratorHelper::getDeviceType(const string& deviceID) {
 	if (outputDevicesIDs.find(deviceID) != outputDevicesIDs.end()) {
-		return utils::MediaDeviceType::eOUTPUT; // TODO read list here, to accomodate for new devices?
+		return utils::MediaDeviceType::eOUTPUT;
 	}
 	if (inputDevicesIDs.find(deviceID) != inputDevicesIDs.end()) {
 		return utils::MediaDeviceType::eINPUT;

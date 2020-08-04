@@ -10,8 +10,6 @@
 #include "StripedImageFadeHelper.h"
 #include "IntMixer.h"
 
-#include "undef.h"
-
 using namespace utils;
 
 void StripedImageFadeHelper::inflate(array2d_view<IntColor> source) {

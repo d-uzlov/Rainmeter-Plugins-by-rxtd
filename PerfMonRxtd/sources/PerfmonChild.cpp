@@ -30,7 +30,7 @@ PerfmonChild::PerfmonChild(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rai
 	}
 }
 
-void PerfmonChild::_reload() {
+void PerfmonChild::vReload() {
 	instanceIndex = rain.read(L"InstanceIndex").asInt<item_t>();
 	ref.counter = rain.read(L"CounterIndex").asInt<counter_t>();
 	ref.useOrigName = rain.read(L"SearchOriginalName").asBool();
@@ -131,7 +131,7 @@ void PerfmonChild::_reload() {
 	ref.named = ref.useOrigName || !ref.name.empty();
 }
 
-double  PerfmonChild::_update() {
+double  PerfmonChild::vUpdate() {
 	if (!parent->canGetRaw() || ref.type == ReferenceType::COUNTER_FORMATTED && !parent->canGetFormatted()) {
 		return 0;
 	}
@@ -148,7 +148,7 @@ double  PerfmonChild::_update() {
 	return parent->getValue(ref, instance, logger);
 }
 
-void PerfmonChild::_updateString(string& resultStringBuffer) {
+void PerfmonChild::vUpdateString(string& resultStringBuffer) {
 	if (ref.total) {
 		resultStringBuffer = L"Total";
 		return;

@@ -22,13 +22,13 @@ AudioChild::AudioChild(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rain)) 
 	parent = utils::ParentBase::find<AudioParent>(rain.getSkin(), parentName);
 
 	if (parent == nullptr) {
-		logger.error(L"Parent '{}' is not found or broken", parentName);
+		logger.error(L"Parent '{}' doesn't exist or broken", parentName);
 		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
 	}
 }
 
-void AudioChild::_reload() {
+void AudioChild::vReload() {
 	const auto channelStr = rain.read(L"Channel").asIString(L"auto");
 	auto channelOpt = Channel::channelParser.find(channelStr);
 	if (!channelOpt.has_value()) {
@@ -80,13 +80,22 @@ void AudioChild::_reload() {
 	if (!rain.read(L"NumberTransform").empty()
 		|| !rain.read(L"Clamp01").empty()
 		|| !rain.read(L"Gain").empty()
-		) {
+	) {
 		legacy_readOptions();
 		legacy.use = true;
 	}
 }
 
-double AudioChild::_update() {
+double AudioChild::vUpdate() {
+	switch (parent->getState()) {
+	case utils::MeasureState::eWORKING: break;
+	case utils::MeasureState::eTEMP_BROKEN: return 0.0;
+	case utils::MeasureState::eBROKEN:
+		logger.error(L"stopping updating because parent measure is broken");
+		setMeasureState(utils::MeasureState::eBROKEN);
+		break;
+	}
+
 	if (legacy.use) {
 		return legacy_update();
 	}
@@ -97,7 +106,7 @@ double AudioChild::_update() {
 	return parent->getValue(procId, valueId, channel, valueIndex);
 }
 
-void AudioChild::_updateString(string& resultStringBuffer) {
+void AudioChild::vUpdateString(string& resultStringBuffer) {
 	resultStringBuffer = parent->resolve(infoRequestC);
 }
 

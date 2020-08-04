@@ -26,10 +26,6 @@ DeviceManager::DeviceManager(Logger _logger, std::function<void(MyWaveFormat wav
 	}
 }
 
-DeviceManager::~DeviceManager() {
-	deviceRelease();
-}
-
 void DeviceManager::deviceInit() {
 	if (getState() != State::eERROR_AUTO) {
 		// eOK - init not needed

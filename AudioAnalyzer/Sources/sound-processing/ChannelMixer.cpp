@@ -10,7 +10,6 @@
 #include "ChannelMixer.h"
 #include "Channel.h"
 
-#include "undef.h"
 #include <set>
 
 using namespace audio_analyzer;

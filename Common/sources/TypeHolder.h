@@ -49,23 +49,31 @@ namespace rxtd::utils {
 		const wchar_t* resolve(int argc, const wchar_t* argv[]);
 		const wchar_t* resolve(array_view<isview> args);
 
-		MeasureState getState() const;
+		MeasureState getState() const {
+			return measureState;
+		}
 
 	protected:
-		virtual void _reload() = 0;
-		virtual double _update() = 0;
+		virtual void vReload() = 0;
+		virtual double vUpdate() = 0;
 
-		virtual void _updateString(string& resultStringBuffer) {
+		virtual void vUpdateString(string& resultStringBuffer) {
 		}
 
-		virtual void _command(isview bangArgs);
-
-		virtual void _resolve(array_view<isview> args, string& resolveBufferString) {
+		virtual void vCommand(isview bangArgs) {
+			logger.warning(L"Measure does not have commands");
 		}
 
-		void setMeasureState(MeasureState brokenState);
-		void setUseResultString(bool value);
+		virtual void vResolve(array_view<isview> args, string& resolveBufferString) {
+		}
 
+		void setMeasureState(MeasureState value) {
+			measureState = value;
+		}
+
+		void setUseResultString(bool value) {
+			useResultString = value;
+		}
 	};
 
 	class ParentBase : public TypeHolder {
@@ -74,7 +82,7 @@ namespace rxtd::utils {
 		static std::map<Rainmeter::Skin, SkinMap> globalMeasuresMap;
 
 	public:
-		explicit ParentBase(Rainmeter&& rain);
+		explicit ParentBase(Rainmeter&& _rain);
 
 		~ParentBase();
 

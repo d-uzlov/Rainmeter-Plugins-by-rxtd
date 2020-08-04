@@ -46,7 +46,7 @@ PerfmonParent::PerfmonParent(utils::Rainmeter&& _rain) : ParentBase(std::move(_r
 	}
 }
 
-void PerfmonParent::_reload() {
+void PerfmonParent::vReload() {
 	needUpdate = true;
 
 	instanceManager.setSortIndex(rain.read(L"SortIndex").asInt<counter_t>());
@@ -197,7 +197,7 @@ sview PerfmonParent::getInstanceName(const InstanceInfo& instance, ResultString 
 	}
 }
 
-double PerfmonParent::_update() {
+double PerfmonParent::vUpdate() {
 
 	if (!stopped) {
 		std::swap(snapshotCurrent, snapshotPrevious);
@@ -231,7 +231,7 @@ double PerfmonParent::_update() {
 	return 1;
 }
 
-void PerfmonParent::_updateString(string& resultStringBuffer) {
+void PerfmonParent::vUpdateString(string& resultStringBuffer) {
 	switch (state) { 
 	case State::eFETCH_ERROR: 
 		resultStringBuffer = L"fetch error";
@@ -246,7 +246,7 @@ void PerfmonParent::_updateString(string& resultStringBuffer) {
 	}
 }
 
-void PerfmonParent::_command(isview bangArgs) {
+void PerfmonParent::vCommand(isview bangArgs) {
 	if (bangArgs== L"Stop") {
 		setStopped(true);
 		return;
@@ -272,7 +272,7 @@ void PerfmonParent::_command(isview bangArgs) {
 	}
 }
 
-void PerfmonParent::_resolve(array_view<isview> args, string& resolveBufferString) {
+void PerfmonParent::vResolve(array_view<isview> args, string& resolveBufferString) {
 	if (args.empty()) {
 		return;
 	}

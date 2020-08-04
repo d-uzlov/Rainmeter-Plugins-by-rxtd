@@ -9,8 +9,6 @@
 
 #include "StringUtils.h"
 
-#include "undef.h"
-
 using namespace utils;
 
 SubstringViewInfo SubstringViewInfo::substr(index subOffset,

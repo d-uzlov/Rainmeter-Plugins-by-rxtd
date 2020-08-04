@@ -26,8 +26,8 @@ namespace rxtd::perfmon {
 		explicit PerfmonChild(utils::Rainmeter&& _rain);
 
 	protected:
-		void _reload() override;
-		double _update() override;
-		void _updateString(string& resultStringBuffer) override;
+		void vReload() override;
+		double vUpdate() override;
+		void vUpdateString(string& resultStringBuffer) override;
 	};
 }

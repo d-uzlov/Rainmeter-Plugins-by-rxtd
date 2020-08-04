@@ -30,78 +30,103 @@ ChannelLayout ChannelLayout::create(sview name, const std::vector<Channel::Value
 }
 
 namespace {
-	ChannelLayout mono = ChannelLayout::create(L"1.0 mono", {
-		Channel::eCENTER
-	});
-	ChannelLayout _1_1 = ChannelLayout::create(L"1.1", {
-		Channel::eCENTER, Channel::eLOW_FREQUENCY
-	});
-	ChannelLayout stereo = ChannelLayout::create(L"2.0 stereo", {
-		Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT
-	});
-	ChannelLayout _2_1 = ChannelLayout::create(L"2.1", {
-		Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT,
-		Channel::eLOW_FREQUENCY
-	});
-	ChannelLayout _3_0 = ChannelLayout::create(L"3.0", {
-		Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT,
-		Channel::eCENTER
-	});
-	ChannelLayout _3_1 = ChannelLayout::create(L"3.1", {
-		Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT,
-		Channel::eCENTER, Channel::eLOW_FREQUENCY
-	});
-	ChannelLayout quad = ChannelLayout::create(L"4.0 quad", {
-		Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT,
-		Channel::eBACK_LEFT, Channel::eBACK_RIGHT
-	});
-	ChannelLayout _5_0 = ChannelLayout::create(L"5.0", {
-		Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT,
-		Channel::eCENTER,
-		Channel::eSIDE_LEFT, Channel::eSIDE_RIGHT
-	});
-	ChannelLayout _5_1 = ChannelLayout::create(L"5.1", {
-		Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT,
-		Channel::eCENTER, Channel::eLOW_FREQUENCY,
-		Channel::eBACK_LEFT, Channel::eBACK_RIGHT
-	});
-	ChannelLayout _5_1_surround = ChannelLayout::create(L"5.1 surround", {
-		Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT,
-		Channel::eCENTER, Channel::eLOW_FREQUENCY,
-		Channel::eSIDE_LEFT, Channel::eSIDE_RIGHT
-	});
-	ChannelLayout _7_0 = ChannelLayout::create(L"7.0", {
-		Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT,
-		Channel::eCENTER,
-		Channel::eBACK_LEFT, Channel::eBACK_RIGHT,
-		Channel::eSIDE_LEFT, Channel::eSIDE_RIGHT
-	});
-	ChannelLayout _7_1surround = ChannelLayout::create(L"7.1 surround", {
-		Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT,
-		Channel::eCENTER, Channel::eLOW_FREQUENCY,
-		Channel::eBACK_LEFT, Channel::eBACK_RIGHT,
-		Channel::eSIDE_LEFT, Channel::eSIDE_RIGHT
-	});
+	ChannelLayout mono = ChannelLayout::create(
+		L"1.0 mono", {
+			Channel::eCENTER
+		});
+	ChannelLayout _1_1 = ChannelLayout::create(
+		L"1.1", {
+			Channel::eCENTER, Channel::eLOW_FREQUENCY
+		});
+	ChannelLayout stereo = ChannelLayout::create(
+		L"2.0 stereo", {
+			Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT
+		});
+	ChannelLayout _2_1 = ChannelLayout::create(
+		L"2.1", {
+			Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT,
+			Channel::eLOW_FREQUENCY
+		});
+	ChannelLayout _3_0 = ChannelLayout::create(
+		L"3.0", {
+			Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT,
+			Channel::eCENTER
+		});
+	ChannelLayout _3_1 = ChannelLayout::create(
+		L"3.1", {
+			Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT,
+			Channel::eCENTER, Channel::eLOW_FREQUENCY
+		});
+	ChannelLayout quad = ChannelLayout::create(
+		L"4.0 quad", {
+			Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT,
+			Channel::eBACK_LEFT, Channel::eBACK_RIGHT
+		});
+	ChannelLayout quad_surround = ChannelLayout::create(
+		L"4.0 surround", {
+			Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT,
+			Channel::eCENTER, Channel::eCENTER_BACK
+		});
+	ChannelLayout _5_0 = ChannelLayout::create(
+		L"5.0", {
+			Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT,
+			Channel::eCENTER,
+			Channel::eSIDE_LEFT, Channel::eSIDE_RIGHT
+		});
+	ChannelLayout _5_1 = ChannelLayout::create(
+		L"5.1", {
+			Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT,
+			Channel::eCENTER, Channel::eLOW_FREQUENCY,
+			Channel::eBACK_LEFT, Channel::eBACK_RIGHT
+		});
+	ChannelLayout _5_1_surround = ChannelLayout::create(
+		L"5.1 surround", {
+			Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT,
+			Channel::eCENTER, Channel::eLOW_FREQUENCY,
+			Channel::eSIDE_LEFT, Channel::eSIDE_RIGHT
+		});
+	ChannelLayout _7_0 = ChannelLayout::create(
+		L"7.0", {
+			Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT,
+			Channel::eCENTER,
+			Channel::eBACK_LEFT, Channel::eBACK_RIGHT,
+			Channel::eSIDE_LEFT, Channel::eSIDE_RIGHT
+		});
+	ChannelLayout _7_1surround = ChannelLayout::create(
+		L"7.1 surround", {
+			Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT,
+			Channel::eCENTER, Channel::eLOW_FREQUENCY,
+			Channel::eBACK_LEFT, Channel::eBACK_RIGHT,
+			Channel::eSIDE_LEFT, Channel::eSIDE_RIGHT
+		});
 }
 
 Channel::ChannelParser::ChannelParser() {
 	addElement(L"Auto", eAUTO);
+
 	addElement(L"Left", eFRONT_LEFT);
 	addElement(L"FrontLeft", eFRONT_LEFT);
 	addElement(L"FL", eFRONT_LEFT);
+
 	addElement(L"Right", eFRONT_RIGHT);
 	addElement(L"FrontRight", eFRONT_RIGHT);
 	addElement(L"FR", eFRONT_RIGHT);
+
 	addElement(L"Center", eCENTER);
 	addElement(L"C", eCENTER);
+
 	addElement(L"LowFrequency", eLOW_FREQUENCY);
 	addElement(L"LFE", eLOW_FREQUENCY);
+
 	addElement(L"BackLeft", eBACK_LEFT);
 	addElement(L"BL", eBACK_LEFT);
+
 	addElement(L"BackRight", eBACK_RIGHT);
 	addElement(L"BR", eBACK_RIGHT);
+
 	addElement(L"SideLeft", eSIDE_LEFT);
 	addElement(L"SL", eSIDE_LEFT);
+
 	addElement(L"SideRight", eSIDE_RIGHT);
 	addElement(L"SR", eSIDE_RIGHT);
 }
@@ -110,7 +135,7 @@ std::optional<Channel> Channel::ChannelParser::find(const isview str) {
 	const auto iter = map.find(str);
 
 	if (iter == map.end()) {
-		return std::nullopt;
+		return { };
 	}
 
 	return iter->second;

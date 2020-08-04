@@ -10,8 +10,6 @@
 #include "BmpWriter.h"
 #include "windows-wrappers/FileWrapper.h"
 
-#include "undef.h"
-
 void utils::BmpWriter::writeFile(const string& filepath, array2d_view<uint32_t> imageData) {
 	BMPHeader header(imageData.getBufferSize(), imageData.getBuffersCount());
 

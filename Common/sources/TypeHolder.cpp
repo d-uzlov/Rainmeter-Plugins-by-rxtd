@@ -9,26 +9,12 @@
 
 #include "TypeHolder.h"
 
-#include "undef.h"
-
 using namespace utils;
 
 std::map<Rainmeter::Skin, std::map<istring, ParentBase*, std::less<>>> ParentBase::globalMeasuresMap{ };
 
-TypeHolder::TypeHolder(Rainmeter&& rain) : rain(std::move(rain)), logger(this->rain.getLogger()) {
+TypeHolder::TypeHolder(Rainmeter&& _rain) : rain(std::move(_rain)), logger(rain.getLogger()) {
 
-}
-
-void TypeHolder::_command(isview bangArgs) {
-	logger.warning(L"Measure does not have commands");
-}
-
-void TypeHolder::setMeasureState(MeasureState brokenState) {
-	this->measureState = brokenState;
-}
-
-void TypeHolder::setUseResultString(bool value) {
-	useResultString = value;
 }
 
 double TypeHolder::update() {
@@ -36,10 +22,10 @@ double TypeHolder::update() {
 		return 0.0;
 	}
 
-	resultDouble = _update();
+	resultDouble = vUpdate();
 	if (useResultString) {
 		resultString = { };
-		_updateString(resultString);
+		vUpdateString(resultString);
 	}
 	return resultDouble;
 }
@@ -51,7 +37,7 @@ void TypeHolder::reload() {
 	}
 
 	measureState = MeasureState::eWORKING;
-	_reload();
+	vReload();
 }
 
 void TypeHolder::command(const wchar_t* bangArgs) {
@@ -60,7 +46,7 @@ void TypeHolder::command(const wchar_t* bangArgs) {
 		return;
 	}
 
-	_command(bangArgs);
+	vCommand(bangArgs);
 }
 
 const wchar_t* TypeHolder::resolve(int argc, const wchar_t* argv[]) {
@@ -78,7 +64,7 @@ const wchar_t* TypeHolder::resolve(int argc, const wchar_t* argv[]) {
 	}
 
 	resolveString = { };
-	_resolve(resolveVector, resolveString);
+	vResolve(resolveVector, resolveString);
 
 	return resolveString.c_str();
 }
@@ -90,7 +76,7 @@ const wchar_t* TypeHolder::resolve(array_view<isview> args) {
 	}
 
 	resolveString = { };
-	_resolve(args, resolveString);
+	vResolve(args, resolveString);
 
 	return resolveString.c_str();
 }
@@ -100,29 +86,21 @@ const wchar_t* TypeHolder::getString() const {
 		return L"broken";
 	}
 
-	if (useResultString) {
-		return resultString.c_str();
-	} else {
-		return nullptr;
-	}
+	return useResultString ? resultString.c_str() : nullptr;
 }
 
-MeasureState TypeHolder::getState() const {
-	return measureState;
-}
-
-ParentBase::ParentBase(Rainmeter&& rain): TypeHolder(std::move(rain)) {
-	globalMeasuresMap[this->rain.getSkin()][this->rain.getMeasureName() % ciView() % own()] = this;
+ParentBase::ParentBase(Rainmeter&& _rain): TypeHolder(std::move(_rain)) {
+	globalMeasuresMap[rain.getSkin()][rain.getMeasureName() % ciView() % own()] = this;
 }
 
 ParentBase::~ParentBase() {
-	const auto skinIter = globalMeasuresMap.find(this->rain.getSkin());
+	const auto skinIter = globalMeasuresMap.find(rain.getSkin());
 	if (skinIter == globalMeasuresMap.end()) {
 		std::terminate();
 	}
 	auto& measuresMap = skinIter->second;
 
-	const auto measureIter = measuresMap.find(this->rain.getMeasureName() % ciView());
+	const auto measureIter = measuresMap.find(rain.getMeasureName() % ciView());
 	if (measureIter == measuresMap.end()) {
 		std::terminate();
 	}
