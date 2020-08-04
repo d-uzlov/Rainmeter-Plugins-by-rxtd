@@ -65,14 +65,9 @@ bool BandCascadeTransformer::parseParams(
 
 SoundHandler::LinkingResult BandCascadeTransformer::vFinishLinking(Logger& cl) {
 	const auto sourcePtr = getSource();
-	if (sourcePtr == nullptr) {
-		cl.error(L"source is not found");
-		return { };
-	}
-
 	const auto provider = dynamic_cast<ResamplerProvider*>(sourcePtr);
 	if (provider == nullptr) {
-		cl.error(L"invalid source");
+		cl.error(L"invalid source: BandResampler is not found in the handler chain");
 		return { };
 	}
 
@@ -91,11 +86,10 @@ SoundHandler::LinkingResult BandCascadeTransformer::vFinishLinking(Logger& cl) {
 		return { };
 	}
 
-	savedIds.resize(sourcePtr->getDataSize().layersCount);
+	const auto dataSize = sourcePtr->getDataSize();
+	savedIds.resize(dataSize.layersCount);
 
-	const index bandsCount = sourcePtr->getDataSize().valuesCount;
-
-	return { 1, bandsCount };
+	return { 1, dataSize.valuesCount };
 }
 
 void BandCascadeTransformer::vReset() {

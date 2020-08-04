@@ -85,15 +85,7 @@ void legacy_FiniteTimeFilter::setParams(const Params& value) {
 }
 
 SoundHandler::LinkingResult legacy_FiniteTimeFilter::vFinishLinking(Logger& cl) {
-	const auto sourcePtr = getSource();
-	if (sourcePtr == nullptr) {
-		cl.error(L"source is not found");
-		return { };
-	}
-
-	auto& source = *sourcePtr;
-
-	const auto dataSize = source.getDataSize();
+	const auto dataSize = getSource()->getDataSize();
 
 	pastValues.resize(dataSize.layersCount);
 	for (auto& vec : pastValues) {

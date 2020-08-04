@@ -37,14 +37,7 @@ void SingleValueTransformer::setParams(const Params& value) {
 }
 
 SoundHandler::LinkingResult SingleValueTransformer::vFinishLinking(Logger& cl) {
-	const auto source = getSource();
-	if (source == nullptr) {
-		cl.error(L"source is not found");
-		return { };
-	}
-
-	// todo check for zero size
-	const auto dataSize = source->getDataSize();
+	const auto dataSize = getSource()->getDataSize();
 
 	params.transformer.setHistoryWidth(dataSize.valuesCount);
 

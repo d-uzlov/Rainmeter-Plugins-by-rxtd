@@ -12,13 +12,15 @@
  First of all, handler should parse its parameters. It happens in the static method #parseParams().
  Then the main life cycle happens, which consists of several phases.
  1. Function #patchMe function is called.
-		Handler should assume that any external resources that it could potentially have links to don't exist anymore
+		Handler should assume that:
+			- any external resources that it could potentially have links to don't exist anymore
+			- sample rate and channel are invalid
+
  2. Function #vFinishLinking is called
 		At this point:
-			- Channel and sample rate are known, and handler may use these values.
-			- Source is also known and either valid or doesn't exist.
-			  If handler relies on source, then it should check it
-		Handler is recalculating data that depend on values above.
+			- Channel and sample rate are known
+			- If handler requested a source via returned value of #getSource function, the source exists and valid
+		Handler must recalculate data that depend on values above.
 		If something fails, handler is invalidated until next params change
  3. vProcess happens in the loop
  4. Data is accessed from other handlers and child measures.
@@ -27,7 +29,6 @@
 
 #pragma once
 #include <atomic>
-
 
 #include "array2d_view.h"
 #include "array_view.h"
@@ -48,9 +49,12 @@ namespace rxtd::audio_analyzer {
 	};
 
 	class HandlerPatcher {
+		friend SoundHandler;
+
 	public:
 		virtual ~HandlerPatcher() = default;
 
+	protected:
 		// takes old pointer and returns new
 		//	- if returned pointer is different from the old, then new object was created,
 		//		and the caller must release resources associated with old pointer
@@ -108,9 +112,12 @@ namespace rxtd::audio_analyzer {
 
 			DataSize() = default;
 
-			DataSize(index layersCount, index valuesCount)
-				: layersCount(layersCount),
-				  valuesCount(valuesCount) {
+			DataSize(index layersCount, index valuesCount) : layersCount(layersCount), valuesCount(valuesCount) {
+			}
+
+			[[nodiscard]]
+			bool isEmpty() const {
+				return layersCount == 0 || valuesCount == 0;
 			}
 		};
 
@@ -158,8 +165,6 @@ namespace rxtd::audio_analyzer {
 			virtual ~HandlerPatcherImpl() = default;
 
 		private:
-			friend SoundHandler;
-
 			[[nodiscard]]
 			SoundHandler* patch(SoundHandler* handlerPtr) const override {
 				auto ptr = dynamic_cast<HandlerType*>(handlerPtr);
@@ -183,7 +188,7 @@ namespace rxtd::audio_analyzer {
 		std::vector<LayerDataId> _idsRef;
 		std::vector<LayerDataId> _ids;
 
-		SoundHandler* _sourceHandler = nullptr;
+		SoundHandler* _sourceHandlerPtr = nullptr;
 		index _sampleRate{ };
 		Channel _channel{ };
 
@@ -236,6 +241,9 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		virtual LinkingResult vFinishLinking(Logger& cl) = 0;
 
+		// push new data
+		// implies that handler generates data on it's own, and the data doesn't have any particular source
+		// maybe source is complex, maybe handler resamples data
 		[[nodiscard]]
 		array_span<float> generateLayerData(index layer) {
 			_generatorId.advance();
@@ -243,6 +251,8 @@ namespace rxtd::audio_analyzer {
 			return _values[layer];
 		}
 
+		// push new data
+		// implies that handler takes data from the source and transforms it somehow
 		[[nodiscard]]
 		array_span<float> updateLayerData(index layer, LayerDataId sourceId) {
 			_idsRef[layer] = sourceId;
@@ -316,7 +326,7 @@ namespace rxtd::audio_analyzer {
 
 		[[nodiscard]]
 		SoundHandler* getSource() const {
-			return _sourceHandler;
+			return _sourceHandlerPtr;
 		}
 
 		[[nodiscard]]

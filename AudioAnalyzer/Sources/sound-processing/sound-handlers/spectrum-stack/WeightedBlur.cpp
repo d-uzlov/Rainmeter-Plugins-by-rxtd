@@ -43,17 +43,11 @@ bool WeightedBlur::parseParams(const OptionMap& optionMap, Logger& cl, const Rai
 SoundHandler::LinkingResult WeightedBlur::vFinishLinking(Logger& cl) {
 	resamplerPtr = getResampler();
 	if (resamplerPtr == nullptr) {
-		cl.error(L"BandResampler is not found in the source chain");
+		cl.error(L"invalid source: BandResampler is not found in the handler chain");
 		return { };
 	}
 
-	const auto source = getSource();
-	if (source == nullptr) {
-		cl.error(L"source is not found");
-		return { };
-	}
-
-	const auto dataSize = source->getDataSize();
+	const auto dataSize = getSource()->getDataSize();
 	return dataSize;
 }
 

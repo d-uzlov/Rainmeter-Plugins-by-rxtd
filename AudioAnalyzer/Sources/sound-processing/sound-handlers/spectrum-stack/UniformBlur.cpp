@@ -34,10 +34,6 @@ bool UniformBlur::parseParams(const OptionMap& optionMap, Logger& cl, const Rain
 
 SoundHandler::LinkingResult UniformBlur::vFinishLinking(Logger& cl) {
 	const auto sourcePtr = getSource();
-	if (sourcePtr == nullptr) {
-		cl.error(L"source is not found");
-		return { };
-	}
 
 	index startingLayer = 0;
 	if (const auto provider = dynamic_cast<ResamplerProvider*>(sourcePtr);

@@ -134,11 +134,11 @@ void Spectrogram::setParams(const Params& value) {
 }
 
 SoundHandler::LinkingResult Spectrogram::vFinishLinking(Logger& cl) {
-	const auto source = getSource();
-	if (source == nullptr) {
-		cl.error(L"source is not found");
-		return { };
-	}
+	const auto sourcePtr = getSource();
+
+	const auto dataSize = sourcePtr->getDataSize();
+	image.setHeight(dataSize.valuesCount);
+	stripBuffer.resize(dataSize.valuesCount);
 
 	filepath = params.prefix;
 	filepath += getChannel().technicalName();
@@ -207,18 +207,10 @@ void Spectrogram::vProcess(array_view<float> wave) {
 
 	// todo check id
 	const auto data = source.getData().values[0];
-	const auto dataSize = source.getDataSize().valuesCount;
-	// if (dataSize <= 0) { // todo move this check to linking
-	// 	setValid(false);
-	// 	return;
-	// }
-
-	image.setHeight(dataSize);
-	stripBuffer.resize(dataSize);
 
 	const bool dataIsZero = std::all_of(
-		data.data(),
-		data.data() + dataSize,
+		data.begin(),
+		data.end(),
 		[=](auto x) { return x < params.colorMinValue; }
 	);
 

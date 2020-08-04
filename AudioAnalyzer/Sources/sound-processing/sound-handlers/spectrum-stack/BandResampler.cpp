@@ -171,13 +171,7 @@ std::vector<float> BandResampler::parseFreqList(sview listId, const Rainmeter& r
 }
 
 SoundHandler::LinkingResult BandResampler::vFinishLinking(Logger& cl) {
-	const auto source = getSource();
-	if (source == nullptr) {
-		cl.error(L"source is not found");
-		return { };
-	}
-
-	fftSource = dynamic_cast<FftAnalyzer*>(source);
+	fftSource = dynamic_cast<FftAnalyzer*>(getSource());
 	if (fftSource == nullptr) {
 		cl.error(L"invalid source, need FftAnalyzer");
 		return { };

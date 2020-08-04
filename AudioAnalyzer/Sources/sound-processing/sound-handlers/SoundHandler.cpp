@@ -23,7 +23,25 @@ SoundHandler* SoundHandler::patch(
 	HandlerFinder& hf, Logger& cl
 ) {
 	auto& result = *patcher.patch(old);
-	result._sourceHandler = hf.getHandler(result.vGetSourceName());
+
+	const auto sourceName = result.vGetSourceName();
+	result._sourceHandlerPtr = hf.getHandler(sourceName);
+
+	if (!sourceName.empty()) {
+		if (result._sourceHandlerPtr == nullptr) {
+			cl.error(L"source is not found");
+			result.setValid(false);
+			return &result;
+		}
+
+		const auto dataSize = result._sourceHandlerPtr->getDataSize();
+		if (dataSize.isEmpty()) {
+			cl.error(L"source doesn't produce any data");
+			result.setValid(false);
+			return &result;
+		}
+	}
+
 	result._sampleRate = sampleRate;
 	result._channel = channel;
 

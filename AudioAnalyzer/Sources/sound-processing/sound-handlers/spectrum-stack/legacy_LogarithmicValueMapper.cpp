@@ -41,14 +41,7 @@ void legacy_LogarithmicValueMapper::setParams(const Params& value) {
 }
 
 SoundHandler::LinkingResult legacy_LogarithmicValueMapper::vFinishLinking(Logger& cl) {
-	const auto sourcePtr = getSource();
-	if (sourcePtr == nullptr) {
-		cl.error(L"source is not found");
-		return { };
-	}
-
-	const auto dataSize = sourcePtr->getDataSize();
-
+	const auto dataSize = getSource()->getDataSize();
 	return dataSize;
 }
 
