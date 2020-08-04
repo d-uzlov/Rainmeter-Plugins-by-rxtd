@@ -74,9 +74,7 @@ void BlockHandler::vReset() {
 	_reset();
 }
 
-void BlockHandler::vProcess(const DataSupplier& dataSupplier) {
-	auto wave = dataSupplier.getWave();
-
+void BlockHandler::vProcess(array_view<float> wave) {
 	float mean = 0.0;
 	if (params.subtractMean && isAverageNeeded()) {
 		mean = std::accumulate(wave.begin(), wave.end(), 0.0f) / wave.size();

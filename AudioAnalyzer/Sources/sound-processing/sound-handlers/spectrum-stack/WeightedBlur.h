@@ -75,7 +75,7 @@ namespace rxtd::audio_analyzer {
 		LinkingResult vFinishLinking(Logger& cl) override;
 
 	public:
-		void vProcess(const DataSupplier& dataSupplier) override;
+		void vProcess(array_view<float> wave) override;
 		void vFinish() override;
 
 	private:

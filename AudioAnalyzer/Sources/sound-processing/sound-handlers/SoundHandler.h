@@ -30,7 +30,6 @@
 
 
 #include "array2d_view.h"
-#include "../DataSupplier.h"
 #include "array_view.h"
 #include "BufferPrinter.h"
 #include "RainmeterWrappers.h"
@@ -267,12 +266,12 @@ namespace rxtd::audio_analyzer {
 			return { _values, _ids };
 		}
 
-		void process(const DataSupplier& dataSupplier) {
+		void process(array_view<float> wave) {
 			if (!isValid()) {
 				return;
 			}
 
-			vProcess(dataSupplier);
+			vProcess(wave);
 		}
 
 		void finish() {
@@ -330,7 +329,7 @@ namespace rxtd::audio_analyzer {
 			return _channel;
 		}
 
-		virtual void vProcess(const DataSupplier& dataSupplier) = 0;
+		virtual void vProcess(array_view<float> wave) = 0;
 
 		// Method can be called several times in a row, handler should check for changes for optimal performance
 		virtual void vFinish() {

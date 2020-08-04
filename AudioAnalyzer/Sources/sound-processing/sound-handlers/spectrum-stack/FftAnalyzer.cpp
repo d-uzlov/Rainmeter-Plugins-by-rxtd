@@ -152,9 +152,7 @@ void FftAnalyzer::vReset() {
 	}
 }
 
-void FftAnalyzer::vProcess(const DataSupplier& dataSupplier) {
-	const auto wave = dataSupplier.getWave();
-
+void FftAnalyzer::vProcess(array_view<float> wave) {
 	if (params.randomTest != 0.0) {
 		processRandom(wave.size());
 	} else {

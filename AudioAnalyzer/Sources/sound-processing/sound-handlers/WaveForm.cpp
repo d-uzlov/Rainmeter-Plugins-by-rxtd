@@ -133,12 +133,11 @@ void WaveForm::vReset() {
 	maxTransformer.reset();
 }
 
-void WaveForm::vProcess(const DataSupplier& dataSupplier) {
+void WaveForm::vProcess(array_view<float> wave) {
 	if (blockSize <= 0 || params.width <= 0 || params.height <= 0) {
+		// todo remove
 		return;
 	}
-
-	const auto wave = dataSupplier.getWave();
 
 	for (const auto value : wave) {
 		min = std::min<double>(min, value);

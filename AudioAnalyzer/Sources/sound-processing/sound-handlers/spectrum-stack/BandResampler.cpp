@@ -220,7 +220,7 @@ SoundHandler::LinkingResult BandResampler::vFinishLinking(Logger& cl) {
 	return { realCascadesCount, bandsCount };
 }
 
-void BandResampler::vProcess(const DataSupplier& dataSupplier) {
+void BandResampler::vProcess(array_view<float> wave) {
 	changed = true;
 }
 

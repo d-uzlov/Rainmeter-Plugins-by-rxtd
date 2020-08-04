@@ -16,26 +16,6 @@
 #include <chrono>
 
 namespace rxtd::audio_analyzer {
-
-	class DataSupplierImpl : public DataSupplier {
-		array_view<float> wave { };
-
-	public:
-		mutable utils::Rainmeter::Logger logger;
-
-		void setWave(array_view<float> value) {
-			wave = value;
-		}
-
-		array_view<float> getWave() const override {
-			return wave;
-		}
-
-		void _log(const wchar_t* message) const override {
-			logger.error(message);
-		}
-	};
-
 	class SoundAnalyzer {
 		using clock = std::chrono::high_resolution_clock;
 		static_assert(clock::is_steady);
@@ -50,7 +30,6 @@ namespace rxtd::audio_analyzer {
 		std::vector<istring> handlerOrder;
 
 		std::map<Channel, ChannelData> channels;
-		DataSupplierImpl dataSupplier;
 
 		ChannelProcessingHelper cph;
 		Logger logger;

@@ -53,9 +53,6 @@
     <ClInclude Include="Sources\sound-processing\Channel.h">
       <Filter>Source Files\sound-processing</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\DataSupplier.h">
-      <Filter>Source Files\sound-processing</Filter>
-    </ClInclude>
     <ClInclude Include="Sources\sound-processing\device-management\DeviceManager.h">
       <Filter>Source Files\sound-processing\device-management</Filter>
     </ClInclude>

@@ -123,7 +123,7 @@ namespace rxtd::audio_analyzer {
 
 	public:
 		void vReset() override;
-		void vProcess(const DataSupplier& dataSupplier) override;
+		void vProcess(array_view<float> wave) override;
 		void vFinish() override;
 
 		bool vGetProp(const isview& prop, utils::BufferPrinter& printer) const override;

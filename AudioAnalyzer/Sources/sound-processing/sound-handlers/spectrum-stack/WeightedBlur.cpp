@@ -57,7 +57,7 @@ SoundHandler::LinkingResult WeightedBlur::vFinishLinking(Logger& cl) {
 	return dataSize;
 }
 
-void WeightedBlur::vProcess(const DataSupplier& dataSupplier) {
+void WeightedBlur::vProcess(array_view<float> wave) {
 	changed = true;
 }
 

@@ -105,7 +105,7 @@ SoundHandler::LinkingResult legacy_FiniteTimeFilter::vFinishLinking(Logger& cl) 
 	return dataSize;
 }
 
-void legacy_FiniteTimeFilter::vProcess(const DataSupplier& dataSupplier) {
+void legacy_FiniteTimeFilter::vProcess(array_view<float> wave) {
 	changed = true;
 }
 

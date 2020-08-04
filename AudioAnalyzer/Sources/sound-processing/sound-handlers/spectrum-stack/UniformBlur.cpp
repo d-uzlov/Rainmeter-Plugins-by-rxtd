@@ -54,7 +54,7 @@ SoundHandler::LinkingResult UniformBlur::vFinishLinking(Logger& cl) {
 	return dataSize;
 }
 
-void UniformBlur::vProcess(const DataSupplier& dataSupplier) {
+void UniformBlur::vProcess(array_view<float> wave) {
 	changed = true;
 }
 

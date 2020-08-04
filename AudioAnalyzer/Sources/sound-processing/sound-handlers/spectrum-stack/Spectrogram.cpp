@@ -188,12 +188,12 @@ void Spectrogram::fillStripMulticolor(array_view<float> data, array_span<utils::
 	}
 }
 
-void Spectrogram::vProcess(const DataSupplier& dataSupplier) {
+void Spectrogram::vProcess(array_view<float> wave) {
 	if (blockSize <= 0) {
 		return;
 	}
 
-	const auto waveSize = dataSupplier.getWave().size();
+	const index waveSize = wave.size();
 	counter += waveSize;
 
 	if (counter < blockSize) {

@@ -167,7 +167,6 @@
     <ClInclude Include="Sources\sound-processing\Channel.h" />
     <ClInclude Include="Sources\sound-processing\ChannelMixer.h" />
     <ClInclude Include="Sources\sound-processing\ChannelProcessingHelper.h" />
-    <ClInclude Include="Sources\sound-processing\DataSupplier.h" />
     <ClInclude Include="Sources\sound-processing\device-management\AudioEnumeratorHelper.h" />
     <ClInclude Include="Sources\sound-processing\device-management\CaptureManager.h" />
     <ClInclude Include="Sources\sound-processing\device-management\DeviceManager.h" />

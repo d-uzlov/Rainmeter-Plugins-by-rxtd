@@ -60,9 +60,9 @@ void SingleValueTransformer::vReset() {
 	params.transformer.resetState();
 }
 
-void SingleValueTransformer::vProcess(const DataSupplier& dataSupplier) {
+void SingleValueTransformer::vProcess(array_view<float> wave) {
 	if (params.transformer.hasState()) {
-		processStateful(dataSupplier.getWave().size());
+		processStateful(wave.size());
 	} else {
 		processStateless();
 	}

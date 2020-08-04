@@ -39,7 +39,6 @@ void SoundAnalyzer::setParams(
 bool SoundAnalyzer::process(const ChannelMixer& mixer, clock::time_point killTime) {
 	cph.reset();
 	cph.processDataFrom(mixer);
-	dataSupplier.logger = logger;
 
 	cph.setGrabBufferSize(index(granularity * cph.getSampleRate()));
 
@@ -54,14 +53,12 @@ bool SoundAnalyzer::process(const ChannelMixer& mixer, clock::time_point killTim
 				break;
 			}
 
-			dataSupplier.setWave(wave);
-
 			for (auto iter = handlerOrder.begin();
 				iter != handlerOrder.end();) {
 				auto& handlerName = *iter;
 				
 				auto& handler = *channelData[handlerName];
-				handler.process(dataSupplier);
+				handler.process(wave);
 
 				if (!handler.isValid()) {
 					logger.error(L"handler '{}' was invalidated", handlerName);

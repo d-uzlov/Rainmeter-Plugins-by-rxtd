@@ -52,7 +52,7 @@ SoundHandler::LinkingResult legacy_LogarithmicValueMapper::vFinishLinking(Logger
 	return dataSize;
 }
 
-void legacy_LogarithmicValueMapper::vProcess(const DataSupplier& dataSupplier) {
+void legacy_LogarithmicValueMapper::vProcess(array_view<float> wave) {
 	changed = true;
 }
 

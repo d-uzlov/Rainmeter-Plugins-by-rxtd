@@ -102,7 +102,7 @@ void BandCascadeTransformer::vReset() {
 	changed = true;
 }
 
-void BandCascadeTransformer::vProcess(const DataSupplier& dataSupplier) {
+void BandCascadeTransformer::vProcess(array_view<float> wave) {
 	changed = true;
 }
 
