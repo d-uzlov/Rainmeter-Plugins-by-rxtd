@@ -32,7 +32,7 @@ void BiQuadIIR::apply(array_span<float> signal) {
 	}
 }
 
-void BiQuadIIR::addGain(double gainDB) {
-	const double gain = utils::MyMath::db2amplitude(gainDB);
+void BiQuadIIR::addGainDbEnergy(double gainDB) {
+	const double gain = utils::MyMath::db2amplitude(gainDB * 0.5);
 	gainAmp *= gain;
 }

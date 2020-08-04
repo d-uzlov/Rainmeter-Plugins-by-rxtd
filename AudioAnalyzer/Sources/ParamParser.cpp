@@ -165,10 +165,21 @@ void ParamParser::parseFilters(const utils::OptionMap& optionMap, ProcessingData
 	if (filterType == L"replayGain") {
 		data.fcc = audio_utils::FilterCascadeParser::parse(
 			utils::Option{
-				L"bqHighPass[q 0.5, freq 310] " // spaces in the ends of the strings are necessary
-				L"bqPeak[q 4.0, freq 1125, gain -4.1] "
-				L"bqPeak[q 4.0, freq 2665, gain 5.5] "
-				L"bwLowPass[order 5, freq 20000] "
+				L"bqHighPass[q 0.8, freq 160, forcedGain 3.65] " // spaces in the ends of the strings are necessary
+				L"bqPeak[q 3.0, freq 1125, gain -3.8] "
+				L"bqPeak[q 3.0, freq 3665, gain 5.28] "
+				L"bwLowPass[order 5, freq 10000] "
+			}, filterLogger
+		);
+		return;
+	}
+
+	if (filterType == L"rxtd") {
+		data.fcc = audio_utils::FilterCascadeParser::parse(
+			utils::Option{
+				L"bqHighPass[q 0.3, freq 200, forcedGain 3.65]  " // spaces in the ends of the strings are necessary
+				L"bqPeak[q 1.0, freq 6000, gain 5.28] "
+				L"bwLowPass[order 5, freq 10000] "
 			}, filterLogger
 		);
 		return;
@@ -176,10 +187,11 @@ void ParamParser::parseFilters(const utils::OptionMap& optionMap, ProcessingData
 
 	if (filterType == L"custom") {
 		data.fcc = audio_utils::FilterCascadeParser::parse(filterParams, filterLogger);
-	} else {
-		filterLogger.error(L"filter class '{}' is not supported", filterType);
-		data.fcc = { };
+		return;
 	}
+
+	filterLogger.error(L"filter class '{}' is not supported", filterType);
+	data.fcc = { };
 }
 
 void ParamParser::parseTargetRate(const utils::OptionMap& optionMap, ProcessingData& data, Logger& cl) const {

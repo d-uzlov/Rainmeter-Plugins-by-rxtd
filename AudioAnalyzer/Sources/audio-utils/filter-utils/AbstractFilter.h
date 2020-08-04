@@ -16,5 +16,7 @@ namespace rxtd::audio_utils {
 		virtual ~AbstractFilter() = default;
 
 		virtual void apply(array_span<float> signal) = 0;
+		
+		virtual void addGainDbEnergy(double gainDB) = 0;
 	};
 }

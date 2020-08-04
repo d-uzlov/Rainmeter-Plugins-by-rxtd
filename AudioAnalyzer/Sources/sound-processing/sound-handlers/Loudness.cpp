@@ -34,12 +34,12 @@ void Loudness::finishBlock() {
 		return;
 	}
 
-	const double value = std::sqrt(intermediateRmsResult / counter);
+	const double value = intermediateRmsResult / counter;
 	setNextValue(value);
 	counter = 0;
 	intermediateRmsResult = 0.0;
 }
 
 sview Loudness::getDefaultTransform() const {
-	return L"db map[from -70 + 0.691 : 0.691] filter[attack 100, attack 500] clamp"sv;
+	return L"db map[from -70 + 0.691 : 0.691] filter[attack 100, decay 500] clamp"sv;
 }

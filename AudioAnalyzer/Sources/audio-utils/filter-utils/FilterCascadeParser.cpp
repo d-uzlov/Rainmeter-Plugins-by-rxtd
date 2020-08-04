@@ -130,9 +130,9 @@ FilterCascadeParser::parseBQ(isview name, const utils::OptionMap& description, u
 		auto filter = new BiQuadIIR{ };
 		*filter = filterCreationFunc(sampleFrequency, q, centralFrequency, gain);
 		if (gain > 0.0) {
-			filter->addGain(-gain);
+			filter->addGainDbEnergy(-gain);
 		}
-		filter->addGain(forcedGain);
+		filter->addGainDbEnergy(forcedGain);
 		return std::unique_ptr<AbstractFilter>{ filter };
 	};
 }
@@ -201,49 +201,49 @@ createButterworth(index order, double forcedGain, double freq1, double freq2, Bu
 	switch (order) {
 	case 1: return [=](double sampleFrequency) {
 			auto ptr = new InfiniteResponseFilterFixed<2>{ func(order, sampleFrequency, freq1, freq2) };
-			ptr->addGain(forcedGain);
+			ptr->addGainDbEnergy(forcedGain);
 			return std::unique_ptr<AbstractFilter>{
 				ptr
 			};
 		};
 	case 2: return [=](double sampleFrequency) {
 			auto ptr = new InfiniteResponseFilterFixed<3>{ func(order, sampleFrequency, freq1, freq2) };
-			ptr->addGain(forcedGain);
+			ptr->addGainDbEnergy(forcedGain);
 			return std::unique_ptr<AbstractFilter>{
 				ptr
 			};
 		};
 	case 3: return [=](double sampleFrequency) {
 			auto ptr = new InfiniteResponseFilterFixed<4>{ func(order, sampleFrequency, freq1, freq2) };
-			ptr->addGain(forcedGain);
+			ptr->addGainDbEnergy(forcedGain);
 			return std::unique_ptr<AbstractFilter>{
 				ptr
 			};
 		};
 	case 4: return [=](double sampleFrequency) {
 			auto ptr = new InfiniteResponseFilterFixed<5>{ func(order, sampleFrequency, freq1, freq2) };
-			ptr->addGain(forcedGain);
+			ptr->addGainDbEnergy(forcedGain);
 			return std::unique_ptr<AbstractFilter>{
 				ptr
 			};
 		};
 	case 5: return [=](double sampleFrequency) {
 			auto ptr = new InfiniteResponseFilterFixed<6>{ func(order, sampleFrequency, freq1, freq2) };
-			ptr->addGain(forcedGain);
+			ptr->addGainDbEnergy(forcedGain);
 			return std::unique_ptr<AbstractFilter>{
 				ptr
 			};
 		};
 	case 10: return [=](double sampleFrequency) {
 			auto ptr = new InfiniteResponseFilterFixed<11>{ func(order, sampleFrequency, freq1, freq2) };
-			ptr->addGain(forcedGain);
+			ptr->addGainDbEnergy(forcedGain);
 			return std::unique_ptr<AbstractFilter>{
 				ptr
 			};
 		};
 	default: return [=](double sampleFrequency) {
 			auto ptr = new InfiniteResponseFilter{ func(order, sampleFrequency, freq1, freq2) };
-			ptr->addGain(forcedGain);
+			ptr->addGainDbEnergy(forcedGain);
 			return std::unique_ptr<AbstractFilter>{
 				ptr
 			};

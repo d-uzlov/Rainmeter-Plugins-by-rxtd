@@ -73,7 +73,7 @@ void CustomizableValueTransformer::applyToArray(array_view<float> source, array_
 				destValue = transform.state.filter.apply(prev, sourceValue);
 				prev = destValue;
 			}
-			
+
 			break;
 		}
 		case TransformType::eDB: {
@@ -81,7 +81,7 @@ void CustomizableValueTransformer::applyToArray(array_view<float> source, array_
 			auto destIter = dest.begin();
 
 			for (; sourceIter != source.end();
-				++sourceIter, ++destIter) {
+			       ++sourceIter, ++destIter) {
 				float value = *sourceIter;
 				float& destValue = *destIter;
 
@@ -91,7 +91,7 @@ void CustomizableValueTransformer::applyToArray(array_view<float> source, array_
 
 				destValue = value;
 			}
-			
+
 			break;
 		}
 		case TransformType::eMAP: {
@@ -99,12 +99,12 @@ void CustomizableValueTransformer::applyToArray(array_view<float> source, array_
 			auto destIter = dest.begin();
 
 			for (; sourceIter != source.end();
-				++sourceIter, ++destIter) {
+			       ++sourceIter, ++destIter) {
 				float value = *sourceIter;
 				float& destValue = *destIter;
 
 				value = transform.state.interpolator.toValue(value);
-				
+
 				destValue = value;
 			}
 
@@ -115,7 +115,7 @@ void CustomizableValueTransformer::applyToArray(array_view<float> source, array_
 			auto destIter = dest.begin();
 
 			for (; sourceIter != source.end();
-				++sourceIter, ++destIter) {
+			       ++sourceIter, ++destIter) {
 				float value = *sourceIter;
 				float& destValue = *destIter;
 
@@ -128,7 +128,7 @@ void CustomizableValueTransformer::applyToArray(array_view<float> source, array_
 		}
 		default: std::terminate();
 		}
-		
+
 		source = dest;
 	}
 }

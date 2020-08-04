@@ -32,6 +32,6 @@ namespace rxtd::audio_utils {
 
 		void apply(array_span<float> signal) override;
 
-		void addGain(double gainDB);
+		void addGainDbEnergy(double gainDB) override;
 	};
 }

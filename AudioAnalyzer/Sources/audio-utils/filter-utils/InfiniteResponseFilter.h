@@ -51,8 +51,8 @@ namespace rxtd::audio_utils {
 			std::fill(state.begin(), state.end(), 0.0);
 		}
 
-		void addGain(double gainDB) {
-			gainAmp *= utils::MyMath::db2amplitude(gainDB);
+		void addGainDbEnergy(double gainDB) override {
+			gainAmp *= utils::MyMath::db2amplitude(gainDB * 0.5);
 		}
 
 	private:
@@ -110,8 +110,8 @@ namespace rxtd::audio_utils {
 			std::fill(state.begin(), state.end(), 0.0);
 		}
 
-		void addGain(double gainDB) {
-			gainAmp *= utils::MyMath::db2amplitude(gainDB);
+		void addGainDbEnergy(double gainDB) override {
+			gainAmp *= utils::MyMath::db2amplitude(gainDB * 0.5);
 		}
 
 	private:
