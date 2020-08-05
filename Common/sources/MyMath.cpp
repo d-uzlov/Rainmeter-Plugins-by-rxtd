@@ -9,9 +9,11 @@
 
 #include "MyMath.h"
 
-const double utils::MyMath::pi = std::acos(-1.0);
+using namespace utils;
 
-double utils::MyMath::fastPow(double a, double b) {
+const double MyMath::pi = std::acos(-1.0);
+
+double MyMath::fastPow(double a, double b) {
 	// https://martin.ankerl.com/2007/10/04/optimized-pow-approximation-for-java-and-c-c/
 
 	static_assert(sizeof(double) == 2 * sizeof(int32_t));
@@ -26,7 +28,7 @@ double utils::MyMath::fastPow(double a, double b) {
 	return u.d;
 }
 
-float utils::MyMath::fastLog2(float val) {
+float MyMath::fastLog2(float val) {
 	// http://www.flipcode.com/archives/Fast_log_Function.shtml
 
 	static_assert(sizeof(float) == sizeof(uint32_t));
@@ -47,7 +49,7 @@ float utils::MyMath::fastLog2(float val) {
 	return u.fl + float(log_2);
 }
 
-float utils::MyMath::fastSqrt(float value) {
+float MyMath::fastSqrt(float value) {
 	// https://bits.stephan-brumme.com/squareRoot.html
 
 	static_assert(sizeof(float) == sizeof(uint32_t));
@@ -62,6 +64,6 @@ float utils::MyMath::fastSqrt(float value) {
 	return u.f;
 }
 
-double utils::MyMath::db2amplitude(double value) {
+double MyMath::db2amplitude(double value) {
 	return std::pow(10.0, value / 10.0);
 }
