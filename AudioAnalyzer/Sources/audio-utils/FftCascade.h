@@ -11,6 +11,7 @@
 #include "DownsampleHelper.h"
 #include "filter-utils/LogarithmicIRF.h"
 #include "FFT.h"
+#include "GrowingVector.h"
 
 namespace rxtd::audio_utils {
 	class FftCascade {
@@ -27,56 +28,14 @@ namespace rxtd::audio_utils {
 		};
 
 	private:
-		class RingBuffer {
-			std::vector<float> buffer;
-			index endOffset = 0;
-			index takenOffset = 0;
-
-			DownsampleHelperFixed<5, 2> downsampleHelper;
-
-		public:
-			// returns part of the wave that didn't fit info the buffer
-			[[nodiscard]]
-			array_view<float> fill(array_view<float> wave);
-
-			// returns part of the wave that didn't fit info the buffer
-			[[nodiscard]]
-			array_view<float> fillResampled(array_view<float> wave);
-
-			void shift(index stride);
-
-			[[nodiscard]]
-			bool isFull() const {
-				return endOffset == index(buffer.size());
-			}
-
-			[[nodiscard]]
-			array_view<float> getBuffer() const {
-				return buffer;
-			}
-
-			[[nodiscard]]
-			array_view<float> take();
-
-			void setSize(index value) {
-				buffer.resize(value);
-				reset();
-			}
-
-			void reset() {
-				endOffset = 0;
-				takenOffset = 0;
-				downsampleHelper.reset();
-			}
-		};
-
 		FftCascade* successorPtr{ };
 		FFT* fftPtr{ };
 
 		Params params{ };
 		index cascadeIndex{ };
 
-		RingBuffer buffer;
+		utils::GrowingVector<float> buffer;
+		DownsampleHelperFixed<5, 2> downsampleHelper;
 		LogarithmicIRF filter{ };
 		std::vector<float> values;
 		float legacy_dc{ };
@@ -106,6 +65,6 @@ namespace rxtd::audio_utils {
 
 	private:
 		void resampleResult();
-		void doFft();
+		void doFft(array_view<float> chunk);
 	};
 }

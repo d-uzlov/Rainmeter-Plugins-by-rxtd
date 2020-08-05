@@ -21,7 +21,8 @@ void FftCascade::setParams(Params _params, FFT* _fftPtr, FftCascade* _successorP
 	fftPtr = _fftPtr;
 	cascadeIndex = _cascadeIndex;
 
-	buffer.setSize(params.fftSize);
+	buffer.reset();
+	buffer.setMaxSize(params.fftSize * 5);
 
 	resampleResult();
 
@@ -34,22 +35,31 @@ void FftCascade::process(array_view<float> wave) {
 		return;
 	}
 
+	array_span<float> newChunk;
+
 	const bool needDownsample = cascadeIndex != 0;
+	if (needDownsample) {
+		const auto requiredSize = downsampleHelper.calcBufferSizeFor(wave.size());
+		newChunk = buffer.allocateNext(requiredSize);
+		(void)downsampleHelper.resample(wave, newChunk);
+	} else {
+		newChunk = buffer.allocateNext(wave.size());
+		std::copy(wave.begin(), wave.end(), newChunk.begin());
+	}
 
-	while (!wave.empty()) {
-		wave = needDownsample ? buffer.fillResampled(wave) : buffer.fill(wave);
+	if (successorPtr != nullptr) {
+		successorPtr->process(newChunk);
+	}
 
-		if (!buffer.isFull()) {
-			continue;
+	while (true) {
+		auto chunk = buffer.getFirst(params.fftSize);
+		if (chunk.empty()) {
+			break;
 		}
 
-		if (successorPtr != nullptr) {
-			successorPtr->process(buffer.take());
-		}
+		doFft(chunk);
 
-		doFft();
-
-		buffer.shift(params.inputStride);
+		buffer.removeFirst(params.inputStride);
 	}
 }
 
@@ -89,8 +99,8 @@ void FftCascade::resampleResult() {
 	values[0] = 0.0;
 }
 
-void FftCascade::doFft() {
-	fftPtr->process(buffer.getBuffer());
+void FftCascade::doFft(array_view<float> chunk) {
+	fftPtr->process(chunk);
 
 	const auto binsCount = params.fftSize / 2;
 
@@ -123,40 +133,4 @@ void FftCascade::doFft() {
 void FftCascade::reset() {
 	std::fill(values.begin(), values.end(), 0.0f);
 	buffer.reset();
-}
-
-array_view<float> FftCascade::RingBuffer::fill(array_view<float> wave) {
-	const auto ringBufferRemainingSize = index(buffer.size()) - endOffset;
-	const auto copySize = std::min(ringBufferRemainingSize, wave.size());
-
-	std::copy(wave.begin(), wave.begin() + copySize, buffer.begin() + endOffset);
-	endOffset += copySize;
-
-	wave.remove_prefix(copySize);
-	return wave;
-}
-
-array_view<float> FftCascade::RingBuffer::fillResampled(array_view<float> wave) {
-	array_span<float> bufferPart = buffer;
-	bufferPart.remove_prefix(endOffset);
-	auto [waveConsumed, bufferFilled] = downsampleHelper.resample(wave, bufferPart);
-	
-	endOffset += bufferFilled;
-	wave.remove_prefix(waveConsumed);
-
-	return wave;
-}
-
-void FftCascade::RingBuffer::shift(index stride) {
-	assert(endOffset >= stride);
-
-	std::copy(buffer.begin() + stride, buffer.end(), buffer.begin());
-	endOffset -= stride;
-	takenOffset -= stride;
-}
-
-array_view<float> FftCascade::RingBuffer::take() {
-	array_view<float> result = { buffer.data() + takenOffset, endOffset - takenOffset };
-	takenOffset = endOffset;
-	return result;
 }

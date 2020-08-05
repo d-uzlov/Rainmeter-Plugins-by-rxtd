@@ -68,13 +68,13 @@ namespace rxtd::audio_analyzer {
 
 		[[nodiscard]]
 		array_view<float> grabNext() {
-			return channels[currentChannel].wave.takeChunk(grabBufferSize);
+			return channels[currentChannel].wave.removeFirst(grabBufferSize);
 		}
 
 		[[nodiscard]]
 		array_view<float> grabRest() {
 			auto& waveBuffer = channels[currentChannel].wave;
-			return waveBuffer.takeChunk(waveBuffer.getRemainingSize());
+			return waveBuffer.removeFirst(waveBuffer.getRemainingSize());
 		}
 
 		void reset();

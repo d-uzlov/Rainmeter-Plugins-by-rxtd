@@ -10,6 +10,7 @@
 #pragma once
 #include "array_view.h"
 #include "array2d_view.h"
+#include "GrowingVector.h"
 
 namespace rxtd::utils {
 	template <typename PIXEL_VALUE_TYPE>
@@ -18,11 +19,9 @@ namespace rxtd::utils {
 		using PixelValueType = PIXEL_VALUE_TYPE;
 
 	protected:
-		std::vector<PixelValueType> pixelData{ };
+		GrowingVector<PixelValueType> pixelData{ };
 		index width = 0;
 		index height = 0;
-		index beginningOffset = 0;
-		index maxOffset = 0;
 
 		PixelValueType backgroundValue = { };
 		PixelValueType lastFillValue = { };
@@ -47,15 +46,11 @@ namespace rxtd::utils {
 			this->width = width;
 			this->height = height;
 
-			beginningOffset = 0;
+			const index imagePixelsCount = width * height;
+			const index maxOffset = getReserveSize(imagePixelsCount);
 
-			const index vectorSize = width * height;
-			maxOffset = getReserveSize(vectorSize);
-
-			pixelData.reserve(vectorSize + maxOffset);
-
-			auto imageLines = getCurrentLinesArray();
-			imageLines.fill(backgroundValue);
+			pixelData.reset(imagePixelsCount, backgroundValue);
+			pixelData.setMaxSize(imagePixelsCount + maxOffset);
 
 			lastFillValue = backgroundValue;
 			sameStripsCount = width - 1;
@@ -178,26 +173,17 @@ namespace rxtd::utils {
 
 		[[nodiscard]]
 		array2d_span<PixelValueType> getCurrentLinesArray() {
-			return { pixelData.data() + beginningOffset, height, width };
+			return { pixelData.getPointer(), height, width };
 		}
 
 		[[nodiscard]]
 		array2d_view<PixelValueType> getCurrentLinesArray() const {
-			return { pixelData.data() + beginningOffset, height, width };
+			return { pixelData.getPointer(), height, width };
 		}
 
 		void incrementStrip() {
-			if (beginningOffset < maxOffset) {
-				beginningOffset++;
-				return;
-			}
-
-			std::copy(
-				pixelData.data() + maxOffset + 1, // this +1 is very important. Without it image won't shift enough
-				pixelData.data() + maxOffset + width * height,
-				pixelData.data()
-			);
-			beginningOffset = 0;
+			pixelData.removeFirst(1);
+			pixelData.allocateNext(1);
 		}
 
 		void incrementStationary() {

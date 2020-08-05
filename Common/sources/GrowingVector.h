@@ -14,26 +14,71 @@ namespace rxtd::utils {
 	template <typename T>
 	class GrowingVector {
 		std::vector<T> array{ };
-		index size = 0;
 		index offset = 0;
+		index maxSize = 0;
 
 	public:
-		[[nodiscard]]
-		index getRemainingSize() const {
-			return size - offset;
+		// Set the size after which buffer will be automatically compacted
+		// Setting this value to 0 disables this behaviour
+		// Default value is 0
+		void setMaxSize(index value) {
+			maxSize = value;
+			array.reserve(maxSize);
 		}
 
+		[[nodiscard]]
+		index getRemainingSize() const {
+			return index(array.size()) - offset;
+		}
+
+
+		void pushNext(T value) {
+			array.push_back(std::move(value));
+		}
+
+		[[nodiscard]]
 		array_span<T> allocateNext(index chunkSize) {
-			const index newSize = size + chunkSize;
-			if (index(array.size()) < newSize) {
-				array.resize(newSize);
+			if (maxSize != 0 && index(array.size()) + chunkSize > maxSize) {
+				compact();
 			}
-			array_span<T> result{ array.data() + size, chunkSize };
-			size = newSize;
+
+			array.resize(index(array.size()) + chunkSize);
+
+			return getLast(chunkSize);
+		}
+
+
+		[[nodiscard]]
+		array_span<T> getFirst(index chunkSize) {
+			if (chunkSize > getRemainingSize()) {
+				return { };
+			}
+			array_span<T> result{ array.data() + offset, chunkSize };
 			return result;
 		}
 
-		array_span<T> takeChunk(index chunkSize) {
+		[[nodiscard]]
+		array_view<T> getFirst(index chunkSize) const {
+			if (chunkSize > getRemainingSize()) {
+				return { };
+			}
+			array_span<T> result{ array.data() + offset, chunkSize };
+			return result;
+		}
+
+
+		[[nodiscard]]
+		T* getPointer() {
+			return array.data() + offset;
+		}
+
+		[[nodiscard]]
+		const T* getPointer() const {
+			return array.data() + offset;
+		}
+
+
+		array_span<T> removeFirst(index chunkSize) {
 			if (chunkSize > getRemainingSize()) {
 				return { };
 			}
@@ -42,34 +87,45 @@ namespace rxtd::utils {
 			return result;
 		}
 
+
 		[[nodiscard]]
-		array_span<T> getFromTheEnd(index chunkSize) {
-			return { array.data() + size - chunkSize, chunkSize };
+		array_span<T> getLast(index chunkSize) {
+			return { array.data() + index(array.size()) - chunkSize, chunkSize };
 		}
 
 		[[nodiscard]]
-		array_view<T> getFromTheEnd(index chunkSize) const {
-			return { array.data() + size - chunkSize, chunkSize };
+		array_view<T> getLast(index chunkSize) const {
+			return { array.data() + index(array.size()) - chunkSize, chunkSize };
+		}
+
+
+		[[nodiscard]]
+		array_span<T> getAllData() {
+			return array;
 		}
 
 		[[nodiscard]]
-		array_span<T> getData() {
-			return { array.data(), size };
+		array_view<T> getAllData() const {
+			return array;
 		}
 
-		[[nodiscard]]
-		array_view<T> getData() const {
-			return { array.data(), size };
-		}
 
+		// functionally does nothing
 		void compact() {
 			array.erase(array.begin(), array.begin() + offset);
-			size = size - offset;
 			offset = 0;
 		}
 
+		// clear the vector
 		void reset() {
-			size = 0;
+			array.clear();
+			offset = 0;
+		}
+
+		// resize vector to #count and fill it with #value
+		void reset(index count, T value) {
+			array.resize(count);
+			std::fill_n(array.begin(), count, value);
 			offset = 0;
 		}
 	};

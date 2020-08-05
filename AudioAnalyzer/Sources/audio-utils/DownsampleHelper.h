@@ -125,6 +125,11 @@ namespace rxtd::audio_utils {
 			filter = { ButterworthWrapper::calcCoefLowPass(filterOrder, 0.907 / decimateFactor) };
 		}
 
+		[[nodiscard]]
+		index calcBufferSizeFor(index sourceSize) const {
+			return (counter + sourceSize) / decimateFactor;
+		}
+
 		// returns part of the wave that didn't fit info the buffer
 		[[nodiscard]]
 		ResampleResultInfo resample(array_view<float> source, array_span<float> buffer) {

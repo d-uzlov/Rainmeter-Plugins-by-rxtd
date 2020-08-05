@@ -124,13 +124,13 @@ array_view<float> ChannelMixer::getChannelPCM(Channel channel) const {
 		return { };
 	}
 
-	return dataIter->second.getData();
+	return dataIter->second.getAllData();
 }
 
 void ChannelMixer::resampleToAuto(index size) {
 	auto writeBuffer = channels[Channel::eAUTO].allocateNext(size);
-	const auto& bufferFirst = channels[Channel::eFRONT_LEFT].getFromTheEnd(size);
-	const auto& bufferSecond = channels[Channel::eFRONT_RIGHT].getFromTheEnd(size);
+	const auto& bufferFirst = channels[Channel::eFRONT_LEFT].getLast(size);
+	const auto& bufferSecond = channels[Channel::eFRONT_RIGHT].getLast(size);
 
 	for (index i = 0; i < size; ++i) {
 		writeBuffer[i] = (bufferFirst[i] + bufferSecond[i]) * 0.5f;
