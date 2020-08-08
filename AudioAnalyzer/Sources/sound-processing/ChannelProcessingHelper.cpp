@@ -67,7 +67,7 @@ void ChannelProcessingHelper::reset() {
 void ChannelProcessingHelper::processChannel(Channel channel, const ChannelMixer& mixer) {
 	auto& data = channels[channel];
 
-	auto wave = mixer.getChannelPCM(currentChannel);
+	auto wave = mixer.getChannelPCM(channel);
 	if (wave.empty()) {
 		return;
 	}
