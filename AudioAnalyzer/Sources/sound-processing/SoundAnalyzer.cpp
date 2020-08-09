@@ -25,13 +25,12 @@ void SoundAnalyzer::setFormat(index sampleRate, ChannelLayout _layout) {
 
 void SoundAnalyzer::setParams(
 	std::set<Channel> channelSetRequested,
-	const ParamParser::HandlerPatcherInfo& patchersInfo,
+	const ParamParser::HandlerPatchersInfo& _patchersInfo,
 	double _granularity,
 	index _legacyNumber
 ) {
 	this->channelSetRequested = std::move(channelSetRequested);
-	handlerPatchers = &patchersInfo.map;
-	handlerOrder = patchersInfo.order;
+	patchersInfo = _patchersInfo;
 	granularity = _granularity;
 	legacyNumber = _legacyNumber;
 
@@ -55,16 +54,17 @@ bool SoundAnalyzer::process(const ChannelMixer& mixer, clock::time_point killTim
 				break;
 			}
 
-			for (auto iter = handlerOrder.begin();
-				iter != handlerOrder.end();) {
+			auto& order = patchersInfo.order;
+			for (auto iter = order.begin();
+			     iter != order.end();) {
 				auto& handlerName = *iter;
-				
+
 				auto& handler = *channelData[handlerName];
 				handler.process(wave);
 
 				if (!handler.isValid()) {
 					logger.error(L"handler '{}' was invalidated", handlerName);
-					iter = handlerOrder.erase(iter);
+					iter = order.erase(iter);
 				} else {
 					++iter;
 				}
@@ -81,22 +81,23 @@ bool SoundAnalyzer::process(const ChannelMixer& mixer, clock::time_point killTim
 
 bool SoundAnalyzer::finishStandalone(clock::time_point killTime) {
 	for (auto& [channel, channelData] : channels) {
-		for (auto iter = handlerOrder.begin();
-			iter != handlerOrder.end();) {
+		auto& order = patchersInfo.order;
+		for (auto iter = order.begin();
+		     iter != order.end();) {
 			auto& handlerName = *iter;
-			
+
 			auto& handler = *channelData[handlerName];
-			
+
 			if (!handler.vIsStandalone()) {
 				++iter;
 				continue;
 			}
-			
+
 			handler.finish();
-				
+
 			if (!handler.isValid()) {
 				logger.error(L"handler '{}' was invalidated", handlerName);
-				iter = handlerOrder.erase(iter);
+				iter = order.erase(iter);
 			} else {
 				++iter;
 			}
@@ -140,13 +141,14 @@ void SoundAnalyzer::patchChannels() {
 void SoundAnalyzer::patchHandlers() {
 	for (auto& [channel, channelData] : channels) {
 		ChannelData newData;
-		HandlerFinderImpl hf { newData };
+		HandlerFinderImpl hf{ newData };
 
-		for (auto iter = handlerOrder.begin();
-			iter != handlerOrder.end();) {
+		auto& order = patchersInfo.order;
+		for (auto iter = order.begin();
+		     iter != order.end();) {
 			auto& handlerName = *iter;
-			
-			auto& patcher = *handlerPatchers->find(handlerName)->second.patcher;
+
+			auto& patcher = *patchersInfo.patchers.find(handlerName)->second;
 			auto& handlerInfo = channelData[handlerName];
 
 			auto cl = logger.context(L"Handler {}: ", handlerName);
@@ -163,15 +165,15 @@ void SoundAnalyzer::patchHandlers() {
 				cl.error(L"invalid handler");
 
 				if (legacyNumber < 104) {
-					iter = handlerOrder.erase(iter);
+					iter = order.erase(iter);
 					continue;
 				} else {
-					handlerOrder.clear();
+					order.clear();
 					newData.clear();
 					break;
 				}
 			}
-			
+
 			newData[handlerName] = std::move(handlerInfo);
 
 			++iter;

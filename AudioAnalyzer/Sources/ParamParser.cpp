@@ -27,7 +27,6 @@
 #include "option-parser/OptionList.h"
 
 using namespace std::string_literals;
-using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
@@ -52,6 +51,9 @@ bool ParamParser::parse() {
 		parseResult = { };
 	}
 
+	hch.reset();
+	hch.setUnusedOptionsWarning(unusedOptionsWarning);
+
 	ProcessingsInfoMap result;
 	for (const auto& nameOption : processingIndices) {
 		const auto name = nameOption.asIString() % own();
@@ -70,7 +72,7 @@ bool ParamParser::parse() {
 	return anythingChanged;
 }
 
-void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldData) const {
+void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldData) {
 	string processingOptionIndex = L"Processing-"s += name;
 	auto processingDescriptionOption = rain.read(processingOptionIndex);
 	if (processingDescriptionOption.empty()) {
@@ -87,7 +89,7 @@ void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldData
 
 	auto processingMap = processingDescriptionOption.asMap(L'|', L' ');
 
-	auto channelsList = processingMap.get(L"channels"sv).asList(L',');
+	auto channelsList = processingMap.get(L"channels").asList(L',');
 	if (channelsList.empty()) {
 		cl.error(L"channels not found");
 		oldData.channels = { };
@@ -104,7 +106,7 @@ void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldData
 		return;
 	}
 
-	auto handlersOption = processingMap.get(L"handlers"sv);
+	auto handlersOption = processingMap.get(L"handlers");
 	if (handlersOption.empty()) {
 		cl.error(L"handlers not found");
 		oldData.handlersInfo = { };
@@ -120,8 +122,8 @@ void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldData
 		return;
 	}
 
-	oldData.handlersInfo = parseHandlers(handlersList, std::move(oldData.handlersInfo));
-	if (oldData.handlersInfo.map.empty()) {
+	oldData.handlersInfo = parseHandlers(handlersList);
+	if (oldData.handlersInfo.order.empty()) {
 		cl.warning(L"no valid handlers found");
 		anythingChanged = true;
 		return;
@@ -161,11 +163,6 @@ void ParamParser::parseFilters(const utils::OptionMap& optionMap, ProcessingData
 	if (filterType == L"none") {
 		data.fcc = { };
 		return;
-	}
-
-	if (legacyNumber < 104) {
-		filterLogger.warning(L"legacy number '{}'", legacyNumber);
-		data.fcc = { };
 	}
 
 	if (filterType == L"replayGain") {
@@ -237,15 +234,16 @@ std::set<Channel> ParamParser::parseChannels(const utils::OptionList& channelsSt
 	return set;
 }
 
-ParamParser::HandlerPatcherInfo
-ParamParser::parseHandlers(const utils::OptionList& names, HandlerPatcherInfo oldHandlers) const {
-	HandlerPatcherInfo result;
+ParamParser::HandlerPatchersInfo
+ParamParser::parseHandlers(const utils::OptionList& names) {
+	HandlerPatchersInfo result;
 
 	for (auto nameOption : names) {
-		auto handler = std::move(oldHandlers.map[nameOption.asIString() % own()]);
+		auto name = istring{ nameOption.asIString() };
 
-		const auto success = parseHandler(nameOption.asString(), result, handler);
-		if (!success) {
+		auto handler = hch.getHandler(name);
+
+		if (handler == nullptr) {
 			if (legacyNumber < 104) {
 				continue;
 			} else {
@@ -253,14 +251,26 @@ ParamParser::parseHandlers(const utils::OptionList& names, HandlerPatcherInfo ol
 			}
 		}
 
-		result.map[nameOption.asIString() % own()] = std::move(handler);
-		result.order.push_back(nameOption.asIString() % own());
+		result.patchers[name] = handler;
+		result.order.push_back(name);
 	}
 
 	return result;
 }
 
-bool ParamParser::parseHandler(sview name, const HandlerPatcherInfo& prevHandlers, HandlerInfo& handler) const {
+HandlerPatcher* HandlerCacheHelper::getHandler(const istring& name) {
+	auto& info = patchersCache[name];
+
+	if (!info.updated) {
+		info = parseHandler(name % csView(), std::move(info));
+		info.updated = true;
+	}
+
+	return info.patcher.get();
+
+}
+
+HandlerCacheHelper::HandlerRawInfo HandlerCacheHelper::parseHandler(sview name, HandlerRawInfo handler) {
 	string optionName = L"Handler-"s += name;
 	auto descriptionOption = rain.read(optionName);
 	if (descriptionOption.empty()) {
@@ -272,7 +282,7 @@ bool ParamParser::parseHandler(sview name, const HandlerPatcherInfo& prevHandler
 
 	if (descriptionOption.empty()) {
 		cl.error(L"description is not found", name);
-		return false;
+		return { };
 	}
 
 	utils::OptionMap optionMap = descriptionOption.asMap(L'|', L' ');
@@ -280,13 +290,13 @@ bool ParamParser::parseHandler(sview name, const HandlerPatcherInfo& prevHandler
 	readRawDescription2(optionMap.get(L"type").asIString(), optionMap, rawDescription2);
 
 	if (handler.rawDescription == descriptionOption.asString() && handler.rawDescription2 == rawDescription2) {
-		return true;
+		return handler;
 	}
 	anythingChanged = true;
 
-	handler.patcher = getHandlerPatcher(optionMap, cl, prevHandlers);
+	handler.patcher = createHandlerPatcher(optionMap, cl);
 	if (handler.patcher == nullptr) {
-		return false;
+		return { };
 	}
 
 	const auto unusedOptions = optionMap.getListOfUntouched();
@@ -297,29 +307,19 @@ bool ParamParser::parseHandler(sview name, const HandlerPatcherInfo& prevHandler
 	handler.rawDescription2 = std::move(rawDescription2);
 	handler.rawDescription = descriptionOption.asString();
 
-	return true;
+	return handler;
 }
 
-std::shared_ptr<HandlerPatcher> ParamParser::getHandlerPatcher(
+std::unique_ptr<HandlerPatcher>
+HandlerCacheHelper::createHandlerPatcher(
 	const utils::OptionMap& optionMap,
-	Logger& cl,
-	const HandlerPatcherInfo& prevHandlers
+	Logger& cl
 ) const {
-	const auto type = optionMap.get(L"type"sv).asIString();
+	const auto type = optionMap.get(L"type").asIString();
 
 	if (type.empty()) {
 		cl.error(L"type is not found");
-		return nullptr;
-	}
-
-	// source must be checked to prevent loops
-	const auto source = optionMap.getUntouched(L"source").asIString();
-	if (!source.empty()) {
-		const bool found = prevHandlers.map.find(source) != prevHandlers.map.end();
-		if (!found) {
-			cl.error(L"reverse or unknown dependency '{}'", source);
-			return nullptr;
-		}
+		return { };
 	}
 
 	if (type == L"rms") {
@@ -352,29 +352,27 @@ std::shared_ptr<HandlerPatcher> ParamParser::getHandlerPatcher(
 	if (type == L"loudness") {
 		return createPatcher<Loudness>(optionMap, cl);
 	}
-
-	if (legacyNumber >= 104) {
-		if (type == L"ValueTransformer") {
-			return createPatcher<SingleValueTransformer>(optionMap, cl);
-		}
+	if (type == L"ValueTransformer") {
+		return createPatcher<SingleValueTransformer>(optionMap, cl);
 	}
-
-	if (legacyNumber < 104) {
-		if (type == L"FiniteTimeFilter") {
-			return createPatcher<legacy_FiniteTimeFilter>(optionMap, cl);
-		}
-		if (type == L"LogarithmicValueMapper") {
-			return createPatcher<legacy_LogarithmicValueMapper>(optionMap, cl);
-		}
+	if (type == L"FiniteTimeFilter") {
+		return createPatcher<legacy_FiniteTimeFilter>(optionMap, cl);
+	}
+	if (type == L"LogarithmicValueMapper") {
+		return createPatcher<legacy_LogarithmicValueMapper>(optionMap, cl);
 	}
 
 	cl.error(L"unknown type '{}'", type);
 	return nullptr;
 }
 
-void ParamParser::readRawDescription2(isview type, const utils::OptionMap& optionMap, string& rawDescription2) const {
+void HandlerCacheHelper::readRawDescription2(
+	isview type,
+	const utils::OptionMap& optionMap,
+	string& rawDescription2
+) const {
 	if (type == L"BandResampler") {
-		auto freqListIndex = optionMap.getUntouched(L"freqList"sv).asString();
+		auto freqListIndex = optionMap.getUntouched(L"freqList").asString();
 		if (!freqListIndex.empty()) {
 			auto freqListOptionName = L"FreqList-"s += freqListIndex;
 			auto freqListOption = rain.read(freqListOptionName);

@@ -23,11 +23,10 @@ namespace rxtd::audio_analyzer {
 		using ChannelData = std::map<istring, std::unique_ptr<SoundHandler>, std::less<>>;
 		using Logger = utils::Rainmeter::Logger;
 
-		// Following two fields are used for updating .channels field.
+		// The following two fields are used for updating .channels field.
 		// They can contain info about handlers that doesn't exist because of channel layout
 		std::set<Channel> channelSetRequested;
-		const ParamParser::HandlerPatcherMap* handlerPatchers = nullptr;
-		std::vector<istring> handlerOrder;
+		ParamParser::HandlerPatchersInfo patchersInfo;
 
 		std::map<Channel, ChannelData> channels;
 
@@ -85,7 +84,7 @@ namespace rxtd::audio_analyzer {
 		// depends on options only
 		void setParams(
 			std::set<Channel> channelSetRequested,
-			const ParamParser::HandlerPatcherInfo& patchersInfo,
+			const ParamParser::HandlerPatchersInfo& patchersInfo,
 			double _granularity,
 			index _legacyNumber
 		);

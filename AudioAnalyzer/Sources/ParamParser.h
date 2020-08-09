@@ -10,6 +10,7 @@
 #pragma once
 #include <set>
 #include <functional>
+#include <utility>
 
 #include "RainmeterWrappers.h"
 #include "sound-processing/Channel.h"
@@ -17,24 +18,77 @@
 #include "audio-utils/filter-utils/FilterCascadeParser.h"
 
 namespace rxtd::audio_analyzer {
-	class SoundAnalyzer;
+	class HandlerCacheHelper {
+		using Logger = utils::Rainmeter::Logger;
+		using Rainmeter = utils::Rainmeter;
+
+		struct HandlerRawInfo {
+			bool updated = false;
+			string rawDescription;
+			string rawDescription2;
+			std::unique_ptr<HandlerPatcher> patcher;
+		};
+
+		using PatchersMap = std::map<istring, HandlerRawInfo, std::less<>>;
+		PatchersMap patchersCache;
+		Rainmeter rain;
+		bool anythingChanged = false;
+		bool unusedOptionsWarning = false;
+		index legacyNumber{ };
+
+	public:
+		void setRain(Rainmeter value) {
+			rain = std::move(value);
+		}
+
+		void setUnusedOptionsWarning(bool value) {
+			unusedOptionsWarning = value;
+		}
+
+		void setLegacyNumber(index value) {
+			legacyNumber = value;
+		}
+
+		void reset() {
+			for (auto& [name, info] : patchersCache) {
+				info.updated = false;
+			}
+			anythingChanged = false;
+		}
+
+		bool isAnythingChanged() const {
+			return anythingChanged;
+		}
+
+		[[nodiscard]]
+		HandlerPatcher* getHandler(const istring& name);
+
+		[[nodiscard]]
+		HandlerRawInfo parseHandler(sview name, HandlerRawInfo handler);
+
+		[[nodiscard]]
+		std::unique_ptr<HandlerPatcher> createHandlerPatcher(const utils::OptionMap& optionMap, Logger& cl) const;
+
+		template <typename T>
+		[[nodiscard]]
+		std::unique_ptr<HandlerPatcher> createPatcher(
+			const utils::OptionMap& om,
+			Logger& cl
+		) const {
+			return std::make_unique<SoundHandler::HandlerPatcherImpl<T>>(om, cl, rain, legacyNumber);
+		}
+
+		void readRawDescription2(isview type, const utils::OptionMap& optionMap, string& rawDescription2) const;
+	};
 
 	class ParamParser {
 		using Logger = utils::Rainmeter::Logger;
 		using Rainmeter = utils::Rainmeter;
 
 	public:
-		struct HandlerInfo {
-			string rawDescription;
-			string rawDescription2;
-			std::shared_ptr<HandlerPatcher> patcher;
-		};
-
-		using HandlerPatcherMap = std::map<istring, HandlerInfo, std::less<>>;
-		
-		struct HandlerPatcherInfo {
-			HandlerPatcherMap map;
+		struct HandlerPatchersInfo {
 			std::vector<istring> order;
+			std::map<istring, HandlerPatcher*, std::less<>> patchers;
 		};
 
 		struct ProcessingData {
@@ -46,17 +100,20 @@ namespace rxtd::audio_analyzer {
 			index targetRate{ };
 
 			std::set<Channel> channels;
-			HandlerPatcherInfo handlersInfo;
+			HandlerPatchersInfo handlersInfo;
 		};
 
 		using ProcessingsInfoMap = std::map<istring, ProcessingData, std::less<>>;
 
 	private:
 		Rainmeter rain;
+
 		bool unusedOptionsWarning = true;
 		index defaultTargetRate = 44100;
 		ProcessingsInfoMap parseResult;
 		index legacyNumber = 0;
+		HandlerCacheHelper hch;
+
 		mutable bool anythingChanged = false;
 
 	public:
@@ -70,7 +127,8 @@ namespace rxtd::audio_analyzer {
 		ParamParser& operator=(ParamParser&& other) = delete;
 
 		void setRainmeter(Rainmeter value) {
-			rain = std::move(value);
+			rain = value;
+			hch.setRain(value);
 		}
 
 		// return true is there were any changes since last update, false if there were none
@@ -93,33 +151,13 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		static bool checkListUnique(const utils::OptionList& list);
 
-		void parseProcessing(sview name, Logger cl, ProcessingData& oldData) const;
+		void parseProcessing(sview name, Logger cl, ProcessingData& oldData);
 
 		[[nodiscard]]
 		std::set<Channel> parseChannels(const utils::OptionList& channelsStringList, Logger& logger) const;
 
 		[[nodiscard]]
-		HandlerPatcherInfo parseHandlers(const utils::OptionList& indices, HandlerPatcherInfo oldHandlers) const;
+		HandlerPatchersInfo parseHandlers(const utils::OptionList& indices);
 
-		[[nodiscard]]
-		bool parseHandler(sview name, const HandlerPatcherInfo& prevHandlers, HandlerInfo& handler) const;
-
-		[[nodiscard]]
-		std::shared_ptr<HandlerPatcher> getHandlerPatcher(
-			const utils::OptionMap& optionMap,
-			Logger& cl,
-			const HandlerPatcherInfo& prevHandlers
-		) const;
-
-		template<typename T>
-		[[nodiscard]]
-		std::shared_ptr<HandlerPatcher> createPatcher(
-			const utils::OptionMap& optionMap,
-			Logger& cl
-		) const {
-			return std::make_shared<SoundHandler::HandlerPatcherImpl<T>>(optionMap, cl, rain, legacyNumber);
-		}
-		
-		void readRawDescription2(isview type, const utils::OptionMap& optionMap, string& rawDescription2) const;
 	};
 }
