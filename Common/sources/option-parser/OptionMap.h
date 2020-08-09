@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -43,7 +43,10 @@ namespace rxtd::utils {
 		// Returns named option, search is case-insensitive.
 		// Doesn't raise the "touched" flag on the option
 		[[nodiscard]]
-		Option getUntouched(sview name) const;
+		GhostOption getUntouched(sview name) const &;
+		
+		[[nodiscard]]
+		Option getUntouched(sview name) const &&;
 
 		[[nodiscard]]
 		GhostOption get(sview name) const & {

@@ -12,20 +12,19 @@
 #include "option-parser/OptionMap.h"
 
 using namespace std::string_literals;
-using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
 bool WaveForm::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
 
-	params.width = optionMap.get(L"width"sv).asInt(100);
+	params.width = optionMap.get(L"width").asInt(100);
 	if (params.width < 2) {
 		cl.error(L"width must be >= 2 but {} found", params.width);
 		return { };
 	}
 
-	params.height = optionMap.get(L"height"sv).asInt(100);
+	params.height = optionMap.get(L"height").asInt(100);
 	if (params.height < 2) {
 		cl.error(L"height must be >= 2 but {} found", params.height);
 		return { };
@@ -35,7 +34,7 @@ bool WaveForm::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmet
 		cl.warning(L"dangerously big width and height: {}, {}", params.width, params.height);
 	}
 
-	params.resolution = optionMap.get(L"resolution"sv).asFloat(50);
+	params.resolution = optionMap.get(L"resolution").asFloat(50);
 	if (params.resolution <= 0) {
 		cl.warning(L"resolution must be > 0 but {} found. Assume 100", params.resolution);
 		params.resolution = 100;
@@ -43,16 +42,16 @@ bool WaveForm::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmet
 	params.resolution *= 0.001;
 
 	params.folder = utils::FileWrapper::getAbsolutePath(
-		optionMap.get(L"folder"sv).asString() % own(),
+		optionMap.get(L"folder").asString() % own(),
 		rain.replaceVariables(L"[#CURRENTPATH]") % own()
 	);
 
-	params.colors.background = optionMap.get(L"backgroundColor"sv).asColor({ 0, 0, 0, 1 }).toIntColor();
-	params.colors.wave = optionMap.get(L"waveColor"sv).asColor({ 1, 1, 1, 1 }).toIntColor();
-	params.colors.line = optionMap.get(L"lineColor"sv).asColor({ 0.5, 0.5, 0.5, 0.5 }).toIntColor();
-	params.colors.border = optionMap.get(L"borderColor"sv).asColor({ 1.0, 0.2, 0.2, 1 }).toIntColor();
+	params.colors.background = optionMap.get(L"backgroundColor").asColor({ 0, 0, 0, 1 }).toIntColor();
+	params.colors.wave = optionMap.get(L"waveColor").asColor({ 1, 1, 1, 1 }).toIntColor();
+	params.colors.line = optionMap.get(L"lineColor").asColor({ 0.5, 0.5, 0.5, 0.5 }).toIntColor();
+	params.colors.border = optionMap.get(L"borderColor").asColor({ 1.0, 0.2, 0.2, 1 }).toIntColor();
 
-	if (const auto ldpString = optionMap.get(L"lineDrawingPolicy"sv).asIString(L"always");
+	if (const auto ldpString = optionMap.get(L"lineDrawingPolicy").asIString(L"always");
 		ldpString == L"always") {
 		params.lineDrawingPolicy = LDP::eALWAYS;
 	} else if (ldpString == L"belowWave") {
@@ -72,14 +71,14 @@ bool WaveForm::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmet
 
 	params.fading = optionMap.get(L"fadingPercent").asFloat(0.0);
 
-	if (optionMap.has(L"transform"sv)) {
-		params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform"), cl);
+	if (optionMap.has(L"transform")) {
+		params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform").asString(), cl);
 	} else if (optionMap.has(L"gain")) {
 		// legacy
-		const auto gain = optionMap.get(L"gain"sv).asFloat(1.0);
+		const auto gain = optionMap.get(L"gain").asFloat(1.0);
 		utils::BufferPrinter printer;
 		printer.print(L"map[from 0 ; 1][to 0 ; {}]", gain);
-		params.transformer = audio_utils::TransformationParser::parse(utils::Option{ printer.getBufferView() }, cl);
+		params.transformer = audio_utils::TransformationParser::parse(printer.getBufferView(), cl);
 	} else {
 		params.transformer = { };
 	}
@@ -106,7 +105,7 @@ SoundHandler::LinkingResult WaveForm::vFinishLinking(Logger& cl) {
 	filepath = params.folder;
 	filepath += L"wave-";
 	filepath += getChannel().technicalName();
-	filepath += L".bmp"sv;
+	filepath += L".bmp";
 	// todo check that can write ro this file
 
 	minTransformer = { params.transformer };

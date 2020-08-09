@@ -27,7 +27,7 @@ bool SingleValueTransformer::parseParams(
 	}
 
 	auto transformLogger = cl.context(L"transform: ");
-	params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform"), transformLogger);
+	params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform").asString(), transformLogger);
 
 	return true;
 }

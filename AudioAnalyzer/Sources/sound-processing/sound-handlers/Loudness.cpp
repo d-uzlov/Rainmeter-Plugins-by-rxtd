@@ -24,7 +24,7 @@ bool Loudness::parseParams(
 	auto& params = *static_cast<Params*>(paramsPtr);
 
 	auto transformLogger = cl.context(L"transform: ");
-	params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform"), transformLogger);
+	params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform").asString(), transformLogger);
 
 	params.gatingLimit = optionMap.get(L"gatingLimit").asFloat(0.5);
 	params.gatingLimit = std::clamp(params.gatingLimit, 0.0, 1.0);

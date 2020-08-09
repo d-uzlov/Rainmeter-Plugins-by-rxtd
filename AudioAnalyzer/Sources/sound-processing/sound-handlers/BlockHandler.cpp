@@ -8,43 +8,40 @@
  */
 
 #include "BlockHandler.h"
-#include <numeric>
 #include "option-parser/OptionMap.h"
-
-using namespace std::string_literals;
-using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
 bool BlockHandler::parseParams(
-	const OptionMap& optionMap, Logger& cl, const Rainmeter& rain,
+	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	void* paramsPtr,
 	index legacyNumber
 ) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
 
-	params.resolution = optionMap.get(L"resolution"sv).asFloat(1000.0 / 60.0);
-	if (params.resolution <= 0) {
-		cl.warning(L"resolution must be > 0 but {} found. Assume 10", params.resolution);
-		params.resolution = 10;
+	const sview updateIntervalOptionName = om.has(L"updateInterval") ? L"updateInterval" : L"resolution";
+	params.updateIntervalMs = om.get(updateIntervalOptionName).asFloat(1000.0 / 60.0);
+	if (params.updateIntervalMs <= 0) {
+		cl.warning(L"{} must be > 0 but {} found. Assume 10", updateIntervalOptionName, params.updateIntervalMs);
+		params.updateIntervalMs = 10;
 	}
-	params.resolution *= 0.001;
-
-	params.subtractMean = optionMap.get(L"subtractMean").asBool(true);
+	params.updateIntervalMs *= 0.001;
 
 	if (legacyNumber < 104) {
-		params.legacy_attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.0);
-		params.legacy_decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.legacy_attackTime), 0.0);
+		params.legacy_attackTime = std::max(om.get(L"attack").asFloat(100), 0.0);
+		params.legacy_decayTime = std::max(om.get(L"decay").asFloat(params.legacy_attackTime), 0.0);
 
 		utils::BufferPrinter printer;
 		printer.print(L"filter[attack {}, decay {}]", params.legacy_attackTime, params.legacy_decayTime);
-		params.transformer = audio_utils::TransformationParser::parse(utils::Option{ printer.getBufferView() }, cl);
+		params.transformer = audio_utils::TransformationParser::parse(printer.getBufferView(), cl);
 	} else {
 		params.legacy_attackTime = 0.0;
 		params.legacy_decayTime = 0.0;
 
 		auto transformLogger = cl.context(L"transform: ");
-		params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform"), transformLogger);
+		const sview transformDescription =
+			om.has(L"transform") ? om.get(L"transform").asString() : getDefaultTransform();
+		params.transformer = audio_utils::TransformationParser::parse(transformDescription, transformLogger);
 	}
 
 	return true;
@@ -52,17 +49,10 @@ bool BlockHandler::parseParams(
 
 void BlockHandler::setParams(const Params& value) {
 	params = value;
-
-	if (params.transformer.isEmpty()) {
-		utils::Rainmeter::Logger dummyLogger;
-		params.transformer = audio_utils::TransformationParser::parse(
-			utils::Option{ getDefaultTransform() }, dummyLogger
-		);
-	}
 }
 
 SoundHandler::LinkingResult BlockHandler::vFinishLinking(Logger& cl) {
-	blockSize = static_cast<decltype(blockSize)>(getSampleRate() * params.resolution);
+	blockSize = static_cast<decltype(blockSize)>(getSampleRate() * params.updateIntervalMs);
 	blockSize = std::max<index>(blockSize, 1);
 
 	params.transformer.setParams(getSampleRate(), blockSize);
@@ -77,12 +67,7 @@ void BlockHandler::vReset() {
 }
 
 void BlockHandler::vProcess(array_view<float> wave) {
-	float mean = 0.0;
-	if (params.subtractMean && isAverageNeeded()) {
-		mean = std::accumulate(wave.begin(), wave.end(), 0.0f) / wave.size();
-	}
-
-	_process(wave, mean);
+	_process(wave);
 }
 
 bool BlockHandler::vGetProp(const isview& prop, utils::BufferPrinter& printer) const {
@@ -102,13 +87,12 @@ bool BlockHandler::vGetProp(const isview& prop, utils::BufferPrinter& printer) c
 	return false;
 }
 
-void BlockHandler::setNextValue(double value) {
-	generateLayerData(0)[0] = params.transformer.apply(float(value));
+void BlockHandler::setNextValue(float value) {
+	generateLayerData(0)[0] = params.transformer.apply(value);
 }
 
-void BlockRms::_process(array_view<float> wave, float average) {
+void BlockRms::_process(array_view<float> wave) {
 	for (double x : wave) {
-		x -= average;
 		intermediateResult += x * x;
 		counter++;
 		if (counter >= getBlockSize()) {
@@ -119,7 +103,7 @@ void BlockRms::_process(array_view<float> wave, float average) {
 
 void BlockRms::finishBlock() {
 	const double value = std::sqrt(intermediateResult / getBlockSize());
-	setNextValue(value);
+	setNextValue(float(value));
 	counter = 0;
 	intermediateResult = 0.0;
 }
@@ -129,13 +113,12 @@ void BlockRms::_reset() {
 }
 
 sview BlockRms::getDefaultTransform() const {
-	return L"db map[from -70 : 0] filter[attack 200, decay 200] clamp"sv;
+	return L"db map[from -70 : 0] filter[attack 200, decay 200] clamp";
 }
 
-void BlockPeak::_process(array_view<float> wave, float average) {
-	for (double x : wave) {
-		x -= average;
-		intermediateResult = std::max<double>(intermediateResult, std::abs(x));
+void BlockPeak::_process(array_view<float> wave) {
+	for (float x : wave) {
+		intermediateResult = std::max(intermediateResult, std::abs(x));
 		counter++;
 		if (counter >= getBlockSize()) {
 			finishBlock();
@@ -154,5 +137,5 @@ void BlockPeak::_reset() {
 }
 
 sview BlockPeak::getDefaultTransform() const {
-	return L"filter[attack 0, decay 500] clamp"sv;
+	return L"filter[attack 0, decay 500] clamp";
 }

@@ -169,11 +169,10 @@ void CustomizableValueTransformer::setHistoryWidth(index value) {
 	historyWidth = value;
 }
 
-CustomizableValueTransformer TransformationParser::parse(utils::Option transform, utils::Rainmeter::Logger& cl) {
+CustomizableValueTransformer TransformationParser::parse(sview transformDescription, utils::Rainmeter::Logger& cl) {
 	std::vector<Transformation> transforms;
 
-	auto transformSequence = transform.asSequence();
-	for (auto list : transformSequence) {
+	for (auto list : utils::Option { transformDescription }.asSequence()) {
 		auto logger = cl.context(L"{}: ", list.get(0).asString());
 		auto transformOpt = parseTransformation(list, logger);
 		if (!transformOpt.has_value()) {

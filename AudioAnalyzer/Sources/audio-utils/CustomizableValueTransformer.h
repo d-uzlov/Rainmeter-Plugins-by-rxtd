@@ -97,7 +97,7 @@ namespace rxtd::audio_utils {
 
 	public:
 		[[nodiscard]]
-		static CustomizableValueTransformer parse(utils::Option transform, utils::Rainmeter::Logger& cl);
+		static CustomizableValueTransformer parse(sview transformDescription, utils::Rainmeter::Logger& cl);
 
 	private:
 		[[nodiscard]]

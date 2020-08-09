@@ -18,7 +18,16 @@ OptionMap::OptionMap(sview view, std::vector<wchar_t> &&source, std::map<Substri
 	fillParams();
 }
 
-Option OptionMap::getUntouched(sview name) const {
+GhostOption OptionMap::getUntouched(sview name) const & {
+	const auto optionInfoPtr = find(name % ciView());
+	if (optionInfoPtr == nullptr) {
+		return { };
+	}
+
+	return GhostOption { optionInfoPtr->substringInfo.makeView(getView()) };
+}
+
+Option OptionMap::getUntouched(sview name) const && {
 	const auto optionInfoPtr = find(name % ciView());
 	if (optionInfoPtr == nullptr) {
 		return { };
