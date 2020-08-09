@@ -164,7 +164,7 @@ void ParamParser::parseFilters(const utils::OptionMap& optionMap, ProcessingData
 	}
 
 	if (legacyNumber < 104) {
-		filterLogger.error(L"filter class '{}' is not supported", filterType);
+		filterLogger.warning(L"legacy number '{}'", legacyNumber);
 		data.fcc = { };
 	}
 

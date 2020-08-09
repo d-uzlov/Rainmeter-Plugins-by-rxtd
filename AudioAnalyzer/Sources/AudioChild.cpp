@@ -76,7 +76,7 @@ void AudioChild::vReload() {
 	}
 	valueIndex = static_cast<decltype(valueIndex)>(signedIndex);
 
-	const index legacyNumber = rain.read(L"LegacyNumber").asInt();
+	const index legacyNumber = parent->getLegacyNumber();
 	if (legacyNumber < 104) {
 		legacy_readOptions();
 		legacy.use = true;

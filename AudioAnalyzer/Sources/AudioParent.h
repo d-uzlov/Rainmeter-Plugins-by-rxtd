@@ -50,6 +50,10 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		double legacy_getValue(isview id, Channel channel, index ind) const;
 
+		index getLegacyNumber() const {
+			return paramParser.getLegacyNumber();
+		}
+
 	private:
 		void process();
 

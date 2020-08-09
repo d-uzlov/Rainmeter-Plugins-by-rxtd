@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -67,17 +67,6 @@ namespace rxtd::utils {
 		}
 
 
-		[[nodiscard]]
-		T* getPointer() {
-			return array.data() + offset;
-		}
-
-		[[nodiscard]]
-		const T* getPointer() const {
-			return array.data() + offset;
-		}
-
-
 		array_span<T> removeFirst(index chunkSize) {
 			if (chunkSize > getRemainingSize()) {
 				return { };
@@ -107,6 +96,17 @@ namespace rxtd::utils {
 		[[nodiscard]]
 		array_view<T> getAllData() const {
 			return array;
+		}
+
+
+		[[nodiscard]]
+		T* getPointer() {
+			return array.data() + offset;
+		}
+
+		[[nodiscard]]
+		const T* getPointer() const {
+			return array.data() + offset;
 		}
 
 
