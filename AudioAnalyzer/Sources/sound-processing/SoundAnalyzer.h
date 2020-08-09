@@ -84,7 +84,7 @@ namespace rxtd::audio_analyzer {
 		// depends on options only
 		void setParams(
 			std::set<Channel> channelSetRequested,
-			const ParamParser::HandlerPatchersInfo& patchersInfo,
+			ParamParser::HandlerPatchersInfo patchersInfo,
 			double _granularity,
 			index _legacyNumber
 		);

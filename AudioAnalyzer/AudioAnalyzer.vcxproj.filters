@@ -164,6 +164,9 @@
     <ClInclude Include="Sources\audio-utils\GaussianCoefficientsManager.h">
       <Filter>Source Files\audio-utils</Filter>
     </ClInclude>
+    <ClInclude Include="Sources\HandlerCacheHelper.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sources\AudioChild.cpp">
@@ -279,6 +282,9 @@
     </ClCompile>
     <ClCompile Include="Sources\audio-utils\GaussianCoefficientsManager.cpp">
       <Filter>Source Files\audio-utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\HandlerCacheHelper.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

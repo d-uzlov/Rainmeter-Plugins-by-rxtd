@@ -25,12 +25,12 @@ void SoundAnalyzer::setFormat(index sampleRate, ChannelLayout _layout) {
 
 void SoundAnalyzer::setParams(
 	std::set<Channel> channelSetRequested,
-	const ParamParser::HandlerPatchersInfo& _patchersInfo,
+	ParamParser::HandlerPatchersInfo _patchersInfo,
 	double _granularity,
 	index _legacyNumber
 ) {
 	this->channelSetRequested = std::move(channelSetRequested);
-	patchersInfo = _patchersInfo;
+	patchersInfo = std::move(_patchersInfo);
 	granularity = _granularity;
 	legacyNumber = _legacyNumber;
 

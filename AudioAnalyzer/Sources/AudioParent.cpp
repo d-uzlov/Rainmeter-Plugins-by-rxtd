@@ -351,14 +351,13 @@ void AudioParent::process() {
 }
 
 void AudioParent::patchSA(const ParamParser::ProcessingsInfoMap& procs) {
-	std::set<istring> toDelete;
-	for (auto& [name, ptr] : saMap) {
-		if (procs.find(name) == procs.end()) {
-			toDelete.insert(name);
+	for (auto iter = saMap.begin();
+		iter != saMap.end();) {
+		if (procs.find(iter->first) == procs.end()) {
+			iter = saMap.erase(iter);
+		} else {
+			++iter;
 		}
-	}
-	for (auto& name : toDelete) {
-		saMap.erase(name);
 	}
 
 	for (auto& [name, data] : procs) {
