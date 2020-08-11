@@ -8,26 +8,28 @@
  */
 
 #pragma once
+#include "GrowingVector.h"
 #include "butterworth-lib/ButterworthWrapper.h"
 #include "filter-utils/InfiniteResponseFilter.h"
 
 namespace rxtd::audio_utils {
-	template <index filterOrder>
 	class DownsampleHelper {
-	public:
-		struct ResampleResultInfo {
-			index sourceConsumedSize = 0;
-			index bufferFilledSize = 0;
-		};
+		constexpr static index filterOrder = 10;
+		constexpr static index filterSize = ButterworthWrapper::oneSideSlopeSize(filterOrder);
 
-	private:
 		index decimateFactor = 0;
-		InfiniteResponseFilterFixed<filterOrder + 1> filter;
-		index counter = 0;
+		utils::GrowingVector<float> buffer;
+		InfiniteResponseFilterFixed<filterSize> filter1;
+		InfiniteResponseFilterFixed<filterSize> filter2;
+		InfiniteResponseFilterFixed<filterSize> filter3;
 
 	public:
 		DownsampleHelper() {
 			setFactor(2);
+		}
+
+		DownsampleHelper(index factor) {
+			setFactor(factor);
 		}
 
 		void setFactor(index value) {
@@ -36,157 +38,61 @@ namespace rxtd::audio_utils {
 			}
 
 			decimateFactor = value;
-			// digital frequency of (0.907 / decimateFactor) ensures strong cutoff at new nyquist frequency
-			filter = { ButterworthWrapper::lowPass.calcCoefDigital(filterOrder, 0.907 / decimateFactor) };
-			counter = 0;
+			// digital frequency of 0.95 / decimateFactor ensures strong cutoff at new nyquist frequency
+			const double digitalCutoff = 0.95 / decimateFactor;
+			filter1 = { ButterworthWrapper::lowPass.calcCoefDigital(filterOrder, digitalCutoff) };
+			filter2 = filter1;
+			filter3 = filter1;
 		}
 
+		// returns size of the buffer required to grab all of the data downsampled
 		[[nodiscard]]
-		index calcBufferSizeFor(index sourceSize) const {
-			return (counter + sourceSize) / decimateFactor;
+		index pushData(array_view<float> source) {
+			buffer.compact();
+
+			auto chunk = buffer.allocateNext(source.size());
+			std::copy(source.begin(), source.end(), chunk.begin());
+			filter1.apply(chunk);
+			filter2.apply(chunk);
+			filter3.apply(chunk);
+
+			return buffer.getRemainingSize() / decimateFactor;
 		}
 
-		// returns part of the wave that didn't fit info the buffer
-		[[nodiscard]]
-		ResampleResultInfo resample(array_view<float> source, array_span<float> buffer) {
-			ResampleResultInfo result{ };
+		// returns count of downsampled elements
+		index downsample(array_span<float> dest) {
+			const index size = buffer.getRemainingSize();
+			const index resultSize = std::min(size / decimateFactor, dest.size());
+			const index sourceGrabSize = resultSize * decimateFactor;
 
-			const index loopLengthTillNextSample = decimateFactor - counter;
-			const index initialUpdateLength = std::min(loopLengthTillNextSample, source.size());
-			for (index i = 0; i < initialUpdateLength - 1; i++) {
-				filter.next(source[i]);
+			const auto data = buffer.removeFirst(sourceGrabSize);
+			for (index i = 0, j = 0; i < resultSize; i++, j += decimateFactor) {
+				dest[i] = float(data[j]);
 			}
 
-			if (initialUpdateLength != loopLengthTillNextSample) {
-				filter.next(source[initialUpdateLength - 1]);
-				counter += initialUpdateLength;
+			return resultSize;
+		}
 
-				result.sourceConsumedSize = initialUpdateLength;
-				result.bufferFilledSize = 0;
-				return result;
+		// returns count of downsampled elements
+		template<index fixedFactor>
+		index downsampleFixed(array_span<float> dest) {
+			const index size = buffer.getRemainingSize();
+			const index resultSize = std::min(size / fixedFactor, dest.size());
+			const index sourceGrabSize = resultSize * fixedFactor;
+
+			const auto data = buffer.removeFirst(sourceGrabSize);
+			for (index i = 0, j = 0; i < resultSize; i++, j += fixedFactor) {
+				dest[i] = float(data[j]);
 			}
 
-			buffer[0] = float(filter.next(source[initialUpdateLength - 1]));
-
-			buffer.remove_prefix(1);
-			result.bufferFilledSize += 1;
-			source.remove_prefix(initialUpdateLength);
-			result.sourceConsumedSize += initialUpdateLength;
-
-			const index effectiveBufferSize = buffer.size() * decimateFactor;
-			const index copySize = std::min(effectiveBufferSize, source.size());
-			const index copyResultSize = copySize / decimateFactor;
-
-			for (index i = 0; i < copyResultSize; ++i) {
-				for (int j = 0; j < decimateFactor - 1; ++j) {
-					filter.next(source[i * decimateFactor + j]);
-					// only use these values to update the state of the filter
-				}
-				buffer[i] = float(filter.next(source[i * decimateFactor + decimateFactor - 1]));
-			}
-
-			result.bufferFilledSize += copyResultSize;
-			source.remove_prefix(copyResultSize * decimateFactor);
-			result.sourceConsumedSize += copyResultSize * decimateFactor;
-
-			counter = 0;
-			for (float value : source) {
-				filter.next(value);
-				counter++;
-			}
-			result.sourceConsumedSize += counter;
-
-			return result;
+			return resultSize;
 		}
 
 		void reset() {
-			filter.reset();
-			counter = 0;
-		}
-	};
-
-	template <index filterOrder, index decimateFactor>
-	class DownsampleHelperFixed {
-		static_assert(decimateFactor > 1);
-
-	public:
-		struct ResampleResultInfo {
-			index sourceConsumedSize = 0;
-			index bufferFilledSize = 0;
-		};
-
-	private:
-		InfiniteResponseFilterFixed<filterOrder + 1> filter;
-		index counter = 0;
-
-	public:
-		DownsampleHelperFixed() {
-			// digital frequency of 0.907 / decimateFactor ensures strong cutoff at new nyquist frequency
-			filter = { ButterworthWrapper::lowPass.calcCoefDigital(filterOrder, 0.907 / decimateFactor) };
-		}
-
-		[[nodiscard]]
-		index calcBufferSizeFor(index sourceSize) const {
-			return (counter + sourceSize) / decimateFactor;
-		}
-
-		// returns part of the wave that didn't fit info the buffer
-		[[nodiscard]]
-		ResampleResultInfo resample(array_view<float> source, array_span<float> buffer) {
-			ResampleResultInfo result{ };
-
-			const index loopLengthTillNextSample = decimateFactor - counter;
-			const index initialUpdateLength = std::min(loopLengthTillNextSample, source.size());
-			for (index i = 0; i < initialUpdateLength - 1; i++) {
-				filter.next(source[i]);
-			}
-
-			if (initialUpdateLength != loopLengthTillNextSample) {
-				filter.next(source[initialUpdateLength - 1]);
-				counter += initialUpdateLength;
-
-				result.sourceConsumedSize = initialUpdateLength;
-				result.bufferFilledSize = 0;
-				return result;
-			}
-
-			buffer[0] = float(filter.next(source[initialUpdateLength - 1]));
-
-			buffer.remove_prefix(1);
-			result.bufferFilledSize += 1;
-			source.remove_prefix(initialUpdateLength);
-			result.sourceConsumedSize += initialUpdateLength;
-
-			const index effectiveBufferSize = buffer.size() * decimateFactor;
-			const index copySize = std::min(effectiveBufferSize, source.size());
-			const index copyResultSize = copySize / decimateFactor;
-
-			for (index i = 0; i < copyResultSize; ++i) {
-				for (int j = 0; j < decimateFactor - 1; ++j) {
-					filter.next(source[i * decimateFactor + j]);
-					// only use these values to update the state of the filter
-				}
-				buffer[i] = float(filter.next(source[i * decimateFactor + decimateFactor - 1]));
-			}
-
-			result.bufferFilledSize += copyResultSize;
-			source.remove_prefix(copyResultSize * decimateFactor);
-			result.sourceConsumedSize += copyResultSize * decimateFactor;
-
-			const index remainderSize = copySize - copyResultSize * decimateFactor;
-			for (index i = 0; i < remainderSize; ++i) {
-				filter.next(source[i]);
-			}
-			result.sourceConsumedSize += remainderSize;
-
-			counter = remainderSize;
-
-			return result;
-		}
-
-		void reset() {
-			filter.reset();
-			counter = 0;
+			buffer.reset();
+			filter1.reset();
+			filter2.reset();
+			filter3.reset();
 		}
 	};
 }

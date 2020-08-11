@@ -20,7 +20,7 @@ namespace rxtd::audio_analyzer {
 		struct ChannelData {
 			utils::GrowingVector<float> wave;
 			audio_utils::FilterCascade fc;
-			audio_utils::DownsampleHelper<10> downsampleHelper;
+			audio_utils::DownsampleHelper downsampleHelper;
 		};
 
 		MyWaveFormat waveFormat;

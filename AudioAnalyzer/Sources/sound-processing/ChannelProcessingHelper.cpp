@@ -82,9 +82,9 @@ void ChannelProcessingHelper::processChannel(Channel channel, const ChannelMixer
 		writeBuffer = data.wave.allocateNext(wave.size());
 		std::copy(wave.begin(), wave.end(), writeBuffer.begin());
 	} else {
-		const index nextBufferSize = data.downsampleHelper.calcBufferSizeFor(wave.size());
+		const index nextBufferSize = data.downsampleHelper.pushData(wave);
 		writeBuffer = data.wave.allocateNext(nextBufferSize);
-		(void)data.downsampleHelper.resample(wave, writeBuffer);
+		data.downsampleHelper.downsample(writeBuffer);
 	}
 
 	data.fc.applyInPlace(writeBuffer);

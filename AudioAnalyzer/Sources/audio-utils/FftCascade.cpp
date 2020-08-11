@@ -39,9 +39,9 @@ void FftCascade::process(array_view<float> wave) {
 
 	const bool needDownsample = cascadeIndex != 0;
 	if (needDownsample) {
-		const auto requiredSize = downsampleHelper.calcBufferSizeFor(wave.size());
+		const auto requiredSize = downsampleHelper.pushData(wave);
 		newChunk = buffer.allocateNext(requiredSize);
-		(void)downsampleHelper.resample(wave, newChunk);
+		downsampleHelper.downsampleFixed<2>(newChunk);
 	} else {
 		newChunk = buffer.allocateNext(wave.size());
 		std::copy(wave.begin(), wave.end(), newChunk.begin());

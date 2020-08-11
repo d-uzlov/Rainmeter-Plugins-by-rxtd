@@ -35,7 +35,7 @@ namespace rxtd::audio_utils {
 		index cascadeIndex{ };
 
 		utils::GrowingVector<float> buffer;
-		DownsampleHelperFixed<5, 2> downsampleHelper;
+		DownsampleHelper downsampleHelper{ 2 };
 		LogarithmicIRF filter{ };
 		std::vector<float> values;
 		float legacy_dc{ };

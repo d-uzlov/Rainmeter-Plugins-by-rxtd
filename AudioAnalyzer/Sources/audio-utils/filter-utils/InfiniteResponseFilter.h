@@ -96,7 +96,7 @@ namespace rxtd::audio_utils {
 
 		// updates the state of the filter and returns filtered value
 		double next(double value) {
-			// no [[nodiscard]] on the function because it may be used to just update state
+			// no [[nodiscard]] on the function because it may be used for state updating
 			return updateState(value) * gainAmp;
 		}
 
