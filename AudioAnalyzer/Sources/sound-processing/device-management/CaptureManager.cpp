@@ -9,9 +9,6 @@
 
 #include "CaptureManager.h"
 
-using namespace std::string_literals;
-using namespace std::literals::string_view_literals;
-
 namespace rxtd::audio_analyzer {
 	CaptureManager::CaptureManager(utils::Rainmeter::Logger _logger, utils::MediaDeviceWrapper& audioDeviceHandle) : logger(std::move(_logger)) {
 		audioClient = audioDeviceHandle.openAudioClient();
@@ -150,6 +147,7 @@ namespace rxtd::audio_analyzer {
 			return L"<invalid>";
 		}
 
+		// todo use buffer printer
 		string format;
 		format.clear();
 
@@ -166,15 +164,15 @@ namespace rxtd::audio_analyzer {
 		default: std::terminate();
 		}
 
-		format += L", "sv;
+		format += L", ";
 
 		format += std::to_wstring(waveFormat.samplesPerSec);
-		format += L"Hz, "sv;
+		format += L"Hz, ";
 
 		if (waveFormat.channelLayout.getName().empty()) {
-			format += L"unknown layout: "sv;
+			format += L"unknown layout: ";
 			format += std::to_wstring(waveFormat.channelsCount);
-			format += L"ch"sv;
+			format += L"ch";
 		} else {
 			format += waveFormat.channelLayout.getName();
 		}

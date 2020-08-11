@@ -17,7 +17,6 @@
 #include "LinearInterpolator.h"
 
 using namespace std::string_literals;
-using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
@@ -41,13 +40,13 @@ bool Spectrogram::parseParams(
 ) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
 
-	params.sourceName = om.get(L"source"sv).asIString();
+	params.sourceName = om.get(L"source").asIString();
 	if (params.sourceName.empty()) {
 		cl.error(L"source not found");
 		return { };
 	}
 
-	params.length = om.get(L"length"sv).asInt(100);
+	params.length = om.get(L"length").asInt(100);
 	if (params.length < 2) {
 		cl.error(L"length must be >= 2 but {} found", params.length);
 		return { };
@@ -56,7 +55,7 @@ bool Spectrogram::parseParams(
 		cl.warning(L"dangerously large length {}", params.length);
 	}
 
-	params.resolution = om.get(L"resolution"sv).asFloat(50);
+	params.resolution = om.get(L"resolution").asFloat(50);
 	if (params.resolution <= 0) {
 		cl.warning(L"resolution must be > 0 but {} found. Assume 50", params.resolution);
 		params.resolution = 100;
@@ -64,13 +63,13 @@ bool Spectrogram::parseParams(
 	params.resolution *= 0.001;
 
 	params.prefix = utils::FileWrapper::getAbsolutePath(
-		om.get(L"folder"sv).asString() % own(),
+		om.get(L"folder").asString() % own(),
 		rain.replaceVariables(L"[#CURRENTPATH]") % own()
 	);
 	params.prefix += L"spectrogram-";
 
-	if (om.has(L"colors"sv)) {
-		auto colorsDescriptionList = om.get(L"colors"sv).asList(L';');
+	if (om.has(L"colors")) {
+		auto colorsDescriptionList = om.get(L"colors").asList(L';');
 
 		float prevValue = -std::numeric_limits<float>::infinity();
 
@@ -108,17 +107,17 @@ bool Spectrogram::parseParams(
 		}
 	} else {
 		params.colors.resize(2);
-		params.colors[0].color = om.get(L"baseColor"sv).asColor({ 0, 0, 0, 1 }).toIntColor();
-		params.colors[1].color = om.get(L"maxColor"sv).asColor({ 1, 1, 1, 1 }).toIntColor();
+		params.colors[0].color = om.get(L"baseColor").asColor({ 0, 0, 0, 1 }).toIntColor();
+		params.colors[1].color = om.get(L"maxColor").asColor({ 1, 1, 1, 1 }).toIntColor();
 		params.colorMinValue = 0.0f;
 		params.colorMaxValue = 1.0f;
 	}
 
-	params.borderColor = om.get(L"borderColor"sv).asColor({ 1.0, 0.2, 0.2, 1 });
+	params.borderColor = om.get(L"borderColor").asColor({ 1.0, 0.2, 0.2, 1 });
 
 	params.fading = std::clamp(om.get(L"fadingPercent").asFloat(0.0), 0.0, 1.0);
 
-	params.borderSize = std::clamp<index>(om.get(L"borderSize"sv).asInt(0), 0, params.length / 2);
+	params.borderSize = std::clamp<index>(om.get(L"borderSize").asInt(0), 0, params.length / 2);
 
 	params.stationary = om.get(L"stationary").asBool(false);
 
@@ -140,7 +139,7 @@ SoundHandler::LinkingResult Spectrogram::vFinishLinking(Logger& cl) {
 
 	filepath = params.prefix;
 	filepath += getChannel().technicalName();
-	filepath += L".bmp"sv;
+	filepath += L".bmp";
 
 	blockSize = index(getSampleRate() * params.resolution);
 

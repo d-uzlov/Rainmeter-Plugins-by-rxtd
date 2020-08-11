@@ -10,29 +10,26 @@
 #include "WeightedBlur.h"
 #include "option-parser/OptionMap.h"
 
-using namespace std::string_literals;
-using namespace std::literals::string_view_literals;
-
 using namespace audio_analyzer;
 
 bool WeightedBlur::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
 
-	params.sourceId = optionMap.get(L"source"sv).asIString();
+	params.sourceId = optionMap.get(L"source").asIString();
 	if (params.sourceId.empty()) {
 		cl.error(L"source not found");
 		return { };
 	}
 
 	//                                                                      ?? ↓↓ looks best ?? at 0.25 ↓↓ ?? // TODO
-	params.radiusMultiplier = std::max<double>(optionMap.get(L"radiusMultiplier"sv).asFloat(1.0) * 0.25, 0.0);
+	params.radiusMultiplier = std::max<double>(optionMap.get(L"radiusMultiplier").asFloat(1.0) * 0.25, 0.0);
 
-	params.minRadius = std::max<double>(optionMap.get(L"minRadius"sv).asFloat(1.0), 0.0);
-	params.maxRadius = std::max<double>(optionMap.get(L"maxRadius"sv).asFloat(20.0), params.minRadius);
+	params.minRadius = std::max<double>(optionMap.get(L"minRadius").asFloat(1.0), 0.0);
+	params.maxRadius = std::max<double>(optionMap.get(L"maxRadius").asFloat(20.0), params.minRadius);
 
-	params.minRadiusAdaptation = std::max<double>(optionMap.get(L"MinRadiusAdaptation"sv).asFloat(2.0), 0.0);
+	params.minRadiusAdaptation = std::max<double>(optionMap.get(L"MinRadiusAdaptation").asFloat(2.0), 0.0);
 	params.maxRadiusAdaptation = std::max<double>(
-		optionMap.get(L"MaxRadiusAdaptation"sv).asFloat(params.minRadiusAdaptation), 0.0);
+		optionMap.get(L"MaxRadiusAdaptation").asFloat(params.minRadiusAdaptation), 0.0);
 
 	// params.minWeight = std::max<double>(optionMap.get(L"minWeight"sv).asFloat(0), std::numeric_limits<float>::epsilon());
 	params.minWeight = 0.0; // doesn't work as expected
@@ -81,7 +78,7 @@ void WeightedBlur::vFinish() {
 			const auto cascadeWeights = resampler.getLayerWeights(i);
 
 			const auto result = updateLayerData(i, sid);
-			blurCascade(cascadeMagnitudes, cascadeWeights, result, minRadius, maxRadius);
+			blurCascade(cascadeMagnitudes, cascadeWeights, result, std::llround(minRadius), std::llround(maxRadius));
 		}
 
 		minRadius *= params.minRadiusAdaptation;
@@ -96,7 +93,7 @@ void WeightedBlur::blurCascade(
 	for (index centralBand = 0; centralBand < source.size(); ++centralBand) {
 		const double sigma = params.radiusMultiplier / weights[centralBand];
 		index radius = std::clamp<index>(std::lround(sigma * 3.0), minRadius, maxRadius);
-		radius = std::min<index>(std::lround(minRadius), source.size());
+		radius = std::min<index>(radius, source.size());
 
 		if (radius < 2) {
 			dest[centralBand] = source[centralBand];

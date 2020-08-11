@@ -13,18 +13,16 @@
 #include "option-parser/Option.h"
 
 namespace rxtd::utils {
-	using namespace std::literals::string_view_literals;
-
 	template<typename E>
 	typename std::enable_if<std::is_enum<E>::value, sview>::type
 		getEnumName(E value) {
-		return L"<unknown enum>"sv;
+		return L"<unknown enum>";
 	}
 
 	template <typename E>
 	typename std::enable_if<std::is_enum<E>::value, void>::type
 		writeEnum(std::wostream& stream, const E& e, sview options) {
-		if (options == L"name"sv) {
+		if (options == L"name") {
 			stream << getEnumName(e);
 		} else {
 			stream << std::underlying_type<E>::type(e);
@@ -34,8 +32,8 @@ namespace rxtd::utils {
 	template <typename T>
 	typename std::enable_if<std::is_integral<T>::value, void>::type
 		writeIntegral(std::wostream& stream, T t, sview options) {
-		if (options == L"error"sv) {
-			stream << L"0x"sv;
+		if (options == L"error") {
+			stream << L"0x";
 			stream << std::setfill(L'0') << std::setw(sizeof(T) * 2) << std::hex;
 			stream << t;
 			return;

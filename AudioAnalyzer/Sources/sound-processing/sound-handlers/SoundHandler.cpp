@@ -10,9 +10,6 @@
 #include "SoundHandler.h"
 #include "StringUtils.h"
 
-using namespace std::string_literals;
-using namespace std::literals::string_view_literals;
-
 using namespace audio_analyzer;
 
 std::atomic<LayerDataId::idType> LayerDataId::sourceIdCounter{ 1 };

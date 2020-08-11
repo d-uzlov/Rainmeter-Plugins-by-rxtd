@@ -11,10 +11,6 @@
 #include "BandResampler.h"
 #include "option-parser/OptionMap.h"
 #include "ResamplerProvider.h"
-#include "MyMath.h"
-
-using namespace std::string_literals;
-using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
@@ -23,7 +19,7 @@ bool BandCascadeTransformer::parseParams(
 ) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
 
-	params.sourceId = optionMap.get(L"source"sv).asIString();
+	params.sourceId = optionMap.get(L"source").asIString();
 	if (params.sourceId.empty()) {
 		cl.error(L"source not found");
 		return { };
@@ -31,26 +27,26 @@ bool BandCascadeTransformer::parseParams(
 
 	const double epsilon = std::numeric_limits<float>::epsilon();
 
-	params.minWeight = optionMap.get(L"minWeight"sv).asFloat(0.1);
+	params.minWeight = optionMap.get(L"minWeight").asFloat(0.1);
 	params.minWeight = std::max(params.minWeight, epsilon);
 
-	params.targetWeight = optionMap.get(L"targetWeight"sv).asFloat(2.5);
+	params.targetWeight = optionMap.get(L"targetWeight").asFloat(2.5);
 	params.targetWeight = std::max(params.targetWeight, params.minWeight);
 
-	params.weightFallback = optionMap.get(L"weightFallback"sv).asFloat(0.4);
+	params.weightFallback = optionMap.get(L"weightFallback").asFloat(0.4);
 	params.weightFallback = std::clamp(params.weightFallback, 0.0, 1.0) * params.targetWeight;
 
-	params.zeroLevel = optionMap.get(L"zeroLevelMultiplier"sv).asFloat(1.0);
+	params.zeroLevel = optionMap.get(L"zeroLevelMultiplier").asFloat(1.0);
 	params.zeroLevel = std::max(params.zeroLevel, 0.0);
 	params.zeroLevel = params.zeroLevel * 0.66 * epsilon;
 
-	params.zeroLevelHard = optionMap.get(L"zeroLevelHardMultiplier"sv).asFloat(0.01);
+	params.zeroLevelHard = optionMap.get(L"zeroLevelHardMultiplier").asFloat(0.01);
 	params.zeroLevelHard = std::clamp(params.zeroLevelHard, 0.0, 1.0) * params.zeroLevel;
 
-	params.zeroWeight = optionMap.get(L"zeroWeightMultiplier"sv).asFloat(1.0);
+	params.zeroWeight = optionMap.get(L"zeroWeightMultiplier").asFloat(1.0);
 	params.zeroWeight = std::max(params.zeroWeight, epsilon);
 
-	if (const auto mixFunctionString = optionMap.get(L"mixFunction"sv).asIString(L"product");
+	if (const auto mixFunctionString = optionMap.get(L"mixFunction").asIString(L"product");
 		mixFunctionString == L"product") {
 		params.mixFunction = MixFunction::PRODUCT;
 	} else if (mixFunctionString == L"average") {

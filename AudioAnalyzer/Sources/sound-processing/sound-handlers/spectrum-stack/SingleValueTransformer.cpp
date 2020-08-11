@@ -10,9 +10,6 @@
 #include "SingleValueTransformer.h"
 #include "option-parser/OptionMap.h"
 
-using namespace std::string_literals;
-using namespace std::literals::string_view_literals;
-
 using namespace audio_analyzer;
 
 bool SingleValueTransformer::parseParams(
@@ -20,7 +17,7 @@ bool SingleValueTransformer::parseParams(
 ) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
 
-	params.sourceId = optionMap.get(L"source"sv).asIString();
+	params.sourceId = optionMap.get(L"source").asIString();
 	if (params.sourceId.empty()) {
 		cl.error(L"source not found");
 		return { };

@@ -13,8 +13,6 @@
 #include "FftAnalyzer.h"
 #include "option-parser/OptionMap.h"
 
-using namespace std::literals::string_view_literals;
-
 using namespace audio_analyzer;
 
 bool FftAnalyzer::parseParams(
@@ -27,7 +25,7 @@ bool FftAnalyzer::parseParams(
 
 	if (legacyNumber < 104) {
 		params.legacy_attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.0);
-		params.legacy_decayTime = std::max(optionMap.get(L"decay"sv).asFloat(params.legacy_attackTime), 0.0);
+		params.legacy_decayTime = std::max(optionMap.get(L"decay").asFloat(params.legacy_attackTime), 0.0);
 
 		params.legacy_attackTime *= 0.001;
 		params.legacy_decayTime *= 0.001;
@@ -37,9 +35,9 @@ bool FftAnalyzer::parseParams(
 	}
 
 	if (legacyNumber < 104) {
-		if (const auto sizeBy = optionMap.get(L"sizeBy"sv).asIString(L"binWidth");
+		if (const auto sizeBy = optionMap.get(L"sizeBy").asIString(L"binWidth");
 			sizeBy == L"binWidth") {
-			params.binWidth = optionMap.get(L"binWidth"sv).asFloat(100.0);
+			params.binWidth = optionMap.get(L"binWidth").asFloat(100.0);
 			if (params.binWidth <= 0.0) {
 				cl.error(L"binWidth must be > 0 but {} found", params.binWidth);
 				return { };
@@ -50,7 +48,7 @@ bool FftAnalyzer::parseParams(
 			params.legacy_sizeBy = SizeBy::BIN_WIDTH;
 		} else {
 			if (sizeBy == L"size") {
-				params.binWidth = optionMap.get(L"size"sv).asInt(1000);
+				params.binWidth = optionMap.get(L"size").asInt(1000);
 				if (params.binWidth < 2) {
 					cl.warning(L"Size must be >= 2 but {} found. Assume 1000", params.binWidth);
 					params.binWidth = 1000;
@@ -58,7 +56,7 @@ bool FftAnalyzer::parseParams(
 				params.legacy_sizeBy = SizeBy::SIZE;
 
 			} else if (sizeBy == L"sizeExact") {
-				params.binWidth = optionMap.get(L"size"sv).asInt(1000);
+				params.binWidth = optionMap.get(L"size").asInt(1000);
 				if (params.binWidth < 2) {
 					cl.error(L"Size must be >= 2, must be even, but {} found", params.binWidth);
 					return { };
@@ -70,7 +68,7 @@ bool FftAnalyzer::parseParams(
 			}
 		}
 	} else {
-		params.binWidth = optionMap.get(L"binWidth"sv).asFloat(100.0);
+		params.binWidth = optionMap.get(L"binWidth").asFloat(100.0);
 		if (params.binWidth <= 0.0) {
 			cl.error(L"binWidth must be > 0 but {} found", params.binWidth);
 			return { };
@@ -81,9 +79,9 @@ bool FftAnalyzer::parseParams(
 		params.legacy_sizeBy = SizeBy::BIN_WIDTH;
 	}
 
-	params.overlap = std::clamp(optionMap.get(L"overlap"sv).asFloat(0.5), 0.0, 1.0);
+	params.overlap = std::clamp(optionMap.get(L"overlap").asFloat(0.5), 0.0, 1.0);
 
-	params.cascadesCount = optionMap.get(L"cascadesCount"sv).asInt(5);
+	params.cascadesCount = optionMap.get(L"cascadesCount").asInt(5);
 	if (params.cascadesCount <= 0) {
 		cl.warning(L"cascadesCount must be in range [1, 20] but {} found. Assume 1", params.cascadesCount);
 		params.cascadesCount = 1;
@@ -92,11 +90,11 @@ bool FftAnalyzer::parseParams(
 		params.cascadesCount = 20;
 	}
 
-	params.randomTest = std::abs(optionMap.get(L"testRandom"sv).asFloat(0.0));
-	params.randomDuration = std::abs(optionMap.get(L"randomDuration"sv).asFloat(1000.0)) * 0.001;
+	params.randomTest = std::abs(optionMap.get(L"testRandom").asFloat(0.0));
+	params.randomDuration = std::abs(optionMap.get(L"randomDuration").asFloat(1000.0)) * 0.001;
 
 	if (legacyNumber < 104) {
-		params.legacy_correctZero = optionMap.get(L"correctZero"sv).asBool(true);
+		params.legacy_correctZero = optionMap.get(L"correctZero").asBool(true);
 		params.legacyAmplification = true;
 	} else {
 		params.legacy_correctZero = false;

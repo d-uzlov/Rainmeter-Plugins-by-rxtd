@@ -176,7 +176,7 @@ namespace rxtd::utils {
 
 		void incrementStrip() {
 			pixelData.removeFirst(1);
-			pixelData.allocateNext(1);
+			(void)pixelData.allocateNext(1);
 		}
 
 		void incrementStationary() {

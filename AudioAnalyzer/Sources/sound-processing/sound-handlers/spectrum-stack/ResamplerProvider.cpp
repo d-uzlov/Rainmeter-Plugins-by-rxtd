@@ -10,9 +10,6 @@
 #include "ResamplerProvider.h"
 #include "BandResampler.h"
 
-using namespace std::string_literals;
-using namespace std::literals::string_view_literals;
-
 using namespace audio_analyzer;
 
 BandResampler* ResamplerProvider::getResampler() {

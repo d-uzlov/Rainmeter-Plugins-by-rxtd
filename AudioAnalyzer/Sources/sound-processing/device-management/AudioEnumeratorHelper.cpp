@@ -11,9 +11,6 @@
 
 #include <string_view>
 
-using namespace std::string_literals;
-using namespace std::literals::string_view_literals;
-
 using namespace audio_analyzer;
 
 AudioEnumeratorHelper::AudioEnumeratorHelper(utils::Rainmeter::Logger _logger) :
@@ -93,11 +90,11 @@ void AudioEnumeratorHelper::makeDeviceString(utils::MediaDeviceType type, string
 		const auto deviceInfo = device.readDeviceInfo();
 
 		result += deviceInfo.id;
-		result += L";"sv;
+		result += L";";
 		result += deviceInfo.desc;
-		result += L";"sv;
+		result += L";";
 		result += deviceInfo.name;
-		result += L"\n"sv;
+		result += L"\n";
 	}
 
 	result.resize(result.size() - 1);
@@ -136,9 +133,9 @@ void AudioEnumeratorHelper::updateDeviceStringLegacy(utils::MediaDeviceType type
 		const auto deviceInfo = device.readDeviceInfo();
 
 		deviceStringLegacy += deviceInfo.id;
-		deviceStringLegacy += L" "sv;
+		deviceStringLegacy += L" ";
 		deviceStringLegacy += deviceInfo.fullFriendlyName;
-		deviceStringLegacy += L"\n"sv;
+		deviceStringLegacy += L"\n";
 	}
 
 	deviceStringLegacy.resize(deviceStringLegacy.size());

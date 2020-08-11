@@ -12,20 +12,19 @@
 #include "option-parser/OptionList.h"
 
 using namespace std::string_literals;
-using namespace std::literals::string_view_literals;
 
 using namespace audio_analyzer;
 
 bool BandResampler::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
 
-	params.fftId = optionMap.get(L"source"sv).asIString();
+	params.fftId = optionMap.get(L"source").asIString();
 	if (params.fftId.empty()) {
 		cl.error(L"source is not found");
 		return { };
 	}
 
-	const auto freqListIndex = optionMap.get(L"freqList"sv).asString();
+	const auto freqListIndex = optionMap.get(L"freqList").asString();
 	if (freqListIndex.empty()) {
 		cl.error(L"freqList is not found");
 		return { };
@@ -36,8 +35,8 @@ bool BandResampler::parseParams(const OptionMap& optionMap, Logger& cl, const Ra
 		return { };
 	}
 
-	params.minCascade = std::max(optionMap.get(L"minCascade"sv).asInt(0), 0);
-	params.maxCascade = std::max(optionMap.get(L"maxCascade"sv).asInt(0), 0);
+	params.minCascade = std::max(optionMap.get(L"minCascade").asInt(0), 0);
+	params.maxCascade = std::max(optionMap.get(L"maxCascade").asInt(0), 0);
 
 	if (params.minCascade > params.maxCascade) {
 		cl.error(
@@ -47,9 +46,10 @@ bool BandResampler::parseParams(const OptionMap& optionMap, Logger& cl, const Ra
 		return { };
 	}
 
-	params.includeDC = optionMap.get(L"includeDC"sv).asBool(true);
+	params.includeDC = optionMap.get(L"includeDC").asBool(true);
 
-	params.legacy_proportionalValues = optionMap.get(L"proportionalValues"sv).asBool(true);
+	// todo use legacy number
+	params.legacy_proportionalValues = optionMap.get(L"proportionalValues").asBool(true);
 	if (params.legacy_proportionalValues == true) {
 		cl.notice(
 			L"for better results set 'proportionalValues false' and use 'filter replayGain' in processing description instead");

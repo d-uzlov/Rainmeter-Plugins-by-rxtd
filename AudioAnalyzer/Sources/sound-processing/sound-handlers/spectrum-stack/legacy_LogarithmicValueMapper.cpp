@@ -11,9 +11,6 @@
 #include "MyMath.h"
 #include "option-parser/OptionMap.h"
 
-using namespace std::string_literals;
-using namespace std::literals::string_view_literals;
-
 using namespace audio_analyzer;
 
 bool legacy_LogarithmicValueMapper::parseParams(
@@ -21,15 +18,15 @@ bool legacy_LogarithmicValueMapper::parseParams(
 ) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
 
-	params.sourceId = optionMap.get(L"source"sv).asIString();
+	params.sourceId = optionMap.get(L"source").asIString();
 	if (params.sourceId.empty()) {
 		cl.error(L"source not found");
 		return { };
 	}
 
-	params.sensitivity = optionMap.get(L"sensitivity"sv).asFloat(35.0);
+	params.sensitivity = optionMap.get(L"sensitivity").asFloat(35.0);
 	params.sensitivity = std::clamp<double>(params.sensitivity, std::numeric_limits<float>::epsilon(), 1000.0);
-	params.offset = optionMap.get(L"offset"sv).asFloatF(0.0);
+	params.offset = optionMap.get(L"offset").asFloatF(0.0);
 
 	return true;
 }

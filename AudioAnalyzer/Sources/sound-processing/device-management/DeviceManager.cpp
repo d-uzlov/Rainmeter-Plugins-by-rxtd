@@ -11,11 +11,7 @@
 
 #include <utility>
 
-using namespace std::string_literals;
-using namespace std::literals::string_view_literals;
-
 using namespace audio_analyzer;
-
 
 DeviceManager::DeviceManager(Logger _logger, std::function<void(MyWaveFormat waveFormat)> waveFormatUpdateCallback)
 	: enumerator(_logger), waveFormatUpdateCallback(std::move(waveFormatUpdateCallback)) {

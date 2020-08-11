@@ -66,7 +66,7 @@ namespace rxtd::audio_utils {
 				return result;
 			}
 
-			buffer[0] = filter.next(source[initialUpdateLength - 1]);
+			buffer[0] = float(filter.next(source[initialUpdateLength - 1]));
 
 			buffer.remove_prefix(1);
 			result.bufferFilledSize += 1;
@@ -82,7 +82,7 @@ namespace rxtd::audio_utils {
 					filter.next(source[i * decimateFactor + j]);
 					// only use these values to update the state of the filter
 				}
-				buffer[i] = filter.next(source[i * decimateFactor + decimateFactor - 1]);
+				buffer[i] = float(filter.next(source[i * decimateFactor + decimateFactor - 1]));
 			}
 
 			result.bufferFilledSize += copyResultSize;
@@ -150,7 +150,7 @@ namespace rxtd::audio_utils {
 				return result;
 			}
 
-			buffer[0] = filter.next(source[initialUpdateLength - 1]);
+			buffer[0] = float(filter.next(source[initialUpdateLength - 1]));
 
 			buffer.remove_prefix(1);
 			result.bufferFilledSize += 1;
@@ -166,7 +166,7 @@ namespace rxtd::audio_utils {
 					filter.next(source[i * decimateFactor + j]);
 					// only use these values to update the state of the filter
 				}
-				buffer[i] = filter.next(source[i * decimateFactor + decimateFactor - 1]);
+				buffer[i] = float(filter.next(source[i * decimateFactor + decimateFactor - 1]));
 			}
 
 			result.bufferFilledSize += copyResultSize;

@@ -12,9 +12,6 @@
 #include "MyMath.h"
 #include "option-parser/OptionMap.h"
 
-using namespace std::string_literals;
-using namespace std::literals::string_view_literals;
-
 using namespace audio_analyzer;
 
 bool Loudness::parseParams(
@@ -44,12 +41,12 @@ bool Loudness::parseParams(
 }
 
 SoundHandler::LinkingResult Loudness::vFinishLinking(Logger& cl) {
-	blocksCount = params.timeWindowMs / 1000.0 * params.updatesPerSecond;
+	blocksCount = index(params.timeWindowMs / 1000.0 * params.updatesPerSecond);
 	blocksCount = std::max<index>(blocksCount, 0);
 
 	const index sampleRate = getSampleRate();
 
-	blockSize = sampleRate / params.updatesPerSecond;
+	blockSize = index(sampleRate / params.updatesPerSecond);
 	blockNormalizer = 1.0 / blockSize;
 	blockCounter = 0;
 
@@ -61,7 +58,7 @@ SoundHandler::LinkingResult Loudness::vFinishLinking(Logger& cl) {
 
 	gatingValueCoefficient = utils::MyMath::db2amplitude(params.gatingDb) * blockSize;
 
-	minBlocksCount = blocksCount * (1.0 - params.gatingLimit);
+	minBlocksCount = index(blocksCount * (1.0 - params.gatingLimit));
 
 	return { 1, 1 };
 }

@@ -40,6 +40,12 @@ namespace rxtd::utils {
 			return makeDiscreetClamped(toValue(linear));
 		}
 
+		// Values are clamped to [valMin, valMax] range
+		[[nodiscard]]
+		index toValueD(index linear) const {
+			return toValueD(double(linear));
+		}
+
 		// Values are not clamped
 		[[nodiscard]]
 		index makeDiscreet(double value) const {

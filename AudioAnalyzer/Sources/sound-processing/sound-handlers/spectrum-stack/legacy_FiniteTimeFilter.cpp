@@ -10,9 +10,6 @@
 #include "legacy_FiniteTimeFilter.h"
 #include "option-parser/OptionMap.h"
 
-using namespace std::string_literals;
-using namespace std::literals::string_view_literals;
-
 using namespace audio_analyzer;
 
 bool legacy_FiniteTimeFilter::parseParams(
@@ -20,20 +17,20 @@ bool legacy_FiniteTimeFilter::parseParams(
 ) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
 
-	params.sourceId = optionMap.get(L"source"sv).asIString();
+	params.sourceId = optionMap.get(L"source").asIString();
 	if (params.sourceId.empty()) {
 		cl.error(L"source not found");
 		return { };
 	}
 
-	params.smoothingFactor = optionMap.get(L"smoothingFactor"sv).asInt(4);
+	params.smoothingFactor = optionMap.get(L"smoothingFactor").asInt(4);
 	if (params.smoothingFactor <= 0) {
 		cl.warning(L"smoothingFactor should be >= 1 but {} found. Assume 1", params.smoothingFactor);
 		params.smoothingFactor = 1;
 	}
 
 	params.exponentialFactor = 1;
-	if (const auto smoothingCurveString = optionMap.get(L"smoothingCurve"sv).asIString(L"exponential");
+	if (const auto smoothingCurveString = optionMap.get(L"smoothingCurve").asIString(L"exponential");
 		smoothingCurveString == L"exponential") {
 		params.smoothingCurve = SmoothingCurve::EXPONENTIAL;
 		params.exponentialFactor = optionMap.get(L"exponentialFactor").asFloat(1.5);
