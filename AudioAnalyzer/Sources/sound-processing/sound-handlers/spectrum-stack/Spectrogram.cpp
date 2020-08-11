@@ -34,16 +34,20 @@ bool Spectrogram::vGetProp(const isview& prop, utils::BufferPrinter& printer) co
 	return false;
 }
 
-bool Spectrogram::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber) const {
+bool Spectrogram::parseParams(
+	const OptionMap& om, Logger& cl, const Rainmeter& rain,
+	void* paramsPtr,
+	index legacyNumber
+) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
 
-	params.sourceName = optionMap.get(L"source"sv).asIString();
+	params.sourceName = om.get(L"source"sv).asIString();
 	if (params.sourceName.empty()) {
 		cl.error(L"source not found");
 		return { };
 	}
 
-	params.length = optionMap.get(L"length"sv).asInt(100);
+	params.length = om.get(L"length"sv).asInt(100);
 	if (params.length < 2) {
 		cl.error(L"length must be >= 2 but {} found", params.length);
 		return { };
@@ -52,7 +56,7 @@ bool Spectrogram::parseParams(const OptionMap& optionMap, Logger& cl, const Rain
 		cl.warning(L"dangerously large length {}", params.length);
 	}
 
-	params.resolution = optionMap.get(L"resolution"sv).asFloat(50);
+	params.resolution = om.get(L"resolution"sv).asFloat(50);
 	if (params.resolution <= 0) {
 		cl.warning(L"resolution must be > 0 but {} found. Assume 50", params.resolution);
 		params.resolution = 100;
@@ -60,13 +64,13 @@ bool Spectrogram::parseParams(const OptionMap& optionMap, Logger& cl, const Rain
 	params.resolution *= 0.001;
 
 	params.prefix = utils::FileWrapper::getAbsolutePath(
-		optionMap.get(L"folder"sv).asString() % own(),
+		om.get(L"folder"sv).asString() % own(),
 		rain.replaceVariables(L"[#CURRENTPATH]") % own()
 	);
 	params.prefix += L"spectrogram-";
 
-	if (optionMap.has(L"colors"sv)) {
-		auto colorsDescriptionList = optionMap.get(L"colors"sv).asList(L';');
+	if (om.has(L"colors"sv)) {
+		auto colorsDescriptionList = om.get(L"colors"sv).asList(L';');
 
 		float prevValue = -std::numeric_limits<float>::infinity();
 
@@ -104,40 +108,34 @@ bool Spectrogram::parseParams(const OptionMap& optionMap, Logger& cl, const Rain
 		}
 	} else {
 		params.colors.resize(2);
-		params.colors[0].color = optionMap.get(L"baseColor"sv).asColor({ 0, 0, 0, 1 }).toIntColor();
-		params.colors[1].color = optionMap.get(L"maxColor"sv).asColor({ 1, 1, 1, 1 }).toIntColor();
+		params.colors[0].color = om.get(L"baseColor"sv).asColor({ 0, 0, 0, 1 }).toIntColor();
+		params.colors[1].color = om.get(L"maxColor"sv).asColor({ 1, 1, 1, 1 }).toIntColor();
 		params.colorMinValue = 0.0f;
 		params.colorMaxValue = 1.0f;
 	}
 
-	params.borderColor = optionMap.get(L"borderColor"sv).asColor({ 1.0, 0.2, 0.2, 1 });
+	params.borderColor = om.get(L"borderColor"sv).asColor({ 1.0, 0.2, 0.2, 1 });
 
-	params.fading = std::clamp(optionMap.get(L"fadingPercent").asFloat(0.0), 0.0, 1.0);
+	params.fading = std::clamp(om.get(L"fadingPercent").asFloat(0.0), 0.0, 1.0);
 
-	params.borderSize = std::clamp<index>(optionMap.get(L"borderSize"sv).asInt(0), 0, params.length / 2);
+	params.borderSize = std::clamp<index>(om.get(L"borderSize"sv).asInt(0), 0, params.length / 2);
 
-	params.stationary = optionMap.get(L"stationary").asBool(false);
+	params.stationary = om.get(L"stationary").asBool(false);
 
 	return true;
 }
 
-void Spectrogram::setParams(const Params& value) {
-	params = value;
+SoundHandler::LinkingResult Spectrogram::vFinishLinking(Logger& cl) {
+	const auto dataSize = getSource()->getDataSize();
 
 	image.setBackground(params.colors[0].color);
-	image.setWidth(params.length);
 	image.setStationary(params.stationary);
 
 	sifh.setBorderSize(params.borderSize);
 	sifh.setColors(params.colors[0].color, params.borderColor);
 	sifh.setFading(params.fading);
-}
 
-SoundHandler::LinkingResult Spectrogram::vFinishLinking(Logger& cl) {
-	const auto sourcePtr = getSource();
-
-	const auto dataSize = sourcePtr->getDataSize();
-	image.setHeight(dataSize.valuesCount);
+	image.setDimensions(params.length, dataSize.valuesCount);
 	stripBuffer.resize(dataSize.valuesCount);
 
 	filepath = params.prefix;

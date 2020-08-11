@@ -39,29 +39,22 @@ namespace rxtd::utils {
 			stationary = value;
 		}
 
-		void setDimensions(index width, index height) {
-			if (this->width == width && this->height == height) {
+		void setDimensions(index _width, index _height) {
+			if (width == _width && height == _height) {
 				return;
 			}
-			this->width = width;
-			this->height = height;
 
-			const index imagePixelsCount = width * height;
+			this->width = _width;
+			this->height = _height;
+
+			const index imagePixelsCount = _width * _height;
 			const index maxOffset = getReserveSize(imagePixelsCount);
 
 			pixelData.reset(imagePixelsCount, backgroundValue);
 			pixelData.setMaxSize(imagePixelsCount + maxOffset);
 
 			lastFillValue = backgroundValue;
-			sameStripsCount = width - 1;
-		}
-
-		void setWidth(index value) {
-			setDimensions(value, height);
-		}
-
-		void setHeight(index value) {
-			setDimensions(width, value);
+			sameStripsCount = _width - 1;
 		}
 
 		void pushStrip(array_view<PixelValueType> stripData) {

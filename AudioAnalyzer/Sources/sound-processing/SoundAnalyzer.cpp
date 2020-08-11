@@ -123,7 +123,7 @@ void SoundAnalyzer::resetValues() noexcept {
 void SoundAnalyzer::patchChannels() {
 	for (auto iter = channels.begin(); iter != channels.end();) {
 		const auto channel = iter->first;
-		iter = channel == Channel::eAUTO || layout.contains(channel) ? channels.erase(iter) : ++iter;
+		iter = channel == Channel::eAUTO || layout.contains(channel) ? ++iter : channels.erase(iter);
 	}
 
 	std::set<Channel> channelsSet;
