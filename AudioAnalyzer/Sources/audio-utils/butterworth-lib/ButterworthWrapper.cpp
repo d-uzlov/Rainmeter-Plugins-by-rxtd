@@ -21,9 +21,9 @@ FilterParameters ButterworthWrapper::calcCoefLowPass(index _order, double digita
 	digitalCutoff = std::clamp(digitalCutoff, 0.01, 1.0 - 0.01);
 
 	return {
-		wrapCoefs(dcof_bwlp, order, digitalCutoff),
-		wrapCoefs(ccof_bwlp, order),
-		sf_bwlp(order, digitalCutoff)
+		wrapCoefs(dcof_bwlp, order + 1, order, digitalCutoff, 0.0),
+		wrapCoefs(ccof_bwlp, order + 1, order, digitalCutoff, 0.0),
+		sf_bwlp(order, digitalCutoff, 0.0)
 	};
 }
 
@@ -36,9 +36,9 @@ FilterParameters ButterworthWrapper::calcCoefHighPass(index _order, double digit
 	digitalCutoff = std::clamp(digitalCutoff, 0.01, 1.0 - 0.01);
 
 	return {
-		wrapCoefs(dcof_bwhp, order, digitalCutoff),
-		wrapCoefs(ccof_bwhp, order),
-		sf_bwhp(order, digitalCutoff)
+		wrapCoefs(dcof_bwhp, order + 1, order, digitalCutoff, 0.0),
+		wrapCoefs(ccof_bwhp, order + 1, order, digitalCutoff, 0.0),
+		sf_bwhp(order, digitalCutoff, 0.0)
 	};
 }
 
@@ -52,8 +52,8 @@ FilterParameters ButterworthWrapper::calcCoefBandPass(index _order, double digit
 	digitalCutoffHigh = std::clamp(digitalCutoffHigh, 0.01, 1.0 - 0.01);
 
 	return {
-		wrapCoefs(dcof_bwbp, order, digitalCutoffLow, digitalCutoffHigh),
-		wrapCoefs(ccof_bwbp, order),
+		wrapCoefs(dcof_bwbp, 2 * order + 1, order, digitalCutoffLow, digitalCutoffHigh),
+		wrapCoefs(ccof_bwbp, 2 * order + 1, order, digitalCutoffLow, digitalCutoffHigh),
 		sf_bwbp(order, digitalCutoffLow, digitalCutoffHigh)
 	};
 }
@@ -68,8 +68,8 @@ FilterParameters ButterworthWrapper::calcCoefBandStop(index _order, double digit
 	digitalCutoffHigh = std::clamp(digitalCutoffHigh, 0.01, 1.0 - 0.01);
 
 	return {
-		wrapCoefs(dcof_bwbs, order, digitalCutoffLow, digitalCutoffHigh),
-		wrapCoefs(ccof_bwbs, order, digitalCutoffLow, digitalCutoffHigh),
+		wrapCoefs(dcof_bwbs, 2 * order + 1, order, digitalCutoffLow, digitalCutoffHigh),
+		wrapCoefs(ccof_bwbs, 2 * order + 1, order, digitalCutoffLow, digitalCutoffHigh),
 		sf_bwbs(order, digitalCutoffLow, digitalCutoffHigh)
 	};
 }

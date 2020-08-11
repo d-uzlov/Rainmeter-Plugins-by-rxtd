@@ -166,7 +166,7 @@ double *trinomial_mult( int n, double *b, double *c )
 
 */
 
-double *dcof_bwlp( int n, double fcf )
+double *dcof_bwlp( int n, double fcf, double unused)
 {
     int k;            // loop variables
     double theta;     // pi * fcf / 2.0
@@ -212,9 +212,9 @@ double *dcof_bwlp( int n, double fcf )
 
 */
 
-double *dcof_bwhp( int n, double fcf )
+double *dcof_bwhp( int n, double fcf, double unused)
 {
-    return( dcof_bwlp( n, fcf ) );
+    return( dcof_bwlp( n, fcf, unused ) );
 }
 
 
@@ -336,13 +336,13 @@ double *dcof_bwbs( int n, double f1f, double f2f )
 
 */
 
-int *ccof_bwlp( int n )
+double *ccof_bwlp( int n, double fcf, double unused)
 {
-    int *ccof;
+	double *ccof;
     int m;
     int i;
 
-    ccof = (int *)calloc( n+1, sizeof(int) );
+    ccof = (double *)calloc( n+1, sizeof(double) );
     if( ccof == NULL ) return( NULL );
 
     ccof[0] = 1;
@@ -365,12 +365,12 @@ int *ccof_bwlp( int n )
 
 */
 
-int *ccof_bwhp( int n )
+double *ccof_bwhp( int n, double fcf, double unused)
 {
-    int *ccof;
+	double *ccof;
     int i;
 
-    ccof = ccof_bwlp( n );
+    ccof = ccof_bwlp( n , fcf, unused);
     if( ccof == NULL ) return( NULL );
 
     for( i = 0; i <= n; ++i)
@@ -385,16 +385,16 @@ int *ccof_bwhp( int n )
 
 */
 
-int *ccof_bwbp( int n )
+double *ccof_bwbp( int n, double f1f, double f2f)
 {
-    int *tcof;
-    int *ccof;
+	double *tcof;
+	double *ccof;
     int i;
 
-    ccof = (int *)calloc( 2*n+1, sizeof(int) );
+    ccof = (double *)calloc( 2*n+1, sizeof(double) );
     if( ccof == NULL ) return( NULL );
 
-    tcof = ccof_bwhp(n);
+    tcof = ccof_bwhp(n, f1f, f2f);
     if( tcof == NULL ) return( NULL );
 
     for( i = 0; i < n; ++i)
@@ -449,7 +449,7 @@ double *ccof_bwbs( int n, double f1f, double f2f )
 
 */
 
-double sf_bwlp( int n, double fcf )
+double sf_bwlp( int n, double fcf, double unused)
 {
     int m, k;         // loop variables
     double omega;     // pi * fcf
@@ -481,7 +481,7 @@ double sf_bwlp( int n, double fcf )
 
 */
 
-double sf_bwhp( int n, double fcf )
+double sf_bwhp( int n, double fcf, double unused)
 {
     int m, k;         // loop variables
     double omega;     // pi * fcf
