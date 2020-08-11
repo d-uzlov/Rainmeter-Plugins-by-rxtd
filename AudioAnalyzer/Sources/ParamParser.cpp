@@ -18,7 +18,7 @@ using namespace audio_analyzer;
 
 bool ParamParser::parse() {
 	anythingChanged = false;
-	legacyNumber = rain.read(L"LegacyNumber").asInt(0);
+	legacyNumber = rain.read(L"MagicNumber").asInt(0);
 
 	auto& logger = rain.getLogger();
 

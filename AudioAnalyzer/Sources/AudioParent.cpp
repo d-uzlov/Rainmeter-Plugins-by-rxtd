@@ -84,6 +84,15 @@ void AudioParent::vReload() {
 	deviceManager.setOptions(sourceEnum, id);
 
 	const bool anythingChanged = paramParser.parse();
+	index legacyNumber = paramParser.getLegacyNumber();
+	switch (legacyNumber) {
+	case 0:
+	case 104:
+		break;
+	default:
+		logger.error(L"Unknown magic number");
+		setMeasureState(utils::MeasureState::eTEMP_BROKEN);
+	}
 
 	if (anythingChanged) {
 		patchSA(paramParser.getParseResult());

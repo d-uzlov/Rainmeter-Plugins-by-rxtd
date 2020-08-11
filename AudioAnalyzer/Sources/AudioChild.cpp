@@ -22,13 +22,17 @@ AudioChild::AudioChild(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rain)) 
 	parent = utils::ParentBase::find<AudioParent>(rain.getSkin(), parentName);
 
 	if (parent == nullptr) {
-		logger.error(L"Parent '{}' doesn't exist or broken", parentName);
+		logger.error(L"Parent '{}' doesn't exist or is broken", parentName);
 		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
 	}
 }
 
 void AudioChild::vReload() {
+	if (parent->getState() != utils::MeasureState::eWORKING) {
+		return;
+	}
+
 	const auto channelStr = rain.read(L"Channel").asIString(L"auto");
 	auto channelOpt = Channel::channelParser.find(channelStr);
 	if (!channelOpt.has_value()) {
@@ -38,14 +42,14 @@ void AudioChild::vReload() {
 		channel = channelOpt.value();
 	}
 
-	valueId = rain.read(L"ValueId").asIString();
-	if (valueId.empty()) {
+	handlerName = rain.read(L"ValueId").asIString();
+	if (handlerName.empty()) {
 		logger.error(L"ValueID can't be empty");
 		setMeasureState(utils::MeasureState::eTEMP_BROKEN);
 		return;
 	}
 
-	procId = rain.read(L"Processing").asIString();
+	procName = rain.read(L"Processing").asIString();
 
 	const auto stringValueStr = rain.read(L"StringValue").asIString(L"Number");
 	if (stringValueStr == L"Number") {
@@ -82,6 +86,12 @@ void AudioChild::vReload() {
 		legacy.use = true;
 	} else {
 		legacy.use = false;
+
+		const auto error = parent->checkHandler(procName, channel, handlerName);
+		if (!error.empty()) {
+			logger.error(L"Invalid options: {}", error);
+			setMeasureState(utils::MeasureState::eTEMP_BROKEN);
+		}
 	}
 }
 
@@ -99,7 +109,7 @@ double AudioChild::vUpdate() {
 		return legacy_update();
 	}
 
-	return parent->getValue(procId, valueId, channel, valueIndex);
+	return parent->getValue(procName, handlerName, channel, valueIndex);
 }
 
 void AudioChild::vUpdateString(string& resultStringBuffer) {
@@ -131,12 +141,12 @@ double AudioChild::legacy_update() {
 
 	switch (legacy.numberTransform) {
 	case Legacy::NumberTransform::eLINEAR:
-		result = parent->legacy_getValue(valueId, channel, valueIndex);
+		result = parent->legacy_getValue(handlerName, channel, valueIndex);
 		result = result * legacy.correctingConstant;
 		break;
 
 	case Legacy::NumberTransform::eDB:
-		result = parent->legacy_getValue(valueId, channel, valueIndex);
+		result = parent->legacy_getValue(handlerName, channel, valueIndex);
 		result = 20.0 / legacy.correctingConstant * std::log10(result) + 1.0;
 		break;
 
