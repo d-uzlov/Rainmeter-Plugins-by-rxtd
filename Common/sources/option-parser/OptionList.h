@@ -46,7 +46,7 @@ namespace rxtd::utils {
 		// Parseable view of Nth option.
 		[[nodiscard]]
 		GhostOption get(index ind) const & {
-			if (ind >= list.size()) {
+			if (ind >= index(list.size())) {
 				return { };
 			}
 			return GhostOption{ list[ind].makeView(getView()) };

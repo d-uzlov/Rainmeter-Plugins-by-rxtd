@@ -130,7 +130,7 @@ std::vector<float> WindowFunctionHelper::createChebyshev(index size, double atte
 	std::vector<float> window;
 	window.resize(size);
 
-	cheby_win(window.data(), size, attenuation);
+	cheby_win(window.data(), int(size), float(attenuation));
 	
 	return window;
 }
