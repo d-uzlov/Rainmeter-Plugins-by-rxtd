@@ -11,30 +11,23 @@
 
 using namespace audio_analyzer;
 
-void SoundAnalyzer::setFormat(index sampleRate, ChannelLayout _layout) {
-	if (sourceSampleRate == sampleRate && layout == _layout) {
-		return;
-	}
-
-	sourceSampleRate = sampleRate;
-	layout = std::move(_layout);
-
-	cph.setSourceRate(sampleRate);
-	patchCH();
+void SoundAnalyzer::updateFormat(index sampleRate, ChannelLayout layout) {
+	cph.updateSourceRate(sampleRate);
+	patchHandlers(std::move(layout));
 }
 
 void SoundAnalyzer::setParams(
-	std::set<Channel> channelSetRequested,
-	ParamParser::HandlerPatchersInfo _patchersInfo,
-	double _granularity,
-	index _legacyNumber
+	const ProcessingData& pd,
+	index _legacyNumber,
+	index sampleRate, ChannelLayout layout
 ) {
-	this->channelSetRequested = std::move(channelSetRequested);
-	patchersInfo = std::move(_patchersInfo);
-	granularity = _granularity;
+	channelSetRequested = pd.channels;
+	patchersInfo = pd.handlersInfo;
+	granularity = pd.granularity;
 	legacyNumber = _legacyNumber;
 
-	patchCH();
+	cph.setParams(pd.fcc, pd.targetRate, sampleRate);
+	patchHandlers(std::move(layout));
 }
 
 bool SoundAnalyzer::process(const ChannelMixer& mixer, clock::time_point killTime) {
@@ -120,7 +113,7 @@ void SoundAnalyzer::resetValues() noexcept {
 	}
 }
 
-void SoundAnalyzer::patchChannels() {
+void SoundAnalyzer::patchHandlers(ChannelLayout layout) {
 	for (auto iter = channels.begin(); iter != channels.end();) {
 		const auto channel = iter->first;
 		iter = channel == Channel::eAUTO || layout.contains(channel) ? ++iter : channels.erase(iter);
@@ -136,9 +129,7 @@ void SoundAnalyzer::patchChannels() {
 		}
 	}
 	cph.setChannels(channelsSet);
-}
 
-void SoundAnalyzer::patchHandlers() {
 	for (auto& [channel, channelData] : channels) {
 		ChannelData newData;
 		HandlerFinderImpl hf{ newData };

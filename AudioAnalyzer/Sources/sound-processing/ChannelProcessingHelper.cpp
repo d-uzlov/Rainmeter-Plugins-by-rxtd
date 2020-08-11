@@ -27,20 +27,25 @@ void ChannelProcessingHelper::setChannels(const std::set<Channel>& set) {
 	updateFilters();
 }
 
-void ChannelProcessingHelper::setParams(audio_utils::FilterCascadeCreator _fcc, index targetRate) {
+void ChannelProcessingHelper::setParams(
+	audio_utils::FilterCascadeCreator _fcc,
+	index targetRate, index sourceSampleRate
+) {
 	if (fcc == _fcc
-		&& resamplingData.targetRate == targetRate) {
+		&& resamplingData.targetRate == targetRate
+		&& resamplingData.sourceRate == sourceSampleRate) {
 		return;
 	}
 
 	fcc = std::move(_fcc);
 	resamplingData.targetRate = targetRate;
+	resamplingData.sourceRate = sourceSampleRate;
 
 	recalculateResamplingData();
 	updateFilters();
 }
 
-void ChannelProcessingHelper::setSourceRate(index value) {
+void ChannelProcessingHelper::updateSourceRate(index value) {
 	if (value == 0 || value == resamplingData.sourceRate) {
 		return;
 	}
@@ -97,7 +102,6 @@ void ChannelProcessingHelper::recalculateResamplingData() {
 
 void ChannelProcessingHelper::updateFilters() {
 	if (resamplingData.finalSampleRate == 0) {
-		utils::Rainmeter::sourcelessLog(L"sample rate 0");
 		return;
 	}
 

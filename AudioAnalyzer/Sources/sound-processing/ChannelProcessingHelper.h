@@ -46,10 +46,10 @@ namespace rxtd::audio_analyzer {
 		void setChannels(const std::set<Channel>& set);
 
 		// depends on options only
-		void setParams(audio_utils::FilterCascadeCreator _fcc, index targetRate);
+		void setParams(audio_utils::FilterCascadeCreator _fcc, index targetRate, index sourceSampleRate);
 
 		// depends on system format only
-		void setSourceRate(index value);
+		void updateSourceRate(index value);
 
 		[[nodiscard]]
 		index getSampleRate() const {

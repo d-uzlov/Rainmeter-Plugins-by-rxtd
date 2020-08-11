@@ -22,6 +22,7 @@ namespace rxtd::audio_analyzer {
 
 		using ChannelData = std::map<istring, std::unique_ptr<SoundHandler>, std::less<>>;
 		using Logger = utils::Rainmeter::Logger;
+		using ProcessingData = ParamParser::ProcessingData;
 
 		// The following two fields are used for updating .channels field.
 		// They can contain info about handlers that doesn't exist because of channel layout
@@ -33,9 +34,7 @@ namespace rxtd::audio_analyzer {
 		ChannelProcessingHelper cph;
 		Logger logger;
 
-		index sourceSampleRate{ };
 		double granularity{ };
-		ChannelLayout layout;
 
 		index legacyNumber = 0;
 
@@ -67,7 +66,7 @@ namespace rxtd::audio_analyzer {
 		SoundAnalyzer& operator=(SoundAnalyzer&& other) = default;
 
 		// depends on system format only
-		void setFormat(index sampleRate, ChannelLayout layout);
+		void updateFormat(index sampleRate, ChannelLayout layout);
 
 		[[nodiscard]]
 		AudioChildHelper getAudioChildHelper() const {
@@ -83,16 +82,10 @@ namespace rxtd::audio_analyzer {
 		 */
 		// depends on options only
 		void setParams(
-			std::set<Channel> channelSetRequested,
-			ParamParser::HandlerPatchersInfo patchersInfo,
-			double _granularity,
-			index _legacyNumber
+			const ProcessingData& pd,
+			index _legacyNumber,
+			index sampleRate, ChannelLayout layout
 		);
-
-		[[nodiscard]]
-		ChannelProcessingHelper& getCPH() {
-			return cph;
-		}
 
 		// returns true when killed on timeout
 		bool process(const ChannelMixer& mixer, clock::time_point killTime);
@@ -101,12 +94,6 @@ namespace rxtd::audio_analyzer {
 		void resetValues() noexcept;
 
 	private:
-		void patchCH() {
-			patchChannels();
-			patchHandlers();
-		}
-
-		void patchChannels();
-		void patchHandlers();
+		void patchHandlers(ChannelLayout layout);
 	};
 }

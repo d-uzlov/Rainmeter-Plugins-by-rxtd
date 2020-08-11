@@ -18,7 +18,7 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 	deviceManager(logger, [this](MyWaveFormat format) {
 		channelMixer.setFormat(format);
 		for (auto& [name, sa] : saMap) {
-			sa.setFormat(format.samplesPerSec, format.channelLayout);
+			sa.updateFormat(format.samplesPerSec, format.channelLayout);
 		}
 		currentFormat = std::move(format);
 	}) {
@@ -345,14 +345,14 @@ void AudioParent::process() {
 		logger.error(L"handler processing was killed on timeout after {} m, on stage 2", fullDuration);
 		return;
 	}
-	if (computeTimeout > 0 && processDuration > computeTimeout) {
+	if (computeTimeout >= 0 && processDuration > computeTimeout) {
 		logger.debug(L"processing overhead {} ms over specified {} ms", fullDuration - computeTimeout, computeTimeout);
 	}
 }
 
 void AudioParent::patchSA(const ParamParser::ProcessingsInfoMap& procs) {
 	for (auto iter = saMap.begin();
-		iter != saMap.end();) {
+	     iter != saMap.end();) {
 		if (procs.find(iter->first) == procs.end()) {
 			iter = saMap.erase(iter);
 		} else {
@@ -360,11 +360,9 @@ void AudioParent::patchSA(const ParamParser::ProcessingsInfoMap& procs) {
 		}
 	}
 
-	for (auto& [name, data] : procs) {
+	for (const auto& [name, data] : procs) {
 		auto& sa = saMap[name];
-		sa.getCPH().setParams(std::move(data.fcc), data.targetRate);
-		sa.setFormat(currentFormat.samplesPerSec, currentFormat.channelLayout);
-		sa.setParams(data.channels, data.handlersInfo, data.granularity, paramParser.getLegacyNumber());
+		sa.setParams(data, paramParser.getLegacyNumber(), currentFormat.samplesPerSec, currentFormat.channelLayout);
 	}
 }
 
