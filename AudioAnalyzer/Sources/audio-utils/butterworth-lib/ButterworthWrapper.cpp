@@ -12,64 +12,10 @@
 
 using namespace audio_utils;
 
-FilterParameters ButterworthWrapper::calcCoefLowPass(index _order, double digitalCutoff) {
-	const int order = int(_order);
-	if (order < 0) {
-		return { };
-	}
+using BW = ButterworthWrapper;
+using GCC = BW::GenericCoefCalculator;
 
-	digitalCutoff = std::clamp(digitalCutoff, 0.01, 1.0 - 0.01);
-
-	return {
-		wrapCoefs(dcof_bwlp, order + 1, order, digitalCutoff, 0.0),
-		wrapCoefs(ccof_bwlp, order + 1, order, digitalCutoff, 0.0),
-		sf_bwlp(order, digitalCutoff, 0.0)
-	};
-}
-
-FilterParameters ButterworthWrapper::calcCoefHighPass(index _order, double digitalCutoff) {
-	const int order = int(_order);
-	if (order < 0) {
-		return { };
-	}
-
-	digitalCutoff = std::clamp(digitalCutoff, 0.01, 1.0 - 0.01);
-
-	return {
-		wrapCoefs(dcof_bwhp, order + 1, order, digitalCutoff, 0.0),
-		wrapCoefs(ccof_bwhp, order + 1, order, digitalCutoff, 0.0),
-		sf_bwhp(order, digitalCutoff, 0.0)
-	};
-}
-
-FilterParameters ButterworthWrapper::calcCoefBandPass(index _order, double digitalCutoffLow, double digitalCutoffHigh) {
-	const int order = int(_order);
-	if (order < 0) {
-		return { };
-	}
-
-	digitalCutoffLow = std::clamp(digitalCutoffLow, 0.01, 1.0 - 0.01);
-	digitalCutoffHigh = std::clamp(digitalCutoffHigh, 0.01, 1.0 - 0.01);
-
-	return {
-		wrapCoefs(dcof_bwbp, 2 * order + 1, order, digitalCutoffLow, digitalCutoffHigh),
-		wrapCoefs(ccof_bwbp, 2 * order + 1, order, digitalCutoffLow, digitalCutoffHigh),
-		sf_bwbp(order, digitalCutoffLow, digitalCutoffHigh)
-	};
-}
-
-FilterParameters ButterworthWrapper::calcCoefBandStop(index _order, double digitalCutoffLow, double digitalCutoffHigh) {
-	const int order = int(_order);
-	if (order < 0) {
-		return { };
-	}
-
-	digitalCutoffLow = std::clamp(digitalCutoffLow, 0.01, 1.0 - 0.01);
-	digitalCutoffHigh = std::clamp(digitalCutoffHigh, 0.01, 1.0 - 0.01);
-
-	return {
-		wrapCoefs(dcof_bwbs, 2 * order + 1, order, digitalCutoffLow, digitalCutoffHigh),
-		wrapCoefs(ccof_bwbs, 2 * order + 1, order, digitalCutoffLow, digitalCutoffHigh),
-		sf_bwbs(order, digitalCutoffLow, digitalCutoffHigh)
-	};
-}
+const GCC BW::lowPass = { dcof_bwlp, ccof_bwlp, sf_bwlp, OneSideSlopeSize };
+const GCC BW::highPass = { dcof_bwhp, ccof_bwhp, sf_bwhp, OneSideSlopeSize };
+const GCC BW::bandPass = { dcof_bwbp, ccof_bwbp, sf_bwbp, TwoSideSlopeSize };
+const GCC BW::bandStop = { dcof_bwbs, ccof_bwbs, sf_bwbs, TwoSideSlopeSize };

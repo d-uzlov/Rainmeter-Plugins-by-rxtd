@@ -37,7 +37,7 @@ namespace rxtd::audio_utils {
 
 			decimateFactor = value;
 			// digital frequency of (0.907 / decimateFactor) ensures strong cutoff at new nyquist frequency
-			filter = { ButterworthWrapper::calcCoefLowPass(filterOrder, 0.907 / decimateFactor) };
+			filter = { ButterworthWrapper::lowPass.calcCoefDigital(filterOrder, 0.907 / decimateFactor) };
 			counter = 0;
 		}
 
@@ -122,7 +122,7 @@ namespace rxtd::audio_utils {
 	public:
 		DownsampleHelperFixed() {
 			// digital frequency of 0.907 / decimateFactor ensures strong cutoff at new nyquist frequency
-			filter = { ButterworthWrapper::calcCoefLowPass(filterOrder, 0.907 / decimateFactor) };
+			filter = { ButterworthWrapper::lowPass.calcCoefDigital(filterOrder, 0.907 / decimateFactor) };
 		}
 
 		[[nodiscard]]

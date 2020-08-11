@@ -13,6 +13,7 @@
 #include "AbstractFilter.h"
 #include "FilterCascade.h"
 #include "RainmeterWrappers.h"
+#include "../butterworth-lib/ButterworthWrapper.h"
 
 namespace rxtd::audio_utils {
 	class FilterCascadeCreator {
@@ -45,9 +46,6 @@ namespace rxtd::audio_utils {
 	class FilterCascadeParser {
 	public:
 		using FCF = FilterCascadeCreator::FilterCreationFunction;
-		using ButterworthParamsFunc = FilterParameters(*)(
-			index order, double samplingFrequency, double freq1, double freq2
-		);
 
 		[[nodiscard]]
 		static FilterCascadeCreator parse(const utils::Option& description, utils::Rainmeter::Logger& logger);
@@ -62,12 +60,22 @@ namespace rxtd::audio_utils {
 		[[nodiscard]]
 		static FCF parseBW(isview name, const utils::OptionMap& description, utils::Rainmeter::Logger& cl);
 
+		template <index size>
+		[[nodiscard]]
+		static FCF createButterworthMaker(
+			index order,
+			double forcedGain,
+			double freq1, double freq2,
+			const ButterworthWrapper::GenericCoefCalculator& butterworthMaker
+		);
+
+		template <ButterworthWrapper::SizeFuncSignature sizeFunc>
 		[[nodiscard]]
 		static FCF createButterworth(
 			index order,
 			double forcedGain,
 			double freq1, double freq2,
-			ButterworthParamsFunc func
+			const ButterworthWrapper::GenericCoefCalculator& butterworthMaker
 		);
 	};
 }

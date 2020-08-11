@@ -16,87 +16,100 @@ namespace rxtd::audio_utils {
 		// http://www.exstrom.com/journal/sigproc/
 
 	public:
-		[[nodiscard]]
-		static FilterParameters calcCoefLowPass(index order, double digitalCutoff);
+		using SizeFuncSignature = index(*)(index order);
 
-		[[nodiscard]]
-		static FilterParameters calcCoefLowPass(index order, double samplingFrequency, double cutoffFrequency) {
-			return calcCoefLowPass(order, 2.0 * cutoffFrequency / samplingFrequency);
-		}
+		class GenericCoefCalculator {
+			using CoefFuncSignature = double* (*)(int order, double f1, double f2);
+			using ScalingFuncSignature = double (*)(int n, double f1, double f2);
 
-		[[nodiscard]]
-		static FilterParameters
-		calcCoefLowPass(index order, double samplingFrequency, double cutoffFrequency, double unused) {
-			return calcCoefLowPass(order, samplingFrequency, cutoffFrequency);
-		}
+			const CoefFuncSignature aFunc;
+			const CoefFuncSignature bFunc;
+			const ScalingFuncSignature sFunc;
+			const SizeFuncSignature sizeFunc;
 
-		[[nodiscard]]
-		static FilterParameters calcCoefHighPass(index order, double digitalCutoff);
-
-		[[nodiscard]]
-		static FilterParameters calcCoefHighPass(index order, double samplingFrequency, double cutoffFrequency) {
-			return calcCoefHighPass(order, 2.0 * cutoffFrequency / samplingFrequency);
-		}
-
-		[[nodiscard]]
-		static FilterParameters
-		calcCoefHighPass(index order, double samplingFrequency, double cutoffFrequency, double unused) {
-			return calcCoefHighPass(order, samplingFrequency, cutoffFrequency);
-		}
-
-		[[nodiscard]]
-		static FilterParameters calcCoefBandPass(
-			index order,
-			double digitalCutoffLow, double digitalCutoffHigh
-		);
-
-		[[nodiscard]]
-		static FilterParameters calcCoefBandPass(
-			index order,
-			double samplingFrequency,
-			double lowerCutoffFrequency, double upperCutoffFrequency
-		) {
-			return calcCoefBandPass(
-				order,
-				2.0 * lowerCutoffFrequency / samplingFrequency,
-				2.0 * upperCutoffFrequency / samplingFrequency
-			);
-		}
-
-		[[nodiscard]]
-		static FilterParameters calcCoefBandStop(
-			index order,
-			double digitalCutoffLow, double digitalCutoffHigh
-		);
-
-		[[nodiscard]]
-		static FilterParameters calcCoefBandStop(
-			index order,
-			double samplingFrequency,
-			double lowerCutoffFrequency, double upperCutoffFrequency
-		) {
-			return calcCoefBandStop(
-				order,
-				2.0 * lowerCutoffFrequency / samplingFrequency,
-				2.0 * upperCutoffFrequency / samplingFrequency
-			);
-		}
-
-	private:
-		template <typename T, typename... Args>
-		static std::vector<double> wrapCoefs(T* (*funcPtr)(int order, Args ...), int order, Args ... args) {
-			std::vector<double> result;
-
-			T* coefs = funcPtr(order, args...);
-
-			result.resize(order + 1);
-			for (index i = 0; i < index(result.size()); ++i) {
-				result[i] = coefs[i];
+		public:
+			GenericCoefCalculator(
+				CoefFuncSignature aFunc, CoefFuncSignature bFunc, ScalingFuncSignature sFunc, SizeFuncSignature sizeFunc
+			) : aFunc(aFunc), bFunc(bFunc), sFunc(sFunc), sizeFunc(sizeFunc) {
 			}
 
-			free(coefs);
+			[[nodiscard]]
+			index filterSize(index order) const {
+				return sizeFunc(order);
+			}
 
-			return result;
+			[[nodiscard]]
+			FilterParameters calcCoefDigital(index order, double digitalCutoff) const {
+				return calcCoefDigital(order, digitalCutoff, 0.0);
+			}
+
+			[[nodiscard]]
+			FilterParameters calcCoef(index order, double samplingFrequency, double cutoffFrequency) const {
+				return calcCoefDigital(order, 2.0 * cutoffFrequency / samplingFrequency);
+			}
+
+			[[nodiscard]]
+			FilterParameters calcCoefDigital(index _order, double digitalCutoffLow, double digitalCutoffHigh) const {
+				const int order = int(_order);
+				if (order < 0) {
+					return { };
+				}
+
+				digitalCutoffLow = std::clamp(digitalCutoffLow, 0.01, 1.0 - 0.01);
+				digitalCutoffHigh = std::clamp(digitalCutoffHigh, 0.01, 1.0 - 0.01);
+
+				const index size = filterSize(order);
+
+				return {
+					wrapCoefs(aFunc, size, order, digitalCutoffLow, digitalCutoffHigh),
+					wrapCoefs(bFunc, size, order, digitalCutoffLow, digitalCutoffHigh),
+					sFunc(order, digitalCutoffLow, digitalCutoffHigh)
+				};
+			}
+
+			[[nodiscard]]
+			FilterParameters calcCoef(
+				index order,
+				double samplingFrequency,
+				double lowerCutoffFrequency, double upperCutoffFrequency
+			) const {
+				return calcCoefDigital(
+					order,
+					2.0 * lowerCutoffFrequency / samplingFrequency,
+					2.0 * upperCutoffFrequency / samplingFrequency
+				);
+			}
+
+		private:
+			template <typename T, typename... Args>
+			[[nodiscard]]
+			static std::vector<double> wrapCoefs(T* (*funcPtr)(Args ...), index resultSize, Args ... args) {
+				std::vector<double> result;
+
+				T* coefs = funcPtr(args...);
+
+				result.resize(resultSize);
+				for (index i = 0; i < index(result.size()); ++i) {
+					result[i] = coefs[i];
+				}
+
+				free(coefs);
+
+				return result;
+			}
+		};
+
+		static constexpr index OneSideSlopeSize(index order) {
+			return order + 1;
 		}
+
+		static constexpr index TwoSideSlopeSize(index order) {
+			return 2 * order + 1;
+		}
+
+		static const GenericCoefCalculator lowPass;
+		static const GenericCoefCalculator highPass;
+		static const GenericCoefCalculator bandPass;
+		static const GenericCoefCalculator bandStop;
 	};
 }

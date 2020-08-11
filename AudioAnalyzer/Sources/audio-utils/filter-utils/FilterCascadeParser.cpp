@@ -168,9 +168,13 @@ FilterCascadeParser::parseBW(isview name, const utils::OptionMap& description, u
 		}
 
 		if (name == L"bwLowPass") {
-			return createButterworth(order, forcedGain, cutoff, 0.0, ButterworthWrapper::calcCoefLowPass);
+			return createButterworth<ButterworthWrapper::OneSideSlopeSize>(
+				order, forcedGain, cutoff, 0.0, ButterworthWrapper::lowPass
+			);
 		} else {
-			return createButterworth(order, forcedGain, cutoff, 0.0, ButterworthWrapper::calcCoefHighPass);
+			return createButterworth<ButterworthWrapper::OneSideSlopeSize>(
+				order, forcedGain, cutoff, 0.0, ButterworthWrapper::highPass
+			);
 		}
 
 	}
@@ -186,9 +190,13 @@ FilterCascadeParser::parseBW(isview name, const utils::OptionMap& description, u
 		}
 
 		if (name == L"bwBandPass") {
-			return createButterworth(order, forcedGain, cutoffLow, cutoffHigh, ButterworthWrapper::calcCoefBandPass);
+			return createButterworth<ButterworthWrapper::TwoSideSlopeSize>(
+				order, forcedGain, cutoffLow, cutoffHigh, ButterworthWrapper::bandPass
+			);
 		} else {
-			return createButterworth(order, forcedGain, cutoffLow, cutoffHigh, ButterworthWrapper::calcCoefBandStop);
+			return createButterworth<ButterworthWrapper::TwoSideSlopeSize>(
+				order, forcedGain, cutoffLow, cutoffHigh, ButterworthWrapper::bandStop
+			);
 		}
 	}
 
@@ -196,57 +204,43 @@ FilterCascadeParser::parseBW(isview name, const utils::OptionMap& description, u
 	return { };
 }
 
-FilterCascadeParser::FCF FilterCascadeParser::
-createButterworth(index order, double forcedGain, double freq1, double freq2, ButterworthParamsFunc func) {
+template <index size>
+FilterCascadeParser::FCF FilterCascadeParser::createButterworthMaker(
+	index order, double forcedGain, double freq1,
+	double freq2,
+	const ButterworthWrapper::GenericCoefCalculator&
+	butterworthMaker
+) {
+	return [=](double sampleFrequency) {
+		auto ptr = new InfiniteResponseFilterFixed<size>{
+			butterworthMaker.calcCoef(order, sampleFrequency, freq1, freq2)
+		};
+		ptr->addGainDbEnergy(forcedGain);
+		return std::unique_ptr<AbstractFilter>{ ptr };
+	};
+}
+
+template <ButterworthWrapper::SizeFuncSignature sizeFunc>
+FilterCascadeParser::FCF FilterCascadeParser::createButterworth(
+	index order, double forcedGain, double freq1,
+	double freq2,
+	const ButterworthWrapper::GenericCoefCalculator&
+	butterworthMaker
+) {
 	switch (order) {
-	case 1: return [=](double sampleFrequency) {
-			auto ptr = new InfiniteResponseFilterFixed<2>{ func(order, sampleFrequency, freq1, freq2) };
-			ptr->addGainDbEnergy(forcedGain);
-			return std::unique_ptr<AbstractFilter>{
-				ptr
-			};
-		};
-	case 2: return [=](double sampleFrequency) {
-			auto ptr = new InfiniteResponseFilterFixed<3>{ func(order, sampleFrequency, freq1, freq2) };
-			ptr->addGainDbEnergy(forcedGain);
-			return std::unique_ptr<AbstractFilter>{
-				ptr
-			};
-		};
-	case 3: return [=](double sampleFrequency) {
-			auto ptr = new InfiniteResponseFilterFixed<4>{ func(order, sampleFrequency, freq1, freq2) };
-			ptr->addGainDbEnergy(forcedGain);
-			return std::unique_ptr<AbstractFilter>{
-				ptr
-			};
-		};
-	case 4: return [=](double sampleFrequency) {
-			auto ptr = new InfiniteResponseFilterFixed<5>{ func(order, sampleFrequency, freq1, freq2) };
-			ptr->addGainDbEnergy(forcedGain);
-			return std::unique_ptr<AbstractFilter>{
-				ptr
-			};
-		};
-	case 5: return [=](double sampleFrequency) {
-			auto ptr = new InfiniteResponseFilterFixed<6>{ func(order, sampleFrequency, freq1, freq2) };
-			ptr->addGainDbEnergy(forcedGain);
-			return std::unique_ptr<AbstractFilter>{
-				ptr
-			};
-		};
-	case 10: return [=](double sampleFrequency) {
-			auto ptr = new InfiniteResponseFilterFixed<11>{ func(order, sampleFrequency, freq1, freq2) };
-			ptr->addGainDbEnergy(forcedGain);
-			return std::unique_ptr<AbstractFilter>{
-				ptr
-			};
-		};
+	case 1: return createButterworthMaker<sizeFunc(1)>(order, forcedGain, freq1, freq2, butterworthMaker);
+	case 2: return createButterworthMaker<sizeFunc(2)>(order, forcedGain, freq1, freq2, butterworthMaker);
+	case 3: return createButterworthMaker<sizeFunc(3)>(order, forcedGain, freq1, freq2, butterworthMaker);
+	case 4: return createButterworthMaker<sizeFunc(4)>(order, forcedGain, freq1, freq2, butterworthMaker);
+	case 5: return createButterworthMaker<sizeFunc(5)>(order, forcedGain, freq1, freq2, butterworthMaker);
+	case 10: return createButterworthMaker<sizeFunc(10)>(order, forcedGain, freq1, freq2, butterworthMaker);
+
 	default: return [=](double sampleFrequency) {
-			auto ptr = new InfiniteResponseFilter{ func(order, sampleFrequency, freq1, freq2) };
-			ptr->addGainDbEnergy(forcedGain);
-			return std::unique_ptr<AbstractFilter>{
-				ptr
+			auto ptr = new InfiniteResponseFilter{
+				butterworthMaker.calcCoef(order, sampleFrequency, freq1, freq2)
 			};
+			ptr->addGainDbEnergy(forcedGain);
+			return std::unique_ptr<AbstractFilter>{ ptr };
 		};
 	}
 }
