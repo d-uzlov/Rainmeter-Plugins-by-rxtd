@@ -77,7 +77,12 @@ bool Spectrogram::parseParams(
 		params.colorMaxValue = -std::numeric_limits<float>::infinity();
 
 		for (index i = 0; i < colorsDescriptionList.size(); i++) {
-			auto [valueOpt, colorOpt] = colorsDescriptionList.get(i).breakFirst(L' ');
+			auto [valueOpt, colorOpt] = colorsDescriptionList.get(i).breakFirst(L':');
+
+			if (colorOpt.empty()) {
+				cl.error(L"color #{} is not found");
+				continue;
+			}
 
 			float value = valueOpt.asFloatF();
 
