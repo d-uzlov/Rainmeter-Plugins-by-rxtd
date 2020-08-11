@@ -81,5 +81,22 @@ namespace rxtd::audio_utils {
 				2.0 * upperCutoffFrequency / samplingFrequency
 			);
 		}
+
+	private:
+		template <typename T, typename... Args>
+		static std::vector<double> wrapCoefs(T* (*funcPtr)(int order, Args ...), int order, Args ... args) {
+			std::vector<double> result;
+
+			T* coefs = funcPtr(order, args...);
+
+			result.resize(order + 1);
+			for (index i = 0; i < index(result.size()); ++i) {
+				result[i] = coefs[i];
+			}
+
+			free(coefs);
+
+			return result;
+		}
 	};
 }

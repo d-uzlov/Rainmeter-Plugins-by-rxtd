@@ -20,26 +20,11 @@ FilterParameters ButterworthWrapper::calcCoefLowPass(index _order, double digita
 
 	digitalCutoff = std::clamp(digitalCutoff, 0.01, 1.0 - 0.01);
 
-	double* aCoef = dcof_bwlp(order, digitalCutoff);
-	int* bCoef = ccof_bwlp(order);
-	const double scalingFactor = sf_bwlp(order, digitalCutoff);
-
-	std::vector<double> b;
-	b.resize(order + 1);
-	for (index i = 0; i < index(b.size()); ++i) {
-		b[i] = bCoef[i];
-	}
-
-	std::vector<double> a;
-	a.resize(order + 1);
-	for (index i = 0; i < index(a.size()); ++i) {
-		a[i] = aCoef[i];
-	}
-
-	free(aCoef);
-	free(bCoef);
-
-	return { a, b, scalingFactor };
+	return {
+		wrapCoefs(dcof_bwlp, order, digitalCutoff),
+		wrapCoefs(ccof_bwlp, order),
+		sf_bwlp(order, digitalCutoff)
+	};
 }
 
 FilterParameters ButterworthWrapper::calcCoefHighPass(index _order, double digitalCutoff) {
@@ -50,26 +35,11 @@ FilterParameters ButterworthWrapper::calcCoefHighPass(index _order, double digit
 
 	digitalCutoff = std::clamp(digitalCutoff, 0.01, 1.0 - 0.01);
 
-	double* aCoef = dcof_bwhp(order, digitalCutoff);
-	int* bCoef = ccof_bwhp(order);
-	const double scalingFactor = sf_bwhp(order, digitalCutoff);
-
-	std::vector<double> b;
-	b.resize(order + 1);
-	for (index i = 0; i < index(b.size()); ++i) {
-		b[i] = bCoef[i];
-	}
-
-	std::vector<double> a;
-	a.resize(order + 1);
-	for (index i = 0; i < index(a.size()); ++i) {
-		a[i] = aCoef[i];
-	}
-
-	free(aCoef);
-	free(bCoef);
-
-	return { a, b, scalingFactor };
+	return {
+		wrapCoefs(dcof_bwhp, order, digitalCutoff),
+		wrapCoefs(ccof_bwhp, order),
+		sf_bwhp(order, digitalCutoff)
+	};
 }
 
 FilterParameters ButterworthWrapper::calcCoefBandPass(index _order, double digitalCutoffLow, double digitalCutoffHigh) {
@@ -81,26 +51,11 @@ FilterParameters ButterworthWrapper::calcCoefBandPass(index _order, double digit
 	digitalCutoffLow = std::clamp(digitalCutoffLow, 0.01, 1.0 - 0.01);
 	digitalCutoffHigh = std::clamp(digitalCutoffHigh, 0.01, 1.0 - 0.01);
 
-	double* aCoef = dcof_bwbp(order, digitalCutoffLow, digitalCutoffHigh);
-	int* bCoef = ccof_bwbp(order);
-	const double scalingFactor = sf_bwbp(order, digitalCutoffLow, digitalCutoffHigh);
-
-	std::vector<double> b;
-	b.resize(order + 1);
-	for (index i = 0; i < index(b.size()); ++i) {
-		b[i] = bCoef[i];
-	}
-
-	std::vector<double> a;
-	a.resize(order + 1);
-	for (index i = 0; i < index(a.size()); ++i) {
-		a[i] = aCoef[i];
-	}
-
-	free(aCoef);
-	free(bCoef);
-
-	return { a, b, scalingFactor };
+	return {
+		wrapCoefs(dcof_bwbp, order, digitalCutoffLow, digitalCutoffHigh),
+		wrapCoefs(ccof_bwbp, order),
+		sf_bwbp(order, digitalCutoffLow, digitalCutoffHigh)
+	};
 }
 
 FilterParameters ButterworthWrapper::calcCoefBandStop(index _order, double digitalCutoffLow, double digitalCutoffHigh) {
@@ -112,24 +67,9 @@ FilterParameters ButterworthWrapper::calcCoefBandStop(index _order, double digit
 	digitalCutoffLow = std::clamp(digitalCutoffLow, 0.01, 1.0 - 0.01);
 	digitalCutoffHigh = std::clamp(digitalCutoffHigh, 0.01, 1.0 - 0.01);
 
-	double* aCoef = dcof_bwbs(order, digitalCutoffLow, digitalCutoffHigh);
-	double* bCoef = ccof_bwbs(order, digitalCutoffLow, digitalCutoffHigh);
-	const double scalingFactor = sf_bwbs(order, digitalCutoffLow, digitalCutoffHigh);
-
-	std::vector<double> b;
-	b.resize(order + 1);
-	for (index i = 0; i < index(b.size()); ++i) {
-		b[i] = bCoef[i];
-	}
-
-	std::vector<double> a;
-	a.resize(order + 1);
-	for (index i = 0; i < index(a.size()); ++i) {
-		a[i] = aCoef[i];
-	}
-
-	free(aCoef);
-	free(bCoef);
-
-	return { a, b, scalingFactor };
+	return {
+		wrapCoefs(dcof_bwbs, order, digitalCutoffLow, digitalCutoffHigh),
+		wrapCoefs(ccof_bwbs, order, digitalCutoffLow, digitalCutoffHigh),
+		sf_bwbs(order, digitalCutoffLow, digitalCutoffHigh)
+	};
 }
