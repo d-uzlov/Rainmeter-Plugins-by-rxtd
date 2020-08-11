@@ -101,6 +101,9 @@ bool FftAnalyzer::parseParams(
 		params.legacyAmplification = false;
 	}
 
+	params.wcfDescription = optionMap.get(L"windowFunction").asString(L"hann");
+	params.wcf = audio_utils::WindowFunctionHelper::parse(params.wcfDescription, cl);
+
 	return true;
 }
 
@@ -139,7 +142,7 @@ SoundHandler::LinkingResult FftAnalyzer::vFinishLinking(Logger& cl) {
 
 	fftSize = std::max<index>(fftSize, minFftSize);
 
-	fft.setSize(fftSize, !params.legacyAmplification);
+	fft.setParams(fftSize, !params.legacyAmplification, params.wcf(fftSize));
 
 	inputStride = static_cast<index>(fftSize * (1 - params.overlap));
 	inputStride = std::clamp<index>(inputStride, minFftSize, fftSize);

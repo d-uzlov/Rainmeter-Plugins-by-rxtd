@@ -33,6 +33,9 @@
     <Filter Include="Source Files\audio-utils\kiss_fft-lib">
       <UniqueIdentifier>{3cb7bcf2-f4bf-4ed8-a4a5-8b0851d3df34}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\audio-utils\cheby_win-lib">
+      <UniqueIdentifier>{ff8b7d47-9950-4cac-9aa1-d513095c24a3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Sources\AudioChild.h">
@@ -167,6 +170,12 @@
     <ClInclude Include="Sources\HandlerCacheHelper.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="Sources\audio-utils\WindowFunctionHelper.h">
+      <Filter>Source Files\audio-utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\audio-utils\cheby_win-lib\cheby_win.h">
+      <Filter>Source Files\audio-utils\cheby_win-lib</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sources\AudioChild.cpp">
@@ -285,6 +294,12 @@
     </ClCompile>
     <ClCompile Include="Sources\HandlerCacheHelper.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\audio-utils\WindowFunctionHelper.cpp">
+      <Filter>Source Files\audio-utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\audio-utils\cheby_win-lib\cheby_win.cpp">
+      <Filter>Source Files\audio-utils\cheby_win-lib</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

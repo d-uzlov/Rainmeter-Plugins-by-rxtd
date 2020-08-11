@@ -11,10 +11,10 @@
 
 using namespace audio_utils;
 
-void FFT::setSize(index newSize, bool correctScalar) {
+void FFT::setParams(index newSize, bool correctScalar, std::vector<float> _window) {
 	fftSize = newSize;
-	scalar = correctScalar ? float(1.0f / fftSize) : float(1.0 / std::sqrt(fftSize));
-	window = createHannWindow(fftSize);
+	scalar = correctScalar ? 1.0f / fftSize : 1.0f / std::sqrtf(fftSize);
+	window = std::move(_window);
 	kiss.assign(fftSize / 2, false);
 
 	inputBuffer.resize(fftSize);
@@ -28,27 +28,13 @@ double FFT::getDC() const {
 float FFT::getBinMagnitude(index binIndex) const {
 	const auto v = outputBuffer[binIndex];
 	const float square = v.real() * v.real() + v.imag() * v.imag();
-	// return fastSqrt(square); // doesn't seem to improve performance
 	return std::sqrt(square) * scalar;
 }
 
 void FFT::process(array_view<float> wave) {
-	for (index iBin = 0; iBin < fftSize; ++iBin) {
-		inputBuffer[iBin] = wave[iBin] * window[iBin];
+	for (index i = 0; i < fftSize; ++i) {
+		inputBuffer[i] = wave[i] * window[i];
 	}
 
 	kiss.transform_real(inputBuffer.data(), outputBuffer.data());
-}
-
-std::vector<float> FFT::createHannWindow(index fftSize) {
-	std::vector<float> window;
-	window.resize(fftSize);
-	constexpr double _2pi = 2 * 3.14159265358979323846;
-
-	// http://en.wikipedia.org/wiki/Window_function#Hann_.28Hanning.29_window
-	for (index bin = 0; bin < fftSize; ++bin) {
-		window[bin] = static_cast<float>(0.5 * (1.0 - std::cos(_2pi * bin / (fftSize - 1))));
-	}
-
-	return window;
 }

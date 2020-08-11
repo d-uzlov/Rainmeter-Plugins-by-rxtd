@@ -90,7 +90,7 @@ namespace kiss_fft {
 		///
 		/// @note For this to work, the types @c scalar_t and @c cpx_t
 		/// must fulfill the following requirements:
-		///
+		/// @note
 		/// For any object @c z of type @c cpx_t,
 		/// @c reinterpret_cast<scalar_t(&)[2]>(z)[0] is the real part of @c z and
 		/// @c reinterpret_cast<scalar_t(&)[2]>(z)[1] is the imaginary part of @c z.
@@ -99,7 +99,7 @@ namespace kiss_fft {
 		/// is the real part of the complex number @c p[i], and
 		/// @c reinterpret_cast<T*>(p)[2*i+1] is the imaginary part of the
 		/// complex number @c p[i].
-		///
+		/// @note
 		/// Since C++11, these requirements are guaranteed to be satisfied for
 		/// @c scalar_ts being @c float, @c double or @c long @c double
 		/// together with @c cpx_t being @c std::complex<scalar_t>.

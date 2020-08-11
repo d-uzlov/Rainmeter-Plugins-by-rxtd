@@ -28,11 +28,8 @@ namespace rxtd::audio_utils {
 
 	public:
 		FFT() = default;
-		FFT(index fftSize, bool correctScalar) {
-			setSize(fftSize, correctScalar);
-		}
 
-		void setSize(index newSize, bool correctScalar);
+		void setParams(index newSize, bool correctScalar, std::vector<float> window);
 
 		[[nodiscard]]
 		double getDC() const;
@@ -41,9 +38,5 @@ namespace rxtd::audio_utils {
 		float getBinMagnitude(index binIndex) const;
 
 		void process(array_view<float> wave);
-		
-	private:
-		[[nodiscard]]
-		static std::vector<float> createHannWindow(index fftSize);
 	};
 }
