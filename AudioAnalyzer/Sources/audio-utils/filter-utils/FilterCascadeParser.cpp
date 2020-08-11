@@ -145,8 +145,8 @@ FilterCascadeParser::parseBW(isview name, const utils::OptionMap& description, u
 	}
 
 	const index order = description.get(L"order").asInt();
-	if (order <= 0 || order > 15) {
-		cl.error(L"order must be in range [1, 15] but {} found", order);
+	if (order <= 0 || order > 5) {
+		cl.error(L"order must be in range [1, 5] but {} found", order);
 		return { };
 	}
 
@@ -168,11 +168,11 @@ FilterCascadeParser::parseBW(isview name, const utils::OptionMap& description, u
 		}
 
 		if (name == L"bwLowPass") {
-			return createButterworth<ButterworthWrapper::OneSideSlopeSize>(
+			return createButterworth<ButterworthWrapper::oneSideSlopeSize>(
 				order, forcedGain, cutoff, 0.0, ButterworthWrapper::lowPass
 			);
 		} else {
-			return createButterworth<ButterworthWrapper::OneSideSlopeSize>(
+			return createButterworth<ButterworthWrapper::oneSideSlopeSize>(
 				order, forcedGain, cutoff, 0.0, ButterworthWrapper::highPass
 			);
 		}
@@ -190,11 +190,11 @@ FilterCascadeParser::parseBW(isview name, const utils::OptionMap& description, u
 		}
 
 		if (name == L"bwBandPass") {
-			return createButterworth<ButterworthWrapper::TwoSideSlopeSize>(
+			return createButterworth<ButterworthWrapper::twoSideSlopeSize>(
 				order, forcedGain, cutoffLow, cutoffHigh, ButterworthWrapper::bandPass
 			);
 		} else {
-			return createButterworth<ButterworthWrapper::TwoSideSlopeSize>(
+			return createButterworth<ButterworthWrapper::twoSideSlopeSize>(
 				order, forcedGain, cutoffLow, cutoffHigh, ButterworthWrapper::bandStop
 			);
 		}
@@ -233,7 +233,6 @@ FilterCascadeParser::FCF FilterCascadeParser::createButterworth(
 	case 3: return createButterworthMaker<sizeFunc(3)>(order, forcedGain, freq1, freq2, butterworthMaker);
 	case 4: return createButterworthMaker<sizeFunc(4)>(order, forcedGain, freq1, freq2, butterworthMaker);
 	case 5: return createButterworthMaker<sizeFunc(5)>(order, forcedGain, freq1, freq2, butterworthMaker);
-	case 10: return createButterworthMaker<sizeFunc(10)>(order, forcedGain, freq1, freq2, butterworthMaker);
 
 	default: return [=](double sampleFrequency) {
 			auto ptr = new InfiniteResponseFilter{

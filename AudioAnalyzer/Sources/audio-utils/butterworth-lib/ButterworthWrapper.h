@@ -99,11 +99,11 @@ namespace rxtd::audio_utils {
 			}
 		};
 
-		static constexpr index OneSideSlopeSize(index order) {
+		static constexpr index oneSideSlopeSize(index order) {
 			return order + 1;
 		}
 
-		static constexpr index TwoSideSlopeSize(index order) {
+		static constexpr index twoSideSlopeSize(index order) {
 			return 2 * order + 1;
 		}
 

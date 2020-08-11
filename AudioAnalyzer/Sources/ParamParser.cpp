@@ -152,7 +152,7 @@ void ParamParser::parseFilters(const utils::OptionMap& optionMap, ProcessingData
 		return;
 	}
 
-	if (filterType == L"replayGain") {
+	if (filterType == L"like-rg") {
 		data.fcc = audio_utils::FilterCascadeParser::parse(
 			utils::Option{
 				L"bqHighPass[q 0.8, freq 160, forcedGain 3.65] " // spaces in the ends of the strings are necessary
@@ -164,7 +164,17 @@ void ParamParser::parseFilters(const utils::OptionMap& optionMap, ProcessingData
 		return;
 	}
 
-	if (filterType == L"rxtd") {
+	if (filterType == L"like-a") {
+		data.fcc = audio_utils::FilterCascadeParser::parse(
+			utils::Option{
+				L"bqHighPass[q 0.3, freq 200, forcedGain 3.58]  " // spaces in the ends of the strings are necessary
+				L"bwLowPass[order 5, freq 10000] "
+			}, filterLogger
+		);
+		return;
+	}
+
+	if (filterType == L"like-d") {
 		data.fcc = audio_utils::FilterCascadeParser::parse(
 			utils::Option{
 				L"bqHighPass[q 0.3, freq 200, forcedGain 3.65]  " // spaces in the ends of the strings are necessary
