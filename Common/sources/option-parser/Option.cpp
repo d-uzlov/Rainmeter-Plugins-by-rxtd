@@ -62,28 +62,6 @@ bool Option::asBool(bool defaultValue) const {
 	return asFloat() != 0.0;
 }
 
-Color Option::asColor(Color defaultValue) const {
-	sview view = getView();
-
-	if (view.empty()) {
-		return defaultValue;
-	}
-
-	auto numbers = Tokenizer::parse(view, L',');
-	const auto count = index(numbers.size());
-	if (count != 3 && count != 4) {
-		return defaultValue;
-	}
-
-	float values[4];
-	values[3] = 1.0;
-	for (index i = 0; i < count; ++i) {
-		values[i] = float(parseNumber(numbers[i].makeView(view)));
-	}
-
-	return { values[0], values[1], values[2], values[3] };
-}
-
 OptionSeparated Option::breakFirst(wchar_t separator) const {
 	sview view = getView();
 
@@ -92,8 +70,8 @@ OptionSeparated Option::breakFirst(wchar_t separator) const {
 		return { *this, { } };
 	}
 
-	auto first = Option{ sview(view.data(), delimiterPlace) };
-	auto rest = Option{ sview(view.data() + delimiterPlace + 1, view.size() - delimiterPlace - 1) };
+	auto first = Option{ StringUtils::trim(sview(view.data(), delimiterPlace)) };
+	auto rest = Option{ StringUtils::trim(sview(view.data() + delimiterPlace + 1, view.size() - delimiterPlace - 1)) };
 	return OptionSeparated{ first, rest };
 }
 

@@ -10,7 +10,6 @@
 #include "Spectrogram.h"
 #include <filesystem>
 
-#include "IntMixer.h"
 #include "windows-wrappers/FileWrapper.h"
 #include "option-parser/OptionMap.h"
 #include "option-parser/OptionList.h"
@@ -19,6 +18,8 @@
 using namespace std::string_literals;
 
 using namespace audio_analyzer;
+
+using utils::Color;
 
 bool Spectrogram::vGetProp(const isview& prop, utils::BufferPrinter& printer) const {
 	if (prop == L"file") {
@@ -68,31 +69,31 @@ bool Spectrogram::parseParams(
 	);
 	params.prefix += L"spectrogram-";
 
-	if (!om.get(L"colors").empty()) {
-		auto [modeOption, desc] = om.get(L"colors").breakFirst(L' ');
-		auto colorsDescriptionList = desc.asList(L';');
+	using MixMode = Color::Mode;
+	if (auto mixMode = om.get(L"mixMode").asIString(L"rgb");
+		mixMode == L"rgb") {
+		params.mixMode = MixMode::eRGB;
+	} else if (mixMode == L"hsv") {
+		params.mixMode = MixMode::eHSV;
+	} else {
+		cl.error(L"unknown mixMode '{}', using rgb instead", mixMode);
+		params.mixMode = MixMode::eRGB;
+	}
 
-		ColorMixMode mode;
-		if (auto mixMode = modeOption.asIString(L"rgb");
-			mixMode == L"rgb") {
-			mode = ColorMixMode::eRGB;
-		} else if (mixMode == L"hsv") {
-			mode = ColorMixMode::eHSV;
-		} else {
-			cl.error(L"unknown color mode '{}', using rgb instead", mixMode);
-			mode = ColorMixMode::eRGB;
-		}
+	if (!om.get(L"colors").empty()) {
+		auto colorsDescriptionList = om.get(L"colors").asList(L';');
 
 		float prevValue = -std::numeric_limits<float>::infinity();
 
 		params.colorMinValue = std::numeric_limits<float>::infinity();
 		params.colorMaxValue = -std::numeric_limits<float>::infinity();
 
-		for (index i = 0; i < colorsDescriptionList.size(); i++) {
-			auto [valueOpt, colorOpt] = colorsDescriptionList.get(i).breakFirst(L':');
+		bool first = true;
+		for (auto colorsDescription : colorsDescriptionList) {
+			auto [valueOpt, colorOpt] = colorsDescription.breakFirst(L':');
 
 			if (colorOpt.empty()) {
-				cl.error(L"colors: color #{} is not found");
+				cl.warning(L"colors: description '{}' doesn't contain color", colorsDescription.asString());
 				continue;
 			}
 
@@ -108,14 +109,13 @@ bool Spectrogram::parseParams(
 			}
 
 			params.colorLevels.push_back(value);
-			auto color = colorOpt.asColor();
-			if (mode == ColorMixMode::eRGB) {
-				color = color.rgb2hsv();
+			const auto color = Color::parse(colorOpt).convert(params.mixMode);
+			if (first) {
+				first = false;
+			} else {
+				params.colors.back().widthInverted = 1.0f / (value - prevValue);
 			}
 			params.colors.push_back(Params::ColorDescription{ 0.0f, color });
-			if (i > 0) {
-				params.colors[i - 1].widthInverted = 1.0f / (value - prevValue);
-			}
 
 			prevValue = value;
 			params.colorMinValue = std::min(params.colorMinValue, value);
@@ -128,29 +128,13 @@ bool Spectrogram::parseParams(
 		}
 	} else {
 		params.colors.resize(2);
-		params.colors[0].color = om.get(L"baseColor").asColor({ 0, 0, 0, 1 }).rgb2hsv();
-		params.colors[1].color = om.get(L"maxColor").asColor({ 1, 1, 1, 1 }).rgb2hsv();
+		params.colors[0].color = Color::parse(om.get(L"baseColor"), { 0, 0, 0 }).convert(params.mixMode);
+		params.colors[1].color = Color::parse(om.get(L"maxColor"), { 1, 1, 1 }).convert(params.mixMode);
 		params.colorMinValue = 0.0f;
 		params.colorMaxValue = 1.0f;
 	}
 
-	if (auto mixMode = om.get(L"mixMode").asIString(L"rgb");
-		mixMode == L"rgb") {
-		params.mixMode = ColorMixMode::eRGB;
-	} else if (mixMode == L"hsv") {
-		params.mixMode = ColorMixMode::eHSV;
-	} else {
-		cl.error(L"unknown mixMode '{}', using rgb instead", mixMode);
-		params.mixMode = ColorMixMode::eRGB;
-	}
-
-	if (params.mixMode == ColorMixMode::eRGB) {
-		for (auto& desc : params.colors) {
-			desc.color = desc.color.hsv2rgb();
-		}
-	}
-
-	params.borderColor = om.get(L"borderColor").asColor({ 1.0, 0.2, 0.2, 1 });
+	params.borderColor = Color::parse(om.get(L"borderColor"), { 1.0, 0.2, 0.2});
 
 	params.fading = std::clamp(om.get(L"fadingPercent").asFloat(0.0), 0.0, 1.0);
 
@@ -164,17 +148,15 @@ bool Spectrogram::parseParams(
 SoundHandler::LinkingResult Spectrogram::vFinishLinking(Logger& cl) {
 	const auto dataSize = getSource()->getDataSize();
 
-	const utils::Color backgroundColorRgb = params.mixMode == ColorMixMode::eRGB ? params.colors[0].color : params.colors[0].color.hsv2rgb();
-	image.setBackground(backgroundColorRgb.toIntColor());
+	image.setBackground(params.colors[0].color.toIntColor());
 	image.setStationary(params.stationary);
 
 	sifh.setBorderSize(params.borderSize);
-	sifh.setColors(backgroundColorRgb, params.borderColor);
+	sifh.setColors(params.colors[0].color, params.borderColor);
 	sifh.setFading(params.fading);
 
 	image.setDimensions(params.length, dataSize.valuesCount);
 	stripBuffer.resize(dataSize.valuesCount);
-	intBuffer.resize(dataSize.valuesCount);
 
 	filepath = params.prefix;
 	filepath += getChannel().technicalName();
@@ -185,7 +167,7 @@ SoundHandler::LinkingResult Spectrogram::vFinishLinking(Logger& cl) {
 	return { 0, 0 };
 }
 
-void Spectrogram::fillStrip(array_view<float> data, array_span<utils::Color> buffer) const {
+void Spectrogram::fillStrip(array_view<float> data, array_span<utils::IntColor> buffer) const {
 	const utils::LinearInterpolatorF interpolator{ params.colorMinValue, params.colorMaxValue, 0.0, 1.0 };
 	const auto lowColor = params.colors[0].color;
 	const auto highColor = params.colors[1].color;
@@ -194,11 +176,11 @@ void Spectrogram::fillStrip(array_view<float> data, array_span<utils::Color> buf
 		auto value = interpolator.toValue(data[i]);
 		value = std::clamp(value, 0.0f, 1.0f);
 
-		buffer[i] = (highColor * value + lowColor * (1.0f - value));
+		buffer[i] = (highColor * value + lowColor * (1.0f - value)).toIntColor();
 	}
 }
 
-void Spectrogram::fillStripMulticolor(array_view<float> data, array_span<utils::Color> buffer) const {
+void Spectrogram::fillStripMulticolor(array_view<float> data, array_span<utils::IntColor> buffer) const {
 	for (index i = 0; i < buffer.size(); ++i) {
 		const auto value = std::clamp(data[i], params.colorMinValue, params.colorMaxValue);
 
@@ -218,7 +200,7 @@ void Spectrogram::fillStripMulticolor(array_view<float> data, array_span<utils::
 
 		const float percentValue = (value - lowColorValue) * intervalCoef;
 
-		buffer[i] = (highColor * percentValue + lowColor * (1.0f - percentValue));
+		buffer[i] = (highColor * percentValue + lowColor * (1.0f - percentValue)).toIntColor();
 	}
 }
 
@@ -252,11 +234,7 @@ void Spectrogram::vProcess(array_view<float> wave) {
 		changed = true;
 
 		if (dataIsZero) {
-			if (params.mixMode == ColorMixMode::eRGB) {
-				image.pushEmptyStrip(params.colors[0].color.toIntColor());
-			} else {
-				image.pushEmptyStrip(params.colors[0].color.hsv2rgb().toIntColor());
-			}
+			image.pushEmptyStrip(params.colors[0].color.toIntColor());
 		} else {
 			if (params.colors.size() == 2) {
 				// only use 2 colors
@@ -266,17 +244,7 @@ void Spectrogram::vProcess(array_view<float> wave) {
 				fillStripMulticolor(data, stripBuffer);
 			}
 
-			if (params.mixMode == ColorMixMode::eHSV) {
-				for (auto& color : stripBuffer) {
-					color = color.hsv2rgb();
-				}
-			}
-
-			for (index i = 0; i < index(stripBuffer.size()); i++) {
-				intBuffer[i] = stripBuffer[i].toIntColor();
-			}
-
-			image.pushStrip(intBuffer);
+			image.pushStrip(stripBuffer);
 		}
 
 		counter -= blockSize;

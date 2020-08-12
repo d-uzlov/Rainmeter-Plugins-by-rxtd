@@ -59,7 +59,8 @@ index StringUtils::parseInt(sview view) {
 		view = view.substr(1);
 	}
 
-	if (view.length() > 0 && !iswdigit(view.front())) {
+	if (!hex && view.length() > 0 && !iswdigit(view.front())
+		|| hex && view.length() > 0 && !iswxdigit(view.front())) {
 		return 0;
 	}
 

@@ -18,10 +18,6 @@
 namespace rxtd::audio_analyzer {
 	class Spectrogram : public SoundHandler {
 	public:
-		enum class ColorMixMode {
-			eRGB,
-			eHSV,
-		};
 
 		struct Params {
 		private:
@@ -53,7 +49,7 @@ namespace rxtd::audio_analyzer {
 			std::vector<ColorDescription> colors;
 			float colorMinValue{ };
 			float colorMaxValue{ };
-			ColorMixMode mixMode{ };
+			utils::Color::Mode mixMode{ };
 
 			bool stationary{ };
 
@@ -84,8 +80,7 @@ namespace rxtd::audio_analyzer {
 
 		index blockSize{ };
 
-		std::vector<utils::Color> stripBuffer{ };
-		std::vector<utils::IntColor> intBuffer{ };
+		std::vector<utils::IntColor> stripBuffer{ };
 		index counter = 0;
 		bool changed = false;
 
@@ -134,7 +129,7 @@ namespace rxtd::audio_analyzer {
 		}
 
 	private:
-		void fillStrip(array_view<float> data, array_span<utils::Color> buffer) const;
-		void fillStripMulticolor(array_view<float> data, array_span<utils::Color> buffer) const;
+		void fillStrip(array_view<float> data, array_span<utils::IntColor> buffer) const;
+		void fillStripMulticolor(array_view<float> data, array_span<utils::IntColor> buffer) const;
 	};
 }

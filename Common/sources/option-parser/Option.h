@@ -8,7 +8,6 @@
  */
 
 #pragma once
-#include "Color.h"
 #include "StringUtils.h"
 #include "AbstractOption.h"
 
@@ -73,9 +72,6 @@ namespace rxtd::utils {
 
 		[[nodiscard]]
 		bool asBool(bool defaultValue = false) const;
-		// Parse Color, support math operations per color component.
-		[[nodiscard]]
-		Color asColor(Color defaultValue = { }) const;
 
 		[[nodiscard]]
 		OptionSeparated breakFirst(wchar_t separator) const;

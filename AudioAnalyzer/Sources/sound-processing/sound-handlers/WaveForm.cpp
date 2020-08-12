@@ -12,10 +12,12 @@
 #include "option-parser/OptionMap.h"
 
 using namespace std::string_literals;
+using utils::Color;
 
 using namespace audio_analyzer;
 
-bool WaveForm::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber) const {
+bool WaveForm::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr,
+                           index legacyNumber) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
 
 	params.width = optionMap.get(L"width").asInt(100);
@@ -46,10 +48,10 @@ bool WaveForm::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmet
 		rain.replaceVariables(L"[#CURRENTPATH]") % own()
 	);
 
-	params.colors.background = optionMap.get(L"backgroundColor").asColor({ 0, 0, 0, 1 }).toIntColor();
-	params.colors.wave = optionMap.get(L"waveColor").asColor({ 1, 1, 1, 1 }).toIntColor();
-	params.colors.line = optionMap.get(L"lineColor").asColor({ 0.5, 0.5, 0.5, 0.5 }).toIntColor();
-	params.colors.border = optionMap.get(L"borderColor").asColor({ 1.0, 0.2, 0.2, 1 }).toIntColor();
+	params.colors.background = Color::parse(optionMap.get(L"backgroundColor"), { 0, 0, 0 }).toIntColor();
+	params.colors.wave = Color::parse(optionMap.get(L"waveColor"), { 1, 1, 1 }).toIntColor();
+	params.colors.line = Color::parse(optionMap.get(L"lineColor"), { 0.5, 0.5, 0.5, 0.5 }).toIntColor();
+	params.colors.border = Color::parse(optionMap.get(L"borderColor"), { 1.0, 0.2, 0.2 }).toIntColor();
 
 	if (const auto ldpString = optionMap.get(L"lineDrawingPolicy").asIString(L"always");
 		ldpString == L"always") {
