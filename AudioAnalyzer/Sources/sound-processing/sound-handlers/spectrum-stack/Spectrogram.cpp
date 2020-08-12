@@ -70,11 +70,15 @@ bool Spectrogram::parseParams(
 	params.prefix += L"spectrogram-";
 
 	using MixMode = Color::Mode;
-	if (auto mixMode = om.get(L"mixMode").asIString(L"rgb");
-		mixMode == L"rgb") {
+	if (auto mixMode = om.get(L"mixMode").asIString(L"srgb");
+		mixMode == L"srgb") {
 		params.mixMode = MixMode::eRGB;
 	} else if (mixMode == L"hsv") {
 		params.mixMode = MixMode::eHSV;
+	} else if (mixMode == L"hsl") {
+		params.mixMode = MixMode::eHSL;
+	} else if (mixMode == L"ycbcr") {
+		params.mixMode = MixMode::eRGB; // difference between ycbcr and rgb is linear
 	} else {
 		cl.error(L"unknown mixMode '{}', using rgb instead", mixMode);
 		params.mixMode = MixMode::eRGB;

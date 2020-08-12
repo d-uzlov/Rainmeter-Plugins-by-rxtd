@@ -51,6 +51,8 @@ namespace rxtd::utils {
 		enum class Mode {
 			eRGB,
 			eHSV,
+			eHSL,
+			eYCBCR,
 		};
 
 	private:
@@ -66,6 +68,12 @@ namespace rxtd::utils {
 				float sat = 0.0;
 				float val = 0.0;
 			} _hsv;
+
+			struct {
+				float y = 0.0;
+				float cb = 0.0;
+				float cr = 0.0;
+			} _tv;
 		};
 
 		float alpha = 1.0;
@@ -108,6 +116,10 @@ namespace rxtd::utils {
 						result.mode = Mode::eRGB;
 					} else if (opt.asIString() == L"hsv") {
 						result.mode = Mode::eHSV;
+					} else if (opt.asIString() == L"hsl") {
+						result.mode = Mode::eHSL;
+					} else if (opt.asIString() == L"ycbcr") {
+						result.mode = Mode::eYCBCR;
 					} else if (opt.asIString() == L"hex") {
 						result.mode = Mode::eRGB;
 
@@ -195,18 +207,46 @@ namespace rxtd::utils {
 
 		[[nodiscard]]
 		Color rgb() const {
-			if (mode == Mode::eRGB) {
-				return *this;
+			switch (mode) {
+			case Mode::eRGB: return *this;
+			case Mode::eHSV: return hsv2rgb();
+			case Mode::eHSL: return hsl2hsv().hsv2rgb();
+			case Mode::eYCBCR: return ycbcr2rgb();
 			}
-			return hsv2rgb();
+			return { };
 		}
 
 		[[nodiscard]]
 		Color hsv() const {
-			if (mode == Mode::eHSV) {
-				return *this;
+			switch (mode) {
+			case Mode::eRGB: return rgb2hsv();
+			case Mode::eHSV: return *this;
+			case Mode::eHSL: return hsl2hsv();
+			case Mode::eYCBCR: return ycbcr2rgb().rgb2hsv();
 			}
-			return rgb2hsv();
+			return { };
+		}
+
+		[[nodiscard]]
+		Color hsl() const {
+			switch (mode) {
+			case Mode::eRGB: return rgb2hsv().hsv2hsl();
+			case Mode::eHSV: return hsv2hsl();
+			case Mode::eHSL: return *this;
+			case Mode::eYCBCR: return ycbcr2rgb().rgb2hsv().hsv2hsl();
+			}
+			return { };
+		}
+
+		[[nodiscard]]
+		Color ycbcr() const {
+			switch (mode) {
+			case Mode::eRGB: return rgb2ycbcr();
+			case Mode::eHSV: return hsv2rgb().rgb2ycbcr();
+			case Mode::eHSL: return hsl2hsv().hsv2rgb().rgb2ycbcr();
+			case Mode::eYCBCR: return *this;
+			}
+			return { };
 		}
 
 		[[nodiscard]]
@@ -214,6 +254,8 @@ namespace rxtd::utils {
 			switch (_mode) {
 			case Mode::eRGB: return rgb();
 			case Mode::eHSV: return hsv();
+			case Mode::eHSL: return hsl();
+			case Mode::eYCBCR: return ycbcr();
 			}
 			return { };
 		}
@@ -258,6 +300,44 @@ namespace rxtd::utils {
 		}
 
 		[[nodiscard]]
+		Color hsv2hsl() const {
+			Color result;
+			result.mode = Mode::eHSL;
+			result.alpha = alpha;
+			result._hsv.hue = _hsv.hue;
+
+			const float l = _hsv.val * (1.0f - _hsv.sat * 0.5f);
+			if (l <= 0.0f || l >= 1.0f) {
+				result._hsv.sat = 0.0f;
+			} else {
+				result._hsv.sat = (_hsv.val - l) / std::min(l, 1.0f - l);
+			}
+
+			result._hsv.val = l;
+
+			return result;
+		}
+
+		[[nodiscard]]
+		Color hsl2hsv() const {
+			Color result;
+			result.mode = Mode::eHSV;
+			result.alpha = alpha;
+			result._hsv.hue = _hsv.hue;
+
+			const float v = _hsv.val + _hsv.sat * std::min(_hsv.val, 1.0f - _hsv.val);
+			if (v <= 0.0f) {
+				result._hsv.sat = 0.0f;
+			} else {
+				result._hsv.sat = 2.0f * (1.0f - _hsv.val / v);
+			}
+
+			result._hsv.val = v;
+
+			return result;
+		}
+
+		[[nodiscard]]
 		Color hsv2rgb() const {
 			const float chroma = _hsv.val * _hsv.sat;
 			float _;
@@ -293,6 +373,46 @@ namespace rxtd::utils {
 				alpha,
 				Mode::eRGB
 			};
+		}
+
+		[[nodiscard]]
+		Color rgb2ycbcr() const {
+			const float kr = 0.299f;
+			const float kg = 0.587f;
+			const float kb = 0.114f;
+
+			const float y = kr * _rgb.red + kg * _rgb.green + kb * _rgb.blue;
+			const float pb = 0.5f * (_rgb.blue - y) / (1.0f - kb);
+			const float pr = 0.5f * (_rgb.red - y) / (1.0f - kr);
+
+			Color result;
+			result.mode = Mode::eYCBCR;
+			result._tv.y = y;
+			result._tv.cb = pb;
+			result._tv.cr = pr;
+			result.alpha = alpha;
+
+			return result;
+		}
+
+		[[nodiscard]]
+		Color ycbcr2rgb() const {
+			const float kr = 0.299f;
+			const float kg = 0.587f;
+			const float kb = 0.114f;
+
+			const float r = _tv.y + (2.0f - 2.0f * kr) * _tv.cr;
+			const float g = _tv.y - kb / kg * (2.0f - 2.0f * kb) * _tv.cb - kr / kg * (2.0f - 2.0f * kr) * _tv.cr;
+			const float b = _tv.y + (2.0f - 2.0f * kb) * _tv.cb;
+
+			Color result;
+			result.mode = Mode::eRGB;
+			result._rgb.red = r;
+			result._rgb.green = g;
+			result._rgb.blue = b;
+			result.alpha = alpha;
+
+			return result;
 		}
 	};
 }
