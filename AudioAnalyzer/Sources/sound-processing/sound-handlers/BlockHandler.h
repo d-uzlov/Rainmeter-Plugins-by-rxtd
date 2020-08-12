@@ -81,9 +81,6 @@ namespace rxtd::audio_analyzer {
 		virtual void _process(array_view<float> wave) = 0;
 		virtual void finishBlock() = 0;
 		virtual void _reset() = 0;
-
-		[[nodiscard]]
-		virtual sview getDefaultTransform() const = 0;
 	};
 
 
@@ -96,8 +93,6 @@ namespace rxtd::audio_analyzer {
 	protected:
 		void finishBlock() override;
 		void _reset() override;
-		[[nodiscard]]
-		sview getDefaultTransform() const override;
 	};
 
 	class BlockPeak : public BlockHandler {
@@ -109,7 +104,5 @@ namespace rxtd::audio_analyzer {
 	protected:
 		void finishBlock() override;
 		void _reset() override;
-		[[nodiscard]]
-		sview getDefaultTransform() const override;
 	};
 }

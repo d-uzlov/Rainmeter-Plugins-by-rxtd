@@ -172,7 +172,7 @@ void CustomizableValueTransformer::setHistoryWidth(index value) {
 CustomizableValueTransformer TransformationParser::parse(sview transformDescription, utils::Rainmeter::Logger& cl) {
 	std::vector<Transformation> transforms;
 
-	for (auto list : utils::Option { transformDescription }.asSequence()) {
+	for (auto list : utils::Option{ transformDescription }.asSequence()) {
 		auto logger = cl.context(L"{}: ", list.get(0).asString());
 		auto transformOpt = parseTransformation(list, logger);
 		if (!transformOpt.has_value()) {
@@ -212,18 +212,18 @@ std::optional<TransformationParser::Transformation> TransformationParser::parseT
 			auto range = params.get(L"from").asList(L':');
 			if (range.size() != 2) {
 				cl.error(L"need 2 params for source range but {} found", range.size());
-				return std::nullopt;
+				return { };
 			}
 			linMin = range.get(0).asFloatF();
 			linMax = range.get(1).asFloatF();
 
 			if (std::abs(linMin - linMax) < std::numeric_limits<float>::epsilon()) {
 				cl.error(L"source range is too small: {} and {}", linMin, linMax);
-				return std::nullopt;
+				return { };
 			}
 		} else {
 			cl.error(L"source range is not found");
-			return std::nullopt;
+			return { };
 		}
 
 		float valMin = 0.0;
@@ -245,13 +245,13 @@ std::optional<TransformationParser::Transformation> TransformationParser::parseT
 		tr.type = TransformType::eCLAMP;
 
 		tr.args[0] = params.get(L"min").asFloatF(0.0f);
-		tr.args[1] = params.get(L"min").asFloatF(1.0f);
+		tr.args[1] = params.get(L"max").asFloatF(1.0f);
 
 		tr.args[0] = std::min(tr.args[0], tr.args[1]);
 		tr.args[1] = std::max(tr.args[0], tr.args[1]);
 	} else {
 		cl.error(L"'{}' is not recognized as a transform type", transformName);
-		return std::nullopt;
+		return { };
 	}
 
 	return tr;

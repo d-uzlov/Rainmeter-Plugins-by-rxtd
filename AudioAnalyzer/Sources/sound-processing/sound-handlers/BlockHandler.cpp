@@ -39,9 +39,7 @@ bool BlockHandler::parseParams(
 		params.legacy_decayTime = 0.0;
 
 		auto transformLogger = cl.context(L"transform: ");
-		const sview transformDescription =
-			om.has(L"transform") ? om.get(L"transform").asString() : getDefaultTransform();
-		params.transformer = audio_utils::TransformationParser::parse(transformDescription, transformLogger);
+		params.transformer = audio_utils::TransformationParser::parse(om.get(L"transform").asString(), transformLogger);
 	}
 
 	return true;
@@ -112,10 +110,6 @@ void BlockRms::_reset() {
 	intermediateResult = 0.0;
 }
 
-sview BlockRms::getDefaultTransform() const {
-	return L"db map[from -70 : 0] filter[attack 200, decay 200] clamp";
-}
-
 void BlockPeak::_process(array_view<float> wave) {
 	for (float x : wave) {
 		intermediateResult = std::max(intermediateResult, std::abs(x));
@@ -134,8 +128,4 @@ void BlockPeak::finishBlock() {
 
 void BlockPeak::_reset() {
 	intermediateResult = 0.0;
-}
-
-sview BlockPeak::getDefaultTransform() const {
-	return L"filter[attack 0, decay 500] clamp";
 }

@@ -71,16 +71,15 @@ bool WaveForm::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmet
 
 	params.fading = optionMap.get(L"fadingPercent").asFloat(0.0);
 
-	if (optionMap.has(L"transform")) {
-		params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform").asString(), cl);
-	} else if (optionMap.has(L"gain")) {
-		// legacy
+	using TP = audio_utils::TransformationParser;
+	if (legacyNumber < 104) {
 		const auto gain = optionMap.get(L"gain").asFloat(1.0);
 		utils::BufferPrinter printer;
-		printer.print(L"map[from 0 ; 1][to 0 ; {}]", gain);
-		params.transformer = audio_utils::TransformationParser::parse(printer.getBufferView(), cl);
+		printer.print(L"map[from 0 : 1, to 0 : {}]", gain);
+		params.transformer = TP::parse(printer.getBufferView(), cl);
 	} else {
-		params.transformer = { };
+		auto transformLogger = cl.context(L"transform: ");
+		params.transformer = TP::parse(optionMap.get(L"transform").asString(), transformLogger);
 	}
 
 	return true;
@@ -89,7 +88,7 @@ bool WaveForm::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmet
 void WaveForm::setParams(const Params& value) {
 	params = value;
 
-	minDistinguishableValue = 1.0 / params.height / 2.0; // below half pixel
+	minDistinguishableValue = 1.0 / params.height;
 
 	drawer.setDimensions(params.width, params.height);
 	// drawer.setEdges(params.edges);

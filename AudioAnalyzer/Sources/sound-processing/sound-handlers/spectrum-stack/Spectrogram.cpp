@@ -68,7 +68,7 @@ bool Spectrogram::parseParams(
 	);
 	params.prefix += L"spectrogram-";
 
-	if (om.has(L"colors")) {
+	if (!om.get(L"colors").empty()) {
 		auto [modeOption, desc] = om.get(L"colors").breakFirst(L' ');
 		auto colorsDescriptionList = desc.asList(L';');
 
@@ -164,11 +164,12 @@ bool Spectrogram::parseParams(
 SoundHandler::LinkingResult Spectrogram::vFinishLinking(Logger& cl) {
 	const auto dataSize = getSource()->getDataSize();
 
-	image.setBackground(params.colors[0].color.hsv2rgb().toIntColor());
+	const utils::Color backgroundColorRgb = params.mixMode == ColorMixMode::eRGB ? params.colors[0].color : params.colors[0].color.hsv2rgb();
+	image.setBackground(backgroundColorRgb.toIntColor());
 	image.setStationary(params.stationary);
 
 	sifh.setBorderSize(params.borderSize);
-	sifh.setColors(params.colors[0].color, params.borderColor);
+	sifh.setColors(backgroundColorRgb, params.borderColor);
 	sifh.setFading(params.fading);
 
 	image.setDimensions(params.length, dataSize.valuesCount);

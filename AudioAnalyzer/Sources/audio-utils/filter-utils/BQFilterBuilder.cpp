@@ -15,14 +15,15 @@ using namespace audio_utils;
 // Based on formulas from Audio-EQ-Cookbook
 
 BiQuadIIR BQFilterBuilder::createHighShelf(double samplingFrequency, double q, double centralFrequency, double dbGain) {
-	if (samplingFrequency == 0.0 || q == 0) {
+	if (samplingFrequency == 0.0 || q <= 0.0) {
 		return { };
 	}
 
-	centralFrequency = std::min(centralFrequency, samplingFrequency * 0.5);
+	double digitalFreq = 2.0 * centralFrequency / samplingFrequency;
+	digitalFreq = std::clamp(digitalFreq, 0.01, 1.0 - 0.01);
+	const double w0 = utils::MyMath::pi * digitalFreq;
 
 	const double a = std::pow(10, dbGain / 40);
-	const double w0 = 2 * utils::MyMath::pi * centralFrequency / samplingFrequency;
 	const double alpha = std::sin(w0) / (2 * q);
 
 	return {
@@ -36,14 +37,15 @@ BiQuadIIR BQFilterBuilder::createHighShelf(double samplingFrequency, double q, d
 }
 
 BiQuadIIR BQFilterBuilder::createLowShelf(double samplingFrequency, double q, double centralFrequency, double dbGain) {
-	if (samplingFrequency == 0.0 || q == 0) {
+	if (samplingFrequency == 0.0 || q <= 0.0) {
 		return { };
 	}
 
-	centralFrequency = std::min(centralFrequency, samplingFrequency * 0.5);
+	double digitalFreq = 2.0 * centralFrequency / samplingFrequency;
+	digitalFreq = std::clamp(digitalFreq, 0.01, 1.0 - 0.01);
+	const double w0 = utils::MyMath::pi * digitalFreq;
 	
 	const double a = std::pow(10, dbGain / 40);
-	const double w0 = 2 * utils::MyMath::pi * centralFrequency / samplingFrequency;
 	const double alpha = std::sin(w0) / (2 * q);
 
 	return {
@@ -57,13 +59,14 @@ BiQuadIIR BQFilterBuilder::createLowShelf(double samplingFrequency, double q, do
 }
 
 BiQuadIIR BQFilterBuilder::createHighPass(double samplingFrequency, double q, double centralFrequency) {
-	if (samplingFrequency == 0.0 || q == 0) {
+	if (samplingFrequency == 0.0 || q <= 0.0) {
 		return { };
 	}
 
-	centralFrequency = std::min(centralFrequency, samplingFrequency * 0.5);
+	double digitalFreq = 2.0 * centralFrequency / samplingFrequency;
+	digitalFreq = std::clamp(digitalFreq, 0.01, 1.0 - 0.01);
+	const double w0 = utils::MyMath::pi * digitalFreq;
 
-	const double w0 = 2 * utils::MyMath::pi * centralFrequency / samplingFrequency;
 	const double alpha = std::sin(w0) / (2 * q);
 
 	return {
@@ -77,13 +80,14 @@ BiQuadIIR BQFilterBuilder::createHighPass(double samplingFrequency, double q, do
 }
 
 BiQuadIIR BQFilterBuilder::createLowPass(double samplingFrequency, double q, double centralFrequency) {
-	if (samplingFrequency == 0.0 || q == 0) {
+	if (samplingFrequency == 0.0 || q <= 0.0) {
 		return { };
 	}
 
-	centralFrequency = std::min(centralFrequency, samplingFrequency * 0.5);
+	double digitalFreq = 2.0 * centralFrequency / samplingFrequency;
+	digitalFreq = std::clamp(digitalFreq, 0.01, 1.0 - 0.01);
+	const double w0 = utils::MyMath::pi * digitalFreq;
 
-	const double w0 = 2 * utils::MyMath::pi * centralFrequency / samplingFrequency;
 	const double alpha = std::sin(w0) / (2 * q);
 
 	return {
@@ -97,14 +101,15 @@ BiQuadIIR BQFilterBuilder::createLowPass(double samplingFrequency, double q, dou
 }
 
 BiQuadIIR BQFilterBuilder::createPeak(double samplingFrequency, double q, double centralFrequency, double dbGain) {
-	if (samplingFrequency == 0.0 || q == 0) {
+	if (samplingFrequency == 0.0 || q <= 0.0) {
 		return { };
 	}
 
-	centralFrequency = std::min(centralFrequency, samplingFrequency * 0.5);
+	double digitalFreq = 2.0 * centralFrequency / samplingFrequency;
+	digitalFreq = std::clamp(digitalFreq, 0.01, 1.0 - 0.01);
+	const double w0 = utils::MyMath::pi * digitalFreq;
 
 	const double a = std::pow(10, dbGain / 40);
-	const double w0 = 2 * utils::MyMath::pi * centralFrequency / samplingFrequency;
 	const double alpha = std::sin(w0) / (2 * q);
 
 	return {

@@ -69,11 +69,11 @@ FilterCascadeParser::parseFilter(const utils::OptionList& description, utils::Ra
 
 FilterCascadeParser::FCF
 FilterCascadeParser::parseBQ(isview name, const utils::OptionMap& description, utils::Rainmeter::Logger& cl) {
-	if (!description.has(L"q")) {
+	if (description.get(L"q").empty()) {
 		cl.error(L"Q is not found", name);
 		return { };
 	}
-	if (!description.has(L"freq")) {
+	if (description.get(L"freq").empty()) {
 		cl.error(L"freq is not found", name);
 		return { };
 	}
@@ -91,7 +91,7 @@ FilterCascadeParser::parseBQ(isview name, const utils::OptionMap& description, u
 		cl.warning(L"unused options: {}", unused);
 	}
 
-	using FilterCreationFunc = BiQuadIIR (*)(double samplingFrequency, double Q, double freq, double dbGain);
+	using FilterCreationFunc = BiQuadIIR (*)(double samplingFrequency, double q, double freq, double dbGain);
 	FilterCreationFunc filterCreationFunc;
 
 	if (name == L"bqHighPass") {
@@ -101,21 +101,21 @@ FilterCascadeParser::parseBQ(isview name, const utils::OptionMap& description, u
 		filterCreationFunc = BQFilterBuilder::createLowPass;
 		gain = 0.0;
 	} else if (name == L"bqHighShelf") {
-		if (!description.has(L"gain")) {
+		if (description.get(L"gain").empty()) {
 			cl.error(L"gain is not found", name);
 			return { };
 		}
 
 		filterCreationFunc = BQFilterBuilder::createHighShelf;
 	} else if (name == L"bqLowShelf") {
-		if (!description.has(L"gain")) {
+		if (description.get(L"gain").empty()) {
 			cl.error(L"gain is not found", name);
 			return { };
 		}
 
 		filterCreationFunc = BQFilterBuilder::createLowShelf;
 	} else if (name == L"bqPeak") {
-		if (!description.has(L"gain")) {
+		if (description.get(L"gain").empty()) {
 			cl.error(L"gain is not found", name);
 			return { };
 		}
@@ -139,7 +139,7 @@ FilterCascadeParser::parseBQ(isview name, const utils::OptionMap& description, u
 
 FilterCascadeParser::FCF
 FilterCascadeParser::parseBW(isview name, const utils::OptionMap& description, utils::Rainmeter::Logger& cl) {
-	if (!description.has(L"order")) {
+	if (description.get(L"order").empty()) {
 		cl.error(L"order is not found");
 		return { };
 	}
@@ -162,7 +162,7 @@ FilterCascadeParser::parseBW(isview name, const utils::OptionMap& description, u
 	}
 
 	if (name == L"bwLowPass" || name == L"bwHighPass") {
-		if (!description.has(L"freq")) {
+		if (description.get(L"freq").empty()) {
 			cl.error(L"freq is not found");
 			return { };
 		}
@@ -180,11 +180,11 @@ FilterCascadeParser::parseBW(isview name, const utils::OptionMap& description, u
 	}
 
 	if (name == L"bwBandPass" || name == L"bwBandStop") {
-		if (!description.has(L"freqLow")) {
+		if (description.get(L"freqLow").empty()) {
 			cl.error(L"freqLow is not found");
 			return { };
 		}
-		if (!description.has(L"freqHigh")) {
+		if (description.get(L"freqHigh").empty()) {
 			cl.error(L"freqHigh is not found");
 			return { };
 		}
