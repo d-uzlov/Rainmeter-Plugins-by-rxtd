@@ -58,7 +58,7 @@ namespace rxtd::audio_analyzer {
 	public:
 		[[nodiscard]]
 		bool parseParams(
-			const OptionMap& optionMap, Logger& cl, const Rainmeter& rain,
+			const OptionMap& om, Logger& cl, const Rainmeter& rain,
 			void* paramsPtr,
 			index legacyNumber
 		) const override;

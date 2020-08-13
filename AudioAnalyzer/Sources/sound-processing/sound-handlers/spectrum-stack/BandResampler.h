@@ -59,7 +59,7 @@ namespace rxtd::audio_analyzer {
 		bool changed = true;
 
 	public:
-		bool parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber) const override;
+		bool parseParams(const OptionMap& om, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber) const override;
 
 		const Params& getParams() const {
 			return params;

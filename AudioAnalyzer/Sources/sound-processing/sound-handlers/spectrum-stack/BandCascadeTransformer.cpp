@@ -15,11 +15,11 @@
 using namespace audio_analyzer;
 
 bool BandCascadeTransformer::parseParams(
-	const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber
+	const OptionMap& om, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber
 ) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
 
-	params.sourceId = optionMap.get(L"source").asIString();
+	params.sourceId = om.get(L"source").asIString();
 	if (params.sourceId.empty()) {
 		cl.error(L"source not found");
 		return { };
@@ -27,26 +27,26 @@ bool BandCascadeTransformer::parseParams(
 
 	const double epsilon = std::numeric_limits<float>::epsilon();
 
-	params.minWeight = optionMap.get(L"minWeight").asFloat(0.1);
+	params.minWeight = om.get(L"minWeight").asFloat(0.1);
 	params.minWeight = std::max(params.minWeight, epsilon);
 
-	params.targetWeight = optionMap.get(L"targetWeight").asFloat(2.5);
+	params.targetWeight = om.get(L"targetWeight").asFloat(2.5);
 	params.targetWeight = std::max(params.targetWeight, params.minWeight);
 
-	params.weightFallback = optionMap.get(L"weightFallback").asFloat(0.4);
+	params.weightFallback = om.get(L"weightFallback").asFloat(0.4);
 	params.weightFallback = std::clamp(params.weightFallback, 0.0, 1.0) * params.targetWeight;
 
-	params.zeroLevel = optionMap.get(L"zeroLevelMultiplier").asFloat(1.0);
+	params.zeroLevel = om.get(L"zeroLevelMultiplier").asFloat(1.0);
 	params.zeroLevel = std::max(params.zeroLevel, 0.0);
 	params.zeroLevel = params.zeroLevel * 0.66 * epsilon;
 
-	params.zeroLevelHard = optionMap.get(L"zeroLevelHardMultiplier").asFloat(0.01);
+	params.zeroLevelHard = om.get(L"zeroLevelHardMultiplier").asFloat(0.01);
 	params.zeroLevelHard = std::clamp(params.zeroLevelHard, 0.0, 1.0) * params.zeroLevel;
 
-	params.zeroWeight = optionMap.get(L"zeroWeightMultiplier").asFloat(1.0);
+	params.zeroWeight = om.get(L"zeroWeightMultiplier").asFloat(1.0);
 	params.zeroWeight = std::max(params.zeroWeight, epsilon);
 
-	if (const auto mixFunctionString = optionMap.get(L"mixFunction").asIString(L"product");
+	if (const auto mixFunctionString = om.get(L"mixFunction").asIString(L"product");
 		mixFunctionString == L"product") {
 		params.mixFunction = MixFunction::PRODUCT;
 	} else if (mixFunctionString == L"average") {

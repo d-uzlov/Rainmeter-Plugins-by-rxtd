@@ -10,7 +10,6 @@
 #pragma once
 #include "../SoundHandler.h"
 #include "ResamplerProvider.h"
-#include "Vector2D.h"
 #include "../../../audio-utils/GaussianCoefficientsManager.h"
 
 namespace rxtd::audio_analyzer {
@@ -42,7 +41,7 @@ namespace rxtd::audio_analyzer {
 
 	public:
 		[[nodiscard]]
-		bool parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber) const override;
+		bool parseParams(const OptionMap& om, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber) const override;
 
 		[[nodiscard]]
 		const Params& getParams() const {

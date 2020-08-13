@@ -34,7 +34,7 @@ namespace rxtd::utils {
 			Logger() = default;
 
 		private:
-			Logger(void* rm, string prefix) : rm(rm), prefix(prefix) {
+			Logger(void* rm, string prefix) : rm(rm), prefix(std::move(prefix)) {
 			}
 
 		public:

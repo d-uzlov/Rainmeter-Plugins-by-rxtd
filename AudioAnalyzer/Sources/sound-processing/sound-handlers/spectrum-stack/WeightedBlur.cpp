@@ -12,24 +12,24 @@
 
 using namespace audio_analyzer;
 
-bool WeightedBlur::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber) const {
+bool WeightedBlur::parseParams(const OptionMap& om, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
 
-	params.sourceId = optionMap.get(L"source").asIString();
+	params.sourceId = om.get(L"source").asIString();
 	if (params.sourceId.empty()) {
 		cl.error(L"source not found");
 		return { };
 	}
 
 	//                                                                      ?? ↓↓ looks best ?? at 0.25 ↓↓ ?? // TODO
-	params.radiusMultiplier = std::max<double>(optionMap.get(L"radiusMultiplier").asFloat(1.0) * 0.25, 0.0);
+	params.radiusMultiplier = std::max<double>(om.get(L"radiusMultiplier").asFloat(1.0) * 0.25, 0.0);
 
-	params.minRadius = std::max<double>(optionMap.get(L"minRadius").asFloat(1.0), 0.0);
-	params.maxRadius = std::max<double>(optionMap.get(L"maxRadius").asFloat(20.0), params.minRadius);
+	params.minRadius = std::max<double>(om.get(L"minRadius").asFloat(1.0), 0.0);
+	params.maxRadius = std::max<double>(om.get(L"maxRadius").asFloat(20.0), params.minRadius);
 
-	params.minRadiusAdaptation = std::max<double>(optionMap.get(L"MinRadiusAdaptation").asFloat(2.0), 0.0);
+	params.minRadiusAdaptation = std::max<double>(om.get(L"MinRadiusAdaptation").asFloat(2.0), 0.0);
 	params.maxRadiusAdaptation = std::max<double>(
-		optionMap.get(L"MaxRadiusAdaptation").asFloat(params.minRadiusAdaptation), 0.0);
+		om.get(L"MaxRadiusAdaptation").asFloat(params.minRadiusAdaptation), 0.0);
 
 	// params.minWeight = std::max<double>(optionMap.get(L"minWeight"sv).asFloat(0), std::numeric_limits<float>::epsilon());
 	params.minWeight = 0.0; // doesn't work as expected

@@ -16,7 +16,7 @@
 using namespace audio_analyzer;
 
 bool FftAnalyzer::parseParams(
-	const OptionMap& optionMap,
+	const OptionMap& om,
 	Logger& cl, const Rainmeter& rain,
 	void* paramsPtr,
 	index legacyNumber
@@ -24,8 +24,8 @@ bool FftAnalyzer::parseParams(
 	auto& params = *static_cast<Params*>(paramsPtr);
 
 	if (legacyNumber < 104) {
-		params.legacy_attackTime = std::max(optionMap.get(L"attack").asFloat(100), 0.0);
-		params.legacy_decayTime = std::max(optionMap.get(L"decay").asFloat(params.legacy_attackTime), 0.0);
+		params.legacy_attackTime = std::max(om.get(L"attack").asFloat(100), 0.0);
+		params.legacy_decayTime = std::max(om.get(L"decay").asFloat(params.legacy_attackTime), 0.0);
 
 		params.legacy_attackTime *= 0.001;
 		params.legacy_decayTime *= 0.001;
@@ -35,9 +35,9 @@ bool FftAnalyzer::parseParams(
 	}
 
 	if (legacyNumber < 104) {
-		if (const auto sizeBy = optionMap.get(L"sizeBy").asIString(L"binWidth");
+		if (const auto sizeBy = om.get(L"sizeBy").asIString(L"binWidth");
 			sizeBy == L"binWidth") {
-			params.binWidth = optionMap.get(L"binWidth").asFloat(100.0);
+			params.binWidth = om.get(L"binWidth").asFloat(100.0);
 			if (params.binWidth <= 0.0) {
 				cl.error(L"binWidth must be > 0 but {} found", params.binWidth);
 				return { };
@@ -48,7 +48,7 @@ bool FftAnalyzer::parseParams(
 			params.legacy_sizeBy = SizeBy::BIN_WIDTH;
 		} else {
 			if (sizeBy == L"size") {
-				params.binWidth = optionMap.get(L"size").asInt(1000);
+				params.binWidth = om.get(L"size").asInt(1000);
 				if (params.binWidth < 2) {
 					cl.warning(L"Size must be >= 2 but {} found. Assume 1000", params.binWidth);
 					params.binWidth = 1000;
@@ -56,7 +56,7 @@ bool FftAnalyzer::parseParams(
 				params.legacy_sizeBy = SizeBy::SIZE;
 
 			} else if (sizeBy == L"sizeExact") {
-				params.binWidth = optionMap.get(L"size").asInt(1000);
+				params.binWidth = om.get(L"size").asInt(1000);
 				if (params.binWidth < 2) {
 					cl.error(L"Size must be >= 2, must be even, but {} found", params.binWidth);
 					return { };
@@ -68,7 +68,7 @@ bool FftAnalyzer::parseParams(
 			}
 		}
 	} else {
-		params.binWidth = optionMap.get(L"binWidth").asFloat(100.0);
+		params.binWidth = om.get(L"binWidth").asFloat(100.0);
 		if (params.binWidth <= 0.0) {
 			cl.error(L"binWidth must be > 0 but {} found", params.binWidth);
 			return { };
@@ -79,9 +79,9 @@ bool FftAnalyzer::parseParams(
 		params.legacy_sizeBy = SizeBy::BIN_WIDTH;
 	}
 
-	params.overlap = std::clamp(optionMap.get(L"overlap").asFloat(0.5), 0.0, 1.0);
+	params.overlap = std::clamp(om.get(L"overlap").asFloat(0.5), 0.0, 1.0);
 
-	params.cascadesCount = optionMap.get(L"cascadesCount").asInt(5);
+	params.cascadesCount = om.get(L"cascadesCount").asInt(5);
 	if (params.cascadesCount <= 0) {
 		cl.warning(L"cascadesCount must be in range [1, 20] but {} found. Assume 1", params.cascadesCount);
 		params.cascadesCount = 1;
@@ -90,18 +90,18 @@ bool FftAnalyzer::parseParams(
 		params.cascadesCount = 20;
 	}
 
-	params.randomTest = std::abs(optionMap.get(L"testRandom").asFloat(0.0));
-	params.randomDuration = std::abs(optionMap.get(L"randomDuration").asFloat(1000.0)) * 0.001;
+	params.randomTest = std::abs(om.get(L"testRandom").asFloat(0.0));
+	params.randomDuration = std::abs(om.get(L"randomDuration").asFloat(1000.0)) * 0.001;
 
 	if (legacyNumber < 104) {
-		params.legacy_correctZero = optionMap.get(L"correctZero").asBool(true);
+		params.legacy_correctZero = om.get(L"correctZero").asBool(true);
 		params.legacyAmplification = true;
 	} else {
 		params.legacy_correctZero = false;
 		params.legacyAmplification = false;
 	}
 
-	params.wcfDescription = optionMap.get(L"windowFunction").asString(L"hann");
+	params.wcfDescription = om.get(L"windowFunction").asString(L"hann");
 	params.wcf = audio_utils::WindowFunctionHelper::parse(params.wcfDescription, cl);
 
 	return true;

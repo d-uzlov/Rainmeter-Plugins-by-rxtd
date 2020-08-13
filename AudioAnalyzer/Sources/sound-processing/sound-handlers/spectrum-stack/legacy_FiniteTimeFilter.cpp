@@ -13,27 +13,27 @@
 using namespace audio_analyzer;
 
 bool legacy_FiniteTimeFilter::parseParams(
-	const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber
+	const OptionMap& om, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber
 ) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
 
-	params.sourceId = optionMap.get(L"source").asIString();
+	params.sourceId = om.get(L"source").asIString();
 	if (params.sourceId.empty()) {
 		cl.error(L"source not found");
 		return { };
 	}
 
-	params.smoothingFactor = optionMap.get(L"smoothingFactor").asInt(4);
+	params.smoothingFactor = om.get(L"smoothingFactor").asInt(4);
 	if (params.smoothingFactor <= 0) {
 		cl.warning(L"smoothingFactor should be >= 1 but {} found. Assume 1", params.smoothingFactor);
 		params.smoothingFactor = 1;
 	}
 
 	params.exponentialFactor = 1;
-	if (const auto smoothingCurveString = optionMap.get(L"smoothingCurve").asIString(L"exponential");
+	if (const auto smoothingCurveString = om.get(L"smoothingCurve").asIString(L"exponential");
 		smoothingCurveString == L"exponential") {
 		params.smoothingCurve = SmoothingCurve::EXPONENTIAL;
-		params.exponentialFactor = optionMap.get(L"exponentialFactor").asFloat(1.5);
+		params.exponentialFactor = om.get(L"exponentialFactor").asFloat(1.5);
 	} else if (smoothingCurveString == L"flat") {
 		params.smoothingCurve = SmoothingCurve::FLAT;
 	} else if (smoothingCurveString == L"linear") {

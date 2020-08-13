@@ -113,7 +113,7 @@ bool Spectrogram::parseParams(
 			}
 
 			params.colorLevels.push_back(value);
-			const auto color = Color::parse(colorOpt).convert(params.mixMode);
+			const auto color = Color::parse(colorOpt.asString()).convert(params.mixMode);
 			if (first) {
 				first = false;
 			} else {
@@ -132,13 +132,13 @@ bool Spectrogram::parseParams(
 		}
 	} else {
 		params.colors.resize(2);
-		params.colors[0].color = Color::parse(om.get(L"baseColor"), { 0, 0, 0 }).convert(params.mixMode);
-		params.colors[1].color = Color::parse(om.get(L"maxColor"), { 1, 1, 1 }).convert(params.mixMode);
+		params.colors[0].color = Color::parse(om.get(L"baseColor").asString(), { 0, 0, 0 }).convert(params.mixMode);
+		params.colors[1].color = Color::parse(om.get(L"maxColor").asString(), { 1, 1, 1 }).convert(params.mixMode);
 		params.colorMinValue = 0.0f;
 		params.colorMaxValue = 1.0f;
 	}
 
-	params.borderColor = Color::parse(om.get(L"borderColor"), { 1.0, 0.2, 0.2});
+	params.borderColor = Color::parse(om.get(L"borderColor").asString(), { 1.0, 0.2, 0.2 });
 
 	params.fading = std::clamp(om.get(L"fadingPercent").asFloat(0.0), 0.0, 1.0);
 

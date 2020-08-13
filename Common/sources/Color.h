@@ -8,44 +8,9 @@
  */
 
 #pragma once
-#include "IntMixer.h"
-#include "RainmeterWrappers.h"
-#include "option-parser/Option.h"
-#include "option-parser/OptionList.h"
-#include "option-parser/Tokenizer.h"
+#include "IntColor.h"
 
 namespace rxtd::utils {
-	// TODO check endianness at compile time
-	union IntColor {
-		struct {
-			uint8_t b;
-			uint8_t g;
-			uint8_t r;
-			uint8_t a;
-		};
-
-		uint32_t full;
-
-		template <typename MixType, uint8_t precision>
-		[[nodiscard]]
-		IntColor mixWith(IntColor other, IntMixer<MixType, precision> mixer) const {
-			IntColor result{ };
-			result.a = mixer.mix(a, other.a);
-			result.r = mixer.mix(r, other.r);
-			result.g = mixer.mix(g, other.g);
-			result.b = mixer.mix(b, other.b);
-			return result;
-		}
-
-		friend bool operator==(const IntColor& lhs, const IntColor& rhs) {
-			return lhs.full == rhs.full;
-		}
-
-		friend bool operator!=(const IntColor& lhs, const IntColor& rhs) {
-			return !(lhs == rhs);
-		}
-	};
-
 	class Color {
 	public:
 		enum class Mode {
@@ -61,122 +26,43 @@ namespace rxtd::utils {
 				float red = 0.0;
 				float green = 0.0;
 				float blue = 0.0;
-			} _rgb{ };
+			} rgb{ };
 
 			struct {
-				float hue = 0.0;
-				float sat = 0.0;
-				float val = 0.0;
-			} _hsv;
+				float hue;
+				float sat;
+				float val;
+			} hsv;
 
 			struct {
-				float y = 0.0;
-				float cb = 0.0;
-				float cr = 0.0;
-			} _tv;
-		};
+				float y;
+				float cb;
+				float cr;
+			} tv;
+		} _{ };
 
 		float alpha = 1.0;
 		Mode mode = Mode::eRGB;
 
 	public:
-		Color() {
-		}
+		Color() = default;
 
 		Color(float red, float green, float blue, float alpha = 1.0f, Mode mode = Mode::eRGB) :
 			alpha(alpha), mode(mode) {
-			_rgb.red = red;
-			_rgb.green = green;
-			_rgb.blue = blue;
+			_.rgb.red = red;
+			_.rgb.green = green;
+			_.rgb.blue = blue;
 		}
 
 		[[nodiscard]]
-		static Color parse(Option desc, Color defaultValue = { }) {
-			if (desc.empty()) {
-				return defaultValue;
-			}
-
-			Color result;
-			auto view = desc.asIString();
-			OptionList components{ };
-			if (StringUtils::checkStartsWith(view, L"@")) {
-				view.remove_prefix(1);
-				auto [attr, colorDesc] = Option{ view }.breakFirst(L'$');
-				components = colorDesc.asList(L',');
-
-				if (colorDesc.empty()) {
-					BufferPrinter bp;
-					bp.print(L"annotated color without color components: '{}'", desc);
-					Rainmeter::sourcelessLog(bp.getBufferPtr());
-					return defaultValue;
-				}
-
-				for (Option opt : attr.asList(L'@')) {
-					if (opt.asIString() == L"rgb") {
-						result.mode = Mode::eRGB;
-					} else if (opt.asIString() == L"hsv") {
-						result.mode = Mode::eHSV;
-					} else if (opt.asIString() == L"hsl") {
-						result.mode = Mode::eHSL;
-					} else if (opt.asIString() == L"ycbcr") {
-						result.mode = Mode::eYCBCR;
-					} else if (opt.asIString() == L"hex") {
-						result.mode = Mode::eRGB;
-
-						if (colorDesc.asString().size() != 6 && colorDesc.asString().size() != 8) {
-							BufferPrinter bp;
-							bp.print(L"can't parse '{}' as HEX color, need 6 or 8 digits", colorDesc);
-							Rainmeter::sourcelessLog(bp.getBufferPtr());
-							return defaultValue;
-						}
-
-						using namespace std::string_literals;
-
-						result._rgb.red = StringUtils::parseInt(L"0x"s += colorDesc.asString().substr(0, 2)) / 255.0f;
-						result._rgb.green = StringUtils::parseInt(L"0x"s += colorDesc.asString().substr(2, 2)) / 255.0f;
-						result._rgb.blue = StringUtils::parseInt(L"0x"s += colorDesc.asString().substr(4, 2)) / 255.0f;
-
-						if (colorDesc.asString().size() == 8) {
-							result.alpha = StringUtils::parseInt(L"0x"s += colorDesc.asString().substr(6, 2)) / 255.0f;
-						} else {
-							result.alpha = 1.0;
-						}
-
-						return result;
-					}
-				}
-			} else {
-				components = desc.asList(L',');
-			}
-
-			const auto count = components.size();
-			if (count < 3) {
-				BufferPrinter bp;
-				bp.print(L"can't parse '{}' as color: not enough color components: {}, but need 3 or 4", desc, count);
-				Rainmeter::sourcelessLog(bp.getBufferPtr());
-				return defaultValue;
-			}
-			if (count > 4) {
-				BufferPrinter bp;
-				bp.print(L"can't parse '{}' as color: too many color components: {}, but need 3 or 4", desc, count);
-				Rainmeter::sourcelessLog(bp.getBufferPtr());
-				return defaultValue;
-			}
-
-			result._rgb.red = components.get(0).asFloatF();
-			result._rgb.green = components.get(1).asFloatF();
-			result._rgb.blue = components.get(2).asFloatF();
-			result.alpha = components.get(4).asFloatF(1.0f);
-
-			return result;
-		}
+		static Color parse(sview desc, Color defaultValue = { });
 
 		[[nodiscard]]
 		Color operator*(float value) const {
 			return {
-				_rgb.red * value,
-				_rgb.green * value,
-				_rgb.blue * value,
+				_.rgb.red * value,
+				_.rgb.green * value,
+				_.rgb.blue * value,
 				alpha * value,
 				mode
 			};
@@ -185,9 +71,9 @@ namespace rxtd::utils {
 		[[nodiscard]]
 		Color operator+(const Color& other) const {
 			return {
-				_rgb.red + other._rgb.red,
-				_rgb.green + other._rgb.green,
-				_rgb.blue + other._rgb.blue,
+				_.rgb.red + other._.rgb.red,
+				_.rgb.green + other._.rgb.green,
+				_.rgb.blue + other._.rgb.blue,
 				alpha + other.alpha,
 				mode
 			};
@@ -195,9 +81,9 @@ namespace rxtd::utils {
 
 		// autogenerated
 		friend bool operator==(const Color& lhs, const Color& rhs) {
-			return lhs._rgb.red == rhs._rgb.red
-				&& lhs._rgb.green == rhs._rgb.green
-				&& lhs._rgb.blue == rhs._rgb.blue
+			return lhs._.rgb.red == rhs._.rgb.red
+				&& lhs._.rgb.green == rhs._.rgb.green
+				&& lhs._.rgb.blue == rhs._.rgb.blue
 				&& lhs.alpha == rhs.alpha;
 		}
 
@@ -267,9 +153,9 @@ namespace rxtd::utils {
 			}
 
 			IntColor result{ };
-			result.r = uint8_t(std::clamp<int>(std::lround(_rgb.red * 255), 0, 255));
-			result.g = uint8_t(std::clamp<int>(std::lround(_rgb.green * 255), 0, 255));
-			result.b = uint8_t(std::clamp<int>(std::lround(_rgb.blue * 255), 0, 255));
+			result.r = uint8_t(std::clamp<int>(std::lround(_.rgb.red * 255), 0, 255));
+			result.g = uint8_t(std::clamp<int>(std::lround(_.rgb.green * 255), 0, 255));
+			result.b = uint8_t(std::clamp<int>(std::lround(_.rgb.blue * 255), 0, 255));
 			result.a = uint8_t(std::clamp<int>(std::lround(alpha * 255), 0, 255));
 
 			return result;
@@ -277,142 +163,21 @@ namespace rxtd::utils {
 
 	private:
 		[[nodiscard]]
-		Color rgb2hsv() const {
-			const float xMax = std::max(std::max(_rgb.red, _rgb.green), _rgb.blue);
-			const float xMin = std::min(std::min(_rgb.red, _rgb.green), _rgb.blue);
-
-			const float val = xMax;
-			const float chroma = xMax - xMin;
-			const float l = (xMax + xMin) * 0.5f;
-			float hue = 0.0f;
-			if (chroma == 0.0f) {
-				hue = 0.0f;
-			} else if (val == _rgb.red) {
-				hue = 60.0f * (_rgb.green - _rgb.blue) / chroma;
-			} else if (val == _rgb.green) {
-				hue = 60.0f * (2.0f + (_rgb.blue - _rgb.red) / chroma);
-			} else if (val == _rgb.blue) {
-				hue = 60.0f * (4.0f + (_rgb.red - _rgb.green) / chroma);
-			}
-			const float sat = val == 0.0f ? 0.0f : chroma / val;
-
-			return { hue, sat, val, alpha, Mode::eHSV };
-		}
+		Color rgb2hsv() const;
 
 		[[nodiscard]]
-		Color hsv2hsl() const {
-			Color result;
-			result.mode = Mode::eHSL;
-			result.alpha = alpha;
-			result._hsv.hue = _hsv.hue;
-
-			const float l = _hsv.val * (1.0f - _hsv.sat * 0.5f);
-			if (l <= 0.0f || l >= 1.0f) {
-				result._hsv.sat = 0.0f;
-			} else {
-				result._hsv.sat = (_hsv.val - l) / std::min(l, 1.0f - l);
-			}
-
-			result._hsv.val = l;
-
-			return result;
-		}
+		Color hsv2hsl() const;
 
 		[[nodiscard]]
-		Color hsl2hsv() const {
-			Color result;
-			result.mode = Mode::eHSV;
-			result.alpha = alpha;
-			result._hsv.hue = _hsv.hue;
-
-			const float v = _hsv.val + _hsv.sat * std::min(_hsv.val, 1.0f - _hsv.val);
-			if (v <= 0.0f) {
-				result._hsv.sat = 0.0f;
-			} else {
-				result._hsv.sat = 2.0f * (1.0f - _hsv.val / v);
-			}
-
-			result._hsv.val = v;
-
-			return result;
-		}
+		Color hsl2hsv() const;
 
 		[[nodiscard]]
-		Color hsv2rgb() const {
-			const float chroma = _hsv.val * _hsv.sat;
-			float _;
-			float h = _hsv.hue * (1.0f / 60.0f);
-			h = std::modff(h * (1.0f / 6.0f), &_) * 6.0f;
-			const float hFraction = std::modff(h * 0.5f, &_) * 2.0f;
-			const float x = chroma * (1.0f - std::abs(hFraction - 1.0f));
-
-			struct {
-				float r, g, b;
-			} tmp{ };
-			if (chroma == 0.0) {
-				tmp = { 0.0, 0.0, 0.0 };
-			} else if (h >= 0.0 && h <= 1.0) {
-				tmp = { chroma, x, 0.0 };
-			} else if (h >= 1.0 && h <= 2.0) {
-				tmp = { x, chroma, 0.0 };
-			} else if (h >= 2.0 && h <= 3.0) {
-				tmp = { 0.0, chroma, x };
-			} else if (h >= 3.0 && h <= 4.0) {
-				tmp = { 0.0, x, chroma };
-			} else if (h >= 4.0 && h <= 5.0) {
-				tmp = { x, 0.0, chroma };
-			} else {
-				tmp = { chroma, 0.0, x };
-			}
-
-			const float m = _hsv.val - chroma;
-			return {
-				tmp.r + m,
-				tmp.g + m,
-				tmp.b + m,
-				alpha,
-				Mode::eRGB
-			};
-		}
+		Color hsv2rgb() const;
 
 		[[nodiscard]]
-		Color rgb2ycbcr() const {
-			const float kr = 0.299f;
-			const float kg = 0.587f;
-			const float kb = 0.114f;
-
-			const float y = kr * _rgb.red + kg * _rgb.green + kb * _rgb.blue;
-			const float pb = 0.5f * (_rgb.blue - y) / (1.0f - kb);
-			const float pr = 0.5f * (_rgb.red - y) / (1.0f - kr);
-
-			Color result;
-			result.mode = Mode::eYCBCR;
-			result._tv.y = y;
-			result._tv.cb = pb;
-			result._tv.cr = pr;
-			result.alpha = alpha;
-
-			return result;
-		}
+		Color rgb2ycbcr() const;
 
 		[[nodiscard]]
-		Color ycbcr2rgb() const {
-			const float kr = 0.299f;
-			const float kg = 0.587f;
-			const float kb = 0.114f;
-
-			const float r = _tv.y + (2.0f - 2.0f * kr) * _tv.cr;
-			const float g = _tv.y - kb / kg * (2.0f - 2.0f * kb) * _tv.cb - kr / kg * (2.0f - 2.0f * kr) * _tv.cr;
-			const float b = _tv.y + (2.0f - 2.0f * kb) * _tv.cb;
-
-			Color result;
-			result.mode = Mode::eRGB;
-			result._rgb.red = r;
-			result._rgb.green = g;
-			result._rgb.blue = b;
-			result.alpha = alpha;
-
-			return result;
-		}
+		Color ycbcr2rgb() const;
 	};
 }

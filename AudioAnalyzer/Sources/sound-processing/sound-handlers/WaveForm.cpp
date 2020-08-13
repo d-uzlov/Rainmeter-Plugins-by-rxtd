@@ -16,17 +16,20 @@ using utils::Color;
 
 using namespace audio_analyzer;
 
-bool WaveForm::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr,
-                           index legacyNumber) const {
+bool WaveForm::parseParams(
+	const OptionMap& om, Logger& cl, const Rainmeter& rain,
+	void* paramsPtr,
+	index legacyNumber
+) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
 
-	params.width = optionMap.get(L"width").asInt(100);
+	params.width = om.get(L"width").asInt(100);
 	if (params.width < 2) {
 		cl.error(L"width must be >= 2 but {} found", params.width);
 		return { };
 	}
 
-	params.height = optionMap.get(L"height").asInt(100);
+	params.height = om.get(L"height").asInt(100);
 	if (params.height < 2) {
 		cl.error(L"height must be >= 2 but {} found", params.height);
 		return { };
@@ -36,7 +39,7 @@ bool WaveForm::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmet
 		cl.warning(L"dangerously big width and height: {}, {}", params.width, params.height);
 	}
 
-	params.resolution = optionMap.get(L"resolution").asFloat(50);
+	params.resolution = om.get(L"resolution").asFloat(50);
 	if (params.resolution <= 0) {
 		cl.warning(L"resolution must be > 0 but {} found. Assume 100", params.resolution);
 		params.resolution = 100;
@@ -44,16 +47,16 @@ bool WaveForm::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmet
 	params.resolution *= 0.001;
 
 	params.folder = utils::FileWrapper::getAbsolutePath(
-		optionMap.get(L"folder").asString() % own(),
+		om.get(L"folder").asString() % own(),
 		rain.replaceVariables(L"[#CURRENTPATH]") % own()
 	);
 
-	params.colors.background = Color::parse(optionMap.get(L"backgroundColor"), { 0, 0, 0 }).toIntColor();
-	params.colors.wave = Color::parse(optionMap.get(L"waveColor"), { 1, 1, 1 }).toIntColor();
-	params.colors.line = Color::parse(optionMap.get(L"lineColor"), { 0.5, 0.5, 0.5, 0.5 }).toIntColor();
-	params.colors.border = Color::parse(optionMap.get(L"borderColor"), { 1.0, 0.2, 0.2 }).toIntColor();
+	params.colors.background = Color::parse(om.get(L"backgroundColor").asString(), { 0, 0, 0 }).toIntColor();
+	params.colors.wave = Color::parse(om.get(L"waveColor").asString(), { 1, 1, 1 }).toIntColor();
+	params.colors.line = Color::parse(om.get(L"lineColor").asString(), { 0.5, 0.5, 0.5, 0.5 }).toIntColor();
+	params.colors.border = Color::parse(om.get(L"borderColor").asString(), { 1.0, 0.2, 0.2 }).toIntColor();
 
-	if (const auto ldpString = optionMap.get(L"lineDrawingPolicy").asIString(L"always");
+	if (const auto ldpString = om.get(L"lineDrawingPolicy").asIString(L"always");
 		ldpString == L"always") {
 		params.lineDrawingPolicy = LDP::eALWAYS;
 	} else if (ldpString == L"belowWave") {
@@ -65,23 +68,23 @@ bool WaveForm::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmet
 		params.lineDrawingPolicy = LDP::eALWAYS;
 	}
 
-	params.stationary = optionMap.get(L"stationary").asBool(false);
-	params.connected = optionMap.get(L"connected").asBool(true);
+	params.stationary = om.get(L"stationary").asBool(false);
+	params.connected = om.get(L"connected").asBool(true);
 
-	params.borderSize = optionMap.get(L"borderSize").asInt(0);
+	params.borderSize = om.get(L"borderSize").asInt(0);
 	params.borderSize = std::clamp<index>(params.borderSize, 0, params.width / 2);
 
-	params.fading = optionMap.get(L"fadingPercent").asFloat(0.0);
+	params.fading = om.get(L"fadingPercent").asFloat(0.0);
 
 	using TP = audio_utils::TransformationParser;
 	if (legacyNumber < 104) {
-		const auto gain = optionMap.get(L"gain").asFloat(1.0);
+		const auto gain = om.get(L"gain").asFloat(1.0);
 		utils::BufferPrinter printer;
 		printer.print(L"map[from 0 : 1, to 0 : {}]", gain);
 		params.transformer = TP::parse(printer.getBufferView(), cl);
 	} else {
 		auto transformLogger = cl.context(L"transform: ");
-		params.transformer = TP::parse(optionMap.get(L"transform").asString(), transformLogger);
+		params.transformer = TP::parse(om.get(L"transform").asString(), transformLogger);
 	}
 
 	return true;

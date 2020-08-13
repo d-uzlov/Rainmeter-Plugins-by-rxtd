@@ -13,18 +13,18 @@
 using namespace audio_analyzer;
 
 bool SingleValueTransformer::parseParams(
-	const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber
+	const OptionMap& om, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber
 ) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
 
-	params.sourceId = optionMap.get(L"source").asIString();
+	params.sourceId = om.get(L"source").asIString();
 	if (params.sourceId.empty()) {
 		cl.error(L"source not found");
 		return { };
 	}
 
 	auto transformLogger = cl.context(L"transform: ");
-	params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform").asString(), transformLogger);
+	params.transformer = audio_utils::TransformationParser::parse(om.get(L"transform").asString(), transformLogger);
 
 	return true;
 }

@@ -15,27 +15,27 @@
 using namespace audio_analyzer;
 
 bool Loudness::parseParams(
-	const OptionMap& optionMap, Logger& cl, const Rainmeter& rain,
+	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	void* paramsPtr,
 	index legacyNumber) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
 
 	auto transformLogger = cl.context(L"transform: ");
-	params.transformer = audio_utils::TransformationParser::parse(optionMap.get(L"transform").asString(), transformLogger);
+	params.transformer = audio_utils::TransformationParser::parse(om.get(L"transform").asString(), transformLogger);
 
-	params.gatingLimit = optionMap.get(L"gatingLimit").asFloat(0.5);
+	params.gatingLimit = om.get(L"gatingLimit").asFloat(0.5);
 	params.gatingLimit = std::clamp(params.gatingLimit, 0.0, 1.0);
 
-	params.updatesPerSecond = optionMap.get(L"updatesPerSecond").asFloat(20.0);
+	params.updatesPerSecond = om.get(L"updatesPerSecond").asFloat(20.0);
 	params.updatesPerSecond = std::clamp(params.updatesPerSecond, 0.01, 60.0);
 
-	params.timeWindowMs = optionMap.get(L"timeWindow").asFloat(1000.0);
+	params.timeWindowMs = om.get(L"timeWindow").asFloat(1000.0);
 	params.timeWindowMs = std::clamp(params.timeWindowMs, 0.01, 10000.0);
 
-	params.gatingDb = optionMap.get(L"gatingDb").asFloat(-20.0);
+	params.gatingDb = om.get(L"gatingDb").asFloat(-20.0);
 	params.gatingDb = std::clamp(params.gatingDb, -70.0, 0.0);
 
-	params.ignoreGatingForSilence = optionMap.get(L"ignoreGatingForSilence").asBool(true);
+	params.ignoreGatingForSilence = om.get(L"ignoreGatingForSilence").asBool(true);
 
 	return true;
 }

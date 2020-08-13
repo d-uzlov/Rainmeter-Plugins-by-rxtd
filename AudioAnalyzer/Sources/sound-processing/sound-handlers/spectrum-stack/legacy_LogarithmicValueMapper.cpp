@@ -14,19 +14,19 @@
 using namespace audio_analyzer;
 
 bool legacy_LogarithmicValueMapper::parseParams(
-	const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber
+	const OptionMap& om, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber
 ) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
 
-	params.sourceId = optionMap.get(L"source").asIString();
+	params.sourceId = om.get(L"source").asIString();
 	if (params.sourceId.empty()) {
 		cl.error(L"source not found");
 		return { };
 	}
 
-	params.sensitivity = optionMap.get(L"sensitivity").asFloat(35.0);
+	params.sensitivity = om.get(L"sensitivity").asFloat(35.0);
 	params.sensitivity = std::clamp<double>(params.sensitivity, std::numeric_limits<float>::epsilon(), 1000.0);
-	params.offset = optionMap.get(L"offset").asFloatF(0.0);
+	params.offset = om.get(L"offset").asFloatF(0.0);
 
 	return true;
 }

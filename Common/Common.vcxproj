@@ -156,6 +156,7 @@
     <ClCompile Include="sources\array_view.h" />
     <ClCompile Include="sources\BmpWriter.cpp" />
     <ClCompile Include="sources\BufferPrinter.cpp" />
+    <ClCompile Include="sources\Color.cpp" />
     <ClCompile Include="sources\image-utils\StripedImageFadeHelper.cpp" />
     <ClCompile Include="sources\image-utils\WaveFormDrawer.cpp" />
     <ClCompile Include="sources\MyMath.cpp" />
@@ -187,6 +188,7 @@
     <ClInclude Include="sources\image-utils\StripedImage.h" />
     <ClInclude Include="sources\image-utils\StripedImageFadeHelper.h" />
     <ClInclude Include="sources\image-utils\WaveFormDrawer.h" />
+    <ClInclude Include="sources\IntColor.h" />
     <ClInclude Include="sources\IntMixer.h" />
     <ClInclude Include="sources\LinearInterpolator.h" />
     <ClInclude Include="sources\option-parser\AbstractOption.h" />

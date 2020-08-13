@@ -221,7 +221,7 @@ namespace rxtd::audio_analyzer {
 
 		// must return true if all options are valid, false otherwise
 		virtual bool parseParams(
-			const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber
+			const OptionMap& om, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber
 		) const = 0;
 
 	public:

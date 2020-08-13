@@ -13,18 +13,18 @@
 
 using namespace audio_analyzer;
 
-bool UniformBlur::parseParams(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber) const {
+bool UniformBlur::parseParams(const OptionMap& om, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
 
-	params.sourceId = optionMap.get(L"source").asIString();
+	params.sourceId = om.get(L"source").asIString();
 	if (params.sourceId.empty()) {
 		cl.error(L"source not found");
 		return { };
 	}
 
 	//                                                        ?? ↓↓ looks best ?? at 0.25 ↓↓ ?? // TODO
-	params.blurRadius = std::max<double>(optionMap.get(L"Radius").asFloat(1.0) * 0.25, 0.0);
-	params.blurRadiusAdaptation = std::max<double>(optionMap.get(L"RadiusAdaptation").asFloat(2.0), 0.0);
+	params.blurRadius = std::max<double>(om.get(L"Radius").asFloat(1.0) * 0.25, 0.0);
+	params.blurRadiusAdaptation = std::max<double>(om.get(L"RadiusAdaptation").asFloat(2.0), 0.0);
 
 	return true;
 }
