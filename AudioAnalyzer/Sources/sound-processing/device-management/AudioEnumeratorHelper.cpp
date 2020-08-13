@@ -9,8 +9,6 @@
 
 #include "AudioEnumeratorHelper.h"
 
-#include <string_view>
-
 using namespace audio_analyzer;
 
 AudioEnumeratorHelper::AudioEnumeratorHelper(utils::Rainmeter::Logger _logger) :

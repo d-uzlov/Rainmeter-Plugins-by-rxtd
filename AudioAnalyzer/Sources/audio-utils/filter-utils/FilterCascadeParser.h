@@ -9,7 +9,6 @@
 
 #pragma once
 #include <functional>
-#include <utility>
 #include "AbstractFilter.h"
 #include "FilterCascade.h"
 #include "RainmeterWrappers.h"

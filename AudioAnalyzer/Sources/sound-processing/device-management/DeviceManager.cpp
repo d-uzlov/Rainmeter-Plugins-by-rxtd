@@ -9,8 +9,6 @@
 
 #include "DeviceManager.h"
 
-#include <utility>
-
 using namespace audio_analyzer;
 
 DeviceManager::DeviceManager(Logger _logger, std::function<void(MyWaveFormat waveFormat)> waveFormatUpdateCallback)

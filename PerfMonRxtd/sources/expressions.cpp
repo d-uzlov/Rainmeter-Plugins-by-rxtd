@@ -7,13 +7,9 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include <cwctype>
-
 #include "expressions.h"
 
 #include "StringUtils.h"
-
-#include "undef.h"
 
 using namespace std::string_literals;
 using namespace std::literals::string_view_literals;

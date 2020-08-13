@@ -8,8 +8,6 @@
  */
 
 #pragma once
-#include <map>
-
 #include "RainmeterWrappers.h"
 #include "sound-processing/sound-handlers/SoundHandler.h"
 
