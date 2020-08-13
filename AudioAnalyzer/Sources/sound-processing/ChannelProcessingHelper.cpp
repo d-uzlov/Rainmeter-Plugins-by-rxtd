@@ -55,35 +55,20 @@ void ChannelProcessingHelper::updateSourceRate(index value) {
 	updateFilters();
 }
 
-void ChannelProcessingHelper::processDataFrom(const ChannelMixer& mixer) {
-	autoAlias = mixer.getAutoAlias();
-
-	for (auto& [channel, data] : channels) {
-		processChannel(channel, mixer);
-	}
-}
-
-void ChannelProcessingHelper::reset() {
-	for (auto& [channel, data] : channels) {
-		data.wave.compact();
-	}
-}
-
-void ChannelProcessingHelper::processChannel(Channel channel, const ChannelMixer& mixer) {
-	auto& data = channels[channel];
-
-	auto wave = mixer.getChannelPCM(channel);
+void ChannelProcessingHelper::processDataFrom(Channel channel, array_view<float> wave) {
 	if (wave.empty()) {
 		return;
 	}
 
+	auto& data = channels[channel];
+
 	array_span<float> writeBuffer;
 	if (resamplingData.divider <= 1) {
-		writeBuffer = data.wave.allocateNext(wave.size());
+		writeBuffer = buffer.allocateNext(wave.size());
 		std::copy(wave.begin(), wave.end(), writeBuffer.begin());
 	} else {
 		const index nextBufferSize = data.downsampleHelper.pushData(wave);
-		writeBuffer = data.wave.allocateNext(nextBufferSize);
+		writeBuffer = buffer.allocateNext(nextBufferSize);
 		data.downsampleHelper.downsample(writeBuffer);
 	}
 

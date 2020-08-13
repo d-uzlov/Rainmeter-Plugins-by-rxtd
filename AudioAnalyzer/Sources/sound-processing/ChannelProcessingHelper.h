@@ -8,23 +8,22 @@
  */
 
 #pragma once
-#include "device-management/MyWaveFormat.h"
+#include <set>
+
+#include "Channel.h"
 #include "array_view.h"
 #include "../audio-utils/filter-utils/FilterCascadeParser.h"
-#include "ChannelMixer.h"
-#include <set>
 #include "../audio-utils/DownsampleHelper.h"
 
 namespace rxtd::audio_analyzer {
 	class ChannelProcessingHelper {
 		struct ChannelData {
-			utils::GrowingVector<float> wave;
 			audio_utils::FilterCascade fc;
 			audio_utils::DownsampleHelper downsampleHelper;
 		};
 
-		MyWaveFormat waveFormat;
 		std::map<Channel, ChannelData> channels;
+		utils::GrowingVector<float> buffer;
 
 		audio_utils::FilterCascadeCreator fcc;
 
@@ -35,12 +34,10 @@ namespace rxtd::audio_analyzer {
 			index divider = 1;
 		} resamplingData;
 
-		Channel currentChannel{ };
-		Channel autoAlias{ };
-		index grabBufferSize = 0;
-
 	public:
-		ChannelProcessingHelper() = default;
+		ChannelProcessingHelper() {
+			buffer.setMaxSize(1);
+		}
 
 		// depends on both system format and options
 		void setChannels(const std::set<Channel>& set);
@@ -56,32 +53,19 @@ namespace rxtd::audio_analyzer {
 			return resamplingData.finalSampleRate;
 		}
 
-		void setGrabBufferSize(index value) {
-			grabBufferSize = value;
-		}
-
-		void setCurrentChannel(Channel value) {
-			currentChannel = value == Channel::eAUTO ? autoAlias : value;
-		}
-
-		void processDataFrom(const ChannelMixer& mixer);
+		void processDataFrom(Channel channel, array_view<float> wave);
 
 		[[nodiscard]]
-		array_view<float> grabNext() {
-			return channels[currentChannel].wave.removeFirst(grabBufferSize);
+		array_view<float> grabNext(index size) {
+			return buffer.removeFirst(size);
 		}
 
 		[[nodiscard]]
 		array_view<float> grabRest() {
-			auto& waveBuffer = channels[currentChannel].wave;
-			return waveBuffer.removeFirst(waveBuffer.getRemainingSize());
+			return buffer.removeFirst(buffer.getRemainingSize());
 		}
 
-		void reset();
-
 	private:
-		void processChannel(Channel channel, const ChannelMixer& mixer);
-
 		void recalculateResamplingData();
 		void updateFilters();
 	};

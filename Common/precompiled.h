@@ -16,6 +16,7 @@
 #include <string>
 #include <string_view>
 #include <cwctype>
+#include <utility>
 
 #include "typedefs.h"
 #include "CaseInsensitiveString.h"

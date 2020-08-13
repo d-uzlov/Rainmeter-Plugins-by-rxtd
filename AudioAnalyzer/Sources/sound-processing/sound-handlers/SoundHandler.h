@@ -13,6 +13,7 @@
  Then the main life cycle happens, which consists of several phases.
  1. Function #patchMe function is called.
 		Handler should assume that:
+			- only its params are known and valid
 			- any external resources that it could potentially have links to don't exist anymore
 			- sample rate and channel are invalid
 
@@ -182,7 +183,6 @@ namespace rxtd::audio_analyzer {
 
 	private:
 		LayerDataId _generatorId;
-		bool _valid = true;
 		DataSize _dataSize{ };
 		utils::Vector2D<float> _values;
 		std::vector<LayerDataId> _idsRef;
@@ -196,11 +196,6 @@ namespace rxtd::audio_analyzer {
 		SoundHandler() {
 			_generatorId = LayerDataId::createNext();
 		}
-
-		SoundHandler(const SoundHandler& other) = delete;
-		SoundHandler(SoundHandler&& other) noexcept = delete;
-		SoundHandler& operator=(const SoundHandler& other) = delete;
-		SoundHandler& operator=(SoundHandler&& other) noexcept = delete;
 
 		virtual ~SoundHandler() = default;
 
@@ -277,30 +272,19 @@ namespace rxtd::audio_analyzer {
 		}
 
 		void process(array_view<float> wave) {
-			if (!isValid()) {
-				return;
-			}
-
 			vProcess(wave);
 		}
 
-		void finish() {
-			if (!isValid()) {
-				return;
-			}
-
+		// returns true on success, false on failure
+		bool finish() {
 			vFinish();
+			return true; // todo
 		}
 
 		void reset() {
 			// todo do we even need reset at all?
 			_values.init(0.0f);
 			vReset();
-		}
-
-		[[nodiscard]]
-		bool isValid() const {
-			return _valid;
 		}
 
 		[[nodiscard]]
@@ -320,10 +304,6 @@ namespace rxtd::audio_analyzer {
 		}
 
 	protected:
-		void setValid(bool value) {
-			_valid = value;
-		}
-
 		[[nodiscard]]
 		SoundHandler* getSource() const {
 			return _sourceHandlerPtr;
@@ -342,6 +322,7 @@ namespace rxtd::audio_analyzer {
 		virtual void vProcess(array_view<float> wave) = 0;
 
 		// Method can be called several times in a row, handler should check for changes for optimal performance
+		// returns true on success, false on failure
 		virtual void vFinish() {
 		}
 

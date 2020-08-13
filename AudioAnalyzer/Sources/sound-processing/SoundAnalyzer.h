@@ -8,12 +8,13 @@
  */
 
 #pragma once
-#include <utility>
+#include <chrono>
+
 #include "Channel.h"
 #include "AudioChildHelper.h"
 #include "ChannelProcessingHelper.h"
 #include "../ParamParser.h"
-#include <chrono>
+#include "ChannelMixer.h"
 
 namespace rxtd::audio_analyzer {
 	class SoundAnalyzer {
@@ -22,7 +23,6 @@ namespace rxtd::audio_analyzer {
 
 		using ChannelData = std::map<istring, std::unique_ptr<SoundHandler>, std::less<>>;
 		using Logger = utils::Rainmeter::Logger;
-		using ProcessingData = ParamParser::ProcessingData;
 
 		// The following two fields are used for updating .channels field.
 		// They can contain info about handlers that doesn't exist because of channel layout
@@ -54,16 +54,10 @@ namespace rxtd::audio_analyzer {
 
 	public:
 		SoundAnalyzer() = default;
+		~SoundAnalyzer() = default;
 
 		SoundAnalyzer(Logger logger) noexcept : logger(std::move(logger)) {
 		}
-
-		~SoundAnalyzer() = default;
-		/** This class is non copyable */
-		SoundAnalyzer(const SoundAnalyzer& other) = delete;
-		SoundAnalyzer(SoundAnalyzer&& other) = default;
-		SoundAnalyzer& operator=(const SoundAnalyzer& other) = delete;
-		SoundAnalyzer& operator=(SoundAnalyzer&& other) = default;
 
 		// depends on system format only
 		void updateFormat(index sampleRate, ChannelLayout layout);
@@ -82,7 +76,7 @@ namespace rxtd::audio_analyzer {
 		 */
 		// depends on options only
 		void setParams(
-			const ProcessingData& pd,
+			const ParamParser::ProcessingData& pd,
 			index _legacyNumber,
 			index sampleRate, ChannelLayout layout
 		);

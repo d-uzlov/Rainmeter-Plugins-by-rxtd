@@ -17,7 +17,7 @@ void SoundAnalyzer::updateFormat(index sampleRate, ChannelLayout layout) {
 }
 
 void SoundAnalyzer::setParams(
-	const ProcessingData& pd,
+	const ParamParser::ProcessingData& pd,
 	index _legacyNumber,
 	index sampleRate, ChannelLayout layout
 ) {
@@ -31,15 +31,18 @@ void SoundAnalyzer::setParams(
 }
 
 bool SoundAnalyzer::process(const ChannelMixer& mixer, clock::time_point killTime) {
-	cph.reset();
-	cph.processDataFrom(mixer);
-
-	cph.setGrabBufferSize(index(granularity * cph.getSampleRate()));
+	const index grabSize = index(granularity * cph.getSampleRate());
 
 	for (auto& [channel, channelData] : channels) {
-		cph.setCurrentChannel(channel);
+		if (channel == Channel::eAUTO) {
+			const auto alias = mixer.getAutoAlias();
+			cph.processDataFrom(alias, mixer.getChannelPCM(alias));
+		} else {
+			cph.processDataFrom(channel, mixer.getChannelPCM(channel));
+		}
+
 		while (true) {
-			auto wave = cph.grabNext();
+			auto wave = cph.grabNext(grabSize);
 			if (wave.empty()) {
 				wave = cph.grabRest();
 			}
@@ -47,20 +50,9 @@ bool SoundAnalyzer::process(const ChannelMixer& mixer, clock::time_point killTim
 				break;
 			}
 
-			auto& order = patchersInfo.order;
-			for (auto iter = order.begin();
-			     iter != order.end();) {
-				auto& handlerName = *iter;
-
+			for (auto& handlerName : patchersInfo.order) {
 				auto& handler = *channelData[handlerName];
 				handler.process(wave);
-
-				if (!handler.isValid()) {
-					logger.error(L"handler '{}' was invalidated", handlerName);
-					iter = order.erase(iter);
-				} else {
-					++iter;
-				}
 
 				if (clock::now() > killTime) {
 					return true;
@@ -74,25 +66,20 @@ bool SoundAnalyzer::process(const ChannelMixer& mixer, clock::time_point killTim
 
 bool SoundAnalyzer::finishStandalone(clock::time_point killTime) {
 	for (auto& [channel, channelData] : channels) {
-		auto& order = patchersInfo.order;
-		for (auto iter = order.begin();
-		     iter != order.end();) {
-			auto& handlerName = *iter;
-
+		for (auto& handlerName : patchersInfo.order) {
 			auto& handler = *channelData[handlerName];
 
 			if (!handler.vIsStandalone()) {
-				++iter;
 				continue;
 			}
 
-			handler.finish();
+			const bool success = handler.finish();
 
-			if (!handler.isValid()) {
-				logger.error(L"handler '{}' was invalidated", handlerName);
-				iter = order.erase(iter);
-			} else {
-				++iter;
+			if (!success) {
+				logger.error(L"handler '{}' was unexpectedly invalidated, stopping processing", handlerName);
+				channels.clear();
+				patchersInfo.order.clear();
+				return false;
 			}
 
 			if (clock::now() > killTime) {
@@ -143,16 +130,13 @@ void SoundAnalyzer::patchHandlers(ChannelLayout layout) {
 			auto& handlerInfo = channelData[handlerName];
 
 			auto cl = logger.context(L"Handler {}: ", handlerName);
-			SoundHandler* ptr = SoundHandler::patch(
+			const auto ptr = SoundHandler::patch(
 				handlerInfo.get(), patcher,
 				channel, cph.getSampleRate(),
 				hf, cl
 			);
-			if (ptr != handlerInfo.get()) {
-				handlerInfo = std::unique_ptr<SoundHandler>(ptr);
-			}
 
-			if (!ptr->isValid()) {
+			if (ptr == nullptr) {
 				cl.error(L"invalid handler");
 
 				if (legacyNumber < 104) {
@@ -163,6 +147,10 @@ void SoundAnalyzer::patchHandlers(ChannelLayout layout) {
 					newData.clear();
 					break;
 				}
+			}
+
+			if (ptr != handlerInfo.get()) {
+				handlerInfo = std::unique_ptr<SoundHandler>(ptr);
 			}
 
 			newData[handlerName] = std::move(handlerInfo);
