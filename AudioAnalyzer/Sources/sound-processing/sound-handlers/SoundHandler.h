@@ -82,7 +82,7 @@ namespace rxtd::audio_analyzer {
 		};
 
 		struct DataChunk {
-			index size;
+			index equivalentWaveSize{ };
 			array_view<float> data;
 		};
 
@@ -105,8 +105,10 @@ namespace rxtd::audio_analyzer {
 		};
 
 	public:
-		template <typename HandlerType>
+		template <typename _HandlerType>
 		class HandlerPatcherImpl : public HandlerPatcher {
+			using HandlerType = _HandlerType;
+
 			typename HandlerType::Params params{ };
 			bool valid = false;
 
@@ -225,7 +227,7 @@ namespace rxtd::audio_analyzer {
 			for (auto& data : _layers) {
 				data.chunks.resize(data.meta.size());
 				for (index i = 0; i < index(data.meta.size()); i++) {
-					data.chunks[i].size = data.meta[i].equivalentWaveSize;
+					data.chunks[i].equivalentWaveSize = data.meta[i].equivalentWaveSize;
 					data.chunks[i].data = { _buffer.data() + data.meta[i].offset, _dataSize.valuesCount };
 				}
 			}

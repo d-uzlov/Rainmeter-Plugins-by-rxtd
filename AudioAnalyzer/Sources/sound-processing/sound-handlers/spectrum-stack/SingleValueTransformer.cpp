@@ -66,7 +66,7 @@ void SingleValueTransformer::processStateless() {
 	for (index i = 0; i < layersCount; ++i) {
 		for (auto chunk : source.getChunks(i)) {
 			auto layerData = chunk.data;
-			auto dest = generateLayerData(i, chunk.size);
+			auto dest = generateLayerData(i, chunk.equivalentWaveSize);
 
 			params.transformer.applyToArray(layerData, dest);
 		}
@@ -81,10 +81,10 @@ void SingleValueTransformer::processStateful() {
 	for (index i = 0; i < layersCount; ++i) {
 		for (auto chunk : source.getChunks(i)) {
 			auto layerData = chunk.data;
-			auto dest = generateLayerData(i, chunk.size);
+			auto dest = generateLayerData(i, chunk.equivalentWaveSize);
 
 			// todo resample in time
-			transformers[i].setParams(getSampleRate(), chunk.size);
+			transformers[i].setParams(getSampleRate(), chunk.equivalentWaveSize);
 			params.transformer.applyToArray(layerData, dest);
 		}
 	}

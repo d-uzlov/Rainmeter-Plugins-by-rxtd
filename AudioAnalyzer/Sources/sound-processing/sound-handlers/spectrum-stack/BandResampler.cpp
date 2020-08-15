@@ -238,7 +238,7 @@ void BandResampler::vFinish() {
 		const index localCascadeIndex = cascadeIndex - startCascade;
 
 		for (auto chunk : chunks) {
-			auto dest = generateLayerData(localCascadeIndex, chunk.size);
+			auto dest = generateLayerData(localCascadeIndex, chunk.equivalentWaveSize);
 			sampleCascade(chunk.data, dest, binWidth);
 
 			if (params.legacy_proportionalValues) {

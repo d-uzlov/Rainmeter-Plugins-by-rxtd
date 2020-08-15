@@ -67,7 +67,7 @@ void UniformBlur::vFinish() {
 	for (index i = 0; i < cascadesCount; ++i) {
 		for (auto chunk : source.getChunks(i)) {
 			const auto cascadeSource = chunk.data;
-			auto cascadeResult = generateLayerData(i, chunk.size);
+			auto cascadeResult = generateLayerData(i, chunk.equivalentWaveSize);
 
 			const index radius = std::llround(theoreticalRadius);
 			if (radius < 1) {

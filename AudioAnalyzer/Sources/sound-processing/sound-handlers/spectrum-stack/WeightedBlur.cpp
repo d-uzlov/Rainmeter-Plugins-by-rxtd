@@ -73,7 +73,7 @@ void WeightedBlur::vFinish() {
 			const auto cascadeMagnitudes = chunk.data;
 			const auto cascadeWeights = resampler.getLayerWeights(i);
 
-			const auto result = generateLayerData(i, chunk.size);
+			const auto result = generateLayerData(i, chunk.equivalentWaveSize);
 			blurCascade(cascadeMagnitudes, cascadeWeights, result, std::llround(minRadius), std::llround(maxRadius));
 		}
 

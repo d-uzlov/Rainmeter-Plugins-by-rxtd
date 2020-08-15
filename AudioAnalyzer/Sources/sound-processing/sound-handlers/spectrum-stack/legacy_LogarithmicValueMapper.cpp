@@ -61,7 +61,7 @@ void legacy_LogarithmicValueMapper::vFinish() {
 
 	for (index i = 0; i < layersCount; ++i) {
 		for (auto chunk : source.getChunks(i)) {
-			auto dest = generateLayerData(i, chunk.size);
+			auto dest = generateLayerData(i, chunk.equivalentWaveSize);
 
 			for (index j = 0; j < chunk.data.size(); ++j) {
 				float value = utils::MyMath::fastLog2(chunk.data[j]) * log10inverse;

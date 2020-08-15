@@ -114,7 +114,7 @@ void legacy_FiniteTimeFilter::vFinish() {
 
 		for (auto chunk : chunks) {
 			if (params.smoothingFactor <= 1) {
-				auto dest = generateLayerData(layer, chunk.size);
+				auto dest = generateLayerData(layer, chunk.equivalentWaveSize);
 				std::copy(chunk.data.begin(), chunk.data.end(), dest.begin());
 				continue;
 			}
@@ -130,7 +130,7 @@ void legacy_FiniteTimeFilter::vFinish() {
 			std::copy(sourceValues.begin(), sourceValues.end(), layerPastValues[pastValuesIndex].begin());
 
 			// todo resample in time
-			const auto dest = generateLayerData(layer, chunk.size);
+			const auto dest = generateLayerData(layer, chunk.equivalentWaveSize);
 			applyToLayer(layerPastValues, dest);
 		}
 	}

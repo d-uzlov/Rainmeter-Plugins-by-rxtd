@@ -114,7 +114,7 @@ void BandCascadeTransformer::vFinish() {
 	for (auto chunk : source.getChunks(0)) {
 		for (index i = 0; i < layersCount; i++) {
 			auto& meta = snapshot[i];
-			meta.offset -= chunk.size;
+			meta.offset -= chunk.equivalentWaveSize;
 
 			auto layerChunks = source.getChunks(i);
 			if (meta.nextChunkIndex >= layerChunks.size() || meta.offset >= 0) {
@@ -124,10 +124,10 @@ void BandCascadeTransformer::vFinish() {
 			auto nextChunk = layerChunks[meta.nextChunkIndex];
 			meta.data = nextChunk.data;
 			meta.nextChunkIndex++;
-			meta.offset += nextChunk.size;
+			meta.offset += nextChunk.equivalentWaveSize;
 		}
 
-		auto dest = generateLayerData(0, chunk.size);
+		auto dest = generateLayerData(0, chunk.equivalentWaveSize);
 		for (index band = 0; band < bandsCount; ++band) {
 			dest[band] = computeForBand(band);
 		}
