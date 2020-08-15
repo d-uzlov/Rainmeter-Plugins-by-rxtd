@@ -29,8 +29,6 @@ namespace rxtd::audio_analyzer {
 		};
 
 		struct ProcessingData {
-			double granularity{ };
-
 			string rawFccDescription;
 			audio_utils::FilterCascadeCreator fcc;
 

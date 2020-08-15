@@ -23,7 +23,7 @@ namespace rxtd::audio_analyzer {
 		};
 
 		std::map<Channel, ChannelData> channels;
-		utils::GrowingVector<float> buffer;
+		std::vector<float> buffer;
 
 		audio_utils::FilterCascadeCreator fcc;
 
@@ -35,10 +35,6 @@ namespace rxtd::audio_analyzer {
 		} resamplingData;
 
 	public:
-		ChannelProcessingHelper() {
-			buffer.setMaxSize(1);
-		}
-
 		// depends on both system format and options
 		void setChannels(const std::set<Channel>& set);
 
@@ -56,13 +52,8 @@ namespace rxtd::audio_analyzer {
 		void processDataFrom(Channel channel, array_view<float> wave);
 
 		[[nodiscard]]
-		array_view<float> grabNext(index size) {
-			return buffer.removeFirst(size);
-		}
-
-		[[nodiscard]]
-		array_view<float> grabRest() {
-			return buffer.removeFirst(buffer.getRemainingSize());
+		array_view<float> getResampled() const {
+			return buffer;
 		}
 
 	private:

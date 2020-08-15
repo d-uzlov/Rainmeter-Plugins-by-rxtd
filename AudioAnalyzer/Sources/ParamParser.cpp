@@ -116,12 +116,6 @@ void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldData
 		return;
 	}
 
-	if (const auto granularity = std::max(processingMap.get(L"granularity").asFloat(10.0), 1.0) / 1000.0;
-		granularity != oldData.granularity) {
-		anythingChanged = true;
-		oldData.granularity = granularity;
-	}
-
 	parseFilters(processingMap, oldData, cl);
 	parseTargetRate(processingMap, oldData, cl);
 

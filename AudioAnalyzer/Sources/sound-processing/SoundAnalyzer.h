@@ -34,8 +34,6 @@ namespace rxtd::audio_analyzer {
 		ChannelProcessingHelper cph;
 		Logger logger;
 
-		double granularity{ };
-
 		index legacyNumber = 0;
 
 		class HandlerFinderImpl : public HandlerFinder {

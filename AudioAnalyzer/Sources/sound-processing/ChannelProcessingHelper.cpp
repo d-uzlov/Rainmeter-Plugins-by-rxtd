@@ -57,22 +57,22 @@ void ChannelProcessingHelper::updateSourceRate(index value) {
 
 void ChannelProcessingHelper::processDataFrom(Channel channel, array_view<float> wave) {
 	if (wave.empty()) {
+		buffer.clear();
 		return;
 	}
 
 	auto& data = channels[channel];
 
-	array_span<float> writeBuffer;
 	if (resamplingData.divider <= 1) {
-		writeBuffer = buffer.allocateNext(wave.size());
-		std::copy(wave.begin(), wave.end(), writeBuffer.begin());
+		buffer.resize(wave.size());
+		std::copy(wave.begin(), wave.end(), buffer.begin());
 	} else {
 		const index nextBufferSize = data.downsampleHelper.pushData(wave);
-		writeBuffer = buffer.allocateNext(nextBufferSize);
-		data.downsampleHelper.downsample(writeBuffer);
+		buffer.resize(nextBufferSize);
+		data.downsampleHelper.downsample(buffer);
 	}
 
-	data.fc.applyInPlace(writeBuffer);
+	data.fc.applyInPlace(buffer);
 }
 
 void ChannelProcessingHelper::recalculateResamplingData() {

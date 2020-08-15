@@ -23,7 +23,6 @@ void SoundAnalyzer::setParams(
 ) {
 	channelSetRequested = pd.channels;
 	patchersInfo = pd.handlersInfo;
-	granularity = pd.granularity;
 	legacyNumber = _legacyNumber;
 
 	cph.setParams(pd.fcc, pd.targetRate, sampleRate);
@@ -31,8 +30,6 @@ void SoundAnalyzer::setParams(
 }
 
 bool SoundAnalyzer::process(const ChannelMixer& mixer, clock::time_point killTime) {
-	const index grabSize = index(granularity * cph.getSampleRate());
-
 	for (auto& [channel, channelData] : channels) {
 		if (channel == Channel::eAUTO) {
 			const auto alias = mixer.getAutoAlias();
@@ -41,23 +38,19 @@ bool SoundAnalyzer::process(const ChannelMixer& mixer, clock::time_point killTim
 			cph.processDataFrom(channel, mixer.getChannelPCM(channel));
 		}
 
-		while (true) {
-			auto wave = cph.grabNext(grabSize);
-			if (wave.empty()) {
-				wave = cph.grabRest();
-			}
-			if (wave.empty()) {
-				break;
-			}
+		auto wave = cph.getResampled();
+		if (wave.empty()) {
+			// todo remove
+			continue;
+		}
 
-			for (auto& handlerName : patchersInfo.order) {
-				auto& handler = *channelData[handlerName];
-				handler.purgeCache();
-				handler.process(wave);
+		for (auto& handlerName : patchersInfo.order) {
+			auto& handler = *channelData[handlerName];
+			handler.purgeCache();
+			handler.process(wave);
 
-				if (clock::now() > killTime) {
-					return true;
-				}
+			if (clock::now() > killTime) {
+				return true;
 			}
 		}
 	}
