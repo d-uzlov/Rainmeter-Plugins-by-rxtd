@@ -11,6 +11,7 @@
 #include "FftAnalyzer.h"
 #include "../SoundHandler.h"
 #include "ResamplerProvider.h"
+#include "Vector2D.h"
 
 namespace rxtd::audio_analyzer {
 	class BandResampler final : public ResamplerProvider {

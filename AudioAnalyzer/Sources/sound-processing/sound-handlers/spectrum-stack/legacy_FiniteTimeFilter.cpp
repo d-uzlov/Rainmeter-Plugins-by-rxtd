@@ -106,27 +106,33 @@ void legacy_FiniteTimeFilter::vFinish() {
 	changed = false;
 
 	auto& source = *getSource();
-
 	source.finish();
-	const auto sourceData = source.getData();
+
 	const index layersCount = source.getDataSize().layersCount;
-
-	if (params.smoothingFactor <= 1) {
-		return;
-	}
-
-	pastValuesIndex++;
-	if (pastValuesIndex >= params.smoothingFactor) {
-		pastValuesIndex = 0;
-	}
-
 	for (index layer = 0; layer < layersCount; ++layer) {
-		auto& layerPastValues = pastValues[layer];
-		const auto sourceValues = sourceData.values[layer];
-		std::copy(sourceValues.begin(), sourceValues.end(), layerPastValues[pastValuesIndex].begin());
+		auto chunks = source.getChunks(layer);
 
-		const auto dest = generateLayerData(layer);
-		applyToLayer(layerPastValues, dest);
+		for (auto chunk : chunks) {
+			if (params.smoothingFactor <= 1) {
+				auto dest = generateLayerData(layer, chunk.size);
+				std::copy(chunk.data.begin(), chunk.data.end(), dest.begin());
+				continue;
+			}
+
+			pastValuesIndex++;
+			if (pastValuesIndex >= params.smoothingFactor) {
+				pastValuesIndex = 0;
+			}
+
+			auto& layerPastValues = pastValues[layer];
+
+			const auto sourceValues = chunk.data;
+			std::copy(sourceValues.begin(), sourceValues.end(), layerPastValues[pastValuesIndex].begin());
+
+			// todo resample in time
+			const auto dest = generateLayerData(layer, chunk.size);
+			applyToLayer(layerPastValues, dest);
+		}
 	}
 }
 
@@ -139,7 +145,7 @@ void legacy_FiniteTimeFilter::applyToLayer(utils::array2d_view<float> layerPastV
 	if (pastValuesStartIndex >= params.smoothingFactor) {
 		pastValuesStartIndex = 0;
 	}
-	
+
 	switch (params.smoothingCurve) {
 	case SmoothingCurve::FLAT:
 		for (index band = 0; band < index(dest.size()); ++band) {

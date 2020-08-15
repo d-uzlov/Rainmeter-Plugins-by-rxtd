@@ -83,7 +83,8 @@ SoundHandler::LinkingResult BandCascadeTransformer::vFinishLinking(Logger& cl) {
 	}
 
 	const auto dataSize = sourcePtr->getDataSize();
-	savedIds.resize(dataSize.layersCount);
+	snapshot.clear();
+	snapshot.resize(dataSize.layersCount);
 
 	return { 1, dataSize.valuesCount };
 }
@@ -99,26 +100,37 @@ void BandCascadeTransformer::vFinish() {
 	changed = false;
 
 	auto& source = *getSource();
-
 	source.finish();
-	const auto sourceData = source.getData();
-
-	bool anyChanged = false;
-	for (index i = 0; i < sourceData.ids.size(); i++) {
-		if (savedIds[i] != sourceData.ids[i]) {
-			savedIds[i] = sourceData.ids[i];
-			anyChanged = true;
-		}
-	}
-	if (!anyChanged) {
-		return;
-	}
 
 	const index bandsCount = source.getDataSize().valuesCount;
-	auto dest = generateLayerData(0);
+	const index layersCount = source.getDataSize().layersCount;
 
-	for (index band = 0; band < bandsCount; ++band) {
-		dest[band] = computeForBand(band, sourceData.values);
+	for (index i = 0; i < layersCount; i++) {
+		auto& meta = snapshot[i];
+		meta.nextChunkIndex = 0;
+		meta.data = source.getSavedData(i);
+	}
+
+	for (auto chunk : source.getChunks(0)) {
+		for (index i = 0; i < layersCount; i++) {
+			auto& meta = snapshot[i];
+			meta.offset -= chunk.size;
+
+			auto layerChunks = source.getChunks(i);
+			if (meta.nextChunkIndex >= layerChunks.size() || meta.offset >= 0) {
+				continue;
+			}
+
+			auto nextChunk = layerChunks[meta.nextChunkIndex];
+			meta.data = nextChunk.data;
+			meta.nextChunkIndex++;
+			meta.offset += nextChunk.size;
+		}
+
+		auto dest = generateLayerData(0, chunk.size);
+		for (index band = 0; band < bandsCount; ++band) {
+			dest[band] = computeForBand(band);
+		}
 	}
 }
 
@@ -136,7 +148,7 @@ bool BandCascadeTransformer::vGetProp(const isview& prop, utils::BufferPrinter& 
 	return true;
 }
 
-float BandCascadeTransformer::computeForBand(index band, utils::array2d_view<float> sourceData) const {
+float BandCascadeTransformer::computeForBand(index band) const {
 	const BandResampler& resampler = *resamplerPtr;
 
 	float weight = 0.0;
@@ -150,10 +162,11 @@ float BandCascadeTransformer::computeForBand(index band, utils::array2d_view<flo
 
 	for (index cascade = 0; cascade < bandEndCascade; cascade++) {
 		const auto bandWeight = bandWeights[cascade];
-		const auto magnitude = sourceData[cascade][band];
+		const auto magnitude = snapshot[cascade].data[band];
 		const auto cascadeBandValue = magnitude / bandWeight;
 
-		if (cascadeBandValue < params.zeroLevelHard) { // todo read all of this and try to understand
+		if (cascadeBandValue < params.zeroLevelHard) {
+			// todo read all of this and try to understand
 			break;
 		}
 		if (bandWeight < params.minWeight) {
@@ -174,7 +187,7 @@ float BandCascadeTransformer::computeForBand(index band, utils::array2d_view<flo
 	if (weight < params.weightFallback) {
 		for (index cascade = 0; cascade < bandEndCascade; cascade++) {
 			const auto bandWeight = bandWeights[cascade];
-			const auto magnitude = sourceData[cascade][band];
+			const auto magnitude = snapshot[cascade].data[band];
 			const auto cascadeBandValue = magnitude / bandWeight;
 
 			if (cascadeBandValue < params.zeroLevelHard) {

@@ -12,7 +12,8 @@
 
 using namespace audio_analyzer;
 
-bool WeightedBlur::parseParams(const OptionMap& om, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber) const {
+bool WeightedBlur::parseParams(const OptionMap& om, Logger& cl, const Rainmeter& rain, void* paramsPtr,
+                               index legacyNumber) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
 
 	params.sourceId = om.get(L"source").asIString();
@@ -63,21 +64,16 @@ void WeightedBlur::vFinish() {
 	source.finish();
 	const BandResampler& resampler = *resamplerPtr;
 	const index layersCount = source.getDataSize().layersCount;
-	const auto sourceData = source.getData();
 
 	double minRadius = params.minRadius * std::pow(params.minRadiusAdaptation, resampler.getStartingLayer());
 	double maxRadius = params.maxRadius * std::pow(params.maxRadiusAdaptation, resampler.getStartingLayer());
 
-	const auto refIds = getRefIds();
-
 	for (index i = 0; i < layersCount; ++i) {
-		const auto sid = sourceData.ids[i];
-
-		if (sid != refIds[i]) {
-			const auto cascadeMagnitudes = sourceData.values[i];
+		for (auto chunk : source.getChunks(i)) {
+			const auto cascadeMagnitudes = chunk.data;
 			const auto cascadeWeights = resampler.getLayerWeights(i);
 
-			const auto result = updateLayerData(i, sid);
+			const auto result = generateLayerData(i, chunk.size);
 			blurCascade(cascadeMagnitudes, cascadeWeights, result, std::llround(minRadius), std::llround(maxRadius));
 		}
 

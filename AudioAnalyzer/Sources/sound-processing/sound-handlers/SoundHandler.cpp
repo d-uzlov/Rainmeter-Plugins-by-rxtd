@@ -12,8 +12,6 @@
 
 using namespace audio_analyzer;
 
-std::atomic<LayerDataId::idType> LayerDataId::sourceIdCounter{ 1 };
-
 SoundHandler* SoundHandler::patch(
 	SoundHandler* old, HandlerPatcher& patcher,
 	Channel channel, index sampleRate,
@@ -45,20 +43,10 @@ SoundHandler* SoundHandler::patch(
 	}
 
 	result._dataSize = linkingResult.dataSize;
-	result._values.setBuffersCount(linkingResult.dataSize.layersCount);
-	result._values.setBufferSize(linkingResult.dataSize.valuesCount);
-
-	const index oldSize = result._ids.size();
-	if (linkingResult.dataSize.layersCount > oldSize) {
-		result._ids.reserve(linkingResult.dataSize.layersCount);
-
-		for (index i = 0; i < linkingResult.dataSize.layersCount - oldSize; i++) {
-			result._ids.push_back(result._generatorId);
-		}
-	}
-
-	result._idsRef.clear();
-	result._idsRef.resize(linkingResult.dataSize.layersCount);
+	result._layers.resize(linkingResult.dataSize.layersCount);
+	result._lastResults.setBuffersCount(linkingResult.dataSize.layersCount);
+	result._lastResults.setBufferSize(linkingResult.dataSize.valuesCount);
+	result._lastResults.init(0.0f);
 
 	return &result;
 }

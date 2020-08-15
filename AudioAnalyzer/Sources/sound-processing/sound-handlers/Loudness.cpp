@@ -102,6 +102,6 @@ void Loudness::pushMicroBlock(double value) {
 void Loudness::pushNextValue(double value) {
 	prevValue = value;
 
-	auto result = generateLayerData(0);
+	auto result = generateLayerData(0, blockSize);
 	result[0] = params.transformer.apply(float(value));
 }

@@ -31,6 +31,10 @@ namespace rxtd::utils {
 			return index(array.size()) - offset;
 		}
 
+		[[nodiscard]]
+		bool empty() const {
+			return getRemainingSize() == 0;
+		}
 
 		void pushNext(T value) {
 			array.push_back(std::move(value));

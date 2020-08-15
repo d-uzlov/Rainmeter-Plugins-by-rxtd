@@ -8,6 +8,8 @@
  */
 
 #pragma once
+#include <functional>
+
 #include "DownsampleHelper.h"
 #include "filter-utils/LogarithmicIRF.h"
 #include "FFT.h"
@@ -25,6 +27,8 @@ namespace rxtd::audio_utils {
 
 			index inputStride;
 			bool legacy_correctZero;
+
+			std::function<void(array_view<float> result, index cascade)> callback;
 		};
 
 	private:
@@ -45,18 +49,6 @@ namespace rxtd::audio_utils {
 		void setParams(Params _params, FFT* _fftPtr, FftCascade* _successorPtr, index _cascadeIndex);
 		void process(array_view<float> wave);
 		void reset();
-
-		[[nodiscard]]
-		bool grabChanges() {
-			const bool result = hasChanges;
-			hasChanges = false;
-			return result;
-		}
-
-		[[nodiscard]]
-		array_view<float> getValues() const {
-			return values;
-		}
 
 		[[nodiscard]]
 		double legacy_getDC() const {

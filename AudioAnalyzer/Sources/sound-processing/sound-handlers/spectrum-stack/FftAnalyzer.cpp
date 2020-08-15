@@ -152,13 +152,17 @@ SoundHandler::LinkingResult FftAnalyzer::vFinishLinking(Logger& cl) {
 
 	cascades.resize(params.cascadesCount);
 
-	audio_utils::FftCascade::Params cascadeParams{ };
+	audio_utils::FftCascade::Params cascadeParams;
 	cascadeParams.fftSize = fftSize;
 	cascadeParams.samplesPerSec = getSampleRate();
 	cascadeParams.legacy_attackTime = params.legacy_attackTime;
 	cascadeParams.legacy_decayTime = params.legacy_decayTime;
 	cascadeParams.inputStride = inputStride;
 	cascadeParams.legacy_correctZero = params.legacy_correctZero;
+	cascadeParams.callback = [this](array_view<float> result, index cascade) {
+		auto buffer = generateLayerData(cascade, inputStride * index(std::pow(2, cascade)));
+		std::copy(result.begin(), result.end(), buffer.begin());
+	};
 
 	for (index i = 0; i < index(cascades.size()); i++) {
 		const auto next = i + 1 < index(cascades.size()) ? &cascades[i + 1] : nullptr;
@@ -190,17 +194,6 @@ void FftAnalyzer::vProcess(array_view<float> wave) {
 		processRandom(wave.size());
 	} else {
 		cascades[0].process(wave);
-	}
-
-	for (index i = 0; i < index(cascades.size()); i++) {
-		const auto hasChanges = cascades[i].grabChanges();
-		if (!hasChanges) {
-			continue;
-		}
-
-		auto source = cascades[i].getValues();
-		auto dest = generateLayerData(i);
-		std::copy(source.begin(), source.end(), dest.begin());
 	}
 }
 

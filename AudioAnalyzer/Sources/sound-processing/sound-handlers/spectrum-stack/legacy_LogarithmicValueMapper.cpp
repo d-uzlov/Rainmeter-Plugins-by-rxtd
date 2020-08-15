@@ -59,24 +59,15 @@ void legacy_LogarithmicValueMapper::vFinish() {
 	source.finish();
 	const index layersCount = source.getDataSize().layersCount;
 
-	const auto sourceData = source.getData();
-
-	const auto refIds = getRefIds();
-
 	for (index i = 0; i < layersCount; ++i) {
-		const auto sid = sourceData.ids[i];
+		for (auto chunk : source.getChunks(i)) {
+			auto dest = generateLayerData(i, chunk.size);
 
-		if (sid == refIds[i]) {
-			continue;
-		}
-
-		auto sd = sourceData.values[i];
-		auto dest = updateLayerData(i, sid);
-
-		for (index j = 0; j < sd.size(); ++j) {
-			float value = utils::MyMath::fastLog2(sd[j]) * log10inverse;
-			value = value * logNormalization + 1.0f + params.offset;
-			dest[j] = float(value);
+			for (index j = 0; j < chunk.data.size(); ++j) {
+				float value = utils::MyMath::fastLog2(chunk.data[j]) * log10inverse;
+				value = value * logNormalization + 1.0f + params.offset;
+				dest[j] = float(value);
+			}
 		}
 	}
 }

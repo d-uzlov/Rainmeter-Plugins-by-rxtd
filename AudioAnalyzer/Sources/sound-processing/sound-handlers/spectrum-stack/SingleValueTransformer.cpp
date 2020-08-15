@@ -52,7 +52,7 @@ void SingleValueTransformer::vReset() {
 
 void SingleValueTransformer::vProcess(array_view<float> wave) {
 	if (params.transformer.hasState()) {
-		processStateful(wave.size());
+		processStateful();
 	} else {
 		processStateless();
 	}
@@ -61,36 +61,31 @@ void SingleValueTransformer::vProcess(array_view<float> wave) {
 void SingleValueTransformer::processStateless() {
 	auto& source = *getSource();
 	source.finish();
-	const auto sourceData = source.getData();
 	const index layersCount = source.getDataSize().layersCount;
 
-	const auto refIds = getRefIds();
-
 	for (index i = 0; i < layersCount; ++i) {
-		const auto sid = sourceData.ids[i];
+		for (auto chunk : source.getChunks(i)) {
+			auto layerData = chunk.data;
+			auto dest = generateLayerData(i, chunk.size);
 
-		if (sid == refIds[i]) {
-			continue;
+			params.transformer.applyToArray(layerData, dest);
 		}
-
-		auto layerData = sourceData.values[i];
-		auto dest = updateLayerData(i, sid);
-
-		params.transformer.applyToArray(layerData, dest);
 	}
 }
 
-void SingleValueTransformer::processStateful(index waveSize) {
+void SingleValueTransformer::processStateful() {
 	auto& source = *getSource();
 	source.finish();
-	const auto sourceData = source.getData();
 	const index layersCount = source.getDataSize().layersCount;
 
 	for (index i = 0; i < layersCount; ++i) {
-		auto layerData = sourceData.values[i];
-		auto dest = generateLayerData(i);
+		for (auto chunk : source.getChunks(i)) {
+			auto layerData = chunk.data;
+			auto dest = generateLayerData(i, chunk.size);
 
-		transformers[i].setParams(getSampleRate(), waveSize);
-		transformers[i].applyToArray(layerData, dest);
+			// todo resample in time
+			transformers[i].setParams(getSampleRate(), chunk.size);
+			params.transformer.applyToArray(layerData, dest);
+		}
 	}
 }

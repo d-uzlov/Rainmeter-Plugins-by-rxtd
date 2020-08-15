@@ -8,6 +8,7 @@
  */
 
 #pragma once
+#include "array2d_view.h"
 #include "../SoundHandler.h"
 #include "BandResampler.h"
 
@@ -67,11 +68,21 @@ namespace rxtd::audio_analyzer {
 			bool anyCascadeUsed{ };
 		} analysis;
 
-		std::vector<LayerDataId> savedIds;
+		struct CascadeMeta {
+			index offset{ };
+			index nextChunkIndex{ };
+			array_view<float> data;
+		};
+
+		std::vector<CascadeMeta> snapshot;
 
 	public:
 		[[nodiscard]]
-		bool parseParams(const OptionMap& om, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber) const override;
+		bool parseParams(
+			const OptionMap& om, Logger& cl, const Rainmeter& rain,
+			void* paramsPtr,
+			index legacyNumber
+		) const override;
 
 		[[nodiscard]]
 		const Params& getParams() const {
@@ -104,7 +115,7 @@ namespace rxtd::audio_analyzer {
 
 	private:
 		[[nodiscard]]
-		float computeForBand(index band, utils::array2d_view<float> sourceData) const;
+		float computeForBand(index band) const;
 
 		[[nodiscard]]
 		static AnalysisInfo computeAnalysis(BandResampler& resampler, double minWeight, double targetWeight);

@@ -58,6 +58,7 @@ void FftCascade::process(array_view<float> wave) {
 		}
 
 		doFft(chunk);
+		params.callback(values, cascadeIndex);
 
 		buffer.removeFirst(params.inputStride);
 	}

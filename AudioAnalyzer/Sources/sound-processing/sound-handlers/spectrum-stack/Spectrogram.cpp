@@ -223,10 +223,12 @@ void Spectrogram::vProcess(array_view<float> wave) {
 	auto& source = *getSource();
 
 	source.finish();
-	const auto sd = source.getData();
 
-	// todo check id
-	const auto data = source.getData().values[0];
+	auto allData = source.getChunks(0);
+	if (allData.empty()) {
+		return;
+	}
+	const auto data = allData.back().data;
 
 	const bool dataIsZero = std::all_of(
 		data.begin(),

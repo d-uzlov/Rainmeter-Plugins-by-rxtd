@@ -13,7 +13,8 @@
 
 using namespace audio_analyzer;
 
-bool UniformBlur::parseParams(const OptionMap& om, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber) const {
+bool UniformBlur::parseParams(const OptionMap& om, Logger& cl, const Rainmeter& rain, void* paramsPtr,
+                              index legacyNumber) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
 
 	params.sourceId = om.get(L"source").asIString();
@@ -59,19 +60,14 @@ void UniformBlur::vFinish() {
 
 	auto& source = *getSource();
 	source.finish();
-	const auto sourceData = source.getData();
 
 	double theoreticalRadius = startingRadius;
 
-	const auto refIds = getRefIds();
-
 	const index cascadesCount = source.getDataSize().layersCount;
 	for (index i = 0; i < cascadesCount; ++i) {
-		const auto sid = sourceData.ids[i];
-
-		if (sid != refIds[i]) {
-			const auto cascadeSource = sourceData.values[i];
-			auto cascadeResult = updateLayerData(i, sid);
+		for (auto chunk : source.getChunks(i)) {
+			const auto cascadeSource = chunk.data;
+			auto cascadeResult = generateLayerData(i, chunk.size);
 
 			const index radius = std::llround(theoreticalRadius);
 			if (radius < 1) {
@@ -86,7 +82,7 @@ void UniformBlur::vFinish() {
 }
 
 void UniformBlur::blurCascade(array_view<float> source, array_span<float> dest, index radius) {
-	auto& kernel = gcm.forRadius(radius);
+	auto kernel = gcm.forRadius(radius);
 
 	const auto bandsCount = source.size();
 	for (index i = 0; i < bandsCount; ++i) {

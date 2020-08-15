@@ -15,7 +15,11 @@ using namespace std::string_literals;
 
 using namespace audio_analyzer;
 
-bool BandResampler::parseParams(const OptionMap& om, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber) const {
+bool BandResampler::parseParams(
+	const OptionMap& om, Logger& cl, const Rainmeter& rain,
+	void* paramsPtr,
+	index legacyNumber
+) const {
 	auto& params = *static_cast<Params*>(paramsPtr);
 
 	params.fftId = om.get(L"source").asIString();
@@ -227,19 +231,15 @@ void BandResampler::vFinish() {
 	auto& source = *fftSource;
 
 	source.finish();
-	const auto sourceData = source.getData();
 	double binWidth = static_cast<double>(getSampleRate()) / (source.getFftSize() * std::pow(2, startCascade));
 
-	const auto refIds = getRefIds();
-
 	for (index cascadeIndex = startCascade; cascadeIndex < endCascade; ++cascadeIndex) {
-		const auto sid = sourceData.ids[cascadeIndex];
+		const auto chunks = source.getChunks(cascadeIndex);
 		const index localCascadeIndex = cascadeIndex - startCascade;
 
-		if (sid != refIds[localCascadeIndex]) {
-			const auto cascade = sourceData.values[cascadeIndex];
-			auto dest = updateLayerData(localCascadeIndex, sid);
-			sampleCascade(cascade, dest, binWidth);
+		for (auto chunk : chunks) {
+			auto dest = generateLayerData(localCascadeIndex, chunk.size);
+			sampleCascade(chunk.data, dest, binWidth);
 
 			if (params.legacy_proportionalValues) {
 				for (index band = 0; band < bandsCount; ++band) {

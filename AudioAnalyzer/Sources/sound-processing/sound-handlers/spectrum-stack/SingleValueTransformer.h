@@ -63,6 +63,6 @@ namespace rxtd::audio_analyzer {
 
 	private:
 		void processStateless();
-		void processStateful(index waveSize);
+		void processStateful();
 	};
 }

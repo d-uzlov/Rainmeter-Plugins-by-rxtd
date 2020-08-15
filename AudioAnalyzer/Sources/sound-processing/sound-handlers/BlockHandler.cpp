@@ -86,7 +86,7 @@ bool BlockHandler::vGetProp(const isview& prop, utils::BufferPrinter& printer) c
 }
 
 void BlockHandler::setNextValue(float value) {
-	generateLayerData(0)[0] = params.transformer.apply(value);
+	generateLayerData(0, blockSize)[0] = params.transformer.apply(value);
 }
 
 void BlockRms::_process(array_view<float> wave) {
