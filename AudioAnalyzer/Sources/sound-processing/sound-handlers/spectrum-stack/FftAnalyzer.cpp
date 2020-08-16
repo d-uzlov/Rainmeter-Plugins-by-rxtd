@@ -201,7 +201,7 @@ void FftAnalyzer::processRandom(index waveSize) {
 	audio_utils::RandomGenerator random;
 
 	std::vector<float> wave;
-	wave.resize(waveSize);
+	wave.reserve(waveSize);
 
 	for (index i = 0; i < waveSize; ++i) {
 		if (randomState == RandomState::ON) {
