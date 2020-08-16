@@ -66,7 +66,8 @@ namespace rxtd::audio_analyzer {
 		template <typename T>
 		[[nodiscard]]
 		std::unique_ptr<HandlerPatcher> createPatcher(const utils::OptionMap& om, Logger& cl) const {
-			return std::make_unique<SoundHandler::HandlerPatcherImpl<T>>(om, cl, rain, legacyNumber);
+			auto result = std::make_unique<SoundHandler::HandlerPatcherImpl<T>>(om, cl, rain, legacyNumber);
+			return result->isValid() ? std::move(result) : nullptr;
 		}
 
 		void readRawDescription2(isview type, const utils::OptionMap& optionMap, string& rawDescription2) const;

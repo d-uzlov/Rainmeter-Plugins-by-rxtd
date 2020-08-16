@@ -108,7 +108,7 @@ bool Spectrogram::parseParams(
 				return { };
 			}
 			if (value / prevValue < 1.001f && value - prevValue < 0.001f) {
-				cl.error(L"colors: values {} and {} are too close, discarding second one", prevValue, value);
+				cl.warning(L"colors: values {} and {} are too close, discarding second one", prevValue, value);
 				continue;
 			}
 
@@ -128,7 +128,7 @@ bool Spectrogram::parseParams(
 
 		if (params.colors.size() < 2) {
 			cl.error(L"need at least 2 colors but {} found", params.colors.size());
-			params.colors = { };
+			return { };
 		}
 	} else {
 		params.colors.resize(2);
