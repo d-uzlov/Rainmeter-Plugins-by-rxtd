@@ -31,7 +31,6 @@
 #include "array_view.h"
 #include "BufferPrinter.h"
 #include "RainmeterWrappers.h"
-#include "../Channel.h"
 #include "Vector2D.h"
 #include "option-parser/OptionMap.h"
 
@@ -44,13 +43,6 @@ namespace rxtd::audio_analyzer {
 
 		[[nodiscard]]
 		virtual SoundHandler* getHandler(isview id) const = 0;
-	};
-
-	using HandlerPatchingFun = std::unique_ptr<SoundHandler>(*)(std::unique_ptr<SoundHandler> old);
-
-	struct PatchInfo {
-		std::any params;
-		HandlerPatchingFun fun = nullptr;
 	};
 
 	class SoundHandler {
@@ -109,7 +101,7 @@ namespace rxtd::audio_analyzer {
 		struct Configuration {
 			SoundHandler* sourcePtr = nullptr;
 			index sampleRate{ };
-			Channel channel{ };
+			sview channelName{ };
 		};
 
 		struct ConfigurationResult {
@@ -183,7 +175,7 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		bool patch(
 			const std::any& params,
-			Channel channel, index sampleRate,
+			sview channelName, index sampleRate,
 			HandlerFinder& hf,
 			Logger& cl
 		);
@@ -192,11 +184,9 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		virtual isview vGetSourceName() const = 0;
 
-		// method should return true on success, false on fail
 		[[nodiscard]]
 		virtual ConfigurationResult vConfigure(Logger& cl) = 0;
 
-		// push new data
 		[[nodiscard]]
 		array_span<float> pushLayer(index layer, index equivalentWaveSize) {
 			const index offset = index(_buffer.size());

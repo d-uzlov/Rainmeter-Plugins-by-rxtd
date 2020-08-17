@@ -12,6 +12,13 @@
 #include "sound-processing/sound-handlers/SoundHandler.h"
 
 namespace rxtd::audio_analyzer {
+	using HandlerPatchingFun = std::unique_ptr<SoundHandler>(*)(std::unique_ptr<SoundHandler> old);
+
+	struct PatchInfo {
+		std::any params;
+		HandlerPatchingFun fun = nullptr;
+	};
+
 	class HandlerCacheHelper {
 		using Logger = utils::Rainmeter::Logger;
 		using Rainmeter = utils::Rainmeter;

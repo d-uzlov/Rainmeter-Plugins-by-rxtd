@@ -104,7 +104,7 @@ SoundHandler::ConfigurationResult WaveForm::vConfigure(Logger& cl) {
 
 	filepath = params.folder;
 	filepath += L"wave-";
-	filepath += config.channel.technicalName();
+	filepath += config.channelName;
 	filepath += L".bmp";
 	// todo check that can write ro this file
 

@@ -124,7 +124,7 @@ void SoundAnalyzer::patchHandlers(ChannelLayout layout) {
 			auto handlerPtr = patchInfo.fun(std::move(channelData[handlerName]));
 
 			auto cl = logger.context(L"Handler {}: ", handlerName);
-			const bool success = handlerPtr->patch(patchInfo.params, channel, cph.getSampleRate(), hf, cl);
+			const bool success = handlerPtr->patch(patchInfo.params, channel.technicalName(), cph.getSampleRate(), hf, cl);
 			if (!success) {
 				cl.error(L"invalid handler");
 

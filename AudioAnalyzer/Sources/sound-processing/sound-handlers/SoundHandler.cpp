@@ -14,43 +14,42 @@ using namespace audio_analyzer;
 
 bool SoundHandler::patch(
 	const std::any& params,
-	Channel channel, index sampleRate,
+	sview channelName, index sampleRate,
 	HandlerFinder& hf, Logger& cl
 ) {
-	auto& result = *this;
-
-	if (!result.checkSameParams(params)) {
-		result.setParams(params);
+	if (!checkSameParams(params)) {
+		setParams(params);
 	}
 
-	if (const auto sourceName = result.vGetSourceName();
+	if (const auto sourceName = vGetSourceName();
 		!sourceName.empty()) {
-		result._configuration.sourcePtr = hf.getHandler(sourceName);
-		if (result._configuration.sourcePtr == nullptr) {
+		_configuration.sourcePtr = hf.getHandler(sourceName);
+		if (_configuration.sourcePtr == nullptr) {
 			cl.error(L"source is not found");
 			return { };
 		}
 
-		const auto dataSize = result._configuration.sourcePtr->getDataSize();
+		const auto dataSize = _configuration.sourcePtr->getDataSize();
 		if (dataSize.isEmpty()) {
 			cl.error(L"source doesn't produce any data");
 			return { };
 		}
 	}
 
-	result._configuration.sampleRate = sampleRate;
-	result._configuration.channel = channel;
+	_configuration.sampleRate = sampleRate;
+	_configuration.channelName = channelName;
 
-	const auto linkingResult = result.vConfigure(cl);
+	const auto linkingResult = vConfigure(cl);
 	if (!linkingResult.success) {
 		return { };
 	}
 
-	result._dataSize = linkingResult.dataSize;
-	result._layers.resize(linkingResult.dataSize.layersCount);
-	result._lastResults.setBuffersCount(linkingResult.dataSize.layersCount);
-	result._lastResults.setBufferSize(linkingResult.dataSize.valuesCount);
-	result._lastResults.init(0.0f);
+	_dataSize = linkingResult.dataSize;
+	_layers.clear();
+	_layers.resize(linkingResult.dataSize.layersCount);
+	_lastResults.setBuffersCount(linkingResult.dataSize.layersCount);
+	_lastResults.setBufferSize(linkingResult.dataSize.valuesCount);
+	_lastResults.init(0.0f);
 
 	return true;
 }

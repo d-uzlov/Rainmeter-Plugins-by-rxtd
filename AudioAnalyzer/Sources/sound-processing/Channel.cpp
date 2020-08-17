@@ -115,6 +115,9 @@ Channel::ChannelParser::ChannelParser() {
 	addElement(L"Center", eCENTER);
 	addElement(L"C", eCENTER);
 
+	addElement(L"CenterBack", eCENTER_BACK);
+	addElement(L"CB", eCENTER_BACK);
+
 	addElement(L"LowFrequency", eLOW_FREQUENCY);
 	addElement(L"LFE", eLOW_FREQUENCY);
 
@@ -146,14 +149,15 @@ sview Channel::technicalName() const {
 	case eFRONT_LEFT: return L"FRONT_LEFT";
 	case eFRONT_RIGHT: return L"FRONT_RIGHT";
 	case eCENTER: return L"CENTER";
+	case eCENTER_BACK: return L"CENTER_BACK";
 	case eLOW_FREQUENCY: return L"LOW_FREQUENCY";
 	case eBACK_LEFT: return L"BACK_LEFT";
 	case eBACK_RIGHT: return L"BACK_RIGHT";
 	case eSIDE_LEFT: return L"SIDE_LEFT";
 	case eSIDE_RIGHT: return L"SIDE_RIGHT";
 	case eAUTO: return L"AUTO";
-	default: return L"unknown_channel";
 	}
+	return { };
 }
 
 

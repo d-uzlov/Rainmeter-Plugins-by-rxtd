@@ -161,7 +161,7 @@ SoundHandler::ConfigurationResult Spectrogram::vConfigure(Logger& cl) {
 	stripBuffer.resize(dataSize.valuesCount);
 
 	filepath = params.prefix;
-	filepath += config.channel.technicalName();
+	filepath += config.channelName;
 	filepath += L".bmp";
 
 	blockSize = index(config.sampleRate * params.resolution);
