@@ -19,7 +19,6 @@
 #include "sound-processing/sound-handlers/spectrum-stack/WeightedBlur.h"
 #include "sound-processing/sound-handlers/spectrum-stack/legacy_FiniteTimeFilter.h"
 #include "sound-processing/sound-handlers/spectrum-stack/UniformBlur.h"
-#include "sound-processing/sound-handlers/spectrum-stack/legacy_LogarithmicValueMapper.h"
 #include "sound-processing/sound-handlers/spectrum-stack/Spectrogram.h"
 #include "sound-processing/sound-handlers/spectrum-stack/SingleValueTransformer.h"
 
@@ -125,7 +124,20 @@ PatchInfo HandlerCacheHelper::createHandlerPatcher(
 		return createPatcherT<legacy_FiniteTimeFilter>(optionMap, cl);
 	}
 	if (type == L"LogarithmicValueMapper") {
-		return createPatcherT<legacy_LogarithmicValueMapper>(optionMap, cl);
+		// legacy
+		utils::BufferPrinter bp;
+		bp.append(L"type ValueTransformer");
+		bp.append(L"| source {}", optionMap.get(L"source").asString());
+		const double sensitivity = std::clamp<double>(
+			optionMap.get(L"sensitivity").asFloat(35.0),
+			std::numeric_limits<float>::epsilon(),
+			1000.0
+		);
+		const double offset = optionMap.get(L"offset").asFloatF(0.0);
+
+		bp.append(L"| transform db map[from -{} : 0, to {} : {}]", sensitivity * 0.5, offset, 1.0 + offset);
+		auto optionMapLocal = utils::Option{ bp.getBufferView() }.asMap(L'|', L' ');
+		return createPatcherT<SingleValueTransformer>(optionMapLocal, cl);
 	}
 
 	cl.error(L"unknown type '{}'", type);
