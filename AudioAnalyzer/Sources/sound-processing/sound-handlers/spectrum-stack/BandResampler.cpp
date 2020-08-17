@@ -163,7 +163,7 @@ std::vector<float> BandResampler::parseFreqList(sview listId, const Rainmeter& r
 	return result;
 }
 
-SoundHandler::LinkingResult BandResampler::vFinishLinking(Logger& cl) {
+SoundHandler::ConfigurationResult BandResampler::vConfigure(Logger& cl) {
 	auto& config = getConfiguration();
 	fftSource = dynamic_cast<FftAnalyzer*>(config.sourcePtr);
 	if (fftSource == nullptr) {
@@ -237,7 +237,7 @@ void BandResampler::vFinish() {
 		const index localCascadeIndex = cascadeIndex - startCascade;
 
 		for (auto chunk : chunks) {
-			auto dest = generateLayerData(localCascadeIndex, chunk.equivalentWaveSize);
+			auto dest = pushLayer(localCascadeIndex, chunk.equivalentWaveSize);
 			sampleCascade(chunk.data, dest, binWidth);
 
 			if (params.legacy_proportionalValues) {

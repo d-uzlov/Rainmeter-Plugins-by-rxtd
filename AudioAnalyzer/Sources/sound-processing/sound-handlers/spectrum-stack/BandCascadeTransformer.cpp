@@ -60,7 +60,7 @@ SoundHandler::ParseResult BandCascadeTransformer::parseParams(
 	return params;
 }
 
-SoundHandler::LinkingResult BandCascadeTransformer::vFinishLinking(Logger& cl) {
+SoundHandler::ConfigurationResult BandCascadeTransformer::vConfigure(Logger& cl) {
 	auto& config = getConfiguration();
 	const auto provider = dynamic_cast<ResamplerProvider*>(config.sourcePtr);
 	if (provider == nullptr) {
@@ -128,7 +128,7 @@ void BandCascadeTransformer::vFinish() {
 			meta.offset += nextChunk.equivalentWaveSize;
 		}
 
-		auto dest = generateLayerData(0, chunk.equivalentWaveSize);
+		auto dest = pushLayer(0, chunk.equivalentWaveSize);
 		for (index band = 0; band < bandsCount; ++band) {
 			dest[band] = computeForBand(band);
 		}

@@ -32,7 +32,7 @@ SoundHandler::ParseResult UniformBlur::parseParams(
 	return params;
 }
 
-SoundHandler::LinkingResult UniformBlur::vFinishLinking(Logger& cl) {
+SoundHandler::ConfigurationResult UniformBlur::vConfigure(Logger& cl) {
 	auto& config = getConfiguration();
 
 	index startingLayer = 0;
@@ -70,7 +70,7 @@ void UniformBlur::vFinish() {
 	for (index i = 0; i < cascadesCount; ++i) {
 		for (auto chunk : source.getChunks(i)) {
 			const auto cascadeSource = chunk.data;
-			auto cascadeResult = generateLayerData(i, chunk.equivalentWaveSize);
+			auto cascadeResult = pushLayer(i, chunk.equivalentWaveSize);
 
 			const index radius = std::llround(theoreticalRadius);
 			if (radius < 1) {

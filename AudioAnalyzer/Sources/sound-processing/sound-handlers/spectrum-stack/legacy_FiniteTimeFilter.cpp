@@ -47,7 +47,7 @@ SoundHandler::ParseResult legacy_FiniteTimeFilter::parseParams(
 	return params;
 }
 
-SoundHandler::LinkingResult legacy_FiniteTimeFilter::vFinishLinking(Logger& cl) {
+SoundHandler::ConfigurationResult legacy_FiniteTimeFilter::vConfigure(Logger& cl) {
 	if (params.smoothingFactor <= 1) {
 		smoothingNormConstant = 1.0;
 	} else {
@@ -115,7 +115,7 @@ void legacy_FiniteTimeFilter::vFinish() {
 
 		for (auto chunk : chunks) {
 			if (params.smoothingFactor <= 1) {
-				auto dest = generateLayerData(layer, chunk.equivalentWaveSize);
+				auto dest = pushLayer(layer, chunk.equivalentWaveSize);
 				std::copy(chunk.data.begin(), chunk.data.end(), dest.begin());
 				continue;
 			}
@@ -130,7 +130,7 @@ void legacy_FiniteTimeFilter::vFinish() {
 			const auto sourceValues = chunk.data;
 			std::copy(sourceValues.begin(), sourceValues.end(), layerPastValues[pastValuesIndex].begin());
 
-			const auto dest = generateLayerData(layer, chunk.equivalentWaveSize);
+			const auto dest = pushLayer(layer, chunk.equivalentWaveSize);
 			applyToLayer(layerPastValues, dest);
 		}
 	}

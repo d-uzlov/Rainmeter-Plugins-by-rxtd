@@ -41,7 +41,7 @@ bool SoundHandler::patch(
 	result._configuration.sampleRate = sampleRate;
 	result._configuration.channel = channel;
 
-	const auto linkingResult = result.vFinishLinking(cl);
+	const auto linkingResult = result.vConfigure(cl);
 	if (!linkingResult.success) {
 		return { };
 	}

@@ -44,7 +44,7 @@ SoundHandler::ParseResult BlockHandler::parseParams(
 	return params;
 }
 
-SoundHandler::LinkingResult BlockHandler::vFinishLinking(Logger& cl) {
+SoundHandler::ConfigurationResult BlockHandler::vConfigure(Logger& cl) {
 	auto& config = getConfiguration();
 	blockSize = static_cast<decltype(blockSize)>(config.sampleRate * params.updateIntervalMs);
 	blockSize = std::max<index>(blockSize, 1);
@@ -82,7 +82,7 @@ bool BlockHandler::vGetProp(const isview& prop, utils::BufferPrinter& printer) c
 }
 
 void BlockHandler::setNextValue(float value) {
-	generateLayerData(0, blockSize)[0] = params.transformer.apply(value);
+	pushLayer(0, blockSize)[0] = params.transformer.apply(value);
 }
 
 void BlockRms::_process(array_view<float> wave) {

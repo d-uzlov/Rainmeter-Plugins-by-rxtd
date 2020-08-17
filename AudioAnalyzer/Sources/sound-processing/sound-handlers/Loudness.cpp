@@ -40,7 +40,7 @@ SoundHandler::ParseResult Loudness::parseParams(
 	return params;
 }
 
-SoundHandler::LinkingResult Loudness::vFinishLinking(Logger& cl) {
+SoundHandler::ConfigurationResult Loudness::vConfigure(Logger& cl) {
 	blocksCount = index(params.timeWindowMs / 1000.0 * params.updatesPerSecond);
 	blocksCount = std::max<index>(blocksCount, 0);
 
@@ -103,6 +103,6 @@ void Loudness::pushMicroBlock(double value) {
 void Loudness::pushNextValue(double value) {
 	prevValue = value;
 
-	auto result = generateLayerData(0, blockSize);
+	auto result = pushLayer(0, blockSize);
 	result[0] = params.transformer.apply(float(value));
 }

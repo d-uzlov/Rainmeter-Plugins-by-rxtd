@@ -65,7 +65,7 @@ namespace rxtd::audio_analyzer {
 		}
 
 		[[nodiscard]]
-		LinkingResult vFinishLinking(Logger& cl) override;
+		ConfigurationResult vConfigure(Logger& cl) override;
 
 		void vReset() final;
 		void vProcess(array_view<float> wave) final;

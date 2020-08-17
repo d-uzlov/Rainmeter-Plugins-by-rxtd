@@ -146,7 +146,7 @@ SoundHandler::ParseResult Spectrogram::parseParams(const OptionMap& om, Logger& 
 	return params;
 }
 
-SoundHandler::LinkingResult Spectrogram::vFinishLinking(Logger& cl) {
+SoundHandler::ConfigurationResult Spectrogram::vConfigure(Logger& cl) {
 	auto& config = getConfiguration();
 	const auto dataSize = config.sourcePtr->getDataSize();
 

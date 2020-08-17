@@ -105,7 +105,7 @@ SoundHandler::ParseResult FftAnalyzer::parseParams(
 	return params;
 }
 
-SoundHandler::LinkingResult FftAnalyzer::vFinishLinking(Logger& cl) {
+SoundHandler::ConfigurationResult FftAnalyzer::vConfigure(Logger& cl) {
 	auto& config = getConfiguration();
 	
 	switch (params.legacy_sizeBy) {
@@ -156,7 +156,7 @@ SoundHandler::LinkingResult FftAnalyzer::vFinishLinking(Logger& cl) {
 	cascadeParams.inputStride = inputStride;
 	cascadeParams.legacy_correctZero = params.legacy_correctZero;
 	cascadeParams.callback = [this](array_view<float> result, index cascade) {
-		auto buffer = generateLayerData(cascade, inputStride * index(std::pow(2, cascade)));
+		auto buffer = pushLayer(cascade, inputStride * index(std::pow(2, cascade)));
 		std::copy(result.begin(), result.end(), buffer.begin());
 	};
 

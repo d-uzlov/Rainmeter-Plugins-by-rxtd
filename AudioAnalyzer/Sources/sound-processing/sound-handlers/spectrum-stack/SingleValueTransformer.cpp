@@ -33,7 +33,7 @@ SoundHandler::ParseResult SingleValueTransformer::parseParams(
 	return params;
 }
 
-SoundHandler::LinkingResult SingleValueTransformer::vFinishLinking(Logger& cl) {
+SoundHandler::ConfigurationResult SingleValueTransformer::vConfigure(Logger& cl) {
 	auto& config = getConfiguration();
 	const auto dataSize = config.sourcePtr->getDataSize();
 
@@ -73,7 +73,7 @@ void SingleValueTransformer::processStateless() {
 	for (index i = 0; i < layersCount; ++i) {
 		for (auto chunk : source.getChunks(i)) {
 			auto layerData = chunk.data;
-			auto dest = generateLayerData(i, chunk.equivalentWaveSize);
+			auto dest = pushLayer(i, chunk.equivalentWaveSize);
 
 			params.transformer.applyToArray(layerData, dest);
 		}
@@ -95,7 +95,7 @@ void SingleValueTransformer::processStateful() {
 			while (counter >= granularityBlock) {
 				counter -= granularityBlock;
 				auto layerData = chunk.data;
-				auto dest = generateLayerData(i, granularityBlock);
+				auto dest = pushLayer(i, granularityBlock);
 
 				params.transformer.applyToArray(layerData, dest);
 			}

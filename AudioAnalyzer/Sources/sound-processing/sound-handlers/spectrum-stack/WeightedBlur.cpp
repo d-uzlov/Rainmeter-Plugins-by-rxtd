@@ -40,7 +40,7 @@ SoundHandler::ParseResult WeightedBlur::parseParams(
 	return params;
 }
 
-SoundHandler::LinkingResult WeightedBlur::vFinishLinking(Logger& cl) {
+SoundHandler::ConfigurationResult WeightedBlur::vConfigure(Logger& cl) {
 	resamplerPtr = getResampler();
 	if (resamplerPtr == nullptr) {
 		cl.error(L"invalid source: BandResampler is not found in the handler chain");
@@ -77,7 +77,7 @@ void WeightedBlur::vFinish() {
 			const auto cascadeMagnitudes = chunk.data;
 			const auto cascadeWeights = resampler.getLayerWeights(i);
 
-			const auto result = generateLayerData(i, chunk.equivalentWaveSize);
+			const auto result = pushLayer(i, chunk.equivalentWaveSize);
 			blurCascade(cascadeMagnitudes, cascadeWeights, result, std::llround(minRadius), std::llround(maxRadius));
 		}
 

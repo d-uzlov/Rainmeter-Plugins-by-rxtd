@@ -88,7 +88,7 @@ SoundHandler::ParseResult WaveForm::parseParams(
 	return params;
 }
 
-SoundHandler::LinkingResult WaveForm::vFinishLinking(Logger& cl) {
+SoundHandler::ConfigurationResult WaveForm::vConfigure(Logger& cl) {
 	minDistinguishableValue = 1.0 / params.height;
 
 	drawer.setDimensions(params.width, params.height);

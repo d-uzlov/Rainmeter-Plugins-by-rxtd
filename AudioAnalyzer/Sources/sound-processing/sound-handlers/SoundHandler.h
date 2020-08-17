@@ -9,20 +9,17 @@
 
 /*
  Handler life cycle
- First of all, handler should parse its parameters. It happens in the static method #parseParams().
- Then the main life cycle happens, which consists of several phases.
- 1. Function #patchMe function is called.
-		Handler should assume that:
-			- only its params are known and valid
-			- any external resources that it could potentially have links to don't exist anymore
-			- sample rate and channel are invalid
-
- 2. Function #vFinishLinking is called
-		At this point:
-			- Channel and sample rate are known
-			- If handler requested a source via returned value of #getSource function, the source exists and valid
-		Handler must recalculate data that depend on values above.
-		If something fails, handler is invalidated until next params change
+ First of all, handler should parse its parameters. It happens in the method #parseParams(),
+ which is called on an empty object.
+ If params are invalid, then parseParams should return invalid object,
+ so that handler with these params will not be created.
+ Then the main life cycle happens:
+ 1. Function #setParams is called.
+		This function should only save parameters, any external info in the moment of time when this function is called is considered invalid
+ 2. Function #vConfigure is called
+		At this point handler should do all calculations required to work.
+		Handler may call #vConfigure to get external info
+		If something fails, handler should return invalid object, and the it is invalidated until next params change
  3. vProcess happens in the loop
  4. Data is accessed from other handlers and child measures.
 		Before data is accessed vFinish method is called. // todo remove
@@ -115,16 +112,17 @@ namespace rxtd::audio_analyzer {
 			Channel channel{ };
 		};
 
-		struct LinkingResult {
+		struct ConfigurationResult {
 			bool success = false;
 			DataSize dataSize{ };
 
-			LinkingResult() = default;
+			ConfigurationResult() = default;
 
-			LinkingResult(DataSize dataSize): success(true), dataSize(dataSize) {
+			ConfigurationResult(DataSize dataSize): success(true), dataSize(dataSize) {
 			}
 
-			LinkingResult(index layersCount, index valuesCount): LinkingResult(DataSize{ layersCount, valuesCount }) {
+			ConfigurationResult(index layersCount, index valuesCount):
+				ConfigurationResult(DataSize{ layersCount, valuesCount }) {
 			}
 		};
 
@@ -144,8 +142,6 @@ namespace rxtd::audio_analyzer {
 		}
 
 	private:
-		DataSize _dataSize{ };
-
 		struct LayerCache {
 			struct ChunkInfo {
 				index offset{ };
@@ -156,6 +152,7 @@ namespace rxtd::audio_analyzer {
 			std::vector<ChunkInfo> meta;
 		};
 
+		DataSize _dataSize{ };
 		mutable bool _layersAreValid = false;
 		std::vector<float> _buffer;
 		std::vector<LayerCache> _layers;
@@ -164,8 +161,6 @@ namespace rxtd::audio_analyzer {
 		Configuration _configuration{ };
 
 	public:
-		SoundHandler() = default;
-
 		virtual ~SoundHandler() = default;
 
 	protected:
@@ -175,6 +170,7 @@ namespace rxtd::audio_analyzer {
 		}
 
 	public:
+		// should return true when params are the same
 		[[nodiscard]]
 		virtual bool checkSameParams(const std::any& p) const = 0;
 		virtual void setParams(const std::any& p) = 0;
@@ -198,16 +194,16 @@ namespace rxtd::audio_analyzer {
 
 		// method should return true on success, false on fail
 		[[nodiscard]]
-		virtual LinkingResult vFinishLinking(Logger& cl) = 0;
+		virtual ConfigurationResult vConfigure(Logger& cl) = 0;
 
 		// push new data
 		[[nodiscard]]
-		array_span<float> generateLayerData(index layer, index size) {
+		array_span<float> pushLayer(index layer, index equivalentWaveSize) {
 			const index offset = index(_buffer.size());
 			_buffer.resize(offset + _dataSize.valuesCount);
 			_layersAreValid = false;
 
-			_layers[layer].meta.push_back({ offset, size });
+			_layers[layer].meta.push_back({ offset, equivalentWaveSize });
 
 			return { _buffer.data() + offset, _dataSize.valuesCount };
 		}

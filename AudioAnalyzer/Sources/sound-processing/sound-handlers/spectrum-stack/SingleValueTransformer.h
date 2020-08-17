@@ -63,7 +63,7 @@ namespace rxtd::audio_analyzer {
 		}
 
 		[[nodiscard]]
-		LinkingResult vFinishLinking(Logger& cl) override;
+		ConfigurationResult vConfigure(Logger& cl) override;
 
 	public:
 		void vReset() override;
