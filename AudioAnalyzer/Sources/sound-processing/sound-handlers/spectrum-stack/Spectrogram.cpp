@@ -213,35 +213,26 @@ void Spectrogram::vProcess(array_view<float> wave) {
 		return;
 	}
 
-	const index waveSize = wave.size();
-	counter += waveSize;
-
-	if (counter < blockSize) {
-		return;
-	}
-
 	auto& source = *getSource();
-
 	source.finish();
+	for (auto chunk : source.getChunks(0)) {
+		counter += chunk.equivalentWaveSize;
 
-	auto allData = source.getChunks(0);
-	if (allData.empty()) {
-		return;
-	}
-	const auto data = allData.back().data;
+		if (counter < blockSize) {
+			continue;
+		}
 
-	const bool dataIsZero = std::all_of(
-		data.begin(),
-		data.end(),
-		[=](auto x) { return x < params.colorMinValue; }
-	);
-
-	while (counter >= blockSize) {
 		changed = true;
 
-		if (dataIsZero) {
-			image.pushEmptyStrip(params.colors[0].color.toIntColor());
-		} else {
+		const auto data = chunk.data;
+
+		const bool dataIsZero = std::all_of(
+			data.begin(),
+			data.end(),
+			[=](auto x) { return x < params.colorMinValue; }
+		);
+
+		if (!dataIsZero) {
 			if (params.colors.size() == 2) {
 				// only use 2 colors
 				fillStrip(data, stripBuffer);
@@ -249,11 +240,17 @@ void Spectrogram::vProcess(array_view<float> wave) {
 				// many colors, but slightly slower
 				fillStripMulticolor(data, stripBuffer);
 			}
-
-			image.pushStrip(stripBuffer);
 		}
 
-		counter -= blockSize;
+		while (counter >= blockSize) {
+			if (dataIsZero) {
+				image.pushEmptyStrip(params.colors[0].color.toIntColor());
+			} else {
+				image.pushStrip(stripBuffer);
+			}
+
+			counter -= blockSize;
+		}
 	}
 }
 
