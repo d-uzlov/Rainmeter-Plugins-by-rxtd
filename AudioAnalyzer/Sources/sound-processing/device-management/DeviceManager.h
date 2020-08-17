@@ -90,19 +90,12 @@ namespace rxtd::audio_analyzer {
 			return requestedDevice.type;
 		}
 
-		[[nodiscard]]
-		sview getRequestedSourceId() const {
-			return requestedDevice.id;
-		}
-
 		void setOptions(DataSource source, sview deviceID);
 
 		[[nodiscard]]
 		const utils::MediaDeviceWrapper::DeviceInfo& getDeviceInfo() const;
 		[[nodiscard]]
 		bool getDeviceStatus() const;
-
-		void checkAndRepair();
 
 		[[nodiscard]]
 		CaptureManager& getCaptureManager();

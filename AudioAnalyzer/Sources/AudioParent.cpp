@@ -106,30 +106,13 @@ double AudioParent::vUpdate() {
 	if (source == DeviceManager::DataSource::eDEFAULT_INPUT && changes.defaultCapture
 		|| source == DeviceManager::DataSource::eDEFAULT_OUTPUT && changes.defaultRender) {
 		deviceManager.forceReconnect();
-	}
-
-	if (!changes.devices.empty()) {
-		const auto requestedSourceId = deviceManager.getRequestedSourceId();
-		if (changes.devices.count(requestedSourceId) > 0) {
-			deviceManager.checkAndRepair();
+	} else if (!changes.devices.empty()) {
+		if (changes.devices.count(deviceManager.getDeviceInfo().id) > 0) {
+			deviceManager.forceReconnect();
 		}
 
 		deviceManager.getDeviceEnumerator().updateDeviceStrings();
 	}
-
-	if (deviceManager.getState() == DeviceManager::State::eOK) {
-		bool any = false;
-		deviceManager.getCaptureManager().capture([&](utils::array2d_view<float> channelsData) {
-			channelMixer.saveChannelsData(channelsData, true);
-			any = true;
-		});
-
-		if (any) {
-			process();
-		}
-	}
-
-	deviceManager.checkAndRepair();
 
 	if (deviceManager.getState() != DeviceManager::State::eOK) {
 		if (deviceManager.getState() == DeviceManager::State::eFATAL) {
@@ -140,6 +123,18 @@ double AudioParent::vUpdate() {
 		for (auto& [name, sa] : saMap) {
 			sa.resetValues();
 		}
+
+		return deviceManager.getDeviceStatus();
+	}
+
+	bool any = false;
+	deviceManager.getCaptureManager().capture([&](utils::array2d_view<float> channelsData) {
+		channelMixer.saveChannelsData(channelsData, true);
+		any = true;
+	});
+
+	if (any) {
+		process();
 	}
 
 	return deviceManager.getDeviceStatus();

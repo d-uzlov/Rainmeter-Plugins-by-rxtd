@@ -123,32 +123,6 @@ bool DeviceManager::getDeviceStatus() const {
 	return audioDeviceHandle.isDeviceActive();
 }
 
-void DeviceManager::checkAndRepair() {
-	if (state == State::eFATAL) {
-		return;
-	}
-
-	if (!captureManager.isRecoverable()) {
-		state = State::eFATAL;
-		deviceRelease();
-		return;
-	}
-
-	if (!captureManager.isValid()) {
-		state = State::eERROR_AUTO;
-	}
-
-	if (state == State::eOK) {
-		return;
-	}
-
-	if (clock::now() - lastDevicePollTime < DEVICE_POLL_TIMEOUT) {
-		return; // not enough time has passed since last attempt
-	}
-
-	deviceInit();
-}
-
 CaptureManager& DeviceManager::getCaptureManager() {
 	return captureManager;
 }
