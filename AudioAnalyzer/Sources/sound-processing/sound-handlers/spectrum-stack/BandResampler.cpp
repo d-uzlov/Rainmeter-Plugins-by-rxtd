@@ -216,20 +216,10 @@ SoundHandler::ConfigurationResult BandResampler::vConfigure(Logger& cl) {
 }
 
 void BandResampler::vProcess(array_view<float> wave) {
-	changed = true;
-}
-
-void BandResampler::vFinish() {
-	if (!changed) {
-		return;
-	}
-	changed = false;
-
 	auto& config = getConfiguration();
 
 	auto& source = *fftSource;
 
-	source.finish();
 	double binWidth = static_cast<double>(config.sampleRate) / (source.getFftSize() * std::pow(2, startCascade));
 
 	for (index cascadeIndex = startCascade; cascadeIndex < endCascade; ++cascadeIndex) {
@@ -249,8 +239,6 @@ void BandResampler::vFinish() {
 
 		binWidth *= 0.5;
 	}
-
-	// legacy
 }
 
 bool BandResampler::vGetProp(const isview& prop, utils::BufferPrinter& printer) const {

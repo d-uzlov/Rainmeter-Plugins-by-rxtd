@@ -51,8 +51,6 @@ namespace rxtd::audio_analyzer {
 
 		BandResampler* resamplerPtr = nullptr;
 
-		bool changed = true;
-
 		struct AnalysisInfo {
 			string analysisString{ };
 			index minCascadeUsed = -1;
@@ -91,7 +89,6 @@ namespace rxtd::audio_analyzer {
 
 	public:
 		void vProcess(array_view<float> wave) override;
-		void vFinish() override;
 
 		[[nodiscard]]
 		index getStartingLayer() const override {

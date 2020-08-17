@@ -40,21 +40,10 @@ SoundHandler::ConfigurationResult legacy_LogarithmicValueMapper::vConfigure(Logg
 }
 
 void legacy_LogarithmicValueMapper::vProcess(array_view<float> wave) {
-	changed = true;
-}
-
-void legacy_LogarithmicValueMapper::vFinish() {
-	if (!changed) {
-		return;
-	}
-
-	changed = false;
-
 	constexpr float log10inverse = 0.30102999566398119521; // 1.0 / log2(10)
 
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
-	source.finish();
 	const index layersCount = source.getDataSize().layersCount;
 
 	for (index i = 0; i < layersCount; ++i) {

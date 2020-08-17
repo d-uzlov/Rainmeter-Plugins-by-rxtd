@@ -114,7 +114,7 @@ namespace rxtd::audio_analyzer {
 
 	public:
 		void vProcess(array_view<float> wave) override;
-		void vFinish() override;
+		void vFinishStandalone() override;
 
 		[[nodiscard]]
 		bool vGetProp(const isview& prop, utils::BufferPrinter& printer) const override;

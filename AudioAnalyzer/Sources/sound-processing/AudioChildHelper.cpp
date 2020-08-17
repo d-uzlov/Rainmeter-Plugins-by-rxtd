@@ -52,8 +52,6 @@ double AudioChildHelper::getValueFrom(SoundHandler* handler, Channel channel, in
 		return 0.0;
 	}
 
-	handler->finish();
-
 	const auto values = handler->getLastData(0);
 	if (values.empty()) {
 		return 0.0;

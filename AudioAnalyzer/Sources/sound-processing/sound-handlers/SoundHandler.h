@@ -270,8 +270,8 @@ namespace rxtd::audio_analyzer {
 		}
 
 		// returns true on success, false on failure
-		bool finish() {
-			vFinish();
+		bool finishStandalone() {
+			vFinishStandalone();
 			return true; // todo
 		}
 
@@ -325,9 +325,7 @@ namespace rxtd::audio_analyzer {
 
 		virtual void vProcess(array_view<float> wave) = 0;
 
-		// Method can be called several times in a row, handler should check for changes for optimal performance
-		// returns true on success, false on failure
-		virtual void vFinish() {
+		virtual void vFinishStandalone() {
 		}
 
 		virtual void vReset() {

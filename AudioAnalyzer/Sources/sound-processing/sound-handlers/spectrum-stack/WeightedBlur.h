@@ -47,8 +47,6 @@ namespace rxtd::audio_analyzer {
 
 		BandResampler* resamplerPtr{ };
 
-		bool changed = true;
-
 	public:
 		[[nodiscard]]
 		bool checkSameParams(const std::any& p) const override {
@@ -71,10 +69,11 @@ namespace rxtd::audio_analyzer {
 
 	public:
 		void vProcess(array_view<float> wave) override;
-		void vFinish() override;
 
 	private:
-		void blurCascade(array_view<float> source, array_view<float> weights, array_span<float> dest, index minRadius,
-		                 index maxRadius);
+		void blurCascade(
+			array_view<float> source, array_view<float> weights, array_span<float> dest,
+			index minRadius, index maxRadius
+		);
 	};
 }

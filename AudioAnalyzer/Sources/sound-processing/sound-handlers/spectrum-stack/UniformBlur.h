@@ -34,8 +34,6 @@ namespace rxtd::audio_analyzer {
 		audio_utils::GaussianCoefficientsManager gcm;
 		double startingRadius{ };
 
-		bool changed = true;
-
 	public:
 		[[nodiscard]]
 		bool checkSameParams(const std::any& p) const override {
@@ -58,7 +56,6 @@ namespace rxtd::audio_analyzer {
 
 	public:
 		void vProcess(array_view<float> wave) override;
-		void vFinish() override;
 
 	private:
 		void blurCascade(array_view<float> source, array_span<float> dest, index radius);

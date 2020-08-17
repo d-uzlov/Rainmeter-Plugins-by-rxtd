@@ -53,19 +53,8 @@ SoundHandler::ConfigurationResult WeightedBlur::vConfigure(Logger& cl) {
 }
 
 void WeightedBlur::vProcess(array_view<float> wave) {
-	changed = true;
-}
-
-void WeightedBlur::vFinish() {
-	if (!changed) {
-		return;
-	}
-
-	changed = false;
-
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
-	source.finish();
 	const BandResampler& resampler = *resamplerPtr;
 	const index layersCount = source.getDataSize().layersCount;
 

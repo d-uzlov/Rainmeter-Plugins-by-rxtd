@@ -93,25 +93,12 @@ SoundHandler::ConfigurationResult legacy_FiniteTimeFilter::vConfigure(Logger& cl
 }
 
 void legacy_FiniteTimeFilter::vProcess(array_view<float> wave) {
-	changed = true;
-}
-
-void legacy_FiniteTimeFilter::vFinish() {
-	if (!changed) {
-		return;
-	}
-
-	changed = false;
-
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
-	source.finish();
 
 	const index layersCount = source.getDataSize().layersCount;
 	for (index layer = 0; layer < layersCount; ++layer) {
-		auto chunks = source.getChunks(layer);
-
-		for (auto chunk : chunks) {
+		for (auto chunk : source.getChunks(layer)) {
 			if (params.smoothingFactor <= 1) {
 				auto dest = pushLayer(layer, chunk.equivalentWaveSize);
 				std::copy(chunk.data.begin(), chunk.data.end(), dest.begin());
@@ -135,7 +122,7 @@ void legacy_FiniteTimeFilter::vFinish() {
 }
 
 void legacy_FiniteTimeFilter::vReset() {
-	changed = true;
+	// todo
 }
 
 void legacy_FiniteTimeFilter::applyToLayer(utils::array2d_view<float> layerPastValues, array_span<float> dest) const {

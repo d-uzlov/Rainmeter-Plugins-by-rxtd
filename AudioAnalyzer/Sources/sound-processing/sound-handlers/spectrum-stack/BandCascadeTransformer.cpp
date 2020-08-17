@@ -91,17 +91,7 @@ SoundHandler::ConfigurationResult BandCascadeTransformer::vConfigure(Logger& cl)
 }
 
 void BandCascadeTransformer::vProcess(array_view<float> wave) {
-	changed = true;
-}
-
-void BandCascadeTransformer::vFinish() {
-	if (!changed) {
-		return;
-	}
-	changed = false;
-
 	auto& source = *getConfiguration().sourcePtr;
-	source.finish();
 
 	const index bandsCount = source.getDataSize().valuesCount;
 	const index layersCount = source.getDataSize().layersCount;

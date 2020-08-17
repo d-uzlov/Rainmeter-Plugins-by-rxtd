@@ -63,11 +63,7 @@ bool SoundAnalyzer::finishStandalone(clock::time_point killTime) {
 		for (auto& handlerName : patchersInfo.order) {
 			auto& handler = *channelData[handlerName];
 
-			if (!handler.vIsStandalone()) {
-				continue;
-			}
-
-			const bool success = handler.finish();
+			const bool success = handler.finishStandalone();
 
 			if (!success) {
 				logger.error(L"handler '{}' was unexpectedly invalidated, stopping processing", handlerName);

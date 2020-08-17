@@ -51,18 +51,8 @@ SoundHandler::ConfigurationResult UniformBlur::vConfigure(Logger& cl) {
 }
 
 void UniformBlur::vProcess(array_view<float> wave) {
-	changed = true;
-}
-
-void UniformBlur::vFinish() {
-	if (!changed) {
-		return;
-	}
-	changed = false;
-
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
-	source.finish();
 
 	double theoreticalRadius = startingRadius;
 

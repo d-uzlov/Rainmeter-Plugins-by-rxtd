@@ -222,7 +222,6 @@ void Spectrogram::vProcess(array_view<float> wave) {
 
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
-	source.finish();
 
 	for (auto chunk : source.getChunks(0)) {
 		counter += chunk.equivalentWaveSize;
@@ -278,7 +277,7 @@ void Spectrogram::vProcess(array_view<float> wave) {
 	}
 }
 
-void Spectrogram::vFinish() {
+void Spectrogram::vFinishStandalone() {
 	if (!changed) {
 		return;
 	}

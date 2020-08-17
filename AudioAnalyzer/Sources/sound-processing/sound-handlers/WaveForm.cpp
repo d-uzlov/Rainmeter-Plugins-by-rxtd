@@ -145,7 +145,7 @@ void WaveForm::vProcess(array_view<float> wave) {
 	}
 }
 
-void WaveForm::vFinish() {
+void WaveForm::vFinishStandalone() {
 	if (!changed) {
 		return;
 	}

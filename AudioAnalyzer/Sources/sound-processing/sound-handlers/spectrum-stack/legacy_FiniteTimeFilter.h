@@ -49,8 +49,6 @@ namespace rxtd::audio_analyzer {
 
 		double smoothingNormConstant{ };
 
-		bool changed = true;
-
 	public:
 		[[nodiscard]]
 		bool checkSameParams(const std::any& p) const override {
@@ -74,7 +72,6 @@ namespace rxtd::audio_analyzer {
 	public:
 		void vReset() override;
 		void vProcess(array_view<float> wave) override;
-		void vFinish() override;
 
 	private:
 		void applyToLayer(utils::array2d_view<float> layerPastValues, array_span<float> dest) const;

@@ -67,7 +67,6 @@ void SingleValueTransformer::vProcess(array_view<float> wave) {
 void SingleValueTransformer::processStateless() {
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
-	source.finish();
 	const index layersCount = source.getDataSize().layersCount;
 
 	for (index i = 0; i < layersCount; ++i) {
@@ -83,7 +82,6 @@ void SingleValueTransformer::processStateless() {
 void SingleValueTransformer::processStateful() {
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
-	source.finish();
 	const index layersCount = source.getDataSize().layersCount;
 
 	for (index i = 0; i < layersCount; ++i) {
