@@ -47,7 +47,6 @@ float CustomizableValueTransformer::apply(float value) {
 			value = std::clamp(value, transform.args[0], transform.args[1]);
 			break;
 		}
-		default: std::terminate();
 		}
 	}
 
@@ -126,7 +125,6 @@ void CustomizableValueTransformer::applyToArray(array_view<float> source, array_
 
 			break;
 		}
-		default: std::terminate();
 		}
 
 		source = dest;

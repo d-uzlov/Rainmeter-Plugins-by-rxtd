@@ -74,8 +74,6 @@ SoundHandler::ConfigurationResult legacy_FiniteTimeFilter::vConfigure(Logger& cl
 			smoothingNormConstant = 1.0 / smoothingWeight;
 			break;
 		}
-
-		default: std::terminate();
 		}
 	}
 
@@ -181,7 +179,5 @@ void legacy_FiniteTimeFilter::applyToLayer(utils::array2d_view<float> layerPastV
 			dest[band] = float(outValue * smoothingNormConstant);
 		}
 		break;
-
-	default: std::terminate(); // should be unreachable statement
 	}
 }

@@ -130,8 +130,6 @@ SoundHandler::ConfigurationResult FftAnalyzer::vConfigure(Logger& cl) {
 		}
 
 		break;
-	default: // must be unreachable statement
-		std::abort();
 	}
 
 	constexpr index minFftSize = 16;

@@ -182,7 +182,6 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 			case utils::MediaDeviceType::eOUTPUT:
 				resolveBufferString = L"output";
 				return;
-			default: ;
 			}
 		}
 		if (deviceProperty == L"name") {

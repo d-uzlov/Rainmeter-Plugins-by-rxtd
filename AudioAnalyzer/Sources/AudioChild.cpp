@@ -151,7 +151,6 @@ double AudioChild::legacy_update() {
 		break;
 
 	case Legacy::NumberTransform::eNONE:
-	default:
 		break;
 	}
 	if (legacy.clamp01) {

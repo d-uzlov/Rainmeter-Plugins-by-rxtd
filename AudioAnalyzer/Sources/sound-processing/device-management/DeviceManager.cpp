@@ -60,7 +60,6 @@ void DeviceManager::deviceInit() {
 			return;
 		}
 		break;
-	default: ;
 	}
 
 	audioDeviceHandle = std::move(deviceOpt.value());
