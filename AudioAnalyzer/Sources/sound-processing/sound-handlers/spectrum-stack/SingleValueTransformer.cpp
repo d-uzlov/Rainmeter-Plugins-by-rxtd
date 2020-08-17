@@ -23,6 +23,9 @@ bool SingleValueTransformer::parseParams(
 		return { };
 	}
 
+	params.granularity = om.get(L"granularity").asFloat(0.0);
+	params.granularity *= 0.001;
+
 	auto transformLogger = cl.context(L"transform: ");
 	params.transformer = audio_utils::TransformationParser::parse(om.get(L"transform").asString(), transformLogger);
 
@@ -38,9 +41,14 @@ SoundHandler::LinkingResult SingleValueTransformer::vFinishLinking(Logger& cl) {
 
 	params.transformer.setHistoryWidth(dataSize.valuesCount);
 
-	transformers.resize(dataSize.layersCount);
-	for (auto& tr : transformers) {
+	transformersPerLayer.resize(dataSize.layersCount);
+	for (auto& tr : transformersPerLayer) {
 		tr = params.transformer;
+	}
+
+	granularityBlock = index(params.granularity * getSampleRate());
+	for (auto& transformer : transformersPerLayer) {
+		transformer.setParams(getSampleRate(), granularityBlock);
 	}
 
 	return dataSize;
@@ -79,13 +87,18 @@ void SingleValueTransformer::processStateful() {
 	const index layersCount = source.getDataSize().layersCount;
 
 	for (index i = 0; i < layersCount; ++i) {
-		for (auto chunk : source.getChunks(i)) {
-			auto layerData = chunk.data;
-			auto dest = generateLayerData(i, chunk.equivalentWaveSize);
+		index& counter = countersPerLayer[i];
 
-			// todo resample in time
-			transformers[i].setParams(getSampleRate(), chunk.equivalentWaveSize);
-			params.transformer.applyToArray(layerData, dest);
+		for (auto chunk : source.getChunks(i)) {
+			counter += chunk.equivalentWaveSize;
+
+			while (counter >= granularityBlock) {
+				counter -= granularityBlock;
+				auto layerData = chunk.data;
+				auto dest = generateLayerData(i, granularityBlock);
+
+				params.transformer.applyToArray(layerData, dest);
+			}
 		}
 	}
 }

@@ -129,7 +129,6 @@ void legacy_FiniteTimeFilter::vFinish() {
 			const auto sourceValues = chunk.data;
 			std::copy(sourceValues.begin(), sourceValues.end(), layerPastValues[pastValuesIndex].begin());
 
-			// todo resample in time
 			const auto dest = generateLayerData(layer, chunk.equivalentWaveSize);
 			applyToLayer(layerPastValues, dest);
 		}

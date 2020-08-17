@@ -19,6 +19,7 @@ namespace rxtd::audio_analyzer {
 	public:
 		struct Params {
 			istring sourceId;
+			double granularity{ };
 
 			CVT transformer;
 
@@ -35,7 +36,9 @@ namespace rxtd::audio_analyzer {
 
 	private:
 		Params params{ };
-		std::vector<CVT> transformers;
+		std::vector<CVT> transformersPerLayer;
+		std::vector<index> countersPerLayer;
+		index granularityBlock{ };
 
 	public:
 		[[nodiscard]]
