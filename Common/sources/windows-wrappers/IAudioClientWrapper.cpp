@@ -21,12 +21,21 @@ IAudioClientWrapper::IAudioClientWrapper(MediaDeviceType type, InitFunction init
 }
 
 IAudioCaptureClientWrapper IAudioClientWrapper::openCapture() {
-	return IAudioCaptureClientWrapper{
+	auto result = IAudioCaptureClientWrapper{
 		[&](auto ptr) {
 			lastResult = getPointer()->GetService(IID_IAudioCaptureClient, reinterpret_cast<void**>(ptr));
 			return lastResult == S_OK;
 		}
 	};
+
+	result.setParams(
+		format.format == WaveDataFormat::ePCM_F32
+			? IAudioCaptureClientWrapper::Type::eFloat
+			: IAudioCaptureClientWrapper::Type::eInt,
+		format.channelsCount
+	);
+
+	return result;
 }
 
 WaveFormat IAudioClientWrapper::getFormat() const {

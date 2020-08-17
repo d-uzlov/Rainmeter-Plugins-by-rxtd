@@ -16,11 +16,7 @@ namespace rxtd::utils {
 
 	// static_assert(std::is_same<DWORD, uint32_t>::value); // ...
 
-	IAudioCaptureClientWrapper::IAudioCaptureClientWrapper(InitFunction initFunction) :
-		GenericComWrapper(std::move(initFunction)) {
-	}
-
-	void IAudioCaptureClientWrapper::readBuffer(Type type, index channelsCount) {
+	void IAudioCaptureClientWrapper::readBuffer() {
 		uint8_t* data = nullptr;
 		DWORD flags{ };
 		uint32_t dataSize;
@@ -28,11 +24,8 @@ namespace rxtd::utils {
 		const bool silent = (flags & AUDCLNT_BUFFERFLAGS_SILENT) != 0;
 
 		if (dataSize == 0) {
-			empty = true;
 			return;
 		}
-
-		empty = false;
 
 		buffer.setBuffersCount(channelsCount);
 		buffer.setBufferSize(dataSize);

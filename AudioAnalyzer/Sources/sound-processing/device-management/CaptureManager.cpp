@@ -10,8 +10,9 @@
 #include "CaptureManager.h"
 
 namespace rxtd::audio_analyzer {
-	CaptureManager::CaptureManager(utils::Rainmeter::Logger _logger,
-	                               utils::MediaDeviceWrapper& audioDeviceHandle) : logger(std::move(_logger)) {
+	CaptureManager::CaptureManager(
+		utils::Rainmeter::Logger _logger, utils::MediaDeviceWrapper& audioDeviceHandle
+	) : logger(std::move(_logger)) {
 		audioClient = audioDeviceHandle.openAudioClient();
 		if (audioDeviceHandle.getLastResult() != S_OK) {
 			valid = false;
@@ -98,12 +99,7 @@ namespace rxtd::audio_analyzer {
 		}
 
 		while (true) {
-			audioCaptureClient.readBuffer(
-				waveFormat.format == utils::WaveDataFormat::ePCM_F32
-					? utils::IAudioCaptureClientWrapper::Type::eFloat
-					: utils::IAudioCaptureClientWrapper::Type::eInt,
-				waveFormat.channelsCount
-			);
+			audioCaptureClient.readBuffer();
 
 			const auto queryResult = audioCaptureClient.getLastResult();
 			const auto now = clock::now();

@@ -17,26 +17,33 @@
 
 namespace rxtd::utils {
 	class IAudioCaptureClientWrapper : public GenericComWrapper<IAudioCaptureClient> {
-		index lastResult{ };
-
-		Vector2D<float> buffer;
-		bool empty = true;
-
 	public:
 		enum class Type {
 			eInt,
 			eFloat,
 		};
 
-		IAudioCaptureClientWrapper() = default;
-		explicit IAudioCaptureClientWrapper(InitFunction initFunction);
+	private:
+		Type type{ };
+		index channelsCount{ };
 
-		[[nodiscard]]
-		bool isEmpty() const {
-			return empty;
+		Vector2D<float> buffer;
+
+		index lastResult{ };
+
+	public:
+		IAudioCaptureClientWrapper() = default;
+
+		explicit IAudioCaptureClientWrapper(InitFunction initFunction) :
+			GenericComWrapper(std::move(initFunction)) {
 		}
 
-		void readBuffer(Type type, index channelsCount);
+		void setParams(Type _type, index _channelsCount) {
+			type = _type;
+			channelsCount = _channelsCount;
+		}
+
+		void readBuffer();
 
 		[[nodiscard]]
 		index getLastResult() const {
