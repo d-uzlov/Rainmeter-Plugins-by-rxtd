@@ -269,10 +269,8 @@ namespace rxtd::audio_analyzer {
 			vProcess(wave);
 		}
 
-		// returns true on success, false on failure
-		bool finishStandalone() {
+		void finishStandalone() {
 			vFinishStandalone();
-			return true; // todo
 		}
 
 		void purgeCache() {
