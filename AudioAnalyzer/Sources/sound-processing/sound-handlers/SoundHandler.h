@@ -47,6 +47,10 @@ namespace rxtd::audio_analyzer {
 
 	class SoundHandler {
 	public:
+		using OptionMap = utils::OptionMap;
+		using Rainmeter = utils::Rainmeter;
+		using Logger = utils::Rainmeter::Logger;
+
 		struct DataSize {
 			index layersCount{ };
 			index valuesCount{ };
@@ -108,10 +112,6 @@ namespace rxtd::audio_analyzer {
 		};
 
 	protected:
-		using OptionMap = utils::OptionMap;
-		using Rainmeter = utils::Rainmeter;
-		using Logger = utils::Rainmeter::Logger;
-
 		struct Configuration {
 			SoundHandler* sourcePtr = nullptr;
 			index sampleRate{ };
@@ -131,21 +131,6 @@ namespace rxtd::audio_analyzer {
 				ConfigurationResult(DataSize{ layersCount, valuesCount }) {
 			}
 		};
-
-	public:
-		template <typename _HandlerType>
-		[[nodiscard]]
-		static std::unique_ptr<SoundHandler> patchHandlerImpl(std::unique_ptr<SoundHandler> handlerPtr) {
-			using HandlerType = _HandlerType;
-
-			SoundHandler* ptr = dynamic_cast<HandlerType*>(handlerPtr.get());
-			if (ptr == nullptr) {
-				ptr = new HandlerType();
-				handlerPtr = std::unique_ptr<SoundHandler>{ ptr };
-			}
-
-			return handlerPtr;
-		}
 
 	private:
 		struct LayerCache {
@@ -169,18 +154,35 @@ namespace rxtd::audio_analyzer {
 	public:
 		virtual ~SoundHandler() = default;
 
+		template <typename _HandlerType>
+		[[nodiscard]]
+		static std::unique_ptr<SoundHandler> patchHandlerImpl(std::unique_ptr<SoundHandler> handlerPtr) {
+			using HandlerType = _HandlerType;
+
+			SoundHandler* ptr = dynamic_cast<HandlerType*>(handlerPtr.get());
+			if (ptr == nullptr) {
+				ptr = new HandlerType();
+				handlerPtr = std::unique_ptr<SoundHandler> { ptr };
+			}
+
+			return handlerPtr;
+		}
+
 	protected:
 		template <typename Params>
 		static bool compareParamsEquals(Params p1, const std::any& p2) {
 			return p1 == *std::any_cast<Params>(&p2);
 		}
 
-	public:
 		// should return true when params are the same
 		[[nodiscard]]
 		virtual bool checkSameParams(const std::any& p) const = 0;
 		virtual void setParams(const std::any& p) = 0;
 
+		[[nodiscard]]
+		virtual ConfigurationResult vConfigure(Logger& cl) = 0;
+
+	public:
 		[[nodiscard]]
 		virtual ParseResult
 		parseParams(const OptionMap& om, Logger& cl, const Rainmeter& rain, index legacyNumber) const = 0;
@@ -195,9 +197,6 @@ namespace rxtd::audio_analyzer {
 		);
 
 	protected:
-		[[nodiscard]]
-		virtual ConfigurationResult vConfigure(Logger& cl) = 0;
-
 		[[nodiscard]]
 		array_span<float> pushLayer(index layer, index equivalentWaveSize) {
 			const index offset = index(_buffer.size());

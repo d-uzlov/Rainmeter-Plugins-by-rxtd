@@ -29,16 +29,13 @@ namespace rxtd::utils {
 		index allocationShortage = 0;
 
 	public:
-		// Must be called before #setDimensions
-		void setBackground(PixelValueType value) {
-			backgroundValue = value;
-		}
+		void setParams(index _width, index _height, PixelValueType _backgroundValue, bool _stationary) {
+			if (width == _width && height == _height && backgroundValue == _backgroundValue && stationary == _stationary) {
+				return;
+			}
 
-		void setStationary(bool value) {
-			stationary = value;
-		}
-
-		void setDimensions(index _width, index _height) {
+			backgroundValue = _backgroundValue;
+			stationary = _stationary;
 			width = _width;
 			height = _height;
 

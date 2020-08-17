@@ -73,8 +73,6 @@ namespace rxtd::utils {
 		MinMax prev;
 
 	public:
-		WaveFormDrawer();
-
 		void setConnected(bool value) {
 			connected = value;
 		}
@@ -87,10 +85,6 @@ namespace rxtd::utils {
 			fading = value;
 		}
 
-		void setStationary(bool value) {
-			minMaxBuffer.setStationary(value);
-		}
-
 		void setLineDrawingPolicy(LineDrawingPolicy value) {
 			lineDrawingPolicy = value;
 		}
@@ -99,7 +93,7 @@ namespace rxtd::utils {
 			colors = value;
 		}
 
-		void setDimensions(index width, index height);
+		void setImageParams(index width, index height, bool stationary);
 
 		void fillSilence();
 

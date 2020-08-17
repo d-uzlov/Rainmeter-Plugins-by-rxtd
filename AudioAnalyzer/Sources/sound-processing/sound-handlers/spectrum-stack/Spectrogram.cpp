@@ -14,7 +14,6 @@
 #include "option-parser/OptionMap.h"
 #include "option-parser/OptionList.h"
 #include "LinearInterpolator.h"
-#include "../WaveForm.h"
 
 using namespace std::string_literals;
 
@@ -158,14 +157,12 @@ SoundHandler::ConfigurationResult Spectrogram::vConfigure(Logger& cl) {
 	const auto dataSize = config.sourcePtr->getDataSize();
 
 	const auto backgroundIntColor = params.colors[0].color.toIntColor();
-	image.setBackground(backgroundIntColor);
-	image.setStationary(params.stationary);
+	image.setParams(params.length, dataSize.valuesCount, backgroundIntColor, params.stationary);
 
 	sifh.setBorderSize(params.borderSize);
 	sifh.setColors(backgroundIntColor, params.borderColor.toIntColor());
 	sifh.setFading(params.fading);
 
-	image.setDimensions(params.length, dataSize.valuesCount);
 	stripBuffer.resize(dataSize.valuesCount);
 
 	filepath = params.prefix;

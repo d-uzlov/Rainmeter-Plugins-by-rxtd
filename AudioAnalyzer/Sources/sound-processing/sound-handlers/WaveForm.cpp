@@ -96,11 +96,10 @@ SoundHandler::ConfigurationResult WaveForm::vConfigure(Logger& cl) {
 
 	minDistinguishableValue = 1.0 / params.height;
 
-	drawer.setDimensions(params.width, params.height);
+	drawer.setImageParams(params.width, params.height, params.stationary);
 	// drawer.setEdges(params.edges);
 	drawer.setColors(params.colors);
 	drawer.setLineDrawingPolicy(params.lineDrawingPolicy);
-	drawer.setStationary(params.stationary);
 	drawer.setFading(params.fading);
 	drawer.setConnected(params.connected);
 	drawer.setBorderSize(params.borderSize);

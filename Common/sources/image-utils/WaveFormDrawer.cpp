@@ -13,16 +13,12 @@
 
 using namespace utils;
 
-WaveFormDrawer::WaveFormDrawer() {
-	minMaxBuffer.setBackground({ 0, 0 });
-}
-
-void WaveFormDrawer::setDimensions(index width, index height) {
+void WaveFormDrawer::setImageParams(index width, index height, bool stationary) {
 	if (width == this->width && height == this->height) {
 		return;
 	}
 
-	minMaxBuffer.setDimensions(width, 1);
+	minMaxBuffer.setParams(width, 1, { 0, 0 }, stationary);
 	resultBuffer.setBufferSize(width);
 	resultBuffer.setBuffersCount(height);
 
