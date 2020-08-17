@@ -300,6 +300,8 @@ namespace rxtd::audio_analyzer {
 				data.meta.clear();
 			}
 
+			_layersAreValid = false;
+
 			_buffer.clear();
 		}
 
