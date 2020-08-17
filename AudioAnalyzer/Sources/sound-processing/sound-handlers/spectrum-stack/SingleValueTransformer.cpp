@@ -56,7 +56,7 @@ void SingleValueTransformer::vReset() {
 	params.transformer.resetState();
 }
 
-void SingleValueTransformer::vProcess(array_view<float> wave) {
+void SingleValueTransformer::vProcess(array_view<float> wave, clock::time_point killTime) {
 	if (params.transformer.hasState()) {
 		processStateful();
 	} else {

@@ -46,8 +46,7 @@ bool SoundAnalyzer::process(const ChannelMixer& mixer, clock::time_point killTim
 
 		for (auto& handlerName : patchersInfo.order) {
 			auto& handler = *channelData[handlerName];
-			handler.purgeCache();
-			handler.process(wave);
+			handler.process(wave, killTime);
 
 			if (clock::now() > killTime) {
 				return true;

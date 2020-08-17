@@ -92,7 +92,7 @@ SoundHandler::ConfigurationResult legacy_FiniteTimeFilter::vConfigure(Logger& cl
 	return dataSize;
 }
 
-void legacy_FiniteTimeFilter::vProcess(array_view<float> wave) {
+void legacy_FiniteTimeFilter::vProcess(array_view<float> wave, clock::time_point killTime) {
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
 

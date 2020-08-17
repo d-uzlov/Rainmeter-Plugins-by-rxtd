@@ -22,11 +22,11 @@
 		If something fails, handler should return invalid object, and the it is invalidated until next params change
  3. vProcess happens in the loop
  4. Data is accessed from other handlers and child measures.
-		Before data is accessed vFinish method is called. // todo remove
  */
 
 #pragma once
 #include <any>
+#include <chrono>
 
 #include "array_view.h"
 #include "BufferPrinter.h"
@@ -50,6 +50,8 @@ namespace rxtd::audio_analyzer {
 		using OptionMap = utils::OptionMap;
 		using Rainmeter = utils::Rainmeter;
 		using Logger = utils::Rainmeter::Logger;
+		using clock = std::chrono::high_resolution_clock;
+		static_assert(clock::is_steady);
 
 		struct DataSize {
 			index layersCount{ };
@@ -99,7 +101,7 @@ namespace rxtd::audio_analyzer {
 			std::any takeParams() {
 				return std::move(_params);
 			}
-			
+
 			[[nodiscard]]
 			std::vector<istring> takeSources() {
 				return std::move(_sources);
@@ -162,25 +164,11 @@ namespace rxtd::audio_analyzer {
 			SoundHandler* ptr = dynamic_cast<HandlerType*>(handlerPtr.get());
 			if (ptr == nullptr) {
 				ptr = new HandlerType();
-				handlerPtr = std::unique_ptr<SoundHandler> { ptr };
+				handlerPtr = std::unique_ptr<SoundHandler>{ ptr };
 			}
 
 			return handlerPtr;
 		}
-
-	protected:
-		template <typename Params>
-		static bool compareParamsEquals(Params p1, const std::any& p2) {
-			return p1 == *std::any_cast<Params>(&p2);
-		}
-
-		// should return true when params are the same
-		[[nodiscard]]
-		virtual bool checkSameParams(const std::any& p) const = 0;
-		virtual void setParams(const std::any& p) = 0;
-
-		[[nodiscard]]
-		virtual ConfigurationResult vConfigure(Logger& cl) = 0;
 
 	public:
 		[[nodiscard]]
@@ -196,36 +184,6 @@ namespace rxtd::audio_analyzer {
 			Logger& cl
 		);
 
-	protected:
-		[[nodiscard]]
-		array_span<float> pushLayer(index layer, index equivalentWaveSize) {
-			const index offset = index(_buffer.size());
-			_buffer.resize(offset + _dataSize.valuesCount);
-			_layersAreValid = false;
-
-			_layers[layer].meta.push_back({ offset, equivalentWaveSize });
-
-			return { _buffer.data() + offset, _dataSize.valuesCount };
-		}
-
-	private:
-		void inflateLayers() const {
-			if (_layersAreValid) {
-				return;
-			}
-
-			for (auto& data : _layers) {
-				data.chunks.resize(data.meta.size());
-				for (index i = 0; i < index(data.meta.size()); i++) {
-					data.chunks[i].equivalentWaveSize = data.meta[i].equivalentWaveSize;
-					data.chunks[i].data = { _buffer.data() + data.meta[i].offset, _dataSize.valuesCount };
-				}
-			}
-
-			_layersAreValid = true;
-		}
-
-	public:
 		[[nodiscard]]
 		DataSize getDataSize() const {
 			return _dataSize;
@@ -265,32 +223,13 @@ namespace rxtd::audio_analyzer {
 			return _lastResults[layer];
 		}
 
-		void process(array_view<float> wave) {
-			vProcess(wave);
+		void process(array_view<float> wave, clock::time_point killTime) {
+			purgeCache();
+			vProcess(wave, killTime);
 		}
 
 		void finishStandalone() {
 			vFinishStandalone();
-		}
-
-		void purgeCache() {
-			for (index layer = 0; layer < _dataSize.layersCount; layer++) {
-				auto chunks = _layers[layer].chunks;
-				if (chunks.empty()) {
-					continue;
-				}
-
-				auto chunkData = chunks.back().data;
-				std::copy(chunkData.begin(), chunkData.end(), _lastResults[layer].begin());
-			}
-
-			for (auto& data : _layers) {
-				data.meta.clear();
-			}
-
-			_layersAreValid = false;
-
-			_buffer.clear();
 		}
 
 		void reset() {
@@ -316,12 +255,39 @@ namespace rxtd::audio_analyzer {
 		}
 
 	protected:
+		template <typename Params>
+		static bool compareParamsEquals(Params p1, const std::any& p2) {
+			return p1 == *std::any_cast<Params>(&p2);
+		}
+
+		// should return true when params are the same
+		[[nodiscard]]
+		virtual bool checkSameParams(const std::any& p) const = 0;
+		virtual void setParams(const std::any& p) = 0;
+
+		[[nodiscard]]
+		virtual ConfigurationResult vConfigure(Logger& cl) = 0;
+
+		[[nodiscard]]
+		array_span<float> pushLayer(index layer, index equivalentWaveSize) {
+			const index offset = index(_buffer.size());
+			_buffer.resize(offset + _dataSize.valuesCount);
+			_layersAreValid = false;
+
+			_layers[layer].meta.push_back({ offset, equivalentWaveSize });
+
+			return { _buffer.data() + offset, _dataSize.valuesCount };
+		}
+
 		[[nodiscard]]
 		const Configuration& getConfiguration() const {
 			return _configuration;
 		}
 
-		virtual void vProcess(array_view<float> wave) = 0;
+		// if handler is potentially heavy,
+		// handler should try to return control to caller
+		// when time is more than killTime
+		virtual void vProcess(array_view<float> wave, clock::time_point killTime) = 0;
 
 		virtual void vFinishStandalone() {
 		}
@@ -338,5 +304,42 @@ namespace rxtd::audio_analyzer {
 			const isview& propName,
 			index minBound, index endBound
 		);
+
+	private:
+		void inflateLayers() const {
+			if (_layersAreValid) {
+				return;
+			}
+
+			for (auto& data : _layers) {
+				data.chunks.resize(data.meta.size());
+				for (index i = 0; i < index(data.meta.size()); i++) {
+					data.chunks[i].equivalentWaveSize = data.meta[i].equivalentWaveSize;
+					data.chunks[i].data = { _buffer.data() + data.meta[i].offset, _dataSize.valuesCount };
+				}
+			}
+
+			_layersAreValid = true;
+		}
+
+		void purgeCache() {
+			for (index layer = 0; layer < _dataSize.layersCount; layer++) {
+				auto chunks = _layers[layer].chunks;
+				if (chunks.empty()) {
+					continue;
+				}
+
+				auto chunkData = chunks.back().data;
+				std::copy(chunkData.begin(), chunkData.end(), _lastResults[layer].begin());
+			}
+
+			for (auto& data : _layers) {
+				data.meta.clear();
+			}
+
+			_layersAreValid = false;
+
+			_buffer.clear();
+		}
 	};
 }

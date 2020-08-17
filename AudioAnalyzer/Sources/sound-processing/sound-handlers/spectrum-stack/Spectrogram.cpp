@@ -215,7 +215,7 @@ void Spectrogram::fillStripMulticolor(array_view<float> data, array_span<utils::
 	}
 }
 
-void Spectrogram::vProcess(array_view<float> wave) {
+void Spectrogram::vProcess(array_view<float> wave, clock::time_point killTime) {
 	image.removeLast(overpushCount);
 	overpushCount = 0;
 	dataShortageEqSize += wave.size();

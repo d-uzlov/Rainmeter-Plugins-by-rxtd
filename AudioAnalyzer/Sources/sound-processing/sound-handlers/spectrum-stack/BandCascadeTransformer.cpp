@@ -90,7 +90,7 @@ SoundHandler::ConfigurationResult BandCascadeTransformer::vConfigure(Logger& cl)
 	return { 1, dataSize.valuesCount };
 }
 
-void BandCascadeTransformer::vProcess(array_view<float> wave) {
+void BandCascadeTransformer::vProcess(array_view<float> wave, clock::time_point killTime) {
 	auto& source = *getConfiguration().sourcePtr;
 
 	const index bandsCount = source.getDataSize().valuesCount;

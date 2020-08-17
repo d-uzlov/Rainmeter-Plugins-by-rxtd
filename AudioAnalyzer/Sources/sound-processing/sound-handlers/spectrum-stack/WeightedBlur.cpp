@@ -52,7 +52,7 @@ SoundHandler::ConfigurationResult WeightedBlur::vConfigure(Logger& cl) {
 	return dataSize;
 }
 
-void WeightedBlur::vProcess(array_view<float> wave) {
+void WeightedBlur::vProcess(array_view<float> wave, clock::time_point killTime) {
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
 	const BandResampler& resampler = *resamplerPtr;

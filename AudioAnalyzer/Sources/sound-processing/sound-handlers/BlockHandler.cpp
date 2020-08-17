@@ -60,7 +60,7 @@ void BlockHandler::vReset() {
 	_reset();
 }
 
-void BlockHandler::vProcess(array_view<float> wave) {
+void BlockHandler::vProcess(array_view<float> wave, clock::time_point killTime) {
 	_process(wave);
 }
 

@@ -130,7 +130,7 @@ void WaveForm::vReset() {
 	maxTransformer.reset();
 }
 
-void WaveForm::vProcess(array_view<float> wave) {
+void WaveForm::vProcess(array_view<float> wave, clock::time_point killTime) {
 	for (const auto value : wave) {
 		min = std::min<double>(min, value);
 		max = std::max<double>(max, value);

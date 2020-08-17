@@ -178,7 +178,7 @@ void FftAnalyzer::vReset() {
 	}
 }
 
-void FftAnalyzer::vProcess(array_view<float> wave) {
+void FftAnalyzer::vProcess(array_view<float> wave, clock::time_point killTime) {
 	if (params.randomTest != 0.0) {
 		processRandom(wave.size());
 	} else {

@@ -50,7 +50,7 @@ SoundHandler::ConfigurationResult UniformBlur::vConfigure(Logger& cl) {
 	return dataSize;
 }
 
-void UniformBlur::vProcess(array_view<float> wave) {
+void UniformBlur::vProcess(array_view<float> wave, clock::time_point killTime) {
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
 

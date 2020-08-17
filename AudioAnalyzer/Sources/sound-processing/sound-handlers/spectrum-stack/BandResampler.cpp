@@ -215,7 +215,7 @@ SoundHandler::ConfigurationResult BandResampler::vConfigure(Logger& cl) {
 	return { realCascadesCount, bandsCount };
 }
 
-void BandResampler::vProcess(array_view<float> wave) {
+void BandResampler::vProcess(array_view<float> wave, clock::time_point killTime) {
 	auto& config = getConfiguration();
 
 	auto& source = *fftSource;

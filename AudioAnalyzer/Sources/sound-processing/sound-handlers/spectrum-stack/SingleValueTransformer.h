@@ -60,7 +60,7 @@ namespace rxtd::audio_analyzer {
 
 	public:
 		void vReset() override;
-		void vProcess(array_view<float> wave) override;
+		void vProcess(array_view<float> wave, clock::time_point killTime) override;
 
 	private:
 		void processStateless();
