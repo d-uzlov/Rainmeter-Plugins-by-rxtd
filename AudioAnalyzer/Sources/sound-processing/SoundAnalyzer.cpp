@@ -38,11 +38,7 @@ bool SoundAnalyzer::process(const ChannelMixer& mixer, clock::time_point killTim
 			cph.processDataFrom(channel, mixer.getChannelPCM(channel));
 		}
 
-		auto wave = cph.getResampled();
-		if (wave.empty()) {
-			// todo remove
-			continue;
-		}
+		const auto wave = cph.getResampled();
 
 		for (auto& handlerName : patchersInfo.order) {
 			auto& handler = *channelData[handlerName];

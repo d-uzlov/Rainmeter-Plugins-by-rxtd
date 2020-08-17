@@ -23,7 +23,6 @@ void ChannelProcessingHelper::setChannels(const std::set<Channel>& set) {
 		}
 	}
 
-	// TODO check if it is even needed?
 	updateFilters();
 }
 

@@ -51,11 +51,10 @@ SoundHandler::ParseResult BandResampler::parseParams(
 
 	params.includeDC = om.get(L"includeDC").asBool(true);
 
-	// todo use legacy number
-	params.legacy_proportionalValues = om.get(L"proportionalValues").asBool(true);
-	if (params.legacy_proportionalValues == true) {
-		cl.notice(
-			L"for better results set 'proportionalValues false' and use 'filter replayGain' in processing description instead");
+	if (legacyNumber < 104) {
+		params.legacy_proportionalValues = om.get(L"proportionalValues").asBool(true);
+	} else {
+		params.legacy_proportionalValues = false;
 	}
 
 	return { params, fftId % own() };
@@ -174,7 +173,6 @@ SoundHandler::ConfigurationResult BandResampler::vConfigure(Logger& cl) {
 	const auto cascadesCount = fftSource->getDataSize().layersCount;
 
 	if (params.minCascade > cascadesCount) {
-		// todo
 		cl.error(L"minCascade is more than number of cascades");
 		return { };
 	}

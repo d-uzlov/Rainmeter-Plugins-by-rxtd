@@ -24,7 +24,7 @@ SoundHandler::ParseResult WeightedBlur::parseParams(
 		return { };
 	}
 
-	//                                                                      ?? ↓↓ looks best ?? at 0.25 ↓↓ ?? // TODO
+	//                                                                      ?? ↓↓ looks best ?? at 0.25 ↓↓ ??
 	params.radiusMultiplier = std::max<double>(om.get(L"radiusMultiplier").asFloat(1.0) * 0.25, 0.0);
 
 	params.minRadius = std::max<double>(om.get(L"minRadius").asFloat(1.0), 0.0);

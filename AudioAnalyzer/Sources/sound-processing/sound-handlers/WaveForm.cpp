@@ -108,7 +108,6 @@ SoundHandler::ConfigurationResult WaveForm::vConfigure(Logger& cl) {
 	filepath += L"wave-";
 	filepath += config.channelName;
 	filepath += L".bmp";
-	// todo check that can write to this file
 
 	minTransformer = { params.transformer };
 	maxTransformer = { params.transformer };

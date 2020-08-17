@@ -118,11 +118,15 @@ double AudioParent::vUpdate() {
 	}
 
 	if (deviceManager.getState() == DeviceManager::State::eOK) {
+		bool any = false;
 		deviceManager.getCaptureManager().capture([&](utils::array2d_view<float> channelsData) {
 			channelMixer.decomposeFramesIntoChannels(channelsData, true);
+			any = true;
 		});
 
-		process();
+		if (any) {
+			process();
+		}
 	}
 
 	deviceManager.checkAndRepair();

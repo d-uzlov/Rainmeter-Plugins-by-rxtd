@@ -150,36 +150,26 @@ namespace rxtd::audio_analyzer {
 			return L"<invalid>";
 		}
 
-		// todo use buffer printer
-		string format;
-		format.clear();
-
-		format.reserve(64);
+		utils::BufferPrinter bp;
 
 		switch (waveFormat.format) {
 		case Format::ePCM_S16:
-			format += L"PCM 16b";
+			bp.append(L"PCM 16b");
 			break;
 		case Format::ePCM_F32:
-			format += L"PCM 32b";
+			bp.append(L"PCM 32b");
 			break;
 		case Format::eINVALID: ;
-		default: std::terminate();
 		}
 
-		format += L", ";
-
-		format += std::to_wstring(waveFormat.samplesPerSec);
-		format += L"Hz, ";
+		bp.append(L", {} Hz, ", waveFormat.samplesPerSec);
 
 		if (waveFormat.channelLayout.getName().empty()) {
-			format += L"unknown layout: ";
-			format += std::to_wstring(waveFormat.channelsCount);
-			format += L"ch";
+			bp.append(L"unknown layout: {} channels", waveFormat.channelsCount);
 		} else {
-			format += waveFormat.channelLayout.getName();
+			bp.append(L"{}", waveFormat.channelLayout.getName());
 		}
 
-		return format;
+		return string{ bp.getBufferView() };
 	}
 }
