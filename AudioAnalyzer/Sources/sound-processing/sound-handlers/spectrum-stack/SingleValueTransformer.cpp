@@ -12,10 +12,11 @@
 
 using namespace audio_analyzer;
 
-bool SingleValueTransformer::parseParams(
-	const OptionMap& om, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber
+SoundHandler::ParseResult SingleValueTransformer::parseParams(
+	const OptionMap& om, Logger& cl, const Rainmeter& rain,
+	index legacyNumber
 ) const {
-	auto& params = *static_cast<Params*>(paramsPtr);
+	Params params;
 
 	params.sourceId = om.get(L"source").asIString();
 	if (params.sourceId.empty()) {
@@ -29,11 +30,7 @@ bool SingleValueTransformer::parseParams(
 	auto transformLogger = cl.context(L"transform: ");
 	params.transformer = audio_utils::TransformationParser::parse(om.get(L"transform").asString(), transformLogger);
 
-	return true;
-}
-
-void SingleValueTransformer::setParams(const Params& value) {
-	params = value;
+	return params;
 }
 
 SoundHandler::LinkingResult SingleValueTransformer::vFinishLinking(Logger& cl) {

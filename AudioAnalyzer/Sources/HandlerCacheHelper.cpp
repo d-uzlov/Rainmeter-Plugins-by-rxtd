@@ -29,7 +29,7 @@ using namespace std::string_literals;
 
 using namespace audio_analyzer;
 
-HandlerPatcher* HandlerCacheHelper::getHandler(const istring& name) {
+PatchInfo* HandlerCacheHelper::getHandler(const istring& name) {
 	auto& info = patchersCache[name];
 
 	if (!info.updated) {
@@ -37,8 +37,7 @@ HandlerPatcher* HandlerCacheHelper::getHandler(const istring& name) {
 		info.updated = true;
 	}
 
-	return info.patcher.get();
-
+	return info.patchInfo.fun == nullptr ? nullptr : &info.patchInfo;
 }
 
 HandlerCacheHelper::HandlerRawInfo HandlerCacheHelper::parseHandler(sview name, HandlerRawInfo handler) {
@@ -65,10 +64,7 @@ HandlerCacheHelper::HandlerRawInfo HandlerCacheHelper::parseHandler(sview name, 
 	}
 	anythingChanged = true;
 
-	handler.patcher = createHandlerPatcher(optionMap, cl);
-	if (handler.patcher == nullptr) {
-		return { };
-	}
+	handler.patchInfo = createHandlerPatcher(optionMap, cl);
 
 	const auto unusedOptions = optionMap.getListOfUntouched();
 	if (unusedOptionsWarning && !unusedOptions.empty()) {
@@ -81,8 +77,7 @@ HandlerCacheHelper::HandlerRawInfo HandlerCacheHelper::parseHandler(sview name, 
 	return handler;
 }
 
-std::unique_ptr<HandlerPatcher>
-HandlerCacheHelper::createHandlerPatcher(
+PatchInfo HandlerCacheHelper::createHandlerPatcher(
 	const utils::OptionMap& optionMap,
 	Logger& cl
 ) const {
@@ -94,47 +89,47 @@ HandlerCacheHelper::createHandlerPatcher(
 	}
 
 	if (type == L"rms") {
-		return createPatcher<BlockRms>(optionMap, cl);
+		return createPatcherT<BlockRms>(optionMap, cl);
 	}
 	if (type == L"peak") {
-		return createPatcher<BlockPeak>(optionMap, cl);
+		return createPatcherT<BlockPeak>(optionMap, cl);
 	}
 	if (type == L"fft") {
-		return createPatcher<FftAnalyzer>(optionMap, cl);
+		return createPatcherT<FftAnalyzer>(optionMap, cl);
 	}
 	if (type == L"BandResampler") {
-		return createPatcher<BandResampler>(optionMap, cl);
+		return createPatcherT<BandResampler>(optionMap, cl);
 	}
 	if (type == L"BandCascadeTransformer") {
-		return createPatcher<BandCascadeTransformer>(optionMap, cl);
+		return createPatcherT<BandCascadeTransformer>(optionMap, cl);
 	}
 	if (type == L"WeightedBlur") {
-		return createPatcher<WeightedBlur>(optionMap, cl);
+		return createPatcherT<WeightedBlur>(optionMap, cl);
 	}
 	if (type == L"UniformBlur") {
-		return createPatcher<UniformBlur>(optionMap, cl);
+		return createPatcherT<UniformBlur>(optionMap, cl);
 	}
 	if (type == L"spectrogram") {
-		return createPatcher<Spectrogram>(optionMap, cl);
+		return createPatcherT<Spectrogram>(optionMap, cl);
 	}
 	if (type == L"waveform") {
-		return createPatcher<WaveForm>(optionMap, cl);
+		return createPatcherT<WaveForm>(optionMap, cl);
 	}
 	if (type == L"loudness") {
-		return createPatcher<Loudness>(optionMap, cl);
+		return createPatcherT<Loudness>(optionMap, cl);
 	}
 	if (type == L"ValueTransformer") {
-		return createPatcher<SingleValueTransformer>(optionMap, cl);
+		return createPatcherT<SingleValueTransformer>(optionMap, cl);
 	}
 	if (type == L"FiniteTimeFilter") {
-		return createPatcher<legacy_FiniteTimeFilter>(optionMap, cl);
+		return createPatcherT<legacy_FiniteTimeFilter>(optionMap, cl);
 	}
 	if (type == L"LogarithmicValueMapper") {
-		return createPatcher<legacy_LogarithmicValueMapper>(optionMap, cl);
+		return createPatcherT<legacy_LogarithmicValueMapper>(optionMap, cl);
 	}
 
 	cl.error(L"unknown type '{}'", type);
-	return nullptr;
+	return { };
 }
 
 void HandlerCacheHelper::readRawDescription2(

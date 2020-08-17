@@ -82,17 +82,20 @@ namespace rxtd::audio_analyzer {
 		audio_utils::FFT fft{ };
 
 	public:
-		bool parseParams(
-			const OptionMap& om, Logger& cl, const Rainmeter& rain,
-			void* paramsPtr,
-			index legacyNumber
-		) const override;
-
-		const Params& getParams() const {
-			return params;
+		[[nodiscard]]
+		bool checkSameParams(const std::any& p) const override {
+			return compareParamsEquals(params, p);
 		}
 
-		void setParams(const Params& value);
+		void setParams(const std::any& p) override {
+			params = std::any_cast<Params>(p);
+		}
+
+		[[nodiscard]]
+		ParseResult parseParams(
+			const OptionMap& om, Logger& cl, const Rainmeter& rain,
+			index legacyNumber
+		) const override;
 
 	protected:
 		[[nodiscard]]

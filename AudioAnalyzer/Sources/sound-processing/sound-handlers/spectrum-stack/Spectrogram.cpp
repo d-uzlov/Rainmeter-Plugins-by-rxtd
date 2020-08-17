@@ -34,12 +34,9 @@ bool Spectrogram::vGetProp(const isview& prop, utils::BufferPrinter& printer) co
 	return false;
 }
 
-bool Spectrogram::parseParams(
-	const OptionMap& om, Logger& cl, const Rainmeter& rain,
-	void* paramsPtr,
-	index legacyNumber
-) const {
-	auto& params = *static_cast<Params*>(paramsPtr);
+SoundHandler::ParseResult Spectrogram::parseParams(const OptionMap& om, Logger& cl, const Rainmeter& rain,
+	index legacyNumber) const {
+	Params params;
 
 	params.sourceName = om.get(L"source").asIString();
 	if (params.sourceName.empty()) {
@@ -94,7 +91,7 @@ bool Spectrogram::parseParams(
 
 		bool first = true;
 		for (auto colorsDescription : colorsDescriptionList) {
-			auto [valueOpt, colorOpt] = colorsDescription.breakFirst(L':');
+			auto[valueOpt, colorOpt] = colorsDescription.breakFirst(L':');
 
 			if (colorOpt.empty()) {
 				cl.warning(L"colors: description '{}' doesn't contain color", colorsDescription.asString());
@@ -119,7 +116,7 @@ bool Spectrogram::parseParams(
 			} else {
 				params.colors.back().widthInverted = 1.0f / (value - prevValue);
 			}
-			params.colors.push_back(Params::ColorDescription{ 0.0f, color });
+			params.colors.push_back(Params::ColorDescription { 0.0f, color });
 
 			prevValue = value;
 			params.colorMinValue = std::min(params.colorMinValue, value);
@@ -146,7 +143,7 @@ bool Spectrogram::parseParams(
 
 	params.stationary = om.get(L"stationary").asBool(false);
 
-	return true;
+	return params;
 }
 
 SoundHandler::LinkingResult Spectrogram::vFinishLinking(Logger& cl) {

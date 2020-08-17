@@ -12,9 +12,11 @@
 
 using namespace audio_analyzer;
 
-bool WeightedBlur::parseParams(const OptionMap& om, Logger& cl, const Rainmeter& rain, void* paramsPtr,
-                               index legacyNumber) const {
-	auto& params = *static_cast<Params*>(paramsPtr);
+SoundHandler::ParseResult WeightedBlur::parseParams(
+	const OptionMap& om, Logger& cl, const Rainmeter& rain,
+	index legacyNumber
+) const {
+	Params params;
 
 	params.sourceId = om.get(L"source").asIString();
 	if (params.sourceId.empty()) {
@@ -35,7 +37,7 @@ bool WeightedBlur::parseParams(const OptionMap& om, Logger& cl, const Rainmeter&
 	// params.minWeight = std::max<double>(optionMap.get(L"minWeight"sv).asFloat(0), std::numeric_limits<float>::epsilon());
 	params.minWeight = 0.0; // doesn't work as expected
 
-	return true;
+	return params;
 }
 
 SoundHandler::LinkingResult WeightedBlur::vFinishLinking(Logger& cl) {

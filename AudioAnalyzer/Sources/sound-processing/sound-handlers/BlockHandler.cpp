@@ -12,12 +12,11 @@
 
 using namespace audio_analyzer;
 
-bool BlockHandler::parseParams(
+SoundHandler::ParseResult BlockHandler::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
-	void* paramsPtr,
 	index legacyNumber
 ) const {
-	auto& params = *static_cast<Params*>(paramsPtr);
+	Params params;
 
 	const sview updateIntervalOptionName = om.has(L"updateInterval") ? L"updateInterval" : L"resolution";
 	params.updateIntervalMs = om.get(updateIntervalOptionName).asFloat(1000.0 / 60.0);
@@ -42,11 +41,7 @@ bool BlockHandler::parseParams(
 		params.transformer = audio_utils::TransformationParser::parse(om.get(L"transform").asString(), transformLogger);
 	}
 
-	return true;
-}
-
-void BlockHandler::setParams(const Params& value) {
-	params = value;
+	return params;
 }
 
 SoundHandler::LinkingResult BlockHandler::vFinishLinking(Logger& cl) {

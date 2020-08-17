@@ -14,11 +14,11 @@
 
 using namespace audio_analyzer;
 
-bool Loudness::parseParams(
+SoundHandler::ParseResult Loudness::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
-	void* paramsPtr,
-	index legacyNumber) const {
-	auto& params = *static_cast<Params*>(paramsPtr);
+	index legacyNumber
+) const {
+	Params params;
 
 	auto transformLogger = cl.context(L"transform: ");
 	params.transformer = audio_utils::TransformationParser::parse(om.get(L"transform").asString(), transformLogger);
@@ -37,7 +37,7 @@ bool Loudness::parseParams(
 
 	params.ignoreGatingForSilence = om.get(L"ignoreGatingForSilence").asBool(true);
 
-	return true;
+	return params;
 }
 
 SoundHandler::LinkingResult Loudness::vFinishLinking(Logger& cl) {

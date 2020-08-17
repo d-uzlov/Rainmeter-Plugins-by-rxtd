@@ -20,7 +20,7 @@ namespace rxtd::audio_analyzer {
 			bool updated = false;
 			string rawDescription;
 			string rawDescription2;
-			std::unique_ptr<HandlerPatcher> patcher;
+			PatchInfo patchInfo;
 		};
 
 		using PatchersMap = std::map<istring, HandlerRawInfo, std::less<>>;
@@ -55,19 +55,30 @@ namespace rxtd::audio_analyzer {
 		}
 
 		[[nodiscard]]
-		HandlerPatcher* getHandler(const istring& name);
+		PatchInfo* getHandler(const istring& name);
 
+	private:
 		[[nodiscard]]
 		HandlerRawInfo parseHandler(sview name, HandlerRawInfo handler);
 
 		[[nodiscard]]
-		std::unique_ptr<HandlerPatcher> createHandlerPatcher(const utils::OptionMap& optionMap, Logger& cl) const;
+		PatchInfo createHandlerPatcher(const utils::OptionMap& optionMap, Logger& cl) const;
 
 		template <typename T>
 		[[nodiscard]]
-		std::unique_ptr<HandlerPatcher> createPatcher(const utils::OptionMap& om, Logger& cl) const {
-			auto result = std::make_unique<SoundHandler::HandlerPatcherImpl<T>>(om, cl, rain, legacyNumber);
-			return result->isValid() ? std::move(result) : nullptr;
+		PatchInfo createPatcherT(const utils::OptionMap& om, Logger& cl) const {
+			T instance{ };
+			SoundHandler& ref = instance;
+			SoundHandler::ParseResult parseResult = ref.parseParams(om, cl, rain, legacyNumber);
+
+			if (!parseResult.isValid()) {
+				return { };
+			}
+
+			PatchInfo result;
+			result.params = parseResult.takeParams();
+			result.fun = SoundHandler::patchHandlerImpl<T>;
+			return result;
 		}
 
 		void readRawDescription2(isview type, const utils::OptionMap& optionMap, string& rawDescription2) const;

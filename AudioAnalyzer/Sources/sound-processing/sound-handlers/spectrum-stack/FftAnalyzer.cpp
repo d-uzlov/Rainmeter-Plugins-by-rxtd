@@ -15,13 +15,11 @@
 
 using namespace audio_analyzer;
 
-bool FftAnalyzer::parseParams(
-	const OptionMap& om,
-	Logger& cl, const Rainmeter& rain,
-	void* paramsPtr,
+SoundHandler::ParseResult FftAnalyzer::parseParams(
+	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	index legacyNumber
 ) const {
-	auto& params = *static_cast<Params*>(paramsPtr);
+	Params params;
 
 	if (legacyNumber < 104) {
 		params.legacy_attackTime = std::max(om.get(L"attack").asFloat(100), 0.0);
@@ -104,11 +102,7 @@ bool FftAnalyzer::parseParams(
 	params.wcfDescription = om.get(L"windowFunction").asString(L"hann");
 	params.wcf = audio_utils::WindowFunctionHelper::parse(params.wcfDescription, cl);
 
-	return true;
-}
-
-void FftAnalyzer::setParams(const Params& value) {
-	params = value;
+	return params;
 }
 
 SoundHandler::LinkingResult FftAnalyzer::vFinishLinking(Logger& cl) {

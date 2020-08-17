@@ -13,9 +13,11 @@
 
 using namespace audio_analyzer;
 
-bool UniformBlur::parseParams(const OptionMap& om, Logger& cl, const Rainmeter& rain, void* paramsPtr,
-                              index legacyNumber) const {
-	auto& params = *static_cast<Params*>(paramsPtr);
+SoundHandler::ParseResult UniformBlur::parseParams(
+	const OptionMap& om, Logger& cl, const Rainmeter& rain,
+	index legacyNumber
+) const {
+	Params params;
 
 	params.sourceId = om.get(L"source").asIString();
 	if (params.sourceId.empty()) {
@@ -27,7 +29,7 @@ bool UniformBlur::parseParams(const OptionMap& om, Logger& cl, const Rainmeter& 
 	params.blurRadius = std::max<double>(om.get(L"Radius").asFloat(1.0) * 0.25, 0.0);
 	params.blurRadiusAdaptation = std::max<double>(om.get(L"RadiusAdaptation").asFloat(2.0), 0.0);
 
-	return true;
+	return params;
 }
 
 SoundHandler::LinkingResult UniformBlur::vFinishLinking(Logger& cl) {

@@ -29,11 +29,14 @@
  */
 
 #pragma once
+#include <any>
+
 #include "array_view.h"
 #include "BufferPrinter.h"
 #include "RainmeterWrappers.h"
 #include "../Channel.h"
 #include "Vector2D.h"
+#include "option-parser/OptionMap.h"
 
 namespace rxtd::audio_analyzer {
 	class SoundHandler;
@@ -46,21 +49,11 @@ namespace rxtd::audio_analyzer {
 		virtual SoundHandler* getHandler(isview id) const = 0;
 	};
 
-	class HandlerPatcher {
-		friend SoundHandler;
+	using HandlerPatchingFun = std::unique_ptr<SoundHandler>(*)(std::unique_ptr<SoundHandler> old);
 
-	public:
-		virtual ~HandlerPatcher() = default;
-
-	protected:
-		// takes old pointer and returns new
-		//	- if returned pointer is different from the old, then new object was created,
-		//		and the caller must release resources associated with old pointer
-		//
-		//	- if returned pointer is the same, then the old object was reused
-		//
-		//	- if return nullptr, then the handler is invalid
-		virtual SoundHandler* patch(SoundHandler* handlerPtr) const = 0;
+	struct PatchInfo {
+		std::any params;
+		HandlerPatchingFun fun = nullptr;
 	};
 
 	class SoundHandler {
@@ -77,6 +70,32 @@ namespace rxtd::audio_analyzer {
 			[[nodiscard]]
 			bool isEmpty() const {
 				return layersCount == 0 || valuesCount == 0;
+			}
+		};
+
+		class ParseResult {
+			bool valid{ };
+			std::any _params;
+
+		public:
+			ParseResult() {
+				valid = false;
+			}
+
+			template <typename Params>
+			ParseResult(Params params) {
+				valid = true;
+				_params = std::move(params);
+			}
+
+			[[nodiscard]]
+			bool isValid() const {
+				return valid;
+			}
+
+			[[nodiscard]]
+			std::any takeParams() {
+				return std::move(_params);
 			}
 		};
 
@@ -111,41 +130,18 @@ namespace rxtd::audio_analyzer {
 
 	public:
 		template <typename _HandlerType>
-		class HandlerPatcherImpl : public HandlerPatcher {
+		[[nodiscard]]
+		static std::unique_ptr<SoundHandler> patchHandlerImpl(std::unique_ptr<SoundHandler> handlerPtr) {
 			using HandlerType = _HandlerType;
 
-			typename HandlerType::Params params{ };
-			bool valid = false;
-
-		public:
-			HandlerPatcherImpl(const OptionMap& optionMap, Logger& cl, const Rainmeter& rain, index legacyNumber) {
-				HandlerType temp1{ };
-				SoundHandler& temp2 = temp1;
-				valid = temp2.parseParams(optionMap, cl, rain, &params, legacyNumber);
+			SoundHandler* ptr = dynamic_cast<HandlerType*>(handlerPtr.get());
+			if (ptr == nullptr) {
+				ptr = new HandlerType();
+				handlerPtr = std::unique_ptr<SoundHandler>{ ptr };
 			}
 
-			[[nodiscard]]
-			bool isValid() const {
-				return valid;
-			}
-
-			virtual ~HandlerPatcherImpl() = default;
-
-		private:
-			[[nodiscard]]
-			SoundHandler* patch(SoundHandler* handlerPtr) const override {
-				auto ptr = dynamic_cast<HandlerType*>(handlerPtr);
-				if (ptr == nullptr) {
-					ptr = new HandlerType();
-				}
-
-				if (ptr->getParams() != params) {
-					ptr->setParams(params);
-				}
-
-				return ptr;
-			}
-		};
+			return handlerPtr;
+		}
 
 	private:
 		DataSize _dataSize{ };
@@ -172,30 +168,25 @@ namespace rxtd::audio_analyzer {
 
 		virtual ~SoundHandler() = default;
 
-	private:
-		// All derived classes should have methods with following signatures
-
-		/*
-		const Params& getParams() const;
-		void patchMe(const Params& _params);
-		 */
-
-		// I can't declare these as virtual functions
-		// because Params structs are defined in derived classes,
-		// and C++ doesn't support template virtual functions
-
-		template <typename>
-		friend class HandlerPatcherImpl;
-
-		// must return true if all options are valid, false otherwise
-		virtual bool parseParams(
-			const OptionMap& om, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber
-		) const = 0;
+	protected:
+		template <typename Params>
+		static bool compareParamsEquals(Params p1, const std::any& p2) {
+			return p1 == *std::any_cast<Params>(&p2);
+		}
 
 	public:
 		[[nodiscard]]
-		static SoundHandler* patch(
-			SoundHandler* old, HandlerPatcher& patcher,
+		virtual bool checkSameParams(const std::any& p) const = 0;
+		virtual void setParams(const std::any& p) = 0;
+
+		[[nodiscard]]
+		virtual ParseResult
+		parseParams(const OptionMap& om, Logger& cl, const Rainmeter& rain, index legacyNumber) const = 0;
+
+		// returns true on success, false on invalid handler
+		[[nodiscard]]
+		bool patch(
+			const std::any& params,
 			Channel channel, index sampleRate,
 			HandlerFinder& hf,
 			Logger& cl

@@ -92,20 +92,19 @@ namespace rxtd::audio_analyzer {
 
 	public:
 		[[nodiscard]]
-		bool parseParams(
-			const OptionMap& om, Logger& cl, const Rainmeter& rain,
-			void* paramsPtr,
-			index legacyNumber
-		) const override;
+		bool checkSameParams(const std::any& p) const override {
+			return compareParamsEquals(params, p);
+		}
+
+		void setParams(const std::any& p) override {
+			params = std::any_cast<Params>(p);
+		}
 
 		[[nodiscard]]
-		const Params& getParams() const {
-			return params;
-		}
-
-		void setParams(const Params& value) {
-			params = value;
-		}
+		ParseResult parseParams(
+			const OptionMap& om, Logger& cl, const Rainmeter& rain,
+			index legacyNumber
+		) const override;
 
 	protected:
 		[[nodiscard]]

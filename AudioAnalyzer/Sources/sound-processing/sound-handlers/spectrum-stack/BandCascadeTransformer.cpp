@@ -14,10 +14,11 @@
 
 using namespace audio_analyzer;
 
-bool BandCascadeTransformer::parseParams(
-	const OptionMap& om, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber
+SoundHandler::ParseResult BandCascadeTransformer::parseParams(
+	const OptionMap& om, Logger& cl, const Rainmeter& rain,
+	index legacyNumber
 ) const {
-	auto& params = *static_cast<Params*>(paramsPtr);
+	Params params;
 
 	params.sourceId = om.get(L"source").asIString();
 	if (params.sourceId.empty()) {
@@ -56,7 +57,7 @@ bool BandCascadeTransformer::parseParams(
 		params.mixFunction = MixFunction::PRODUCT;
 	}
 
-	return true;
+	return params;
 }
 
 SoundHandler::LinkingResult BandCascadeTransformer::vFinishLinking(Logger& cl) {

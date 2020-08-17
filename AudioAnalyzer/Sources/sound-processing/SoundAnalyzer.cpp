@@ -120,17 +120,12 @@ void SoundAnalyzer::patchHandlers(ChannelLayout layout) {
 		     iter != order.end();) {
 			auto& handlerName = *iter;
 
-			auto& patcher = *patchersInfo.patchers.find(handlerName)->second;
-			auto& handlerInfo = channelData[handlerName];
+			auto& patchInfo = *patchersInfo.patchers.find(handlerName)->second;
+			auto handlerPtr = patchInfo.fun(std::move(channelData[handlerName]));
 
 			auto cl = logger.context(L"Handler {}: ", handlerName);
-			const auto ptr = SoundHandler::patch(
-				handlerInfo.get(), patcher,
-				channel, cph.getSampleRate(),
-				hf, cl
-			);
-
-			if (ptr == nullptr) {
+			const bool success = handlerPtr->patch(patchInfo.params, channel, cph.getSampleRate(), hf, cl);
+			if (!success) {
 				cl.error(L"invalid handler");
 
 				if (legacyNumber < 104) {
@@ -143,11 +138,7 @@ void SoundAnalyzer::patchHandlers(ChannelLayout layout) {
 				}
 			}
 
-			if (ptr != handlerInfo.get()) {
-				handlerInfo = std::unique_ptr<SoundHandler>(ptr);
-			}
-
-			newData[handlerName] = std::move(handlerInfo);
+			newData[handlerName] = std::move(handlerPtr);
 
 			++iter;
 		}

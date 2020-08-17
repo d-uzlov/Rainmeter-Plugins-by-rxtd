@@ -12,12 +12,16 @@
 
 using namespace audio_analyzer;
 
-SoundHandler* SoundHandler::patch(
-	SoundHandler* old, HandlerPatcher& patcher,
+bool SoundHandler::patch(
+	const std::any& params,
 	Channel channel, index sampleRate,
 	HandlerFinder& hf, Logger& cl
 ) {
-	auto& result = *patcher.patch(old);
+	auto& result = *this;
+
+	if (!result.checkSameParams(params)) {
+		result.setParams(params);
+	}
 
 	if (const auto sourceName = result.vGetSourceName();
 		!sourceName.empty()) {
@@ -48,7 +52,7 @@ SoundHandler* SoundHandler::patch(
 	result._lastResults.setBufferSize(linkingResult.dataSize.valuesCount);
 	result._lastResults.init(0.0f);
 
-	return &result;
+	return true;
 }
 
 index SoundHandler::legacy_parseIndexProp(

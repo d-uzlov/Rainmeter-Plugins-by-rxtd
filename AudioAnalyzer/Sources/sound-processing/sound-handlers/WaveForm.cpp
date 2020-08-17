@@ -9,19 +9,17 @@
 
 #include "WaveForm.h"
 #include <filesystem>
-#include "option-parser/OptionMap.h"
 
 using namespace std::string_literals;
 using utils::Color;
 
 using namespace audio_analyzer;
 
-bool WaveForm::parseParams(
+SoundHandler::ParseResult WaveForm::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
-	void* paramsPtr,
 	index legacyNumber
 ) const {
-	auto& params = *static_cast<Params*>(paramsPtr);
+	Params params;
 
 	params.width = om.get(L"width").asInt(100);
 	if (params.width < 2) {
@@ -87,12 +85,10 @@ bool WaveForm::parseParams(
 		params.transformer = TP::parse(om.get(L"transform").asString(), transformLogger);
 	}
 
-	return true;
+	return params;
 }
 
-void WaveForm::setParams(const Params& value) {
-	params = value;
-
+SoundHandler::LinkingResult WaveForm::vFinishLinking(Logger& cl) {
 	minDistinguishableValue = 1.0 / params.height;
 
 	drawer.setDimensions(params.width, params.height);
@@ -103,11 +99,9 @@ void WaveForm::setParams(const Params& value) {
 	drawer.setFading(params.fading);
 	drawer.setConnected(params.connected);
 	drawer.setBorderSize(params.borderSize);
-}
 
-SoundHandler::LinkingResult WaveForm::vFinishLinking(Logger& cl) {
 	auto& config = getConfiguration();
-	
+
 	filepath = params.folder;
 	filepath += L"wave-";
 	filepath += config.channel.technicalName();

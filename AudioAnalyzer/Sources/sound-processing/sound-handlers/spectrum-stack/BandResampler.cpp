@@ -15,12 +15,11 @@ using namespace std::string_literals;
 
 using namespace audio_analyzer;
 
-bool BandResampler::parseParams(
+SoundHandler::ParseResult BandResampler::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
-	void* paramsPtr,
 	index legacyNumber
 ) const {
-	auto& params = *static_cast<Params*>(paramsPtr);
+	Params params;
 
 	params.fftId = om.get(L"source").asIString();
 	if (params.fftId.empty()) {
@@ -59,17 +58,7 @@ bool BandResampler::parseParams(
 			L"for better results set 'proportionalValues false' and use 'filter replayGain' in processing description instead");
 	}
 
-	return true;
-}
-
-void BandResampler::setParams(const Params& value) {
-	params = value;
-
-	bandsCount = index(params.bandFreqs.size() - 1);
-
-	if (params.legacy_proportionalValues) {
-		legacy_generateBandMultipliers();
-	}
+	return params;
 }
 
 std::vector<float> BandResampler::parseFreqList(sview listId, const Rainmeter& rain) {
@@ -185,8 +174,15 @@ SoundHandler::LinkingResult BandResampler::vFinishLinking(Logger& cl) {
 	const auto cascadesCount = fftSource->getDataSize().layersCount;
 
 	if (params.minCascade > cascadesCount) {
+		// todo
 		cl.error(L"minCascade is more than number of cascades");
 		return { };
+	}
+
+	bandsCount = index(params.bandFreqs.size() - 1);
+
+	if (params.legacy_proportionalValues) {
+		legacy_generateBandMultipliers();
 	}
 
 	startCascade = 1;
@@ -228,7 +224,7 @@ void BandResampler::vFinish() {
 		return;
 	}
 	changed = false;
-	
+
 	auto& config = getConfiguration();
 
 	auto& source = *fftSource;

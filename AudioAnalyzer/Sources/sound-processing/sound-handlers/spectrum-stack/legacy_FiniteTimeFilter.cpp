@@ -12,10 +12,11 @@
 
 using namespace audio_analyzer;
 
-bool legacy_FiniteTimeFilter::parseParams(
-	const OptionMap& om, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber
+SoundHandler::ParseResult legacy_FiniteTimeFilter::parseParams(
+	const OptionMap& om, Logger& cl, const Rainmeter& rain,
+	index legacyNumber
 ) const {
-	auto& params = *static_cast<Params*>(paramsPtr);
+	Params params;
 
 	params.sourceId = om.get(L"source").asIString();
 	if (params.sourceId.empty()) {
@@ -29,7 +30,7 @@ bool legacy_FiniteTimeFilter::parseParams(
 		params.smoothingFactor = 1;
 	}
 
-	params.exponentialFactor = 1;
+	params.exponentialFactor = 1.0;
 	if (const auto smoothingCurveString = om.get(L"smoothingCurve").asIString(L"exponential");
 		smoothingCurveString == L"exponential") {
 		params.smoothingCurve = SmoothingCurve::EXPONENTIAL;
@@ -39,16 +40,14 @@ bool legacy_FiniteTimeFilter::parseParams(
 	} else if (smoothingCurveString == L"linear") {
 		params.smoothingCurve = SmoothingCurve::LINEAR;
 	} else {
-		cl.warning(L"smoothingCurve '{}' now recognized. Assume 'flat'", smoothingCurveString);
+		cl.warning(L"smoothingCurve '{}' is not recognized. Assume 'flat'", smoothingCurveString);
 		params.smoothingCurve = SmoothingCurve::FLAT;
 	}
 
-	return true;
+	return params;
 }
 
-void legacy_FiniteTimeFilter::setParams(const Params& value) {
-	params = value;
-
+SoundHandler::LinkingResult legacy_FiniteTimeFilter::vFinishLinking(Logger& cl) {
 	if (params.smoothingFactor <= 1) {
 		smoothingNormConstant = 1.0;
 	} else {
@@ -57,13 +56,15 @@ void legacy_FiniteTimeFilter::setParams(const Params& value) {
 			smoothingNormConstant = 1.0 / params.smoothingFactor;
 			break;
 
-		case SmoothingCurve::LINEAR: {
+		case SmoothingCurve::LINEAR:
+		{
 			const index smoothingWeight = params.smoothingFactor * (params.smoothingFactor + 1) / 2;
 			smoothingNormConstant = 1.0 / smoothingWeight;
 			break;
 		}
 
-		case SmoothingCurve::EXPONENTIAL: {
+		case SmoothingCurve::EXPONENTIAL:
+		{
 			double smoothingWeight = 0;
 			double weight = 1;
 
@@ -79,9 +80,7 @@ void legacy_FiniteTimeFilter::setParams(const Params& value) {
 		default: std::terminate();
 		}
 	}
-}
-
-SoundHandler::LinkingResult legacy_FiniteTimeFilter::vFinishLinking(Logger& cl) {
+	
 	auto& config = getConfiguration();
 	const auto dataSize = config.sourcePtr->getDataSize();
 

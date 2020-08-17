@@ -13,10 +13,10 @@
 
 using namespace audio_analyzer;
 
-bool legacy_LogarithmicValueMapper::parseParams(
-	const OptionMap& om, Logger& cl, const Rainmeter& rain, void* paramsPtr, index legacyNumber
+SoundHandler::ParseResult legacy_LogarithmicValueMapper::parseParams(
+	const OptionMap& om, Logger& cl, const Rainmeter& rain, index legacyNumber
 ) const {
-	auto& params = *static_cast<Params*>(paramsPtr);
+	Params params;
 
 	params.sourceId = om.get(L"source").asIString();
 	if (params.sourceId.empty()) {
@@ -28,16 +28,12 @@ bool legacy_LogarithmicValueMapper::parseParams(
 	params.sensitivity = std::clamp<double>(params.sensitivity, std::numeric_limits<float>::epsilon(), 1000.0);
 	params.offset = om.get(L"offset").asFloatF(0.0);
 
-	return true;
-}
-
-void legacy_LogarithmicValueMapper::setParams(const Params& value) {
-	params = value;
-
-	logNormalization = float(20.0 / params.sensitivity);
+	return params;
 }
 
 SoundHandler::LinkingResult legacy_LogarithmicValueMapper::vFinishLinking(Logger& cl) {
+	logNormalization = float(20.0 / params.sensitivity);
+
 	auto& config = getConfiguration();
 	const auto dataSize = config.sourcePtr->getDataSize();
 	return dataSize;
