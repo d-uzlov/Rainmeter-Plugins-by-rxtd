@@ -12,7 +12,6 @@
 namespace rxtd::utils {
 	class MyMath {
 	public:
-		// TODO remove this pi?
 		static const double pi;
 
 		// return approximately a**b

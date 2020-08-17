@@ -84,7 +84,7 @@ SoundHandler::ConfigurationResult legacy_FiniteTimeFilter::vConfigure(Logger& cl
 	for (auto& vec : pastValues) {
 		vec.setBuffersCount(params.smoothingFactor);
 		vec.setBufferSize(dataSize.valuesCount);
-		vec.init();
+		vec.fill();
 	}
 
 	return dataSize;

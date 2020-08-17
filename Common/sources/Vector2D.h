@@ -52,8 +52,7 @@ namespace rxtd::utils {
 		Vector2D(const Vector2D& other) = default;
 		Vector2D& operator=(const Vector2D& other) = default;
 
-		// todo rename to fill
-		void init(const T value = { }) {
+		void fill(const T value = { }) {
 			std::fill_n(array.data(), buffersCount * bufferSize, value);
 		}
 

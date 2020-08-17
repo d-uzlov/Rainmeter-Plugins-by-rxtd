@@ -26,7 +26,11 @@ void SoundAnalyzer::setParams(
 	legacyNumber = _legacyNumber;
 
 	cph.setParams(pd.fcc, pd.targetRate, sampleRate);
-	patchHandlers(std::move(layout));
+	if (sampleRate != 0) {
+		patchHandlers(std::move(layout));
+	} else {
+		channels.clear();
+	}
 }
 
 bool SoundAnalyzer::process(const ChannelMixer& mixer, clock::time_point killTime) {
@@ -35,7 +39,7 @@ bool SoundAnalyzer::process(const ChannelMixer& mixer, clock::time_point killTim
 
 		const auto wave = cph.getResampled();
 
-		for (auto& handlerName : patchersInfo.order) {
+		for (auto& handlerName : realOrder) {
 			auto& handler = *channelData[handlerName];
 			handler.process(wave, killTime);
 
@@ -50,7 +54,7 @@ bool SoundAnalyzer::process(const ChannelMixer& mixer, clock::time_point killTim
 
 bool SoundAnalyzer::finishStandalone(clock::time_point killTime) {
 	for (auto& [channel, channelData] : channels) {
-		for (auto& handlerName : patchersInfo.order) {
+		for (auto& handlerName : realOrder) {
 			auto& handler = *channelData[handlerName];
 
 			handler.finishStandalone();
@@ -94,9 +98,9 @@ void SoundAnalyzer::patchHandlers(ChannelLayout layout) {
 		ChannelData newData;
 		HandlerFinderImpl hf{ newData };
 
-		auto& order = patchersInfo.order;
-		for (auto iter = order.begin();
-		     iter != order.end();) {
+		realOrder = patchersInfo.order;
+		for (auto iter = realOrder.begin();
+		     iter != realOrder.end();) {
 			auto& handlerName = *iter;
 
 			auto& patchInfo = *patchersInfo.patchers.find(handlerName)->second;
@@ -108,10 +112,10 @@ void SoundAnalyzer::patchHandlers(ChannelLayout layout) {
 				cl.error(L"invalid handler");
 
 				if (legacyNumber < 104) {
-					iter = order.erase(iter);
+					iter = realOrder.erase(iter);
 					continue;
 				} else {
-					order.clear();
+					realOrder.clear();
 					newData.clear();
 					break;
 				}

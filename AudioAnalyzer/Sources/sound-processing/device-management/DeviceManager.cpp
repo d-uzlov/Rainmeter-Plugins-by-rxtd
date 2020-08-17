@@ -37,7 +37,6 @@ void DeviceManager::deviceInit() {
 	case DataSource::eDEFAULT_INPUT:
 		deviceOpt = enumerator.getDefaultDevice(utils::MediaDeviceType::eINPUT);
 		if (!deviceOpt) {
-			logger.error(L"can't connect to default input device");
 			state = State::eERROR_MANUAL;
 			return;
 		}
@@ -46,7 +45,6 @@ void DeviceManager::deviceInit() {
 	case DataSource::eDEFAULT_OUTPUT:
 		deviceOpt = enumerator.getDefaultDevice(utils::MediaDeviceType::eOUTPUT);
 		if (!deviceOpt) {
-			logger.error(L"can't connect to default output device");
 			state = State::eERROR_MANUAL;
 			return;
 		}
@@ -55,7 +53,6 @@ void DeviceManager::deviceInit() {
 	case DataSource::eID:
 		deviceOpt = enumerator.getDevice(requestedDevice.id);
 		if (!deviceOpt) {
-			logger.error(L"can't connect to specified device '{}'", requestedDevice.id);
 			state = State::eERROR_MANUAL;
 			return;
 		}

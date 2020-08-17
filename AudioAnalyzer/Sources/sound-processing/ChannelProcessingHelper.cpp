@@ -38,10 +38,8 @@ void ChannelProcessingHelper::setParams(
 
 	fcc = std::move(_fcc);
 	resamplingData.targetRate = targetRate;
-	resamplingData.sourceRate = sourceSampleRate;
 
-	recalculateResamplingData();
-	updateFilters();
+	updateSourceRate(sourceSampleRate);
 }
 
 void ChannelProcessingHelper::updateSourceRate(index value) {

@@ -28,6 +28,7 @@ namespace rxtd::audio_analyzer {
 		// They can contain info about handlers that doesn't exist because of channel layout
 		std::set<Channel> channelSetRequested;
 		ParamParser::HandlerPatchersInfo patchersInfo;
+		std::vector<istring> realOrder;
 
 		std::map<Channel, ChannelData> channels;
 

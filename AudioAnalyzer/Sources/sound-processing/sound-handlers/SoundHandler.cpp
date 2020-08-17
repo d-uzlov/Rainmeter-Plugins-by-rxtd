@@ -55,7 +55,7 @@ bool SoundHandler::patch(
 	_layers.resize(linkingResult.dataSize.layersCount);
 	_lastResults.setBuffersCount(linkingResult.dataSize.layersCount);
 	_lastResults.setBufferSize(linkingResult.dataSize.valuesCount);
-	_lastResults.init(0.0f);
+	_lastResults.fill(0.0f);
 
 	return true;
 }

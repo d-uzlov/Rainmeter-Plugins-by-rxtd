@@ -31,7 +31,7 @@ namespace rxtd::utils {
 		buffer.setBufferSize(dataSize);
 
 		if (silent) {
-			buffer.init(0.0);
+			buffer.fill(0.0);
 		} else {
 			switch (type) {
 			case Type::eInt:

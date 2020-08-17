@@ -49,7 +49,7 @@ std::optional<utils::MediaDeviceWrapper> AudioEnumeratorHelper::getDefaultDevice
 
 	if (!audioDeviceHandle.isValid()) {
 		logger.error(
-			L"Can't get default {} audio device",
+			L"Can't connect to default {} audio device",
 			type == utils::MediaDeviceType::eOUTPUT ? L"output" : L"input"
 		);
 		return std::nullopt;
