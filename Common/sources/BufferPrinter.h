@@ -13,15 +13,15 @@
 #include "option-parser/Option.h"
 
 namespace rxtd::utils {
-	template<typename E>
+	template <typename E>
 	typename std::enable_if<std::is_enum<E>::value, sview>::type
-		getEnumName(E value) {
+	getEnumName(E value) {
 		return L"<unknown enum>";
 	}
 
 	template <typename E>
 	typename std::enable_if<std::is_enum<E>::value, void>::type
-		writeEnum(std::wostream& stream, const E& e, sview options) {
+	writeEnum(std::wostream& stream, const E& e, sview options) {
 		if (options == L"name") {
 			stream << getEnumName(e);
 		} else {
@@ -31,7 +31,7 @@ namespace rxtd::utils {
 
 	template <typename T>
 	typename std::enable_if<std::is_integral<T>::value, void>::type
-		writeIntegral(std::wostream& stream, T t, sview options) {
+	writeIntegral(std::wostream& stream, T t, sview options) {
 		if (options == L"error") {
 			stream << L"0x";
 			stream << std::setfill(L'0') << std::setw(sizeof(T) * 2) << std::hex;
@@ -47,7 +47,7 @@ namespace rxtd::utils {
 
 	template <typename F>
 	typename std::enable_if<std::is_floating_point<F>::value, void>::type
-		writeFloat(std::wostream& stream, const F& t, sview options) {
+	writeFloat(std::wostream& stream, const F& t, sview options) {
 		stream << t;
 	}
 
@@ -56,7 +56,7 @@ namespace rxtd::utils {
 		stream << t;
 	}
 
-	template<typename T>
+	template <typename T>
 	void writeObject(std::wostream& stream, const std::vector<T>& vec, sview options) {
 		stream << L'[';
 		if (!vec.empty()) {
@@ -112,7 +112,7 @@ namespace rxtd::utils {
 			ReadableOutputBuffer(const ReadableOutputBuffer& other) = default;
 			ReadableOutputBuffer& operator=(const ReadableOutputBuffer& other) = default;
 
-			const char_type* getBuffer();
+			sview getBuffer();
 			void resetPointers();
 			void appendEOL();
 
@@ -121,30 +121,32 @@ namespace rxtd::utils {
 		};
 
 		ReadableOutputBuffer buffer;
-		const wchar_t *formatString = nullptr;
+		const wchar_t* formatString = nullptr;
 		bool skipUnlistedArgs = true;
 
 	public:
-		void setSkipUnlistedArgs(bool value);
+		void setSkipUnlistedArgs(bool value) {
+			skipUnlistedArgs = value;
+		}
 
-		template<typename... Args>
+		template <typename... Args>
 		void print(string formatString, const Args&... args) {
 			print(formatString.c_str(), args...);
 		}
 
-		template<typename T>
+		template <typename T>
 		void print(T arg) {
 			print(L"{}", arg);
 		}
 
-		template<typename... Args>
-		void print(const wchar_t *formatString, const Args&... args) {
+		template <typename... Args>
+		void print(const wchar_t* formatString, const Args&... args) {
 			buffer.resetPointers();
 			append(formatString, args...);
 		}
 
-		template<typename... Args>
-		void append(const wchar_t *formatString, const Args&... args) {
+		template <typename... Args>
+		void append(const wchar_t* formatString, const Args&... args) {
 			this->formatString = formatString;
 			writeToStream(args...);
 			this->formatString = nullptr;
@@ -157,25 +159,27 @@ namespace rxtd::utils {
 		[[nodiscard]]
 		const wchar_t* getBufferPtr() {
 			buffer.appendEOL();
-			return buffer.getBuffer();
+			return buffer.getBuffer().data();
 		}
 
 		[[nodiscard]]
 		sview getBufferView() {
 			buffer.appendEOL();
+
 			return buffer.getBuffer();
 		}
-	private:
 
-		template<typename T, typename... Args>
+	private:
+		template <typename T, typename... Args>
 		void writeToStream(const T& t, const Args&... args);
 
 		void writeToStream();
 
-		template<typename T, typename... Args>
+		template <typename T, typename... Args>
 		void writeUnlisted(const T& t, const Args&... args);
 
-		void writeUnlisted();
+		void writeUnlisted() {
+		}
 
 		template <typename T>
 		void writeType(std::wostream& stream, const T& t, sview options) {

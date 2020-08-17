@@ -9,6 +9,8 @@
 
 #include "BufferPrinter.h"
 
+#include "RainmeterWrappers.h"
+
 using namespace utils;
 
 void utils::writeObject(std::wostream& stream, const Option& t, sview options) {
@@ -29,8 +31,9 @@ BufferPrinter::ReadableOutputBuffer& BufferPrinter::ReadableOutputBuffer::operat
 	return *this;
 }
 
-const std::basic_streambuf<wchar_t>::char_type* BufferPrinter::ReadableOutputBuffer::getBuffer() {
-	return buffer.data();
+sview BufferPrinter::ReadableOutputBuffer::getBuffer() {
+	const index size = pptr() - pbase();
+	return { buffer.data(), sview::size_type(size) };
 }
 
 void BufferPrinter::ReadableOutputBuffer::resetPointers() {
@@ -59,17 +62,10 @@ std::basic_streambuf<wchar_t>::int_type BufferPrinter::ReadableOutputBuffer::ove
 	return c;
 }
 
-void BufferPrinter::setSkipUnlistedArgs(bool value) {
-	skipUnlistedArgs = value;
-}
-
 void BufferPrinter::writeToStream() {
 	std::wostream stream = std::wostream(&buffer);
 	stream << formatString;
 }
-
-void BufferPrinter::writeUnlisted() { }
-
 
 namespace rxtd::utils {
 
@@ -82,4 +78,3 @@ namespace rxtd::utils {
 		}
 	}
 }
-

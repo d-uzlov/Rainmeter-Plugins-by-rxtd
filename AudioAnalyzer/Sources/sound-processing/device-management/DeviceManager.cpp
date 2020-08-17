@@ -87,14 +87,6 @@ void DeviceManager::deviceRelease() {
 	state = State::eERROR_AUTO;
 }
 
-utils::MediaDeviceType DeviceManager::getCurrentDeviceType() const {
-	return sourceDeviceType;
-}
-
-DeviceManager::State DeviceManager::getState() const {
-	return state;
-}
-
 void DeviceManager::forceReconnect() {
 	state = State::eERROR_AUTO;
 	deviceInit();
@@ -109,28 +101,4 @@ void DeviceManager::setOptions(DataSource source, sview deviceID) {
 	requestedDevice.type = source;
 
 	forceReconnect();
-}
-
-const utils::MediaDeviceWrapper::DeviceInfo& DeviceManager::getDeviceInfo() const {
-	return deviceInfo;
-}
-
-bool DeviceManager::getDeviceStatus() const {
-	return audioDeviceHandle.isDeviceActive();
-}
-
-CaptureManager& DeviceManager::getCaptureManager() {
-	return captureManager;
-}
-
-const CaptureManager& DeviceManager::getCaptureManager() const {
-	return captureManager;
-}
-
-AudioEnumeratorHelper& DeviceManager::getDeviceEnumerator() {
-	return enumerator;
-}
-
-const AudioEnumeratorHelper& DeviceManager::getDeviceEnumerator() const {
-	return enumerator;
 }

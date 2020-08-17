@@ -75,27 +75,21 @@ void AudioEnumeratorHelper::updateDeviceStrings() {
 }
 
 void AudioEnumeratorHelper::makeDeviceString(utils::MediaDeviceType type, string& result) {
-	result.clear();
-
 	auto collection = enumeratorWrapper.getActiveDevices(type);
 	if (collection.empty()) {
+		result.clear();
 		return;
 	}
 
-	result.reserve(collection.size() * 100);
-
+	utils::BufferPrinter bp;
 	for (auto& device : collection) {
 		const auto deviceInfo = device.readDeviceInfo();
-
-		result += deviceInfo.id;
-		result += L";";
-		result += deviceInfo.desc;
-		result += L";";
-		result += deviceInfo.name;
-		result += L"\n";
+		bp.append(L"{};{};{}\n", deviceInfo.id, deviceInfo.desc, deviceInfo.name);
 	}
 
-	result.resize(result.size() - 1);
+	result = bp.getBufferView();
+	result.pop_back(); // removes \0
+	result.pop_back(); // removes \n
 }
 
 void AudioEnumeratorHelper::updateDeviceLists() {
@@ -118,23 +112,20 @@ std::set<string> AudioEnumeratorHelper::readDeviceIdList(utils::MediaDeviceType 
 }
 
 void AudioEnumeratorHelper::updateDeviceStringLegacy(utils::MediaDeviceType type) {
-	deviceStringLegacy.clear();
-
 	auto collection = enumeratorWrapper.getActiveDevices(type);
 	if (collection.empty()) {
+		deviceStringLegacy.clear();
 		return;
 	}
 
-	deviceStringLegacy.reserve(collection.size() * 100);
-
+	utils::BufferPrinter bp;
 	for (auto& device : collection) {
 		const auto deviceInfo = device.readDeviceInfo();
 
-		deviceStringLegacy += deviceInfo.id;
-		deviceStringLegacy += L" ";
-		deviceStringLegacy += deviceInfo.fullFriendlyName;
-		deviceStringLegacy += L"\n";
+		bp.append(L"{} {}\n", deviceInfo.id, deviceInfo.fullFriendlyName);
 	}
 
-	deviceStringLegacy.resize(deviceStringLegacy.size());
+	deviceStringLegacy = bp.getBufferView();
+	deviceStringLegacy.pop_back();
+	deviceStringLegacy.pop_back();
 }

@@ -79,9 +79,14 @@ namespace rxtd::audio_analyzer {
 		DeviceManager& operator=(DeviceManager&& other) = delete;
 
 		[[nodiscard]]
-		utils::MediaDeviceType getCurrentDeviceType() const;
+		utils::MediaDeviceType getCurrentDeviceType() const {
+			return sourceDeviceType;
+		}
+
 		[[nodiscard]]
-		State getState() const;
+		State getState() const {
+			return state;
+		}
 
 		void forceReconnect();
 
@@ -93,18 +98,34 @@ namespace rxtd::audio_analyzer {
 		void setOptions(DataSource source, sview deviceID);
 
 		[[nodiscard]]
-		const utils::MediaDeviceWrapper::DeviceInfo& getDeviceInfo() const;
-		[[nodiscard]]
-		bool getDeviceStatus() const;
+		const utils::MediaDeviceWrapper::DeviceInfo& getDeviceInfo() const {
+			return deviceInfo;
+		}
 
 		[[nodiscard]]
-		CaptureManager& getCaptureManager();
+		bool getDeviceStatus() const {
+			return audioDeviceHandle.isDeviceActive();
+		}
+
 		[[nodiscard]]
-		const CaptureManager& getCaptureManager() const;
+		CaptureManager& getCaptureManager() {
+			return captureManager;
+		}
+
 		[[nodiscard]]
-		AudioEnumeratorHelper& getDeviceEnumerator();
+		const CaptureManager& getCaptureManager() const {
+			return captureManager;
+		}
+
 		[[nodiscard]]
-		const AudioEnumeratorHelper& getDeviceEnumerator() const;
+		AudioEnumeratorHelper& getDeviceEnumerator() {
+			return enumerator;
+		}
+
+		[[nodiscard]]
+		const AudioEnumeratorHelper& getDeviceEnumerator() const {
+			return enumerator;
+		}
 
 	private:
 		void deviceInit();
