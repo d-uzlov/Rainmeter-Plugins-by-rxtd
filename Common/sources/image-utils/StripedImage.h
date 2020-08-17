@@ -15,10 +15,8 @@
 namespace rxtd::utils {
 	template <typename PIXEL_VALUE_TYPE>
 	class StripedImage {
-	public:
 		using PixelValueType = PIXEL_VALUE_TYPE;
 
-	protected:
 		GrowingVector<PixelValueType> pixelData{ };
 		index width = 0;
 		index height = 0;
@@ -28,6 +26,7 @@ namespace rxtd::utils {
 		index sameStripsCount = 0;
 		bool stationary = false;
 		index stationaryOffset = 0;
+		index allocationShortage = 0;
 
 	public:
 		// Must be called before #setDimensions
@@ -40,18 +39,15 @@ namespace rxtd::utils {
 		}
 
 		void setDimensions(index _width, index _height) {
-			if (width == _width && height == _height) {
-				return;
-			}
-
-			this->width = _width;
-			this->height = _height;
+			width = _width;
+			height = _height;
 
 			const index imagePixelsCount = _width * _height;
 			const index maxOffset = getReserveSize(imagePixelsCount);
 
 			pixelData.reset(imagePixelsCount, backgroundValue);
 			pixelData.setMaxSize(imagePixelsCount + maxOffset);
+			allocationShortage = 0;
 
 			lastFillValue = backgroundValue;
 			sameStripsCount = _width - 1;
@@ -141,6 +137,20 @@ namespace rxtd::utils {
 			return stationaryOffset;
 		}
 
+		void removeLast(index count) {
+			if (stationary) {
+				stationaryOffset -= count;
+				if (stationaryOffset < 0) {
+					stationaryOffset += width;
+				}
+			} else {
+				pixelData.eraseLast(count);
+				allocationShortage += count;
+			}
+
+			sameStripsCount = std::max<index>(sameStripsCount - count, 0);
+		}
+
 	private:
 		// returns index of next string to write to
 		index incrementAndGetIndex() {
@@ -175,7 +185,11 @@ namespace rxtd::utils {
 		}
 
 		void incrementStrip() {
-			pixelData.removeFirst(1);
+			if (allocationShortage == 0) {
+				pixelData.removeFirst(1);
+			} else {
+				allocationShortage--;
+			}
 			(void)pixelData.allocateNext(1);
 		}
 

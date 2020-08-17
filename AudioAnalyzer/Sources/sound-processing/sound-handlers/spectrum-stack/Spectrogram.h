@@ -84,6 +84,10 @@ namespace rxtd::audio_analyzer {
 		index counter = 0;
 		bool changed = false;
 
+		index dataShortageEqSize{ };
+		index overpushCount{ };
+		bool lastDataIsZero{ };
+
 		utils::StripedImage<utils::IntColor> image{ };
 		utils::StripedImageFadeHelper sifh{ };
 		utils::ImageWriteHelper writerHelper{ };

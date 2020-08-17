@@ -91,6 +91,13 @@ namespace rxtd::utils {
 			return { array.data() + index(array.size()) - chunkSize, chunkSize };
 		}
 
+		void eraseLast(index chunkSize) {
+			if (chunkSize > getRemainingSize()) {
+				return;
+			}
+
+			array.resize(array.size() - chunkSize);
+		}
 
 		[[nodiscard]]
 		array_span<T> getAllData() {

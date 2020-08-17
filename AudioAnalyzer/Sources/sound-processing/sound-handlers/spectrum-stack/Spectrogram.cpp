@@ -14,6 +14,7 @@
 #include "option-parser/OptionMap.h"
 #include "option-parser/OptionList.h"
 #include "LinearInterpolator.h"
+#include "../WaveForm.h"
 
 using namespace std::string_literals;
 
@@ -34,8 +35,10 @@ bool Spectrogram::vGetProp(const isview& prop, utils::BufferPrinter& printer) co
 	return false;
 }
 
-SoundHandler::ParseResult Spectrogram::parseParams(const OptionMap& om, Logger& cl, const Rainmeter& rain,
-	index legacyNumber) const {
+SoundHandler::ParseResult Spectrogram::parseParams(
+	const OptionMap& om, Logger& cl, const Rainmeter& rain,
+	index legacyNumber
+) const {
 	Params params;
 
 	params.sourceName = om.get(L"source").asIString();
@@ -91,7 +94,7 @@ SoundHandler::ParseResult Spectrogram::parseParams(const OptionMap& om, Logger& 
 
 		bool first = true;
 		for (auto colorsDescription : colorsDescriptionList) {
-			auto[valueOpt, colorOpt] = colorsDescription.breakFirst(L':');
+			auto [valueOpt, colorOpt] = colorsDescription.breakFirst(L':');
 
 			if (colorOpt.empty()) {
 				cl.warning(L"colors: description '{}' doesn't contain color", colorsDescription.asString());
@@ -116,7 +119,7 @@ SoundHandler::ParseResult Spectrogram::parseParams(const OptionMap& om, Logger& 
 			} else {
 				params.colors.back().widthInverted = 1.0f / (value - prevValue);
 			}
-			params.colors.push_back(Params::ColorDescription { 0.0f, color });
+			params.colors.push_back(Params::ColorDescription{ 0.0f, color });
 
 			prevValue = value;
 			params.colorMinValue = std::min(params.colorMinValue, value);
@@ -164,7 +167,12 @@ SoundHandler::ConfigurationResult Spectrogram::vConfigure(Logger& cl) {
 	filepath += config.channelName;
 	filepath += L".bmp";
 
+	std::fill(stripBuffer.begin(), stripBuffer.end(), params.colors[0].color.toIntColor());
+
 	blockSize = index(config.sampleRate * params.resolution);
+	counter = 0;
+	dataShortageEqSize = 0;
+	overpushCount = 0;
 
 	return { 0, 0 };
 }
@@ -211,9 +219,14 @@ void Spectrogram::vProcess(array_view<float> wave) {
 		return;
 	}
 
+	image.removeLast(overpushCount);
+	overpushCount = 0;
+	dataShortageEqSize += wave.size();
+
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
 	source.finish();
+
 	for (auto chunk : source.getChunks(0)) {
 		counter += chunk.equivalentWaveSize;
 
@@ -225,13 +238,13 @@ void Spectrogram::vProcess(array_view<float> wave) {
 
 		const auto data = chunk.data;
 
-		const bool dataIsZero = std::all_of(
+		lastDataIsZero = std::all_of(
 			data.begin(),
 			data.end(),
 			[=](auto x) { return x < params.colorMinValue; }
 		);
 
-		if (!dataIsZero) {
+		if (!lastDataIsZero) {
 			if (params.colors.size() == 2) {
 				// only use 2 colors
 				fillStrip(data, stripBuffer);
@@ -242,14 +255,29 @@ void Spectrogram::vProcess(array_view<float> wave) {
 		}
 
 		while (counter >= blockSize) {
-			if (dataIsZero) {
+			if (lastDataIsZero) {
 				image.pushEmptyStrip(params.colors[0].color.toIntColor());
 			} else {
 				image.pushStrip(stripBuffer);
 			}
 
 			counter -= blockSize;
+			dataShortageEqSize -= blockSize;
 		}
+	}
+
+	index localShortageSize = dataShortageEqSize;
+	while (localShortageSize >= blockSize) {
+		changed = true;
+
+		if (lastDataIsZero) {
+			image.pushEmptyStrip(params.colors[0].color.toIntColor());
+		} else {
+			image.pushStrip(stripBuffer);
+		}
+
+		localShortageSize -= blockSize;
+		overpushCount++;
 	}
 }
 
