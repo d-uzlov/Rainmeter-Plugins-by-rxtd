@@ -18,9 +18,9 @@ SoundHandler::ParseResult SingleValueTransformer::parseParams(
 ) const {
 	Params params;
 
-	params.sourceId = om.get(L"source").asIString();
-	if (params.sourceId.empty()) {
-		cl.error(L"source not found");
+	const auto sourceId = om.get(L"source").asIString();
+	if (sourceId.empty()) {
+		cl.error(L"source is not found");
 		return { };
 	}
 
@@ -30,7 +30,7 @@ SoundHandler::ParseResult SingleValueTransformer::parseParams(
 	auto transformLogger = cl.context(L"transform: ");
 	params.transformer = audio_utils::TransformationParser::parse(om.get(L"transform").asString(), transformLogger);
 
-	return params;
+	return { params, sourceId % own() };
 }
 
 SoundHandler::ConfigurationResult SingleValueTransformer::vConfigure(Logger& cl) {

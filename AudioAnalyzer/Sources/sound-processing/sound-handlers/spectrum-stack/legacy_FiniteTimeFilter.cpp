@@ -18,8 +18,8 @@ SoundHandler::ParseResult legacy_FiniteTimeFilter::parseParams(
 ) const {
 	Params params;
 
-	params.sourceId = om.get(L"source").asIString();
-	if (params.sourceId.empty()) {
+	const auto sourceId = om.get(L"source").asIString();
+	if (sourceId.empty()) {
 		cl.error(L"source not found");
 		return { };
 	}
@@ -44,7 +44,7 @@ SoundHandler::ParseResult legacy_FiniteTimeFilter::parseParams(
 		params.smoothingCurve = SmoothingCurve::FLAT;
 	}
 
-	return params;
+	return { params, sourceId % own() };
 }
 
 SoundHandler::ConfigurationResult legacy_FiniteTimeFilter::vConfigure(Logger& cl) {
@@ -56,15 +56,13 @@ SoundHandler::ConfigurationResult legacy_FiniteTimeFilter::vConfigure(Logger& cl
 			smoothingNormConstant = 1.0 / params.smoothingFactor;
 			break;
 
-		case SmoothingCurve::LINEAR:
-		{
+		case SmoothingCurve::LINEAR: {
 			const index smoothingWeight = params.smoothingFactor * (params.smoothingFactor + 1) / 2;
 			smoothingNormConstant = 1.0 / smoothingWeight;
 			break;
 		}
 
-		case SmoothingCurve::EXPONENTIAL:
-		{
+		case SmoothingCurve::EXPONENTIAL: {
 			double smoothingWeight = 0;
 			double weight = 1;
 
@@ -80,7 +78,7 @@ SoundHandler::ConfigurationResult legacy_FiniteTimeFilter::vConfigure(Logger& cl
 		default: std::terminate();
 		}
 	}
-	
+
 	auto& config = getConfiguration();
 	const auto dataSize = config.sourcePtr->getDataSize();
 

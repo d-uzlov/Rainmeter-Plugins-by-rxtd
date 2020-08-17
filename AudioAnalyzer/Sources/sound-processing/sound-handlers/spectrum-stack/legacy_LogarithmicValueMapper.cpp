@@ -18,8 +18,8 @@ SoundHandler::ParseResult legacy_LogarithmicValueMapper::parseParams(
 ) const {
 	Params params;
 
-	params.sourceId = om.get(L"source").asIString();
-	if (params.sourceId.empty()) {
+	const auto sourceId = om.get(L"source").asIString();
+	if (sourceId.empty()) {
 		cl.error(L"source not found");
 		return { };
 	}
@@ -28,7 +28,7 @@ SoundHandler::ParseResult legacy_LogarithmicValueMapper::parseParams(
 	params.sensitivity = std::clamp<double>(params.sensitivity, std::numeric_limits<float>::epsilon(), 1000.0);
 	params.offset = om.get(L"offset").asFloatF(0.0);
 
-	return params;
+	return { params, sourceId % own() };
 }
 
 SoundHandler::ConfigurationResult legacy_LogarithmicValueMapper::vConfigure(Logger& cl) {

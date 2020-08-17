@@ -20,8 +20,8 @@ SoundHandler::ParseResult BandCascadeTransformer::parseParams(
 ) const {
 	Params params;
 
-	params.sourceId = om.get(L"source").asIString();
-	if (params.sourceId.empty()) {
+	const auto sourceId = om.get(L"source").asIString();
+	if (sourceId.empty()) {
 		cl.error(L"source not found");
 		return { };
 	}
@@ -57,7 +57,7 @@ SoundHandler::ParseResult BandCascadeTransformer::parseParams(
 		params.mixFunction = MixFunction::PRODUCT;
 	}
 
-	return params;
+	return { params, sourceId % own() };
 }
 
 SoundHandler::ConfigurationResult BandCascadeTransformer::vConfigure(Logger& cl) {

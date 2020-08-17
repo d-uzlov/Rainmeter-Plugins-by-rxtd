@@ -16,14 +16,11 @@ namespace rxtd::audio_analyzer {
 	class UniformBlur : public ResamplerProvider {
 	public:
 		struct Params {
-			istring sourceId;
-
 			double blurRadius{ };
 			double blurRadiusAdaptation{ };
 
 			friend bool operator==(const Params& lhs, const Params& rhs) {
-				return lhs.sourceId == rhs.sourceId
-					&& lhs.blurRadius == rhs.blurRadius
+				return lhs.blurRadius == rhs.blurRadius
 					&& lhs.blurRadiusAdaptation == rhs.blurRadiusAdaptation;
 			}
 
@@ -56,11 +53,6 @@ namespace rxtd::audio_analyzer {
 		) const override;
 
 	protected:
-		[[nodiscard]]
-		isview vGetSourceName() const override {
-			return params.sourceId;
-		}
-
 		[[nodiscard]]
 		ConfigurationResult vConfigure(Logger& cl) override;
 

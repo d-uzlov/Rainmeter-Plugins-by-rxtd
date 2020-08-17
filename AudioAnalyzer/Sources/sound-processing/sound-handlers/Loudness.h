@@ -73,11 +73,6 @@ namespace rxtd::audio_analyzer {
 
 	protected:
 		[[nodiscard]]
-		isview vGetSourceName() const override {
-			return { };
-		}
-
-		[[nodiscard]]
 		ConfigurationResult vConfigure(Logger& cl) override;
 
 		// void vReset() final;

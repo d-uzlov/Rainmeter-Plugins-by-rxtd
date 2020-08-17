@@ -19,9 +19,9 @@ SoundHandler::ParseResult UniformBlur::parseParams(
 ) const {
 	Params params;
 
-	params.sourceId = om.get(L"source").asIString();
-	if (params.sourceId.empty()) {
-		cl.error(L"source not found");
+	const auto sourceId = om.get(L"source").asIString();
+	if (sourceId.empty()) {
+		cl.error(L"source is not found");
 		return { };
 	}
 
@@ -29,7 +29,7 @@ SoundHandler::ParseResult UniformBlur::parseParams(
 	params.blurRadius = std::max<double>(om.get(L"Radius").asFloat(1.0) * 0.25, 0.0);
 	params.blurRadiusAdaptation = std::max<double>(om.get(L"RadiusAdaptation").asFloat(2.0), 0.0);
 
-	return params;
+	return { params, sourceId % own() };
 }
 
 SoundHandler::ConfigurationResult UniformBlur::vConfigure(Logger& cl) {

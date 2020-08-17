@@ -18,9 +18,9 @@ SoundHandler::ParseResult WeightedBlur::parseParams(
 ) const {
 	Params params;
 
-	params.sourceId = om.get(L"source").asIString();
-	if (params.sourceId.empty()) {
-		cl.error(L"source not found");
+	const auto sourceId = om.get(L"source").asIString();
+	if (sourceId.empty()) {
+		cl.error(L"source is not found");
 		return { };
 	}
 
@@ -37,7 +37,7 @@ SoundHandler::ParseResult WeightedBlur::parseParams(
 	// params.minWeight = std::max<double>(optionMap.get(L"minWeight"sv).asFloat(0), std::numeric_limits<float>::epsilon());
 	params.minWeight = 0.0; // doesn't work as expected
 
-	return params;
+	return { params, sourceId % own() };
 }
 
 SoundHandler::ConfigurationResult WeightedBlur::vConfigure(Logger& cl) {

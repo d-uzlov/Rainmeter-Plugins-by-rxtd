@@ -21,8 +21,8 @@ SoundHandler::ParseResult BandResampler::parseParams(
 ) const {
 	Params params;
 
-	params.fftId = om.get(L"source").asIString();
-	if (params.fftId.empty()) {
+	const auto fftId = om.get(L"source").asIString();
+	if (fftId.empty()) {
 		cl.error(L"source is not found");
 		return { };
 	}
@@ -58,7 +58,7 @@ SoundHandler::ParseResult BandResampler::parseParams(
 			L"for better results set 'proportionalValues false' and use 'filter replayGain' in processing description instead");
 	}
 
-	return params;
+	return { params, fftId % own() };
 }
 
 std::vector<float> BandResampler::parseFreqList(sview listId, const Rainmeter& rain) {

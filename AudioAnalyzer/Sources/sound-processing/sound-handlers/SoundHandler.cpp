@@ -13,25 +13,31 @@
 using namespace audio_analyzer;
 
 bool SoundHandler::patch(
-	const std::any& params,
+	const std::any& params, const std::vector<istring>& sources,
 	sview channelName, index sampleRate,
 	HandlerFinder& hf, Logger& cl
 ) {
+	if (sources.size() > 1) {
+		throw std::exception{ "no support for multiple sources yet" }; // todo
+	}
+
 	if (!checkSameParams(params)) {
+		// todo add check that source changed and it matters
 		setParams(params);
 	}
 
-	if (const auto sourceName = vGetSourceName();
-		!sourceName.empty()) {
+	_configuration.sourcePtr = nullptr;
+	if (!sources.empty()) {
+		const auto& sourceName = sources[0];
 		_configuration.sourcePtr = hf.getHandler(sourceName);
 		if (_configuration.sourcePtr == nullptr) {
-			cl.error(L"source is not found");
+			cl.error(L"source '{}' is not found", sourceName);
 			return { };
 		}
 
 		const auto dataSize = _configuration.sourcePtr->getDataSize();
 		if (dataSize.isEmpty()) {
-			cl.error(L"source doesn't produce any data");
+			cl.error(L"source '{}' doesn't produce any data", sourceName);
 			return { };
 		}
 	}

@@ -26,7 +26,6 @@ namespace rxtd::audio_analyzer {
 			double resolution{ };
 			index length{ };
 			index borderSize{ };
-			istring sourceName{ };
 			string prefix = { };
 			utils::Color borderColor{ };
 			double fading{ };
@@ -58,7 +57,6 @@ namespace rxtd::audio_analyzer {
 				return lhs.resolution == rhs.resolution
 					&& lhs.length == rhs.length
 					&& lhs.borderSize == rhs.borderSize
-					&& lhs.sourceName == rhs.sourceName
 					&& lhs.prefix == rhs.prefix
 					&& lhs.borderColor == rhs.borderColor
 					&& lhs.fading == rhs.fading
@@ -111,11 +109,6 @@ namespace rxtd::audio_analyzer {
 		) const override;
 
 	protected:
-		[[nodiscard]]
-		isview vGetSourceName() const override {
-			return params.sourceName;
-		}
-
 		[[nodiscard]]
 		ConfigurationResult vConfigure(Logger& cl) override;
 

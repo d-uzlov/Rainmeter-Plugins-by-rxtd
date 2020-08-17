@@ -16,6 +16,7 @@ namespace rxtd::audio_analyzer {
 
 	struct PatchInfo {
 		std::any params;
+		std::vector<istring> sources;
 		HandlerPatchingFun fun = nullptr;
 	};
 
@@ -85,6 +86,7 @@ namespace rxtd::audio_analyzer {
 			PatchInfo result;
 			result.params = parseResult.takeParams();
 			result.fun = SoundHandler::patchHandlerImpl<T>;
+			result.sources = parseResult.takeSources();
 			return result;
 		}
 

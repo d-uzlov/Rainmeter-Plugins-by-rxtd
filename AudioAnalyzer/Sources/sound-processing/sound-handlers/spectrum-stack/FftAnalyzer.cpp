@@ -102,12 +102,12 @@ SoundHandler::ParseResult FftAnalyzer::parseParams(
 	params.wcfDescription = om.get(L"windowFunction").asString(L"hann");
 	params.wcf = audio_utils::WindowFunctionHelper::parse(params.wcfDescription, cl);
 
-	return params;
+	return { params, std::vector<istring>{ } };
 }
 
 SoundHandler::ConfigurationResult FftAnalyzer::vConfigure(Logger& cl) {
 	auto& config = getConfiguration();
-	
+
 	switch (params.legacy_sizeBy) {
 	case SizeBy::BIN_WIDTH:
 		fftSize = kiss_fft::calculateNextFastSize(index(config.sampleRate / params.binWidth), true);
@@ -215,7 +215,7 @@ void FftAnalyzer::processRandom(index waveSize) {
 
 bool FftAnalyzer::vGetProp(const isview& prop, utils::BufferPrinter& printer) const {
 	auto& config = getConfiguration();
-	
+
 	if (prop == L"size") {
 		printer.print(fftSize);
 	} else if (prop == L"attack") {

@@ -15,14 +15,11 @@ namespace rxtd::audio_analyzer {
 	class legacy_LogarithmicValueMapper : public SoundHandler {
 	public:
 		struct Params {
-			istring sourceId;
-
 			float offset{ };
 			double sensitivity{ };
 
 			friend bool operator==(const Params& lhs, const Params& rhs) {
-				return lhs.sourceId == rhs.sourceId
-					&& lhs.offset == rhs.offset
+				return lhs.offset == rhs.offset
 					&& lhs.sensitivity == rhs.sensitivity;
 			}
 
@@ -55,11 +52,6 @@ namespace rxtd::audio_analyzer {
 		) const override;
 
 	protected:
-		[[nodiscard]]
-		isview vGetSourceName() const override {
-			return params.sourceId;
-		}
-
 		[[nodiscard]]
 		ConfigurationResult vConfigure(Logger& cl) override;
 

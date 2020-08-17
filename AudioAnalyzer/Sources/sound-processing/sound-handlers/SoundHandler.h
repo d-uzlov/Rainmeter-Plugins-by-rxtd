@@ -65,6 +65,7 @@ namespace rxtd::audio_analyzer {
 		class ParseResult {
 			bool valid{ };
 			std::any _params;
+			std::vector<istring> _sources;
 
 		public:
 			ParseResult() {
@@ -72,9 +73,17 @@ namespace rxtd::audio_analyzer {
 			}
 
 			template <typename Params>
-			ParseResult(Params params) {
+			ParseResult(Params params, istring source) {
 				valid = true;
 				_params = std::move(params);
+				_sources.push_back(source);
+			}
+
+			template <typename Params>
+			ParseResult(Params params, std::vector<istring> sources) {
+				valid = true;
+				_params = std::move(params);
+				_sources = std::move(sources);
 			}
 
 			[[nodiscard]]
@@ -85,6 +94,11 @@ namespace rxtd::audio_analyzer {
 			[[nodiscard]]
 			std::any takeParams() {
 				return std::move(_params);
+			}
+			
+			[[nodiscard]]
+			std::vector<istring> takeSources() {
+				return std::move(_sources);
 			}
 		};
 
@@ -174,16 +188,13 @@ namespace rxtd::audio_analyzer {
 		// returns true on success, false on invalid handler
 		[[nodiscard]]
 		bool patch(
-			const std::any& params,
+			const std::any& params, const std::vector<istring>& sources,
 			sview channelName, index sampleRate,
 			HandlerFinder& hf,
 			Logger& cl
 		);
 
 	protected:
-		[[nodiscard]]
-		virtual isview vGetSourceName() const = 0;
-
 		[[nodiscard]]
 		virtual ConfigurationResult vConfigure(Logger& cl) = 0;
 

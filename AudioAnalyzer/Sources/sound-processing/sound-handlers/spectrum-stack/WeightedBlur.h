@@ -17,8 +17,6 @@ namespace rxtd::audio_analyzer {
 	class WeightedBlur : public ResamplerProvider {
 	public:
 		struct Params {
-			istring sourceId;
-
 			double radiusMultiplier{ };
 
 			double minRadius{ };
@@ -29,8 +27,7 @@ namespace rxtd::audio_analyzer {
 			double minWeight{ };
 
 			friend bool operator==(const Params& lhs, const Params& rhs) {
-				return lhs.sourceId == rhs.sourceId
-					&& lhs.radiusMultiplier == rhs.radiusMultiplier
+				return lhs.radiusMultiplier == rhs.radiusMultiplier
 					&& lhs.minRadius == rhs.minRadius
 					&& lhs.maxRadius == rhs.maxRadius
 					&& lhs.minRadiusAdaptation == rhs.minRadiusAdaptation
@@ -69,11 +66,6 @@ namespace rxtd::audio_analyzer {
 		) const override;
 
 	protected:
-		[[nodiscard]]
-		isview vGetSourceName() const override {
-			return params.sourceId;
-		}
-
 		[[nodiscard]]
 		ConfigurationResult vConfigure(Logger& cl) override;
 

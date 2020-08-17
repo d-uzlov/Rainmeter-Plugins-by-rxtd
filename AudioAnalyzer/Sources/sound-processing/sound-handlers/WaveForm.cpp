@@ -85,7 +85,7 @@ SoundHandler::ParseResult WaveForm::parseParams(
 		params.transformer = TP::parse(om.get(L"transform").asString(), transformLogger);
 	}
 
-	return params;
+	return { params, std::vector<istring>{ } };
 }
 
 SoundHandler::ConfigurationResult WaveForm::vConfigure(Logger& cl) {

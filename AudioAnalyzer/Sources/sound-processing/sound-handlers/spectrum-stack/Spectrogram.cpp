@@ -41,9 +41,9 @@ SoundHandler::ParseResult Spectrogram::parseParams(
 ) const {
 	Params params;
 
-	params.sourceName = om.get(L"source").asIString();
-	if (params.sourceName.empty()) {
-		cl.error(L"source not found");
+	const auto sourceId = om.get(L"source").asIString();
+	if (sourceId.empty()) {
+		cl.error(L"source is not found");
 		return { };
 	}
 
@@ -146,7 +146,7 @@ SoundHandler::ParseResult Spectrogram::parseParams(
 
 	params.stationary = om.get(L"stationary").asBool(false);
 
-	return params;
+	return { params, sourceId % own() };
 }
 
 SoundHandler::ConfigurationResult Spectrogram::vConfigure(Logger& cl) {
