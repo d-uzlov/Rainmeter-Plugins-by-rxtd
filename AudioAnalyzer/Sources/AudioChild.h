@@ -32,7 +32,6 @@ namespace rxtd::audio_analyzer {
 			bool clamp01 = false;
 			NumberTransform numberTransform = NumberTransform::eNONE;
 			double correctingConstant = 0.0;
-
 		} legacy;
 
 	public:

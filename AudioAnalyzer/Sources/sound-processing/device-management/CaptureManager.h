@@ -41,7 +41,9 @@ namespace rxtd::audio_analyzer {
 	public:
 		CaptureManager() = default;
 		CaptureManager(utils::Rainmeter::Logger logger, utils::MediaDeviceWrapper& audioDeviceHandle);
-		~CaptureManager();
+		~CaptureManager() {
+			invalidate();
+		}
 
 		CaptureManager(CaptureManager&& other) noexcept = default;
 		CaptureManager& operator=(CaptureManager&& other) noexcept = default;
@@ -50,14 +52,25 @@ namespace rxtd::audio_analyzer {
 		CaptureManager& operator=(const CaptureManager& other) = delete;
 
 		[[nodiscard]]
-		MyWaveFormat getWaveFormat() const;
+		MyWaveFormat getWaveFormat() const {
+			return waveFormat;
+		}
+
 		[[nodiscard]]
-		const string& getFormatString() const;
-		bool isEmpty() const;
+		const string& getFormatString() const {
+			return formatString;
+		}
+
 		[[nodiscard]]
-		bool isValid() const;
+		bool isValid() const {
+			return valid;
+		}
+
 		[[nodiscard]]
-		bool isRecoverable() const;
+		bool isRecoverable() const {
+			return recoverable;
+		}
+
 		void capture(const ProcessingCallback& processingCallback);
 
 	private:
