@@ -11,28 +11,46 @@
 
 #include "GenericComWrapper.h"
 #include <Audioclient.h>
-#include "AudioBuffer.h"
+
+#include "array2d_view.h"
+#include "Vector2D.h"
 
 namespace rxtd::utils {
 	class IAudioCaptureClientWrapper : public GenericComWrapper<IAudioCaptureClient> {
-		friend AudioBuffer;
-
-		index lastBufferID = 0;
-		uint32_t lastBufferSize{ };
 		index lastResult{ };
 
+		Vector2D<float> buffer;
+		bool empty = true;
+
 	public:
+		enum class Type {
+			eInt,
+			eFloat,
+		};
+
 		IAudioCaptureClientWrapper() = default;
 		explicit IAudioCaptureClientWrapper(InitFunction initFunction);
 
-		// Be careful, call to this function invalidates all previous buffers
 		[[nodiscard]]
-		AudioBuffer readBuffer();
+		bool isEmpty() const {
+			return empty;
+		}
+
+		void readBuffer(Type type, index channelsCount);
 
 		[[nodiscard]]
-		index getLastResult() const;
+		index getLastResult() const {
+			return lastResult;
+		}
+
+		[[nodiscard]]
+		array2d_view<float> getBuffer() const {
+			return buffer;
+		}
 
 	private:
-		void releaseBuffer(index id);
+		static void copyFloat(void* source, array_span<float> dest, index offset, index stride);
+
+		static void copyInt(void* source, array_span<float> dest, index offset, index stride);
 	};
 }

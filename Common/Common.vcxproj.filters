@@ -59,9 +59,6 @@
     <ClCompile Include="sources\windows-wrappers\IAudioCaptureClientWrapper.cpp">
       <Filter>Source Files\windows-wrappers</Filter>
     </ClCompile>
-    <ClCompile Include="sources\windows-wrappers\AudioBuffer.cpp">
-      <Filter>Source Files\windows-wrappers</Filter>
-    </ClCompile>
     <ClCompile Include="sources\windows-wrappers\IMMDeviceEnumeratorWrapper.cpp">
       <Filter>Source Files\windows-wrappers</Filter>
     </ClCompile>
@@ -146,9 +143,6 @@
       <Filter>Source Files\windows-wrappers</Filter>
     </ClInclude>
     <ClInclude Include="sources\windows-wrappers\WaveFormat.h">
-      <Filter>Source Files\windows-wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\windows-wrappers\AudioBuffer.h">
       <Filter>Source Files\windows-wrappers</Filter>
     </ClInclude>
     <ClInclude Include="sources\windows-wrappers\MediaDeviceType.h">

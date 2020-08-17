@@ -20,33 +20,65 @@ namespace rxtd::utils {
 		GenericComWrapper(std::move(initFunction)) {
 	}
 
-	AudioBuffer IAudioCaptureClientWrapper::readBuffer() {
-		releaseBuffer(lastBufferID);
-		lastBufferID++;
-
-		uint8_t* bufferData = nullptr;
-
+	void IAudioCaptureClientWrapper::readBuffer(Type type, index channelsCount) {
+		uint8_t* data = nullptr;
 		DWORD flags{ };
-		lastResult = getPointer()->GetBuffer(&bufferData, &lastBufferSize, &flags, nullptr, nullptr);
+		uint32_t dataSize;
+		lastResult = getPointer()->GetBuffer(&data, &dataSize, &flags, nullptr, nullptr);
 		const bool silent = (flags & AUDCLNT_BUFFERFLAGS_SILENT) != 0;
 
-		// TODO this is incorrect
-		// lastBufferSize is in frames but array_view operates std::byte
-		const array_view<std::byte> buffer = { reinterpret_cast<const std::byte*>(bufferData), lastBufferSize };
-
-		return AudioBuffer{ *this, lastBufferID, silent, buffer };
-	}
-
-	index IAudioCaptureClientWrapper::getLastResult() const {
-		return lastResult;
-	}
-
-	void IAudioCaptureClientWrapper::releaseBuffer(const index id) {
-		if (id != lastBufferID || lastBufferSize == 0 || !isValid()) {
+		if (dataSize == 0) {
+			empty = true;
 			return;
 		}
 
-		getPointer()->ReleaseBuffer(lastBufferSize);
-		lastBufferSize = 0;
+		empty = false;
+
+		buffer.setBuffersCount(channelsCount);
+		buffer.setBufferSize(dataSize);
+
+		if (silent) {
+			buffer.init(0.0);
+		} else {
+			switch (type) {
+			case Type::eInt:
+				for (index i = 0; i < channelsCount; i++) {
+					copyInt(data, buffer[i], i, channelsCount);
+				}
+				break;
+			case Type::eFloat:
+				for (index i = 0; i < channelsCount; i++) {
+					copyFloat(data, buffer[i], i, channelsCount);
+				}
+				break;
+			}
+		}
+
+		getPointer()->ReleaseBuffer(dataSize);
+	}
+
+	void IAudioCaptureClientWrapper::copyFloat(void* source, array_span<float> dest, index offset, index stride) {
+		const auto bufferInt = static_cast<const float*>(source);
+		const auto framesCount = dest.size();
+
+		auto channelSourceBuffer = bufferInt + offset;
+
+		for (index frame = 0; frame < framesCount; ++frame) {
+			dest[frame] = *channelSourceBuffer;
+			channelSourceBuffer += stride;
+		}
+	}
+
+	void IAudioCaptureClientWrapper::copyInt(void* source, array_span<float> dest, index offset, index stride) {
+		const auto bufferInt = static_cast<const int16_t*>(source);
+		const auto framesCount = dest.size();
+
+		auto channelSourceBuffer = bufferInt + offset;
+
+		for (index frame = 0; frame < framesCount; ++frame) {
+			const float value = float(*channelSourceBuffer) * (1.0f / std::numeric_limits<int16_t>::max());
+			dest[frame] = value;
+			channelSourceBuffer += stride;
+		}
 	}
 }

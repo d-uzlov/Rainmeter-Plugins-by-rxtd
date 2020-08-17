@@ -15,12 +15,11 @@
 #include <chrono>
 #include "windows-wrappers/IAudioCaptureClientWrapper.h"
 #include <functional>
-#include "array_view.h"
 
 namespace rxtd::audio_analyzer {
 	class CaptureManager {
 	public:
-		using ProcessingCallback = std::function<void(bool silent, array_view<std::byte> frameBuffer)>;
+		using ProcessingCallback = std::function<void(utils::array2d_view<float> channels)>;
 
 	private:
 		using clock = std::chrono::high_resolution_clock;

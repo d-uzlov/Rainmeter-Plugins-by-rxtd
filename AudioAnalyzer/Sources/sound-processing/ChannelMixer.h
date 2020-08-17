@@ -11,6 +11,7 @@
 #include "device-management/MyWaveFormat.h"
 #include "array_view.h"
 #include "GrowingVector.h"
+#include "array2d_view.h"
 
 namespace rxtd::audio_analyzer {
 	class ChannelMixer {
@@ -20,7 +21,7 @@ namespace rxtd::audio_analyzer {
 
 	public:
 		void setFormat(MyWaveFormat waveFormat);
-		void decomposeFramesIntoChannels(array_view<std::byte> frameBuffer, bool withAuto);
+		void decomposeFramesIntoChannels(utils::array2d_view<float> channelsData, bool withAuto);
 		void writeSilence(index size, bool withAuto);
 
 		[[nodiscard]]

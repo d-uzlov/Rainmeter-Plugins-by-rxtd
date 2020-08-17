@@ -55,51 +55,17 @@ void ChannelMixer::setFormat(MyWaveFormat _waveFormat) {
 	channels[aliasOfAuto];
 }
 
-void ChannelMixer::decomposeFramesIntoChannels(array_view<std::byte> frameBuffer, bool withAuto) {
-	const auto channelsCount = waveFormat.channelsCount;
-	const auto framesCount = frameBuffer.size();
-
-	switch (waveFormat.format) {
-	case utils::WaveDataFormat::ePCM_S16: {
-		const auto bufferInt = reinterpret_cast<const int16_t*>(frameBuffer.data());
-
-		for (auto channel : waveFormat.channelLayout) {
-			auto& waveBuffer = channels[channel];
-			auto writeBuffer = waveBuffer.allocateNext(framesCount);
-			auto channelSourceBuffer = bufferInt + waveFormat.channelLayout.indexOf(channel).value();
-
-			for (index frame = 0; frame < framesCount; ++frame) {
-				const float value = *channelSourceBuffer * (1.0f / std::numeric_limits<int16_t>::max());
-				writeBuffer[frame] = value;
-				channelSourceBuffer += channelsCount;
-			}
-		}
-		break;
-	}
-	case utils::WaveDataFormat::ePCM_F32: {
-		const auto sourceBufferFloat = reinterpret_cast<const float*>(frameBuffer.data());
-
-		for (auto channel : waveFormat.channelLayout) {
-			auto& waveBuffer = channels[channel];
-			auto writeBuffer = waveBuffer.allocateNext(framesCount);
-			auto channelSourceBuffer = sourceBufferFloat + waveFormat.channelLayout.indexOf(channel).value();
-
-			for (index frame = 0; frame < framesCount; ++frame) {
-				writeBuffer[frame] = *channelSourceBuffer;
-				channelSourceBuffer += channelsCount;
-			}
-		}
-		break;
-	}
-	default:
-		// If a format is unknown then there should be
-		// no wave data in the first place
-		// so this function should never be called
-		std::terminate();
+void ChannelMixer::decomposeFramesIntoChannels(utils::array2d_view<float> channelsData, bool withAuto) {
+	for (auto channel : waveFormat.channelLayout) {
+		auto channelData = channelsData[waveFormat.channelLayout.indexOf(channel).value()];
+		auto& waveBuffer = channels[channel];
+		auto writeBuffer = waveBuffer.allocateNext(channelData.size());
+		std::copy(channelData.begin(), channelData.end(), writeBuffer.begin());
 	}
 
 	if (withAuto && aliasOfAuto == Channel::eAUTO) {
-		resampleToAuto(framesCount);
+		const auto valuesCount = channelsData[0].size();
+		resampleToAuto(valuesCount);
 	}
 }
 

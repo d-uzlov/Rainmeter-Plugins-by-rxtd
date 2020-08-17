@@ -118,12 +118,8 @@ double AudioParent::vUpdate() {
 	}
 
 	if (deviceManager.getState() == DeviceManager::State::eOK) {
-		deviceManager.getCaptureManager().capture([&](bool silent, array_view<std::byte> buffer) {
-			if (!silent) {
-				channelMixer.decomposeFramesIntoChannels(buffer, true);
-			} else {
-				channelMixer.writeSilence(buffer.size(), true);
-			}
+		deviceManager.getCaptureManager().capture([&](utils::array2d_view<float> channelsData) {
+			channelMixer.decomposeFramesIntoChannels(channelsData, true);
 		});
 
 		process();

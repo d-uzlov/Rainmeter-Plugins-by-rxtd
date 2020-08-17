@@ -10,7 +10,8 @@
 #include "CaptureManager.h"
 
 namespace rxtd::audio_analyzer {
-	CaptureManager::CaptureManager(utils::Rainmeter::Logger _logger, utils::MediaDeviceWrapper& audioDeviceHandle) : logger(std::move(_logger)) {
+	CaptureManager::CaptureManager(utils::Rainmeter::Logger _logger,
+	                               utils::MediaDeviceWrapper& audioDeviceHandle) : logger(std::move(_logger)) {
 		audioClient = audioDeviceHandle.openAudioClient();
 		if (audioDeviceHandle.getLastResult() != S_OK) {
 			valid = false;
@@ -77,7 +78,8 @@ namespace rxtd::audio_analyzer {
 		return formatString;
 	}
 
-	bool CaptureManager::isEmpty() const { // TODO unused
+	bool CaptureManager::isEmpty() const {
+		// TODO unused
 		return !audioCaptureClient.isValid() || !audioClient.isValid();
 	}
 
@@ -96,7 +98,12 @@ namespace rxtd::audio_analyzer {
 		}
 
 		while (true) {
-			const auto buffer = audioCaptureClient.readBuffer();
+			audioCaptureClient.readBuffer(
+				waveFormat.format == utils::WaveDataFormat::ePCM_F32
+					? utils::IAudioCaptureClientWrapper::Type::eFloat
+					: utils::IAudioCaptureClientWrapper::Type::eInt,
+				waveFormat.channelsCount
+			);
 
 			const auto queryResult = audioCaptureClient.getLastResult();
 			const auto now = clock::now();
@@ -105,7 +112,7 @@ namespace rxtd::audio_analyzer {
 			case S_OK:
 				lastBufferFillTime = now;
 
-				processingCallback(buffer.isSilent(), buffer.getBuffer());
+				processingCallback(audioCaptureClient.getBuffer());
 				break;
 
 			case AUDCLNT_S_BUFFER_EMPTY:
@@ -154,13 +161,13 @@ namespace rxtd::audio_analyzer {
 		format.reserve(64);
 
 		switch (waveFormat.format) {
-		case Format::ePCM_S16: 
+		case Format::ePCM_S16:
 			format += L"PCM 16b";
 			break;
-		case Format::ePCM_F32: 
+		case Format::ePCM_F32:
 			format += L"PCM 32b";
 			break;
-		case Format::eINVALID:;
+		case Format::eINVALID: ;
 		default: std::terminate();
 		}
 

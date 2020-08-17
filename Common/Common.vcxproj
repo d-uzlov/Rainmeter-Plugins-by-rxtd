@@ -167,7 +167,6 @@
     <ClCompile Include="sources\RainmeterWrappers.cpp" />
     <ClCompile Include="sources\StringUtils.cpp" />
     <ClCompile Include="sources\TypeHolder.cpp" />
-    <ClCompile Include="sources\windows-wrappers\AudioBuffer.cpp" />
     <ClCompile Include="sources\windows-wrappers\FileWrapper.cpp" />
     <ClCompile Include="sources\windows-wrappers\IAudioCaptureClientWrapper.cpp" />
     <ClCompile Include="sources\windows-wrappers\IAudioClientWrapper.cpp" />
@@ -204,7 +203,6 @@
     <ClInclude Include="sources\RainmeterWrappers.h" />
     <ClInclude Include="sources\StringUtils.h" />
     <ClInclude Include="sources\TypeHolder.h" />
-    <ClInclude Include="sources\windows-wrappers\AudioBuffer.h" />
     <ClInclude Include="sources\windows-wrappers\FileWrapper.h" />
     <ClInclude Include="sources\windows-wrappers\GenericComWrapper.h" />
     <ClInclude Include="sources\windows-wrappers\IAudioCaptureClientWrapper.h" />
