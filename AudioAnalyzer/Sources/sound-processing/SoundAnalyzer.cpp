@@ -31,12 +31,7 @@ void SoundAnalyzer::setParams(
 
 bool SoundAnalyzer::process(const ChannelMixer& mixer, clock::time_point killTime) {
 	for (auto& [channel, channelData] : channels) {
-		if (channel == Channel::eAUTO) {
-			const auto alias = mixer.getAutoAlias();
-			cph.processDataFrom(alias, mixer.getChannelPCM(alias));
-		} else {
-			cph.processDataFrom(channel, mixer.getChannelPCM(channel));
-		}
+		cph.processDataFrom(channel, mixer.getChannelPCM(channel));
 
 		const auto wave = cph.getResampled();
 

@@ -55,7 +55,7 @@ void ChannelMixer::setFormat(MyWaveFormat _waveFormat) {
 	channels[aliasOfAuto];
 }
 
-void ChannelMixer::decomposeFramesIntoChannels(utils::array2d_view<float> channelsData, bool withAuto) {
+void ChannelMixer::saveChannelsData(utils::array2d_view<float> channelsData, bool withAuto) {
 	for (auto channel : waveFormat.channelLayout) {
 		auto channelData = channelsData[waveFormat.channelLayout.indexOf(channel).value()];
 		auto& waveBuffer = channels[channel];

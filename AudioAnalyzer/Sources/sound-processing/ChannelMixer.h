@@ -21,16 +21,11 @@ namespace rxtd::audio_analyzer {
 
 	public:
 		void setFormat(MyWaveFormat waveFormat);
-		void decomposeFramesIntoChannels(utils::array2d_view<float> channelsData, bool withAuto);
+		void saveChannelsData(utils::array2d_view<float> channelsData, bool withAuto);
 		void writeSilence(index size, bool withAuto);
 
 		[[nodiscard]]
 		array_view<float> getChannelPCM(Channel channel) const;
-
-		[[nodiscard]]
-		Channel getAutoAlias() const {
-			return aliasOfAuto;
-		}
 
 		void reset() {
 			for (auto& [channel, buffer] : channels) {
