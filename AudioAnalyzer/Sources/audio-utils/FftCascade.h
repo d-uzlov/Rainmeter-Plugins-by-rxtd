@@ -8,6 +8,7 @@
  */
 
 #pragma once
+#include <chrono>
 #include <functional>
 
 #include "DownsampleHelper.h"
@@ -18,6 +19,9 @@
 namespace rxtd::audio_utils {
 	class FftCascade {
 	public:
+		using clock = std::chrono::high_resolution_clock;
+		static_assert(clock::is_steady);
+
 		struct Params {
 			index fftSize;
 			index samplesPerSec;
@@ -47,7 +51,7 @@ namespace rxtd::audio_utils {
 
 	public:
 		void setParams(Params _params, FFT* _fftPtr, FftCascade* _successorPtr, index _cascadeIndex);
-		void process(array_view<float> wave);
+		void process(array_view<float> wave, clock::time_point killTime);
 		void reset();
 
 		[[nodiscard]]

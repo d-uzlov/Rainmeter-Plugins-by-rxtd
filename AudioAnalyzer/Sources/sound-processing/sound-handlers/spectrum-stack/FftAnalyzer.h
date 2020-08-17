@@ -111,6 +111,6 @@ namespace rxtd::audio_analyzer {
 		bool vGetProp(const isview& prop, utils::BufferPrinter& printer) const override;
 
 	private:
-		void processRandom(index waveSize);
+		void processRandom(index waveSize, clock::time_point killTime);
 	};
 }

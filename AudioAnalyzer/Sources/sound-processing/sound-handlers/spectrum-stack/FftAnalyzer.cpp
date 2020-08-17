@@ -180,13 +180,13 @@ void FftAnalyzer::vReset() {
 
 void FftAnalyzer::vProcess(array_view<float> wave, clock::time_point killTime) {
 	if (params.randomTest != 0.0) {
-		processRandom(wave.size());
+		processRandom(wave.size(), killTime);
 	} else {
-		cascades[0].process(wave);
+		cascades[0].process(wave, killTime);
 	}
 }
 
-void FftAnalyzer::processRandom(index waveSize) {
+void FftAnalyzer::processRandom(index waveSize, clock::time_point killTime) {
 	audio_utils::RandomGenerator random;
 
 	std::vector<float> wave;
@@ -210,7 +210,7 @@ void FftAnalyzer::processRandom(index waveSize) {
 		}
 	}
 
-	cascades[0].process(wave);
+	cascades[0].process(wave, killTime);
 }
 
 bool FftAnalyzer::vGetProp(const isview& prop, utils::BufferPrinter& printer) const {

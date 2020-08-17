@@ -30,7 +30,7 @@ void FftCascade::setParams(Params _params, FFT* _fftPtr, FftCascade* _successorP
 	filter.setParams(params.legacy_attackTime, params.legacy_decayTime, cascadeSampleRate, params.inputStride);
 }
 
-void FftCascade::process(array_view<float> wave) {
+void FftCascade::process(array_view<float> wave, clock::time_point killTime) {
 	if (wave.empty()) {
 		return;
 	}
@@ -48,7 +48,22 @@ void FftCascade::process(array_view<float> wave) {
 	}
 
 	if (successorPtr != nullptr) {
-		successorPtr->process(newChunk);
+		successorPtr->process(newChunk, killTime);
+	}
+
+	if (clock::now() > killTime) {
+		while (true) {
+			auto chunk = buffer.getFirst(params.fftSize);
+			if (chunk.empty()) {
+				break;
+			}
+
+			params.callback(values, cascadeIndex);
+
+			buffer.removeFirst(params.inputStride);
+		}
+
+		return;
 	}
 
 	while (true) {
