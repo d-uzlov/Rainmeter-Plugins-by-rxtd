@@ -89,6 +89,11 @@ SoundHandler::ParseResult WaveForm::parseParams(
 }
 
 SoundHandler::ConfigurationResult WaveForm::vConfigure(Logger& cl) {
+	auto& config = getConfiguration();
+	const index sampleRate = config.sampleRate;
+	blockSize = index(sampleRate * params.resolution);
+	blockSize = std::max<index>(blockSize, 1);
+
 	minDistinguishableValue = 1.0 / params.height;
 
 	drawer.setDimensions(params.width, params.height);
@@ -100,20 +105,14 @@ SoundHandler::ConfigurationResult WaveForm::vConfigure(Logger& cl) {
 	drawer.setConnected(params.connected);
 	drawer.setBorderSize(params.borderSize);
 
-	auto& config = getConfiguration();
-
 	filepath = params.folder;
 	filepath += L"wave-";
 	filepath += config.channelName;
 	filepath += L".bmp";
-	// todo check that can write ro this file
+	// todo check that can write to this file
 
 	minTransformer = { params.transformer };
 	maxTransformer = { params.transformer };
-
-	const index sampleRate = config.sampleRate;
-	blockSize = index(sampleRate * params.resolution);
-	blockSize = std::max<index>(blockSize, 1);
 
 	minTransformer.updateTransformations(sampleRate, blockSize);
 	maxTransformer.updateTransformations(sampleRate, blockSize);
@@ -133,11 +132,6 @@ void WaveForm::vReset() {
 }
 
 void WaveForm::vProcess(array_view<float> wave) {
-	if (blockSize <= 0 || params.width <= 0 || params.height <= 0) {
-		// todo remove
-		return;
-	}
-
 	for (const auto value : wave) {
 		min = std::min<double>(min, value);
 		max = std::max<double>(max, value);
@@ -153,14 +147,16 @@ void WaveForm::vProcess(array_view<float> wave) {
 }
 
 void WaveForm::vFinish() {
-	if (changed) {
-		const bool forced = !drawer.isEmpty();
-		if (forced || !writerHelper.isEmptinessWritten()) {
-			drawer.inflate();
-		}
-		writerHelper.write(drawer.getResultBuffer(), drawer.isEmpty(), filepath);
-		changed = false;
+	if (!changed) {
+		return;
 	}
+
+	const bool forced = !drawer.isEmpty();
+	if (forced || !writerHelper.isEmptinessWritten()) {
+		drawer.inflate();
+	}
+	writerHelper.write(drawer.getResultBuffer(), drawer.isEmpty(), filepath);
+	changed = false;
 }
 
 bool WaveForm::vGetProp(const isview& prop, utils::BufferPrinter& printer) const {

@@ -35,9 +35,9 @@ namespace rxtd::utils {
 			fading = value;
 		}
 
-		void setColors(Color _background, Color _border) {
-			background = _background.toIntColor();
-			border = _border.toIntColor();
+		void setColors(IntColor _background, IntColor _border) {
+			background = _background;
+			border = _border;
 		}
 
 		[[nodiscard]]

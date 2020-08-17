@@ -151,13 +151,18 @@ SoundHandler::ParseResult Spectrogram::parseParams(
 
 SoundHandler::ConfigurationResult Spectrogram::vConfigure(Logger& cl) {
 	auto& config = getConfiguration();
+	const index sampleRate = config.sampleRate;
+	blockSize = index(sampleRate * params.resolution);
+	blockSize = std::max<index>(blockSize, 1);
+
 	const auto dataSize = config.sourcePtr->getDataSize();
 
-	image.setBackground(params.colors[0].color.toIntColor());
+	const auto backgroundIntColor = params.colors[0].color.toIntColor();
+	image.setBackground(backgroundIntColor);
 	image.setStationary(params.stationary);
 
 	sifh.setBorderSize(params.borderSize);
-	sifh.setColors(params.colors[0].color, params.borderColor);
+	sifh.setColors(backgroundIntColor, params.borderColor.toIntColor());
 	sifh.setFading(params.fading);
 
 	image.setDimensions(params.length, dataSize.valuesCount);
@@ -167,9 +172,8 @@ SoundHandler::ConfigurationResult Spectrogram::vConfigure(Logger& cl) {
 	filepath += config.channelName;
 	filepath += L".bmp";
 
-	std::fill(stripBuffer.begin(), stripBuffer.end(), params.colors[0].color.toIntColor());
+	std::fill(stripBuffer.begin(), stripBuffer.end(), backgroundIntColor);
 
-	blockSize = index(config.sampleRate * params.resolution);
 	counter = 0;
 	dataShortageEqSize = 0;
 	overpushCount = 0;
@@ -215,10 +219,6 @@ void Spectrogram::fillStripMulticolor(array_view<float> data, array_span<utils::
 }
 
 void Spectrogram::vProcess(array_view<float> wave) {
-	if (blockSize <= 0) {
-		return;
-	}
-
 	image.removeLast(overpushCount);
 	overpushCount = 0;
 	dataShortageEqSize += wave.size();
