@@ -38,7 +38,8 @@ void legacy_LogarithmicValueMapper::setParams(const Params& value) {
 }
 
 SoundHandler::LinkingResult legacy_LogarithmicValueMapper::vFinishLinking(Logger& cl) {
-	const auto dataSize = getSource()->getDataSize();
+	auto& config = getConfiguration();
+	const auto dataSize = config.sourcePtr->getDataSize();
 	return dataSize;
 }
 
@@ -55,7 +56,8 @@ void legacy_LogarithmicValueMapper::vFinish() {
 
 	constexpr float log10inverse = 0.30102999566398119521; // 1.0 / log2(10)
 
-	auto& source = *getSource();
+	auto& config = getConfiguration();
+	auto& source = *config.sourcePtr;
 	source.finish();
 	const index layersCount = source.getDataSize().layersCount;
 

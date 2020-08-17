@@ -44,7 +44,8 @@ SoundHandler::LinkingResult Loudness::vFinishLinking(Logger& cl) {
 	blocksCount = index(params.timeWindowMs / 1000.0 * params.updatesPerSecond);
 	blocksCount = std::max<index>(blocksCount, 0);
 
-	const index sampleRate = getSampleRate();
+	auto& config = getConfiguration();
+	const index sampleRate = config.sampleRate;
 
 	blockSize = index(sampleRate / params.updatesPerSecond);
 	blockNormalizer = 1.0 / blockSize;

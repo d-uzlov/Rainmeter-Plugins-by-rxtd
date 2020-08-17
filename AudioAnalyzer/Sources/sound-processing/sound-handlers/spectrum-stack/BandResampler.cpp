@@ -175,7 +175,8 @@ std::vector<float> BandResampler::parseFreqList(sview listId, const Rainmeter& r
 }
 
 SoundHandler::LinkingResult BandResampler::vFinishLinking(Logger& cl) {
-	fftSource = dynamic_cast<FftAnalyzer*>(getSource());
+	auto& config = getConfiguration();
+	fftSource = dynamic_cast<FftAnalyzer*>(config.sourcePtr);
 	if (fftSource == nullptr) {
 		cl.error(L"invalid source, need FftAnalyzer");
 		return { };
@@ -227,11 +228,13 @@ void BandResampler::vFinish() {
 		return;
 	}
 	changed = false;
+	
+	auto& config = getConfiguration();
 
 	auto& source = *fftSource;
 
 	source.finish();
-	double binWidth = static_cast<double>(getSampleRate()) / (source.getFftSize() * std::pow(2, startCascade));
+	double binWidth = static_cast<double>(config.sampleRate) / (source.getFftSize() * std::pow(2, startCascade));
 
 	for (index cascadeIndex = startCascade; cascadeIndex < endCascade; ++cascadeIndex) {
 		const auto chunks = source.getChunks(cascadeIndex);
@@ -354,8 +357,9 @@ void BandResampler::sampleCascade(array_view<float> source, array_span<float> de
 }
 
 void BandResampler::computeWeights(index fftSize) {
+	auto& config = getConfiguration();
 	const auto fftBinsCount = fftSize / 2;
-	double binWidth = static_cast<double>(getSampleRate()) / (fftSize * std::pow(2, startCascade));
+	double binWidth = static_cast<double>(config.sampleRate) / (fftSize * std::pow(2, startCascade));
 
 	for (index i = 0; i < layerWeights.getBuffersCount(); ++i) {
 		computeCascadeWeights(layerWeights[i], fftBinsCount, binWidth);

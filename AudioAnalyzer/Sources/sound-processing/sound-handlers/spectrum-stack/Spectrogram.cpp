@@ -150,7 +150,8 @@ bool Spectrogram::parseParams(
 }
 
 SoundHandler::LinkingResult Spectrogram::vFinishLinking(Logger& cl) {
-	const auto dataSize = getSource()->getDataSize();
+	auto& config = getConfiguration();
+	const auto dataSize = config.sourcePtr->getDataSize();
 
 	image.setBackground(params.colors[0].color.toIntColor());
 	image.setStationary(params.stationary);
@@ -163,10 +164,10 @@ SoundHandler::LinkingResult Spectrogram::vFinishLinking(Logger& cl) {
 	stripBuffer.resize(dataSize.valuesCount);
 
 	filepath = params.prefix;
-	filepath += getChannel().technicalName();
+	filepath += config.channel.technicalName();
 	filepath += L".bmp";
 
-	blockSize = index(getSampleRate() * params.resolution);
+	blockSize = index(config.sampleRate * params.resolution);
 
 	return { 0, 0 };
 }
@@ -213,7 +214,8 @@ void Spectrogram::vProcess(array_view<float> wave) {
 		return;
 	}
 
-	auto& source = *getSource();
+	auto& config = getConfiguration();
+	auto& source = *config.sourcePtr;
 	source.finish();
 	for (auto chunk : source.getChunks(0)) {
 		counter += chunk.equivalentWaveSize;

@@ -106,16 +106,18 @@ void WaveForm::setParams(const Params& value) {
 }
 
 SoundHandler::LinkingResult WaveForm::vFinishLinking(Logger& cl) {
+	auto& config = getConfiguration();
+	
 	filepath = params.folder;
 	filepath += L"wave-";
-	filepath += getChannel().technicalName();
+	filepath += config.channel.technicalName();
 	filepath += L".bmp";
 	// todo check that can write ro this file
 
 	minTransformer = { params.transformer };
 	maxTransformer = { params.transformer };
 
-	const index sampleRate = getSampleRate();
+	const index sampleRate = config.sampleRate;
 	blockSize = index(sampleRate * params.resolution);
 	blockSize = std::max<index>(blockSize, 1);
 

@@ -112,9 +112,11 @@ void FftAnalyzer::setParams(const Params& value) {
 }
 
 SoundHandler::LinkingResult FftAnalyzer::vFinishLinking(Logger& cl) {
+	auto& config = getConfiguration();
+	
 	switch (params.legacy_sizeBy) {
 	case SizeBy::BIN_WIDTH:
-		fftSize = kiss_fft::calculateNextFastSize(index(getSampleRate() / params.binWidth), true);
+		fftSize = kiss_fft::calculateNextFastSize(index(config.sampleRate / params.binWidth), true);
 		break;
 	case SizeBy::SIZE:
 		fftSize = kiss_fft::calculateNextFastSize(index(params.binWidth), true);
@@ -147,14 +149,14 @@ SoundHandler::LinkingResult FftAnalyzer::vFinishLinking(Logger& cl) {
 	inputStride = static_cast<index>(fftSize * (1 - params.overlap));
 	inputStride = std::clamp<index>(inputStride, minFftSize, fftSize);
 
-	randomBlockSize = index(params.randomDuration * getSampleRate() * fftSize / inputStride);
+	randomBlockSize = index(params.randomDuration * config.sampleRate * fftSize / inputStride);
 	randomCurrentOffset = 0;
 
 	cascades.resize(params.cascadesCount);
 
 	audio_utils::FftCascade::Params cascadeParams;
 	cascadeParams.fftSize = fftSize;
-	cascadeParams.samplesPerSec = getSampleRate();
+	cascadeParams.samplesPerSec = config.sampleRate;
 	cascadeParams.legacy_attackTime = params.legacy_attackTime;
 	cascadeParams.legacy_decayTime = params.legacy_decayTime;
 	cascadeParams.inputStride = inputStride;
@@ -170,13 +172,6 @@ SoundHandler::LinkingResult FftAnalyzer::vFinishLinking(Logger& cl) {
 	}
 
 	return { params.cascadesCount, fftSize / 2 };
-}
-
-double FftAnalyzer::getFftFreq(index fft) const {
-	if (fft > fftSize / 2) {
-		return 0.0;
-	}
-	return static_cast<double>(fft) * getSampleRate() / fftSize;
 }
 
 index FftAnalyzer::getFftSize() const {
@@ -225,6 +220,8 @@ void FftAnalyzer::processRandom(index waveSize) {
 }
 
 bool FftAnalyzer::vGetProp(const isview& prop, utils::BufferPrinter& printer) const {
+	auto& config = getConfiguration();
+	
 	if (prop == L"size") {
 		printer.print(fftSize);
 	} else if (prop == L"attack") {
@@ -244,7 +241,7 @@ bool FftAnalyzer::vGetProp(const isview& prop, utils::BufferPrinter& printer) co
 			if (cascadeIndex > 0) {
 				cascadeIndex--;
 			}
-			printer.print(static_cast<index>(getSampleRate() / 2.0 / std::pow(2, cascadeIndex)));
+			printer.print(static_cast<index>(config.sampleRate / 2.0 / std::pow(2, cascadeIndex)));
 			return true;
 		}
 
@@ -271,7 +268,7 @@ bool FftAnalyzer::vGetProp(const isview& prop, utils::BufferPrinter& printer) co
 			if (cascadeIndex > 0) {
 				cascadeIndex--;
 			}
-			const auto resolution = static_cast<double>(getSampleRate()) / fftSize / std::pow(2, cascadeIndex);
+			const auto resolution = static_cast<double>(config.sampleRate) / fftSize / std::pow(2, cascadeIndex);
 			printer.print(resolution);
 			return true;
 		}

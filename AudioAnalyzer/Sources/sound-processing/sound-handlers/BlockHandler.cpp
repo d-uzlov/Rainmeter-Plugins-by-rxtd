@@ -50,10 +50,11 @@ void BlockHandler::setParams(const Params& value) {
 }
 
 SoundHandler::LinkingResult BlockHandler::vFinishLinking(Logger& cl) {
-	blockSize = static_cast<decltype(blockSize)>(getSampleRate() * params.updateIntervalMs);
+	auto& config = getConfiguration();
+	blockSize = static_cast<decltype(blockSize)>(config.sampleRate * params.updateIntervalMs);
 	blockSize = std::max<index>(blockSize, 1);
 
-	params.transformer.setParams(getSampleRate(), blockSize);
+	params.transformer.setParams(config.sampleRate, blockSize);
 
 	return { 1, 1 };
 }

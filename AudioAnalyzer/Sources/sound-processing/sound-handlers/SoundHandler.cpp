@@ -21,21 +21,21 @@ SoundHandler* SoundHandler::patch(
 
 	if (const auto sourceName = result.vGetSourceName();
 		!sourceName.empty()) {
-		result._sourceHandlerPtr = hf.getHandler(sourceName);
-		if (result._sourceHandlerPtr == nullptr) {
+		result._configuration.sourcePtr = hf.getHandler(sourceName);
+		if (result._configuration.sourcePtr == nullptr) {
 			cl.error(L"source is not found");
 			return { };
 		}
 
-		const auto dataSize = result._sourceHandlerPtr->getDataSize();
+		const auto dataSize = result._configuration.sourcePtr->getDataSize();
 		if (dataSize.isEmpty()) {
 			cl.error(L"source doesn't produce any data");
 			return { };
 		}
 	}
 
-	result._sampleRate = sampleRate;
-	result._channel = channel;
+	result._configuration.sampleRate = sampleRate;
+	result._configuration.channel = channel;
 
 	const auto linkingResult = result.vFinishLinking(cl);
 	if (!linkingResult.success) {

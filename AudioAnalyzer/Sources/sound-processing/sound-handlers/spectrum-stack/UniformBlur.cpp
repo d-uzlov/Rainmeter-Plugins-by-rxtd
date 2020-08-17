@@ -31,10 +31,10 @@ bool UniformBlur::parseParams(const OptionMap& om, Logger& cl, const Rainmeter& 
 }
 
 SoundHandler::LinkingResult UniformBlur::vFinishLinking(Logger& cl) {
-	const auto sourcePtr = getSource();
+	auto& config = getConfiguration();
 
 	index startingLayer = 0;
-	if (const auto provider = dynamic_cast<ResamplerProvider*>(sourcePtr);
+	if (const auto provider = dynamic_cast<ResamplerProvider*>(config.sourcePtr);
 		provider != nullptr) {
 		const BandResampler* resamplerPtr = provider->getResampler();
 		if (resamplerPtr != nullptr) {
@@ -44,7 +44,7 @@ SoundHandler::LinkingResult UniformBlur::vFinishLinking(Logger& cl) {
 
 	startingRadius = params.blurRadius * std::pow(params.blurRadiusAdaptation, startingLayer);
 
-	const auto dataSize = sourcePtr->getDataSize();
+	const auto dataSize = config.sourcePtr->getDataSize();
 	return dataSize;
 }
 
@@ -58,7 +58,8 @@ void UniformBlur::vFinish() {
 	}
 	changed = false;
 
-	auto& source = *getSource();
+	auto& config = getConfiguration();
+	auto& source = *config.sourcePtr;
 	source.finish();
 
 	double theoreticalRadius = startingRadius;

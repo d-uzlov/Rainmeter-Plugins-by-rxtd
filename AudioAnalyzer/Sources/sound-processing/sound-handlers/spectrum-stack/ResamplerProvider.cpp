@@ -13,7 +13,8 @@
 using namespace audio_analyzer;
 
 BandResampler* ResamplerProvider::getResampler() {
-	const auto source = getSource();
+	auto& config = getConfiguration();
+	const auto source = config.sourcePtr;
 	if (source == nullptr) {
 		return nullptr;
 	}

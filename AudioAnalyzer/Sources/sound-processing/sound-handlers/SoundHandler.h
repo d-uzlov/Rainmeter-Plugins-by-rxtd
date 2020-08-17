@@ -31,7 +31,6 @@
 #pragma once
 #include "array_view.h"
 #include "BufferPrinter.h"
-#include "GrowingVector.h"
 #include "RainmeterWrappers.h"
 #include "../Channel.h"
 #include "Vector2D.h"
@@ -90,6 +89,12 @@ namespace rxtd::audio_analyzer {
 		using OptionMap = utils::OptionMap;
 		using Rainmeter = utils::Rainmeter;
 		using Logger = utils::Rainmeter::Logger;
+
+		struct Configuration {
+			SoundHandler* sourcePtr = nullptr;
+			index sampleRate{ };
+			Channel channel{ };
+		};
 
 		struct LinkingResult {
 			bool success = false;
@@ -158,11 +163,9 @@ namespace rxtd::audio_analyzer {
 		mutable bool _layersAreValid = false;
 		std::vector<float> _buffer;
 		std::vector<LayerCache> _layers;
-
-		SoundHandler* _sourceHandlerPtr = nullptr;
-		index _sampleRate{ };
-		Channel _channel{ };
 		utils::Vector2D<float> _lastResults;
+
+		Configuration _configuration{ };
 
 	public:
 		SoundHandler() = default;
@@ -329,18 +332,8 @@ namespace rxtd::audio_analyzer {
 
 	protected:
 		[[nodiscard]]
-		SoundHandler* getSource() const {
-			return _sourceHandlerPtr;
-		}
-
-		[[nodiscard]]
-		index getSampleRate() const {
-			return _sampleRate;
-		}
-
-		[[nodiscard]]
-		Channel getChannel() const {
-			return _channel;
+		const Configuration& getConfiguration() const {
+			return _configuration;
 		}
 
 		virtual void vProcess(array_view<float> wave) = 0;

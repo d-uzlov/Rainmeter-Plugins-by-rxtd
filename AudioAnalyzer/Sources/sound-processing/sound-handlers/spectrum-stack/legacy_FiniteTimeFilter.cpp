@@ -82,7 +82,8 @@ void legacy_FiniteTimeFilter::setParams(const Params& value) {
 }
 
 SoundHandler::LinkingResult legacy_FiniteTimeFilter::vFinishLinking(Logger& cl) {
-	const auto dataSize = getSource()->getDataSize();
+	auto& config = getConfiguration();
+	const auto dataSize = config.sourcePtr->getDataSize();
 
 	pastValues.resize(dataSize.layersCount);
 	for (auto& vec : pastValues) {
@@ -105,7 +106,8 @@ void legacy_FiniteTimeFilter::vFinish() {
 
 	changed = false;
 
-	auto& source = *getSource();
+	auto& config = getConfiguration();
+	auto& source = *config.sourcePtr;
 	source.finish();
 
 	const index layersCount = source.getDataSize().layersCount;

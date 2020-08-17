@@ -37,7 +37,8 @@ void SingleValueTransformer::setParams(const Params& value) {
 }
 
 SoundHandler::LinkingResult SingleValueTransformer::vFinishLinking(Logger& cl) {
-	const auto dataSize = getSource()->getDataSize();
+	auto& config = getConfiguration();
+	const auto dataSize = config.sourcePtr->getDataSize();
 
 	params.transformer.setHistoryWidth(dataSize.valuesCount);
 
@@ -46,9 +47,9 @@ SoundHandler::LinkingResult SingleValueTransformer::vFinishLinking(Logger& cl) {
 		tr = params.transformer;
 	}
 
-	granularityBlock = index(params.granularity * getSampleRate());
+	granularityBlock = index(params.granularity * config.sampleRate);
 	for (auto& transformer : transformersPerLayer) {
-		transformer.setParams(getSampleRate(), granularityBlock);
+		transformer.setParams(config.sampleRate, granularityBlock);
 	}
 
 	return dataSize;
@@ -67,7 +68,8 @@ void SingleValueTransformer::vProcess(array_view<float> wave) {
 }
 
 void SingleValueTransformer::processStateless() {
-	auto& source = *getSource();
+	auto& config = getConfiguration();
+	auto& source = *config.sourcePtr;
 	source.finish();
 	const index layersCount = source.getDataSize().layersCount;
 
@@ -82,7 +84,8 @@ void SingleValueTransformer::processStateless() {
 }
 
 void SingleValueTransformer::processStateful() {
-	auto& source = *getSource();
+	auto& config = getConfiguration();
+	auto& source = *config.sourcePtr;
 	source.finish();
 	const index layersCount = source.getDataSize().layersCount;
 

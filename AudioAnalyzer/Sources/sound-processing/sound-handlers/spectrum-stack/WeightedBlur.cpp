@@ -45,7 +45,8 @@ SoundHandler::LinkingResult WeightedBlur::vFinishLinking(Logger& cl) {
 		return { };
 	}
 
-	const auto dataSize = getSource()->getDataSize();
+	auto& config = getConfiguration();
+	const auto dataSize = config.sourcePtr->getDataSize();
 	return dataSize;
 }
 
@@ -60,7 +61,8 @@ void WeightedBlur::vFinish() {
 
 	changed = false;
 
-	auto& source = *getSource();
+	auto& config = getConfiguration();
+	auto& source = *config.sourcePtr;
 	source.finish();
 	const BandResampler& resampler = *resamplerPtr;
 	const index layersCount = source.getDataSize().layersCount;
