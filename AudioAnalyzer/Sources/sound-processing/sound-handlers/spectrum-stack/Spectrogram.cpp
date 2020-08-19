@@ -263,7 +263,7 @@ void Spectrogram::vProcess(array_view<float> wave, clock::time_point killTime) {
 	}
 
 	index localShortageSize = dataShortageEqSize;
-	while (localShortageSize >= blockSize) {
+	while (localShortageSize >= blockSize && overpushCount < params.length) {
 		changed = true;
 
 		if (lastDataIsZero) {
