@@ -34,18 +34,18 @@ SoundHandler::ParseResult BandCascadeTransformer::parseParams(
 	params.targetWeight = om.get(L"targetWeight").asFloat(2.5);
 	params.targetWeight = std::max(params.targetWeight, params.minWeight);
 
-	params.weightFallback = om.get(L"weightFallback").asFloat(0.4);
-	params.weightFallback = std::clamp(params.weightFallback, 0.0, 1.0) * params.targetWeight;
+	if (legacyNumber < 104) {
+		auto zeroLevel = om.get(L"zeroLevelMultiplier").asFloat(1.0);
+		zeroLevel = std::max(zeroLevel, 0.0);
+		zeroLevel = zeroLevel * 0.66 * epsilon;
 
-	params.zeroLevel = om.get(L"zeroLevelMultiplier").asFloat(1.0);
-	params.zeroLevel = std::max(params.zeroLevel, 0.0);
-	params.zeroLevel = params.zeroLevel * 0.66 * epsilon;
-
-	params.zeroLevelHard = om.get(L"zeroLevelHardMultiplier").asFloat(0.01);
-	params.zeroLevelHard = std::clamp(params.zeroLevelHard, 0.0, 1.0) * params.zeroLevel;
-
-	params.zeroWeight = om.get(L"zeroWeightMultiplier").asFloat(1.0);
-	params.zeroWeight = std::max(params.zeroWeight, epsilon);
+		params.zeroLevelHard = om.get(L"zeroLevelHardMultiplier").asFloat(0.01);
+		params.zeroLevelHard = std::clamp(params.zeroLevelHard, 0.0, 1.0) * zeroLevel;
+	} else {
+		params.zeroLevelHard = om.get(L"zeroLevelMultiplier").asFloat(1.0);
+		params.zeroLevelHard = std::max(params.zeroLevelHard, 0.0);
+		params.zeroLevelHard *= epsilon;
+	}
 
 	if (const auto mixFunctionString = om.get(L"mixFunction").asIString(L"product");
 		mixFunctionString == L"product") {
@@ -93,7 +93,6 @@ SoundHandler::ConfigurationResult BandCascadeTransformer::vConfigure(Logger& cl)
 void BandCascadeTransformer::vProcess(array_view<float> wave, clock::time_point killTime) {
 	auto& source = *getConfiguration().sourcePtr;
 
-	const index bandsCount = source.getDataSize().valuesCount;
 	const index layersCount = source.getDataSize().layersCount;
 
 	for (index i = 0; i < layersCount; i++) {
@@ -116,10 +115,12 @@ void BandCascadeTransformer::vProcess(array_view<float> wave, clock::time_point 
 			meta.data = nextChunk.data;
 			meta.nextChunkIndex++;
 			meta.offset += nextChunk.equivalentWaveSize;
+			meta.maxValue = *std::max_element(meta.data.begin(), meta.data.end());
 		}
 
+		index band;
 		auto dest = pushLayer(0, chunk.equivalentWaveSize);
-		for (index band = 0; band < bandsCount; ++band) {
+		for (band = 0; band < dest.size(); ++band) {
 			dest[band] = computeForBand(band);
 		}
 	}
@@ -142,78 +143,54 @@ bool BandCascadeTransformer::vGetProp(const isview& prop, utils::BufferPrinter& 
 float BandCascadeTransformer::computeForBand(index band) const {
 	const BandResampler& resampler = *resamplerPtr;
 
-	float weight = 0.0;
-	index cascadesSummed = 0;
+	float weight = 0.0f;
+	float cascadesSummed = 0.0f;
 	const index bandEndCascade = analysis.bandEndCascades[band] - analysis.minCascadeUsed;
 
-	float valueProduct = 1.0;
-	float valueSum = 0.0;
+	float valueProduct = 1.0f;
+	float valueSum = 0.0f;
 
 	const auto bandWeights = resampler.getBandWeights(band);
 
 	for (index cascade = 0; cascade < bandEndCascade; cascade++) {
-		const auto bandWeight = bandWeights[cascade];
-		const auto magnitude = snapshot[cascade].data[band];
-		const auto cascadeBandValue = magnitude / bandWeight;
+		const float bandWeight = bandWeights[cascade];
+		const float magnitude = snapshot[cascade].data[band];
 
-		if (cascadeBandValue < params.zeroLevelHard) {
-			// todo read all of this and try to understand
+		if (snapshot[cascade].maxValue < params.zeroLevelHard) {
+			// this most often happens when there was a silence, and then some sound,
+			// so cascade with index more than N haven't updated yet
+			// so in that case we ignore values of all these cascades
+
+			if (cascadesSummed == 0.0f) {
+				// if cascadesSummed == 0.0f then bandWeight < params.minWeight for all previous cascades
+				// let's use value of previous cascade to provide at least something
+				return cascade == 0 ? 0.0f : snapshot[cascade - 1].data[band];
+			}
 			break;
 		}
+
 		if (bandWeight < params.minWeight) {
 			continue;
 		}
 
-		valueProduct *= cascadeBandValue;
-		valueSum += cascadeBandValue;
+		valueProduct *= magnitude;
+		valueSum += magnitude;
 
 		weight += bandWeight;
-		cascadesSummed++;
-
-		if (cascadeBandValue < params.zeroLevel) {
-			break;
-		}
+		cascadesSummed += 1.0f;
 	}
 
-	if (weight < params.weightFallback) {
-		for (index cascade = 0; cascade < bandEndCascade; cascade++) {
-			const auto bandWeight = bandWeights[cascade];
-			const auto magnitude = snapshot[cascade].data[band];
-			const auto cascadeBandValue = magnitude / bandWeight;
-
-			if (cascadeBandValue < params.zeroLevelHard) {
-				break;
-			}
-			if (bandWeight < params.zeroWeight) {
-				continue;
-			}
-			if (bandWeight >= params.minWeight) {
-				continue;
-			}
-
-			valueProduct *= cascadeBandValue;
-			valueSum += cascadeBandValue;
-
-			weight += bandWeight;
-			cascadesSummed++;
-
-			if (cascadeBandValue < params.zeroLevel) {
-				break;
-			}
-			if (weight >= params.weightFallback) {
-				break;
-			}
-		}
+	if (cascadesSummed == 0.0f) {
+		// bandWeight < params.minWeight for all cascades
+		// let's use value of the last cascade
+		return bandWeights[bandEndCascade - 1] != 0.0f ? snapshot[bandEndCascade - 1].data[band] : 0.0f;
 	}
 
-	if (cascadesSummed <= 0) {
-		return 0.0f;
-	}
-
-	valueProduct = std::powf(valueProduct, 1.0f / cascadesSummed);
-	valueSum /= cascadesSummed;
-
-	return float(params.mixFunction == MixFunction::PRODUCT ? valueProduct : valueSum);
+	return float(
+		params.mixFunction == MixFunction::PRODUCT
+			? std::pow(valueProduct, 1.0f / cascadesSummed)
+			: valueSum / cascadesSummed
+	);
 }
 
 BandCascadeTransformer::AnalysisInfo
