@@ -21,6 +21,7 @@ namespace rxtd::audio_analyzer {
 			index maxCascade{ };
 
 			std::vector<float> bandFreqs;
+			bool useCubicResampling{ };
 
 			bool legacy_proportionalValues{ };
 			bool includeDC{ };
@@ -30,6 +31,7 @@ namespace rxtd::audio_analyzer {
 				return lhs.minCascade == rhs.minCascade
 					&& lhs.maxCascade == rhs.maxCascade
 					&& lhs.bandFreqs == rhs.bandFreqs
+					&& lhs.useCubicResampling == rhs.useCubicResampling
 					&& lhs.legacy_proportionalValues == rhs.legacy_proportionalValues
 					&& lhs.includeDC == rhs.includeDC;
 			}

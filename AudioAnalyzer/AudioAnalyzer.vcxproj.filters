@@ -173,6 +173,9 @@
     <ClInclude Include="Sources\audio-utils\cheby_win-lib\cheby_win.h">
       <Filter>Source Files\audio-utils\cheby_win-lib</Filter>
     </ClInclude>
+    <ClInclude Include="Sources\audio-utils\CubicInterpolationHelper.h">
+      <Filter>Source Files\audio-utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sources\AudioChild.cpp">
@@ -294,6 +297,9 @@
     </ClCompile>
     <ClCompile Include="Sources\audio-utils\cheby_win-lib\cheby_win.cpp">
       <Filter>Source Files\audio-utils\cheby_win-lib</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\audio-utils\CubicInterpolationHelper.cpp">
+      <Filter>Source Files\audio-utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

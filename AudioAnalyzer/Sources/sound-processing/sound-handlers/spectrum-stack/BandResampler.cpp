@@ -8,6 +8,9 @@
  */
 
 #include "BandResampler.h"
+
+#include "LinearInterpolator.h"
+#include "../../../audio-utils/CubicInterpolationHelper.h"
 #include "option-parser/OptionMap.h"
 #include "option-parser/OptionList.h"
 
@@ -49,13 +52,16 @@ SoundHandler::ParseResult BandResampler::parseParams(
 		return { };
 	}
 
-	params.includeDC = om.get(L"includeDC").asBool(true);
-
 	if (legacyNumber < 104) {
+		params.includeDC = om.get(L"includeDC").asBool(true);
 		params.legacy_proportionalValues = om.get(L"proportionalValues").asBool(true);
 	} else {
+		params.includeDC = true;
 		params.legacy_proportionalValues = false;
 	}
+
+	const bool defaultCubicResampling = !(legacyNumber < 104);
+	params.useCubicResampling = om.get(L"cubicInterpolation").asBool(defaultCubicResampling);
 
 	return { params, fftId % own() };
 }
@@ -289,51 +295,39 @@ bool BandResampler::vGetProp(const isview& prop, utils::BufferPrinter& printer) 
 
 void BandResampler::sampleCascade(array_view<float> source, array_span<float> dest, double binWidth) {
 	const index fftBinsCount = source.size();
-	const double binWidthInverse = 1.0 / binWidth;
 
-	index bin = params.includeDC ? 0 : 1; // bin 0 is DC
-	index band = 0;
+	utils::LinearInterpolator lowerBinBoundInter;
+	lowerBinBoundInter.setParams(
+		-binWidth * 0.5,
+		(fftBinsCount - 0.5) * binWidth,
+		double(0),
+		double(fftBinsCount - 1)
+	);
 
-	double bandMinFreq = params.bandFreqs[0];
-	double bandMaxFreq = params.bandFreqs[1];
+	audio_utils::CubicInterpolationHelper cih;
+	cih.setSource(source);
 
-	double value = 0.0;
-	std::fill(dest.begin(), dest.end(), 0.0f);
+	for (index band = 0; band < bandsCount; band++) {
+		const double bandMinFreq = params.bandFreqs[band];
+		const double bandMaxFreq = params.bandFreqs[band + 1];
 
-	while (bin < fftBinsCount && band < bandsCount) {
-		const double binUpperFreq = (bin + 0.5) * binWidth;
-		if (binUpperFreq < bandMinFreq) {
-			bin++;
-			continue;
-		}
-
-		double weight = 1.0;
-		const double binLowerFreq = (bin - 0.5) * binWidth;
-
-		if (binLowerFreq < bandMinFreq) {
-			weight -= (bandMinFreq - binLowerFreq) * binWidthInverse;
-		}
-		if (binUpperFreq > bandMaxFreq) {
-			weight -= (binUpperFreq - bandMaxFreq) * binWidthInverse;
-		}
-		if (weight > 0) {
-			const auto fftValue = source[bin];
-			value += fftValue * weight;
-		}
-
-		if (bandMaxFreq >= binUpperFreq) {
-			bin++;
+		if (params.useCubicResampling && bandMaxFreq - bandMinFreq < binWidth) {
+			const double interpolatedCoordinate = lowerBinBoundInter.toValue((bandMinFreq + bandMaxFreq) * 0.5);
+			const double value = cih.getValueFor(interpolatedCoordinate);
+			dest[band] = std::max<float>(value, 0.0f);
 		} else {
-			dest[band] = float(value);
-			value = 0.0;
-			band++;
-
-			if (band >= bandsCount) {
+			const index minBin = index(std::floor(lowerBinBoundInter.toValue(bandMinFreq)));
+			if (minBin >= fftBinsCount) {
 				break;
 			}
+			const index maxBin = std::min(index(std::floor(lowerBinBoundInter.toValue(bandMaxFreq))), fftBinsCount - 1);
 
-			bandMinFreq = bandMaxFreq;
-			bandMaxFreq = params.bandFreqs[band + 1];
+			float value = 0.0;
+			for (index bin = minBin; bin <= maxBin; ++bin) {
+				value += source[bin];
+			}
+			const float binsCount = (1.0f + maxBin - minBin);
+			dest[band] = value / binsCount;
 		}
 	}
 }
@@ -352,46 +346,26 @@ void BandResampler::computeWeights(index fftSize) {
 void BandResampler::computeCascadeWeights(array_span<float> result, index fftBinsCount, double binWidth) {
 	const double binWidthInverse = 1.0 / binWidth;
 
-	index bin = params.includeDC ? 0 : 1; // bin 0 is ~DC
-	index band = 0;
+	const index bandsCount = params.bandFreqs.size() - 1;
 
-	double bandMinFreq = params.bandFreqs[0];
-	double bandMaxFreq = params.bandFreqs[1];
+	const float fftMinFreq = float(params.includeDC ? -binWidth * 0.5 : binWidth * 0.5);
+	const float fftMaxFreq = float((fftBinsCount - 0.5) * binWidth);
 
-	double bandWeight = 0.0;
-
-	while (bin < fftBinsCount && band < bandsCount) {
-		const double binUpperFreq = (bin + 0.5) * binWidth;
-		if (binUpperFreq < bandMinFreq) {
-			bin++;
+	for (index band = 0; band < bandsCount; band++) {
+		const float bandMaxFreq = std::min(params.bandFreqs[band + 1], fftMaxFreq);
+		if (bandMaxFreq < fftMinFreq) {
+			result[band] = 0.0f;
 			continue;
 		}
 
-		double binWeight = 1.0;
-		const double binLowerFreq = (bin - 0.5) * binWidth;
-
-		if (binLowerFreq < bandMinFreq) {
-			binWeight -= (bandMinFreq - binLowerFreq) * binWidthInverse;
-		}
-		if (binUpperFreq > bandMaxFreq) {
-			binWeight -= (binUpperFreq - bandMaxFreq) * binWidthInverse;
-		}
-		if (binWeight > 0) {
-			bandWeight += binWeight;
+		const float bandMinFreq = std::max(params.bandFreqs[band], fftMinFreq);
+		if (bandMinFreq > fftMaxFreq) {
+			result[band] = 0.0f;
+			continue;
 		}
 
-		if (bandMaxFreq >= binUpperFreq) {
-			bin++;
-		} else {
-			result[band] = float(bandWeight);
-			bandWeight = 0.0;
-			band++;
-			if (band >= bandsCount) {
-				break;
-			}
-			bandMinFreq = bandMaxFreq;
-			bandMaxFreq = params.bandFreqs[band + 1];
-		}
+		const double bandWidth = bandMaxFreq - bandMinFreq;
+		result[band] = float(bandWidth * binWidthInverse);
 	}
 }
 
