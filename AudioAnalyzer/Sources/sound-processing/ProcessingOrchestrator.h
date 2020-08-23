@@ -12,6 +12,10 @@
 
 namespace rxtd::audio_analyzer {
 	class ProcessingOrchestrator {
+	public:
+		using DataSnapshot = std::map<istring, ProcessingManager::Snapshot, std::less<>>;
+
+	private:
 		struct {
 			index samplesPerSec{ };
 			ChannelLayout channelLayout;
@@ -23,6 +27,7 @@ namespace rxtd::audio_analyzer {
 		utils::Rainmeter::Logger logger;
 
 		std::map<istring, ProcessingManager, std::less<>> saMap;
+		DataSnapshot dataSnapshot;
 
 	public:
 		void setLogger(utils::Rainmeter::Logger value) {
@@ -32,11 +37,13 @@ namespace rxtd::audio_analyzer {
 		void setKillTimeout(double value) {
 			killTimeoutMs = value;
 		}
-		
+
 		void setComputeTimeout(double value) {
 			computeTimeoutMs = value;
 		}
-		
+
+		// void exchangeData(DataSnapshot& snapshot);
+
 		void setFormat(index samplesPerSec, ChannelLayout channelLayout);
 
 		void patch(const ParamParser::ProcessingsInfoMap& patches, index legacyNumber);

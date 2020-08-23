@@ -113,6 +113,10 @@ namespace rxtd::audio_analyzer {
 			array_view<float> data;
 		};
 
+		struct Snapshot {
+			utils::Vector2D<float> values;
+		};
+
 	protected:
 		struct Configuration {
 			SoundHandler* sourcePtr = nullptr;
@@ -154,8 +158,6 @@ namespace rxtd::audio_analyzer {
 		Configuration _configuration{ };
 
 	public:
-		virtual ~SoundHandler() = default;
-
 		template <typename _HandlerType>
 		[[nodiscard]]
 		static std::unique_ptr<SoundHandler> patchHandlerImpl(std::unique_ptr<SoundHandler> handlerPtr) {
@@ -170,7 +172,12 @@ namespace rxtd::audio_analyzer {
 			return handlerPtr;
 		}
 
-	public:
+		void exchangeData(Snapshot& snapshot) {
+			purgeCache();
+
+			std::swap(_lastResults, snapshot.values);
+		}
+
 		[[nodiscard]]
 		virtual ParseResult
 		parseParams(const OptionMap& om, Logger& cl, const Rainmeter& rain, index legacyNumber) const = 0;
@@ -180,9 +187,10 @@ namespace rxtd::audio_analyzer {
 		bool patch(
 			const std::any& params, const std::vector<istring>& sources,
 			sview channelName, index sampleRate,
-			HandlerFinder& hf,
-			Logger& cl
+			HandlerFinder& hf, Logger& cl
 		);
+
+		void configureSnapshot(Snapshot& snapshot) const;
 
 		[[nodiscard]]
 		DataSize getDataSize() const {

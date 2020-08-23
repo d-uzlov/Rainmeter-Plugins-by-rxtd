@@ -16,6 +16,16 @@ void ProcessingManager::updateFormat(index sampleRate, ChannelLayout layout) {
 	patchHandlers(std::move(layout));
 }
 
+void ProcessingManager::updateSnapshot(Snapshot& snapshot) {
+	for (auto& [channel, channelData] : channels) {
+		auto& channelSnapshot = snapshot[channel];
+		for (auto& [handlerName, handler] : channelData) {
+			// order is not important
+			handler->exchangeData(channelSnapshot[handlerName]);
+		}
+	}
+}
+
 void ProcessingManager::setParams(
 	const ParamParser::ProcessingData& pd,
 	index _legacyNumber,
@@ -70,9 +80,31 @@ bool ProcessingManager::finishStandalone(clock::time_point killTime) {
 
 void ProcessingManager::resetValues() noexcept {
 	for (auto& [channel, channelData] : channels) {
-		for (auto& [name, handler] : channelData) {
+		for (auto& [handlerName, handler] : channelData) {
 			// order is not important
 			handler->reset();
+		}
+	}
+}
+
+void ProcessingManager::configureSnapshot(Snapshot& snapshot) {
+	for (auto iter = snapshot.begin(); iter != snapshot.end();) {
+		const auto channel = iter->first;
+		const bool hasChannel = channels.find(channel) != channels.end();
+		iter = hasChannel ? ++iter : snapshot.erase(iter);
+	}
+
+	for (auto& [channel, channelData] : channels) {
+		auto& channelSnapshot = snapshot[channel];
+		for (auto iter = channelSnapshot.begin(); iter != channelSnapshot.end();) {
+			const auto handlerName = iter->first;
+			const bool hasHandler = channelData.find(handlerName) != channelData.end();
+			iter = hasHandler ? ++iter : channelSnapshot.erase(iter);
+		}
+
+		for (auto& [handlerName, handler] : channelData) {
+			auto& handlerSnapshot = channelSnapshot[handlerName];
+			handler->configureSnapshot(handlerSnapshot);
 		}
 	}
 }

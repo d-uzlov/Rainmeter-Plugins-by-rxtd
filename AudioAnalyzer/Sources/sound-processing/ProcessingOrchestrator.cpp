@@ -24,6 +24,7 @@ void ProcessingOrchestrator::patch(const ParamParser::ProcessingsInfoMap& patche
 	     iter != saMap.end();) {
 		if (patches.find(iter->first) == patches.end()) {
 			iter = saMap.erase(iter);
+			dataSnapshot.erase(iter->first);
 		} else {
 			++iter;
 		}
@@ -33,6 +34,7 @@ void ProcessingOrchestrator::patch(const ParamParser::ProcessingsInfoMap& patche
 		auto& sa = saMap[name];
 		sa.setLogger(logger);
 		sa.setParams(data, legacyNumber, currentFormat.samplesPerSec, currentFormat.channelLayout);
+		sa.configureSnapshot(dataSnapshot[name]);
 	}
 }
 
@@ -60,6 +62,10 @@ void ProcessingOrchestrator::process(const ChannelMixer& channelMixer) {
 	if (killed) {
 		logger.error(L"handler processing was killed on timeout after {} m, on stage 1", processDuration);
 		return;
+	}
+
+	for (auto& [name, sa] : saMap) {
+		sa.updateSnapshot(dataSnapshot[name]);
 	}
 
 	for (auto& [name, sa] : saMap) {
@@ -105,37 +111,34 @@ bool ProcessingOrchestrator::getProp(
 }
 
 double ProcessingOrchestrator::temp_getValue(isview proc, isview id, Channel channel, index ind) const {
-	auto procIter = saMap.find(proc);
-	if (procIter == saMap.end()) {
+	auto procIter = dataSnapshot.find(proc);
+	if (procIter == dataSnapshot.end()) {
+		return 0.0;
+	}
+
+	const auto& processingSnapshot = procIter->second;
+	auto channelSnapshotIter = processingSnapshot.find(channel);
+	if (channelSnapshotIter == processingSnapshot.end()) {
 		return 0.0;
 
 	}
 
-	return procIter->second.getAudioChildHelper().getValue(channel, id, ind);
+	auto& channelSnapshot = channelSnapshotIter->second;
+	auto handlerSnapshotIter = channelSnapshot.find(id);
+	if (handlerSnapshotIter == channelSnapshot.end()) {
+		return 0.0;
 
-	// const auto& data = procIter->second;
-	// auto channelIter = data.find(channel);
-	// if (channelIter == data.end()) {
-	// 	return 0.0;
-	//
-	// }
-	//
-	// auto& channelData = channelIter->second;
-	// auto handlerIter = channelData.find(id);
-	// if (handlerIter == channelData.end()) {
-	// 	return 0.0;
-	//
-	// }
-	//
-	// auto& values = handlerIter->second.first;
-	// const auto layersCount = values.getBuffersCount();
-	// if (layersCount == 0) {
-	// 	return 0.0;
-	// }
-	// const auto valuesCount = values.getBufferSize();
-	// if (ind >= valuesCount) {
-	// 	return 0.0;
-	// }
-	//
-	// return values[0][ind];
+	}
+
+	auto& values = handlerSnapshotIter->second.values;
+	const auto layersCount = values.getBuffersCount();
+	if (layersCount == 0) {
+		return 0.0;
+	}
+	const auto valuesCount = values.getBufferSize();
+	if (ind >= valuesCount) {
+		return 0.0;
+	}
+
+	return values[0][ind];
 }

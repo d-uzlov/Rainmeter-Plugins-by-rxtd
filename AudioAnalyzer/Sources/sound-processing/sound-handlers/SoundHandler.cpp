@@ -60,6 +60,12 @@ bool SoundHandler::patch(
 	return true;
 }
 
+void SoundHandler::configureSnapshot(Snapshot& snapshot) const {
+	snapshot.values.setBuffersCount(_dataSize.layersCount);
+	snapshot.values.setBufferSize(_dataSize.valuesCount);
+	snapshot.values.fill(0.0f);
+}
+
 index SoundHandler::legacy_parseIndexProp(
 	const isview& request, const isview& propName,
 	index minBound, index endBound

@@ -18,6 +18,11 @@
 
 namespace rxtd::audio_analyzer {
 	class ProcessingManager {
+	public:
+		using ChannelSnapshot = std::map<istring, SoundHandler::Snapshot, std::less<>>;
+		using Snapshot = std::map<Channel, ChannelSnapshot, std::less<>>;
+
+	private:
 		using clock = std::chrono::high_resolution_clock;
 		static_assert(clock::is_steady);
 
@@ -50,6 +55,8 @@ namespace rxtd::audio_analyzer {
 			return AudioChildHelper{ channels };
 		}
 
+		void updateSnapshot(Snapshot& snapshot);
+
 		// todo update documentation
 		/**
 		 * Handlers aren't completely recreated when measure is reloaded.
@@ -70,6 +77,7 @@ namespace rxtd::audio_analyzer {
 		// returns true when killed on timeout
 		bool finishStandalone(clock::time_point killTime);
 		void resetValues() noexcept;
+		void configureSnapshot(Snapshot& snapshot);
 
 	private:
 		void patchHandlers(ChannelLayout layout);
