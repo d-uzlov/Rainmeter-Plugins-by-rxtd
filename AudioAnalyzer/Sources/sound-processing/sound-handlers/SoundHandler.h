@@ -207,21 +207,7 @@ namespace rxtd::audio_analyzer {
 			return _layers[layer].chunks;
 		}
 
-		[[nodiscard]]
-		array_view<float> getLastData(index layer) const {
-			if (layer >= _dataSize.layersCount) {
-				return { };
-			}
-
-			inflateLayers();
-			auto chunks = _layers[layer].chunks;
-			if (!chunks.empty()) {
-				return chunks.back().data;
-			}
-
-			return _lastResults[layer];
-		}
-
+		// returns saved data from previous iteration
 		[[nodiscard]]
 		array_view<float> getSavedData(index layer) const {
 			if (layer >= _dataSize.layersCount) {

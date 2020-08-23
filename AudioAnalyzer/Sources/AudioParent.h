@@ -52,30 +52,7 @@ namespace rxtd::audio_analyzer {
 		}
 
 		// returns error message or empty string
-		string checkHandler(isview procName, Channel channel, isview handlerName) const {
-			utils::BufferPrinter bp;
-
-			const auto procDataIter = paramParser.getParseResult().find(procName);
-			if (procDataIter == paramParser.getParseResult().end()) {
-				bp.print(L"processing {} is not found", procName);
-				return bp.getBufferPtr();
-			}
-
-			auto procData = procDataIter->second;
-			auto& channels = procData.channels;
-			if (channels.find(channel) == channels.end()) {
-				bp.print(L"processing {} doesn't have channel {}", procName, channel.technicalName());
-				return bp.getBufferPtr();
-			}
-
-			auto& handlerMap = procData.handlersInfo.patchers;
-			if (handlerMap.find(handlerName) == handlerMap.end()) {
-				bp.print(L"processing {} doesn't have handler {}", procName, handlerName);
-				return bp.getBufferPtr();
-			}
-
-			return { };
-		}
+		string checkHandler(isview procName, Channel channel, isview handlerName) const;
 
 		isview legacy_findProcessingFor(isview handlerName);
 

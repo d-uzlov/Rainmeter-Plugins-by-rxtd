@@ -23,9 +23,5 @@ namespace rxtd::audio_analyzer {
 
 		[[nodiscard]]
 		SoundHandler* findHandler(Channel channel, isview handlerId) const;
-		[[nodiscard]]
-		double getValue(Channel channel, isview handlerId, index index) const;
-		[[nodiscard]]
-		double getValueFrom(SoundHandler* handler, Channel channel, index index) const;
 	};
 }
