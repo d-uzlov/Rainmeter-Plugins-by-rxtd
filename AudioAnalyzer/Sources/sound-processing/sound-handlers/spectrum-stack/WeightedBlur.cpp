@@ -37,7 +37,10 @@ SoundHandler::ParseResult WeightedBlur::parseParams(
 	// params.minWeight = std::max<double>(optionMap.get(L"minWeight"sv).asFloat(0), std::numeric_limits<float>::epsilon());
 	params.minWeight = 0.0; // doesn't work as expected
 
-	return { params, sourceId % own() };
+	ParseResult result;
+	result.setParams(std::move(params));
+	result.addSource(sourceId);
+	return result;
 }
 
 SoundHandler::ConfigurationResult WeightedBlur::vConfigure(Logger& cl) {

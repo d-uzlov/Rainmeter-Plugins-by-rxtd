@@ -71,43 +71,31 @@ namespace rxtd::audio_analyzer {
 		using Finisher = void(*)(std::any& handlerSpecificData);
 
 		class ParseResult {
-			bool valid{ };
-			std::any _params;
+			bool valid = false;
+			std::any params;
 			std::vector<istring> _sources;
 			Finisher _finisher = nullptr;
 
 		public:
-			ParseResult() {
-				valid = false;
+			template <typename Params>
+			void setParams(Params value) {
+				valid = true;
+				params = std::move(value);
 			}
 
-			template <typename Params>
-			ParseResult(Params params, istring source) {
+			void addSource(istring value) {
 				valid = true;
-				_params = std::move(params);
-				_sources.push_back(source);
+				_sources.push_back(std::move(value));
 			}
 
-			template <typename Params>
-			ParseResult(Params params, Finisher finisher) {
+			void addSource(isview value) {
 				valid = true;
-				_params = std::move(params);
-				_finisher = finisher;
+				_sources.push_back(value % own());
 			}
 
-			template <typename Params>
-			ParseResult(Params params, istring source, Finisher finisher) {
+			void setFinisher(Finisher value) {
 				valid = true;
-				_params = std::move(params);
-				_sources.push_back(source);
-				_finisher = finisher;
-			}
-
-			template <typename Params>
-			ParseResult(Params params, std::vector<istring> sources) {
-				valid = true;
-				_params = std::move(params);
-				_sources = std::move(sources);
+				_finisher = value;
 			}
 
 			[[nodiscard]]
@@ -117,7 +105,7 @@ namespace rxtd::audio_analyzer {
 
 			[[nodiscard]]
 			auto takeParams() {
-				return std::move(_params);
+				return std::move(params);
 			}
 
 			[[nodiscard]]

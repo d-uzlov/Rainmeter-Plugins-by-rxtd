@@ -30,7 +30,10 @@ SoundHandler::ParseResult SingleValueTransformer::parseParams(
 	auto transformLogger = cl.context(L"transform: ");
 	params.transformer = audio_utils::TransformationParser::parse(om.get(L"transform").asString(), transformLogger);
 
-	return { params, sourceId % own() };
+	ParseResult result;
+	result.setParams(std::move(params));
+	result.addSource(sourceId);
+	return result;
 }
 
 SoundHandler::ConfigurationResult SingleValueTransformer::vConfigure(Logger& cl) {

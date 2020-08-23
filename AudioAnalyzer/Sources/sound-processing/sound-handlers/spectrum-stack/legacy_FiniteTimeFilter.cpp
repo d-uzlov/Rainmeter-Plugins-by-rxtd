@@ -44,7 +44,10 @@ SoundHandler::ParseResult legacy_FiniteTimeFilter::parseParams(
 		params.smoothingCurve = SmoothingCurve::FLAT;
 	}
 
-	return { params, sourceId % own() };
+	ParseResult result;
+	result.setParams(std::move(params));
+	result.addSource(sourceId);
+	return result;
 }
 
 SoundHandler::ConfigurationResult legacy_FiniteTimeFilter::vConfigure(Logger& cl) {

@@ -102,7 +102,9 @@ SoundHandler::ParseResult FftAnalyzer::parseParams(
 	params.wcfDescription = om.get(L"windowFunction").asString(L"hann");
 	params.wcf = audio_utils::WindowFunctionHelper::parse(params.wcfDescription, cl);
 
-	return { params, std::vector<istring>{ } };
+	ParseResult result;
+	result.setParams(std::move(params));
+	return result;
 }
 
 SoundHandler::ConfigurationResult FftAnalyzer::vConfigure(Logger& cl) {

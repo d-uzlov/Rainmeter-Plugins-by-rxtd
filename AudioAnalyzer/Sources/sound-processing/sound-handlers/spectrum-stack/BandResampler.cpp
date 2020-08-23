@@ -24,8 +24,8 @@ SoundHandler::ParseResult BandResampler::parseParams(
 ) const {
 	Params params;
 
-	const auto fftId = om.get(L"source").asIString();
-	if (fftId.empty()) {
+	const auto sourceId = om.get(L"source").asIString();
+	if (sourceId.empty()) {
 		cl.error(L"source is not found");
 		return { };
 	}
@@ -63,7 +63,10 @@ SoundHandler::ParseResult BandResampler::parseParams(
 	const bool defaultCubicResampling = !(legacyNumber < 104);
 	params.useCubicResampling = om.get(L"cubicInterpolation").asBool(defaultCubicResampling);
 
-	return { params, fftId % own() };
+	ParseResult result;
+	result.setParams(std::move(params));
+	result.addSource(sourceId);
+	return result;
 }
 
 std::vector<float> BandResampler::parseFreqList(sview listId, const Rainmeter& rain) {

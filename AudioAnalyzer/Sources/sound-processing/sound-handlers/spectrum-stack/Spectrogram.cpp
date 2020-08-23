@@ -196,7 +196,11 @@ SoundHandler::ParseResult Spectrogram::parseParams(
 
 	params.stationary = om.get(L"stationary").asBool(false);
 
-	return { params, sourceId % own(), staticFinisher };
+	ParseResult result;
+	result.setParams(std::move(params));
+	result.addSource(sourceId);
+	result.setFinisher(staticFinisher);
+	return result;
 }
 
 SoundHandler::ConfigurationResult Spectrogram::vConfigure(Logger& cl) {
