@@ -136,25 +136,27 @@ void WaveForm::vProcess(array_view<float> wave, clock::time_point killTime) {
 		counter++;
 		if (counter >= blockSize) {
 			pushStrip(min, max);
+			writeNeeded = true;
 
 			counter = 0;
 			min = 10.0;
 			max = -10.0;
 		}
 	}
-}
-
-void WaveForm::vFinishStandalone() {
-	if (!changed) {
-		return;
-	}
 
 	const bool forced = !drawer.isEmpty();
 	if (forced || !writerHelper.isEmptinessWritten()) {
 		drawer.inflate();
 	}
+}
+
+void WaveForm::vFinishStandalone() {
+	if (!writeNeeded) {
+		return;
+	}
+
 	writerHelper.write(drawer.getResultBuffer(), drawer.isEmpty(), filepath);
-	changed = false;
+	writeNeeded = false;
 }
 
 bool WaveForm::vGetProp(const isview& prop, utils::BufferPrinter& printer) const {
@@ -179,6 +181,4 @@ void WaveForm::pushStrip(double min, double max) {
 	} else {
 		drawer.fillStrip(min, max);
 	}
-
-	changed = true;
 }

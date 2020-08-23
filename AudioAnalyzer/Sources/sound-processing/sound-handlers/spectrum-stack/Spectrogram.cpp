@@ -174,6 +174,7 @@ SoundHandler::ConfigurationResult Spectrogram::vConfigure(Logger& cl) {
 	counter = 0;
 	dataShortageEqSize = 0;
 	overpushCount = 0;
+	writeNeeded = true;
 
 	return { 0, 0 };
 }
@@ -223,6 +224,8 @@ void Spectrogram::vProcess(array_view<float> wave, clock::time_point killTime) {
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
 
+	bool imageChanged = false;
+
 	for (auto chunk : source.getChunks(0)) {
 		counter += chunk.equivalentWaveSize;
 
@@ -230,15 +233,11 @@ void Spectrogram::vProcess(array_view<float> wave, clock::time_point killTime) {
 			continue;
 		}
 
-		changed = true;
+		imageChanged = true;
 
 		const auto data = chunk.data;
 
-		lastDataIsZero = std::all_of(
-			data.begin(),
-			data.end(),
-			[=](auto x) { return x < params.colorMinValue; }
-		);
+		lastDataIsZero = *std::max_element(data.begin(),data.end()) < params.colorMinValue;
 
 		if (!lastDataIsZero) {
 			if (params.colors.size() == 2) {
@@ -264,7 +263,7 @@ void Spectrogram::vProcess(array_view<float> wave, clock::time_point killTime) {
 
 	index localShortageSize = dataShortageEqSize;
 	while (localShortageSize >= blockSize && overpushCount < params.length) {
-		changed = true;
+		imageChanged = true;
 
 		if (lastDataIsZero) {
 			image.pushEmptyStrip(params.colors[0].color.toIntColor());
@@ -275,29 +274,30 @@ void Spectrogram::vProcess(array_view<float> wave, clock::time_point killTime) {
 		localShortageSize -= blockSize;
 		overpushCount++;
 	}
+
+	if (imageChanged) {
+		writeNeeded = true;
+
+		if (params.fading != 0.0) {
+			if (image.isForced() || !writerHelper.isEmptinessWritten()) {
+				sifh.setPastLastStripIndex(image.getPastLastStripIndex());
+				sifh.inflate(image.getPixels());
+			}
+		} else {
+			if (params.borderSize != 0) {
+				sifh.setPastLastStripIndex(image.getPastLastStripIndex());
+				sifh.drawBorderInPlace(image.getPixelsWritable());
+			}
+		}
+	}
 }
 
 void Spectrogram::vFinishStandalone() {
-	if (!changed) {
+	if (!writeNeeded) {
 		return;
 	}
 
-	utils::array2d_view<utils::IntColor> pixelBuffer;
-
-	if (params.fading != 0.0) {
-		if (image.isForced() || !writerHelper.isEmptinessWritten()) {
-			sifh.setPastLastStripIndex(image.getPastLastStripIndex());
-			sifh.inflate(image.getPixels());
-		}
-		pixelBuffer = sifh.getResultBuffer();
-	} else {
-		if (params.borderSize != 0) {
-			sifh.setPastLastStripIndex(image.getPastLastStripIndex());
-			sifh.drawBorderInPlace(image.getPixelsWritable());
-		}
-		pixelBuffer = image.getPixels();
-	}
-
+	auto pixelBuffer = params.fading != 0.0 ? sifh.getResultBuffer() : image.getPixels();
 	writerHelper.write(pixelBuffer, !image.isForced(), filepath);
-	changed = false;
+	writeNeeded = false;
 }

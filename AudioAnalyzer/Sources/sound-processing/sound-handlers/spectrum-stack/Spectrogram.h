@@ -80,7 +80,7 @@ namespace rxtd::audio_analyzer {
 
 		std::vector<utils::IntColor> stripBuffer{ };
 		index counter = 0;
-		bool changed = false;
+		bool writeNeeded = false;
 
 		index dataShortageEqSize{ };
 		index overpushCount{ };

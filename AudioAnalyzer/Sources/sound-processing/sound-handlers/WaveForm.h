@@ -90,7 +90,7 @@ namespace rxtd::audio_analyzer {
 		index counter = 0;
 		double min{ };
 		double max{ };
-		bool changed = false;
+		bool writeNeeded = false;
 
 		WaveformValueTransformer minTransformer{ };
 		WaveformValueTransformer maxTransformer{ };
