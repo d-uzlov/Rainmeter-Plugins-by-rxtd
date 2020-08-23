@@ -77,15 +77,6 @@ SoundHandler::ConfigurationResult BandCascadeTransformer::vConfigure(Logger& cl)
 		return { };
 	}
 
-	analysis = computeAnalysis(
-		*resamplerPtr,
-		params.minWeight, params.targetWeight
-	);
-	if (!analysis.anyCascadeUsed) {
-		cl.error(L"no input data could be used because of too strict weight constraints");
-		return { };
-	}
-
 	const auto dataSize = config.sourcePtr->getDataSize();
 	snapshot.clear();
 	snapshot.resize(dataSize.layersCount);
@@ -121,26 +112,11 @@ void BandCascadeTransformer::vProcess(array_view<float> wave, clock::time_point 
 			meta.maxValue = *std::max_element(meta.data.begin(), meta.data.end());
 		}
 
-		index band;
 		auto dest = pushLayer(0, chunk.equivalentWaveSize);
-		for (band = 0; band < dest.size(); ++band) {
+		for (index band = 0; band < dest.size(); ++band) {
 			dest[band] = computeForBand(band);
 		}
 	}
-}
-
-bool BandCascadeTransformer::vGetProp(const isview& prop, utils::BufferPrinter& printer) const {
-	if (prop == L"cascade analysis") {
-		printer.print(analysis.analysisString);
-	} else if (prop == L"min cascade used") {
-		printer.print(analysis.minCascadeUsed + 1);
-	} else if (prop == L"max cascade used") {
-		printer.print(analysis.maxCascadeUsed + 1);
-	} else {
-		return false;
-	}
-
-	return true;
 }
 
 float BandCascadeTransformer::computeForBand(index band) const {
@@ -148,14 +124,13 @@ float BandCascadeTransformer::computeForBand(index band) const {
 
 	float weight = 0.0f;
 	float cascadesSummed = 0.0f;
-	const index bandEndCascade = analysis.bandEndCascades[band] - analysis.minCascadeUsed;
 
 	float valueProduct = 1.0f;
 	float valueSum = 0.0f;
 
 	const auto bandWeights = resampler.getBandWeights(band);
 
-	for (index cascade = 0; cascade < bandEndCascade; cascade++) {
+	for (index cascade = 0; cascade < snapshot.size(); cascade++) {
 		const float bandWeight = bandWeights[cascade];
 		const float magnitude = snapshot[cascade].data[band];
 
@@ -176,17 +151,21 @@ float BandCascadeTransformer::computeForBand(index band) const {
 			continue;
 		}
 
+		cascadesSummed += 1.0f;
+
 		valueProduct *= magnitude;
 		valueSum += magnitude;
-
 		weight += bandWeight;
-		cascadesSummed += 1.0f;
+
+		if (weight >= params.targetWeight) {
+			break;
+		}
 	}
 
 	if (cascadesSummed == 0.0f) {
 		// bandWeight < params.minWeight for all cascades
 		// let's use value of the last cascade
-		return bandWeights[bandEndCascade - 1] != 0.0f ? snapshot[bandEndCascade - 1].data[band] : 0.0f;
+		return bandWeights.back() != 0.0f ? snapshot.back().data[band] : 0.0f;
 	}
 
 	return float(
@@ -194,78 +173,4 @@ float BandCascadeTransformer::computeForBand(index band) const {
 			? std::pow(valueProduct, 1.0f / cascadesSummed)
 			: valueSum / cascadesSummed
 	);
-}
-
-BandCascadeTransformer::AnalysisInfo
-BandCascadeTransformer::computeAnalysis(BandResampler& resampler, double minWeight, double targetWeight) {
-	const index startCascade = resampler.getStartingLayer();
-	const index endCascade = resampler.getEndCascade();
-
-	std::wostringstream out;
-
-	out.precision(1);
-	out << std::fixed;
-
-	AnalysisInfo analysis{ };
-	analysis.minCascadeUsed = std::numeric_limits<index>::max();
-	analysis.maxCascadeUsed = std::numeric_limits<index>::min();
-
-	const index bandsCount = resampler.getDataSize().valuesCount;
-	analysis.bandEndCascades.resize(bandsCount);
-
-	for (index band = 0; band < bandsCount; ++band) {
-		double weight = 0.0;
-		index bandMinCascade = -1;
-		index bandMaxCascade = -1;
-		bool anyCascadeUsed = false;
-
-		const auto bandWeights = resampler.getBandWeights(band);
-
-		for (index cascade = startCascade; cascade < endCascade; ++cascade) {
-			const auto bandWeight = bandWeights[cascade - startCascade];
-
-			if (bandWeight < minWeight) {
-				continue;
-			}
-
-			anyCascadeUsed = true;
-			weight += bandWeight;
-			if (bandMinCascade < 0) {
-				bandMinCascade = cascade;
-			}
-			bandMaxCascade = cascade;
-
-			if (weight >= targetWeight) {
-				break;
-			}
-		}
-
-
-		out << band;
-		out << L":";
-
-		if (!anyCascadeUsed) {
-			out << L"!!";
-			bandMinCascade = startCascade;
-			bandMaxCascade = endCascade - 1;
-		} else {
-			analysis.minCascadeUsed = std::min(analysis.minCascadeUsed, bandMinCascade);
-			analysis.maxCascadeUsed = std::max(analysis.maxCascadeUsed, bandMaxCascade);
-			analysis.anyCascadeUsed = true;
-		}
-
-		analysis.bandEndCascades[band] = bandMaxCascade + 1;
-
-		out << weight;
-		out << L":";
-		out << bandMinCascade + 1;
-		out << L"-";
-		out << bandMaxCascade + 1;
-		out << L" ";
-
-	}
-
-	analysis.analysisString = out.str();
-
-	return analysis;
 }
