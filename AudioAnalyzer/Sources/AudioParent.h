@@ -25,6 +25,7 @@ namespace rxtd::audio_analyzer {
 
 		utils::GenericComWrapper<utils::CMMNotificationClient> notificationClient;
 		ProcessingOrchestrator orchestrator;
+		ProcessingOrchestrator::DataSnapshot snapshot;
 
 	public:
 		explicit AudioParent(utils::Rainmeter&& rain);

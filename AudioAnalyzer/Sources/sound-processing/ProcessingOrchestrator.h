@@ -42,16 +42,14 @@ namespace rxtd::audio_analyzer {
 			computeTimeoutMs = value;
 		}
 
-		// void exchangeData(DataSnapshot& snapshot);
+		void exchangeData(DataSnapshot& snapshot);
 
 		void setFormat(index samplesPerSec, ChannelLayout channelLayout);
 
-		void patch(const ParamParser::ProcessingsInfoMap& patches, index legacyNumber);
+		void patch(const ParamParser::ProcessingsInfoMap& patches, index legacyNumber, DataSnapshot& snapshot);
 
 		void process(const ChannelMixer& channelMixer);
 
 		bool getProp(isview proc, isview id, Channel channel, isview propName, utils::BufferPrinter& printer);
-
-		double temp_getValue(isview proc, isview id, Channel channel, index ind) const;
 	};
 }

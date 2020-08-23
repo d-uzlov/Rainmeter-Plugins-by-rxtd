@@ -95,7 +95,7 @@ void AudioParent::vReload() {
 	}
 
 	if (anythingChanged) {
-		orchestrator.patch(paramParser.getParseResult(), legacyNumber);
+		orchestrator.patch(paramParser.getParseResult(), legacyNumber, snapshot);
 	}
 }
 
@@ -136,6 +136,7 @@ double AudioParent::vUpdate() {
 
 	if (any) {
 		orchestrator.process(channelMixer);
+		orchestrator.exchangeData(snapshot);
 		channelMixer.reset();
 	}
 
@@ -244,7 +245,7 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 		//
 		// const auto value = procIter->second.getAudioChildHelper().getValue(channelOpt.value(), handlerName, ind);
 
-		const auto value = orchestrator.temp_getValue(procName, handlerName, channelOpt.value(), ind);
+		const auto value = getValue(procName, handlerName, channelOpt.value(), ind);
 		cl.printer.print(value);
 
 		resolveBufferString = cl.printer.getBufferView();
@@ -297,7 +298,36 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 }
 
 double AudioParent::getValue(isview proc, isview id, Channel channel, index ind) const {
-	return orchestrator.temp_getValue(proc, id, channel, ind);
+	auto procIter = snapshot.find(proc);
+	if (procIter == snapshot.end()) {
+		return 0.0;
+	}
+
+	const auto& processingSnapshot = procIter->second;
+	auto channelSnapshotIter = processingSnapshot.find(channel);
+	if (channelSnapshotIter == processingSnapshot.end()) {
+		return 0.0;
+
+	}
+
+	auto& channelSnapshot = channelSnapshotIter->second;
+	auto handlerSnapshotIter = channelSnapshot.find(id);
+	if (handlerSnapshotIter == channelSnapshot.end()) {
+		return 0.0;
+
+	}
+
+	auto& values = handlerSnapshotIter->second.values;
+	const auto layersCount = values.getBuffersCount();
+	if (layersCount == 0) {
+		return 0.0;
+	}
+	const auto valuesCount = values.getBufferSize();
+	if (ind >= valuesCount) {
+		return 0.0;
+	}
+
+	return values[0][ind];
 }
 
 isview AudioParent::legacy_findProcessingFor(isview handlerName) {

@@ -13,6 +13,10 @@
 
 using namespace audio_analyzer;
 
+void ProcessingOrchestrator::exchangeData(DataSnapshot& snapshot) {
+	std::swap(snapshot, dataSnapshot);
+}
+
 void ProcessingOrchestrator::setFormat(index samplesPerSec, ChannelLayout channelLayout) {
 	for (auto& [name, sa] : saMap) {
 		sa.updateFormat(samplesPerSec, channelLayout);
@@ -21,15 +25,17 @@ void ProcessingOrchestrator::setFormat(index samplesPerSec, ChannelLayout channe
 	currentFormat.channelLayout = std::move(channelLayout);
 }
 
-void ProcessingOrchestrator::patch(const ParamParser::ProcessingsInfoMap& patches, index legacyNumber) {
+void ProcessingOrchestrator::patch(const ParamParser::ProcessingsInfoMap& patches, index legacyNumber, DataSnapshot& snapshot) {
 	utils::MapUtils::intersectKeyCollection(saMap, patches);
 	utils::MapUtils::intersectKeyCollection(dataSnapshot, patches);
+	utils::MapUtils::intersectKeyCollection(snapshot, patches);
 
 	for (const auto& [name, data] : patches) {
 		auto& sa = saMap[name];
 		sa.setLogger(logger);
 		sa.setParams(data, legacyNumber, currentFormat.samplesPerSec, currentFormat.channelLayout);
 		sa.configureSnapshot(dataSnapshot[name]);
+		sa.configureSnapshot(snapshot[name]);
 	}
 }
 
@@ -103,37 +109,4 @@ bool ProcessingOrchestrator::getProp(
 	}
 
 	return handler->vGetProp(propName, printer);
-}
-
-double ProcessingOrchestrator::temp_getValue(isview proc, isview id, Channel channel, index ind) const {
-	auto procIter = dataSnapshot.find(proc);
-	if (procIter == dataSnapshot.end()) {
-		return 0.0;
-	}
-
-	const auto& processingSnapshot = procIter->second;
-	auto channelSnapshotIter = processingSnapshot.find(channel);
-	if (channelSnapshotIter == processingSnapshot.end()) {
-		return 0.0;
-
-	}
-
-	auto& channelSnapshot = channelSnapshotIter->second;
-	auto handlerSnapshotIter = channelSnapshot.find(id);
-	if (handlerSnapshotIter == channelSnapshot.end()) {
-		return 0.0;
-
-	}
-
-	auto& values = handlerSnapshotIter->second.values;
-	const auto layersCount = values.getBuffersCount();
-	if (layersCount == 0) {
-		return 0.0;
-	}
-	const auto valuesCount = values.getBufferSize();
-	if (ind >= valuesCount) {
-		return 0.0;
-	}
-
-	return values[0][ind];
 }
