@@ -138,6 +138,15 @@ double AudioParent::vUpdate() {
 		orchestrator.process(channelMixer);
 		orchestrator.exchangeData(snapshot);
 		channelMixer.reset();
+
+		for (const auto& [procName, procInfo] : paramParser.getParseResult()) {
+			auto& processingSnapshot = snapshot[procName];
+			for (const auto& [handlerName, finisher] : procInfo.finishers) {
+				for (auto& [channel, channelSnapshot] : processingSnapshot) {
+					finisher(channelSnapshot[handlerName].handlerSpecificData);
+				}
+			}
+		}
 	}
 
 	return deviceManager.getDeviceStatus();

@@ -64,22 +64,6 @@ bool ProcessingManager::process(const ChannelMixer& mixer, clock::time_point kil
 	return false;
 }
 
-bool ProcessingManager::finishStandalone(clock::time_point killTime) {
-	for (auto& [channel, channelData] : channels) {
-		for (auto& handlerName : realOrder) {
-			auto& handler = *channelData[handlerName];
-
-			handler.finishStandalone();
-
-			if (clock::now() > killTime) {
-				return true;
-			}
-		}
-	}
-
-	return false;
-}
-
 void ProcessingManager::resetValues() noexcept {
 	for (auto& [channel, channelData] : channels) {
 		for (auto& [handlerName, handler] : channelData) {

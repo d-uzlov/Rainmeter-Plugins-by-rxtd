@@ -69,25 +69,10 @@ void ProcessingOrchestrator::process(const ChannelMixer& channelMixer) {
 		sa.updateSnapshot(dataSnapshot[name]);
 	}
 
-	for (auto& [name, sa] : saMap) {
-		killed = sa.finishStandalone(killTime);
-		if (killed) {
-			break;
-		}
-	}
-
-	const auto fullEndTime = clock::now();
-
-	const auto fullDuration = std::chrono::duration<double, std::milli>{ fullEndTime - processBeginTime }.count();
-
-	if (killed) {
-		logger.error(L"handler processing was killed on timeout after {} m, on stage 2", fullDuration);
-		return;
-	}
 	if (computeTimeoutMs >= 0 && processDuration > computeTimeoutMs) {
 		logger.debug(
 			L"processing overhead {} ms over specified {} ms",
-			fullDuration - computeTimeoutMs,
+			processDuration - computeTimeoutMs,
 			computeTimeoutMs
 		);
 	}

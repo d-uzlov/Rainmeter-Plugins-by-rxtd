@@ -34,6 +34,57 @@ bool Spectrogram::vGetProp(const isview& prop, utils::BufferPrinter& printer) co
 	return false;
 }
 
+void Spectrogram::vConfigureSnapshot(std::any& handlerSpecificData) const {
+	auto snapshotPtr = std::any_cast<Snapshot>(&handlerSpecificData);
+	if (snapshotPtr == nullptr) {
+		handlerSpecificData = Snapshot{ };
+		snapshotPtr = std::any_cast<Snapshot>(&handlerSpecificData);
+	}
+	auto& snapshot = *snapshotPtr;
+
+	snapshot.filepath = filepath;
+
+	const index width = params.length;
+	const index height = getConfiguration().sourcePtr->getDataSize().valuesCount;
+	if (height == snapshot.pixels.getBuffersCount() && width == snapshot.pixels.getBufferSize()) {
+		return;
+	}
+
+	snapshot.pixels.setBuffersCount(height);
+	snapshot.pixels.setBufferSize(width);
+	snapshot.pixels.fill(params.colors[0].color.toIntColor());
+
+	snapshot.writeNeeded = true;
+	snapshot.empty = false;
+}
+
+void Spectrogram::vUpdateSnapshot(std::any& handlerSpecificData) const {
+	if (!writeNeeded) {
+		return;
+	}
+
+	auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
+	snapshot.writeNeeded = true;
+	snapshot.empty = !image.isForced();
+
+	auto pixels = params.fading != 0.0 ? sifh.getResultBuffer().getFlat() : image.getPixels().getFlat();
+	std::copy(pixels.begin(), pixels.end(), snapshot.pixels.getFlat().begin());
+
+	writeNeeded = false;
+}
+
+void Spectrogram::staticFinisher(std::any& handlerSpecificData) {
+	auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
+
+	auto& writeNeeded = snapshot.writeNeeded;
+	if (!writeNeeded) {
+		return;
+	}
+
+	snapshot.writerHelper.write(snapshot.pixels, snapshot.empty, snapshot.filepath);
+	writeNeeded = false;
+}
+
 SoundHandler::ParseResult Spectrogram::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	index legacyNumber
@@ -145,7 +196,7 @@ SoundHandler::ParseResult Spectrogram::parseParams(
 
 	params.stationary = om.get(L"stationary").asBool(false);
 
-	return { params, sourceId % own() };
+	return { params, sourceId % own(), staticFinisher };
 }
 
 SoundHandler::ConfigurationResult Spectrogram::vConfigure(Logger& cl) {
@@ -237,7 +288,7 @@ void Spectrogram::vProcess(array_view<float> wave, clock::time_point killTime) {
 
 		const auto data = chunk.data;
 
-		lastDataIsZero = *std::max_element(data.begin(),data.end()) < params.colorMinValue;
+		lastDataIsZero = *std::max_element(data.begin(), data.end()) < params.colorMinValue;
 
 		if (!lastDataIsZero) {
 			if (params.colors.size() == 2) {
@@ -290,14 +341,4 @@ void Spectrogram::vProcess(array_view<float> wave, clock::time_point killTime) {
 			}
 		}
 	}
-}
-
-void Spectrogram::vFinishStandalone() {
-	if (!writeNeeded) {
-		return;
-	}
-
-	auto pixelBuffer = params.fading != 0.0 ? sifh.getResultBuffer() : image.getPixels();
-	writerHelper.write(pixelBuffer, !image.isForced(), filepath);
-	writeNeeded = false;
 }

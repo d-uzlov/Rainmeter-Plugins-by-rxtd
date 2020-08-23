@@ -67,6 +67,8 @@ void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldData
 		processingDescriptionOption = rain.read(processingOptionIndex);
 	}
 
+	oldData.finishers.clear();
+
 	if (processingDescriptionOption.empty()) {
 		cl.error(L"processing description not found");
 		oldData = { };
@@ -114,6 +116,12 @@ void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldData
 		cl.warning(L"no valid handlers found");
 		anythingChanged = true;
 		return;
+	}
+
+	for (const auto& [name, info] : oldData.handlersInfo.patchers) {
+		if (info->finisher != nullptr) {
+			oldData.finishers[name] = info->finisher;
+		}
 	}
 
 	parseFilters(processingMap, oldData, cl);

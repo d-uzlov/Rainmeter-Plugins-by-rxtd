@@ -53,6 +53,14 @@ namespace rxtd::audio_analyzer {
 			}
 		};
 
+		struct Snapshot {
+			utils::Vector2D<utils::IntColor> pixels;
+			utils::ImageWriteHelper writerHelper{ };
+			string filepath;
+			bool writeNeeded{ };
+			bool empty{ };
+		};
+
 	private:
 		class WaveformValueTransformer {
 			CVT cvt;
@@ -90,14 +98,13 @@ namespace rxtd::audio_analyzer {
 		index counter = 0;
 		double min{ };
 		double max{ };
-		bool writeNeeded = false;
+		mutable bool writeNeeded = false;
 
 		WaveformValueTransformer minTransformer{ };
 		WaveformValueTransformer maxTransformer{ };
 		double minDistinguishableValue{ };
 
 		utils::WaveFormDrawer drawer{ };
-		utils::ImageWriteHelper writerHelper{ };
 
 		string filepath{ };
 
@@ -123,15 +130,14 @@ namespace rxtd::audio_analyzer {
 
 		void vReset() override;
 		void vProcess(array_view<float> wave, clock::time_point killTime) override;
-		void vFinishStandalone() override;
 
 		bool vGetProp(const isview& prop, utils::BufferPrinter& printer) const override;
 
-		bool vIsStandalone() override {
-			return true;
-		}
+		void vConfigureSnapshot(std::any& handlerSpecificData) const override;
+		void vUpdateSnapshot(std::any& handlerSpecificData) const override;
 
 	private:
+		static void staticFinisher(std::any& handlerSpecificData);
 		void pushStrip(double min, double max);
 	};
 }

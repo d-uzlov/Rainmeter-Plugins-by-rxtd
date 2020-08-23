@@ -68,10 +68,13 @@ namespace rxtd::audio_analyzer {
 			}
 		};
 
+		using Finisher = void(*)(std::any& handlerSpecificData);
+
 		class ParseResult {
 			bool valid{ };
 			std::any _params;
 			std::vector<istring> _sources;
+			Finisher _finisher = nullptr;
 
 		public:
 			ParseResult() {
@@ -83,6 +86,21 @@ namespace rxtd::audio_analyzer {
 				valid = true;
 				_params = std::move(params);
 				_sources.push_back(source);
+			}
+
+			template <typename Params>
+			ParseResult(Params params, Finisher finisher) {
+				valid = true;
+				_params = std::move(params);
+				_finisher = finisher;
+			}
+
+			template <typename Params>
+			ParseResult(Params params, istring source, Finisher finisher) {
+				valid = true;
+				_params = std::move(params);
+				_sources.push_back(source);
+				_finisher = finisher;
 			}
 
 			template <typename Params>
@@ -98,13 +116,18 @@ namespace rxtd::audio_analyzer {
 			}
 
 			[[nodiscard]]
-			std::any takeParams() {
+			auto takeParams() {
 				return std::move(_params);
 			}
 
 			[[nodiscard]]
-			std::vector<istring> takeSources() {
+			auto takeSources() {
 				return std::move(_sources);
+			}
+
+			[[nodiscard]]
+			auto takeFinisher() const {
+				return _finisher;
 			}
 		};
 
@@ -115,6 +138,7 @@ namespace rxtd::audio_analyzer {
 
 		struct Snapshot {
 			utils::Vector2D<float> values;
+			std::any handlerSpecificData;
 		};
 
 	protected:
@@ -158,6 +182,8 @@ namespace rxtd::audio_analyzer {
 		Configuration _configuration{ };
 
 	public:
+		virtual ~SoundHandler() = default;
+
 		template <typename _HandlerType>
 		[[nodiscard]]
 		static std::unique_ptr<SoundHandler> patchHandlerImpl(std::unique_ptr<SoundHandler> handlerPtr) {
@@ -175,6 +201,7 @@ namespace rxtd::audio_analyzer {
 		void updateSnapshot(Snapshot& snapshot) {
 			purgeCache();
 			snapshot.values = _lastResults;
+			vUpdateSnapshot(snapshot.handlerSpecificData);
 		}
 
 		[[nodiscard]]
@@ -189,7 +216,12 @@ namespace rxtd::audio_analyzer {
 			HandlerFinder& hf, Logger& cl
 		);
 
-		void configureSnapshot(Snapshot& snapshot) const;
+		void configureSnapshot(Snapshot& snapshot) const {
+			snapshot.values.setBuffersCount(_dataSize.layersCount);
+			snapshot.values.setBufferSize(_dataSize.valuesCount);
+			snapshot.values.fill(0.0f);
+			vConfigureSnapshot(snapshot.handlerSpecificData);
+		}
 
 		[[nodiscard]]
 		DataSize getDataSize() const {
@@ -221,10 +253,6 @@ namespace rxtd::audio_analyzer {
 			vProcess(wave, killTime);
 		}
 
-		void finishStandalone() {
-			vFinishStandalone();
-		}
-
 		void reset() {
 			// todo do we even need reset at all?
 			purgeCache();
@@ -242,11 +270,6 @@ namespace rxtd::audio_analyzer {
 			return false;
 		}
 
-		[[nodiscard]]
-		virtual bool vIsStandalone() {
-			return false;
-		}
-
 	protected:
 		template <typename Params>
 		static bool compareParamsEquals(Params p1, const std::any& p2) {
@@ -260,6 +283,12 @@ namespace rxtd::audio_analyzer {
 
 		[[nodiscard]]
 		virtual ConfigurationResult vConfigure(Logger& cl) = 0;
+
+		virtual void vConfigureSnapshot(std::any& handlerSpecificData) const {
+		}
+
+		virtual void vUpdateSnapshot(std::any& handlerSpecificData) const {
+		}
 
 		[[nodiscard]]
 		array_span<float> pushLayer(index layer, index equivalentWaveSize) {
@@ -281,9 +310,6 @@ namespace rxtd::audio_analyzer {
 		// handler should try to return control to caller
 		// when time is more than killTime
 		virtual void vProcess(array_view<float> wave, clock::time_point killTime) = 0;
-
-		virtual void vFinishStandalone() {
-		}
 
 		virtual void vReset() {
 		}

@@ -85,7 +85,7 @@ SoundHandler::ParseResult WaveForm::parseParams(
 		params.transformer = TP::parse(om.get(L"transform").asString(), transformLogger);
 	}
 
-	return { params, std::vector<istring>{ } };
+	return { params, staticFinisher };
 }
 
 SoundHandler::ConfigurationResult WaveForm::vConfigure(Logger& cl) {
@@ -104,6 +104,8 @@ SoundHandler::ConfigurationResult WaveForm::vConfigure(Logger& cl) {
 	drawer.setConnected(params.connected);
 	drawer.setBorderSize(params.borderSize);
 
+	drawer.inflate();
+
 	filepath = params.folder;
 	filepath += L"wave-";
 	filepath += config.channelName;
@@ -114,6 +116,8 @@ SoundHandler::ConfigurationResult WaveForm::vConfigure(Logger& cl) {
 
 	minTransformer.updateTransformations(sampleRate, blockSize);
 	maxTransformer.updateTransformations(sampleRate, blockSize);
+
+	writeNeeded = true;
 
 	vReset();
 
@@ -144,19 +148,9 @@ void WaveForm::vProcess(array_view<float> wave, clock::time_point killTime) {
 		}
 	}
 
-	const bool forced = !drawer.isEmpty();
-	if (forced || !writerHelper.isEmptinessWritten()) {
+	if (!drawer.isEmpty()) {
 		drawer.inflate();
 	}
-}
-
-void WaveForm::vFinishStandalone() {
-	if (!writeNeeded) {
-		return;
-	}
-
-	writerHelper.write(drawer.getResultBuffer(), drawer.isEmpty(), filepath);
-	writeNeeded = false;
 }
 
 bool WaveForm::vGetProp(const isview& prop, utils::BufferPrinter& printer) const {
@@ -170,6 +164,57 @@ bool WaveForm::vGetProp(const isview& prop, utils::BufferPrinter& printer) const
 	}
 
 	return false;
+}
+
+void WaveForm::vConfigureSnapshot(std::any& handlerSpecificData) const {
+	auto snapshotPtr = std::any_cast<Snapshot>(&handlerSpecificData);
+	if (snapshotPtr == nullptr) {
+		handlerSpecificData = Snapshot{ };
+		snapshotPtr = std::any_cast<Snapshot>(&handlerSpecificData);
+	}
+	auto& snapshot = *snapshotPtr;
+
+	snapshot.filepath = filepath;
+
+	const index width = params.width;
+	const index height = params.height;
+	if (height == snapshot.pixels.getBuffersCount() && width == snapshot.pixels.getBufferSize()) {
+		return;
+	}
+
+	snapshot.pixels.setBuffersCount(height);
+	snapshot.pixels.setBufferSize(width);
+	snapshot.pixels.fill(params.colors.background);
+
+	snapshot.writeNeeded = true;
+	snapshot.empty = false;
+}
+
+void WaveForm::vUpdateSnapshot(std::any& handlerSpecificData) const {
+	if (!writeNeeded) {
+		return;
+	}
+
+	auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
+	snapshot.writeNeeded = true;
+	snapshot.empty = drawer.isEmpty();
+
+	auto pixels = drawer.getResultBuffer().getFlat();
+	std::copy(pixels.begin(), pixels.end(), snapshot.pixels.getFlat().begin());
+
+	writeNeeded = false;
+}
+
+void WaveForm::staticFinisher(std::any& handlerSpecificData) {
+	auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
+
+	auto& writeNeeded = snapshot.writeNeeded;
+	if (!writeNeeded) {
+		return;
+	}
+
+	snapshot.writerHelper.write(snapshot.pixels, snapshot.empty, snapshot.filepath);
+	writeNeeded = false;
 }
 
 void WaveForm::pushStrip(double min, double max) {

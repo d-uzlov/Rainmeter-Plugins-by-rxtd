@@ -18,6 +18,7 @@ namespace rxtd::audio_analyzer {
 		std::any params;
 		std::vector<istring> sources;
 		HandlerPatchingFun fun = nullptr;
+		SoundHandler::Finisher finisher = nullptr;
 	};
 
 	class HandlerCacheHelper {
@@ -55,6 +56,7 @@ namespace rxtd::audio_analyzer {
 			for (auto& [name, info] : patchersCache) {
 				info.updated = false;
 			}
+
 			anythingChanged = false;
 		}
 
@@ -87,6 +89,7 @@ namespace rxtd::audio_analyzer {
 			result.params = parseResult.takeParams();
 			result.fun = SoundHandler::patchHandlerImpl<T>;
 			result.sources = parseResult.takeSources();
+			result.finisher = parseResult.takeFinisher();
 			return result;
 		}
 

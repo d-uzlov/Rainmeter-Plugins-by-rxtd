@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (C) 2019-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
@@ -36,6 +36,9 @@ namespace rxtd::audio_analyzer {
 
 			std::set<Channel> channels;
 			HandlerPatchersInfo handlersInfo;
+
+			// handlerName → finisher
+			std::map<istring, SoundHandler::Finisher, std::less<>> finishers;
 		};
 
 		using ProcessingsInfoMap = std::map<istring, ProcessingData, std::less<>>;
@@ -70,7 +73,7 @@ namespace rxtd::audio_analyzer {
 		bool parse();
 
 		[[nodiscard]]
-		const ProcessingsInfoMap& getParseResult() const {
+		const auto& getParseResult() const {
 			return parseResult;
 		}
 

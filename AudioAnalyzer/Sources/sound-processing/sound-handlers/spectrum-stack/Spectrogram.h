@@ -73,6 +73,14 @@ namespace rxtd::audio_analyzer {
 			}
 		};
 
+		struct Snapshot {
+			utils::Vector2D<utils::IntColor> pixels;
+			utils::ImageWriteHelper writerHelper{ };
+			string filepath;
+			bool writeNeeded{ };
+			bool empty{ };
+		};
+
 	private:
 		Params params;
 
@@ -80,7 +88,7 @@ namespace rxtd::audio_analyzer {
 
 		std::vector<utils::IntColor> stripBuffer{ };
 		index counter = 0;
-		bool writeNeeded = false;
+		mutable bool writeNeeded = false;
 
 		index dataShortageEqSize{ };
 		index overpushCount{ };
@@ -114,17 +122,16 @@ namespace rxtd::audio_analyzer {
 
 	public:
 		void vProcess(array_view<float> wave, clock::time_point killTime) override;
-		void vFinishStandalone() override;
 
 		[[nodiscard]]
 		bool vGetProp(const isview& prop, utils::BufferPrinter& printer) const override;
 
-		[[nodiscard]]
-		bool vIsStandalone() override {
-			return true;
-		}
+		void vConfigureSnapshot(std::any& handlerSpecificData) const override;
+		void vUpdateSnapshot(std::any& handlerSpecificData) const override;
 
 	private:
+		static void staticFinisher(std::any& handlerSpecificData);
+
 		void fillStrip(array_view<float> data, array_span<utils::IntColor> buffer) const;
 		void fillStripMulticolor(array_view<float> data, array_span<utils::IntColor> buffer) const;
 	};
