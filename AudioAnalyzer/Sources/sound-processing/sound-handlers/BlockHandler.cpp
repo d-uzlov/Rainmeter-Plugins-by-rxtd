@@ -71,14 +71,6 @@ bool BlockHandler::vGetProp(const isview& prop, utils::BufferPrinter& printer) c
 		printer.print(blockSize);
 		return true;
 	}
-	if (prop == L"attack") {
-		printer.print(params.legacy_attackTime);
-		return true;
-	}
-	if (prop == L"decay") {
-		printer.print(params.legacy_decayTime);
-		return true;
-	}
 
 	return false;
 }

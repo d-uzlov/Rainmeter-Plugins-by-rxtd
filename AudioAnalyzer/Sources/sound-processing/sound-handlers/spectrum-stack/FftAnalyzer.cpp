@@ -218,57 +218,48 @@ bool FftAnalyzer::vGetProp(const isview& prop, utils::BufferPrinter& printer) co
 
 	if (prop == L"size") {
 		printer.print(fftSize);
-	} else if (prop == L"attack") {
-		printer.print(params.legacy_attackTime * 1000.0);
-	} else if (prop == L"decay") {
-		printer.print(params.legacy_decayTime * 1000.0);
-	} else if (prop == L"cascades count") {
-		printer.print(cascades.size());
-	} else if (prop == L"overlap") {
-		printer.print(params.overlap);
-	} else {
-		auto cascadeIndex = legacy_parseIndexProp(prop, L"nyquist frequency", cascades.size() + 1);
-		if (cascadeIndex == -2) {
-			return L"0";
-		}
-		if (cascadeIndex >= 0) {
-			if (cascadeIndex > 0) {
-				cascadeIndex--;
-			}
-			printer.print(static_cast<index>(config.sampleRate / 2.0 / std::pow(2, cascadeIndex)));
-			return true;
-		}
-
-		cascadeIndex = legacy_parseIndexProp(prop, L"dc", cascades.size() + 1);
-		if (cascadeIndex == -2) {
-			return L"0";
-		}
-		if (cascadeIndex >= 0) {
-			if (cascadeIndex > 0) {
-				cascadeIndex--;
-			}
-			printer.print(cascades[cascadeIndex].legacy_getDC());
-			return true;
-		}
-
-		cascadeIndex = legacy_parseIndexProp(prop, L"resolution", cascades.size() + 1);
-		if (cascadeIndex == -2) {
-			return L"0";
-		}
-		if (cascadeIndex < 0) {
-			cascadeIndex = legacy_parseIndexProp(prop, L"binWidth", cascades.size() + 1);
-		}
-		if (cascadeIndex >= 0) {
-			if (cascadeIndex > 0) {
-				cascadeIndex--;
-			}
-			const auto resolution = static_cast<double>(config.sampleRate) / fftSize / std::pow(2, cascadeIndex);
-			printer.print(resolution);
-			return true;
-		}
-
-		return false;
+		return true;
 	}
 
-	return true;
+	auto cascadeIndex = legacy_parseIndexProp(prop, L"nyquist frequency", cascades.size() + 1);
+	if (cascadeIndex == -2) {
+		return L"0";
+	}
+	if (cascadeIndex >= 0) {
+		if (cascadeIndex > 0) {
+			cascadeIndex--;
+		}
+		printer.print(static_cast<index>(config.sampleRate / 2.0 / std::pow(2, cascadeIndex)));
+		return true;
+	}
+
+	cascadeIndex = legacy_parseIndexProp(prop, L"dc", cascades.size() + 1);
+	if (cascadeIndex == -2) {
+		return L"0";
+	}
+	if (cascadeIndex >= 0) {
+		if (cascadeIndex > 0) {
+			cascadeIndex--;
+		}
+		printer.print(cascades[cascadeIndex].legacy_getDC());
+		return true;
+	}
+
+	cascadeIndex = legacy_parseIndexProp(prop, L"resolution", cascades.size() + 1);
+	if (cascadeIndex == -2) {
+		return L"0";
+	}
+	if (cascadeIndex < 0) {
+		cascadeIndex = legacy_parseIndexProp(prop, L"binWidth", cascades.size() + 1);
+	}
+	if (cascadeIndex >= 0) {
+		if (cascadeIndex > 0) {
+			cascadeIndex--;
+		}
+		const auto resolution = static_cast<double>(config.sampleRate) / fftSize / std::pow(2, cascadeIndex);
+		printer.print(resolution);
+		return true;
+	}
+
+	return false;
 }
