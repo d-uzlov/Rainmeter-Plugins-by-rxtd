@@ -23,7 +23,7 @@ void ProcessingManager::updateSnapshot(Snapshot& snapshot) {
 		auto& channelSnapshot = snapshot[channel];
 		for (auto& [handlerName, handler] : channelData) {
 			// order is not important
-			handler->exchangeData(channelSnapshot[handlerName]);
+			handler->updateSnapshot(channelSnapshot[handlerName]);
 		}
 	}
 }

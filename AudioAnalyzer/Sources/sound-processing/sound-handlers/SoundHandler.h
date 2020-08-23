@@ -172,10 +172,9 @@ namespace rxtd::audio_analyzer {
 			return handlerPtr;
 		}
 
-		void exchangeData(Snapshot& snapshot) {
+		void updateSnapshot(Snapshot& snapshot) {
 			purgeCache();
-
-			std::swap(_lastResults, snapshot.values);
+			snapshot.values = _lastResults;
 		}
 
 		[[nodiscard]]
