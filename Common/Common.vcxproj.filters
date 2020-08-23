@@ -208,6 +208,9 @@
     <ClInclude Include="sources\image-utils\IntColor.h">
       <Filter>Source Files\image-utils</Filter>
     </ClInclude>
+    <ClInclude Include="sources\MapUtils.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="array_view.natvis" />

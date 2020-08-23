@@ -190,6 +190,7 @@
     <ClInclude Include="sources\image-utils\WaveFormDrawer.h" />
     <ClInclude Include="sources\IntMixer.h" />
     <ClInclude Include="sources\LinearInterpolator.h" />
+    <ClInclude Include="sources\MapUtils.h" />
     <ClInclude Include="sources\option-parser\AbstractOption.h" />
     <ClInclude Include="sources\option-parser\Option.h" />
     <ClInclude Include="sources\option-parser\OptionList.h" />

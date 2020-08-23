@@ -9,6 +9,8 @@
 
 #include "ProcessingManager.h"
 
+#include "MapUtils.h"
+
 using namespace audio_analyzer;
 
 void ProcessingManager::updateFormat(index sampleRate, ChannelLayout layout) {
@@ -88,19 +90,11 @@ void ProcessingManager::resetValues() noexcept {
 }
 
 void ProcessingManager::configureSnapshot(Snapshot& snapshot) {
-	for (auto iter = snapshot.begin(); iter != snapshot.end();) {
-		const auto channel = iter->first;
-		const bool hasChannel = channels.find(channel) != channels.end();
-		iter = hasChannel ? ++iter : snapshot.erase(iter);
-	}
+	utils::MapUtils::intersectKeyCollection(snapshot, channels);
 
 	for (auto& [channel, channelData] : channels) {
 		auto& channelSnapshot = snapshot[channel];
-		for (auto iter = channelSnapshot.begin(); iter != channelSnapshot.end();) {
-			const auto handlerName = iter->first;
-			const bool hasHandler = channelData.find(handlerName) != channelData.end();
-			iter = hasHandler ? ++iter : channelSnapshot.erase(iter);
-		}
+		utils::MapUtils::intersectKeyCollection(channelSnapshot, channelData);
 
 		for (auto& [handlerName, handler] : channelData) {
 			auto& handlerSnapshot = channelSnapshot[handlerName];
@@ -110,10 +104,9 @@ void ProcessingManager::configureSnapshot(Snapshot& snapshot) {
 }
 
 void ProcessingManager::patchHandlers(ChannelLayout layout) {
-	for (auto iter = channels.begin(); iter != channels.end();) {
-		const auto channel = iter->first;
-		iter = channel == Channel::eAUTO || layout.contains(channel) ? ++iter : channels.erase(iter);
-	}
+	utils::MapUtils::intersectKeysWithPredicate(channels, [&](Channel channel) {
+		return channel == Channel::eAUTO || layout.contains(channel);
+	});
 
 	std::set<Channel> channelsSet;
 	// Create missing channels

@@ -9,6 +9,8 @@
 
 #include "ProcessingOrchestrator.h"
 
+#include "MapUtils.h"
+
 using namespace audio_analyzer;
 
 void ProcessingOrchestrator::setFormat(index samplesPerSec, ChannelLayout channelLayout) {
@@ -20,15 +22,8 @@ void ProcessingOrchestrator::setFormat(index samplesPerSec, ChannelLayout channe
 }
 
 void ProcessingOrchestrator::patch(const ParamParser::ProcessingsInfoMap& patches, index legacyNumber) {
-	for (auto iter = saMap.begin();
-	     iter != saMap.end();) {
-		if (patches.find(iter->first) == patches.end()) {
-			iter = saMap.erase(iter);
-			dataSnapshot.erase(iter->first);
-		} else {
-			++iter;
-		}
-	}
+	utils::MapUtils::intersectKeyCollection(saMap, patches);
+	utils::MapUtils::intersectKeyCollection(dataSnapshot, patches);
 
 	for (const auto& [name, data] : patches) {
 		auto& sa = saMap[name];

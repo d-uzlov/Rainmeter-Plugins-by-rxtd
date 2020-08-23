@@ -9,13 +9,12 @@
 
 #include "ChannelProcessingHelper.h"
 #include "Channel.h"
+#include "MapUtils.h"
 
 using namespace audio_analyzer;
 
 void ChannelProcessingHelper::setChannels(const std::set<Channel>& set) {
-	for (auto iter = channels.begin(); iter != channels.end();) {
-		iter = set.count(iter->first) < 1 ? channels.erase(iter) : ++iter;
-	}
+	utils::MapUtils::intersectKeyCollection(channels, set);
 
 	for (auto channel : set) {
 		if (channels.count(channel) < 1) {
