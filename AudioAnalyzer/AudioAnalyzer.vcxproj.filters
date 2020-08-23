@@ -176,6 +176,9 @@
     <ClInclude Include="Sources\sound-processing\ProcessingManager.h">
       <Filter>Source Files\sound-processing</Filter>
     </ClInclude>
+    <ClInclude Include="Sources\sound-processing\ProcessingOrchestrator.h">
+      <Filter>Source Files\sound-processing</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sources\AudioChild.cpp">
@@ -299,6 +302,9 @@
       <Filter>Source Files\audio-utils</Filter>
     </ClCompile>
     <ClCompile Include="Sources\sound-processing\ProcessingManager.cpp">
+      <Filter>Source Files\sound-processing</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\sound-processing\ProcessingOrchestrator.cpp">
       <Filter>Source Files\sound-processing</Filter>
     </ClCompile>
   </ItemGroup>

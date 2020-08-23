@@ -17,10 +17,7 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 	ParentBase(std::move(_rain)),
 	deviceManager(logger, [this](MyWaveFormat format) {
 		channelMixer.setFormat(format);
-		for (auto& [name, sa] : saMap) {
-			sa.updateFormat(format.samplesPerSec, format.channelLayout);
-		}
-		currentFormat = std::move(format);
+		orchestrator.setFormat(format.samplesPerSec, format.channelLayout);
 	}) {
 	setUseResultString(false);
 
@@ -39,6 +36,7 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 	deviceManager.getDeviceEnumerator().updateDeviceStrings();
 
 	paramParser.setRainmeter(rain);
+	orchestrator.setLogger(logger);
 }
 
 void AudioParent::vReload() {
@@ -77,14 +75,16 @@ void AudioParent::vReload() {
 		}
 	}
 
-	computeTimeout = rain.read(L"computeTimeout").asFloat(-1.0);
+	const double computeTimeout = rain.read(L"computeTimeout").asFloat(-1.0);
+	const double killTimeout = std::clamp(rain.read(L"killTimeout").asFloat(33.0), 1.0, 33.0);
 
-	killTimeout = std::clamp(rain.read(L"killTimeout").asFloat(33.0), 1.0, 33.0);
+	orchestrator.setComputeTimeout(computeTimeout);
+	orchestrator.setKillTimeout(killTimeout);
 
 	deviceManager.setOptions(sourceEnum, id);
 
 	const bool anythingChanged = paramParser.parse();
-	index legacyNumber = paramParser.getLegacyNumber();
+	const index legacyNumber = paramParser.getLegacyNumber();
 	switch (legacyNumber) {
 	case 0:
 	case 104:
@@ -95,7 +95,7 @@ void AudioParent::vReload() {
 	}
 
 	if (anythingChanged) {
-		patchSA(paramParser.getParseResult());
+		orchestrator.patch(paramParser.getParseResult(), legacyNumber);
 	}
 }
 
@@ -120,9 +120,10 @@ double AudioParent::vUpdate() {
 			logger.error(L"Unrecoverable error");
 		}
 
-		for (auto& [name, sa] : saMap) {
-			sa.resetValues();
-		}
+		// todo
+		// for (auto& [name, sa] : saMap) {
+		// 	sa.resetValues();
+		// }
 
 		return deviceManager.getDeviceStatus();
 	}
@@ -134,7 +135,8 @@ double AudioParent::vUpdate() {
 	});
 
 	if (any) {
-		process();
+		orchestrator.process(channelMixer);
+		channelMixer.reset();
 	}
 
 	return deviceManager.getDeviceStatus();
@@ -234,13 +236,15 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 			return;
 		}
 
-		auto procIter = saMap.find(procName);
-		if (procIter == saMap.end()) {
-			cl.error(L"processing '{}' is not found", procName);
-			return;
-		}
+		// auto procIter = saMap.find(procName);
+		// if (procIter == saMap.end()) {
+		// 	cl.error(L"processing '{}' is not found", procName);
+		// 	return;
+		// }
+		//
+		// const auto value = procIter->second.getAudioChildHelper().getValue(channelOpt.value(), handlerName, ind);
 
-		const auto value = procIter->second.getAudioChildHelper().getValue(channelOpt.value(), handlerName, ind);
+		const auto value = orchestrator.temp_getValue(procName, handlerName, channelOpt.value(), ind);
 		cl.printer.print(value);
 
 		resolveBufferString = cl.printer.getBufferView();
@@ -264,19 +268,21 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 			return;
 		}
 
-		auto procIter = saMap.find(procName);
-		if (procIter == saMap.end()) {
-			cl.error(L"processing '{}' is not found", procName);
-			return;
-		}
+		// auto procIter = saMap.find(procName);
+		// if (procIter == saMap.end()) {
+		// 	cl.error(L"processing '{}' is not found", procName);
+		// 	return;
+		// }
+		//
+		// auto handler = procIter->second.getAudioChildHelper().findHandler(channelOpt.value(), handlerName);
+		// if (handler == nullptr) {
+		// 	cl.error(L"handler '{}:{}:{}' is not found", procName, channelName, handlerName);
+		// 	return;
+		// }
+		//
+		// const bool found = handler->vGetProp(propName, cl.printer);
 
-		auto handler = procIter->second.getAudioChildHelper().findHandler(channelOpt.value(), handlerName);
-		if (handler == nullptr) {
-			cl.error(L"handler '{}:{}:{}' is not found", procName, channelName, handlerName);
-			return;
-		}
-
-		const bool found = handler->vGetProp(propName, cl.printer);
+		const bool found = orchestrator.getProp(procName, handlerName, channelOpt.value(), propName, cl.printer);
 		if (!found) {
 			cl.error(L"prop '{}:{}' is not found", handlerName, propName);
 			return;
@@ -291,91 +297,14 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 }
 
 double AudioParent::getValue(isview proc, isview id, Channel channel, index ind) const {
-	auto procIter = saMap.find(proc);
-	if (procIter == saMap.end()) {
-		return 0.0;
-	}
-	return procIter->second.getAudioChildHelper().getValue(channel, id, ind);
+	return orchestrator.temp_getValue(proc, id, channel, ind);
 }
 
-double AudioParent::legacy_getValue(isview id, Channel channel, index ind) const {
-	auto [handler, helper] = findHandlerByName(id, channel);
-	if (handler == nullptr) {
-		return 0.0;
-	}
-	return helper.getValueFrom(handler, channel, ind);
-}
-
-void AudioParent::process() {
-	using clock = std::chrono::high_resolution_clock;
-	static_assert(clock::is_steady);
-
-	const auto processBeginTime = clock::now();
-
-	const std::chrono::duration<float, std::milli> processMaxDuration{ killTimeout };
-	const auto killTime = clock::now() + std::chrono::duration_cast<std::chrono::milliseconds>(processMaxDuration);
-
-	bool killed = false;
-	for (auto& [name, sa] : saMap) {
-		killed = sa.process(channelMixer, killTime);
-		if (killed) {
-			break;
-		}
-	}
-	channelMixer.reset();
-
-	const auto processEndTime = clock::now();
-
-	const auto processDuration = std::chrono::duration<double, std::milli>{ processEndTime - processBeginTime }.count();
-
-	if (killed) {
-		logger.error(L"handler processing was killed on timeout after {} m, on stage 1", processDuration);
-		return;
-	}
-
-	for (auto& [name, sa] : saMap) {
-		killed = sa.finishStandalone(killTime);
-		if (killed) {
-			break;
-		}
-	}
-
-	const auto fullEndTime = clock::now();
-
-	const auto fullDuration = std::chrono::duration<double, std::milli>{ fullEndTime - processBeginTime }.count();
-
-	if (killed) {
-		logger.error(L"handler processing was killed on timeout after {} m, on stage 2", fullDuration);
-		return;
-	}
-	if (computeTimeout >= 0 && processDuration > computeTimeout) {
-		logger.debug(L"processing overhead {} ms over specified {} ms", fullDuration - computeTimeout, computeTimeout);
-	}
-}
-
-void AudioParent::patchSA(const ParamParser::ProcessingsInfoMap& procs) {
-	for (auto iter = saMap.begin();
-	     iter != saMap.end();) {
-		if (procs.find(iter->first) == procs.end()) {
-			iter = saMap.erase(iter);
-		} else {
-			++iter;
-		}
-	}
-
-	for (const auto& [name, data] : procs) {
-		auto& sa = saMap[name];
-		sa.setLogger(logger);
-		sa.setParams(data, paramParser.getLegacyNumber(), currentFormat.samplesPerSec, currentFormat.channelLayout);
-	}
-}
-
-std::pair<SoundHandler*, AudioChildHelper>
-AudioParent::findHandlerByName(isview name, Channel channel) const {
-	for (auto& [_, analyzer] : saMap) {
-		auto handler = analyzer.getAudioChildHelper().findHandler(channel, name);
-		if (handler != nullptr) {
-			return { handler, analyzer.getAudioChildHelper() };
+isview AudioParent::legacy_findProcessingFor(isview handlerName) {
+	for (auto& [name, pd] : paramParser.getParseResult()) {
+		auto& patchers = pd.handlersInfo.patchers;
+		if (patchers.find(handlerName) != patchers.end()) {
+			return name;
 		}
 	}
 
@@ -407,13 +336,13 @@ void AudioParent::legacy_resolve(array_view<isview> args, string& resolveBufferS
 			return;
 		}
 
-		auto [handler, helper] = findHandlerByName(handlerName, channelOpt.value());
-		if (handler == nullptr) {
-			cl.error(L"handler '{}:{}' is not found", channelName, handlerName);
+		auto procName = legacy_findProcessingFor(handlerName);
+		if (procName.empty()) {
+			cl.error(L"handler '{}' is not found", handlerName);
 			return;
 		}
 
-		const bool found = handler->vGetProp(propName, cl.printer);
+		const bool found = orchestrator.getProp(propName, handlerName, channelOpt.value(), propName, cl.printer);
 		if (!found) {
 			cl.error(L"prop '{}:{}' is not found", handlerName, propName);
 			return;

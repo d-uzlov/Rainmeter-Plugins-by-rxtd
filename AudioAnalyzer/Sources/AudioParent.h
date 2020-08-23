@@ -14,6 +14,7 @@
 #include "sound-processing/ProcessingManager.h"
 #include "sound-processing/device-management/DeviceManager.h"
 #include "sound-processing/ChannelProcessingHelper.h"
+#include "sound-processing/ProcessingOrchestrator.h"
 #include "windows-wrappers/IMMNotificationClientImpl.h"
 
 namespace rxtd::audio_analyzer {
@@ -21,12 +22,9 @@ namespace rxtd::audio_analyzer {
 		ParamParser paramParser;
 		ChannelMixer channelMixer;
 		DeviceManager deviceManager;
-		std::map<istring, ProcessingManager, std::less<>> saMap;
-		MyWaveFormat currentFormat{ };
-		double computeTimeout = 0.0;
-		double killTimeout = 0.0;
 
 		utils::GenericComWrapper<utils::CMMNotificationClient> notificationClient;
+		ProcessingOrchestrator orchestrator;
 
 	public:
 		explicit AudioParent(utils::Rainmeter&& rain);
@@ -47,8 +45,6 @@ namespace rxtd::audio_analyzer {
 	public:
 		[[nodiscard]]
 		double getValue(isview proc, isview id, Channel channel, index ind) const;
-		[[nodiscard]]
-		double legacy_getValue(isview id, Channel channel, index ind) const;
 
 		index getLegacyNumber() const {
 			return paramParser.getLegacyNumber();
@@ -80,14 +76,9 @@ namespace rxtd::audio_analyzer {
 			return { };
 		}
 
+		isview legacy_findProcessingFor(isview handlerName);
+
 	private:
-		void process();
-
-		void patchSA(const ParamParser::ProcessingsInfoMap& procs);
-
-		[[nodiscard]]
-		std::pair<SoundHandler*, AudioChildHelper> findHandlerByName(isview name, Channel channel) const;
-
 		void legacy_resolve(array_view<isview> args, string& resolveBufferString);
 	};
 }

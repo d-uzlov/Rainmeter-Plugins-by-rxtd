@@ -84,14 +84,16 @@ void AudioChild::vReload() {
 	if (legacyNumber < 104) {
 		legacy_readOptions();
 		legacy.use = true;
+
+		procName = parent->legacy_findProcessingFor(handlerName);
 	} else {
 		legacy.use = false;
+	}
 
-		const auto error = parent->checkHandler(procName, channel, handlerName);
-		if (!error.empty()) {
-			logger.error(L"Invalid options: {}", error);
-			setMeasureState(utils::MeasureState::eTEMP_BROKEN);
-		}
+	const auto error = parent->checkHandler(procName, channel, handlerName);
+	if (!error.empty()) {
+		logger.error(L"Invalid options: {}", error);
+		setMeasureState(utils::MeasureState::eTEMP_BROKEN);
 	}
 }
 
@@ -141,12 +143,12 @@ double AudioChild::legacy_update() {
 
 	switch (legacy.numberTransform) {
 	case Legacy::NumberTransform::eLINEAR:
-		result = parent->legacy_getValue(handlerName, channel, valueIndex);
+		result = parent->getValue(procName, handlerName, channel, valueIndex);
 		result = result * legacy.correctingConstant;
 		break;
 
 	case Legacy::NumberTransform::eDB:
-		result = parent->legacy_getValue(handlerName, channel, valueIndex);
+		result = parent->getValue(procName, handlerName, channel, valueIndex);
 		result = 20.0 / legacy.correctingConstant * std::log10(result) + 1.0;
 		break;
 
