@@ -16,11 +16,12 @@
 #include "sound-processing/sound-handlers/spectrum-stack/FftAnalyzer.h"
 #include "sound-processing/sound-handlers/spectrum-stack/BandResampler.h"
 #include "sound-processing/sound-handlers/spectrum-stack/BandCascadeTransformer.h"
-#include "sound-processing/sound-handlers/spectrum-stack/WeightedBlur.h"
-#include "sound-processing/sound-handlers/spectrum-stack/legacy_FiniteTimeFilter.h"
 #include "sound-processing/sound-handlers/spectrum-stack/UniformBlur.h"
 #include "sound-processing/sound-handlers/spectrum-stack/Spectrogram.h"
 #include "sound-processing/sound-handlers/spectrum-stack/SingleValueTransformer.h"
+
+#include "sound-processing/sound-handlers/spectrum-stack/legacy_WeightedBlur.h"
+#include "sound-processing/sound-handlers/spectrum-stack/legacy_FiniteTimeFilter.h"
 
 #include "option-parser/OptionMap.h"
 
@@ -102,9 +103,6 @@ PatchInfo HandlerCacheHelper::createHandlerPatcher(
 	if (type == L"BandCascadeTransformer") {
 		return createPatcherT<BandCascadeTransformer>(optionMap, cl);
 	}
-	if (type == L"WeightedBlur") {
-		return createPatcherT<WeightedBlur>(optionMap, cl);
-	}
 	if (type == L"UniformBlur") {
 		return createPatcherT<UniformBlur>(optionMap, cl);
 	}
@@ -120,9 +118,14 @@ PatchInfo HandlerCacheHelper::createHandlerPatcher(
 	if (type == L"ValueTransformer") {
 		return createPatcherT<SingleValueTransformer>(optionMap, cl);
 	}
+
+	if (type == L"WeightedBlur") {
+		return createPatcherT<legacy_WeightedBlur>(optionMap, cl);
+	}
 	if (type == L"FiniteTimeFilter") {
 		return createPatcherT<legacy_FiniteTimeFilter>(optionMap, cl);
 	}
+
 	if (type == L"LogarithmicValueMapper") {
 		// legacy
 		utils::BufferPrinter bp;

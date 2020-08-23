@@ -14,7 +14,7 @@
 #include "../../../audio-utils/GaussianCoefficientsManager.h"
 
 namespace rxtd::audio_analyzer {
-	class WeightedBlur : public ResamplerProvider {
+	class legacy_WeightedBlur : public ResamplerProvider {
 	public:
 		struct Params {
 			double radiusMultiplier{ };

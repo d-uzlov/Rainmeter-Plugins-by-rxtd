@@ -7,12 +7,12 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include "WeightedBlur.h"
+#include "legacy_WeightedBlur.h"
 #include "option-parser/OptionMap.h"
 
 using namespace audio_analyzer;
 
-SoundHandler::ParseResult WeightedBlur::parseParams(
+SoundHandler::ParseResult legacy_WeightedBlur::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	index legacyNumber
 ) const {
@@ -43,7 +43,7 @@ SoundHandler::ParseResult WeightedBlur::parseParams(
 	return result;
 }
 
-SoundHandler::ConfigurationResult WeightedBlur::vConfigure(Logger& cl) {
+SoundHandler::ConfigurationResult legacy_WeightedBlur::vConfigure(Logger& cl) {
 	resamplerPtr = getResampler();
 	if (resamplerPtr == nullptr) {
 		cl.error(L"invalid source: BandResampler is not found in the handler chain");
@@ -55,7 +55,7 @@ SoundHandler::ConfigurationResult WeightedBlur::vConfigure(Logger& cl) {
 	return dataSize;
 }
 
-void WeightedBlur::vProcess(array_view<float> wave, clock::time_point killTime) {
+void legacy_WeightedBlur::vProcess(array_view<float> wave, clock::time_point killTime) {
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
 	const BandResampler& resampler = *resamplerPtr;
@@ -78,7 +78,7 @@ void WeightedBlur::vProcess(array_view<float> wave, clock::time_point killTime) 
 	}
 }
 
-void WeightedBlur::blurCascade(
+void legacy_WeightedBlur::blurCascade(
 	array_view<float> source, array_view<float> weights, array_span<float> dest,
 	index minRadius, index maxRadius
 ) {
