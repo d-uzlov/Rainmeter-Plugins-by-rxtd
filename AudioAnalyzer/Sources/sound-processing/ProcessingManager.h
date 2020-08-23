@@ -38,9 +38,8 @@ namespace rxtd::audio_analyzer {
 		index legacyNumber = 0;
 
 	public:
-		ProcessingManager() = default;
-
-		ProcessingManager(Logger logger) noexcept : logger(std::move(logger)) {
+		void setLogger(Logger value) {
+			logger = std::move(value);
 		}
 
 		// depends on system format only

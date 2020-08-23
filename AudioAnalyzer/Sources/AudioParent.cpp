@@ -365,6 +365,7 @@ void AudioParent::patchSA(const ParamParser::ProcessingsInfoMap& procs) {
 
 	for (const auto& [name, data] : procs) {
 		auto& sa = saMap[name];
+		sa.setLogger(logger);
 		sa.setParams(data, paramParser.getLegacyNumber(), currentFormat.samplesPerSec, currentFormat.channelLayout);
 	}
 }
