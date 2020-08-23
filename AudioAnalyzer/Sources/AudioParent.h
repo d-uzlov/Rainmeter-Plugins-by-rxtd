@@ -11,7 +11,7 @@
 
 #include "TypeHolder.h"
 #include "RainmeterWrappers.h"
-#include "sound-processing/SoundAnalyzer.h"
+#include "sound-processing/ProcessingManager.h"
 #include "sound-processing/device-management/DeviceManager.h"
 #include "sound-processing/ChannelProcessingHelper.h"
 #include "windows-wrappers/IMMNotificationClientImpl.h"
@@ -21,7 +21,7 @@ namespace rxtd::audio_analyzer {
 		ParamParser paramParser;
 		ChannelMixer channelMixer;
 		DeviceManager deviceManager;
-		std::map<istring, SoundAnalyzer, std::less<>> saMap;
+		std::map<istring, ProcessingManager, std::less<>> saMap;
 		MyWaveFormat currentFormat{ };
 		double computeTimeout = 0.0;
 		double killTimeout = 0.0;

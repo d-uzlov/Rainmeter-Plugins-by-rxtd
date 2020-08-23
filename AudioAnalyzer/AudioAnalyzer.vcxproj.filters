@@ -50,9 +50,6 @@
     <ClInclude Include="local-version.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\SoundAnalyzer.h">
-      <Filter>Source Files\sound-processing</Filter>
-    </ClInclude>
     <ClInclude Include="Sources\sound-processing\Channel.h">
       <Filter>Source Files\sound-processing</Filter>
     </ClInclude>
@@ -176,6 +173,9 @@
     <ClInclude Include="Sources\audio-utils\CubicInterpolationHelper.h">
       <Filter>Source Files\audio-utils</Filter>
     </ClInclude>
+    <ClInclude Include="Sources\sound-processing\ProcessingManager.h">
+      <Filter>Source Files\sound-processing</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sources\AudioChild.cpp">
@@ -189,9 +189,6 @@
     </ClCompile>
     <ClCompile Include="..\Common\precompiled.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\sound-processing\SoundAnalyzer.cpp">
-      <Filter>Source Files\sound-processing</Filter>
     </ClCompile>
     <ClCompile Include="Sources\sound-processing\Channel.cpp">
       <Filter>Source Files\sound-processing</Filter>
@@ -300,6 +297,9 @@
     </ClCompile>
     <ClCompile Include="Sources\audio-utils\CubicInterpolationHelper.cpp">
       <Filter>Source Files\audio-utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\sound-processing\ProcessingManager.cpp">
+      <Filter>Source Files\sound-processing</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

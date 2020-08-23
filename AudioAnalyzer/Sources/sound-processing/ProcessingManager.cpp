@@ -7,16 +7,16 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include "SoundAnalyzer.h"
+#include "ProcessingManager.h"
 
 using namespace audio_analyzer;
 
-void SoundAnalyzer::updateFormat(index sampleRate, ChannelLayout layout) {
+void ProcessingManager::updateFormat(index sampleRate, ChannelLayout layout) {
 	cph.updateSourceRate(sampleRate);
 	patchHandlers(std::move(layout));
 }
 
-void SoundAnalyzer::setParams(
+void ProcessingManager::setParams(
 	const ParamParser::ProcessingData& pd,
 	index _legacyNumber,
 	index sampleRate, ChannelLayout layout
@@ -33,7 +33,7 @@ void SoundAnalyzer::setParams(
 	}
 }
 
-bool SoundAnalyzer::process(const ChannelMixer& mixer, clock::time_point killTime) {
+bool ProcessingManager::process(const ChannelMixer& mixer, clock::time_point killTime) {
 	for (auto& [channel, channelData] : channels) {
 		cph.processDataFrom(channel, mixer.getChannelPCM(channel));
 
@@ -52,7 +52,7 @@ bool SoundAnalyzer::process(const ChannelMixer& mixer, clock::time_point killTim
 	return false;
 }
 
-bool SoundAnalyzer::finishStandalone(clock::time_point killTime) {
+bool ProcessingManager::finishStandalone(clock::time_point killTime) {
 	for (auto& [channel, channelData] : channels) {
 		for (auto& handlerName : realOrder) {
 			auto& handler = *channelData[handlerName];
@@ -68,7 +68,7 @@ bool SoundAnalyzer::finishStandalone(clock::time_point killTime) {
 	return false;
 }
 
-void SoundAnalyzer::resetValues() noexcept {
+void ProcessingManager::resetValues() noexcept {
 	for (auto& [channel, channelData] : channels) {
 		for (auto& [name, handler] : channelData) {
 			// order is not important
@@ -77,7 +77,7 @@ void SoundAnalyzer::resetValues() noexcept {
 	}
 }
 
-void SoundAnalyzer::patchHandlers(ChannelLayout layout) {
+void ProcessingManager::patchHandlers(ChannelLayout layout) {
 	for (auto iter = channels.begin(); iter != channels.end();) {
 		const auto channel = iter->first;
 		iter = channel == Channel::eAUTO || layout.contains(channel) ? ++iter : channels.erase(iter);
@@ -94,6 +94,22 @@ void SoundAnalyzer::patchHandlers(ChannelLayout layout) {
 	}
 	cph.setChannels(channelsSet);
 
+
+	class HandlerFinderImpl : public HandlerFinder {
+		const ChannelData& channelData;
+
+	public:
+		explicit HandlerFinderImpl(const ChannelData& channelData) : channelData(channelData) {
+		}
+
+		[[nodiscard]]
+		SoundHandler* getHandler(isview id) const override {
+			const auto iter = channelData.find(id);
+			return iter == channelData.end() ? nullptr : iter->second.get();
+		}
+	};
+
+
 	for (auto& [channel, channelData] : channels) {
 		ChannelData newData;
 		HandlerFinderImpl hf{ newData };
@@ -107,7 +123,11 @@ void SoundAnalyzer::patchHandlers(ChannelLayout layout) {
 			auto handlerPtr = patchInfo.fun(std::move(channelData[handlerName]));
 
 			auto cl = logger.context(L"Handler {}: ", handlerName);
-			const bool success = handlerPtr->patch(patchInfo.params, patchInfo.sources, channel.technicalName(), cph.getSampleRate(), hf, cl);
+			const bool success = handlerPtr->patch(
+				patchInfo.params, patchInfo.sources,
+				channel.technicalName(), cph.getSampleRate(),
+				hf, cl
+			);
 			if (!success) {
 				cl.error(L"invalid handler");
 

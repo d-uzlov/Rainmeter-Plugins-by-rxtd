@@ -17,7 +17,7 @@
 #include "ChannelMixer.h"
 
 namespace rxtd::audio_analyzer {
-	class SoundAnalyzer {
+	class ProcessingManager {
 		using clock = std::chrono::high_resolution_clock;
 		static_assert(clock::is_steady);
 
@@ -37,25 +37,10 @@ namespace rxtd::audio_analyzer {
 
 		index legacyNumber = 0;
 
-		class HandlerFinderImpl : public HandlerFinder {
-			const ChannelData& channelData;
-
-		public:
-			explicit HandlerFinderImpl(const ChannelData& channelData) : channelData(channelData) {
-			}
-
-			[[nodiscard]]
-			SoundHandler* getHandler(isview id) const override {
-				const auto iter = channelData.find(id);
-				return iter == channelData.end() ? nullptr : iter->second.get();
-			}
-		};
-
 	public:
-		SoundAnalyzer() = default;
-		~SoundAnalyzer() = default;
+		ProcessingManager() = default;
 
-		SoundAnalyzer(Logger logger) noexcept : logger(std::move(logger)) {
+		ProcessingManager(Logger logger) noexcept : logger(std::move(logger)) {
 		}
 
 		// depends on system format only
@@ -66,6 +51,7 @@ namespace rxtd::audio_analyzer {
 			return AudioChildHelper{ channels };
 		}
 
+		// todo update documentation
 		/**
 		 * Handlers aren't completely recreated when measure is reloaded.
 		 * Instead, they are patched. Patches are created in ParamParser class.
