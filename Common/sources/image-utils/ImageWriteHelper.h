@@ -16,7 +16,7 @@ namespace rxtd::utils {
 		bool emptinessWritten = false;
 
 	public:
-		void write(array2d_view<uint32_t> pixels, bool empty, const string& filepath) {
+		void write(array2d_view<IntColor> pixels, bool empty, const string& filepath) {
 			if (emptinessWritten && empty) {
 				return;
 			}

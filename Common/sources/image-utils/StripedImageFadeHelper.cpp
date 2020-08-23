@@ -34,7 +34,7 @@ void StripedImageFadeHelper::drawBorderInPlace(array2d_span<IntColor> source) co
 	}
 }
 
-void StripedImageFadeHelper::inflateLine(array_view<IntColor> source, array_span<uint32_t> dest) const {
+void StripedImageFadeHelper::inflateLine(array_view<IntColor> source, array_span<IntColor> dest) const {
 	const index width = source.size();
 
 	const index realWidth = width - borderSize;
@@ -63,7 +63,7 @@ void StripedImageFadeHelper::inflateLine(array_view<IntColor> source, array_span
 			sc.r = mixer.mix(back.r, sc.r);
 			sc.g = mixer.mix(back.g, sc.g);
 			sc.b = mixer.mix(back.b, sc.b);
-			dest[i] = sc.full;
+			dest[i] = sc;
 
 			fadeDistance -= fadeDistanceStep;
 		}
@@ -79,7 +79,7 @@ void StripedImageFadeHelper::inflateLine(array_view<IntColor> source, array_span
 		sc.r = mixer.mix(back.r, sc.r);
 		sc.g = mixer.mix(back.g, sc.g);
 		sc.b = mixer.mix(back.b, sc.b);
-		dest[i] = sc.full;
+		dest[i] = sc;
 
 		fadeDistance -= fadeDistanceStep;
 	}
@@ -87,7 +87,7 @@ void StripedImageFadeHelper::inflateLine(array_view<IntColor> source, array_span
 	index borderBeginIndex = flatBeginIndex + flatWidth;
 	if (borderBeginIndex >= width) {
 		for (index i = flatBeginIndex; i < width; i++) {
-			dest[i] = source[i].full;
+			dest[i] = source[i];
 		}
 
 		flatBeginIndex = 0;
@@ -95,19 +95,19 @@ void StripedImageFadeHelper::inflateLine(array_view<IntColor> source, array_span
 	}
 
 	for (index i = flatBeginIndex; i < borderBeginIndex; i++) {
-		dest[i] = source[i].full;
+		dest[i] = source[i];
 	}
 
 	index borderEndIndex = borderBeginIndex + borderSize;
 	if (borderEndIndex >= width) {
 		for (index i = borderBeginIndex; i < width; i++) {
-			dest[i] = border.full;
+			dest[i] = border;
 		}
 		borderBeginIndex = 0;
 		borderEndIndex -= width;
 	}
 	for (index i = borderBeginIndex; i < borderEndIndex; i++) {
-		dest[i] = border.full;
+		dest[i] = border;
 	}
 }
 

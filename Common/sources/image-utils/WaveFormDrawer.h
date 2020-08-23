@@ -57,7 +57,7 @@ namespace rxtd::utils {
 		};
 
 		StripedImage<MinMax> minMaxBuffer{ };
-		Vector2D<uint32_t> resultBuffer{ };
+		Vector2D<IntColor> resultBuffer{ };
 		DiscreetInterpolator interpolator;
 
 		index width{ };
@@ -100,7 +100,7 @@ namespace rxtd::utils {
 		void fillStrip(double min, double max);
 
 		[[nodiscard]]
-		array2d_view<uint32_t> getResultBuffer() const {
+		array2d_view<IntColor> getResultBuffer() const {
 			return resultBuffer;
 		}
 
@@ -112,7 +112,7 @@ namespace rxtd::utils {
 		void inflate();
 
 	private:
-		void inflateLine(index line, array_span<uint32_t> dest, IntColor backgroundColor) const;
+		void inflateLine(index line, array_span<IntColor> dest, IntColor backgroundColor) const;
 
 		[[nodiscard]]
 		bool isWaveAt(index i, index line) const;

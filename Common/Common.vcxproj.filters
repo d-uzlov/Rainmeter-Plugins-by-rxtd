@@ -20,9 +20,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="sources\BmpWriter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="sources\BufferPrinter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -80,18 +77,15 @@
     <ClCompile Include="sources\image-utils\StripedImageFadeHelper.cpp">
       <Filter>Source Files\image-utils</Filter>
     </ClCompile>
-    <ClCompile Include="sources\Color.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="sources\image-utils\BmpWriter.cpp">
+      <Filter>Source Files\image-utils</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\image-utils\Color.cpp">
+      <Filter>Source Files\image-utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="sources\BmpWriter.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="sources\BufferPrinter.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\Color.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="sources\RainmeterWrappers.h">
@@ -205,8 +199,14 @@
     <ClInclude Include="sources\GrowingVector.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="sources\IntColor.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="sources\image-utils\BmpWriter.h">
+      <Filter>Source Files\image-utils</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\image-utils\Color.h">
+      <Filter>Source Files\image-utils</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\image-utils\IntColor.h">
+      <Filter>Source Files\image-utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

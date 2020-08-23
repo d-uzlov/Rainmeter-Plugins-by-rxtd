@@ -13,7 +13,7 @@
 
 namespace rxtd::utils {
 	class StripedImageFadeHelper {
-		Vector2D<uint32_t> resultBuffer{ };
+		Vector2D<IntColor> resultBuffer{ };
 
 		index borderSize = 0;
 		index pastLastStripIndex{ };
@@ -41,7 +41,7 @@ namespace rxtd::utils {
 		}
 
 		[[nodiscard]]
-		array2d_view<uint32_t> getResultBuffer() const {
+		array2d_view<IntColor> getResultBuffer() const {
 			return resultBuffer;
 		}
 
@@ -50,7 +50,7 @@ namespace rxtd::utils {
 		void drawBorderInPlace(array2d_span<IntColor> source) const;
 
 	private:
-		void inflateLine(array_view<IntColor> source, array_span<uint32_t> dest) const;
+		void inflateLine(array_view<IntColor> source, array_span<IntColor> dest) const;
 
 		void drawBorderInLine(array_span<IntColor> line) const;
 	};

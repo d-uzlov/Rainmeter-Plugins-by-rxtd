@@ -9,7 +9,7 @@
 
 #pragma once
 #include "../SoundHandler.h"
-#include "Color.h"
+#include "image-utils/Color.h"
 #include "RainmeterWrappers.h"
 #include "image-utils/StripedImage.h"
 #include "image-utils/ImageWriteHelper.h"

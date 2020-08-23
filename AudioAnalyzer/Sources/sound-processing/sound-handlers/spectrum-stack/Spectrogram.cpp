@@ -282,23 +282,22 @@ void Spectrogram::vFinishStandalone() {
 		return;
 	}
 
+	utils::array2d_view<utils::IntColor> pixelBuffer;
+
 	if (params.fading != 0.0) {
 		if (image.isForced() || !writerHelper.isEmptinessWritten()) {
 			sifh.setPastLastStripIndex(image.getPastLastStripIndex());
 			sifh.inflate(image.getPixels());
 		}
-		writerHelper.write(sifh.getResultBuffer(), !image.isForced(), filepath);
+		pixelBuffer = sifh.getResultBuffer();
 	} else {
 		if (params.borderSize != 0) {
 			sifh.setPastLastStripIndex(image.getPastLastStripIndex());
 			sifh.drawBorderInPlace(image.getPixelsWritable());
 		}
-		auto pixels = image.getPixels();
-		utils::array2d_view<uint32_t> buffer{
-			&(pixels[0].data()->full), pixels.getBuffersCount(), pixels.getBufferSize()
-		};
-		writerHelper.write(buffer, !image.isForced(), filepath);
+		pixelBuffer = image.getPixels();
 	}
 
+	writerHelper.write(pixelBuffer, !image.isForced(), filepath);
 	changed = false;
 }

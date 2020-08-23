@@ -80,7 +80,7 @@ void WaveFormDrawer::inflate() {
 	if (lineDrawingPolicy == LineDrawingPolicy::eALWAYS) {
 		auto destCenter = resultBuffer[centerLineIndex];
 		for (index i = 0; i < width; ++i) {
-			destCenter[i] = colors.line.full;
+			destCenter[i] = colors.line;
 		}
 	} else if (lineDrawingPolicy == LineDrawingPolicy::eBELOW_WAVE) {
 		inflateLine(centerLineIndex, resultBuffer[centerLineIndex], colors.line);
@@ -89,7 +89,7 @@ void WaveFormDrawer::inflate() {
 	}
 }
 
-void WaveFormDrawer::inflateLine(index line, array_span<uint32_t> dest, IntColor backgroundColor) const {
+void WaveFormDrawer::inflateLine(index line, array_span<IntColor> dest, IntColor backgroundColor) const {
 	const index realWidth = width - borderSize;
 
 	const index fadeWidth = index(realWidth * fading);
@@ -112,7 +112,7 @@ void WaveFormDrawer::inflateLine(index line, array_span<uint32_t> dest, IntColor
 		for (index i = fadeBeginIndex; i < width; i++) {
 			mixer.setFactorWarped(fadeDistance * fadeDistance);
 			const auto sc = isWaveAt(i, line) ? colors.wave : backgroundColor;
-			dest[i] = backgroundColor.mixWith(sc, mixer).full;
+			dest[i] = backgroundColor.mixWith(sc, mixer);
 
 			fadeDistance -= fadeDistanceStep;
 		}
@@ -124,7 +124,7 @@ void WaveFormDrawer::inflateLine(index line, array_span<uint32_t> dest, IntColor
 	for (index i = fadeBeginIndex; i < flatBeginIndex; i++) {
 		mixer.setFactorWarped(fadeDistance * fadeDistance);
 		const auto sc = isWaveAt(i, line) ? colors.wave : backgroundColor;
-		dest[i] = backgroundColor.mixWith(sc, mixer).full;
+		dest[i] = backgroundColor.mixWith(sc, mixer);
 
 		fadeDistance -= fadeDistanceStep;
 	}
@@ -133,7 +133,7 @@ void WaveFormDrawer::inflateLine(index line, array_span<uint32_t> dest, IntColor
 	if (borderBeginIndex >= width) {
 		for (index i = flatBeginIndex; i < width; i++) {
 			auto sc = isWaveAt(i, line) ? colors.wave : backgroundColor;
-			dest[i] = sc.full;
+			dest[i] = sc;
 		}
 
 		flatBeginIndex = 0;
@@ -142,20 +142,20 @@ void WaveFormDrawer::inflateLine(index line, array_span<uint32_t> dest, IntColor
 
 	for (index i = flatBeginIndex; i < borderBeginIndex; i++) {
 		auto sc = isWaveAt(i, line) ? colors.wave : backgroundColor;
-		dest[i] = sc.full;
+		dest[i] = sc;
 	}
 
 	const auto border = colors.border;
 	index borderEndIndex = borderBeginIndex + borderSize;
 	if (borderEndIndex >= width) {
 		for (index i = borderBeginIndex; i < width; i++) {
-			dest[i] = border.full;
+			dest[i] = border;
 		}
 		borderBeginIndex = 0;
 		borderEndIndex -= width;
 	}
 	for (index i = borderBeginIndex; i < borderEndIndex; i++) {
-		dest[i] = border.full;
+		dest[i] = border;
 	}
 }
 

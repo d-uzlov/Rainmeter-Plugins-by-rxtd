@@ -23,35 +23,6 @@ namespace rxtd::utils {
 		index bufferSize = 0;
 
 	public:
-		Vector2D() = default;
-		~Vector2D() = default;
-
-		Vector2D(Vector2D&& other) noexcept :
-			array(std::move(other.array)),
-			buffersCount(other.buffersCount),
-			bufferSize(other.bufferSize) {
-			other.buffersCount = 0;
-			other.bufferSize = 0;
-		}
-
-		Vector2D& operator=(Vector2D&& other) noexcept {
-			if (this == &other)
-				return *this;
-
-			array = std::move(other.array);
-
-			buffersCount = other.buffersCount;
-			other.buffersCount = 0;
-
-			bufferSize = other.bufferSize;
-			other.bufferSize = 0;
-
-			return *this;
-		}
-
-		Vector2D(const Vector2D& other) = default;
-		Vector2D& operator=(const Vector2D& other) = default;
-
 		void fill(const T value = { }) {
 			std::fill_n(array.data(), buffersCount * bufferSize, value);
 		}
