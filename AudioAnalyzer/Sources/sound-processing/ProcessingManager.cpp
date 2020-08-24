@@ -13,24 +13,12 @@
 
 using namespace audio_analyzer;
 
-void ProcessingManager::updateSnapshot(Snapshot& snapshot) {
-	for (auto& [channel, channelStruct] : channelMap) {
-		auto& channelSnapshot = snapshot[channel];
-		for (auto& [handlerName, handler] : channelStruct.handlerMap) {
-			// order is not important
-			handler->updateSnapshot(channelSnapshot[handlerName]);
-		}
-	}
-}
-
 void ProcessingManager::setParams(
-	Logger logger,
+	utils::Rainmeter::Logger logger,
 	const ParamParser::ProcessingData& pd,
-	index _legacyNumber,
+	index legacyNumber,
 	index sampleRate, ChannelLayout layout
 ) {
-	legacyNumber = _legacyNumber;
-
 	std::set<Channel> channels;
 	for (const auto channel : pd.channels) {
 		if (channel == Channel::eAUTO || layout.contains(channel)) {
@@ -125,6 +113,16 @@ void ProcessingManager::configureSnapshot(Snapshot& snapshot) {
 		for (auto& [handlerName, handler] : channelStruct.handlerMap) {
 			auto& handlerSnapshot = channelSnapshot[handlerName];
 			handler->configureSnapshot(handlerSnapshot);
+		}
+	}
+}
+
+void ProcessingManager::updateSnapshot(Snapshot& snapshot) {
+	for (auto&[channel, channelStruct] : channelMap) {
+		auto& channelSnapshot = snapshot[channel];
+		for (auto&[handlerName, handler] : channelStruct.handlerMap) {
+			// order is not important
+			handler->updateSnapshot(channelSnapshot[handlerName]);
 		}
 	}
 }

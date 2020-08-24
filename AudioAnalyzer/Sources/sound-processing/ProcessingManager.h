@@ -26,7 +26,6 @@ namespace rxtd::audio_analyzer {
 		static_assert(clock::is_steady);
 
 		using HandlerMap = std::map<istring, std::unique_ptr<SoundHandler>, std::less<>>;
-		using Logger = utils::Rainmeter::Logger;
 
 		struct ChannelStruct {
 			HandlerMap handlerMap;
@@ -38,8 +37,6 @@ namespace rxtd::audio_analyzer {
 		std::vector<istring> order;
 
 		std::map<Channel, ChannelStruct> channelMap;
-
-		index legacyNumber = 0;
 
 		class HandlerFinderImpl : public HandlerFinder {
 			const HandlerMap& channelData;
@@ -78,10 +75,8 @@ namespace rxtd::audio_analyzer {
 		std::vector<float> waveBuffer;
 
 	public:
-		void updateSnapshot(Snapshot& snapshot);
-
 		void setParams(
-			Logger logger,
+			utils::Rainmeter::Logger logger,
 			const ParamParser::ProcessingData& pd,
 			index _legacyNumber,
 			index sampleRate, ChannelLayout layout
@@ -90,5 +85,6 @@ namespace rxtd::audio_analyzer {
 		// returns true when killed on timeout
 		bool process(const ChannelMixer& mixer, clock::time_point killTime);
 		void configureSnapshot(Snapshot& snapshot);
+		void updateSnapshot(Snapshot& snapshot);
 	};
 }
