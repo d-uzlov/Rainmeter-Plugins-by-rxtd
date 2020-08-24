@@ -21,11 +21,12 @@ namespace rxtd::utils {
 		DWORD flags{ };
 		uint32_t dataSize;
 		lastResult = getPointer()->GetBuffer(&data, &dataSize, &flags, nullptr, nullptr);
-		const bool silent = (flags & AUDCLNT_BUFFERFLAGS_SILENT) != 0;
 
-		if (dataSize == 0) {
+		if (lastResult != S_OK || dataSize == 0) {
 			return;
 		}
+
+		const bool silent = (flags & AUDCLNT_BUFFERFLAGS_SILENT) != 0;
 
 		buffer.setBuffersCount(channelsCount);
 		buffer.setBufferSize(dataSize);
