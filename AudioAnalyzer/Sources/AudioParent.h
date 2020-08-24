@@ -30,6 +30,10 @@ namespace rxtd::audio_analyzer {
 		struct Snapshot {
 			ProcessingOrchestrator::DataSnapshot dataSnapshot;
 			DeviceManager::DeviceInfoSnapshot diSnapshot;
+
+			string deviceListInput;
+			string deviceListOutput;
+			string legacy_deviceList;
 		} snapshot;
 
 		index legacyNumber{ };

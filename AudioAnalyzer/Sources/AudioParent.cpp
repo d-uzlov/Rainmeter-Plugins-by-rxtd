@@ -45,6 +45,9 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 
 	enumerator.updateDeviceStrings();
 	enumerator.updateDeviceStringLegacy(snapshot.diSnapshot.type);
+	snapshot.deviceListInput = enumerator.getDeviceListInput();
+	snapshot.deviceListOutput = enumerator.getDeviceListOutput();
+	snapshot.legacy_deviceList = enumerator.legacy_getDeviceList();
 
 	paramParser.setRainmeter(rain);
 	orchestrator.setLogger(logger);
@@ -94,6 +97,9 @@ double AudioParent::vUpdate() {
 
 		enumerator.updateDeviceStrings();
 		enumerator.updateDeviceStringLegacy(snapshot.diSnapshot.type);
+		snapshot.deviceListInput = enumerator.getDeviceListInput();
+		snapshot.deviceListOutput = enumerator.getDeviceListOutput();
+		snapshot.legacy_deviceList = enumerator.legacy_getDeviceList();
 	}
 
 	if (deviceManager.getState() != DeviceManager::State::eOK) {
@@ -183,11 +189,15 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 	}
 
 	if (optionName == L"device list input") {
-		resolveBufferString = enumerator.getDeviceListInput();
+		resolveBufferString = snapshot.deviceListInput;
 		return;
 	}
 	if (optionName == L"device list output") {
-		resolveBufferString = enumerator.getDeviceListOutput();
+		resolveBufferString = snapshot.deviceListOutput;
+		return;
+	}
+	if (optionName == L"device list") {
+		resolveBufferString = snapshot.legacy_deviceList;
 		return;
 	}
 
@@ -228,10 +238,7 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 		return;
 	}
 
-	if (optionName == L"device list") {
-		resolveBufferString = enumerator.getDeviceListLegacy();
-		return;
-	}
+	cl.error(L"unknown section variable");
 }
 
 double AudioParent::getValue(isview proc, isview id, Channel channel, index ind) const {

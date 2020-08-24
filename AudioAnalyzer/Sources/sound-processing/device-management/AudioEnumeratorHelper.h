@@ -67,7 +67,7 @@ namespace rxtd::audio_analyzer {
 		void updateDeviceStringLegacy(utils::MediaDeviceType type);
 
 		[[nodiscard]]
-		const string& getDeviceListLegacy() const {
+		const string& legacy_getDeviceList() const {
 			return deviceStringLegacy;
 		}
 
