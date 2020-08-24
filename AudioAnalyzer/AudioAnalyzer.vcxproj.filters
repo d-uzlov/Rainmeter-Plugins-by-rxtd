@@ -137,9 +137,6 @@
     <ClInclude Include="Sources\audio-utils\filter-utils\FilterCascadeParser.h">
       <Filter>Source Files\audio-utils\filter-utils</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\ChannelProcessingHelper.h">
-      <Filter>Source Files\sound-processing</Filter>
-    </ClInclude>
     <ClInclude Include="Sources\audio-utils\kiss_fft-lib\KissFft.hh">
       <Filter>Source Files\audio-utils\kiss_fft-lib</Filter>
     </ClInclude>
@@ -267,9 +264,6 @@
     </ClCompile>
     <ClCompile Include="Sources\audio-utils\filter-utils\FilterCascadeParser.cpp">
       <Filter>Source Files\audio-utils\filter-utils</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\sound-processing\ChannelProcessingHelper.cpp">
-      <Filter>Source Files\sound-processing</Filter>
     </ClCompile>
     <ClCompile Include="Sources\audio-utils\butterworth-lib\ButterworthWrapper.cpp">
       <Filter>Source Files\audio-utils\butterworth-lib</Filter>

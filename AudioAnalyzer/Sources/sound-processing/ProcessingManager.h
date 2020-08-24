@@ -11,9 +11,9 @@
 #include <chrono>
 
 #include "Channel.h"
-#include "ChannelProcessingHelper.h"
 #include "../ParamParser.h"
 #include "ChannelMixer.h"
+#include "../audio-utils/DownsampleHelper.h"
 
 namespace rxtd::audio_analyzer {
 	class ProcessingManager {
@@ -25,22 +25,28 @@ namespace rxtd::audio_analyzer {
 		using clock = std::chrono::high_resolution_clock;
 		static_assert(clock::is_steady);
 
-		using ChannelData = std::map<istring, std::unique_ptr<SoundHandler>, std::less<>>;
+		using HandlerMap = std::map<istring, std::unique_ptr<SoundHandler>, std::less<>>;
 		using Logger = utils::Rainmeter::Logger;
+
+		struct ChannelStruct {
+			HandlerMap handlerMap;
+
+			audio_utils::FilterCascade fc;
+			audio_utils::DownsampleHelper downsampleHelper;
+		};
 
 		std::vector<istring> order;
 
-		std::map<Channel, ChannelData> channelMap;
-
-		ChannelProcessingHelper cph;
+		std::map<Channel, ChannelStruct> channelMap;
 
 		index legacyNumber = 0;
 
 		class HandlerFinderImpl : public HandlerFinder {
-			const ChannelData& channelData;
+			const HandlerMap& channelData;
 
 		public:
-			explicit HandlerFinderImpl(const ChannelData& channelData) : channelData(channelData) { }
+			explicit HandlerFinderImpl(const HandlerMap& channelData) : channelData(channelData) {
+			}
 
 			[[nodiscard]]
 			SoundHandler* getHandler(isview id) const override {
@@ -48,6 +54,28 @@ namespace rxtd::audio_analyzer {
 				return iter == channelData.end() ? nullptr : iter->second.get();
 			}
 		};
+
+		struct ResamplingData {
+			index sourceRate = 0;
+			index targetRate = 0;
+			index finalSampleRate = 0;
+			index divider = 1;
+
+			void setParams(index _sourceRate, index _targetRate) {
+				sourceRate = _sourceRate;
+				targetRate = _targetRate;
+
+				if (targetRate == 0) {
+					divider = 1;
+				} else {
+					const auto ratio = static_cast<double>(sourceRate) / targetRate;
+					divider = ratio > 1 ? static_cast<index>(ratio) : 1;
+				}
+				finalSampleRate = sourceRate / divider;
+			}
+		} resamplingData;
+
+		std::vector<float> waveBuffer;
 
 	public:
 		void updateSnapshot(Snapshot& snapshot);

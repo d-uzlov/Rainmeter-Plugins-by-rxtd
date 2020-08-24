@@ -14,9 +14,9 @@
 using namespace audio_analyzer;
 
 void ProcessingManager::updateSnapshot(Snapshot& snapshot) {
-	for (auto& [channel, channelData] : channelMap) {
+	for (auto& [channel, channelStruct] : channelMap) {
 		auto& channelSnapshot = snapshot[channel];
-		for (auto& [handlerName, handler] : channelData) {
+		for (auto& [handlerName, handler] : channelStruct.handlerMap) {
 			// order is not important
 			handler->updateSnapshot(channelSnapshot[handlerName]);
 		}
@@ -38,9 +38,15 @@ void ProcessingManager::setParams(
 		}
 	}
 
-	cph.setParams(channels, pd.fcc, pd.targetRate, sampleRate);
-
 	auto oldChannelMap = std::exchange(channelMap, { });
+
+	resamplingData.setParams(sampleRate, pd.targetRate);
+	for (auto channel : channels) {
+		// todo preserve state?
+		auto& newChannelStruct = channelMap[channel];
+		newChannelStruct.fc = pd.fcc.getInstance(double(resamplingData.finalSampleRate));
+		newChannelStruct.downsampleHelper.setFactor(resamplingData.divider);
+	}
 
 	order.clear();
 	for (auto& handlerName : pd.handlersInfo.order) {
@@ -48,14 +54,14 @@ void ProcessingManager::setParams(
 
 		bool handlerIsValid = true;
 		for (auto channel : channels) {
-			auto& channelDataNew = channelMap[channel];
-			auto handlerPtr = patchInfo.fun(std::move(oldChannelMap[channel][handlerName]));
+			auto& channelDataNew = channelMap[channel].handlerMap;
+			auto handlerPtr = patchInfo.fun(std::move(oldChannelMap[channel].handlerMap[handlerName]));
 
 			auto cl = logger.context(L"handler '{}': ", handlerName);
 			HandlerFinderImpl hf{ channelDataNew };
 			const bool success = handlerPtr->patch(
 				patchInfo.params, patchInfo.sources,
-				channel.technicalName(), cph.getSampleRate(),
+				channel.technicalName(), resamplingData.finalSampleRate,
 				hf, cl
 			);
 
@@ -82,14 +88,23 @@ void ProcessingManager::setParams(
 }
 
 bool ProcessingManager::process(const ChannelMixer& mixer, clock::time_point killTime) {
-	for (auto& [channel, channelData] : channelMap) {
-		cph.processDataFrom(channel, mixer.getChannelPCM(channel));
+	for (auto& [channel, channelStruct] : channelMap) {
+		auto wave = mixer.getChannelPCM(channel);
 
-		const auto wave = cph.getResampled();
+		if (resamplingData.divider <= 1) {
+			waveBuffer.resize(wave.size());
+			std::copy(wave.begin(), wave.end(), waveBuffer.begin());
+		} else {
+			const index nextBufferSize = channelStruct.downsampleHelper.pushData(wave);
+			waveBuffer.resize(nextBufferSize);
+			channelStruct.downsampleHelper.downsample(waveBuffer);
+		}
+
+		channelStruct.fc.applyInPlace(waveBuffer);
 
 		for (auto& handlerName : order) {
-			auto& handler = *channelData[handlerName];
-			handler.process(wave, killTime);
+			auto& handler = *channelStruct.handlerMap[handlerName];
+			handler.process(waveBuffer, killTime);
 
 			if (clock::now() > killTime) {
 				return true;
@@ -103,11 +118,11 @@ bool ProcessingManager::process(const ChannelMixer& mixer, clock::time_point kil
 void ProcessingManager::configureSnapshot(Snapshot& snapshot) {
 	utils::MapUtils::intersectKeyCollection(snapshot, channelMap);
 
-	for (auto& [channel, channelData] : channelMap) {
+	for (auto& [channel, channelStruct] : channelMap) {
 		auto& channelSnapshot = snapshot[channel];
-		utils::MapUtils::intersectKeyCollection(channelSnapshot, channelData);
+		utils::MapUtils::intersectKeyCollection(channelSnapshot, channelStruct.handlerMap);
 
-		for (auto& [handlerName, handler] : channelData) {
+		for (auto& [handlerName, handler] : channelStruct.handlerMap) {
 			auto& handlerSnapshot = channelSnapshot[handlerName];
 			handler->configureSnapshot(handlerSnapshot);
 		}
