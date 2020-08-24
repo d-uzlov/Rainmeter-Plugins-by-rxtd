@@ -14,7 +14,7 @@
 using namespace audio_analyzer;
 
 void ProcessingManager::updateSnapshot(Snapshot& snapshot) {
-	for (auto& [channel, channelData] : channels) {
+	for (auto& [channel, channelData] : channelMap) {
 		auto& channelSnapshot = snapshot[channel];
 		for (auto& [handlerName, handler] : channelData) {
 			// order is not important
@@ -29,85 +29,62 @@ void ProcessingManager::setParams(
 	index _legacyNumber,
 	index sampleRate, ChannelLayout layout
 ) {
-	channelSetRequested = pd.channels;
 	legacyNumber = _legacyNumber;
 
 	cph.setParams(pd.fcc, pd.targetRate, sampleRate);
 
-
-	utils::MapUtils::intersectKeysWithPredicate(channels, [&](Channel channel) {
-		return channel == Channel::eAUTO || layout.contains(channel);
-	});
-
-	std::set<Channel> channelsSet;
-	// Create missing channels
-	for (const auto channel : channelSetRequested) {
-		const bool exists = channel == Channel::eAUTO || layout.contains(channel);
-		if (exists) {
-			channels[channel];
-			channelsSet.insert(channel);
+	std::set<Channel> channels;
+	for (const auto channel : pd.channels) {
+		if (channel == Channel::eAUTO || layout.contains(channel)) {
+			channels.insert(channel);
 		}
 	}
-	cph.setChannels(channelsSet);
 
+	cph.setChannels(channels);
 
-	class HandlerFinderImpl : public HandlerFinder {
-		const ChannelData& channelData;
+	auto oldChannelMap = std::exchange(channelMap, { });
 
-	public:
-		explicit HandlerFinderImpl(const ChannelData& channelData) : channelData(channelData) {
-		}
+	order.clear();
+	for (auto& handlerName : pd.handlersInfo.order) {
+		auto& patchInfo = *pd.handlersInfo.patchers.find(handlerName)->second;
 
-		[[nodiscard]]
-		SoundHandler* getHandler(isview id) const override {
-			const auto iter = channelData.find(id);
-			return iter == channelData.end() ? nullptr : iter->second.get();
-		}
-	};
-
-
-	for (auto& [channel, channelData] : channels) {
-		ChannelData newData;
-		HandlerFinderImpl hf{ newData };
-
-		order = pd.handlersInfo.order;
-		for (auto iter = order.begin();
-		     iter != order.end();) {
-			auto& handlerName = *iter;
-
-			auto& patchInfo = *pd.handlersInfo.patchers.find(handlerName)->second;
-			auto handlerPtr = patchInfo.fun(std::move(channelData[handlerName]));
+		bool handlerIsValid = true;
+		for (auto channel : channels) {
+			auto& channelDataNew = channelMap[channel];
+			auto handlerPtr = patchInfo.fun(std::move(oldChannelMap[channel][handlerName]));
 
 			auto cl = logger.context(L"handler '{}': ", handlerName);
+			HandlerFinderImpl hf{ channelDataNew };
 			const bool success = handlerPtr->patch(
 				patchInfo.params, patchInfo.sources,
 				channel.technicalName(), cph.getSampleRate(),
 				hf, cl
 			);
+
 			if (!success) {
 				cl.error(L"invalid handler");
 
-				if (legacyNumber < 104) {
-					iter = order.erase(iter);
-					continue;
-				} else {
-					order.clear();
-					newData.clear();
-					break;
-				}
+				handlerIsValid = false;
 			}
 
-			newData[handlerName] = std::move(handlerPtr);
-
-			++iter;
+			channelDataNew[handlerName] = std::move(handlerPtr);
 		}
 
-		channelData = std::move(newData);
+		if (handlerIsValid) {
+			order.push_back(handlerName);
+		} else {
+			if (legacyNumber < 104) {
+				continue;
+			}
+
+			order.clear();
+			break;
+		}
 	}
 }
 
 bool ProcessingManager::process(const ChannelMixer& mixer, clock::time_point killTime) {
-	for (auto& [channel, channelData] : channels) {
+	for (auto& [channel, channelData] : channelMap) {
 		cph.processDataFrom(channel, mixer.getChannelPCM(channel));
 
 		const auto wave = cph.getResampled();
@@ -126,9 +103,9 @@ bool ProcessingManager::process(const ChannelMixer& mixer, clock::time_point kil
 }
 
 void ProcessingManager::configureSnapshot(Snapshot& snapshot) {
-	utils::MapUtils::intersectKeyCollection(snapshot, channels);
+	utils::MapUtils::intersectKeyCollection(snapshot, channelMap);
 
-	for (auto& [channel, channelData] : channels) {
+	for (auto& [channel, channelData] : channelMap) {
 		auto& channelSnapshot = snapshot[channel];
 		utils::MapUtils::intersectKeyCollection(channelSnapshot, channelData);
 
