@@ -41,13 +41,6 @@ bool ParentHelper::init(
 	deviceManager.setLogger(logger);
 	deviceManager.setLegacyNumber(legacyNumber);
 
-	notificationClient = {
-		[=](auto ptr) {
-			*ptr = new utils::CMMNotificationClient{ enumerator.getWrapper() };
-			return true;
-		}
-	};
-
 	updateDeviceListStrings();
 
 	orchestrator.setLogger(logger);
@@ -141,7 +134,7 @@ void ParentHelper::separateThreadFunction() {
 }
 
 void ParentHelper::pUpdate() {
-	const auto changes = notificationClient.getPointer()->takeChanges();
+	const auto changes = notificationClient.takeChanges();
 
 	// todo handle "no default device" and "device not found"
 

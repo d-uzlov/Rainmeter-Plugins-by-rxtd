@@ -46,7 +46,7 @@ namespace rxtd::audio_analyzer {
 		ChannelMixer channelMixer;
 		DeviceManager deviceManager;
 
-		utils::GenericComWrapper<utils::CMMNotificationClient> notificationClient;
+		utils::CMMNotificationClient notificationClient;
 		ProcessingOrchestrator orchestrator;
 		AudioEnumeratorHelper enumerator;
 

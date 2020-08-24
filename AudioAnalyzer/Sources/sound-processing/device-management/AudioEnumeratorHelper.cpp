@@ -11,15 +11,6 @@
 
 using namespace audio_analyzer;
 
-AudioEnumeratorHelper::AudioEnumeratorHelper() {
-	if (!enumeratorWrapper.isValid()) {
-		valid = false;
-		return;
-	}
-
-	updateDeviceLists();
-}
-
 std::optional<utils::MediaDeviceWrapper> AudioEnumeratorHelper::getDevice(const string& deviceID) {
 	auto typeOpt = getDeviceType(deviceID);
 	if (!typeOpt.has_value()) {

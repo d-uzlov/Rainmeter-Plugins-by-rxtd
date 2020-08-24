@@ -15,12 +15,6 @@
 #include <mutex>
 #include <set>
 
-// You've instantiated std::atomic<T> with sizeof(T) equal to 2/4/8 and alignof(T) < sizeof(T).
-// Before VS 2015 Update 2, this would have misbehaved at runtime.
-// VS 2015 Update 2 was fixed to handle this correctly, but the fix inherently changes layout and breaks binary compatibility.
-// Please define _ENABLE_ATOMIC_ALIGNMENT_FIX to acknowledge that you understand this,
-// and that everything you're linking has been compiled with VS 2015 Update 2 (or later).
-// #define _ENABLE_ATOMIC_ALIGNMENT_FIX
 #include <atomic>
 
 namespace rxtd::utils {
@@ -34,7 +28,6 @@ namespace rxtd::utils {
 
 	private:
 		IMMDeviceEnumeratorWrapper enumerator;
-		bool registered = false;
 
 		std::atomic<bool> defaultRenderChanged{ };
 		std::atomic<bool> defaultCaptureChanged{ };
@@ -42,37 +35,19 @@ namespace rxtd::utils {
 
 		std::mutex mut;
 
-		// when Rainmeter::Logger is used in functions here,
-		// somewhere in the ntdll.dll deadlock can occur
-
 	public:
-		CMMNotificationClient() = default;
-
-		virtual ~CMMNotificationClient() {
-			unregister();
+		CMMNotificationClient() {
+			enumerator.getPointer()->RegisterEndpointNotificationCallback(this);
 		}
 
-		CMMNotificationClient(IMMDeviceEnumeratorWrapper _enumerator) :
-			enumerator(std::move(_enumerator)) {
-			const auto result = enumerator.getPointer()->RegisterEndpointNotificationCallback(this);
-			if (result == S_OK) {
-				registered = true;
-			}
+		virtual ~CMMNotificationClient() {
+			enumerator.getPointer()->UnregisterEndpointNotificationCallback(this);
 		}
 
 		CMMNotificationClient(const CMMNotificationClient& other) = delete;
 		CMMNotificationClient(CMMNotificationClient&& other) noexcept = delete;
 		CMMNotificationClient& operator=(const CMMNotificationClient& other) = delete;
 		CMMNotificationClient& operator=(CMMNotificationClient&& other) noexcept = delete;
-
-		void unregister() {
-			if (registered == false) {
-				return;
-			}
-
-			enumerator.getPointer()->UnregisterEndpointNotificationCallback(this);
-			registered = false;
-		}
 
 		[[nodiscard]]
 		Changes takeChanges() {

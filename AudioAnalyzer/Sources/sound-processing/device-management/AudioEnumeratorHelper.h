@@ -16,7 +16,6 @@
 
 namespace rxtd::audio_analyzer {
 	class AudioEnumeratorHelper {
-		bool valid = true;
 
 		utils::Rainmeter::Logger logger;
 
@@ -27,15 +26,13 @@ namespace rxtd::audio_analyzer {
 		std::set<string> outputDevicesIDs;
 
 	public:
-		AudioEnumeratorHelper();
-
 		void setLogger(utils::Rainmeter::Logger value) {
 			logger = std::move(value);
 		}
 
 		[[nodiscard]]
 		bool isValid() const {
-			return valid;
+			return enumeratorWrapper.isValid();
 		}
 
 		[[nodiscard]]
@@ -48,11 +45,6 @@ namespace rxtd::audio_analyzer {
 
 		string makeDeviceString(utils::MediaDeviceType type);
 		string legacy_makeDeviceString(utils::MediaDeviceType type);
-
-		[[nodiscard]]
-		utils::IMMDeviceEnumeratorWrapper& getWrapper() {
-			return enumeratorWrapper;
-		}
 
 	private:
 		void updateDeviceLists();
