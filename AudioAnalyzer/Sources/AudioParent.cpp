@@ -42,23 +42,23 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 }
 
 void AudioParent::vReload() {
-	if (auto request = readRequest();
-		request != requestedSource) {
-		requestedSource = std::move(request);
-
-		helper.setDevice(requestedSource);
-	}
-
+	auto request = readRequest();
 	const bool anythingChanged = paramParser.parse(legacyNumber);
 
-	if (anythingChanged) {
-		helper.patch(paramParser.getParseResult(), legacyNumber, snapshot.dataSnapshot);
+	if (request != requestedSource || anythingChanged) {
+		requestedSource = std::move(request);
+
+		helper.setParams(requestedSource, paramParser.getParseResult(), legacyNumber, snapshot.dataSnapshot);
 	}
 }
 
 double AudioParent::vUpdate() {
-	helper.update();
-	helper.updateSnapshot(snapshot);
+	helper.update(snapshot);
+
+	if (snapshot.fatalError) {
+		setMeasureState(utils::MeasureState::eBROKEN);
+		return { };
+	}
 
 	for (const auto& [procName, procInfo] : paramParser.getParseResult()) {
 		auto& processingSnapshot = snapshot.dataSnapshot[procName];
@@ -96,21 +96,22 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 		}
 
 		const isview deviceProperty = args[1];
+		const auto& state= snapshot.diSnapshot;
 
 		if (deviceProperty == L"status") {
-			resolveBufferString = snapshot.diSnapshot.status ? L"1" : L"0";
+			resolveBufferString = state.status ? L"1" : L"0";
 		} else if (deviceProperty == L"status string") {
-			resolveBufferString = snapshot.diSnapshot.status ? L"active" : L"down";
+			resolveBufferString = state.status ? L"active" : L"down";
 		} else if (deviceProperty == L"type") {
-			resolveBufferString = snapshot.diSnapshot.type == utils::MediaDeviceType::eINPUT ? L"input" : L"output";
+			resolveBufferString = state.type == utils::MediaDeviceType::eINPUT ? L"input" : L"output";
 		} else if (deviceProperty == L"name") {
-			resolveBufferString = snapshot.diSnapshot.name;
+			resolveBufferString = state.name;
 		} else if (deviceProperty == L"description") {
-			resolveBufferString = snapshot.diSnapshot.description;
+			resolveBufferString = state.description;
 		} else if (deviceProperty == L"id") {
-			resolveBufferString = snapshot.diSnapshot.id;
+			resolveBufferString = state.id;
 		} else if (deviceProperty == L"format") {
-			resolveBufferString = snapshot.diSnapshot.formatString;
+			resolveBufferString = state.formatString;
 		} else {
 			cl.warning(L"unknown device property '{}'", deviceProperty);
 		}
@@ -127,6 +128,7 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 		return;
 	}
 	if (optionName == L"device list") {
+		// todo use legacy number
 		resolveBufferString = snapshot.legacy_deviceList;
 		return;
 	}

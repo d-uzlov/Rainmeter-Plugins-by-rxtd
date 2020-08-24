@@ -11,7 +11,11 @@
 
 using namespace audio_analyzer;
 
-bool ParentHelper::init(utils::Rainmeter::Logger _logger, index _legacyNumber, double computeTimeout, double killTimeout) {
+bool ParentHelper::init(
+	utils::Rainmeter::Logger _logger,
+	index _legacyNumber,
+	double computeTimeout, double killTimeout
+) {
 	logger = std::move(_logger);
 	legacyNumber = _legacyNumber;
 
@@ -43,22 +47,40 @@ bool ParentHelper::init(utils::Rainmeter::Logger _logger, index _legacyNumber, d
 	return true;
 }
 
-void ParentHelper::setDevice(RequestedDeviceDescription request) {
-	requestedSource = std::move(request);
-	updateDevice();
-}
-
-void ParentHelper::patch(
+void ParentHelper::setParams(
+	RequestedDeviceDescription request,
 	const ParamParser::ProcessingsInfoMap& patches,
 	index legacyNumber,
 	ProcessingOrchestrator::DataSnapshot& dataSnapshot
 ) {
+	requestedSource = std::move(request);
+	updateDevice();
+
 	orchestrator.patch(patches, legacyNumber);
 	orchestrator.configureSnapshot(snapshot.dataSnapshot);
 	orchestrator.configureSnapshot(dataSnapshot);
 }
 
-bool ParentHelper::update() {
+void ParentHelper::update(Snapshot& snap) {
+	pUpdate();
+
+	if (formatIsUpdated) {
+		std::swap(snapshot.dataSnapshot, snap.dataSnapshot);
+		return;
+	}
+
+	// todo check that dataSnapshot has newest info
+	orchestrator.configureSnapshot(snap.dataSnapshot);
+
+	snap.diSnapshot = snapshot.diSnapshot;
+	snap.deviceListInput = snapshot.deviceListInput;
+	snap.deviceListOutput = snapshot.deviceListOutput;
+	snap.legacy_deviceList = snapshot.legacy_deviceList;
+
+	formatIsUpdated = true;
+}
+
+void ParentHelper::pUpdate() {
 	const auto changes = notificationClient.getPointer()->takeChanges();
 
 	// todo handle "no default device" and "device not found"
@@ -80,7 +102,8 @@ bool ParentHelper::update() {
 	}
 
 	if (deviceManager.getState() == DeviceManager::State::eFATAL) {
-		return false;
+		snapshot.fatalError = true;
+		return;
 
 		// todo
 		// for (auto& [name, sa] : saMap) {
@@ -99,25 +122,6 @@ bool ParentHelper::update() {
 		orchestrator.exchangeData(snapshot.dataSnapshot);
 		channelMixer.reset();
 	}
-
-	return true;
-}
-
-void ParentHelper::updateSnapshot(Snapshot& snap) {
-	if (formatIsUpdated) {
-		std::swap(snapshot.dataSnapshot, snap.dataSnapshot);
-		return;
-	}
-
-	// todo check that dataSnapshot has newest info
-	orchestrator.configureSnapshot(snap.dataSnapshot);
-
-	snap.diSnapshot = snapshot.diSnapshot;
-	snap.deviceListInput = snapshot.deviceListInput;
-	snap.deviceListOutput = snapshot.deviceListOutput;
-	snap.legacy_deviceList = snapshot.legacy_deviceList;
-
-	formatIsUpdated = true;
 }
 
 void ParentHelper::updateDevice() {

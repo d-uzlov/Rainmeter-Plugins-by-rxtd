@@ -39,6 +39,8 @@ namespace rxtd::audio_analyzer {
 			string deviceListInput;
 			string deviceListOutput;
 			string legacy_deviceList;
+
+			bool fatalError = false;
 		};
 
 	private:
@@ -61,20 +63,17 @@ namespace rxtd::audio_analyzer {
 		// return true on success, false on fatal error
 		bool init(utils::Rainmeter::Logger _logger, index _legacyNumber, double computeTimeout, double killTimeout);
 
-		void setDevice(RequestedDeviceDescription request);
-
-		void patch(
+		void setParams(
+			RequestedDeviceDescription request,
 			const ParamParser::ProcessingsInfoMap& patches,
 			index legacyNumber,
 			ProcessingOrchestrator::DataSnapshot& dataSnapshot
 		);
 
-		// return true on success, false on fatal error
-		bool update();
-
-		void updateSnapshot(Snapshot& snap);
+		void update(Snapshot& snap);
 
 	private:
+		void pUpdate();
 		void updateDevice();
 	};
 }
