@@ -122,10 +122,6 @@ void legacy_FiniteTimeFilter::vProcess(array_view<float> wave, clock::time_point
 	}
 }
 
-void legacy_FiniteTimeFilter::vReset() {
-	// todo
-}
-
 void legacy_FiniteTimeFilter::applyToLayer(utils::array2d_view<float> layerPastValues, array_span<float> dest) const {
 	auto pastValuesStartIndex = pastValuesIndex + 1;
 	if (pastValuesStartIndex >= params.smoothingFactor) {

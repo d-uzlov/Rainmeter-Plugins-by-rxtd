@@ -52,7 +52,6 @@ namespace rxtd::audio_utils {
 	public:
 		void setParams(Params _params, FFT* _fftPtr, FftCascade* _successorPtr, index _cascadeIndex);
 		void process(array_view<float> wave, clock::time_point killTime);
-		void reset();
 
 		[[nodiscard]]
 		double legacy_getDC() const {

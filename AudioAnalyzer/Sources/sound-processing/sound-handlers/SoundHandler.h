@@ -255,12 +255,6 @@ namespace rxtd::audio_analyzer {
 			vProcess(wave, killTime);
 		}
 
-		void reset() {
-			// todo do we even need reset at all?
-			purgeCache();
-			vReset();
-		}
-
 		[[nodiscard]]
 		virtual index getStartingLayer() const {
 			return 0;
@@ -306,9 +300,6 @@ namespace rxtd::audio_analyzer {
 		// handler should try to return control to caller
 		// when time is more than killTime
 		virtual void vProcess(array_view<float> wave, clock::time_point killTime) = 0;
-
-		virtual void vReset() {
-		}
 
 		static index legacy_parseIndexProp(const isview& request, const isview& propName, index endBound) {
 			return legacy_parseIndexProp(request, propName, 0, endBound);

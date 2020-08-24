@@ -195,12 +195,6 @@ index FftAnalyzer::getFftSize() const {
 	return fftSize;
 }
 
-void FftAnalyzer::vReset() {
-	for (auto& cascade : cascades) {
-		cascade.reset();
-	}
-}
-
 void FftAnalyzer::vProcess(array_view<float> wave, clock::time_point killTime) {
 	if (params.randomTest != 0.0) {
 		processRandom(wave.size(), killTime);

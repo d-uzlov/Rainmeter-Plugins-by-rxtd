@@ -55,6 +55,7 @@ double AudioParent::vUpdate() {
 
 	if (snapshot.fatalError) {
 		setMeasureState(utils::MeasureState::eBROKEN);
+		// todo free memory
 		return { };
 	}
 

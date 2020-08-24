@@ -68,7 +68,6 @@ namespace rxtd::audio_analyzer {
 
 		// returns true when killed on timeout
 		bool process(const ChannelMixer& mixer, clock::time_point killTime);
-		void resetValues() noexcept;
 		void configureSnapshot(Snapshot& snapshot);
 
 	private:

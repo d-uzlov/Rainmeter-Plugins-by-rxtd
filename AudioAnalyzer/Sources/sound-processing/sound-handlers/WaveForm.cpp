@@ -123,18 +123,14 @@ SoundHandler::ConfigurationResult WaveForm::vConfigure(Logger& cl) {
 
 	writeNeeded = true;
 
-	vReset();
-
-	return { 0, 0 };
-}
-
-void WaveForm::vReset() {
 	counter = 0;
 	min = 10.0;
 	max = -10.0;
 
 	minTransformer.reset();
 	maxTransformer.reset();
+
+	return { 0, 0 };
 }
 
 void WaveForm::vProcess(array_view<float> wave, clock::time_point killTime) {

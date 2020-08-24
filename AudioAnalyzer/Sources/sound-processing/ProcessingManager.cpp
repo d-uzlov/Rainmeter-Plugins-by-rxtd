@@ -64,15 +64,6 @@ bool ProcessingManager::process(const ChannelMixer& mixer, clock::time_point kil
 	return false;
 }
 
-void ProcessingManager::resetValues() noexcept {
-	for (auto& [channel, channelData] : channels) {
-		for (auto& [handlerName, handler] : channelData) {
-			// order is not important
-			handler->reset();
-		}
-	}
-}
-
 void ProcessingManager::configureSnapshot(Snapshot& snapshot) {
 	utils::MapUtils::intersectKeyCollection(snapshot, channels);
 

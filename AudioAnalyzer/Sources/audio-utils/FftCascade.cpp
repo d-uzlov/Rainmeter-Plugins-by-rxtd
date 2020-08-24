@@ -145,8 +145,3 @@ void FftCascade::doFft(array_view<float> chunk) {
 
 	hasChanges = true;
 }
-
-void FftCascade::reset() {
-	std::fill(values.begin(), values.end(), 0.0f);
-	buffer.reset();
-}

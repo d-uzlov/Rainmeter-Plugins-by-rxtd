@@ -66,7 +66,6 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		ConfigurationResult vConfigure(Logger& cl) override;
 
-		void vReset() final;
 		void vProcess(array_view<float> wave, clock::time_point killTime) final;
 
 		void setNextValue(float value);
@@ -78,7 +77,6 @@ namespace rxtd::audio_analyzer {
 
 		virtual void _process(array_view<float> wave) = 0;
 		virtual void finishBlock() = 0;
-		virtual void _reset() = 0;
 
 	private:
 		void vConfigureSnapshot(std::any& handlerSpecificData) const override;
@@ -94,7 +92,6 @@ namespace rxtd::audio_analyzer {
 
 	protected:
 		void finishBlock() override;
-		void _reset() override;
 	};
 
 	class BlockPeak : public BlockHandler {
@@ -105,6 +102,5 @@ namespace rxtd::audio_analyzer {
 
 	protected:
 		void finishBlock() override;
-		void _reset() override;
 	};
 }

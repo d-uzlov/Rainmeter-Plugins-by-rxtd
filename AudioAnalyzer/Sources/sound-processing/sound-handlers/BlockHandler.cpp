@@ -57,12 +57,6 @@ SoundHandler::ConfigurationResult BlockHandler::vConfigure(Logger& cl) {
 	return { 1, 1 };
 }
 
-void BlockHandler::vReset() {
-	counter = 0;
-	params.transformer.resetState();
-	_reset();
-}
-
 void BlockHandler::vProcess(array_view<float> wave, clock::time_point killTime) {
 	_process(wave);
 }
@@ -110,10 +104,6 @@ void BlockRms::finishBlock() {
 	intermediateResult = 0.0;
 }
 
-void BlockRms::_reset() {
-	intermediateResult = 0.0;
-}
-
 void BlockPeak::_process(array_view<float> wave) {
 	for (float x : wave) {
 		intermediateResult = std::max(intermediateResult, std::abs(x));
@@ -127,9 +117,5 @@ void BlockPeak::_process(array_view<float> wave) {
 void BlockPeak::finishBlock() {
 	setNextValue(intermediateResult);
 	counter = 0;
-	intermediateResult = 0.0;
-}
-
-void BlockPeak::_reset() {
 	intermediateResult = 0.0;
 }

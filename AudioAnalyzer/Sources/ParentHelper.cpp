@@ -173,14 +173,13 @@ void ParentHelper::pUpdate() {
 		auto snapshotLock = getSnapshotLock();
 		snapshot.fatalError = true;
 		return;
-
-		// todo
-		// for (auto& [name, sa] : saMap) {
-		// 	sa.resetValues();
-		// }
+	}
+	if (deviceManager.getState() != DeviceManager::State::eOK) {
+		return;
 	}
 
 	bool any = false;
+	// todo
 	deviceManager.getCaptureManager().capture([&](utils::array2d_view<float> channelsData) {
 		channelMixer.saveChannelsData(channelsData, true);
 		any = true;

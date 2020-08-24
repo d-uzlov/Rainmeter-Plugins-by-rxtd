@@ -129,7 +129,6 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		ConfigurationResult vConfigure(Logger& cl) override;
 
-		void vReset() override;
 		void vProcess(array_view<float> wave, clock::time_point killTime) override;
 
 
