@@ -48,11 +48,7 @@ bool ParentHelper::init(
 		}
 	};
 
-	enumerator.updateDeviceStrings();
-	enumerator.updateDeviceStringLegacy(snapshot.diSnapshot.type);
-	snapshot.deviceListInput = enumerator.getDeviceListInput();
-	snapshot.deviceListOutput = enumerator.getDeviceListOutput();
-	snapshot.legacy_deviceList = enumerator.legacy_getDeviceList();
+	updateDeviceListStrings();
 
 	orchestrator.setLogger(logger);
 
@@ -162,11 +158,7 @@ void ParentHelper::pUpdate() {
 			updateDevice();
 		}
 
-		enumerator.updateDeviceStrings();
-		enumerator.updateDeviceStringLegacy(snapshot.diSnapshot.type);
-		snapshot.deviceListInput = enumerator.getDeviceListInput();
-		snapshot.deviceListOutput = enumerator.getDeviceListOutput();
-		snapshot.legacy_deviceList = enumerator.legacy_getDeviceList();
+		updateDeviceListStrings();
 	}
 
 	if (deviceManager.getState() == DeviceManager::State::eFATAL) {
@@ -215,7 +207,16 @@ void ParentHelper::fullSnapshotUpdate(Snapshot& snap) const {
 	snap.diSnapshot = snapshot.diSnapshot;
 	snap.deviceListInput = snapshot.deviceListInput;
 	snap.deviceListOutput = snapshot.deviceListOutput;
-	snap.legacy_deviceList = snapshot.legacy_deviceList;
+}
+
+void ParentHelper::updateDeviceListStrings() {
+	if (legacyNumber < 104) {
+		snapshot.deviceListInput = enumerator.legacy_makeDeviceString(utils::MediaDeviceType::eINPUT);
+		snapshot.deviceListOutput = enumerator.legacy_makeDeviceString(utils::MediaDeviceType::eOUTPUT);
+	} else {
+		snapshot.deviceListInput = enumerator.makeDeviceString(utils::MediaDeviceType::eINPUT);
+		snapshot.deviceListOutput = enumerator.makeDeviceString(utils::MediaDeviceType::eOUTPUT);
+	}
 }
 
 std::unique_lock<std::mutex> ParentHelper::getFullStateLock() {

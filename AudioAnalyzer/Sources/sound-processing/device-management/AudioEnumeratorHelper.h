@@ -26,11 +26,6 @@ namespace rxtd::audio_analyzer {
 		std::set<string> inputDevicesIDs;
 		std::set<string> outputDevicesIDs;
 
-		string deviceStringInput;
-		string deviceStringOutput;
-
-		string deviceStringLegacy;
-
 	public:
 		AudioEnumeratorHelper();
 
@@ -51,25 +46,8 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		std::optional<utils::MediaDeviceType> getDeviceType(const string& deviceID);
 
-		[[nodiscard]]
-		const string& getDeviceListInput() const {
-			return deviceStringInput;
-		}
-
-		[[nodiscard]]
-		const string& getDeviceListOutput() const {
-			return deviceStringOutput;
-		}
-
-		void updateDeviceStrings();
-		void makeDeviceString(utils::MediaDeviceType type, string& result);
-
-		void updateDeviceStringLegacy(utils::MediaDeviceType type);
-
-		[[nodiscard]]
-		const string& legacy_getDeviceList() const {
-			return deviceStringLegacy;
-		}
+		string makeDeviceString(utils::MediaDeviceType type);
+		string legacy_makeDeviceString(utils::MediaDeviceType type);
 
 		[[nodiscard]]
 		utils::IMMDeviceEnumeratorWrapper& getWrapper() {

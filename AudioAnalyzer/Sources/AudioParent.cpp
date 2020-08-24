@@ -127,8 +127,10 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 		return;
 	}
 	if (optionName == L"device list") {
-		// todo use legacy number
-		resolveBufferString = snapshot.legacy_deviceList;
+		resolveBufferString =
+			snapshot.diSnapshot.type == utils::MediaDeviceType::eINPUT
+				? snapshot.deviceListInput
+				: snapshot.deviceListOutput;
 		return;
 	}
 

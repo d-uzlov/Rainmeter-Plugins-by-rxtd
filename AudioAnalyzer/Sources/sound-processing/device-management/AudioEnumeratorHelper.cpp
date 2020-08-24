@@ -66,16 +66,12 @@ std::optional<utils::MediaDeviceType> AudioEnumeratorHelper::getDeviceType(const
 	return std::nullopt;
 }
 
-void AudioEnumeratorHelper::updateDeviceStrings() {
-	makeDeviceString(utils::MediaDeviceType::eINPUT, deviceStringInput);
-	makeDeviceString(utils::MediaDeviceType::eOUTPUT, deviceStringOutput);
-}
+string AudioEnumeratorHelper::makeDeviceString(utils::MediaDeviceType type) {
+	string result;
 
-void AudioEnumeratorHelper::makeDeviceString(utils::MediaDeviceType type, string& result) {
 	auto collection = enumeratorWrapper.getActiveDevices(type);
 	if (collection.empty()) {
-		result.clear();
-		return;
+		return result;
 	}
 
 	utils::BufferPrinter bp;
@@ -87,6 +83,30 @@ void AudioEnumeratorHelper::makeDeviceString(utils::MediaDeviceType type, string
 	result = bp.getBufferView();
 	result.pop_back(); // removes \0
 	result.pop_back(); // removes \n
+
+	return result;
+}
+
+string AudioEnumeratorHelper::legacy_makeDeviceString(utils::MediaDeviceType type) {
+	string result;
+
+	auto collection = enumeratorWrapper.getActiveDevices(type);
+	if (collection.empty()) {
+		return result;;
+	}
+
+	utils::BufferPrinter bp;
+	for (auto& device : collection) {
+		const auto deviceInfo = device.readDeviceInfo();
+
+		bp.append(L"{} {}\n", deviceInfo.id, deviceInfo.fullFriendlyName);
+	}
+
+	result = bp.getBufferView();
+	result.pop_back();
+	result.pop_back();
+
+	return result;
 }
 
 void AudioEnumeratorHelper::updateDeviceLists() {
@@ -106,23 +126,4 @@ std::set<string> AudioEnumeratorHelper::readDeviceIdList(utils::MediaDeviceType 
 	}
 
 	return list;
-}
-
-void AudioEnumeratorHelper::updateDeviceStringLegacy(utils::MediaDeviceType type) {
-	auto collection = enumeratorWrapper.getActiveDevices(type);
-	if (collection.empty()) {
-		deviceStringLegacy.clear();
-		return;
-	}
-
-	utils::BufferPrinter bp;
-	for (auto& device : collection) {
-		const auto deviceInfo = device.readDeviceInfo();
-
-		bp.append(L"{} {}\n", deviceInfo.id, deviceInfo.fullFriendlyName);
-	}
-
-	deviceStringLegacy = bp.getBufferView();
-	deviceStringLegacy.pop_back();
-	deviceStringLegacy.pop_back();
 }

@@ -38,7 +38,6 @@ namespace rxtd::audio_analyzer {
 
 			string deviceListInput;
 			string deviceListOutput;
-			string legacy_deviceList;
 
 			bool fatalError = false;
 		};
@@ -100,6 +99,7 @@ namespace rxtd::audio_analyzer {
 		void pUpdate();
 		void updateDevice();
 		void fullSnapshotUpdate(Snapshot& snap) const;
+		void updateDeviceListStrings();
 
 		std::unique_lock<std::mutex> getFullStateLock();
 		std::unique_lock<std::mutex> getSnapshotLock();
