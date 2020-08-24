@@ -48,7 +48,7 @@ HandlerCacheHelper::HandlerRawInfo HandlerCacheHelper::parseHandler(sview name, 
 		descriptionOption = rain.read(optionName);
 	}
 
-	auto cl = rain.getLogger().context(L"Handler '{}': ", name);
+	auto cl = rain.createLogger().context(L"Handler '{}': ", name);
 
 	if (descriptionOption.empty()) {
 		cl.error(L"description is not found", name);

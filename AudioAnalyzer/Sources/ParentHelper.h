@@ -51,7 +51,6 @@ namespace rxtd::audio_analyzer {
 		ProcessingOrchestrator orchestrator;
 		AudioEnumeratorHelper enumerator;
 
-		utils::Rainmeter::Logger logger;
 		index legacyNumber{ };
 
 		RequestedDeviceDescription requestedSource;

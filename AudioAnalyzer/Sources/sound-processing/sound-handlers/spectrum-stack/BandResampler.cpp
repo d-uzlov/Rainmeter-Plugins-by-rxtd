@@ -78,7 +78,7 @@ std::vector<float> BandResampler::parseFreqList(sview listId, const Rainmeter& r
 		freqListOption = rain.read(freqListOptionName);
 	}
 
-	Logger cl = rain.getLogger().context(L"FreqList {}: ", listId);
+	Logger cl = rain.createLogger().context(L"FreqList {}: ", listId);
 	if (freqListOption.empty()) {
 		cl.error(L"description is not found");
 		return { };

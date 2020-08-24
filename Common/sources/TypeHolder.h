@@ -21,7 +21,7 @@ namespace rxtd::utils {
 	class TypeHolder {
 	protected:
 		Rainmeter rain;
-		Rainmeter::Logger& logger;
+		Rainmeter::Logger logger;
 
 	private:
 		MeasureState measureState = MeasureState::eWORKING;

@@ -16,11 +16,11 @@ using namespace std::string_literals;
 
 using namespace audio_analyzer;
 
-bool ParamParser::parse(index legacyNumber) {
+bool ParamParser::parse(index _legacyNumber) {
 	anythingChanged = false;
-	this->legacyNumber = legacyNumber;
+	legacyNumber = _legacyNumber;
 
-	auto& logger = rain.getLogger();
+	auto logger = rain.createLogger();
 
 	auto defaultTargetRate = rain.read(L"TargetRate").asInt(44100);
 	if (defaultTargetRate < 0) {
@@ -32,7 +32,7 @@ bool ParamParser::parse(index legacyNumber) {
 
 	auto processingIndices = rain.read(L"Processing").asList(L'|');
 	if (!checkListUnique(processingIndices)) {
-		rain.getLogger().error(L"Found repeating processings, aborting");
+		logger.error(L"Found repeating processings, aborting");
 		anythingChanged = true;
 		parseResult = { };
 	}

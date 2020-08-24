@@ -13,8 +13,8 @@ using namespace utils;
 
 std::map<Rainmeter::Skin, std::map<istring, ParentBase*, std::less<>>> ParentBase::globalMeasuresMap{ };
 
-TypeHolder::TypeHolder(Rainmeter&& _rain) : rain(std::move(_rain)), logger(rain.getLogger()) {
-
+TypeHolder::TypeHolder(Rainmeter&& _rain) : rain(std::move(_rain)) {
+	logger = rain.createLogger();
 }
 
 double TypeHolder::update() {

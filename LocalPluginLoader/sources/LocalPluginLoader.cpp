@@ -12,10 +12,11 @@
 
 LocalPluginLoader::LocalPluginLoader(void* rm) {
 	rain = utils::Rainmeter{ rm };
+	logger = rain.createLogger();
 
 	string pluginPath = rain.readPath(L"PluginPath") % own();
 	if (pluginPath.empty()) {
-		rain.getLogger().error(L"Plugin path must be specified");
+		logger.error(L"Plugin path must be specified");
 		return;
 	}
 	const wchar_t lastSymbol = pluginPath[pluginPath.length() - 1];
@@ -44,14 +45,14 @@ LocalPluginLoader::LocalPluginLoader(void* rm) {
 			nullptr
 		);
 
-		rain.getLogger().error(L"Can't load library in path '{}' (error {})", pluginPath, errorCode);
-		rain.getLogger().error(L"More info: {}", receiveBuffer);
+		logger.error(L"Can't load library in path '{}' (error {})", pluginPath, errorCode);
+		logger.error(L"More info: {}", receiveBuffer);
 
 		LocalFree(receiveBuffer);
 		return;
 	}
 	if (GetProcAddress(hLib, "LocalPluginLoaderRecursionPrevention_123_") != nullptr) {
-		rain.getLogger().error(L"Loaded plugin must not be LocalPluginLoader");
+		logger.error(L"Loaded plugin must not be LocalPluginLoader");
 		return;
 	}
 
@@ -119,7 +120,7 @@ const wchar_t* LocalPluginLoader::solveSectionVariable(const int count, const wc
 		return nullptr;
 	}
 	if (count < 1) {
-		rain.getLogger().error(L"Function name must be specified");
+		logger.error(L"Function name must be specified");
 		return nullptr;
 	}
 
@@ -145,7 +146,7 @@ const wchar_t* LocalPluginLoader::solveSectionVariable(const int count, const wc
 		const wchar_t wc = funcName[i];
 		const char c = static_cast<char>(wc);
 		if (c != wc) {
-			rain.getLogger().error(L"Can not find function '{}'", funcName);
+			logger.error(L"Can not find function '{}'", funcName);
 			return nullptr;
 		}
 		byteFuncName[i] = c;
@@ -154,7 +155,7 @@ const wchar_t* LocalPluginLoader::solveSectionVariable(const int count, const wc
 	const auto funcPtr = reinterpret_cast<const wchar_t* (*)(void* data, int argc, const wchar_t* argv[])>(
 		GetProcAddress(hLib, byteFuncName.c_str()));
 	if (funcPtr == nullptr) {
-		rain.getLogger().error(L"Can not find function '{}'", funcName);
+		logger.error(L"Can not find function '{}'", funcName);
 		return nullptr;
 	}
 	return funcPtr(pluginData, count - 1, args + 1);

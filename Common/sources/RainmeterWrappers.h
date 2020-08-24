@@ -18,6 +18,10 @@ namespace rxtd::utils {
 		class Logger {
 			friend Rainmeter;
 
+			void* rm{ };
+			string prefix{ };
+
+		public:
 			enum class LogLevel {
 				eERROR = 1,
 				eWARNING = 2,
@@ -25,10 +29,6 @@ namespace rxtd::utils {
 				eDEBUG = 4
 			};
 
-			void* rm{ };
-			string prefix{ };
-
-		public:
 			mutable BufferPrinter printer;
 
 			Logger() = default;
@@ -74,12 +74,12 @@ namespace rxtd::utils {
 
 				printer.append(formatString, args...);
 
-				logRainmeter(logLevel, printer.getBufferPtr());
+				logRainmeter(logLevel, printer.getBufferView());
 
 				printer.reset();
 			}
 
-			void logRainmeter(LogLevel logLevel, const wchar_t* message) const;
+			void logRainmeter(LogLevel logLevel, sview message) const;
 		};
 
 		/**
@@ -113,7 +113,6 @@ namespace rxtd::utils {
 		void* rm{ };
 		Skin skin{ };
 		string measureName;
-		mutable Logger logger;
 		mutable string optionNameBuffer;
 
 	public:
@@ -121,7 +120,10 @@ namespace rxtd::utils {
 		explicit Rainmeter(void* rm);
 
 		[[nodiscard]]
-		Option read(sview optionName) const;
+		Option read(sview optionName) const {
+			return Option{ readString(optionName) }.own();
+		}
+
 		[[nodiscard]]
 		sview readString(sview optionName, const wchar_t* defaultValue = L"") const;
 		[[nodiscard]]
@@ -141,16 +143,26 @@ namespace rxtd::utils {
 		void executeCommand(sview command, Skin skin);
 
 		[[nodiscard]]
-		Logger& getLogger() const;
+		Logger createLogger() const {
+			return { rm, { } };
+		}
 
 		[[nodiscard]]
-		Skin getSkin() const;
+		Skin getSkin() const {
+			return skin;
+		}
+
 		[[nodiscard]]
-		const string& getMeasureName() const;
+		sview getMeasureName() const {
+			return measureName;
+		}
+
 		[[nodiscard]]
 		void* getWindowHandle();
 
 		static void sourcelessLog(const wchar_t* message);
+
+		static void printLogMessages();
 
 	private:
 		[[nodiscard]]

@@ -27,11 +27,10 @@ ParentHelper::~ParentHelper() {
 }
 
 bool ParentHelper::init(
-	utils::Rainmeter::Logger _logger,
+	utils::Rainmeter::Logger logger,
 	utils::OptionMap threadingMap,
 	index _legacyNumber
 ) {
-	logger = std::move(_logger);
 	legacyNumber = _legacyNumber;
 
 	if (!enumerator.isValid()) {

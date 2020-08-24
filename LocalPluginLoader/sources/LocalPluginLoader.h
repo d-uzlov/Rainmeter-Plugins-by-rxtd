@@ -14,6 +14,7 @@
 
 class LocalPluginLoader {
 	utils::Rainmeter rain;
+	utils::Rainmeter::Logger logger;
 	HMODULE hLib = {};
 	void* pluginData = nullptr;
 

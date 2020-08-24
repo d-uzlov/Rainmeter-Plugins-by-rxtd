@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -8,25 +8,57 @@
  */
 
 #include "RainmeterWrappers.h"
+
+#include <mutex>
+
 #include "RainmeterAPI.h"
 
 #pragma comment(lib, "Rainmeter.lib")
 
 using namespace utils;
 
-void Rainmeter::Logger::logRainmeter(LogLevel logLevel, const wchar_t* message) const {
-	RmLog(rm, static_cast<int>(logLevel), message);
+std::mutex logMutex;
+std::vector<wchar_t> logBuffer;
+
+struct LogMessageInfo {
+	void* rm;
+	index offset;
+	Rainmeter::Logger::LogLevel logLevel;
+};
+
+std::vector<LogMessageInfo> logMessagesInfo;
+
+static void saveLogMessage(void* rm, Rainmeter::Logger::LogLevel logLevel, sview message) {
+	std::unique_lock<std::mutex> lock{ logMutex };
+
+	const index logBufferOffset = logBuffer.size();
+	const index messageSize = message.size();
+	logBuffer.resize(logBufferOffset + messageSize);
+	std::copy(message.begin(), message.end(), logBuffer.begin() + logBufferOffset);
+	logBuffer.push_back(L'\0');
+
+	logMessagesInfo.push_back({ rm, logBufferOffset, logLevel });
+}
+
+void Rainmeter::Logger::logRainmeter(LogLevel logLevel, sview message) const {
+	saveLogMessage(rm, logLevel, message);
+}
+
+void Rainmeter::printLogMessages() {
+	std::unique_lock<std::mutex> lock{ logMutex };
+
+	for (auto info : logMessagesInfo) {
+		RmLog(info.rm, static_cast<int>(info.logLevel), logBuffer.data() + info.offset);
+	}
+
+	logMessagesInfo.clear();
+	logBuffer.clear();
 }
 
 Rainmeter::Rainmeter(void* rm) :
 	rm(rm) {
 	skin = Skin{ RmGetSkin(rm) };
 	measureName = RmGetMeasureName(rm);
-	logger = { rm, { } };
-}
-
-Option Rainmeter::read(sview optionName) const {
-	return Option{ readString(optionName) }.own();
 }
 
 sview Rainmeter::readString(sview optionName, const wchar_t* defaultValue) const {
@@ -53,24 +85,12 @@ void Rainmeter::executeCommand(sview command, Skin skin) {
 	RmExecute(skin.getRawPointer(), makeNullTerminated(command));
 }
 
-Rainmeter::Logger& Rainmeter::getLogger() const {
-	return logger;
-}
-
-Rainmeter::Skin Rainmeter::getSkin() const {
-	return skin;
-}
-
-const string& Rainmeter::getMeasureName() const {
-	return measureName;
-}
-
 void* Rainmeter::getWindowHandle() {
 	return RmGetSkinWindow(rm);
 }
 
 void Rainmeter::sourcelessLog(const wchar_t* message) {
-	RmLog(nullptr, static_cast<int>(Logger::LogLevel::eDEBUG), message);
+	saveLogMessage(nullptr, Logger::LogLevel::eDEBUG, message);
 }
 
 const wchar_t* Rainmeter::makeNullTerminated(sview view) const {
