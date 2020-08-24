@@ -13,11 +13,6 @@
 
 using namespace audio_analyzer;
 
-void ProcessingManager::updateFormat(index sampleRate, ChannelLayout layout) {
-	cph.updateSourceRate(sampleRate);
-	patchHandlers(std::move(layout));
-}
-
 void ProcessingManager::updateSnapshot(Snapshot& snapshot) {
 	for (auto& [channel, channelData] : channels) {
 		auto& channelSnapshot = snapshot[channel];
@@ -29,6 +24,7 @@ void ProcessingManager::updateSnapshot(Snapshot& snapshot) {
 }
 
 void ProcessingManager::setParams(
+	Logger logger,
 	const ParamParser::ProcessingData& pd,
 	index _legacyNumber,
 	index sampleRate, ChannelLayout layout
@@ -38,47 +34,8 @@ void ProcessingManager::setParams(
 	legacyNumber = _legacyNumber;
 
 	cph.setParams(pd.fcc, pd.targetRate, sampleRate);
-	if (sampleRate != 0) {
-		patchHandlers(std::move(layout));
-	} else {
-		channels.clear();
-	}
-}
 
-bool ProcessingManager::process(const ChannelMixer& mixer, clock::time_point killTime) {
-	for (auto& [channel, channelData] : channels) {
-		cph.processDataFrom(channel, mixer.getChannelPCM(channel));
 
-		const auto wave = cph.getResampled();
-
-		for (auto& handlerName : realOrder) {
-			auto& handler = *channelData[handlerName];
-			handler.process(wave, killTime);
-
-			if (clock::now() > killTime) {
-				return true;
-			}
-		}
-	}
-
-	return false;
-}
-
-void ProcessingManager::configureSnapshot(Snapshot& snapshot) {
-	utils::MapUtils::intersectKeyCollection(snapshot, channels);
-
-	for (auto& [channel, channelData] : channels) {
-		auto& channelSnapshot = snapshot[channel];
-		utils::MapUtils::intersectKeyCollection(channelSnapshot, channelData);
-
-		for (auto& [handlerName, handler] : channelData) {
-			auto& handlerSnapshot = channelSnapshot[handlerName];
-			handler->configureSnapshot(handlerSnapshot);
-		}
-	}
-}
-
-void ProcessingManager::patchHandlers(ChannelLayout layout) {
 	utils::MapUtils::intersectKeysWithPredicate(channels, [&](Channel channel) {
 		return channel == Channel::eAUTO || layout.contains(channel);
 	});
@@ -122,7 +79,7 @@ void ProcessingManager::patchHandlers(ChannelLayout layout) {
 			auto& patchInfo = *patchersInfo.patchers.find(handlerName)->second;
 			auto handlerPtr = patchInfo.fun(std::move(channelData[handlerName]));
 
-			auto cl = logger.context(L"Handler {}: ", handlerName);
+			auto cl = logger.context(L"handler '{}': ", handlerName);
 			const bool success = handlerPtr->patch(
 				patchInfo.params, patchInfo.sources,
 				channel.technicalName(), cph.getSampleRate(),
@@ -147,5 +104,38 @@ void ProcessingManager::patchHandlers(ChannelLayout layout) {
 		}
 
 		channelData = std::move(newData);
+	}
+}
+
+bool ProcessingManager::process(const ChannelMixer& mixer, clock::time_point killTime) {
+	for (auto& [channel, channelData] : channels) {
+		cph.processDataFrom(channel, mixer.getChannelPCM(channel));
+
+		const auto wave = cph.getResampled();
+
+		for (auto& handlerName : realOrder) {
+			auto& handler = *channelData[handlerName];
+			handler.process(wave, killTime);
+
+			if (clock::now() > killTime) {
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+void ProcessingManager::configureSnapshot(Snapshot& snapshot) {
+	utils::MapUtils::intersectKeyCollection(snapshot, channels);
+
+	for (auto& [channel, channelData] : channels) {
+		auto& channelSnapshot = snapshot[channel];
+		utils::MapUtils::intersectKeyCollection(channelSnapshot, channelData);
+
+		for (auto& [handlerName, handler] : channelData) {
+			auto& handlerSnapshot = channelSnapshot[handlerName];
+			handler->configureSnapshot(handlerSnapshot);
+		}
 	}
 }

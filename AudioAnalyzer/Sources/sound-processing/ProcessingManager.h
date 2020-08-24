@@ -37,22 +37,14 @@ namespace rxtd::audio_analyzer {
 		std::map<Channel, ChannelData> channels;
 
 		ChannelProcessingHelper cph;
-		Logger logger;
 
 		index legacyNumber = 0;
 
 	public:
-		void setLogger(Logger value) {
-			logger = std::move(value);
-		}
-
-		// format can be updated a lot
-		void updateFormat(index sampleRate, ChannelLayout layout);
-
 		void updateSnapshot(Snapshot& snapshot);
 
-		// options are rarely updated
 		void setParams(
+			Logger logger,
 			const ParamParser::ProcessingData& pd,
 			index _legacyNumber,
 			index sampleRate, ChannelLayout layout
@@ -61,8 +53,5 @@ namespace rxtd::audio_analyzer {
 		// returns true when killed on timeout
 		bool process(const ChannelMixer& mixer, clock::time_point killTime);
 		void configureSnapshot(Snapshot& snapshot);
-
-	private:
-		void patchHandlers(ChannelLayout layout);
 	};
 }

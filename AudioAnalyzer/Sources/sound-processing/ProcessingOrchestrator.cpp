@@ -17,14 +17,17 @@ void ProcessingOrchestrator::exchangeData(DataSnapshot& snapshot) {
 	std::swap(snapshot, dataSnapshot);
 }
 
-void ProcessingOrchestrator::patch(const ParamParser::ProcessingsInfoMap& patches, index legacyNumber, index samplesPerSec, ChannelLayout channelLayout) {
+void ProcessingOrchestrator::patch(
+	const ParamParser::ProcessingsInfoMap& patches,
+	index legacyNumber,
+	index samplesPerSec, ChannelLayout channelLayout
+) {
 	utils::MapUtils::intersectKeyCollection(saMap, patches);
 	utils::MapUtils::intersectKeyCollection(dataSnapshot, patches);
 
-	for (const auto&[name, data] : patches) {
+	for (const auto& [name, data] : patches) {
 		auto& sa = saMap[name];
-		sa.setLogger(logger);
-		sa.setParams(data, legacyNumber, samplesPerSec, channelLayout);
+		sa.setParams(logger.context(L"Proc '{}': ", name), data, legacyNumber, samplesPerSec, channelLayout);
 		sa.configureSnapshot(dataSnapshot[name]);
 	}
 }
@@ -34,7 +37,7 @@ void ProcessingOrchestrator::process(const ChannelMixer& channelMixer) {
 	static_assert(clock::is_steady);
 	using namespace std::chrono_literals;
 
-	const auto killTime = clock::now() + std::chrono::duration_cast<std::chrono::milliseconds>(1.0ms * killTimeoutMs );
+	const auto killTime = clock::now() + std::chrono::duration_cast<std::chrono::milliseconds>(1.0ms * killTimeoutMs);
 
 	bool killed = false;
 	const auto processBeginTime = clock::now();
@@ -46,7 +49,7 @@ void ProcessingOrchestrator::process(const ChannelMixer& channelMixer) {
 	}
 	const auto processEndTime = clock::now();
 
-	for (auto&[name, sa] : saMap) {
+	for (auto& [name, sa] : saMap) {
 		sa.updateSnapshot(dataSnapshot[name]);
 	}
 

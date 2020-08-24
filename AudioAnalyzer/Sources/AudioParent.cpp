@@ -104,7 +104,10 @@ double AudioParent::vUpdate() {
 		auto& processingSnapshot = snapshot.dataSnapshot[procName];
 		for (const auto& [handlerName, finisher] : procInfo.finishers) {
 			for (auto& [channel, channelSnapshot] : processingSnapshot) {
-				finisher(channelSnapshot[handlerName].handlerSpecificData);
+				auto handlerDataIter = channelSnapshot.find(handlerName);
+				if (handlerDataIter != channelSnapshot.end()) {
+					finisher(handlerDataIter->second.handlerSpecificData);
+				}
 			}
 		}
 	}
