@@ -167,6 +167,7 @@
     <ClInclude Include="Sources\AudioParent.h" />
     <ClInclude Include="Sources\HandlerCacheHelper.h" />
     <ClInclude Include="Sources\ParamParser.h" />
+    <ClInclude Include="Sources\ParentHelper.h" />
     <ClInclude Include="Sources\sound-processing\Channel.h" />
     <ClInclude Include="Sources\sound-processing\ChannelMixer.h" />
     <ClInclude Include="Sources\sound-processing\ChannelProcessingHelper.h" />
@@ -218,6 +219,7 @@
     <ClCompile Include="Sources\AudioParent.cpp" />
     <ClCompile Include="Sources\HandlerCacheHelper.cpp" />
     <ClCompile Include="Sources\ParamParser.cpp" />
+    <ClCompile Include="Sources\ParentHelper.cpp" />
     <ClCompile Include="Sources\sound-processing\Channel.cpp" />
     <ClCompile Include="Sources\sound-processing\ChannelMixer.cpp" />
     <ClCompile Include="Sources\sound-processing\ChannelProcessingHelper.cpp" />

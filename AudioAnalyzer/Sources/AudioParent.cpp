@@ -17,40 +17,28 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 	ParentBase(std::move(_rain)) {
 	setUseResultString(false);
 
-	if (!enumerator.isValid()) {
-		logger.error(L"Fatal error: can't get IMMDeviceEnumerator");
-		setMeasureState(utils::MeasureState::eBROKEN);
-		return;
-	}
-
 	legacyNumber = rain.read(L"MagicNumber").asInt(0);
 	switch (legacyNumber) {
 	case 0:
 	case 104:
 		break;
 	default:
-		logger.error(L"Fatal error: unknown magic number {}", legacyNumber);
+		logger.error(L"Fatal error: unknown MagicNumber {}", legacyNumber);
 		setMeasureState(utils::MeasureState::eBROKEN);
+		return;
 	}
 
-	deviceManager.setLogger(logger);
-	deviceManager.setLegacyNumber(legacyNumber);
+	const auto threadingParams = rain.read(L"threading").asMap(L'|', L' ');
+	const double computeTimeout = threadingParams.get(L"computeTimeout").asFloat(-1.0);
+	const double killTimeout = std::clamp(threadingParams.get(L"killTimeout").asFloat(33.0), 1.0, 33.0);
 
-	notificationClient = {
-		[=](auto ptr) {
-			*ptr = new utils::CMMNotificationClient{ enumerator.getWrapper() };
-			return true;
-		}
-	};
-
-	enumerator.updateDeviceStrings();
-	enumerator.updateDeviceStringLegacy(snapshot.diSnapshot.type);
-	snapshot.deviceListInput = enumerator.getDeviceListInput();
-	snapshot.deviceListOutput = enumerator.getDeviceListOutput();
-	snapshot.legacy_deviceList = enumerator.legacy_getDeviceList();
+	const bool success = helper.init(logger, legacyNumber, computeTimeout, killTimeout);
+	if (!success) {
+		setMeasureState(utils::MeasureState::eBROKEN);
+		return;
+	}
 
 	paramParser.setRainmeter(rain);
-	orchestrator.setLogger(logger);
 }
 
 void AudioParent::vReload() {
@@ -58,87 +46,29 @@ void AudioParent::vReload() {
 		request != requestedSource) {
 		requestedSource = std::move(request);
 
-		deviceManager.reconnect(enumerator, requestedSource.sourceType, requestedSource.id);
-		deviceManager.updateDeviceInfoSnapshot(snapshot.diSnapshot);
-		channelMixer.setFormat(snapshot.diSnapshot.format);
-		orchestrator.setFormat(snapshot.diSnapshot.format.samplesPerSec, snapshot.diSnapshot.format.channelLayout);
+		helper.setDevice(requestedSource);
 	}
-
-	const double computeTimeout = rain.read(L"computeTimeout").asFloat(-1.0);
-	const double killTimeout = std::clamp(rain.read(L"killTimeout").asFloat(33.0), 1.0, 33.0);
-
-	orchestrator.setComputeTimeout(computeTimeout);
-	orchestrator.setKillTimeout(killTimeout);
 
 	const bool anythingChanged = paramParser.parse(legacyNumber);
 
 	if (anythingChanged) {
-		orchestrator.patch(paramParser.getParseResult(), legacyNumber, snapshot.dataSnapshot);
+		helper.patch(paramParser.getParseResult(), legacyNumber, snapshot.dataSnapshot);
 	}
 }
 
 double AudioParent::vUpdate() {
-	const auto changes = notificationClient.getPointer()->takeChanges();
+	helper.update();
+	helper.updateSnapshot(snapshot);
 
-	if (const auto source = requestedSource.sourceType;
-		source == DeviceManager::DataSource::eDEFAULT_INPUT && changes.defaultCapture
-		|| source == DeviceManager::DataSource::eDEFAULT_OUTPUT && changes.defaultRender) {
-		deviceManager.reconnect(enumerator, requestedSource.sourceType, requestedSource.id);
-		deviceManager.updateDeviceInfoSnapshot(snapshot.diSnapshot);
-		channelMixer.setFormat(snapshot.diSnapshot.format);
-		orchestrator.setFormat(snapshot.diSnapshot.format.samplesPerSec, snapshot.diSnapshot.format.channelLayout);
-	} else if (!changes.devices.empty()) {
-		if (changes.devices.count(snapshot.diSnapshot.id) > 0) {
-			deviceManager.reconnect(enumerator, requestedSource.sourceType, requestedSource.id);
-			deviceManager.updateDeviceInfoSnapshot(snapshot.diSnapshot);
-			channelMixer.setFormat(snapshot.diSnapshot.format);
-			orchestrator.setFormat(snapshot.diSnapshot.format.samplesPerSec, snapshot.diSnapshot.format.channelLayout);
-		}
-
-		enumerator.updateDeviceStrings();
-		enumerator.updateDeviceStringLegacy(snapshot.diSnapshot.type);
-		snapshot.deviceListInput = enumerator.getDeviceListInput();
-		snapshot.deviceListOutput = enumerator.getDeviceListOutput();
-		snapshot.legacy_deviceList = enumerator.legacy_getDeviceList();
-	}
-
-	if (deviceManager.getState() != DeviceManager::State::eOK) {
-		if (deviceManager.getState() == DeviceManager::State::eFATAL) {
-			setMeasureState(utils::MeasureState::eBROKEN);
-			logger.error(L"Unrecoverable error");
-		}
-
-		// todo
-		// for (auto& [name, sa] : saMap) {
-		// 	sa.resetValues();
-		// }
-
-		return 0.0;
-	}
-
-
-	bool any = false;
-	deviceManager.getCaptureManager().capture([&](utils::array2d_view<float> channelsData) {
-		channelMixer.saveChannelsData(channelsData, true);
-		any = true;
-	});
-
-	if (any) {
-		orchestrator.process(channelMixer);
-		orchestrator.exchangeData(snapshot.dataSnapshot);
-		channelMixer.reset();
-
-		for (const auto& [procName, procInfo] : paramParser.getParseResult()) {
-			auto& processingSnapshot = snapshot.dataSnapshot[procName];
-			for (const auto& [handlerName, finisher] : procInfo.finishers) {
-				for (auto& [channel, channelSnapshot] : processingSnapshot) {
-					finisher(channelSnapshot[handlerName].handlerSpecificData);
-				}
+	for (const auto& [procName, procInfo] : paramParser.getParseResult()) {
+		auto& processingSnapshot = snapshot.dataSnapshot[procName];
+		for (const auto& [handlerName, finisher] : procInfo.finishers) {
+			for (auto& [channel, channelSnapshot] : processingSnapshot) {
+				finisher(channelSnapshot[handlerName].handlerSpecificData);
 			}
 		}
 	}
 
-	// todo if we are here, then status in true?
 	return snapshot.diSnapshot.status ? 1.0 : 0.0;
 }
 
@@ -299,7 +229,7 @@ string AudioParent::checkHandler(isview procName, Channel channel, isview handle
 	return { };
 }
 
-isview AudioParent::legacy_findProcessingFor(isview handlerName) {
+isview AudioParent::legacy_findProcessingFor(isview handlerName) const {
 	for (auto& [name, pd] : paramParser.getParseResult()) {
 		auto& patchers = pd.handlersInfo.patchers;
 		if (patchers.find(handlerName) != patchers.end()) {
@@ -310,8 +240,8 @@ isview AudioParent::legacy_findProcessingFor(isview handlerName) {
 	return { };
 }
 
-AudioParent::RequestedDeviceDescription AudioParent::readRequest() const {
-	RequestedDeviceDescription result;
+ParentHelper::RequestedDeviceDescription AudioParent::readRequest() const {
+	ParentHelper::RequestedDeviceDescription result;
 
 	using DataSource = DeviceManager::DataSource;
 	if (const auto source = rain.read(L"Source").asIString();

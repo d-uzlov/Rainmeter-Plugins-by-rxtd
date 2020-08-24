@@ -25,17 +25,15 @@ void ProcessingOrchestrator::setFormat(index samplesPerSec, ChannelLayout channe
 	currentFormat.channelLayout = std::move(channelLayout);
 }
 
-void ProcessingOrchestrator::patch(const ParamParser::ProcessingsInfoMap& patches, index legacyNumber, DataSnapshot& snapshot) {
+void ProcessingOrchestrator::patch(const ParamParser::ProcessingsInfoMap& patches, index legacyNumber) {
 	utils::MapUtils::intersectKeyCollection(saMap, patches);
 	utils::MapUtils::intersectKeyCollection(dataSnapshot, patches);
-	utils::MapUtils::intersectKeyCollection(snapshot, patches);
 
 	for (const auto& [name, data] : patches) {
 		auto& sa = saMap[name];
 		sa.setLogger(logger);
 		sa.setParams(data, legacyNumber, currentFormat.samplesPerSec, currentFormat.channelLayout);
 		sa.configureSnapshot(dataSnapshot[name]);
-		sa.configureSnapshot(snapshot[name]);
 	}
 }
 
@@ -76,4 +74,8 @@ void ProcessingOrchestrator::process(const ChannelMixer& channelMixer) {
 			computeTimeoutMs
 		);
 	}
+}
+
+void ProcessingOrchestrator::configureSnapshot(DataSnapshot& snapshot) const {
+	snapshot = dataSnapshot;
 }

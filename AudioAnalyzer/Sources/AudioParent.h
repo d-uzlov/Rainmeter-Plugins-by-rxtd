@@ -10,47 +10,17 @@
 #pragma once
 
 #include "TypeHolder.h"
-#include "RainmeterWrappers.h"
-#include "sound-processing/ProcessingManager.h"
-#include "sound-processing/device-management/DeviceManager.h"
-#include "sound-processing/ChannelProcessingHelper.h"
-#include "sound-processing/ProcessingOrchestrator.h"
-#include "windows-wrappers/IMMNotificationClientImpl.h"
+#include "ParentHelper.h"
 
 namespace rxtd::audio_analyzer {
 	class AudioParent : public utils::ParentBase {
+		ParentHelper helper;
+		ParentHelper::RequestedDeviceDescription requestedSource;
+
 		ParamParser paramParser;
-		ChannelMixer channelMixer;
-		DeviceManager deviceManager;
-
-		utils::GenericComWrapper<utils::CMMNotificationClient> notificationClient;
-		ProcessingOrchestrator orchestrator;
-		AudioEnumeratorHelper enumerator;
-
-		struct Snapshot {
-			ProcessingOrchestrator::DataSnapshot dataSnapshot;
-			DeviceManager::DeviceInfoSnapshot diSnapshot;
-
-			string deviceListInput;
-			string deviceListOutput;
-			string legacy_deviceList;
-		} snapshot;
+		ParentHelper::Snapshot snapshot;
 
 		index legacyNumber{ };
-
-		struct RequestedDeviceDescription {
-			DeviceManager::DataSource sourceType{ };
-			string id;
-
-			friend bool operator==(const RequestedDeviceDescription& lhs, const RequestedDeviceDescription& rhs) {
-				return lhs.sourceType == rhs.sourceType
-					&& lhs.id == rhs.id;
-			}
-
-			friend bool operator!=(const RequestedDeviceDescription& lhs, const RequestedDeviceDescription& rhs) {
-				return !(lhs == rhs);
-			}
-		} requestedSource;
 
 	public:
 		explicit AudioParent(utils::Rainmeter&& rain);
@@ -79,10 +49,10 @@ namespace rxtd::audio_analyzer {
 		// returns error message or empty string
 		string checkHandler(isview procName, Channel channel, isview handlerName) const;
 
-		isview legacy_findProcessingFor(isview handlerName);
+		isview legacy_findProcessingFor(isview handlerName) const;
 
 	private:
-		RequestedDeviceDescription readRequest() const;
+		ParentHelper::RequestedDeviceDescription readRequest() const;
 		void resolveProp(array_view<isview> args, string& resolveBufferString);
 	};
 }
