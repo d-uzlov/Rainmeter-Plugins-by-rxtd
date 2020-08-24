@@ -46,20 +46,12 @@ namespace rxtd::audio_analyzer {
 			logger = std::move(value);
 		}
 
-		// depends on system format only
+		// format can be updated a lot
 		void updateFormat(index sampleRate, ChannelLayout layout);
 
 		void updateSnapshot(Snapshot& snapshot);
 
-		// todo update documentation
-		/**
-		 * Handlers aren't completely recreated when measure is reloaded.
-		 * Instead, they are patched. Patches are created in ParamParser class.
-		 * Patch is a function that takes old handler as a parameter and returns new handler.
-		 * This new handler may be completely new if it didn't exist before or if class of handler with this name changed,
-		 * but usually this is the same handler with updated parameters.
-		 */
-		// depends on options only
+		// options are rarely updated
 		void setParams(
 			const ParamParser::ProcessingData& pd,
 			index _legacyNumber,

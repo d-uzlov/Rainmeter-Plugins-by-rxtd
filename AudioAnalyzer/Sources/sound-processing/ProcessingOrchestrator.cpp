@@ -17,24 +17,16 @@ void ProcessingOrchestrator::exchangeData(DataSnapshot& snapshot) {
 	std::swap(snapshot, dataSnapshot);
 }
 
-void ProcessingOrchestrator::patch(const ParamParser::ProcessingsInfoMap& patches, index legacyNumber) {
+void ProcessingOrchestrator::patch(const ParamParser::ProcessingsInfoMap& patches, index legacyNumber, index samplesPerSec, ChannelLayout channelLayout) {
 	utils::MapUtils::intersectKeyCollection(saMap, patches);
 	utils::MapUtils::intersectKeyCollection(dataSnapshot, patches);
 
 	for (const auto&[name, data] : patches) {
 		auto& sa = saMap[name];
 		sa.setLogger(logger);
-		sa.setParams(data, legacyNumber, currentFormat.samplesPerSec, currentFormat.channelLayout);
-	}
-}
-
-void ProcessingOrchestrator::setFormat(index samplesPerSec, ChannelLayout channelLayout) {
-	for (auto& [name, sa] : saMap) {
-		sa.updateFormat(samplesPerSec, channelLayout);
+		sa.setParams(data, legacyNumber, samplesPerSec, channelLayout);
 		sa.configureSnapshot(dataSnapshot[name]);
 	}
-	currentFormat.samplesPerSec = samplesPerSec;
-	currentFormat.channelLayout = std::move(channelLayout);
 }
 
 void ProcessingOrchestrator::process(const ChannelMixer& channelMixer) {

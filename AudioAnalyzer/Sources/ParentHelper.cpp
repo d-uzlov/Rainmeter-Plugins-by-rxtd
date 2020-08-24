@@ -72,8 +72,7 @@ bool ParentHelper::init(
 
 void ParentHelper::setParams(
 	RequestedDeviceDescription request,
-	const ParamParser::ProcessingsInfoMap& patches,
-	index legacyNumber,
+	ParamParser::ProcessingsInfoMap _patches,
 	Snapshot& snap
 ) {
 	auto fullStateLock = getFullStateLock();
@@ -81,8 +80,7 @@ void ParentHelper::setParams(
 	// because separate thread either sleeps
 	// or is guarded by fullStateLock
 
-	orchestrator.patch(patches, legacyNumber);
-
+	patches = std::move(_patches);
 	requestedSource = std::move(request);
 	updateDevice();
 
@@ -216,7 +214,11 @@ void ParentHelper::updateDevice() {
 	deviceManager.updateDeviceInfoSnapshot(snapshot.diSnapshot);
 
 	channelMixer.setFormat(snapshot.diSnapshot.format);
-	orchestrator.setFormat(snapshot.diSnapshot.format.samplesPerSec, snapshot.diSnapshot.format.channelLayout);
+	orchestrator.patch(
+		patches, legacyNumber,
+		snapshot.diSnapshot.format.samplesPerSec,
+		snapshot.diSnapshot.format.channelLayout
+	);
 
 	orchestrator.configureSnapshot(snapshot.dataSnapshot);
 }

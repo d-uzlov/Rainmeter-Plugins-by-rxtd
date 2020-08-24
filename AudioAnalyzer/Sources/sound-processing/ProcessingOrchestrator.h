@@ -16,11 +16,6 @@ namespace rxtd::audio_analyzer {
 		using DataSnapshot = std::map<istring, ProcessingManager::Snapshot, std::less<>>;
 
 	private:
-		struct {
-			index samplesPerSec{ };
-			ChannelLayout channelLayout;
-		} currentFormat;
-
 		double warnTimeMs = 33.0;
 		double killTimeoutMs = 33.0;
 
@@ -44,9 +39,11 @@ namespace rxtd::audio_analyzer {
 
 		void exchangeData(DataSnapshot& snapshot);
 
-		void patch(const ParamParser::ProcessingsInfoMap& patches, index legacyNumber);
-
-		void setFormat(index samplesPerSec, ChannelLayout channelLayout);
+		void patch(
+			const ParamParser::ProcessingsInfoMap& patches,
+			index legacyNumber,
+			index samplesPerSec, ChannelLayout channelLayout
+		);
 
 		void process(const ChannelMixer& channelMixer);
 		void configureSnapshot(DataSnapshot& snapshot) const;

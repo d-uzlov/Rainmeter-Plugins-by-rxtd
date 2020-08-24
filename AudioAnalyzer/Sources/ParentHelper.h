@@ -46,8 +46,9 @@ namespace rxtd::audio_analyzer {
 	private:
 		ChannelMixer channelMixer;
 		DeviceManager deviceManager;
-
 		utils::CMMNotificationClient notificationClient;
+
+		ParamParser::ProcessingsInfoMap patches;
 		ProcessingOrchestrator orchestrator;
 		AudioEnumeratorHelper enumerator;
 
@@ -95,8 +96,7 @@ namespace rxtd::audio_analyzer {
 
 		void setParams(
 			RequestedDeviceDescription request,
-			const ParamParser::ProcessingsInfoMap& patches,
-			index legacyNumber,
+			ParamParser::ProcessingsInfoMap _patches,
 			Snapshot& snap
 		);
 
