@@ -104,6 +104,7 @@ SoundHandler::ParseResult FftAnalyzer::parseParams(
 
 	ParseResult result;
 	result.setParams(std::move(params));
+	result.setPropGetter(getProp);
 	return result;
 }
 
@@ -168,6 +169,28 @@ SoundHandler::ConfigurationResult FftAnalyzer::vConfigure(Logger& cl) {
 	return { params.cascadesCount, fftSize / 2 };
 }
 
+void FftAnalyzer::vConfigureSnapshot(std::any& handlerSpecificData) const {
+	auto snapshotPtr = std::any_cast<Snapshot>(&handlerSpecificData);
+	if (snapshotPtr == nullptr) {
+		handlerSpecificData = Snapshot { };
+		snapshotPtr = std::any_cast<Snapshot>(&handlerSpecificData);
+	}
+	auto& snapshot = *snapshotPtr;
+
+	snapshot.fftSize = fftSize;
+	snapshot.sampleRate = getConfiguration().sampleRate;
+	snapshot.cascadesCount = cascades.size();
+}
+
+void FftAnalyzer::vUpdateSnapshot(std::any& handlerSpecificData) const {
+	auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
+	snapshot.dc.clear();
+
+	for (const auto& cascade : cascades) {
+		snapshot.dc.push_back(cascade.legacy_getDC());
+	}
+}
+
 index FftAnalyzer::getFftSize() const {
 	return fftSize;
 }
@@ -184,6 +207,57 @@ void FftAnalyzer::vProcess(array_view<float> wave, clock::time_point killTime) {
 	} else {
 		cascades[0].process(wave, killTime);
 	}
+}
+
+bool FftAnalyzer::getProp(const std::any& handlerSpecificData, isview prop, utils::BufferPrinter& printer) {
+	auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
+
+	if (prop == L"size") {
+		printer.print(snapshot.fftSize);
+		return true;
+	}
+
+	auto cascadeIndex = legacy_parseIndexProp(prop, L"nyquist frequency", snapshot.cascadesCount + 1);
+	if (cascadeIndex == -2) {
+		return L"0";
+	}
+	if (cascadeIndex >= 0) {
+		if (cascadeIndex > 0) {
+			cascadeIndex--;
+		}
+		printer.print(static_cast<index>(snapshot.sampleRate / 2.0 / std::pow(2, cascadeIndex)));
+		return true;
+	}
+
+	cascadeIndex = legacy_parseIndexProp(prop, L"dc", snapshot.cascadesCount + 1);
+	if (cascadeIndex == -2) {
+		return L"0";
+	}
+	if (cascadeIndex >= 0) {
+		if (cascadeIndex > 0) {
+			cascadeIndex--;
+		}
+		printer.print(snapshot.dc[cascadeIndex]);
+		return true;
+	}
+
+	cascadeIndex = legacy_parseIndexProp(prop, L"resolution", snapshot.cascadesCount + 1);
+	if (cascadeIndex == -2) {
+		return L"0";
+	}
+	if (cascadeIndex < 0) {
+		cascadeIndex = legacy_parseIndexProp(prop, L"binWidth", snapshot.cascadesCount + 1);
+	}
+	if (cascadeIndex >= 0) {
+		if (cascadeIndex > 0) {
+			cascadeIndex--;
+		}
+		const auto resolution = static_cast<double>(snapshot.sampleRate) / snapshot.fftSize / std::pow(2, cascadeIndex);
+		printer.print(resolution);
+		return true;
+	}
+
+	return false;
 }
 
 void FftAnalyzer::processRandom(index waveSize, clock::time_point killTime) {
@@ -211,55 +285,4 @@ void FftAnalyzer::processRandom(index waveSize, clock::time_point killTime) {
 	}
 
 	cascades[0].process(wave, killTime);
-}
-
-bool FftAnalyzer::vGetProp(const isview& prop, utils::BufferPrinter& printer) const {
-	auto& config = getConfiguration();
-
-	if (prop == L"size") {
-		printer.print(fftSize);
-		return true;
-	}
-
-	auto cascadeIndex = legacy_parseIndexProp(prop, L"nyquist frequency", cascades.size() + 1);
-	if (cascadeIndex == -2) {
-		return L"0";
-	}
-	if (cascadeIndex >= 0) {
-		if (cascadeIndex > 0) {
-			cascadeIndex--;
-		}
-		printer.print(static_cast<index>(config.sampleRate / 2.0 / std::pow(2, cascadeIndex)));
-		return true;
-	}
-
-	cascadeIndex = legacy_parseIndexProp(prop, L"dc", cascades.size() + 1);
-	if (cascadeIndex == -2) {
-		return L"0";
-	}
-	if (cascadeIndex >= 0) {
-		if (cascadeIndex > 0) {
-			cascadeIndex--;
-		}
-		printer.print(cascades[cascadeIndex].legacy_getDC());
-		return true;
-	}
-
-	cascadeIndex = legacy_parseIndexProp(prop, L"resolution", cascades.size() + 1);
-	if (cascadeIndex == -2) {
-		return L"0";
-	}
-	if (cascadeIndex < 0) {
-		cascadeIndex = legacy_parseIndexProp(prop, L"binWidth", cascades.size() + 1);
-	}
-	if (cascadeIndex >= 0) {
-		if (cascadeIndex > 0) {
-			cascadeIndex--;
-		}
-		const auto resolution = static_cast<double>(config.sampleRate) / fftSize / std::pow(2, cascadeIndex);
-		printer.print(resolution);
-		return true;
-	}
-
-	return false;
 }

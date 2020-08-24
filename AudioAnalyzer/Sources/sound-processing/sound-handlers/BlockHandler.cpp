@@ -43,6 +43,7 @@ SoundHandler::ParseResult BlockHandler::parseParams(
 
 	ParseResult result;
 	result.setParams(std::move(params));
+	result.setPropGetter(getProp);
 	return result;
 }
 
@@ -66,17 +67,30 @@ void BlockHandler::vProcess(array_view<float> wave, clock::time_point killTime) 
 	_process(wave);
 }
 
-bool BlockHandler::vGetProp(const isview& prop, utils::BufferPrinter& printer) const {
+void BlockHandler::setNextValue(float value) {
+	pushLayer(0, blockSize)[0] = params.transformer.apply(value);
+}
+
+void BlockHandler::vConfigureSnapshot(std::any& handlerSpecificData) const {
+	auto snapshotPtr = std::any_cast<Snapshot>(&handlerSpecificData);
+	if (snapshotPtr == nullptr) {
+		handlerSpecificData = Snapshot{ };
+		snapshotPtr = std::any_cast<Snapshot>(&handlerSpecificData);
+	}
+	auto& snapshot = *snapshotPtr;
+
+	snapshot.blockSize = blockSize;
+}
+
+bool BlockHandler::getProp(const std::any& handlerSpecificData, isview prop, utils::BufferPrinter& printer) {
+	auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
+
 	if (prop == L"block size") {
-		printer.print(blockSize);
+		printer.print(snapshot.blockSize);
 		return true;
 	}
 
 	return false;
-}
-
-void BlockHandler::setNextValue(float value) {
-	pushLayer(0, blockSize)[0] = params.transformer.apply(value);
 }
 
 void BlockRms::_process(array_view<float> wave) {

@@ -70,11 +70,15 @@ namespace rxtd::audio_analyzer {
 
 		using Finisher = void(*)(std::any& handlerSpecificData);
 
+		// return true if such prop exists, false otherwise
+		using PropGetter = bool(*)(const std::any& handlerSpecificData, isview prop, utils::BufferPrinter& printer);
+
 		class ParseResult {
 			bool valid = false;
 			std::any params;
-			std::vector<istring> _sources;
-			Finisher _finisher = nullptr;
+			std::vector<istring> sources;
+			Finisher finisher = nullptr;
+			PropGetter propGetter = nullptr;
 
 		public:
 			template <typename Params>
@@ -85,17 +89,22 @@ namespace rxtd::audio_analyzer {
 
 			void addSource(istring value) {
 				valid = true;
-				_sources.push_back(std::move(value));
+				sources.push_back(std::move(value));
 			}
 
 			void addSource(isview value) {
 				valid = true;
-				_sources.push_back(value % own());
+				sources.push_back(value % own());
 			}
 
 			void setFinisher(Finisher value) {
 				valid = true;
-				_finisher = value;
+				finisher = value;
+			}
+
+			void setPropGetter(PropGetter value) {
+				valid = true;
+				propGetter = value;
 			}
 
 			[[nodiscard]]
@@ -110,12 +119,17 @@ namespace rxtd::audio_analyzer {
 
 			[[nodiscard]]
 			auto takeSources() {
-				return std::move(_sources);
+				return std::move(sources);
 			}
 
 			[[nodiscard]]
 			auto takeFinisher() const {
-				return _finisher;
+				return finisher;
+			}
+
+			[[nodiscard]]
+			auto takePropGetter() const {
+				return propGetter;
 			}
 		};
 
@@ -252,15 +266,9 @@ namespace rxtd::audio_analyzer {
 			return 0;
 		}
 
-		// return true if such prop exists, false otherwise
-		[[nodiscard]]
-		virtual bool vGetProp(const isview& prop, utils::BufferPrinter& printer) const {
-			return false;
-		}
-
 	protected:
 		template <typename Params>
-		static bool compareParamsEquals(Params p1, const std::any& p2) {
+		static bool compareParamsEquals(const Params& p1, const std::any& p2) {
 			return p1 == *std::any_cast<Params>(&p2);
 		}
 

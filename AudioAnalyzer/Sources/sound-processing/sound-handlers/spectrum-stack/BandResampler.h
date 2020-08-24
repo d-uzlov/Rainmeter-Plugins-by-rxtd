@@ -54,6 +54,10 @@ namespace rxtd::audio_analyzer {
 		index endCascade = 0;
 		index bandsCount = 0;
 
+		struct Snapshot {
+			std::vector<float> bandFreqs;
+		};
+
 	public:
 		[[nodiscard]]
 		bool checkSameParams(const std::any& p) const override {
@@ -104,9 +108,9 @@ namespace rxtd::audio_analyzer {
 			return this;
 		}
 
-		bool vGetProp(const isview& prop, utils::BufferPrinter& printer) const override;
-
 	private:
+		void vConfigureSnapshot(std::any& handlerSpecificData) const override;
+
 		void sampleCascade(array_view<float> source, array_span<float> dest, double binWidth);
 
 		// depends on fft size and sample rate
@@ -114,5 +118,7 @@ namespace rxtd::audio_analyzer {
 		void computeCascadeWeights(array_span<float> result, index fftBinsCount, double binWidth);
 
 		void legacy_generateBandMultipliers();
+
+		static bool getProp(const std::any& handlerSpecificData, isview prop, utils::BufferPrinter& printer);
 	};
 }

@@ -49,7 +49,5 @@ namespace rxtd::audio_analyzer {
 		void patch(const ParamParser::ProcessingsInfoMap& patches, index legacyNumber, DataSnapshot& snapshot);
 
 		void process(const ChannelMixer& channelMixer);
-
-		bool getProp(isview proc, isview id, Channel channel, isview propName, utils::BufferPrinter& printer);
 	};
 }

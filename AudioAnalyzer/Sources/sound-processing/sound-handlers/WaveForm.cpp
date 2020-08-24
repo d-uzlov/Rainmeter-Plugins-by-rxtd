@@ -88,6 +88,7 @@ SoundHandler::ParseResult WaveForm::parseParams(
 	ParseResult result;
 	result.setParams(std::move(params));
 	result.setFinisher(staticFinisher);
+	result.setPropGetter(getProp);
 	return result;
 }
 
@@ -156,19 +157,6 @@ void WaveForm::vProcess(array_view<float> wave, clock::time_point killTime) {
 	}
 }
 
-bool WaveForm::vGetProp(const isview& prop, utils::BufferPrinter& printer) const {
-	if (prop == L"file") {
-		printer.print(filepath);
-		return true;
-	}
-	if (prop == L"block size") {
-		printer.print(blockSize);
-		return true;
-	}
-
-	return false;
-}
-
 void WaveForm::vConfigureSnapshot(std::any& handlerSpecificData) const {
 	auto snapshotPtr = std::any_cast<Snapshot>(&handlerSpecificData);
 	if (snapshotPtr == nullptr) {
@@ -178,6 +166,7 @@ void WaveForm::vConfigureSnapshot(std::any& handlerSpecificData) const {
 	auto& snapshot = *snapshotPtr;
 
 	snapshot.filepath = filepath;
+	snapshot.blockSize = blockSize;
 
 	const index width = params.width;
 	const index height = params.height;
@@ -229,4 +218,19 @@ void WaveForm::pushStrip(double min, double max) {
 	} else {
 		drawer.fillStrip(min, max);
 	}
+}
+
+bool WaveForm::getProp(const std::any& handlerSpecificData, isview prop, utils::BufferPrinter& printer) {
+	auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
+
+	if (prop == L"file") {
+		printer.print(snapshot.filepath);
+		return true;
+	}
+	if (prop == L"block size") {
+		printer.print(snapshot.blockSize);
+		return true;
+	}
+
+	return false;
 }

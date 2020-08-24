@@ -21,70 +21,6 @@ using namespace audio_analyzer;
 
 using utils::Color;
 
-bool Spectrogram::vGetProp(const isview& prop, utils::BufferPrinter& printer) const {
-	if (prop == L"file") {
-		printer.print(filepath);
-		return true;
-	}
-	if (prop == L"block size") {
-		printer.print(blockSize);
-		return true;
-	}
-
-	return false;
-}
-
-void Spectrogram::vConfigureSnapshot(std::any& handlerSpecificData) const {
-	auto snapshotPtr = std::any_cast<Snapshot>(&handlerSpecificData);
-	if (snapshotPtr == nullptr) {
-		handlerSpecificData = Snapshot{ };
-		snapshotPtr = std::any_cast<Snapshot>(&handlerSpecificData);
-	}
-	auto& snapshot = *snapshotPtr;
-
-	snapshot.filepath = filepath;
-
-	const index width = params.length;
-	const index height = getConfiguration().sourcePtr->getDataSize().valuesCount;
-	if (height == snapshot.pixels.getBuffersCount() && width == snapshot.pixels.getBufferSize()) {
-		return;
-	}
-
-	snapshot.pixels.setBuffersCount(height);
-	snapshot.pixels.setBufferSize(width);
-	snapshot.pixels.fill(params.colors[0].color.toIntColor());
-
-	snapshot.writeNeeded = true;
-	snapshot.empty = false;
-}
-
-void Spectrogram::vUpdateSnapshot(std::any& handlerSpecificData) const {
-	if (!writeNeeded) {
-		return;
-	}
-
-	auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
-	snapshot.writeNeeded = true;
-	snapshot.empty = !image.isForced();
-
-	auto pixels = params.fading != 0.0 ? sifh.getResultBuffer().getFlat() : image.getPixels().getFlat();
-	std::copy(pixels.begin(), pixels.end(), snapshot.pixels.getFlat().begin());
-
-	writeNeeded = false;
-}
-
-void Spectrogram::staticFinisher(std::any& handlerSpecificData) {
-	auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
-
-	auto& writeNeeded = snapshot.writeNeeded;
-	if (!writeNeeded) {
-		return;
-	}
-
-	snapshot.writerHelper.write(snapshot.pixels, snapshot.empty, snapshot.filepath);
-	writeNeeded = false;
-}
-
 SoundHandler::ParseResult Spectrogram::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	index legacyNumber
@@ -200,6 +136,7 @@ SoundHandler::ParseResult Spectrogram::parseParams(
 	result.setParams(std::move(params));
 	result.addSource(sourceId);
 	result.setFinisher(staticFinisher);
+	result.setPropGetter(getProp);
 	return result;
 }
 
@@ -232,43 +169,6 @@ SoundHandler::ConfigurationResult Spectrogram::vConfigure(Logger& cl) {
 	writeNeeded = true;
 
 	return { 0, 0 };
-}
-
-void Spectrogram::fillStrip(array_view<float> data, array_span<utils::IntColor> buffer) const {
-	const utils::LinearInterpolatorF interpolator{ params.colorMinValue, params.colorMaxValue, 0.0, 1.0 };
-	const auto lowColor = params.colors[0].color;
-	const auto highColor = params.colors[1].color;
-
-	for (index i = 0; i < index(buffer.size()); ++i) {
-		auto value = interpolator.toValue(data[i]);
-		value = std::clamp(value, 0.0f, 1.0f);
-
-		buffer[i] = (highColor * value + lowColor * (1.0f - value)).toIntColor();
-	}
-}
-
-void Spectrogram::fillStripMulticolor(array_view<float> data, array_span<utils::IntColor> buffer) const {
-	for (index i = 0; i < buffer.size(); ++i) {
-		const auto value = std::clamp(data[i], params.colorMinValue, params.colorMaxValue);
-
-		index lowColorIndex = 0;
-		for (index j = 1; j < index(params.colors.size()); j++) {
-			const auto colorHighValue = params.colorLevels[j];
-			if (value <= colorHighValue) {
-				lowColorIndex = j - 1;
-				break;
-			}
-		}
-
-		const auto lowColorValue = params.colorLevels[lowColorIndex];
-		const auto intervalCoef = params.colors[lowColorIndex].widthInverted;
-		const auto lowColor = params.colors[lowColorIndex].color;
-		const auto highColor = params.colors[lowColorIndex + 1].color;
-
-		const float percentValue = (value - lowColorValue) * intervalCoef;
-
-		buffer[i] = (highColor * percentValue + lowColor * (1.0f - percentValue)).toIntColor();
-	}
 }
 
 void Spectrogram::vProcess(array_view<float> wave, clock::time_point killTime) {
@@ -345,4 +245,108 @@ void Spectrogram::vProcess(array_view<float> wave, clock::time_point killTime) {
 			}
 		}
 	}
+}
+
+void Spectrogram::vConfigureSnapshot(std::any& handlerSpecificData) const {
+	auto snapshotPtr = std::any_cast<Snapshot>(&handlerSpecificData);
+	if (snapshotPtr == nullptr) {
+		handlerSpecificData = Snapshot{ };
+		snapshotPtr = std::any_cast<Snapshot>(&handlerSpecificData);
+	}
+	auto& snapshot = *snapshotPtr;
+
+	snapshot.filepath = filepath;
+	snapshot.blockSize = blockSize;
+
+	const index width = params.length;
+	const index height = getConfiguration().sourcePtr->getDataSize().valuesCount;
+	if (height == snapshot.pixels.getBuffersCount() && width == snapshot.pixels.getBufferSize()) {
+		return;
+	}
+
+	snapshot.pixels.setBuffersCount(height);
+	snapshot.pixels.setBufferSize(width);
+	snapshot.pixels.fill(params.colors[0].color.toIntColor());
+
+	snapshot.writeNeeded = true;
+	snapshot.empty = false;
+}
+
+void Spectrogram::vUpdateSnapshot(std::any& handlerSpecificData) const {
+	if (!writeNeeded) {
+		return;
+	}
+
+	auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
+	snapshot.writeNeeded = true;
+	snapshot.empty = !image.isForced();
+
+	auto pixels = params.fading != 0.0 ? sifh.getResultBuffer().getFlat() : image.getPixels().getFlat();
+	std::copy(pixels.begin(), pixels.end(), snapshot.pixels.getFlat().begin());
+
+	writeNeeded = false;
+}
+
+void Spectrogram::staticFinisher(std::any& handlerSpecificData) {
+	auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
+
+	auto& writeNeeded = snapshot.writeNeeded;
+	if (!writeNeeded) {
+		return;
+	}
+
+	snapshot.writerHelper.write(snapshot.pixels, snapshot.empty, snapshot.filepath);
+	writeNeeded = false;
+}
+
+void Spectrogram::fillStrip(array_view<float> data, array_span<utils::IntColor> buffer) const {
+	const utils::LinearInterpolatorF interpolator{ params.colorMinValue, params.colorMaxValue, 0.0, 1.0 };
+	const auto lowColor = params.colors[0].color;
+	const auto highColor = params.colors[1].color;
+
+	for (index i = 0; i < index(buffer.size()); ++i) {
+		auto value = interpolator.toValue(data[i]);
+		value = std::clamp(value, 0.0f, 1.0f);
+
+		buffer[i] = (highColor * value + lowColor * (1.0f - value)).toIntColor();
+	}
+}
+
+void Spectrogram::fillStripMulticolor(array_view<float> data, array_span<utils::IntColor> buffer) const {
+	for (index i = 0; i < buffer.size(); ++i) {
+		const auto value = std::clamp(data[i], params.colorMinValue, params.colorMaxValue);
+
+		index lowColorIndex = 0;
+		for (index j = 1; j < index(params.colors.size()); j++) {
+			const auto colorHighValue = params.colorLevels[j];
+			if (value <= colorHighValue) {
+				lowColorIndex = j - 1;
+				break;
+			}
+		}
+
+		const auto lowColorValue = params.colorLevels[lowColorIndex];
+		const auto intervalCoef = params.colors[lowColorIndex].widthInverted;
+		const auto lowColor = params.colors[lowColorIndex].color;
+		const auto highColor = params.colors[lowColorIndex + 1].color;
+
+		const float percentValue = (value - lowColorValue) * intervalCoef;
+
+		buffer[i] = (highColor * percentValue + lowColor * (1.0f - percentValue)).toIntColor();
+	}
+}
+
+bool Spectrogram::getProp(const std::any& handlerSpecificData, isview prop, utils::BufferPrinter& printer) {
+	auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
+
+	if (prop == L"file") {
+		printer.print(snapshot.filepath);
+		return true;
+	}
+	if (prop == L"block size") {
+		printer.print(snapshot.blockSize);
+		return true;
+	}
+
+	return false;
 }

@@ -66,6 +66,7 @@ SoundHandler::ParseResult BandResampler::parseParams(
 	ParseResult result;
 	result.setParams(std::move(params));
 	result.addSource(sourceId);
+	result.setPropGetter(getProp);
 	return result;
 }
 
@@ -248,52 +249,15 @@ void BandResampler::vProcess(array_view<float> wave, clock::time_point killTime)
 	}
 }
 
-bool BandResampler::vGetProp(const isview& prop, utils::BufferPrinter& printer) const {
-	if (prop == L"bands count") {
-		printer.print(bandsCount);
-		return true;
+void BandResampler::vConfigureSnapshot(std::any& handlerSpecificData) const {
+	auto snapshotPtr = std::any_cast<Snapshot>(&handlerSpecificData);
+	if (snapshotPtr == nullptr) {
+		handlerSpecificData = Snapshot{ };
+		snapshotPtr = std::any_cast<Snapshot>(&handlerSpecificData);
 	}
+	auto& snapshot = *snapshotPtr;
 
-	auto index = legacy_parseIndexProp(prop, L"lower bound", bandsCount + 1);
-	if (index == -2) {
-		printer.print(L"0");
-		return true;
-	}
-	if (index >= 0) {
-		if (index > 0) {
-			index--;
-		}
-		printer.print(params.bandFreqs[index]);
-		return true;
-	}
-
-	index = legacy_parseIndexProp(prop, L"upper bound", bandsCount + 1);
-	if (index == -2) {
-		printer.print(L"0");
-		return true;
-	}
-	if (index >= 0) {
-		if (index > 0) {
-			index--;
-		}
-		printer.print(params.bandFreqs[index + 1]);
-		return true;
-	}
-
-	index = legacy_parseIndexProp(prop, L"central frequency", bandsCount + 1);
-	if (index == -2) {
-		printer.print(L"0");
-		return true;
-	}
-	if (index >= 0) {
-		if (index > 0) {
-			index--;
-		}
-		printer.print((params.bandFreqs[index] + params.bandFreqs[index + 1]) * 0.5);
-		return true;
-	}
-
-	return false;
+	snapshot.bandFreqs = params.bandFreqs;
 }
 
 void BandResampler::sampleCascade(array_view<float> source, array_span<float> dest, double binWidth) {
@@ -385,4 +349,56 @@ void BandResampler::legacy_generateBandMultipliers() {
 	for (auto& multiplier : legacy_bandFreqMultipliers) {
 		multiplier = float(multiplier * multiplierCorrectingConstant);
 	}
+}
+
+bool BandResampler::getProp(const std::any& handlerSpecificData, isview prop, utils::BufferPrinter& printer) {
+	auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
+
+	const index bandsCount = snapshot.bandFreqs.size();
+
+	if (prop == L"bands count") {
+		printer.print(bandsCount);
+		return true;
+	}
+
+	auto index = legacy_parseIndexProp(prop, L"lower bound", bandsCount + 1);
+	if (index == -2) {
+		printer.print(L"0");
+		return true;
+	}
+	if (index >= 0) {
+		if (index > 0) {
+			index--;
+		}
+		printer.print(snapshot.bandFreqs[index]);
+		return true;
+	}
+
+	index = legacy_parseIndexProp(prop, L"upper bound", bandsCount + 1);
+	if (index == -2) {
+		printer.print(L"0");
+		return true;
+	}
+	if (index >= 0) {
+		if (index > 0) {
+			index--;
+		}
+		printer.print(snapshot.bandFreqs[index + 1]);
+		return true;
+	}
+
+	index = legacy_parseIndexProp(prop, L"central frequency", bandsCount + 1);
+	if (index == -2) {
+		printer.print(L"0");
+		return true;
+	}
+	if (index >= 0) {
+		if (index > 0) {
+			index--;
+		}
+		printer.print((snapshot.bandFreqs[index] + snapshot.bandFreqs[index + 1]) * 0.5);
+		return true;
+	}
+
+	return false;
 }

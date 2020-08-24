@@ -57,6 +57,6 @@ namespace rxtd::audio_analyzer {
 		isview legacy_findProcessingFor(isview handlerName);
 
 	private:
-		void legacy_resolve(array_view<isview> args, string& resolveBufferString);
+		void resolveProp(array_view<isview> args, string& resolveBufferString);
 	};
 }

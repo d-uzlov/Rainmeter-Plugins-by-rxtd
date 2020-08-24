@@ -77,6 +77,7 @@ namespace rxtd::audio_analyzer {
 			utils::Vector2D<utils::IntColor> pixels;
 			utils::ImageWriteHelper writerHelper{ };
 			string filepath;
+			index blockSize { };
 			bool writeNeeded{ };
 			bool empty{ };
 		};
@@ -123,9 +124,6 @@ namespace rxtd::audio_analyzer {
 	public:
 		void vProcess(array_view<float> wave, clock::time_point killTime) override;
 
-		[[nodiscard]]
-		bool vGetProp(const isview& prop, utils::BufferPrinter& printer) const override;
-
 		void vConfigureSnapshot(std::any& handlerSpecificData) const override;
 		void vUpdateSnapshot(std::any& handlerSpecificData) const override;
 
@@ -134,5 +132,7 @@ namespace rxtd::audio_analyzer {
 
 		void fillStrip(array_view<float> data, array_span<utils::IntColor> buffer) const;
 		void fillStripMulticolor(array_view<float> data, array_span<utils::IntColor> buffer) const;
+
+		static bool getProp(const std::any& handlerSpecificData, isview prop, utils::BufferPrinter& printer);
 	};
 }

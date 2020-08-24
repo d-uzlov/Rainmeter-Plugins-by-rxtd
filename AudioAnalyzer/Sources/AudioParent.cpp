@@ -261,49 +261,15 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 		return;
 	}
 
-	if (optionName == L"handler info") {
-		if (args.size() < 5) {
-			cl.error(L"need >= 5 argc, but only {} found", args.size());
-			return;
-		}
-
-		const auto procName = args[1];
-		const auto channelName = args[2];
-		const auto handlerName = args[3];
-		const auto propName = args[4];
-
-		auto channelOpt = Channel::channelParser.find(channelName);
-		if (!channelOpt.has_value()) {
-			cl.error(L"channel '{}' is not recognized", channelName);
-			return;
-		}
-
-		// auto procIter = saMap.find(procName);
-		// if (procIter == saMap.end()) {
-		// 	cl.error(L"processing '{}' is not found", procName);
-		// 	return;
-		// }
-		//
-		// auto handler = procIter->second.getAudioChildHelper().findHandler(channelOpt.value(), handlerName);
-		// if (handler == nullptr) {
-		// 	cl.error(L"handler '{}:{}:{}' is not found", procName, channelName, handlerName);
-		// 	return;
-		// }
-		//
-		// const bool found = handler->vGetProp(propName, cl.printer);
-
-		const bool found = orchestrator.getProp(procName, handlerName, channelOpt.value(), propName, cl.printer);
-		if (!found) {
-			cl.error(L"prop '{}:{}' is not found", handlerName, propName);
-			return;
-		}
-
-		resolveBufferString = cl.printer.getBufferView();
+	if (optionName == L"handler info" || optionName == L"prop") {
+		resolveProp(args, resolveBufferString);
 		return;
 	}
 
-
-	legacy_resolve(args, resolveBufferString);
+	if (optionName == L"device list") {
+		resolveBufferString = deviceManager.getDeviceEnumerator().getDeviceListLegacy();
+		return;
+	}
 }
 
 double AudioParent::getValue(isview proc, isview id, Channel channel, index ind) const {
@@ -375,46 +341,87 @@ isview AudioParent::legacy_findProcessingFor(isview handlerName) {
 	return { };
 }
 
-void AudioParent::legacy_resolve(array_view<isview> args, string& resolveBufferString) {
+void AudioParent::resolveProp(array_view<isview> args, string& resolveBufferString) {
 	const isview optionName = args[0];
+
+	isview procName = args[1];
+	isview channelName = args[2];
+	isview handlerName = args[3];
+	isview propName = args[4];
+
 	auto cl = logger.context(L"Invalid section variable '{}': ", optionName);
 
-	if (optionName == L"device list") {
-		resolveBufferString = deviceManager.getDeviceEnumerator().getDeviceListLegacy();
-		return;
-	}
+	if (optionName == L"handler info") {
+		if (args.size() < 5) {
+			cl.error(L"need >= 5 argc, but only {} found", args.size());
+			return;
+		}
 
-	if (optionName == L"prop") {
+		procName = args[1];
+		channelName = args[2];
+		handlerName = args[3];
+		propName = args[4];
+	} else if (optionName == L"prop") {
+		// legacy
 		if (args.size() < 4) {
 			cl.error(L"need >= 4 argc, but only {} found", args.size());
 			return;
 		}
 
-		const auto channelName = args[1];
-		const auto handlerName = args[2];
-		const auto propName = args[3];
+		channelName = args[1];
+		handlerName = args[2];
+		propName = args[3];
 
-		auto channelOpt = Channel::channelParser.find(channelName);
-		if (!channelOpt.has_value()) {
-			cl.error(L"channel '{}' is not recognized", channelName);
-			return;
-		}
-
-		auto procName = legacy_findProcessingFor(handlerName);
+		procName = legacy_findProcessingFor(handlerName);
 		if (procName.empty()) {
 			cl.error(L"handler '{}' is not found", handlerName);
 			return;
 		}
+	}
 
-		const bool found = orchestrator.getProp(propName, handlerName, channelOpt.value(), propName, cl.printer);
-		if (!found) {
-			cl.error(L"prop '{}:{}' is not found", handlerName, propName);
-			return;
-		}
-
-		resolveBufferString = cl.printer.getBufferView();
+	auto channelOpt = Channel::channelParser.find(channelName);
+	if (!channelOpt.has_value()) {
+		cl.error(L"channel '{}' is not recognized", channelName);
 		return;
 	}
 
-	cl.error(L"option is not supported");
+	auto procIter = snapshot.find(procName);
+	if (procIter == snapshot.end()) {
+		cl.error(L"processing '{}' is not found", procName);
+		return;
+	}
+
+	auto& processingSnapshot = procIter->second;
+	auto channelSnapshotIter = processingSnapshot.find(channelOpt.value());
+	if (channelSnapshotIter == processingSnapshot.end()) {
+		// "channel not found" is a relaxed error, so no log message for this one
+		return;
+	}
+
+	auto& channelSnapshot = channelSnapshotIter->second;
+	auto handlerSnapshotIter = channelSnapshot.find(handlerName);
+	if (handlerSnapshotIter == channelSnapshot.end()) {
+		cl.error(L"handler '{}:{}' is not found", procName, handlerName);
+		return;
+	}
+
+	auto& handlerSnapshot = handlerSnapshotIter->second;
+	const SoundHandler::PropGetter propGetter
+		= paramParser
+		  .getParseResult()
+		  .find(procName)->second.handlersInfo.patchers
+		  .find(handlerName)->second->propGetter;
+
+	if (propGetter == nullptr) {
+		cl.error(L"handler '{}:{}' doesn't have any props", procName, handlerName);
+		return;
+	}
+
+	const bool found = propGetter(handlerSnapshot.handlerSpecificData, propName, cl.printer);
+	if (!found) {
+		cl.error(L"prop '{}:{}:{}' is not found", procName, handlerName, propName);
+		return;
+	}
+
+	resolveBufferString = cl.printer.getBufferView();
 }

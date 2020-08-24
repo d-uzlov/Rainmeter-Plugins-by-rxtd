@@ -66,6 +66,13 @@ namespace rxtd::audio_analyzer {
 			}
 		};
 
+		struct Snapshot {
+			index fftSize{ };
+			index sampleRate{ };
+			index cascadesCount{ };
+			std::vector<float> dc;
+		};
+
 	private:
 		Params params{ };
 
@@ -101,6 +108,10 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		ConfigurationResult vConfigure(Logger& cl) override;
 
+		void vConfigureSnapshot(std::any& handlerSpecificData) const override;
+
+		void vUpdateSnapshot(std::any& handlerSpecificData) const override;
+
 	public:
 		index getFftSize() const;
 
@@ -108,9 +119,9 @@ namespace rxtd::audio_analyzer {
 
 		void vProcess(array_view<float> wave, clock::time_point killTime) override;
 
-		bool vGetProp(const isview& prop, utils::BufferPrinter& printer) const override;
-
 	private:
+		static bool getProp(const std::any& handlerSpecificData, isview prop, utils::BufferPrinter& printer);
+
 		void processRandom(index waveSize, clock::time_point killTime);
 	};
 }

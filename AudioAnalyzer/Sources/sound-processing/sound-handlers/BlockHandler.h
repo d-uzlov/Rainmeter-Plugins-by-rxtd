@@ -34,6 +34,10 @@ namespace rxtd::audio_analyzer {
 			}
 		};
 
+		struct Snapshot {
+			index blockSize { };
+		};
+
 	private:
 		Params params{ };
 
@@ -65,8 +69,6 @@ namespace rxtd::audio_analyzer {
 		void vReset() final;
 		void vProcess(array_view<float> wave, clock::time_point killTime) final;
 
-		bool vGetProp(const isview& prop, utils::BufferPrinter& printer) const override;
-
 		void setNextValue(float value);
 
 		[[nodiscard]]
@@ -77,6 +79,10 @@ namespace rxtd::audio_analyzer {
 		virtual void _process(array_view<float> wave) = 0;
 		virtual void finishBlock() = 0;
 		virtual void _reset() = 0;
+
+	private:
+		void vConfigureSnapshot(std::any& handlerSpecificData) const override;
+		static bool getProp(const std::any& handlerSpecificData, isview prop, utils::BufferPrinter& printer);
 	};
 
 

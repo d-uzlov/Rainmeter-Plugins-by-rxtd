@@ -77,21 +77,3 @@ void ProcessingOrchestrator::process(const ChannelMixer& channelMixer) {
 		);
 	}
 }
-
-bool ProcessingOrchestrator::getProp(
-	isview proc, isview id, Channel channel,
-	isview propName, utils::BufferPrinter& printer
-) {
-	auto procIter = saMap.find(proc);
-	if (procIter == saMap.end()) {
-		return { };
-
-	}
-
-	const auto handler = procIter->second.getAudioChildHelper().findHandler(channel, id);
-	if (handler == nullptr) {
-		return false;
-	}
-
-	return handler->vGetProp(propName, printer);
-}

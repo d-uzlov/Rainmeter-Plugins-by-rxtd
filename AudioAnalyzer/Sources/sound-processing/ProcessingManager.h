@@ -11,7 +11,6 @@
 #include <chrono>
 
 #include "Channel.h"
-#include "AudioChildHelper.h"
 #include "ChannelProcessingHelper.h"
 #include "../ParamParser.h"
 #include "ChannelMixer.h"
@@ -49,11 +48,6 @@ namespace rxtd::audio_analyzer {
 
 		// depends on system format only
 		void updateFormat(index sampleRate, ChannelLayout layout);
-
-		[[nodiscard]]
-		AudioChildHelper getAudioChildHelper() const {
-			return AudioChildHelper{ channels };
-		}
 
 		void updateSnapshot(Snapshot& snapshot);
 
