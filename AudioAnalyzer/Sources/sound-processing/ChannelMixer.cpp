@@ -69,17 +69,6 @@ void ChannelMixer::saveChannelsData(utils::array2d_view<float> channelsData, boo
 	}
 }
 
-void ChannelMixer::writeSilence(index size, bool withAuto) {
-	if (withAuto && aliasOfAuto == Channel::eAUTO) {
-		channels[Channel::eAUTO];
-	}
-
-	for (auto& [channel, buffer] : channels) {
-		auto writeBuffer = buffer.allocateNext(size);
-		std::fill(writeBuffer.begin(), writeBuffer.end(), 0.0f);
-	}
-}
-
 array_view<float> ChannelMixer::getChannelPCM(Channel channel) const {
 	if (channel == Channel::eAUTO) {
 		channel = aliasOfAuto;

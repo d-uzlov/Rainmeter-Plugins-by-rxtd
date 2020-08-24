@@ -30,20 +30,15 @@ namespace rxtd::audio_analyzer {
 		struct ChannelStruct {
 			HandlerMap handlerMap;
 
-			audio_utils::FilterCascade fc;
+			audio_utils::FilterCascade filter;
 			audio_utils::DownsampleHelper downsampleHelper;
 		};
-
-		std::vector<istring> order;
-
-		std::map<Channel, ChannelStruct> channelMap;
 
 		class HandlerFinderImpl : public HandlerFinder {
 			const HandlerMap& channelData;
 
 		public:
-			explicit HandlerFinderImpl(const HandlerMap& channelData) : channelData(channelData) {
-			}
+			explicit HandlerFinderImpl(const HandlerMap& channelData) : channelData(channelData) { }
 
 			[[nodiscard]]
 			SoundHandler* getHandler(isview id) const override {
@@ -52,26 +47,9 @@ namespace rxtd::audio_analyzer {
 			}
 		};
 
-		struct ResamplingData {
-			index sourceRate = 0;
-			index targetRate = 0;
-			index finalSampleRate = 0;
-			index divider = 1;
-
-			void setParams(index _sourceRate, index _targetRate) {
-				sourceRate = _sourceRate;
-				targetRate = _targetRate;
-
-				if (targetRate == 0) {
-					divider = 1;
-				} else {
-					const auto ratio = static_cast<double>(sourceRate) / targetRate;
-					divider = ratio > 1 ? static_cast<index>(ratio) : 1;
-				}
-				finalSampleRate = sourceRate / divider;
-			}
-		} resamplingData;
-
+		std::vector<istring> order;
+		std::map<Channel, ChannelStruct> channelMap;
+		index resamplingDivider{ };
 		std::vector<float> waveBuffer;
 
 	public:

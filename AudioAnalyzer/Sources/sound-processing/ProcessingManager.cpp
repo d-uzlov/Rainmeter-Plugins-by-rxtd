@@ -28,12 +28,18 @@ void ProcessingManager::setParams(
 
 	auto oldChannelMap = std::exchange(channelMap, { });
 
-	resamplingData.setParams(sampleRate, pd.targetRate);
+	if (pd.targetRate == 0) {
+		resamplingDivider = 1;
+	} else {
+		const auto ratio = static_cast<double>(sampleRate) / pd.targetRate;
+		resamplingDivider = ratio > 1 ? static_cast<index>(ratio) : 1;
+	}
+	const index finalSampleRate = sampleRate / resamplingDivider;
+
 	for (auto channel : channels) {
-		// todo preserve state?
 		auto& newChannelStruct = channelMap[channel];
-		newChannelStruct.fc = pd.fcc.getInstance(double(resamplingData.finalSampleRate));
-		newChannelStruct.downsampleHelper.setFactor(resamplingData.divider);
+		newChannelStruct.filter = pd.fcc.getInstance(double(finalSampleRate));
+		newChannelStruct.downsampleHelper.setFactor(resamplingDivider);
 	}
 
 	order.clear();
@@ -49,7 +55,7 @@ void ProcessingManager::setParams(
 			HandlerFinderImpl hf{ channelDataNew };
 			const bool success = handlerPtr->patch(
 				patchInfo.params, patchInfo.sources,
-				channel.technicalName(), resamplingData.finalSampleRate,
+				channel.technicalName(), finalSampleRate,
 				hf, cl
 			);
 
@@ -79,7 +85,7 @@ bool ProcessingManager::process(const ChannelMixer& mixer, clock::time_point kil
 	for (auto& [channel, channelStruct] : channelMap) {
 		auto wave = mixer.getChannelPCM(channel);
 
-		if (resamplingData.divider <= 1) {
+		if (resamplingDivider <= 1) {
 			waveBuffer.resize(wave.size());
 			std::copy(wave.begin(), wave.end(), waveBuffer.begin());
 		} else {
@@ -88,7 +94,7 @@ bool ProcessingManager::process(const ChannelMixer& mixer, clock::time_point kil
 			channelStruct.downsampleHelper.downsample(waveBuffer);
 		}
 
-		channelStruct.fc.applyInPlace(waveBuffer);
+		channelStruct.filter.applyInPlace(waveBuffer);
 
 		for (auto& handlerName : order) {
 			auto& handler = *channelStruct.handlerMap[handlerName];
@@ -118,9 +124,9 @@ void ProcessingManager::configureSnapshot(Snapshot& snapshot) {
 }
 
 void ProcessingManager::updateSnapshot(Snapshot& snapshot) {
-	for (auto&[channel, channelStruct] : channelMap) {
+	for (auto& [channel, channelStruct] : channelMap) {
 		auto& channelSnapshot = snapshot[channel];
-		for (auto&[handlerName, handler] : channelStruct.handlerMap) {
+		for (auto& [handlerName, handler] : channelStruct.handlerMap) {
 			// order is not important
 			handler->updateSnapshot(channelSnapshot[handlerName]);
 		}

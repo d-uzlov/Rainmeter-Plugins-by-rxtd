@@ -22,7 +22,6 @@ namespace rxtd::audio_analyzer {
 	public:
 		void setFormat(MyWaveFormat waveFormat);
 		void saveChannelsData(utils::array2d_view<float> channelsData, bool withAuto);
-		void writeSilence(index size, bool withAuto);
 
 		[[nodiscard]]
 		array_view<float> getChannelPCM(Channel channel) const;
