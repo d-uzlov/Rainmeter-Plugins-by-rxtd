@@ -20,15 +20,8 @@ DeviceManager::DeviceManager(std::function<void(MyWaveFormat waveFormat)> waveFo
 }
 
 void DeviceManager::deviceInit() {
-	if (getState() != State::eERROR_AUTO) {
-		// eOK - init not needed
-		// eERROR_MANUAL - change settings before calling this function
-		return;
-	}
-
 	deviceRelease();
 
-	lastDevicePollTime = clock::now();
 	state = State::eOK;
 
 	std::optional<utils::MediaDeviceWrapper> deviceOpt;
@@ -93,7 +86,6 @@ void DeviceManager::deviceRelease() {
 }
 
 void DeviceManager::forceReconnect() {
-	state = State::eERROR_AUTO;
 	deviceInit();
 }
 

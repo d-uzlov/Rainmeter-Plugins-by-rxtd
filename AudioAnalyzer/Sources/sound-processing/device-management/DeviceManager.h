@@ -17,9 +17,6 @@
 
 namespace rxtd::audio_analyzer {
 	class DeviceManager {
-		using clock = std::chrono::high_resolution_clock;
-		static_assert(clock::is_steady);
-
 		using Logger = utils::Rainmeter::Logger;
 
 	public:
@@ -64,9 +61,6 @@ namespace rxtd::audio_analyzer {
 
 		AudioEnumeratorHelper enumerator;
 		CaptureManager captureManager;
-
-		clock::time_point lastDevicePollTime{ };
-		static constexpr clock::duration DEVICE_POLL_TIMEOUT = std::chrono::milliseconds(250);
 
 		const std::function<void(MyWaveFormat waveFormat)> waveFormatUpdateCallback;
 

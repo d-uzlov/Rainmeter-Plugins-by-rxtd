@@ -188,37 +188,20 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 
 		if (deviceProperty == L"status") {
 			resolveBufferString = diSnapshot.status ? L"1" : L"0";
-			return;
-		}
-		if (deviceProperty == L"status string") {
+		} else if (deviceProperty == L"status string") {
 			resolveBufferString = diSnapshot.status ? L"active" : L"down";
-			return;
-		}
-		if (deviceProperty == L"type") {
-			switch (diSnapshot.type) {
-			case utils::MediaDeviceType::eINPUT:
-				resolveBufferString = L"input";
-				return;
-			case utils::MediaDeviceType::eOUTPUT:
-				resolveBufferString = L"output";
-				return;
-			}
-		}
-		if (deviceProperty == L"name") {
+		} else if (deviceProperty == L"type") {
+			resolveBufferString = diSnapshot.type == utils::MediaDeviceType::eINPUT ? L"input" : L"output";
+		} else if (deviceProperty == L"name") {
 			resolveBufferString = diSnapshot.name;
-			return;
-		}
-		if (deviceProperty == L"description") {
+		} else if (deviceProperty == L"description") {
 			resolveBufferString = diSnapshot.description;
-			return;
-		}
-		if (deviceProperty == L"id") {
+		} else if (deviceProperty == L"id") {
 			resolveBufferString = diSnapshot.id;
-			return;
-		}
-		if (deviceProperty == L"format") {
+		} else if (deviceProperty == L"format") {
 			resolveBufferString = diSnapshot.format;
-			return;
+		} else {
+			cl.warning(L"unknown device property '{}'", deviceProperty);
 		}
 
 		return;
