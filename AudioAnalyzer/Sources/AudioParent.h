@@ -30,6 +30,20 @@ namespace rxtd::audio_analyzer {
 
 		index legacyNumber{ };
 
+		struct RequestedDeviceDescription {
+			DeviceManager::DataSource sourceType{ };
+			string id;
+
+			friend bool operator==(const RequestedDeviceDescription& lhs, const RequestedDeviceDescription& rhs) {
+				return lhs.sourceType == rhs.sourceType
+					&& lhs.id == rhs.id;
+			}
+
+			friend bool operator!=(const RequestedDeviceDescription& lhs, const RequestedDeviceDescription& rhs) {
+				return !(lhs == rhs);
+			}
+		} requestedSource;
+
 	public:
 		explicit AudioParent(utils::Rainmeter&& rain);
 		~AudioParent() = default;
@@ -60,6 +74,7 @@ namespace rxtd::audio_analyzer {
 		isview legacy_findProcessingFor(isview handlerName);
 
 	private:
+		RequestedDeviceDescription readRequest() const;
 		void resolveProp(array_view<isview> args, string& resolveBufferString);
 	};
 }

@@ -54,39 +54,11 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 }
 
 void AudioParent::vReload() {
-	const auto source = rain.read(L"Source").asIString();
-	string id = { };
+	if (auto request = readRequest();
+		request != requestedSource) {
+		requestedSource = std::move(request);
 
-	using DataSource = DeviceManager::DataSource;
-	DataSource sourceEnum;
-	if (!source.empty()) {
-		if (source == L"Output") {
-			sourceEnum = DataSource::eDEFAULT_OUTPUT;
-		} else if (source == L"Input") {
-			sourceEnum = DataSource::eDEFAULT_INPUT;
-		} else {
-			logger.debug(L"Using '{}' as source audio device ID.", source);
-			sourceEnum = DataSource::eID;
-			id = source % csView();
-		}
-	} else {
-		// legacy
-		if (auto legacyID = this->rain.read(L"DeviceID").asString();
-			!legacyID.empty()) {
-			logger.debug(L"Using '{}' as source audio device ID.", legacyID);
-			sourceEnum = DataSource::eID;
-			id = legacyID;
-		} else {
-			const auto port = this->rain.read(L"Port").asIString(L"Output");
-			if (port == L"Output") {
-				sourceEnum = DataSource::eDEFAULT_OUTPUT;
-			} else if (port == L"Input") {
-				sourceEnum = DataSource::eDEFAULT_INPUT;
-			} else {
-				logger.error(L"Invalid Port '{}', must be one of: Output, Input. Set to Output.", port);
-				sourceEnum = DataSource::eDEFAULT_OUTPUT;
-			}
-		}
+		deviceManager.reconnect(requestedSource.sourceType, requestedSource.id);
 	}
 
 	const double computeTimeout = rain.read(L"computeTimeout").asFloat(-1.0);
@@ -94,8 +66,6 @@ void AudioParent::vReload() {
 
 	orchestrator.setComputeTimeout(computeTimeout);
 	orchestrator.setKillTimeout(killTimeout);
-
-	deviceManager.setOptions(sourceEnum, id);
 
 	const bool anythingChanged = paramParser.parse(legacyNumber);
 
@@ -107,13 +77,13 @@ void AudioParent::vReload() {
 double AudioParent::vUpdate() {
 	const auto changes = notificationClient.getPointer()->takeChanges();
 
-	const auto source = deviceManager.getRequesterSourceType();
-	if (source == DeviceManager::DataSource::eDEFAULT_INPUT && changes.defaultCapture
+	if (const auto source = requestedSource.sourceType;
+		source == DeviceManager::DataSource::eDEFAULT_INPUT && changes.defaultCapture
 		|| source == DeviceManager::DataSource::eDEFAULT_OUTPUT && changes.defaultRender) {
-		deviceManager.forceReconnect();
+		deviceManager.reconnect(requestedSource.sourceType, requestedSource.id);
 	} else if (!changes.devices.empty()) {
 		if (changes.devices.count(diSnapshot.id) > 0) {
-			deviceManager.forceReconnect();
+			deviceManager.reconnect(requestedSource.sourceType, requestedSource.id);
 		}
 
 		deviceManager.getDeviceEnumerator().updateDeviceStrings();
@@ -326,6 +296,43 @@ isview AudioParent::legacy_findProcessingFor(isview handlerName) {
 	}
 
 	return { };
+}
+
+AudioParent::RequestedDeviceDescription AudioParent::readRequest() const {
+	RequestedDeviceDescription result;
+
+	using DataSource = DeviceManager::DataSource;
+	if (const auto source = rain.read(L"Source").asIString();
+		!source.empty()) {
+		if (source == L"Output") {
+			result.sourceType = DataSource::eDEFAULT_OUTPUT;
+		} else if (source == L"Input") {
+			result.sourceType = DataSource::eDEFAULT_INPUT;
+		} else {
+			logger.debug(L"Using '{}' as source audio device ID.", source);
+			result.sourceType = DataSource::eID;
+			result.id = source % csView();
+		}
+	} else {
+		// legacy
+		if (auto legacyID = this->rain.read(L"DeviceID").asString();
+			!legacyID.empty()) {
+			result.sourceType = DataSource::eID;
+			result.id = legacyID;
+		} else {
+			const auto port = this->rain.read(L"Port").asIString(L"Output");
+			if (port == L"Output") {
+				result.sourceType = DataSource::eDEFAULT_OUTPUT;
+			} else if (port == L"Input") {
+				result.sourceType = DataSource::eDEFAULT_INPUT;
+			} else {
+				logger.error(L"Invalid Port '{}', must be one of: Output, Input. Set to Output.", port);
+				result.sourceType = DataSource::eDEFAULT_OUTPUT;
+			}
+		}
+	}
+
+	return result;
 }
 
 void AudioParent::resolveProp(array_view<isview> args, string& resolveBufferString) {

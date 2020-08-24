@@ -19,13 +19,13 @@ DeviceManager::DeviceManager(std::function<void(MyWaveFormat waveFormat)> waveFo
 	}
 }
 
-void DeviceManager::deviceInit() {
+void DeviceManager::reconnect(DataSource type, const string& id) {
 	deviceRelease();
 
 	state = State::eOK;
 
 	std::optional<utils::MediaDeviceWrapper> deviceOpt;
-	switch (requestedDevice.type) {
+	switch (type) {
 	case DataSource::eDEFAULT_INPUT:
 		deviceOpt = enumerator.getDefaultDevice(utils::MediaDeviceType::eINPUT);
 		if (!deviceOpt) {
@@ -43,7 +43,7 @@ void DeviceManager::deviceInit() {
 		break;
 
 	case DataSource::eID:
-		deviceOpt = enumerator.getDevice(requestedDevice.id);
+		deviceOpt = enumerator.getDevice(id);
 		if (!deviceOpt) {
 			state = State::eERROR_MANUAL;
 			return;
@@ -83,19 +83,4 @@ void DeviceManager::deviceRelease() {
 	audioDeviceHandle = { };
 	diSnapshot = { };
 	state = State::eERROR_AUTO;
-}
-
-void DeviceManager::forceReconnect() {
-	deviceInit();
-}
-
-void DeviceManager::setOptions(DataSource source, sview deviceID) {
-	if (requestedDevice.id == deviceID && requestedDevice.type == source) {
-		return;
-	}
-
-	requestedDevice.id = deviceID;
-	requestedDevice.type = source;
-
-	forceReconnect();
 }

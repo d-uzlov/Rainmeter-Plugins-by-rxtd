@@ -52,12 +52,7 @@ namespace rxtd::audio_analyzer {
 
 		Logger logger;
 
-		struct {
-			DataSource type{ };
-			string id;
-		} requestedDevice;
-
-		mutable utils::MediaDeviceWrapper audioDeviceHandle{ };
+		utils::MediaDeviceWrapper audioDeviceHandle{ };
 
 		AudioEnumeratorHelper enumerator;
 		CaptureManager captureManager;
@@ -85,6 +80,8 @@ namespace rxtd::audio_analyzer {
 			logger = std::move(value);
 		}
 
+		void reconnect(DataSource type, const string& id);
+
 		void updateDeviceInfoSnapshot(DeviceInfoSnapshot& snapshot) const {
 			snapshot = diSnapshot;
 		}
@@ -93,15 +90,6 @@ namespace rxtd::audio_analyzer {
 		State getState() const {
 			return state;
 		}
-
-		void forceReconnect();
-
-		[[nodiscard]]
-		DataSource getRequesterSourceType() const {
-			return requestedDevice.type;
-		}
-
-		void setOptions(DataSource source, sview deviceID);
 
 		[[nodiscard]]
 		CaptureManager& getCaptureManager() {
@@ -114,8 +102,6 @@ namespace rxtd::audio_analyzer {
 		}
 
 	private:
-		void deviceInit();
-
 		void deviceRelease();
 	};
 
