@@ -44,9 +44,9 @@ namespace rxtd::audio_analyzer {
 
 		void exchangeData(DataSnapshot& snapshot);
 
-		void setFormat(index samplesPerSec, ChannelLayout channelLayout);
-
 		void patch(const ParamParser::ProcessingsInfoMap& patches, index legacyNumber);
+
+		void setFormat(index samplesPerSec, ChannelLayout channelLayout);
 
 		void process(const ChannelMixer& channelMixer);
 		void configureSnapshot(DataSnapshot& snapshot) const;

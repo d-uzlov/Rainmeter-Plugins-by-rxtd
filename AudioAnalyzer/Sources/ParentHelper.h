@@ -57,23 +57,49 @@ namespace rxtd::audio_analyzer {
 		RequestedDeviceDescription requestedSource;
 		Snapshot snapshot;
 
-		bool formatIsUpdated = false;
+		bool snapshotIsUpdated = false;
+
+		std::thread thread;
+		std::atomic_bool stopRequest{ false };
+		std::mutex fullStateMutex;
+		std::mutex snapshotMutex;
+		bool useThreading = false;
+		bool needToInitializeThread = false;
 
 	public:
+		ParentHelper() = default;
+
+		ParentHelper(const ParentHelper& other) = delete;
+		ParentHelper(ParentHelper&& other) noexcept = delete;
+		ParentHelper& operator=(const ParentHelper& other) = delete;
+		ParentHelper& operator=(ParentHelper&& other) noexcept = delete;
+
+		~ParentHelper();
+
 		// return true on success, false on fatal error
-		bool init(utils::Rainmeter::Logger _logger, index _legacyNumber, double computeTimeout, double killTimeout);
+		bool init(
+			utils::Rainmeter::Logger _logger, index _legacyNumber,
+			double computeTimeout, double killTimeout,
+			bool _useThreading
+		);
 
 		void setParams(
 			RequestedDeviceDescription request,
 			const ParamParser::ProcessingsInfoMap& patches,
 			index legacyNumber,
-			ProcessingOrchestrator::DataSnapshot& dataSnapshot
+			Snapshot& snap
 		);
 
 		void update(Snapshot& snap);
 
 	private:
+		void separateThreadFunction();
+
 		void pUpdate();
 		void updateDevice();
+		void fullSnapshotUpdate(Snapshot& snap) const;
+
+		std::unique_lock<std::mutex> getFullStateLock();
+		std::unique_lock<std::mutex> getSnapshotLock();
 	};
 }

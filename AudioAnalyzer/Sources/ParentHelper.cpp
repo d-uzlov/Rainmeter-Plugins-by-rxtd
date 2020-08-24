@@ -11,10 +11,18 @@
 
 using namespace audio_analyzer;
 
+ParentHelper::~ParentHelper() {
+	if (useThreading && !needToInitializeThread) {
+		stopRequest.exchange(true);
+		thread.join();
+	}
+}
+
 bool ParentHelper::init(
 	utils::Rainmeter::Logger _logger,
 	index _legacyNumber,
-	double computeTimeout, double killTimeout
+	double computeTimeout, double killTimeout,
+	bool _useThreading
 ) {
 	logger = std::move(_logger);
 	legacyNumber = _legacyNumber;
@@ -44,6 +52,11 @@ bool ParentHelper::init(
 	orchestrator.setComputeTimeout(computeTimeout);
 	orchestrator.setKillTimeout(killTimeout);
 
+	useThreading = _useThreading;
+	if (useThreading) {
+		needToInitializeThread = true;
+	}
+
 	return true;
 }
 
@@ -51,33 +64,62 @@ void ParentHelper::setParams(
 	RequestedDeviceDescription request,
 	const ParamParser::ProcessingsInfoMap& patches,
 	index legacyNumber,
-	ProcessingOrchestrator::DataSnapshot& dataSnapshot
+	Snapshot& snap
 ) {
-	requestedSource = std::move(request);
-	updateDevice();
+	auto fullStateLock = getFullStateLock();
+	// snapshot lock is not needed
+	// because separate thread either sleeps
+	// or is guarded by fullStateLock
 
 	orchestrator.patch(patches, legacyNumber);
-	orchestrator.configureSnapshot(snapshot.dataSnapshot);
-	orchestrator.configureSnapshot(dataSnapshot);
+
+	requestedSource = std::move(request);
+	updateDevice();
+	fullSnapshotUpdate(snap);
+
+	snapshotIsUpdated = true;
+
+	if (needToInitializeThread) {
+		needToInitializeThread = false;
+		thread = std::thread{ [this]() { separateThreadFunction(); } };
+	}
 }
 
 void ParentHelper::update(Snapshot& snap) {
-	pUpdate();
-
-	if (formatIsUpdated) {
-		std::swap(snapshot.dataSnapshot, snap.dataSnapshot);
-		return;
+	if (!useThreading) {
+		pUpdate();
 	}
 
-	// todo check that dataSnapshot has newest info
-	orchestrator.configureSnapshot(snap.dataSnapshot);
+	auto snapshotLock = getSnapshotLock();
 
-	snap.diSnapshot = snapshot.diSnapshot;
-	snap.deviceListInput = snapshot.deviceListInput;
-	snap.deviceListOutput = snapshot.deviceListOutput;
-	snap.legacy_deviceList = snapshot.legacy_deviceList;
+	if (snapshotIsUpdated) {
+		std::swap(snapshot.dataSnapshot, snap.dataSnapshot);
+	} else {
+		fullSnapshotUpdate(snap);
+		snapshotIsUpdated = true;
+	}
 
-	formatIsUpdated = true;
+	snap.fatalError = snapshot.fatalError;
+}
+
+void ParentHelper::separateThreadFunction() {
+	while (true) {
+		if (stopRequest.load()) {
+			break;
+		}
+
+		{
+			auto fullStateLock = getFullStateLock();
+			pUpdate();
+		}
+
+		if (stopRequest.load()) {
+			break;
+		}
+
+		using namespace std::chrono_literals;
+		std::this_thread::sleep_for(1.0s / 60.0); // todo test
+	}
 }
 
 void ParentHelper::pUpdate() {
@@ -88,8 +130,12 @@ void ParentHelper::pUpdate() {
 	if (const auto source = requestedSource.sourceType;
 		source == DeviceManager::DataSource::eDEFAULT_INPUT && changes.defaultCapture
 		|| source == DeviceManager::DataSource::eDEFAULT_OUTPUT && changes.defaultRender) {
+		auto snapshotLock = getSnapshotLock();
+
 		updateDevice();
 	} else if (!changes.devices.empty()) {
+		auto snapshotLock = getSnapshotLock();
+
 		if (changes.devices.count(snapshot.diSnapshot.id) > 0) {
 			updateDevice();
 		}
@@ -102,6 +148,7 @@ void ParentHelper::pUpdate() {
 	}
 
 	if (deviceManager.getState() == DeviceManager::State::eFATAL) {
+		auto snapshotLock = getSnapshotLock();
 		snapshot.fatalError = true;
 		return;
 
@@ -119,15 +166,49 @@ void ParentHelper::pUpdate() {
 
 	if (any) {
 		orchestrator.process(channelMixer);
-		orchestrator.exchangeData(snapshot.dataSnapshot);
 		channelMixer.reset();
+
+		{
+			auto snapshotLock = getSnapshotLock();
+			orchestrator.exchangeData(snapshot.dataSnapshot);
+		}
 	}
 }
 
 void ParentHelper::updateDevice() {
 	deviceManager.reconnect(enumerator, requestedSource.sourceType, requestedSource.id);
+
 	deviceManager.updateDeviceInfoSnapshot(snapshot.diSnapshot);
+
 	channelMixer.setFormat(snapshot.diSnapshot.format);
 	orchestrator.setFormat(snapshot.diSnapshot.format.samplesPerSec, snapshot.diSnapshot.format.channelLayout);
-	formatIsUpdated = false;
+
+	orchestrator.configureSnapshot(snapshot.dataSnapshot);
+
+	snapshotIsUpdated = false;
+}
+
+void ParentHelper::fullSnapshotUpdate(Snapshot& snap) const {
+	orchestrator.configureSnapshot(snap.dataSnapshot);
+
+	snap.diSnapshot = snapshot.diSnapshot;
+	snap.deviceListInput = snapshot.deviceListInput;
+	snap.deviceListOutput = snapshot.deviceListOutput;
+	snap.legacy_deviceList = snapshot.legacy_deviceList;
+}
+
+std::unique_lock<std::mutex> ParentHelper::getFullStateLock() {
+	auto lock = std::unique_lock<std::mutex>{ fullStateMutex, std::defer_lock };
+	if (useThreading) {
+		lock.lock();
+	}
+	return lock;
+}
+
+std::unique_lock<std::mutex> ParentHelper::getSnapshotLock() {
+	auto lock = std::unique_lock<std::mutex>{ snapshotMutex, std::defer_lock };
+	if (useThreading) {
+		lock.lock();
+	}
+	return lock;
 }
