@@ -57,7 +57,7 @@ bool ParentHelper::init(
 	orchestrator.setLogger(logger);
 
 	const double warnTime = threadingMap.get(L"warnTime").asFloat(-1.0);
-	const double killTimeout = std::clamp(threadingMap.get(L"killTimeout").asFloat(33.0), 1.0, 33.0);
+	const double killTimeout = std::clamp(threadingMap.get(L"killTimeout").asFloat(33.0), 0.01, 33.0);
 	if (const auto threadingPolicy = threadingMap.get(L"policy").asIString(L"none");
 		threadingPolicy == L"none") {
 		useThreading = false;

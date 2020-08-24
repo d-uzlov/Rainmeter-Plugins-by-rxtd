@@ -40,9 +40,9 @@ void ProcessingOrchestrator::setFormat(index samplesPerSec, ChannelLayout channe
 void ProcessingOrchestrator::process(const ChannelMixer& channelMixer) {
 	using clock = std::chrono::high_resolution_clock;
 	static_assert(clock::is_steady);
+	using namespace std::chrono_literals;
 
-	const std::chrono::duration<float, std::milli> processMaxDuration{ killTimeoutMs };
-	const auto killTime = clock::now() + std::chrono::duration_cast<std::chrono::milliseconds>(processMaxDuration);
+	const auto killTime = clock::now() + std::chrono::duration_cast<std::chrono::milliseconds>(1.0ms * killTimeoutMs );
 
 	bool killed = false;
 	const auto processBeginTime = clock::now();
@@ -61,7 +61,7 @@ void ProcessingOrchestrator::process(const ChannelMixer& channelMixer) {
 	const auto processDuration = std::chrono::duration<double, std::milli>{ processEndTime - processBeginTime }.count();
 
 	if (killed) {
-		logger.error(L"handler processing was killed on timeout after {} m", processDuration);
+		logger.error(L"handler processing was killed on timeout after {} ms", processDuration);
 		return;
 	}
 
