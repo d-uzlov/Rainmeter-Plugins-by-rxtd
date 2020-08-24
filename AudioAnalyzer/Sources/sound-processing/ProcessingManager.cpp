@@ -30,7 +30,6 @@ void ProcessingManager::setParams(
 	index sampleRate, ChannelLayout layout
 ) {
 	channelSetRequested = pd.channels;
-	patchersInfo = pd.handlersInfo;
 	legacyNumber = _legacyNumber;
 
 	cph.setParams(pd.fcc, pd.targetRate, sampleRate);
@@ -71,12 +70,12 @@ void ProcessingManager::setParams(
 		ChannelData newData;
 		HandlerFinderImpl hf{ newData };
 
-		realOrder = patchersInfo.order;
-		for (auto iter = realOrder.begin();
-		     iter != realOrder.end();) {
+		order = pd.handlersInfo.order;
+		for (auto iter = order.begin();
+		     iter != order.end();) {
 			auto& handlerName = *iter;
 
-			auto& patchInfo = *patchersInfo.patchers.find(handlerName)->second;
+			auto& patchInfo = *pd.handlersInfo.patchers.find(handlerName)->second;
 			auto handlerPtr = patchInfo.fun(std::move(channelData[handlerName]));
 
 			auto cl = logger.context(L"handler '{}': ", handlerName);
@@ -89,10 +88,10 @@ void ProcessingManager::setParams(
 				cl.error(L"invalid handler");
 
 				if (legacyNumber < 104) {
-					iter = realOrder.erase(iter);
+					iter = order.erase(iter);
 					continue;
 				} else {
-					realOrder.clear();
+					order.clear();
 					newData.clear();
 					break;
 				}
@@ -113,7 +112,7 @@ bool ProcessingManager::process(const ChannelMixer& mixer, clock::time_point kil
 
 		const auto wave = cph.getResampled();
 
-		for (auto& handlerName : realOrder) {
+		for (auto& handlerName : order) {
 			auto& handler = *channelData[handlerName];
 			handler.process(wave, killTime);
 

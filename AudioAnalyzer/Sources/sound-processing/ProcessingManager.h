@@ -31,8 +31,7 @@ namespace rxtd::audio_analyzer {
 		// The following two fields are used for updating .channels field.
 		// They can contain info about handlers that doesn't exist because of channel layout
 		std::set<Channel> channelSetRequested;
-		ParamParser::HandlerPatchersInfo patchersInfo;
-		std::vector<istring> realOrder;
+		std::vector<istring> order;
 
 		std::map<Channel, ChannelData> channels;
 
