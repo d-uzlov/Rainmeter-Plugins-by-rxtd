@@ -11,8 +11,7 @@
 
 using namespace audio_analyzer;
 
-DeviceManager::DeviceManager(std::function<void(MyWaveFormat waveFormat)> waveFormatUpdateCallback):
-	waveFormatUpdateCallback(std::move(waveFormatUpdateCallback)) {
+DeviceManager::DeviceManager() {
 	if (!enumerator.isValid()) {
 		state = State::eFATAL;
 		return;
@@ -72,10 +71,9 @@ void DeviceManager::reconnect(DataSource type, const string& id) {
 	diSnapshot.id = deviceInfo.id;
 	diSnapshot.description = deviceInfo.desc;
 	diSnapshot.name = legacyNumber < 104 ? deviceInfo.fullFriendlyName : deviceInfo.name;
-	diSnapshot.format = captureManager.getFormatString();
+	diSnapshot.formatString = captureManager.getFormatString();
 	diSnapshot.type = audioDeviceHandle.getType();
-
-	waveFormatUpdateCallback(captureManager.getWaveFormat());
+	diSnapshot.format = captureManager.getWaveFormat();
 }
 
 void DeviceManager::deviceRelease() {

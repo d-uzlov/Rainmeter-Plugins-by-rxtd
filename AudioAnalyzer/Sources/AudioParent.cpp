@@ -14,11 +14,7 @@
 using namespace audio_analyzer;
 
 AudioParent::AudioParent(utils::Rainmeter&& _rain) :
-	ParentBase(std::move(_rain)),
-	deviceManager([this](MyWaveFormat format) {
-		channelMixer.setFormat(format);
-		orchestrator.setFormat(format.samplesPerSec, format.channelLayout);
-	}) {
+	ParentBase(std::move(_rain)) {
 	setUseResultString(false);
 
 	if (deviceManager.getState() == DeviceManager::State::eFATAL) {
@@ -59,6 +55,9 @@ void AudioParent::vReload() {
 		requestedSource = std::move(request);
 
 		deviceManager.reconnect(requestedSource.sourceType, requestedSource.id);
+		deviceManager.updateDeviceInfoSnapshot(diSnapshot);
+		channelMixer.setFormat(diSnapshot.format);
+		orchestrator.setFormat(diSnapshot.format.samplesPerSec, diSnapshot.format.channelLayout);
 	}
 
 	const double computeTimeout = rain.read(L"computeTimeout").asFloat(-1.0);
@@ -81,9 +80,15 @@ double AudioParent::vUpdate() {
 		source == DeviceManager::DataSource::eDEFAULT_INPUT && changes.defaultCapture
 		|| source == DeviceManager::DataSource::eDEFAULT_OUTPUT && changes.defaultRender) {
 		deviceManager.reconnect(requestedSource.sourceType, requestedSource.id);
+		deviceManager.updateDeviceInfoSnapshot(diSnapshot);
+		channelMixer.setFormat(diSnapshot.format);
+		orchestrator.setFormat(diSnapshot.format.samplesPerSec, diSnapshot.format.channelLayout);
 	} else if (!changes.devices.empty()) {
 		if (changes.devices.count(diSnapshot.id) > 0) {
 			deviceManager.reconnect(requestedSource.sourceType, requestedSource.id);
+			deviceManager.updateDeviceInfoSnapshot(diSnapshot);
+			channelMixer.setFormat(diSnapshot.format);
+			orchestrator.setFormat(diSnapshot.format.samplesPerSec, diSnapshot.format.channelLayout);
 		}
 
 		deviceManager.getDeviceEnumerator().updateDeviceStrings();
@@ -103,7 +108,6 @@ double AudioParent::vUpdate() {
 		return 0.0;
 	}
 
-	deviceManager.updateDeviceInfoSnapshot(diSnapshot);
 
 	bool any = false;
 	deviceManager.getCaptureManager().capture([&](utils::array2d_view<float> channelsData) {
@@ -169,7 +173,7 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 		} else if (deviceProperty == L"id") {
 			resolveBufferString = diSnapshot.id;
 		} else if (deviceProperty == L"format") {
-			resolveBufferString = diSnapshot.format;
+			resolveBufferString = diSnapshot.formatString;
 		} else {
 			cl.warning(L"unknown device property '{}'", deviceProperty);
 		}

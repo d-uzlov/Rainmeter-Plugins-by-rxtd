@@ -43,8 +43,9 @@ namespace rxtd::audio_analyzer {
 			string name;
 			string description;
 			string id;
-			string format;
+			string formatString;
 			utils::MediaDeviceType type{ };
+			MyWaveFormat format;
 		};
 
 	private:
@@ -57,14 +58,12 @@ namespace rxtd::audio_analyzer {
 		AudioEnumeratorHelper enumerator;
 		CaptureManager captureManager;
 
-		const std::function<void(MyWaveFormat waveFormat)> waveFormatUpdateCallback;
-
 		DeviceInfoSnapshot diSnapshot;
 
 		index legacyNumber = 0;
 
 	public:
-		DeviceManager(std::function<void(MyWaveFormat waveFormat)> waveFormatUpdateCallback);
+		DeviceManager();
 
 		/** This class is non copyable */
 		DeviceManager(const DeviceManager& other) = delete;
