@@ -85,8 +85,8 @@ void ParentHelper::setParams(
 
 	requestedSource = std::move(request);
 	updateDevice();
-	fullSnapshotUpdate(snap);
 
+	snap = snapshot;
 	snapshotIsUpdated = true;
 
 	if (needToInitializeThread) {
@@ -105,7 +105,7 @@ void ParentHelper::update(Snapshot& snap) {
 	if (snapshotIsUpdated) {
 		std::swap(snapshot.dataSnapshot, snap.dataSnapshot);
 	} else {
-		fullSnapshotUpdate(snap);
+		snap = snapshot;
 		snapshotIsUpdated = true;
 	}
 
@@ -136,30 +136,43 @@ void ParentHelper::separateThreadFunction() {
 void ParentHelper::pUpdate() {
 	const auto changes = notificationClient.takeChanges();
 
-	// todo handle "no default device" and "device not found"
+	bool deviceUpdated = false;
 
-	if (const auto source = requestedSource.sourceType;
-		source == DeviceManager::DataSource::eDEFAULT_INPUT && changes.defaultCapture
-		|| source == DeviceManager::DataSource::eDEFAULT_OUTPUT && changes.defaultRender) {
+	using DS = DeviceManager::DataSource;
+	if (requestedSource.sourceType == DS::eDEFAULT_INPUT || requestedSource.sourceType == DS::eDEFAULT_OUTPUT) {
+		const auto change = requestedSource.sourceType == DS::eDEFAULT_INPUT
+			                    ? changes.defaultCapture
+			                    : changes.defaultRender;
+		switch (change) {
+			using DDC = utils::CMMNotificationClient::DefaultDeviceChange;
+		case DDC::eNONE: break;
+		case DDC::eCHANGED: {
+			auto snapshotLock = getSnapshotLock();
+
+			deviceUpdated = true;
+			updateDevice();
+			break;
+		}
+		case DDC::eNO_DEVICE: {
+			auto snapshotLock = getSnapshotLock();
+			deviceIsAvailable = false;
+			snapshot.deviceIsAvailable = false;
+			snapshotIsUpdated = false;
+			break;
+		}
+		}
+	}
+	if (!changes.devices.empty()) {
 		auto snapshotLock = getSnapshotLock();
 
-		updateDevice();
-	} else if (!changes.devices.empty()) {
-		auto snapshotLock = getSnapshotLock();
-
-		if (changes.devices.count(snapshot.diSnapshot.id) > 0) {
+		if (!deviceUpdated && changes.devices.count(snapshot.diSnapshot.id) > 0) {
 			updateDevice();
 		}
 
 		updateDeviceListStrings();
 	}
 
-	if (deviceManager.getState() == DeviceManager::State::eFATAL) {
-		auto snapshotLock = getSnapshotLock();
-		snapshot.fatalError = true;
-		return;
-	}
-	if (deviceManager.getState() != DeviceManager::State::eOK) {
+	if (!deviceIsAvailable) {
 		return;
 	}
 
@@ -182,24 +195,30 @@ void ParentHelper::pUpdate() {
 }
 
 void ParentHelper::updateDevice() {
-	deviceManager.reconnect(enumerator, requestedSource.sourceType, requestedSource.id);
+	snapshotIsUpdated = false;
 
+	const bool ok = deviceManager.reconnect(enumerator, requestedSource.sourceType, requestedSource.id);
+	if (!ok) {
+		snapshot.fatalError = true;
+		deviceIsAvailable = false;
+		return;
+	}
+
+	deviceIsAvailable = deviceManager.isValid();
+	if (!deviceIsAvailable) {
+		return;
+	}
+
+	snapshot.deviceIsAvailable = deviceIsAvailable;
+
+	// it's important that if device is not available
+	// then #updateDeviceInfoSnapshot is not called
 	deviceManager.updateDeviceInfoSnapshot(snapshot.diSnapshot);
 
 	channelMixer.setFormat(snapshot.diSnapshot.format);
 	orchestrator.setFormat(snapshot.diSnapshot.format.samplesPerSec, snapshot.diSnapshot.format.channelLayout);
 
 	orchestrator.configureSnapshot(snapshot.dataSnapshot);
-
-	snapshotIsUpdated = false;
-}
-
-void ParentHelper::fullSnapshotUpdate(Snapshot& snap) const {
-	orchestrator.configureSnapshot(snap.dataSnapshot);
-
-	snap.diSnapshot = snapshot.diSnapshot;
-	snap.deviceListInput = snapshot.deviceListInput;
-	snap.deviceListOutput = snapshot.deviceListOutput;
 }
 
 void ParentHelper::updateDeviceListStrings() {

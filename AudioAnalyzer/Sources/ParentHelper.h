@@ -40,6 +40,7 @@ namespace rxtd::audio_analyzer {
 			string deviceListOutput;
 
 			bool fatalError = false;
+			bool deviceIsAvailable = false;
 		};
 
 	private:
@@ -52,9 +53,11 @@ namespace rxtd::audio_analyzer {
 
 		index legacyNumber{ };
 
-		RequestedDeviceDescription requestedSource;
-		Snapshot snapshot;
+		bool deviceIsAvailable = true;
 
+		RequestedDeviceDescription requestedSource;
+
+		Snapshot snapshot;
 		bool snapshotIsUpdated = false;
 
 		bool useThreading = false;
@@ -63,9 +66,15 @@ namespace rxtd::audio_analyzer {
 		std::atomic_bool stopRequest{ false };
 		double updateTime{ };
 
+		// #fullStateMutex guards all fields except those guarded by #snapshotMutex
 		std::mutex fullStateMutex;
-		std::mutex snapshotMutex;
 		std::condition_variable sleepVariable;
+
+		// snapshotMutex guards following fields:
+		//		#snapshot
+		//		#snapshotIsUpdated
+		//		#snapshotIsUpdated
+		std::mutex snapshotMutex;
 
 	public:
 		ParentHelper() = default;
@@ -98,7 +107,6 @@ namespace rxtd::audio_analyzer {
 
 		void pUpdate();
 		void updateDevice();
-		void fullSnapshotUpdate(Snapshot& snap) const;
 		void updateDeviceListStrings();
 
 		std::unique_lock<std::mutex> getFullStateLock();

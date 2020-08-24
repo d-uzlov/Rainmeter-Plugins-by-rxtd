@@ -29,8 +29,6 @@ namespace rxtd::audio_analyzer {
 		enum class State {
 			// usual operating mode
 			eOK,
-			// something went wrong, but we can fix it
-			eERROR_AUTO,
 			// something went wrong, and we can't fix it without changing parameters
 			// most likely specified device ID not found
 			eERROR_MANUAL,
@@ -70,15 +68,17 @@ namespace rxtd::audio_analyzer {
 			logger = std::move(value);
 		}
 
-		void reconnect(AudioEnumeratorHelper& enumerator, DataSource type, const string& id);
+		// returns false on fatal error, true otherwise
+		[[nodiscard]]
+		bool reconnect(AudioEnumeratorHelper& enumerator, DataSource type, const string& id);
 
 		void updateDeviceInfoSnapshot(DeviceInfoSnapshot& snapshot) const {
 			snapshot = diSnapshot;
 		}
 
 		[[nodiscard]]
-		State getState() const {
-			return state;
+		bool isValid() const {
+			return state == State::eOK;
 		}
 
 		[[nodiscard]]

@@ -11,7 +11,7 @@
 
 using namespace audio_analyzer;
 
-void DeviceManager::reconnect(AudioEnumeratorHelper& enumerator, DataSource type, const string& id) {
+bool DeviceManager::reconnect(AudioEnumeratorHelper& enumerator, DataSource type, const string& id) {
 	deviceRelease();
 
 	state = State::eOK;
@@ -22,7 +22,7 @@ void DeviceManager::reconnect(AudioEnumeratorHelper& enumerator, DataSource type
 		deviceOpt = enumerator.getDefaultDevice(utils::MediaDeviceType::eINPUT);
 		if (!deviceOpt) {
 			state = State::eERROR_MANUAL;
-			return;
+			return true;
 		}
 		break;
 
@@ -30,7 +30,7 @@ void DeviceManager::reconnect(AudioEnumeratorHelper& enumerator, DataSource type
 		deviceOpt = enumerator.getDefaultDevice(utils::MediaDeviceType::eOUTPUT);
 		if (!deviceOpt) {
 			state = State::eERROR_MANUAL;
-			return;
+			return true;
 		}
 		break;
 
@@ -38,7 +38,7 @@ void DeviceManager::reconnect(AudioEnumeratorHelper& enumerator, DataSource type
 		deviceOpt = enumerator.getDevice(id);
 		if (!deviceOpt) {
 			state = State::eERROR_MANUAL;
-			return;
+			return true;
 		}
 		break;
 	}
@@ -51,12 +51,13 @@ void DeviceManager::reconnect(AudioEnumeratorHelper& enumerator, DataSource type
 		if (!captureManager.isRecoverable()) {
 			state = State::eFATAL;
 			logger.debug(L"device manager fatal");
-		} else {
-			logger.debug(L"device manager recoverable, but won't try this time");
+			return false;
 		}
 
+		logger.debug(L"device manager recoverable, but won't try this time");
+
 		deviceRelease();
-		return;
+		return true;
 	}
 
 	auto deviceInfo = audioDeviceHandle.readDeviceInfo();
@@ -67,11 +68,12 @@ void DeviceManager::reconnect(AudioEnumeratorHelper& enumerator, DataSource type
 	diSnapshot.formatString = captureManager.getFormatString();
 	diSnapshot.type = audioDeviceHandle.getType();
 	diSnapshot.format = captureManager.getWaveFormat();
+
+	return true;
 }
 
 void DeviceManager::deviceRelease() {
 	captureManager = { };
 	audioDeviceHandle = { };
 	diSnapshot = { };
-	state = State::eERROR_AUTO;
 }

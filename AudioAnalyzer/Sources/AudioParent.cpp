@@ -47,15 +47,56 @@ void AudioParent::vReload() {
 		requestedSource = std::move(request);
 
 		helper.setParams(requestedSource, paramParser.getParseResult(), legacyNumber, snapshot);
+
+		if (!snapshot.deviceIsAvailable) {
+			switch (requestedSource.sourceType) {
+			case DeviceManager::DataSource::eDEFAULT_INPUT:
+				logger.error(L"No input device found");
+				break;
+			case DeviceManager::DataSource::eDEFAULT_OUTPUT:
+				logger.error(L"No output device found");
+				break;
+			case DeviceManager::DataSource::eID:
+				logger.error(
+					L"Device '{} ({})' is not found",
+					snapshot.diSnapshot.name,
+					snapshot.diSnapshot.description
+				);
+				break;
+			}
+		}
 	}
 }
 
 double AudioParent::vUpdate() {
+	const bool deviceWasAvailable = snapshot.deviceIsAvailable;
 	helper.update(snapshot);
 
 	if (snapshot.fatalError) {
 		setMeasureState(utils::MeasureState::eBROKEN);
-		// todo free memory
+		return { };
+	}
+
+	if (!snapshot.deviceIsAvailable) {
+		if (deviceWasAvailable) {
+			switch (requestedSource.sourceType) {
+			case DeviceManager::DataSource::eDEFAULT_INPUT:
+				logger.error(L"All input devices were disconnected or disabled");
+				break;
+			case DeviceManager::DataSource::eDEFAULT_OUTPUT:
+				logger.error(L"All output devices were disconnected or disabled");
+				break;
+			case DeviceManager::DataSource::eID:
+				logger.error(
+					L"Device '{} ({})' was disconnected or disabled",
+					snapshot.diSnapshot.name,
+					snapshot.diSnapshot.description
+				);
+				break;
+			}
+		}
+
+		// todo reset pictures
 		return { };
 	}
 
@@ -175,6 +216,10 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 }
 
 double AudioParent::getValue(isview proc, isview id, Channel channel, index ind) const {
+	if (!snapshot.deviceIsAvailable) {
+		return 0.0;
+	}
+
 	auto procIter = snapshot.dataSnapshot.find(proc);
 	if (procIter == snapshot.dataSnapshot.end()) {
 		return 0.0;
@@ -184,7 +229,6 @@ double AudioParent::getValue(isview proc, isview id, Channel channel, index ind)
 	auto channelSnapshotIter = processingSnapshot.find(channel);
 	if (channelSnapshotIter == processingSnapshot.end()) {
 		return 0.0;
-
 	}
 
 	auto& channelSnapshot = channelSnapshotIter->second;

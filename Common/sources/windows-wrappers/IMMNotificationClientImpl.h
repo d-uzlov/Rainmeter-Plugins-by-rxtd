@@ -20,17 +20,23 @@
 namespace rxtd::utils {
 	class CMMNotificationClient : public IUnknownImpl<IMMNotificationClient> {
 	public:
+		enum class DefaultDeviceChange {
+			eNONE,
+			eCHANGED,
+			eNO_DEVICE
+		};
+
 		struct Changes {
-			bool defaultRender;
-			bool defaultCapture;
+			DefaultDeviceChange defaultRender;
+			DefaultDeviceChange defaultCapture;
 			std::set<string, std::less<>> devices;
 		};
 
 	private:
 		IMMDeviceEnumeratorWrapper enumerator;
 
-		std::atomic<bool> defaultRenderChanged{ };
-		std::atomic<bool> defaultCaptureChanged{ };
+		std::atomic<DefaultDeviceChange> defaultRenderChanged{ };
+		std::atomic<DefaultDeviceChange> defaultCaptureChanged{ };
 		std::set<string, std::less<>> devicesWithChangedState;
 
 		std::mutex mut;
@@ -53,8 +59,8 @@ namespace rxtd::utils {
 		Changes takeChanges() {
 			std::lock_guard<std::mutex> lock{ mut };
 			Changes result{ };
-			result.defaultRender = defaultRenderChanged.exchange(false);
-			result.defaultCapture = defaultCaptureChanged.exchange(false);
+			result.defaultRender = defaultRenderChanged.exchange(DefaultDeviceChange::eNONE);
+			result.defaultCapture = defaultCaptureChanged.exchange(DefaultDeviceChange::eNONE);
 			result.devices = std::move(devicesWithChangedState);
 			return result;
 		}
@@ -76,15 +82,18 @@ namespace rxtd::utils {
 		}
 
 		HRESULT STDMETHODCALLTYPE OnDefaultDeviceChanged(EDataFlow flow, ERole role, const wchar_t* deviceId) override {
-			// this function can have (deviceId == nullptr) when no default device is available
-			// all other have proper non-null string
+			if (role != eConsole) {
+				return S_OK;
+			}
 
-			if (role == eConsole) {
-				if (flow == eCapture) {
-					defaultCaptureChanged.exchange(true);
-				} else {
-					defaultRenderChanged.exchange(true);
-				}
+			// if (deviceId == nullptr) then no default device is available
+			// this can only happen in #OnDefaultDeviceChanged
+			const auto change = deviceId == nullptr ? DefaultDeviceChange::eNO_DEVICE : DefaultDeviceChange::eCHANGED;
+
+			if (flow == eCapture) {
+				defaultCaptureChanged.exchange(change);
+			} else {
+				defaultRenderChanged.exchange(change);
 			}
 
 			return S_OK;
