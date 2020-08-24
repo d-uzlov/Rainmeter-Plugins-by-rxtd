@@ -138,6 +138,8 @@ void WaveForm::vReset() {
 }
 
 void WaveForm::vProcess(array_view<float> wave, clock::time_point killTime) {
+	const bool wasEmpty = drawer.isEmpty();
+
 	for (const auto value : wave) {
 		min = std::min<double>(min, value);
 		max = std::max<double>(max, value);
@@ -152,7 +154,7 @@ void WaveForm::vProcess(array_view<float> wave, clock::time_point killTime) {
 		}
 	}
 
-	if (!drawer.isEmpty()) {
+	if (!drawer.isEmpty() || wasEmpty != drawer.isEmpty()) {
 		drawer.inflate();
 	}
 }
