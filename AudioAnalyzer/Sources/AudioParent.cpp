@@ -29,21 +29,8 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 	}
 
 	const auto threadingParams = rain.read(L"threading").asMap(L'|', L' ');
-	const double computeTimeout = threadingParams.get(L"computeTimeout").asFloat(-1.0);
-	const double killTimeout = std::clamp(threadingParams.get(L"killTimeout").asFloat(33.0), 1.0, 33.0);
-	auto threadingPolicy = threadingParams.get(L"policy").asIString(L"none");
-	bool useThreading;
-	if (threadingPolicy == L"none") {
-		useThreading = false;
-	} else if (threadingPolicy == L"separateThread") {
-		useThreading = true;
-	} else {
-		logger.error(L"Fatal error: Threading: unknown policy '{}'");
-		setMeasureState(utils::MeasureState::eBROKEN);
-		return;
-	}
 
-	const bool success = helper.init(logger, legacyNumber, computeTimeout, killTimeout, useThreading);
+	const bool success = helper.init(logger, threadingParams, legacyNumber);
 	if (!success) {
 		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
@@ -107,7 +94,7 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 		}
 
 		const isview deviceProperty = args[1];
-		const auto& state= snapshot.diSnapshot;
+		const auto& state = snapshot.diSnapshot;
 
 		if (deviceProperty == L"status") {
 			resolveBufferString = state.status ? L"1" : L"0";

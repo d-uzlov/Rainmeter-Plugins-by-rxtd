@@ -21,7 +21,7 @@ namespace rxtd::audio_analyzer {
 			ChannelLayout channelLayout;
 		} currentFormat;
 
-		double computeTimeoutMs = 33.0;
+		double warnTimeMs = 33.0;
 		double killTimeoutMs = 33.0;
 
 		utils::Rainmeter::Logger logger;
@@ -38,8 +38,8 @@ namespace rxtd::audio_analyzer {
 			killTimeoutMs = value;
 		}
 
-		void setComputeTimeout(double value) {
-			computeTimeoutMs = value;
+		void setWarnTime(double value) {
+			warnTimeMs = value;
 		}
 
 		void exchangeData(DataSnapshot& snapshot);

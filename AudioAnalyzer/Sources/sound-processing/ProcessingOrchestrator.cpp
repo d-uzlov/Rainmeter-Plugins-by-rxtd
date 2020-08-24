@@ -41,37 +41,35 @@ void ProcessingOrchestrator::process(const ChannelMixer& channelMixer) {
 	using clock = std::chrono::high_resolution_clock;
 	static_assert(clock::is_steady);
 
-	const auto processBeginTime = clock::now();
-
 	const std::chrono::duration<float, std::milli> processMaxDuration{ killTimeoutMs };
 	const auto killTime = clock::now() + std::chrono::duration_cast<std::chrono::milliseconds>(processMaxDuration);
 
 	bool killed = false;
+	const auto processBeginTime = clock::now();
 	for (auto& [name, sa] : saMap) {
 		killed = sa.process(channelMixer, killTime);
 		if (killed) {
 			break;
 		}
 	}
-
 	const auto processEndTime = clock::now();
+
+	for (auto&[name, sa] : saMap) {
+		sa.updateSnapshot(dataSnapshot[name]);
+	}
 
 	const auto processDuration = std::chrono::duration<double, std::milli>{ processEndTime - processBeginTime }.count();
 
 	if (killed) {
-		logger.error(L"handler processing was killed on timeout after {} m, on stage 1", processDuration);
+		logger.error(L"handler processing was killed on timeout after {} m", processDuration);
 		return;
 	}
 
-	for (auto& [name, sa] : saMap) {
-		sa.updateSnapshot(dataSnapshot[name]);
-	}
-
-	if (computeTimeoutMs >= 0 && processDuration > computeTimeoutMs) {
+	if (warnTimeMs >= 0.0 && processDuration > warnTimeMs) {
 		logger.debug(
 			L"processing overhead {} ms over specified {} ms",
-			processDuration - computeTimeoutMs,
-			computeTimeoutMs
+			processDuration - warnTimeMs,
+			warnTimeMs
 		);
 	}
 }

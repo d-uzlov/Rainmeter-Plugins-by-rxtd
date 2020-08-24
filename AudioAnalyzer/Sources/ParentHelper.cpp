@@ -14,15 +14,22 @@ using namespace audio_analyzer;
 ParentHelper::~ParentHelper() {
 	if (useThreading && !needToInitializeThread) {
 		stopRequest.exchange(true);
-		thread.join();
+		try {
+			{
+				auto fullStateLock = getFullStateLock();
+				sleepVariable.notify_one();
+			}
+			thread.join();
+		} catch (...) {
+			thread.detach();
+		}
 	}
 }
 
 bool ParentHelper::init(
 	utils::Rainmeter::Logger _logger,
-	index _legacyNumber,
-	double computeTimeout, double killTimeout,
-	bool _useThreading
+	utils::OptionMap threadingMap,
+	index _legacyNumber
 ) {
 	logger = std::move(_logger);
 	legacyNumber = _legacyNumber;
@@ -49,10 +56,25 @@ bool ParentHelper::init(
 	snapshot.legacy_deviceList = enumerator.legacy_getDeviceList();
 
 	orchestrator.setLogger(logger);
-	orchestrator.setComputeTimeout(computeTimeout);
+
+	const double warnTime = threadingMap.get(L"warnTime").asFloat(-1.0);
+	const double killTimeout = std::clamp(threadingMap.get(L"killTimeout").asFloat(33.0), 1.0, 33.0);
+	if (const auto threadingPolicy = threadingMap.get(L"policy").asIString(L"none");
+		threadingPolicy == L"none") {
+		useThreading = false;
+	} else if (threadingPolicy == L"separateThread") {
+		useThreading = true;
+	} else {
+		logger.error(L"Fatal error: Threading: unknown policy '{}'");
+		return false;
+	}
+
+	orchestrator.setWarnTime(warnTime);
 	orchestrator.setKillTimeout(killTimeout);
 
-	useThreading = _useThreading;
+	updateTime = threadingMap.get(L"updateTime").asFloat(1.0 / 120.0);
+	updateTime = std::clamp(updateTime, 1.0 / 200.0, 1.0);
+
 	if (useThreading) {
 		needToInitializeThread = true;
 	}
@@ -103,22 +125,23 @@ void ParentHelper::update(Snapshot& snap) {
 }
 
 void ParentHelper::separateThreadFunction() {
+	using namespace std::chrono_literals;
+	const auto sleepTime = 1.0s * updateTime;
+
+	auto fullStateLock = getFullStateLock();
+
 	while (true) {
 		if (stopRequest.load()) {
 			break;
 		}
 
-		{
-			auto fullStateLock = getFullStateLock();
-			pUpdate();
-		}
+		pUpdate();
 
 		if (stopRequest.load()) {
 			break;
 		}
 
-		using namespace std::chrono_literals;
-		std::this_thread::sleep_for(1.0s / 60.0); // todo test
+		sleepVariable.wait_for(fullStateLock, sleepTime);
 	}
 }
 

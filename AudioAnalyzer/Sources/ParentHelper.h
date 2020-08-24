@@ -59,12 +59,15 @@ namespace rxtd::audio_analyzer {
 
 		bool snapshotIsUpdated = false;
 
-		std::thread thread;
-		std::atomic_bool stopRequest{ false };
-		std::mutex fullStateMutex;
-		std::mutex snapshotMutex;
 		bool useThreading = false;
 		bool needToInitializeThread = false;
+		std::thread thread;
+		std::atomic_bool stopRequest{ false };
+		double updateTime{ };
+
+		std::mutex fullStateMutex;
+		std::mutex snapshotMutex;
+		std::condition_variable sleepVariable;
 
 	public:
 		ParentHelper() = default;
@@ -78,9 +81,9 @@ namespace rxtd::audio_analyzer {
 
 		// return true on success, false on fatal error
 		bool init(
-			utils::Rainmeter::Logger _logger, index _legacyNumber,
-			double computeTimeout, double killTimeout,
-			bool _useThreading
+			utils::Rainmeter::Logger _logger,
+			utils::OptionMap threadingMap,
+			index _legacyNumber
 		);
 
 		void setParams(
