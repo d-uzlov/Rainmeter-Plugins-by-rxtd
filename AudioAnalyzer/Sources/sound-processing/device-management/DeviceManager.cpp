@@ -11,14 +11,7 @@
 
 using namespace audio_analyzer;
 
-DeviceManager::DeviceManager() {
-	if (!enumerator.isValid()) {
-		state = State::eFATAL;
-		return;
-	}
-}
-
-void DeviceManager::reconnect(DataSource type, const string& id) {
+void DeviceManager::reconnect(AudioEnumeratorHelper& enumerator, DataSource type, const string& id) {
 	deviceRelease();
 
 	state = State::eOK;

@@ -17,7 +17,7 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 	ParentBase(std::move(_rain)) {
 	setUseResultString(false);
 
-	if (deviceManager.getState() == DeviceManager::State::eFATAL) {
+	if (!enumerator.isValid()) {
 		logger.error(L"Fatal error: can't get IMMDeviceEnumerator");
 		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
@@ -38,12 +38,13 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 
 	notificationClient = {
 		[=](auto ptr) {
-			*ptr = new utils::CMMNotificationClient{ deviceManager.getDeviceEnumerator().getWrapper() };
+			*ptr = new utils::CMMNotificationClient{ enumerator.getWrapper() };
 			return true;
 		}
 	};
 
-	deviceManager.getDeviceEnumerator().updateDeviceStrings();
+	enumerator.updateDeviceStrings();
+	enumerator.updateDeviceStringLegacy(diSnapshot.type);
 
 	paramParser.setRainmeter(rain);
 	orchestrator.setLogger(logger);
@@ -54,7 +55,7 @@ void AudioParent::vReload() {
 		request != requestedSource) {
 		requestedSource = std::move(request);
 
-		deviceManager.reconnect(requestedSource.sourceType, requestedSource.id);
+		deviceManager.reconnect(enumerator, requestedSource.sourceType, requestedSource.id);
 		deviceManager.updateDeviceInfoSnapshot(diSnapshot);
 		channelMixer.setFormat(diSnapshot.format);
 		orchestrator.setFormat(diSnapshot.format.samplesPerSec, diSnapshot.format.channelLayout);
@@ -79,19 +80,20 @@ double AudioParent::vUpdate() {
 	if (const auto source = requestedSource.sourceType;
 		source == DeviceManager::DataSource::eDEFAULT_INPUT && changes.defaultCapture
 		|| source == DeviceManager::DataSource::eDEFAULT_OUTPUT && changes.defaultRender) {
-		deviceManager.reconnect(requestedSource.sourceType, requestedSource.id);
+		deviceManager.reconnect(enumerator, requestedSource.sourceType, requestedSource.id);
 		deviceManager.updateDeviceInfoSnapshot(diSnapshot);
 		channelMixer.setFormat(diSnapshot.format);
 		orchestrator.setFormat(diSnapshot.format.samplesPerSec, diSnapshot.format.channelLayout);
 	} else if (!changes.devices.empty()) {
 		if (changes.devices.count(diSnapshot.id) > 0) {
-			deviceManager.reconnect(requestedSource.sourceType, requestedSource.id);
+			deviceManager.reconnect(enumerator, requestedSource.sourceType, requestedSource.id);
 			deviceManager.updateDeviceInfoSnapshot(diSnapshot);
 			channelMixer.setFormat(diSnapshot.format);
 			orchestrator.setFormat(diSnapshot.format.samplesPerSec, diSnapshot.format.channelLayout);
 		}
 
-		deviceManager.getDeviceEnumerator().updateDeviceStrings();
+		enumerator.updateDeviceStrings();
+		enumerator.updateDeviceStringLegacy(diSnapshot.type);
 	}
 
 	if (deviceManager.getState() != DeviceManager::State::eOK) {
@@ -136,7 +138,6 @@ double AudioParent::vUpdate() {
 
 void AudioParent::vCommand(isview bangArgs) {
 	if (bangArgs == L"updateDevList") {
-		deviceManager.getDeviceEnumerator().updateDeviceStringLegacy(diSnapshot.type);
 		return;
 	}
 
@@ -182,11 +183,11 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 	}
 
 	if (optionName == L"device list input") {
-		resolveBufferString = deviceManager.getDeviceEnumerator().getDeviceListInput();
+		resolveBufferString = enumerator.getDeviceListInput();
 		return;
 	}
 	if (optionName == L"device list output") {
-		resolveBufferString = deviceManager.getDeviceEnumerator().getDeviceListOutput();
+		resolveBufferString = enumerator.getDeviceListOutput();
 		return;
 	}
 
@@ -228,7 +229,7 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 	}
 
 	if (optionName == L"device list") {
-		resolveBufferString = deviceManager.getDeviceEnumerator().getDeviceListLegacy();
+		resolveBufferString = enumerator.getDeviceListLegacy();
 		return;
 	}
 }

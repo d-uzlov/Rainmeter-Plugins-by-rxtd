@@ -55,7 +55,6 @@ namespace rxtd::audio_analyzer {
 
 		utils::MediaDeviceWrapper audioDeviceHandle{ };
 
-		AudioEnumeratorHelper enumerator;
 		CaptureManager captureManager;
 
 		DeviceInfoSnapshot diSnapshot;
@@ -63,14 +62,6 @@ namespace rxtd::audio_analyzer {
 		index legacyNumber = 0;
 
 	public:
-		DeviceManager();
-
-		/** This class is non copyable */
-		DeviceManager(const DeviceManager& other) = delete;
-		DeviceManager(DeviceManager&& other) = delete;
-		DeviceManager& operator=(const DeviceManager& other) = delete;
-		DeviceManager& operator=(DeviceManager&& other) = delete;
-
 		void setLegacyNumber(index value) {
 			legacyNumber = value;
 		}
@@ -79,7 +70,7 @@ namespace rxtd::audio_analyzer {
 			logger = std::move(value);
 		}
 
-		void reconnect(DataSource type, const string& id);
+		void reconnect(AudioEnumeratorHelper& enumerator, DataSource type, const string& id);
 
 		void updateDeviceInfoSnapshot(DeviceInfoSnapshot& snapshot) const {
 			snapshot = diSnapshot;
@@ -93,11 +84,6 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		CaptureManager& getCaptureManager() {
 			return captureManager;
-		}
-
-		[[nodiscard]]
-		AudioEnumeratorHelper& getDeviceEnumerator() {
-			return enumerator;
 		}
 
 	private:

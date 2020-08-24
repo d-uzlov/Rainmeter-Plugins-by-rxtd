@@ -28,6 +28,7 @@ namespace rxtd::audio_analyzer {
 		ProcessingOrchestrator::DataSnapshot snapshot;
 		DeviceManager::DeviceInfoSnapshot diSnapshot;
 		MyWaveFormat currentFormat;
+		AudioEnumeratorHelper enumerator;
 
 		index legacyNumber{ };
 
