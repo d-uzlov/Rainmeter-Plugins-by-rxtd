@@ -25,10 +25,12 @@ namespace rxtd::audio_analyzer {
 
 		utils::GenericComWrapper<utils::CMMNotificationClient> notificationClient;
 		ProcessingOrchestrator orchestrator;
-		ProcessingOrchestrator::DataSnapshot dataSnapshot;
-		DeviceManager::DeviceInfoSnapshot diSnapshot;
-		MyWaveFormat currentFormat;
 		AudioEnumeratorHelper enumerator;
+
+		struct Snapshot {
+			ProcessingOrchestrator::DataSnapshot dataSnapshot;
+			DeviceManager::DeviceInfoSnapshot diSnapshot;
+		} snapshot;
 
 		index legacyNumber{ };
 

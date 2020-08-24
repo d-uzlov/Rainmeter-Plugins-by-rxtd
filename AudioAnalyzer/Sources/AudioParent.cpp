@@ -44,7 +44,7 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 	};
 
 	enumerator.updateDeviceStrings();
-	enumerator.updateDeviceStringLegacy(diSnapshot.type);
+	enumerator.updateDeviceStringLegacy(snapshot.diSnapshot.type);
 
 	paramParser.setRainmeter(rain);
 	orchestrator.setLogger(logger);
@@ -56,9 +56,9 @@ void AudioParent::vReload() {
 		requestedSource = std::move(request);
 
 		deviceManager.reconnect(enumerator, requestedSource.sourceType, requestedSource.id);
-		deviceManager.updateDeviceInfoSnapshot(diSnapshot);
-		channelMixer.setFormat(diSnapshot.format);
-		orchestrator.setFormat(diSnapshot.format.samplesPerSec, diSnapshot.format.channelLayout);
+		deviceManager.updateDeviceInfoSnapshot(snapshot.diSnapshot);
+		channelMixer.setFormat(snapshot.diSnapshot.format);
+		orchestrator.setFormat(snapshot.diSnapshot.format.samplesPerSec, snapshot.diSnapshot.format.channelLayout);
 	}
 
 	const double computeTimeout = rain.read(L"computeTimeout").asFloat(-1.0);
@@ -70,7 +70,7 @@ void AudioParent::vReload() {
 	const bool anythingChanged = paramParser.parse(legacyNumber);
 
 	if (anythingChanged) {
-		orchestrator.patch(paramParser.getParseResult(), legacyNumber, dataSnapshot);
+		orchestrator.patch(paramParser.getParseResult(), legacyNumber, snapshot.dataSnapshot);
 	}
 }
 
@@ -81,19 +81,19 @@ double AudioParent::vUpdate() {
 		source == DeviceManager::DataSource::eDEFAULT_INPUT && changes.defaultCapture
 		|| source == DeviceManager::DataSource::eDEFAULT_OUTPUT && changes.defaultRender) {
 		deviceManager.reconnect(enumerator, requestedSource.sourceType, requestedSource.id);
-		deviceManager.updateDeviceInfoSnapshot(diSnapshot);
-		channelMixer.setFormat(diSnapshot.format);
-		orchestrator.setFormat(diSnapshot.format.samplesPerSec, diSnapshot.format.channelLayout);
+		deviceManager.updateDeviceInfoSnapshot(snapshot.diSnapshot);
+		channelMixer.setFormat(snapshot.diSnapshot.format);
+		orchestrator.setFormat(snapshot.diSnapshot.format.samplesPerSec, snapshot.diSnapshot.format.channelLayout);
 	} else if (!changes.devices.empty()) {
-		if (changes.devices.count(diSnapshot.id) > 0) {
+		if (changes.devices.count(snapshot.diSnapshot.id) > 0) {
 			deviceManager.reconnect(enumerator, requestedSource.sourceType, requestedSource.id);
-			deviceManager.updateDeviceInfoSnapshot(diSnapshot);
-			channelMixer.setFormat(diSnapshot.format);
-			orchestrator.setFormat(diSnapshot.format.samplesPerSec, diSnapshot.format.channelLayout);
+			deviceManager.updateDeviceInfoSnapshot(snapshot.diSnapshot);
+			channelMixer.setFormat(snapshot.diSnapshot.format);
+			orchestrator.setFormat(snapshot.diSnapshot.format.samplesPerSec, snapshot.diSnapshot.format.channelLayout);
 		}
 
 		enumerator.updateDeviceStrings();
-		enumerator.updateDeviceStringLegacy(diSnapshot.type);
+		enumerator.updateDeviceStringLegacy(snapshot.diSnapshot.type);
 	}
 
 	if (deviceManager.getState() != DeviceManager::State::eOK) {
@@ -119,11 +119,11 @@ double AudioParent::vUpdate() {
 
 	if (any) {
 		orchestrator.process(channelMixer);
-		orchestrator.exchangeData(dataSnapshot);
+		orchestrator.exchangeData(snapshot.dataSnapshot);
 		channelMixer.reset();
 
 		for (const auto& [procName, procInfo] : paramParser.getParseResult()) {
-			auto& processingSnapshot = dataSnapshot[procName];
+			auto& processingSnapshot = snapshot.dataSnapshot[procName];
 			for (const auto& [handlerName, finisher] : procInfo.finishers) {
 				for (auto& [channel, channelSnapshot] : processingSnapshot) {
 					finisher(channelSnapshot[handlerName].handlerSpecificData);
@@ -133,7 +133,7 @@ double AudioParent::vUpdate() {
 	}
 
 	// todo if we are here, then status in true?
-	return diSnapshot.status ? 1.0 : 0.0;
+	return snapshot.diSnapshot.status ? 1.0 : 0.0;
 }
 
 void AudioParent::vCommand(isview bangArgs) {
@@ -162,19 +162,19 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 		const isview deviceProperty = args[1];
 
 		if (deviceProperty == L"status") {
-			resolveBufferString = diSnapshot.status ? L"1" : L"0";
+			resolveBufferString = snapshot.diSnapshot.status ? L"1" : L"0";
 		} else if (deviceProperty == L"status string") {
-			resolveBufferString = diSnapshot.status ? L"active" : L"down";
+			resolveBufferString = snapshot.diSnapshot.status ? L"active" : L"down";
 		} else if (deviceProperty == L"type") {
-			resolveBufferString = diSnapshot.type == utils::MediaDeviceType::eINPUT ? L"input" : L"output";
+			resolveBufferString = snapshot.diSnapshot.type == utils::MediaDeviceType::eINPUT ? L"input" : L"output";
 		} else if (deviceProperty == L"name") {
-			resolveBufferString = diSnapshot.name;
+			resolveBufferString = snapshot.diSnapshot.name;
 		} else if (deviceProperty == L"description") {
-			resolveBufferString = diSnapshot.description;
+			resolveBufferString = snapshot.diSnapshot.description;
 		} else if (deviceProperty == L"id") {
-			resolveBufferString = diSnapshot.id;
+			resolveBufferString = snapshot.diSnapshot.id;
 		} else if (deviceProperty == L"format") {
-			resolveBufferString = diSnapshot.formatString;
+			resolveBufferString = snapshot.diSnapshot.formatString;
 		} else {
 			cl.warning(L"unknown device property '{}'", deviceProperty);
 		}
@@ -235,8 +235,8 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 }
 
 double AudioParent::getValue(isview proc, isview id, Channel channel, index ind) const {
-	auto procIter = dataSnapshot.find(proc);
-	if (procIter == dataSnapshot.end()) {
+	auto procIter = snapshot.dataSnapshot.find(proc);
+	if (procIter == snapshot.dataSnapshot.end()) {
 		return 0.0;
 	}
 
@@ -384,8 +384,8 @@ void AudioParent::resolveProp(array_view<isview> args, string& resolveBufferStri
 		return;
 	}
 
-	auto procIter = dataSnapshot.find(procName);
-	if (procIter == dataSnapshot.end()) {
+	auto procIter = snapshot.dataSnapshot.find(procName);
+	if (procIter == snapshot.dataSnapshot.end()) {
 		cl.error(L"processing '{}' is not found", procName);
 		return;
 	}
