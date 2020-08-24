@@ -25,7 +25,7 @@ namespace rxtd::audio_analyzer {
 
 		utils::GenericComWrapper<utils::CMMNotificationClient> notificationClient;
 		ProcessingOrchestrator orchestrator;
-		ProcessingOrchestrator::DataSnapshot snapshot;
+		ProcessingOrchestrator::DataSnapshot dataSnapshot;
 		DeviceManager::DeviceInfoSnapshot diSnapshot;
 		MyWaveFormat currentFormat;
 		AudioEnumeratorHelper enumerator;

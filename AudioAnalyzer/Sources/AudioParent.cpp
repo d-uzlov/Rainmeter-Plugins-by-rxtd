@@ -70,7 +70,7 @@ void AudioParent::vReload() {
 	const bool anythingChanged = paramParser.parse(legacyNumber);
 
 	if (anythingChanged) {
-		orchestrator.patch(paramParser.getParseResult(), legacyNumber, snapshot);
+		orchestrator.patch(paramParser.getParseResult(), legacyNumber, dataSnapshot);
 	}
 }
 
@@ -119,11 +119,11 @@ double AudioParent::vUpdate() {
 
 	if (any) {
 		orchestrator.process(channelMixer);
-		orchestrator.exchangeData(snapshot);
+		orchestrator.exchangeData(dataSnapshot);
 		channelMixer.reset();
 
 		for (const auto& [procName, procInfo] : paramParser.getParseResult()) {
-			auto& processingSnapshot = snapshot[procName];
+			auto& processingSnapshot = dataSnapshot[procName];
 			for (const auto& [handlerName, finisher] : procInfo.finishers) {
 				for (auto& [channel, channelSnapshot] : processingSnapshot) {
 					finisher(channelSnapshot[handlerName].handlerSpecificData);
@@ -235,8 +235,8 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 }
 
 double AudioParent::getValue(isview proc, isview id, Channel channel, index ind) const {
-	auto procIter = snapshot.find(proc);
-	if (procIter == snapshot.end()) {
+	auto procIter = dataSnapshot.find(proc);
+	if (procIter == dataSnapshot.end()) {
 		return 0.0;
 	}
 
@@ -384,8 +384,8 @@ void AudioParent::resolveProp(array_view<isview> args, string& resolveBufferStri
 		return;
 	}
 
-	auto procIter = snapshot.find(procName);
-	if (procIter == snapshot.end()) {
+	auto procIter = dataSnapshot.find(procName);
+	if (procIter == dataSnapshot.end()) {
 		cl.error(L"processing '{}' is not found", procName);
 		return;
 	}
