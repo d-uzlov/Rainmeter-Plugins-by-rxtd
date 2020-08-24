@@ -22,6 +22,7 @@ namespace rxtd::audio_analyzer {
 			audio_utils::DownsampleHelper downsampleHelper;
 		};
 
+		std::set<Channel> channelSet;
 		std::map<Channel, ChannelData> channels;
 		std::vector<float> buffer;
 
@@ -35,14 +36,7 @@ namespace rxtd::audio_analyzer {
 		} resamplingData;
 
 	public:
-		// depends on both system format and options
-		void setChannels(const std::set<Channel>& set);
-
-		// depends on options only
-		void setParams(audio_utils::FilterCascadeCreator _fcc, index targetRate, index sourceSampleRate);
-
-		// depends on system format only
-		void updateSourceRate(index value);
+		void setParams(const std::set<Channel>& _channelSet, audio_utils::FilterCascadeCreator _fcc, index targetRate, index sourceSampleRate);
 
 		[[nodiscard]]
 		index getSampleRate() const {
@@ -55,9 +49,5 @@ namespace rxtd::audio_analyzer {
 		array_view<float> getResampled() const {
 			return buffer;
 		}
-
-	private:
-		void recalculateResamplingData();
-		void updateFilters();
 	};
 }

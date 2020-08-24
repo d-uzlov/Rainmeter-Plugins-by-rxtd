@@ -31,8 +31,6 @@ void ProcessingManager::setParams(
 ) {
 	legacyNumber = _legacyNumber;
 
-	cph.setParams(pd.fcc, pd.targetRate, sampleRate);
-
 	std::set<Channel> channels;
 	for (const auto channel : pd.channels) {
 		if (channel == Channel::eAUTO || layout.contains(channel)) {
@@ -40,7 +38,7 @@ void ProcessingManager::setParams(
 		}
 	}
 
-	cph.setChannels(channels);
+	cph.setParams(channels, pd.fcc, pd.targetRate, sampleRate);
 
 	auto oldChannelMap = std::exchange(channelMap, { });
 

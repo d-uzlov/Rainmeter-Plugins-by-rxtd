@@ -13,42 +13,44 @@
 
 using namespace audio_analyzer;
 
-void ChannelProcessingHelper::setChannels(const std::set<Channel>& set) {
-	utils::MapUtils::intersectKeyCollection(channels, set);
-
-	for (auto channel : set) {
-		if (channels.count(channel) < 1) {
-			channels[channel];
-		}
-	}
-
-	updateFilters();
-}
-
 void ChannelProcessingHelper::setParams(
+	const std::set<Channel>& _channelSet,
 	audio_utils::FilterCascadeCreator _fcc,
 	index targetRate, index sourceSampleRate
 ) {
 	if (fcc == _fcc
 		&& resamplingData.targetRate == targetRate
-		&& resamplingData.sourceRate == sourceSampleRate) {
+		&& resamplingData.sourceRate == sourceSampleRate
+		&& channelSet == _channelSet) {
 		return;
 	}
 
+	channelSet = _channelSet;
 	fcc = std::move(_fcc);
+
 	resamplingData.targetRate = targetRate;
+	resamplingData.sourceRate = sourceSampleRate;
 
-	updateSourceRate(sourceSampleRate);
-}
+	if (resamplingData.targetRate == 0) {
+		resamplingData.divider = 1;
+	} else {
+		const auto ratio = static_cast<double>(resamplingData.sourceRate) / resamplingData.targetRate;
+		resamplingData.divider = ratio > 1 ? static_cast<index>(ratio) : 1;
+	}
+	resamplingData.finalSampleRate = resamplingData.sourceRate / resamplingData.divider;
 
-void ChannelProcessingHelper::updateSourceRate(index value) {
-	if (value == 0 || value == resamplingData.sourceRate) {
-		return;
+	utils::MapUtils::intersectKeyCollection(channels, channelSet);
+
+	for (auto channel : channelSet) {
+		if (channels.count(channel) < 1) {
+			channels[channel];
+		}
 	}
 
-	resamplingData.sourceRate = value;
-	recalculateResamplingData();
-	updateFilters();
+	for (auto&[c, cd] : channels) {
+		cd.fc = fcc.getInstance(double(resamplingData.finalSampleRate));
+		cd.downsampleHelper.setFactor(resamplingData.divider);
+	}
 }
 
 void ChannelProcessingHelper::processDataFrom(Channel channel, array_view<float> wave) {
@@ -69,25 +71,4 @@ void ChannelProcessingHelper::processDataFrom(Channel channel, array_view<float>
 	}
 
 	data.fc.applyInPlace(buffer);
-}
-
-void ChannelProcessingHelper::recalculateResamplingData() {
-	if (resamplingData.targetRate == 0 || resamplingData.sourceRate == 0) {
-		resamplingData.divider = 1;
-	} else {
-		const auto ratio = static_cast<double>(resamplingData.sourceRate) / resamplingData.targetRate;
-		resamplingData.divider = ratio > 1 ? static_cast<index>(ratio) : 1;
-	}
-	resamplingData.finalSampleRate = resamplingData.sourceRate / resamplingData.divider;
-}
-
-void ChannelProcessingHelper::updateFilters() {
-	if (resamplingData.finalSampleRate == 0) {
-		return;
-	}
-
-	for (auto& [c, cd] : channels) {
-		cd.fc = fcc.getInstance(double(resamplingData.finalSampleRate));
-		cd.downsampleHelper.setFactor(resamplingData.divider);
-	}
 }
