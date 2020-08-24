@@ -70,7 +70,7 @@ namespace rxtd::audio_analyzer {
 		}
 
 		// return true is there were any changes since last update, false if there were none
-		bool parse();
+		bool parse(index legacyNumber);
 
 		[[nodiscard]]
 		const auto& getParseResult() const {

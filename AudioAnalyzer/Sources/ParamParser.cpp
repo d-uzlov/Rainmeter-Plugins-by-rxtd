@@ -16,9 +16,9 @@ using namespace std::string_literals;
 
 using namespace audio_analyzer;
 
-bool ParamParser::parse() {
+bool ParamParser::parse(index legacyNumber) {
 	anythingChanged = false;
-	legacyNumber = rain.read(L"MagicNumber").asInt(0);
+	this->legacyNumber = legacyNumber;
 
 	auto& logger = rain.getLogger();
 

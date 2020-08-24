@@ -32,7 +32,11 @@ namespace rxtd::audio_analyzer {
 		string deviceStringLegacy;
 
 	public:
-		AudioEnumeratorHelper(utils::Rainmeter::Logger logger);
+		AudioEnumeratorHelper();
+
+		void setLogger(utils::Rainmeter::Logger value) {
+			logger = std::move(value);
+		}
 
 		[[nodiscard]]
 		bool isValid() const {

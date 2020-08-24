@@ -11,9 +11,8 @@
 
 using namespace audio_analyzer;
 
-DeviceManager::DeviceManager(Logger _logger, std::function<void(MyWaveFormat waveFormat)> waveFormatUpdateCallback)
-	: enumerator(_logger), waveFormatUpdateCallback(std::move(waveFormatUpdateCallback)) {
-	logger = std::move(_logger);
+DeviceManager::DeviceManager(std::function<void(MyWaveFormat waveFormat)> waveFormatUpdateCallback):
+	waveFormatUpdateCallback(std::move(waveFormatUpdateCallback)) {
 	if (!enumerator.isValid()) {
 		state = State::eFATAL;
 		return;
@@ -60,8 +59,6 @@ void DeviceManager::deviceInit() {
 	}
 
 	audioDeviceHandle = std::move(deviceOpt.value());
-	deviceInfo = audioDeviceHandle.readDeviceInfo();
-	sourceDeviceType = audioDeviceHandle.getType();
 
 	captureManager = CaptureManager{ logger, audioDeviceHandle };
 
@@ -77,13 +74,21 @@ void DeviceManager::deviceInit() {
 		return;
 	}
 
+	auto deviceInfo = audioDeviceHandle.readDeviceInfo();
+	diSnapshot.status = true;
+	diSnapshot.id = deviceInfo.id;
+	diSnapshot.description = deviceInfo.desc;
+	diSnapshot.name = legacyNumber < 104 ? deviceInfo.fullFriendlyName : deviceInfo.name;
+	diSnapshot.format = captureManager.getFormatString();
+	diSnapshot.type = audioDeviceHandle.getType();
+
 	waveFormatUpdateCallback(captureManager.getWaveFormat());
 }
 
 void DeviceManager::deviceRelease() {
 	captureManager = { };
 	audioDeviceHandle = { };
-	deviceInfo = { };
+	diSnapshot = { };
 	state = State::eERROR_AUTO;
 }
 

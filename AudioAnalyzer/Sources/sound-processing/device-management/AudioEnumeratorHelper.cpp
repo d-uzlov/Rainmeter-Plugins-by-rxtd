@@ -11,11 +11,8 @@
 
 using namespace audio_analyzer;
 
-AudioEnumeratorHelper::AudioEnumeratorHelper(utils::Rainmeter::Logger _logger) :
-	logger(std::move(_logger)) {
-
+AudioEnumeratorHelper::AudioEnumeratorHelper() {
 	if (!enumeratorWrapper.isValid()) {
-		logger.error(L"Can't create device enumerator");
 		valid = false;
 		return;
 	}

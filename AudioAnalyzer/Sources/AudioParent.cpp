@@ -15,16 +15,30 @@ using namespace audio_analyzer;
 
 AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 	ParentBase(std::move(_rain)),
-	deviceManager(logger, [this](MyWaveFormat format) {
+	deviceManager([this](MyWaveFormat format) {
 		channelMixer.setFormat(format);
 		orchestrator.setFormat(format.samplesPerSec, format.channelLayout);
 	}) {
 	setUseResultString(false);
 
 	if (deviceManager.getState() == DeviceManager::State::eFATAL) {
+		logger.error(L"Fatal error: can't get IMMDeviceEnumerator");
 		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
 	}
+
+	legacyNumber = rain.read(L"MagicNumber").asInt(0);
+	switch (legacyNumber) {
+	case 0:
+	case 104:
+		break;
+	default:
+		logger.error(L"Fatal error: unknown magic number {}", legacyNumber);
+		setMeasureState(utils::MeasureState::eBROKEN);
+	}
+
+	deviceManager.setLogger(logger);
+	deviceManager.setLegacyNumber(legacyNumber);
 
 	notificationClient = {
 		[=](auto ptr) {
@@ -83,16 +97,7 @@ void AudioParent::vReload() {
 
 	deviceManager.setOptions(sourceEnum, id);
 
-	const bool anythingChanged = paramParser.parse();
-	const index legacyNumber = paramParser.getLegacyNumber();
-	switch (legacyNumber) {
-	case 0:
-	case 104:
-		break;
-	default:
-		logger.error(L"Unknown magic number");
-		setMeasureState(utils::MeasureState::eTEMP_BROKEN);
-	}
+	const bool anythingChanged = paramParser.parse(legacyNumber);
 
 	if (anythingChanged) {
 		orchestrator.patch(paramParser.getParseResult(), legacyNumber, snapshot);
@@ -107,7 +112,7 @@ double AudioParent::vUpdate() {
 		|| source == DeviceManager::DataSource::eDEFAULT_OUTPUT && changes.defaultRender) {
 		deviceManager.forceReconnect();
 	} else if (!changes.devices.empty()) {
-		if (changes.devices.count(deviceManager.getDeviceInfo().id) > 0) {
+		if (changes.devices.count(diSnapshot.id) > 0) {
 			deviceManager.forceReconnect();
 		}
 
@@ -125,8 +130,10 @@ double AudioParent::vUpdate() {
 		// 	sa.resetValues();
 		// }
 
-		return deviceManager.getDeviceStatus();
+		return 0.0;
 	}
+
+	deviceManager.updateDeviceInfoSnapshot(diSnapshot);
 
 	bool any = false;
 	deviceManager.getCaptureManager().capture([&](utils::array2d_view<float> channelsData) {
@@ -149,12 +156,13 @@ double AudioParent::vUpdate() {
 		}
 	}
 
-	return deviceManager.getDeviceStatus();
+	// todo if we are here, then status in true?
+	return diSnapshot.status ? 1.0 : 0.0;
 }
 
 void AudioParent::vCommand(isview bangArgs) {
 	if (bangArgs == L"updateDevList") {
-		deviceManager.getDeviceEnumerator().updateDeviceStringLegacy(deviceManager.getCurrentDeviceType());
+		deviceManager.getDeviceEnumerator().updateDeviceStringLegacy(diSnapshot.type);
 		return;
 	}
 
@@ -179,15 +187,15 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 		const isview deviceProperty = args[1];
 
 		if (deviceProperty == L"status") {
-			resolveBufferString = deviceManager.getDeviceStatus() ? L"1" : L"0";
+			resolveBufferString = diSnapshot.status ? L"1" : L"0";
 			return;
 		}
 		if (deviceProperty == L"status string") {
-			resolveBufferString = deviceManager.getDeviceStatus() ? L"active" : L"down";
+			resolveBufferString = diSnapshot.status ? L"active" : L"down";
 			return;
 		}
 		if (deviceProperty == L"type") {
-			switch (deviceManager.getCurrentDeviceType()) {
+			switch (diSnapshot.type) {
 			case utils::MediaDeviceType::eINPUT:
 				resolveBufferString = L"input";
 				return;
@@ -197,23 +205,19 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 			}
 		}
 		if (deviceProperty == L"name") {
-			resolveBufferString = deviceManager.getDeviceInfo().fullFriendlyName;
-			return;
-		}
-		if (deviceProperty == L"nameOnly") {
-			resolveBufferString = deviceManager.getDeviceInfo().name;
+			resolveBufferString = diSnapshot.name;
 			return;
 		}
 		if (deviceProperty == L"description") {
-			resolveBufferString = deviceManager.getDeviceInfo().desc;
+			resolveBufferString = diSnapshot.description;
 			return;
 		}
 		if (deviceProperty == L"id") {
-			resolveBufferString = deviceManager.getDeviceInfo().id;
+			resolveBufferString = diSnapshot.id;
 			return;
 		}
 		if (deviceProperty == L"format") {
-			resolveBufferString = deviceManager.getCaptureManager().getFormatString();
+			resolveBufferString = diSnapshot.format;
 			return;
 		}
 

@@ -41,6 +41,15 @@ namespace rxtd::audio_analyzer {
 			eFATAL,
 		};
 
+		struct DeviceInfoSnapshot {
+			bool status{ };
+			string name;
+			string description;
+			string id;
+			string format;
+			utils::MediaDeviceType type{ };
+		};
+
 	private:
 		State state = State::eERROR_MANUAL;
 
@@ -51,26 +60,22 @@ namespace rxtd::audio_analyzer {
 			string id;
 		} requestedDevice;
 
-		utils::MediaDeviceType sourceDeviceType{ };
-
 		mutable utils::MediaDeviceWrapper audioDeviceHandle{ };
 
 		AudioEnumeratorHelper enumerator;
 		CaptureManager captureManager;
-
-		utils::MediaDeviceWrapper::DeviceInfo deviceInfo;
 
 		clock::time_point lastDevicePollTime{ };
 		static constexpr clock::duration DEVICE_POLL_TIMEOUT = std::chrono::milliseconds(250);
 
 		const std::function<void(MyWaveFormat waveFormat)> waveFormatUpdateCallback;
 
-	public:
-		DeviceManager(Logger logger, std::function<void(MyWaveFormat waveFormat)> waveFormatUpdateCallback);
+		DeviceInfoSnapshot diSnapshot;
 
-		~DeviceManager() {
-			deviceRelease();
-		}
+		index legacyNumber = 0;
+
+	public:
+		DeviceManager(std::function<void(MyWaveFormat waveFormat)> waveFormatUpdateCallback);
 
 		/** This class is non copyable */
 		DeviceManager(const DeviceManager& other) = delete;
@@ -78,9 +83,16 @@ namespace rxtd::audio_analyzer {
 		DeviceManager& operator=(const DeviceManager& other) = delete;
 		DeviceManager& operator=(DeviceManager&& other) = delete;
 
-		[[nodiscard]]
-		utils::MediaDeviceType getCurrentDeviceType() const {
-			return sourceDeviceType;
+		void setLegacyNumber(index value) {
+			legacyNumber = value;
+		}
+
+		void setLogger(Logger value) {
+			logger = std::move(value);
+		}
+
+		void updateDeviceInfoSnapshot(DeviceInfoSnapshot& snapshot) const {
+			snapshot = diSnapshot;
 		}
 
 		[[nodiscard]]
@@ -98,32 +110,12 @@ namespace rxtd::audio_analyzer {
 		void setOptions(DataSource source, sview deviceID);
 
 		[[nodiscard]]
-		const utils::MediaDeviceWrapper::DeviceInfo& getDeviceInfo() const {
-			return deviceInfo;
-		}
-
-		[[nodiscard]]
-		bool getDeviceStatus() const {
-			return audioDeviceHandle.isDeviceActive();
-		}
-
-		[[nodiscard]]
 		CaptureManager& getCaptureManager() {
 			return captureManager;
 		}
 
 		[[nodiscard]]
-		const CaptureManager& getCaptureManager() const {
-			return captureManager;
-		}
-
-		[[nodiscard]]
 		AudioEnumeratorHelper& getDeviceEnumerator() {
-			return enumerator;
-		}
-
-		[[nodiscard]]
-		const AudioEnumeratorHelper& getDeviceEnumerator() const {
 			return enumerator;
 		}
 
