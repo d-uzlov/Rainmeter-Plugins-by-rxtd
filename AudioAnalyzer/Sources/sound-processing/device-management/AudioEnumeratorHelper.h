@@ -16,15 +16,9 @@
 
 namespace rxtd::audio_analyzer {
 	class AudioEnumeratorHelper {
-		utils::Rainmeter::Logger logger;
-
 		utils::IMMDeviceEnumeratorWrapper enumeratorWrapper;
 
 	public:
-		void setLogger(utils::Rainmeter::Logger value) {
-			logger = std::move(value);
-		}
-
 		[[nodiscard]]
 		bool isValid() const {
 			return enumeratorWrapper.isValid();

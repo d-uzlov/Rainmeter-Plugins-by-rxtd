@@ -15,6 +15,15 @@ bool CaptureManager::setSource(DataSource type, const string& id) {
 	auto deviceOpt = getDevice(type, id);
 
 	if (!deviceOpt) {
+		switch (type) {
+		case DataSource::eDEFAULT_INPUT:
+			logger.error(L"Can't connect to default input audio device");
+		case DataSource::eDEFAULT_OUTPUT:
+			logger.error(L"Can't connect to default output audio device");
+		case DataSource::eID:
+			logger.error(L"Can't connect to audio device with id '{}'", id);
+		}
+
 		valid = false;
 		return true;
 	}

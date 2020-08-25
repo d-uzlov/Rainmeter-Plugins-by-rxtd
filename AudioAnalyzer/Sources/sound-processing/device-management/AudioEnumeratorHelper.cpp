@@ -15,7 +15,6 @@ std::optional<utils::MediaDeviceWrapper> AudioEnumeratorHelper::getDevice(const 
 	utils::MediaDeviceWrapper audioDeviceHandle = enumeratorWrapper.getDeviceByID(deviceID);
 
 	if (!audioDeviceHandle.isValid()) {
-		logger.error(L"Can't connect to audio device, id '{}'", deviceID);
 		return std::nullopt;
 	}
 
@@ -26,10 +25,6 @@ std::optional<utils::MediaDeviceWrapper> AudioEnumeratorHelper::getDefaultDevice
 	utils::MediaDeviceWrapper audioDeviceHandle = enumeratorWrapper.getDefaultDevice(type);
 
 	if (!audioDeviceHandle.isValid()) {
-		logger.error(
-			L"Can't connect to default {} audio device",
-			type == utils::MediaDeviceType::eOUTPUT ? L"output" : L"input"
-		);
 		return std::nullopt;
 	}
 
