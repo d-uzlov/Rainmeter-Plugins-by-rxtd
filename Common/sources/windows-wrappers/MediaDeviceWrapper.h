@@ -12,7 +12,6 @@
 #include "GenericComWrapper.h"
 #include <mmdeviceapi.h>
 #include "IAudioClientWrapper.h"
-#include "MediaDeviceType.h"
 
 namespace rxtd::utils {
 	class MediaDeviceWrapper : public GenericComWrapper<IMMDevice> {

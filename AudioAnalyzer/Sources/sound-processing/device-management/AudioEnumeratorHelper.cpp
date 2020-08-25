@@ -73,17 +73,3 @@ string AudioEnumeratorHelper::legacy_makeDeviceString(utils::MediaDeviceType typ
 
 	return result;
 }
-
-std::set<string> AudioEnumeratorHelper::readDeviceIdList(utils::MediaDeviceType type) {
-	auto collection = enumeratorWrapper.getAllDevices(type);
-	if (collection.empty()) {
-		return { };
-	}
-
-	std::set<string> list;
-	for (auto& device : collection) {
-		list.insert(device.readDeviceId());
-	}
-
-	return list;
-}

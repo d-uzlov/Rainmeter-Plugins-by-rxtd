@@ -210,7 +210,7 @@ void ParentHelper::updateDevice() {
 	snapshot.deviceIsAvailable = deviceIsAvailable;
 
 	// it's important that if device is not available
-	// then #updateDeviceInfoSnapshot is not called
+	// then #updateSnapshot is not called
 	captureManager.updateSnapshot(snapshot.diSnapshot);
 
 	channelMixer.setFormat(snapshot.diSnapshot.format);

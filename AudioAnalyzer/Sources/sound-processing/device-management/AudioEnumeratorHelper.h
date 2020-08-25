@@ -11,7 +11,6 @@
 
 #include "RainmeterWrappers.h"
 #include "windows-wrappers/MediaDeviceWrapper.h"
-#include <set>
 #include "windows-wrappers/IMMDeviceEnumeratorWrapper.h"
 
 namespace rxtd::audio_analyzer {
@@ -31,9 +30,5 @@ namespace rxtd::audio_analyzer {
 
 		string makeDeviceString(utils::MediaDeviceType type);
 		string legacy_makeDeviceString(utils::MediaDeviceType type);
-
-	private:
-		[[nodiscard]]
-		std::set<string> readDeviceIdList(utils::MediaDeviceType type);
 	};
 }
