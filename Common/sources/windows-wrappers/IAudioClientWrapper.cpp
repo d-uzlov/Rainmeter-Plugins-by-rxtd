@@ -10,6 +10,7 @@
 #include "IAudioClientWrapper.h"
 
 static const IID IID_IAudioCaptureClient = __uuidof(IAudioCaptureClient);
+static const IID IID_IAudioSessionControl = __uuidof(IAudioSessionControl);
 
 static constexpr long long REF_TIMES_PER_SEC = 1000'000'0; // 1 sec in 100-ns units
 
@@ -106,4 +107,13 @@ void IAudioClientWrapper::initShared() {
 	}
 
 	CoTaskMemFree(waveFormat);
+}
+
+GenericComWrapper<IAudioSessionControl> IAudioClientWrapper::getControl() {
+	return {
+		[&](auto ptr) {
+			lastResult = getPointer()->GetService(IID_IAudioSessionControl, reinterpret_cast<void**>(ptr));
+			return lastResult == S_OK;
+		}
+	};
 }

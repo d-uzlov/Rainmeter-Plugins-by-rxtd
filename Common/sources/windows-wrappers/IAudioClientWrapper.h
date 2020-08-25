@@ -14,6 +14,7 @@
 #include "IAudioCaptureClientWrapper.h"
 #include "WaveFormat.h"
 #include "MediaDeviceType.h"
+#include "audiopolicy.h"
 
 namespace rxtd::utils {
 	class IAudioClientWrapper : public GenericComWrapper<IAudioClient> {
@@ -43,5 +44,7 @@ namespace rxtd::utils {
 		auto getType() const {
 			return type;
 		}
+		
+		GenericComWrapper<IAudioSessionControl> getControl();
 	};
 }
