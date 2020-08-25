@@ -169,6 +169,10 @@ void ParentHelper::pUpdate() {
 
 		updateDeviceListStrings();
 	}
+	if (!deviceUpdated && !captureManager.isValid()) {
+		auto snapshotLock = getSnapshotLock();
+		updateDevice();
+	}
 
 	if (!deviceIsAvailable) {
 		return;

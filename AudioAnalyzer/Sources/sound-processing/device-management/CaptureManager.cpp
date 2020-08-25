@@ -95,6 +95,7 @@ bool CaptureManager::setSource(DataSource type, const string& id) {
 		return true;
 	}
 
+	valid = true;
 	return true;
 }
 
