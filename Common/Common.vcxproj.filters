@@ -18,6 +18,9 @@
     <Filter Include="Source Files\image-utils">
       <UniqueIdentifier>{08fa18ac-6900-4055-bbf4-97d851946a26}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\windows-wrappers\implementations">
+      <UniqueIdentifier>{574a5653-cea6-48c5-831f-c229edf3cce4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\BufferPrinter.cpp">
@@ -187,9 +190,6 @@
     <ClInclude Include="sources\image-utils\StripedImageFadeHelper.h">
       <Filter>Source Files\image-utils</Filter>
     </ClInclude>
-    <ClInclude Include="sources\windows-wrappers\IMMNotificationClientImpl.h">
-      <Filter>Source Files\windows-wrappers</Filter>
-    </ClInclude>
     <ClInclude Include="sources\windows-wrappers\IUnknownImpl.h">
       <Filter>Source Files\windows-wrappers</Filter>
     </ClInclude>
@@ -210,6 +210,9 @@
     </ClInclude>
     <ClInclude Include="sources\MapUtils.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\windows-wrappers\implementations\NotificationClientImpl.h">
+      <Filter>Source Files\windows-wrappers\implementations</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

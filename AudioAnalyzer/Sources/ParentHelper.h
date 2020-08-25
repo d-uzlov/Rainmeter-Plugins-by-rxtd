@@ -13,7 +13,7 @@
 #include "sound-processing/ProcessingManager.h"
 #include "sound-processing/device-management/CaptureManager.h"
 #include "sound-processing/ProcessingOrchestrator.h"
-#include "windows-wrappers/IMMNotificationClientImpl.h"
+#include "windows-wrappers/implementations/NotificationClientImpl.h"
 
 namespace rxtd::audio_analyzer {
 	class ParentHelper {
