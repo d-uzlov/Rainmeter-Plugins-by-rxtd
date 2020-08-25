@@ -19,7 +19,7 @@ bool CaptureManager::setSource(DataSource type, const string& id) {
 		return true;
 	}
 
-	audioDeviceHandle = std::move(deviceOpt.value());
+	auto audioDeviceHandle = std::move(deviceOpt.value());
 
 	auto deviceInfo = audioDeviceHandle.readDeviceInfo();
 	snapshot.status = true; // todo ?
@@ -132,7 +132,6 @@ void CaptureManager::capture(const ProcessingCallback& processingCallback) {
 }
 
 void CaptureManager::invalidate() {
-	audioDeviceHandle = { };
 	audioCaptureClient = { };
 	audioClient = { };
 	valid = false;

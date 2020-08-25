@@ -48,7 +48,6 @@ namespace rxtd::audio_analyzer {
 
 		AudioEnumeratorHelper enumerator;
 
-		utils::MediaDeviceWrapper audioDeviceHandle;
 		utils::IAudioClientWrapper audioClient;
 		utils::IAudioCaptureClientWrapper audioCaptureClient;
 
