@@ -35,17 +35,11 @@ namespace rxtd::utils {
 		DeviceInfo readDeviceInfo();
 		
 		[[nodiscard]]
-		string readDeviceId();
-
-		[[nodiscard]]
 		IAudioClientWrapper openAudioClient();
 
 		[[nodiscard]]
 		index getLastResult() const {
 			return lastResult;
 		}
-
-		[[nodiscard]]
-		bool isDeviceActive();
 	};
 }

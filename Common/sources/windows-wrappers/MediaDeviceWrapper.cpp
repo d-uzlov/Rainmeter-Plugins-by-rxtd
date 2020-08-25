@@ -25,6 +25,17 @@ MediaDeviceWrapper::DeviceInfo MediaDeviceWrapper::readDeviceInfo() {
 		return { };
 	}
 
+	DeviceInfo deviceInfo;
+
+	wchar_t* idPtr = nullptr;
+	lastResult = getPointer()->GetId(&idPtr);
+	if (lastResult != S_OK) {
+		return { };
+	}
+
+	deviceInfo.id = idPtr;
+	CoTaskMemFree(idPtr);
+
 	PropertyStoreWrapper props{
 		[&](auto ptr) {
 			return S_OK == getPointer()->OpenPropertyStore(STGM_READ, ptr);
@@ -34,30 +45,11 @@ MediaDeviceWrapper::DeviceInfo MediaDeviceWrapper::readDeviceInfo() {
 		return { };
 	}
 
-	DeviceInfo deviceInfo;
-	deviceInfo.id = readDeviceId();
 	deviceInfo.fullFriendlyName = props.readProperty(PKEY_Device_FriendlyName);
 	deviceInfo.desc = props.readProperty(PKEY_Device_DeviceDesc);
 	deviceInfo.name = props.readProperty(PKEY_DeviceInterface_FriendlyName);
 
 	return deviceInfo;
-}
-
-string MediaDeviceWrapper::readDeviceId() {
-	if (!isValid()) {
-		return { };
-	}
-
-	wchar_t* resultCString = nullptr;
-	lastResult = getPointer()->GetId(&resultCString);
-	if (lastResult != S_OK) {
-		return { };
-	}
-	string id = resultCString;
-
-	CoTaskMemFree(resultCString);
-
-	return id;
 }
 
 IAudioClientWrapper MediaDeviceWrapper::openAudioClient() {
@@ -72,23 +64,4 @@ IAudioClientWrapper MediaDeviceWrapper::openAudioClient() {
 			return lastResult == S_OK;
 		}
 	};
-}
-
-bool MediaDeviceWrapper::isDeviceActive() {
-	if (!isValid()) {
-		return false;
-	}
-
-	// static_assert(std::is_same<DWORD, uint32_t>::value);
-	// ...
-	// unsigned != unsigned long
-	// I wish I could use proper types everywhere :(
-
-	DWORD state;
-	const auto result = getPointer()->GetState(&state);
-	if (result != S_OK) {
-		return false;
-	}
-
-	return state == DEVICE_STATE_ACTIVE;
 }
