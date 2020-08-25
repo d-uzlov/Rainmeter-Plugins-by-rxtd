@@ -78,6 +78,8 @@ bool CaptureManager::setSource(DataSource type, const string& id) {
 
 	snapshot.formatString = makeFormatString(snapshot.format);
 
+	channelMixer.setFormat(snapshot.format);
+
 
 	audioCaptureClient = audioClient.openCapture();
 	if (audioClient.getLastResult() != S_OK) {
@@ -98,10 +100,14 @@ bool CaptureManager::setSource(DataSource type, const string& id) {
 	return true;
 }
 
-void CaptureManager::capture(const ProcessingCallback& processingCallback) {
+bool CaptureManager::capture() {
 	if (!isValid()) {
-		return;
+		// todo
+		return false;
 	}
+
+	bool anyCaptured = false;
+	channelMixer.reset();
 
 	while (true) {
 		audioCaptureClient.readBuffer();
@@ -113,7 +119,8 @@ void CaptureManager::capture(const ProcessingCallback& processingCallback) {
 		case S_OK:
 			lastBufferFillTime = now;
 
-			processingCallback(audioCaptureClient.getBuffer());
+			anyCaptured = true;
+			channelMixer.saveChannelsData(audioCaptureClient.getBuffer(), true);
 			break;
 
 		case AUDCLNT_S_BUFFER_EMPTY:
@@ -124,18 +131,18 @@ void CaptureManager::capture(const ProcessingCallback& processingCallback) {
 				logger.debug(L"poll timeout: {} ms", overheadTime.count());
 				invalidate();
 			}
-			return;
+			return anyCaptured;
 
 		case AUDCLNT_E_BUFFER_ERROR:
 		case AUDCLNT_E_DEVICE_INVALIDATED:
 		case AUDCLNT_E_SERVICE_NOT_RUNNING:
 			invalidate();
-			return;
+			return anyCaptured;
 
 		default:
 			logger.warning(L"Unexpected buffer query error code {error}", queryResult);
 			invalidate();
-			return;
+			return anyCaptured;
 		}
 	}
 }

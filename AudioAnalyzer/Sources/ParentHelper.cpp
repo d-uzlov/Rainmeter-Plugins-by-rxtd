@@ -174,16 +174,9 @@ void ParentHelper::pUpdate() {
 		return;
 	}
 
-	bool any = false;
-	// todo
-	captureManager.capture([&](utils::array2d_view<float> channelsData) {
-		channelMixer.saveChannelsData(channelsData, true);
-		any = true;
-	});
-
-	if (any) {
-		orchestrator.process(channelMixer);
-		channelMixer.reset();
+	const bool anyCaptured = captureManager.capture();
+	if (anyCaptured) {
+		orchestrator.process(captureManager.getChannelMixer());
 
 		{
 			auto snapshotLock = getSnapshotLock();
@@ -213,7 +206,6 @@ void ParentHelper::updateDevice() {
 	// then #updateSnapshot is not called
 	captureManager.updateSnapshot(snapshot.diSnapshot);
 
-	channelMixer.setFormat(snapshot.diSnapshot.format);
 	orchestrator.patch(
 		patches, legacyNumber,
 		snapshot.diSnapshot.format.samplesPerSec,

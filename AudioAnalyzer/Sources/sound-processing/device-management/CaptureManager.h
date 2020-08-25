@@ -17,12 +17,11 @@
 #include <functional>
 
 #include "AudioEnumeratorHelper.h"
+#include "../ChannelMixer.h"
 
 namespace rxtd::audio_analyzer {
 	class CaptureManager {
 	public:
-		using ProcessingCallback = std::function<void(utils::array2d_view<float> channels)>;
-
 		enum class DataSource {
 			eDEFAULT_INPUT,
 			eDEFAULT_OUTPUT,
@@ -49,6 +48,7 @@ namespace rxtd::audio_analyzer {
 		AudioEnumeratorHelper enumerator;
 
 		utils::IAudioCaptureClientWrapper audioCaptureClient;
+		ChannelMixer channelMixer;
 
 		clock::time_point lastBufferFillTime{ };
 		static constexpr clock::duration EMPTY_TIMEOUT = std::chrono::milliseconds(100);
@@ -92,7 +92,12 @@ namespace rxtd::audio_analyzer {
 			return valid;
 		}
 
-		void capture(const ProcessingCallback& processingCallback);
+		// returns true is at least one buffer was captured
+		bool capture();
+
+		const auto& getChannelMixer() const {
+			return channelMixer;
+		}
 
 	private:
 		void invalidate();

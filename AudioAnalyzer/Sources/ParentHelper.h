@@ -44,7 +44,6 @@ namespace rxtd::audio_analyzer {
 		};
 
 	private:
-		ChannelMixer channelMixer;
 		CaptureManager captureManager;
 		utils::CMMNotificationClient notificationClient;
 
