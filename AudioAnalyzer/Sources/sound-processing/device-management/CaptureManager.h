@@ -12,7 +12,6 @@
 #include "MyWaveFormat.h"
 #include "windows-wrappers/MediaDeviceWrapper.h"
 #include "RainmeterWrappers.h"
-#include <chrono>
 #include "windows-wrappers/IAudioCaptureClientWrapper.h"
 #include <functional>
 
@@ -39,9 +38,6 @@ namespace rxtd::audio_analyzer {
 		};
 
 	private:
-		using clock = std::chrono::high_resolution_clock;
-		static_assert(clock::is_steady);
-
 		utils::Rainmeter::Logger logger;
 		index legacyNumber = 0;
 
@@ -49,9 +45,6 @@ namespace rxtd::audio_analyzer {
 
 		utils::IAudioCaptureClientWrapper audioCaptureClient;
 		ChannelMixer channelMixer;
-
-		clock::time_point lastBufferFillTime{ };
-		static constexpr clock::duration EMPTY_TIMEOUT = std::chrono::milliseconds(100);
 
 		bool valid = true;
 

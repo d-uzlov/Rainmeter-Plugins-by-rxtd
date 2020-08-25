@@ -95,8 +95,6 @@ bool CaptureManager::setSource(DataSource type, const string& id) {
 		return true;
 	}
 
-	lastBufferFillTime = clock::now();
-
 	return true;
 }
 
@@ -113,24 +111,14 @@ bool CaptureManager::capture() {
 		audioCaptureClient.readBuffer();
 
 		const auto queryResult = audioCaptureClient.getLastResult();
-		const auto now = clock::now();
 
 		switch (queryResult) {
 		case S_OK:
-			lastBufferFillTime = now;
-
 			anyCaptured = true;
 			channelMixer.saveChannelsData(audioCaptureClient.getBuffer(), true);
 			break;
 
 		case AUDCLNT_S_BUFFER_EMPTY:
-			// Windows bug: sometimes when shutting down a playback application, it doesn't zero out the buffer.
-			// rxtd: I don't really understand this. I can't reproduce this and I don't know if this workaround do anything useful
-			if (now - lastBufferFillTime >= EMPTY_TIMEOUT) {
-				const std::chrono::duration<float, std::milli> overheadTime = now - lastBufferFillTime;
-				logger.debug(L"poll timeout: {} ms", overheadTime.count());
-				invalidate();
-			}
 			return anyCaptured;
 
 		case AUDCLNT_E_BUFFER_ERROR:
