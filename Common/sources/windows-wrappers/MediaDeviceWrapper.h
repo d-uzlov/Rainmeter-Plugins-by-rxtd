@@ -11,6 +11,7 @@
 
 #include "GenericComWrapper.h"
 #include <mmdeviceapi.h>
+#include <endpointvolume.h>
 #include "IAudioClientWrapper.h"
 
 namespace rxtd::utils {
@@ -40,6 +41,31 @@ namespace rxtd::utils {
 		[[nodiscard]]
 		index getLastResult() const {
 			return lastResult;
+		}
+
+		template<typename Interface>
+		GenericComWrapper<Interface> activateFor() {
+			static_assert(
+				std::is_base_of<IAudioClient, Interface>::value
+				|| std::is_base_of<IAudioEndpointVolume, Interface>::value
+				|| std::is_base_of<IAudioMeterInformation, Interface>::value
+				|| std::is_base_of<IAudioSessionManager, Interface>::value
+				|| std::is_base_of<IAudioSessionManager2, Interface>::value
+				|| std::is_base_of<IDeviceTopology, Interface>::value,
+				"Interface is not supported by IMMDevice"
+				);
+
+			return {
+				[&](auto ptr) {
+					lastResult = getPointer()->Activate(
+						__uuidof(Interface),
+						CLSCTX_INPROC_SERVER,
+						nullptr,
+						reinterpret_cast<void**>(ptr)
+					);
+					return lastResult == S_OK;
+				}
+			};
 		}
 	};
 }

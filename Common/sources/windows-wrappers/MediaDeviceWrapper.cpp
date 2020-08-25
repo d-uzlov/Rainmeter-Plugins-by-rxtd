@@ -57,7 +57,7 @@ IAudioClientWrapper MediaDeviceWrapper::openAudioClient() {
 		[&](auto ptr) {
 			lastResult = getPointer()->Activate(
 				IID_IAudioClient,
-				CLSCTX_ALL,
+				CLSCTX_INPROC_SERVER,
 				nullptr,
 				reinterpret_cast<void**>(ptr)
 			);
