@@ -25,13 +25,12 @@ namespace rxtd::utils {
 		};
 
 	private:
-		MediaDeviceType type{ };
 		index lastResult = { };
 
 	public:
 		MediaDeviceWrapper() = default;
 
-		explicit MediaDeviceWrapper(MediaDeviceType type, InitFunction initFunction);
+		explicit MediaDeviceWrapper(InitFunction initFunction);
 
 		[[nodiscard]]
 		DeviceInfo readDeviceInfo();
@@ -43,10 +42,9 @@ namespace rxtd::utils {
 		IAudioClientWrapper openAudioClient();
 
 		[[nodiscard]]
-		index getLastResult() const;
-
-		[[nodiscard]]
-		MediaDeviceType getType() const;
+		index getLastResult() const {
+			return lastResult;
+		}
 
 		[[nodiscard]]
 		bool isDeviceActive();

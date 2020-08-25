@@ -15,9 +15,8 @@
 static const IID IID_IAudioClient = __uuidof(IAudioClient);
 
 namespace rxtd::utils {
-	MediaDeviceWrapper::
-	MediaDeviceWrapper(MediaDeviceType type, InitFunction initFunction) : 
-		GenericComWrapper(std::move(initFunction)), type(type) {
+	MediaDeviceWrapper::MediaDeviceWrapper(InitFunction initFunction) :
+		GenericComWrapper(std::move(initFunction)) {
 	}
 
 	MediaDeviceWrapper::DeviceInfo MediaDeviceWrapper::readDeviceInfo() {
@@ -61,7 +60,7 @@ namespace rxtd::utils {
 	}
 
 	IAudioClientWrapper MediaDeviceWrapper::openAudioClient() {
-		return IAudioClientWrapper {
+		return IAudioClientWrapper{
 			[&](auto ptr) {
 				lastResult = getPointer()->Activate(
 					IID_IAudioClient,
@@ -72,14 +71,6 @@ namespace rxtd::utils {
 				return lastResult == S_OK;
 			}
 		};
-	}
-
-	index MediaDeviceWrapper::getLastResult() const {
-		return lastResult;
-	}
-
-	MediaDeviceType MediaDeviceWrapper::getType() const {
-		return type;
 	}
 
 	bool MediaDeviceWrapper::isDeviceActive() {

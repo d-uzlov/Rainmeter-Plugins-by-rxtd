@@ -21,7 +21,7 @@ namespace rxtd::utils {
 		IMMDeviceEnumeratorWrapper();
 
 		[[nodiscard]]
-		MediaDeviceWrapper getDeviceByID(MediaDeviceType type, const string& id);
+		MediaDeviceWrapper getDeviceByID(const string& id);
 
 		[[nodiscard]]
 		MediaDeviceWrapper getDefaultDevice(MediaDeviceType type);

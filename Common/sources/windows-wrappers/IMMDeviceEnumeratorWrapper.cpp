@@ -24,9 +24,8 @@ namespace rxtd::utils {
 	}) {
 	}
 
-	MediaDeviceWrapper IMMDeviceEnumeratorWrapper::getDeviceByID(MediaDeviceType type, const string& id) {
+	MediaDeviceWrapper IMMDeviceEnumeratorWrapper::getDeviceByID(const string& id) {
 		return MediaDeviceWrapper{
-			type,
 			[&](auto ptr) {
 				return S_OK == getPointer()->GetDevice(id.c_str(), ptr);
 			}
@@ -35,7 +34,7 @@ namespace rxtd::utils {
 
 	MediaDeviceWrapper IMMDeviceEnumeratorWrapper::getDefaultDevice(MediaDeviceType type) {
 		return MediaDeviceWrapper{
-			type, [&](auto ptr) {
+			[&](auto ptr) {
 				return S_OK == getPointer()->GetDefaultAudioEndpoint(
 					type == MediaDeviceType::eOUTPUT ? eRender : eCapture,
 					eConsole,
@@ -74,7 +73,7 @@ namespace rxtd::utils {
 		std::vector<MediaDeviceWrapper> result;
 		for (index i = 0; i < devicesCount; ++i) {
 			MediaDeviceWrapper device{
-				type, [&](auto ptr) {
+				[&](auto ptr) {
 					return S_OK == collection.getPointer()->Item(UINT(i), ptr);
 				}
 			};

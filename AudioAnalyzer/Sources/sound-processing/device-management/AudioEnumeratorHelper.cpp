@@ -12,17 +12,7 @@
 using namespace audio_analyzer;
 
 std::optional<utils::MediaDeviceWrapper> AudioEnumeratorHelper::getDevice(const string& deviceID) {
-	auto typeOpt = getDeviceType(deviceID);
-	if (!typeOpt.has_value()) {
-		updateDeviceLists();
-		typeOpt = getDeviceType(deviceID);
-		if (!typeOpt.has_value()) {
-			logger.error(L"Audio device is not found, id '{}'", deviceID);
-			return std::nullopt;
-		}
-	}
-
-	utils::MediaDeviceWrapper audioDeviceHandle = enumeratorWrapper.getDeviceByID(typeOpt.value(), deviceID);
+	utils::MediaDeviceWrapper audioDeviceHandle = enumeratorWrapper.getDeviceByID(deviceID);
 
 	if (!audioDeviceHandle.isValid()) {
 		logger.error(L"Can't connect to audio device, id '{}'", deviceID);
@@ -44,17 +34,6 @@ std::optional<utils::MediaDeviceWrapper> AudioEnumeratorHelper::getDefaultDevice
 	}
 
 	return audioDeviceHandle;
-}
-
-std::optional<utils::MediaDeviceType> AudioEnumeratorHelper::getDeviceType(const string& deviceID) {
-	if (outputDevicesIDs.find(deviceID) != outputDevicesIDs.end()) {
-		return utils::MediaDeviceType::eOUTPUT;
-	}
-	if (inputDevicesIDs.find(deviceID) != inputDevicesIDs.end()) {
-		return utils::MediaDeviceType::eINPUT;
-	}
-
-	return std::nullopt;
 }
 
 string AudioEnumeratorHelper::makeDeviceString(utils::MediaDeviceType type) {
@@ -98,11 +77,6 @@ string AudioEnumeratorHelper::legacy_makeDeviceString(utils::MediaDeviceType typ
 	result.pop_back();
 
 	return result;
-}
-
-void AudioEnumeratorHelper::updateDeviceLists() {
-	inputDevicesIDs = readDeviceIdList(utils::MediaDeviceType::eINPUT);
-	outputDevicesIDs = readDeviceIdList(utils::MediaDeviceType::eOUTPUT);
 }
 
 std::set<string> AudioEnumeratorHelper::readDeviceIdList(utils::MediaDeviceType type) {

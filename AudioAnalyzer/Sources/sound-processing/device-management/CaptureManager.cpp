@@ -26,7 +26,6 @@ bool CaptureManager::setSource(DataSource type, const string& id) {
 	snapshot.id = deviceInfo.id;
 	snapshot.description = deviceInfo.desc;
 	snapshot.name = legacyNumber < 104 ? deviceInfo.fullFriendlyName : deviceInfo.name;
-	snapshot.type = audioDeviceHandle.getType();
 
 	auto audioClient = audioDeviceHandle.openAudioClient();
 	if (audioDeviceHandle.getLastResult() != S_OK) {
@@ -58,6 +57,7 @@ bool CaptureManager::setSource(DataSource type, const string& id) {
 		return true;
 	}
 
+	snapshot.type = audioClient.getType();
 	snapshot.format.format = format.format;
 	snapshot.format.samplesPerSec = format.samplesPerSec;
 	snapshot.format.channelLayout = ChannelLayouts::layoutFromChannelMask(uint32_t(format.channelMask), true);

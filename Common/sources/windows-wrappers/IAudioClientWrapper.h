@@ -16,7 +16,6 @@
 #include "MediaDeviceType.h"
 
 namespace rxtd::utils {
-
 	class IAudioClientWrapper : public GenericComWrapper<IAudioClient> {
 		index lastResult = { };
 		WaveFormat format;
@@ -29,11 +28,20 @@ namespace rxtd::utils {
 		IAudioCaptureClientWrapper openCapture();
 
 		[[nodiscard]]
-		WaveFormat getFormat() const;
+		WaveFormat getFormat() const {
+			return format;
+		}
 
 		void initShared();
 
 		[[nodiscard]]
-		index getLastResult() const;
+		index getLastResult() const {
+			return lastResult;
+		}
+
+		[[nodiscard]]
+		auto getType() const {
+			return type;
+		}
 	};
 }

@@ -37,10 +37,6 @@ IAudioCaptureClientWrapper IAudioClientWrapper::openCapture() {
 	return result;
 }
 
-WaveFormat IAudioClientWrapper::getFormat() const {
-	return format;
-}
-
 void IAudioClientWrapper::initShared() {
 	WAVEFORMATEX* waveFormat;
 	lastResult = getPointer()->GetMixFormat(&waveFormat);
@@ -110,8 +106,4 @@ void IAudioClientWrapper::initShared() {
 	}
 
 	CoTaskMemFree(waveFormat);
-}
-
-index IAudioClientWrapper::getLastResult() const {
-	return lastResult;
 }
