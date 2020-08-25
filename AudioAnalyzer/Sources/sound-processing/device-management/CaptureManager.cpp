@@ -103,11 +103,6 @@ bool CaptureManager::setSource(DataSource type, const string& id) {
 }
 
 bool CaptureManager::capture() {
-	if (!isValid()) {
-		// todo
-		return false;
-	}
-
 	bool anyCaptured = false;
 	channelMixer.reset();
 
@@ -126,21 +121,14 @@ bool CaptureManager::capture() {
 			return anyCaptured;
 
 		case AUDCLNT_E_BUFFER_ERROR:
-			logger.debug(L"AUDCLNT_E_BUFFER_ERROR");
-			state = State::eDEVICE_CONNECTION_ERROR;
-			return anyCaptured;
 		case AUDCLNT_E_DEVICE_INVALIDATED:
-			logger.debug(L"AUDCLNT_E_DEVICE_INVALIDATED");
-			state = State::eDEVICE_CONNECTION_ERROR;
-			return anyCaptured;
 		case AUDCLNT_E_SERVICE_NOT_RUNNING:
-			logger.debug(L"AUDCLNT_E_SERVICE_NOT_RUNNING");
-			state = State::eDEVICE_CONNECTION_ERROR;
+			state = State::eRECONNECT_NEEDED;
 			return anyCaptured;
 
 		default:
 			logger.warning(L"Unexpected buffer query error code {error}", queryResult);
-			state = State::eDEVICE_CONNECTION_ERROR;
+			state = State::eRECONNECT_NEEDED;
 			return anyCaptured;
 		}
 	}

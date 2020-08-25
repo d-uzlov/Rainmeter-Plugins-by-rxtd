@@ -32,6 +32,7 @@ namespace rxtd::audio_analyzer {
 		enum class State {
 			eOK,
 			eDEVICE_CONNECTION_ERROR,
+			eRECONNECT_NEEDED,
 			eDEVICE_IS_EXCLUSIVE,
 		};
 
@@ -82,11 +83,6 @@ namespace rxtd::audio_analyzer {
 
 		void updateSnapshot(Snapshot& snap) const {
 			snap = snapshot;
-		}
-
-		[[nodiscard]]
-		bool isValid() const {
-			return state == State::eOK;
 		}
 
 		[[nodiscard]]

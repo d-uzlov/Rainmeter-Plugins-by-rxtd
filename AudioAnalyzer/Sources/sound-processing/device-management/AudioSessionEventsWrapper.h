@@ -45,11 +45,11 @@ namespace rxtd::audio_analyzer {
 		}
 
 		void init(utils::IAudioClientWrapper& client) {
+			destruct();
 			impl = {
 				[&](auto ptr) {
 					*ptr = new utils::AudioSessionEventsImpl{ client };
-					(*ptr)->AddRef();
-					return S_OK;
+					return true;
 				}
 			};
 		}

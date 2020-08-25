@@ -173,6 +173,10 @@ void ParentHelper::pUpdate() {
 		// todo
 	}
 
+	if (captureManager.getState() != CaptureManager::State::eOK) {
+		return;
+	}
+
 	const bool anyCaptured = captureManager.capture();
 	if (anyCaptured) {
 		orchestrator.process(captureManager.getChannelMixer());
@@ -183,7 +187,7 @@ void ParentHelper::pUpdate() {
 		}
 	}
 
-	if (!captureManager.isValid()) {
+	if (captureManager.getState() == CaptureManager::State::eRECONNECT_NEEDED) {
 		updateDevice();
 	}
 }
@@ -198,7 +202,7 @@ void ParentHelper::updateDevice() {
 		return;
 	}
 
-	deviceIsAvailable = captureManager.isValid();
+	deviceIsAvailable = captureManager.getState() == CaptureManager::State::eOK;
 	if (!deviceIsAvailable) {
 		return;
 	}
