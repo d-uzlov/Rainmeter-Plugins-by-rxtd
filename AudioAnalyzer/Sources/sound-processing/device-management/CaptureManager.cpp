@@ -28,7 +28,7 @@ bool CaptureManager::setSource(DataSource type, const string& id) {
 	snapshot.name = legacyNumber < 104 ? deviceInfo.fullFriendlyName : deviceInfo.name;
 	snapshot.type = audioDeviceHandle.getType();
 
-	audioClient = audioDeviceHandle.openAudioClient();
+	auto audioClient = audioDeviceHandle.openAudioClient();
 	if (audioDeviceHandle.getLastResult() != S_OK) {
 		valid = false;
 		logger.error(L"Can't create AudioClient, error code {}", audioDeviceHandle.getLastResult());
@@ -133,7 +133,6 @@ void CaptureManager::capture(const ProcessingCallback& processingCallback) {
 
 void CaptureManager::invalidate() {
 	audioCaptureClient = { };
-	audioClient = { };
 	valid = false;
 }
 

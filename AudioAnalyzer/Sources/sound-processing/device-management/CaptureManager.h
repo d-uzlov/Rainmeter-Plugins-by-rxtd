@@ -48,7 +48,6 @@ namespace rxtd::audio_analyzer {
 
 		AudioEnumeratorHelper enumerator;
 
-		utils::IAudioClientWrapper audioClient;
 		utils::IAudioCaptureClientWrapper audioCaptureClient;
 
 		clock::time_point lastBufferFillTime{ };
