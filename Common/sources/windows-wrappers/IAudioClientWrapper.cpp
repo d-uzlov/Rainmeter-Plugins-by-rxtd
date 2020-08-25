@@ -9,8 +9,6 @@
 
 #include "IAudioClientWrapper.h"
 
-static const IID IID_IAudioCaptureClient = __uuidof(IAudioCaptureClient);
-
 static constexpr long long REF_TIMES_PER_SEC = 1000'000'0; // 1 sec in 100-ns units
 
 using namespace utils;
@@ -22,7 +20,7 @@ IAudioClientWrapper::IAudioClientWrapper(InitFunction initFunction) :
 IAudioCaptureClientWrapper IAudioClientWrapper::openCapture() {
 	auto result = IAudioCaptureClientWrapper{
 		[&](auto ptr) {
-			lastResult = getPointer()->GetService(IID_IAudioCaptureClient, reinterpret_cast<void**>(ptr));
+			lastResult = getPointer()->GetService(__uuidof(IAudioCaptureClient), reinterpret_cast<void**>(ptr));
 			return lastResult == S_OK;
 		}
 	};

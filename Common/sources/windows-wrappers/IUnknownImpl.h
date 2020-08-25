@@ -39,7 +39,7 @@ namespace rxtd::utils {
 		}
 
 		HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvInterface) override {
-			if (IID_IUnknown == riid) {
+			if (__uuidof(IUnknown) == riid) {
 				AddRef();
 				*ppvInterface = this;
 			} else {

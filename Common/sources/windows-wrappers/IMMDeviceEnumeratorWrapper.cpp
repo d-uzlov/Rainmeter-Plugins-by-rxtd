@@ -9,17 +9,14 @@
 
 #include "IMMDeviceEnumeratorWrapper.h"
 
-static const CLSID CLSID_MMDeviceEnumerator = __uuidof(MMDeviceEnumerator);
-static const IID IID_IMMDeviceEnumerator = __uuidof(IMMDeviceEnumerator);
-
 using namespace utils;
 
 IMMDeviceEnumeratorWrapper::IMMDeviceEnumeratorWrapper() : GenericComWrapper([](auto ptr) {
 	return S_OK == CoCreateInstance(
-		CLSID_MMDeviceEnumerator,
+		__uuidof(MMDeviceEnumerator),
 		nullptr,
 		CLSCTX_INPROC_SERVER,
-		IID_IMMDeviceEnumerator,
+		__uuidof(IMMDeviceEnumerator),
 		reinterpret_cast<void**>(ptr)
 	);
 }) {
