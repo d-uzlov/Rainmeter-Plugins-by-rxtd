@@ -39,16 +39,17 @@ CaptureManager::CaptureManager(
 	}
 
 	const auto format = audioClient.getFormat();
+	if (format.format == utils::WaveDataFormat::eINVALID) {
+		logger.error(L"Invalid sample format");
+		valid = false;
+		return;
+	}
+
+	waveFormat.format = format.format;
 	waveFormat.samplesPerSec = format.samplesPerSec;
 	waveFormat.channelLayout = ChannelLayouts::layoutFromChannelMask(uint32_t(format.channelMask), true);
 	if (waveFormat.channelLayout.getChannelsOrderView().empty()) {
 		logger.error(L"zero known channels found in current channel layout");
-		valid = false;
-		return;
-	}
-	waveFormat.format = format.format;
-	if (waveFormat.format == utils::WaveDataFormat::eINVALID) {
-		logger.error(L"Invalid sample format");
 		valid = false;
 		return;
 	}

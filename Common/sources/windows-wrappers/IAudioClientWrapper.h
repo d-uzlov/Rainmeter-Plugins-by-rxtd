@@ -24,7 +24,7 @@ namespace rxtd::utils {
 
 	public:
 		IAudioClientWrapper() = default;
-		explicit IAudioClientWrapper(MediaDeviceType type, InitFunction initFunction);
+		explicit IAudioClientWrapper(InitFunction initFunction);
 
 		IAudioCaptureClientWrapper openCapture();
 

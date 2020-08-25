@@ -15,9 +15,8 @@ static constexpr long long REF_TIMES_PER_SEC = 1000'000'0; // 1 sec in 100-ns un
 
 using namespace utils;
 
-IAudioClientWrapper::IAudioClientWrapper(MediaDeviceType type, InitFunction initFunction) :
-	GenericComWrapper(std::move(initFunction)),
-	type(type) {
+IAudioClientWrapper::IAudioClientWrapper(InitFunction initFunction) :
+	GenericComWrapper(std::move(initFunction)) {
 }
 
 IAudioCaptureClientWrapper IAudioClientWrapper::openCapture() {
@@ -53,14 +52,29 @@ void IAudioClientWrapper::initShared() {
 	default: ;
 	}
 
-	const bool loopback = type == MediaDeviceType::eOUTPUT;
 	lastResult = getPointer()->Initialize(
 		AUDCLNT_SHAREMODE_SHARED,
-		loopback ? AUDCLNT_STREAMFLAGS_LOOPBACK : 0,
+		AUDCLNT_STREAMFLAGS_LOOPBACK,
 		REF_TIMES_PER_SEC,
 		0,
 		waveFormat,
 		nullptr);
+	if (lastResult == AUDCLNT_E_WRONG_ENDPOINT_TYPE) {
+		lastResult = getPointer()->Initialize(
+			AUDCLNT_SHAREMODE_SHARED,
+			0,
+			REF_TIMES_PER_SEC,
+			0,
+			waveFormat,
+			nullptr);
+		type = MediaDeviceType::eINPUT;
+	} else {
+		type = MediaDeviceType::eOUTPUT;
+	}
+
+	if (lastResult != S_OK) {
+		return;
+	}
 
 	format.channelsCount = waveFormat->nChannels;
 	format.samplesPerSec = waveFormat->nSamplesPerSec;

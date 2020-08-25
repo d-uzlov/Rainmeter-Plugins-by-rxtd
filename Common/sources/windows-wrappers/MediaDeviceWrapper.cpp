@@ -62,7 +62,6 @@ namespace rxtd::utils {
 
 	IAudioClientWrapper MediaDeviceWrapper::openAudioClient() {
 		return IAudioClientWrapper {
-			type,
 			[&](auto ptr) {
 				lastResult = getPointer()->Activate(
 					IID_IAudioClient,
