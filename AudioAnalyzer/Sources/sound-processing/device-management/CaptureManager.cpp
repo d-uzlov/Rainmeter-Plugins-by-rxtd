@@ -124,20 +124,15 @@ bool CaptureManager::capture() {
 		case AUDCLNT_E_BUFFER_ERROR:
 		case AUDCLNT_E_DEVICE_INVALIDATED:
 		case AUDCLNT_E_SERVICE_NOT_RUNNING:
-			invalidate();
+			valid = false;
 			return anyCaptured;
 
 		default:
 			logger.warning(L"Unexpected buffer query error code {error}", queryResult);
-			invalidate();
+			valid = false;
 			return anyCaptured;
 		}
 	}
-}
-
-void CaptureManager::invalidate() {
-	audioCaptureClient = { };
-	valid = false;
 }
 
 std::optional<utils::MediaDeviceWrapper> CaptureManager::getDevice(DataSource type, const string& id) {

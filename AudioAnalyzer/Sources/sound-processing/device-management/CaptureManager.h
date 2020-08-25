@@ -53,10 +53,6 @@ namespace rxtd::audio_analyzer {
 	public:
 		CaptureManager() = default;
 
-		~CaptureManager() {
-			invalidate();
-		}
-
 		CaptureManager(CaptureManager&& other) noexcept = default;
 		CaptureManager& operator=(CaptureManager&& other) noexcept = default;
 
@@ -93,8 +89,6 @@ namespace rxtd::audio_analyzer {
 		}
 
 	private:
-		void invalidate();
-
 		[[nodiscard]]
 		std::optional<utils::MediaDeviceWrapper> getDevice(DataSource type, const string& id);
 
