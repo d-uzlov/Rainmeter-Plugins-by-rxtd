@@ -209,6 +209,7 @@
     <ClInclude Include="sources\windows-wrappers\IAudioCaptureClientWrapper.h" />
     <ClInclude Include="sources\windows-wrappers\IAudioClientWrapper.h" />
     <ClInclude Include="sources\windows-wrappers\IMMDeviceEnumeratorWrapper.h" />
+    <ClInclude Include="sources\windows-wrappers\implementations\AudioSessionEventsImpl.h" />
     <ClInclude Include="sources\windows-wrappers\implementations\NotificationClientImpl.h" />
     <ClInclude Include="sources\windows-wrappers\IUnknownImpl.h" />
     <ClInclude Include="sources\windows-wrappers\MediaDeviceType.h" />
