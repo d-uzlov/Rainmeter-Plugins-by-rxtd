@@ -15,14 +15,16 @@
 namespace rxtd::utils {
 	template <typename T>
 	class GenericComWrapper {
-		static_assert(std::is_base_of<IUnknown, T>::value, "T must extend IUnknown");
-		T* ptr = nullptr;
-
 	public:
-		using InitFunctionType = bool (T** ptr);
+		using InitFunctionType = bool(T** ptr);
 		using InitFunction = std::function<InitFunctionType>;
 		using ObjectType = T;
+		static_assert(std::is_base_of<IUnknown, T>::value, "T must extend IUnknown");
 
+	private:
+		ObjectType* ptr = nullptr;
+
+	public:
 		GenericComWrapper() = default;
 
 		GenericComWrapper(InitFunction initFunction) {
@@ -52,7 +54,9 @@ namespace rxtd::utils {
 
 		GenericComWrapper(const GenericComWrapper& other) {
 			ptr = other.ptr;
-			ptr->AddRef();
+			if (ptr != nullptr) {
+				ptr->AddRef();
+			}
 		}
 
 		GenericComWrapper& operator=(const GenericComWrapper& other) {
@@ -61,8 +65,12 @@ namespace rxtd::utils {
 			}
 
 			release();
+
 			ptr = other.ptr;
-			ptr->AddRef();
+			if (ptr != nullptr) {
+				ptr->AddRef();
+			}
+
 			return *this;
 		}
 
@@ -83,7 +91,7 @@ namespace rxtd::utils {
 		}
 
 		[[nodiscard]]
-		T* getPointer() {
+		ObjectType* getPointer() {
 			return ptr;
 		}
 	};
