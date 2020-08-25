@@ -51,7 +51,6 @@ namespace rxtd::audio_analyzer {
 
 		Logger logger;
 
-		utils::MediaDeviceWrapper audioDeviceHandle{ };
 
 		CaptureManager captureManager;
 
@@ -87,6 +86,8 @@ namespace rxtd::audio_analyzer {
 		}
 
 	private:
+		[[nodiscard]]
+		static std::optional<utils::MediaDeviceWrapper> getDevice(AudioEnumeratorHelper& enumerator, DataSource type, const string& id);
 		void deviceRelease();
 	};
 

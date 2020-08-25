@@ -16,36 +16,25 @@ bool DeviceManager::reconnect(AudioEnumeratorHelper& enumerator, DataSource type
 
 	state = State::eOK;
 
-	std::optional<utils::MediaDeviceWrapper> deviceOpt;
-	switch (type) {
-	case DataSource::eDEFAULT_INPUT:
-		deviceOpt = enumerator.getDefaultDevice(utils::MediaDeviceType::eINPUT);
-		if (!deviceOpt) {
-			state = State::eERROR_MANUAL;
-			return true;
-		}
-		break;
+	std::optional<utils::MediaDeviceWrapper> deviceOpt = getDevice(enumerator, type, id);
 
-	case DataSource::eDEFAULT_OUTPUT:
-		deviceOpt = enumerator.getDefaultDevice(utils::MediaDeviceType::eOUTPUT);
-		if (!deviceOpt) {
-			state = State::eERROR_MANUAL;
-			return true;
-		}
-		break;
-
-	case DataSource::eID:
-		deviceOpt = enumerator.getDevice(id);
-		if (!deviceOpt) {
-			state = State::eERROR_MANUAL;
-			return true;
-		}
-		break;
+	if (!deviceOpt) {
+		state = State::eERROR_MANUAL;
+		return true;
 	}
 
-	audioDeviceHandle = std::move(deviceOpt.value());
+	utils::MediaDeviceWrapper audioDeviceHandle = std::move(deviceOpt.value());
 
-	captureManager = CaptureManager{ logger, audioDeviceHandle };
+	auto deviceInfo = audioDeviceHandle.readDeviceInfo();
+	diSnapshot.status = true;
+	diSnapshot.id = deviceInfo.id;
+	diSnapshot.description = deviceInfo.desc;
+	diSnapshot.name = legacyNumber < 104 ? deviceInfo.fullFriendlyName : deviceInfo.name;
+	diSnapshot.type = audioDeviceHandle.getType();
+
+	captureManager = CaptureManager{ logger, std::move(audioDeviceHandle) };
+	diSnapshot.format = captureManager.getWaveFormat();
+	diSnapshot.formatString = captureManager.getFormatString();
 
 	if (!captureManager.isValid()) {
 		if (!captureManager.isRecoverable()) {
@@ -60,20 +49,24 @@ bool DeviceManager::reconnect(AudioEnumeratorHelper& enumerator, DataSource type
 		return true;
 	}
 
-	auto deviceInfo = audioDeviceHandle.readDeviceInfo();
-	diSnapshot.status = true;
-	diSnapshot.id = deviceInfo.id;
-	diSnapshot.description = deviceInfo.desc;
-	diSnapshot.name = legacyNumber < 104 ? deviceInfo.fullFriendlyName : deviceInfo.name;
-	diSnapshot.formatString = captureManager.getFormatString();
-	diSnapshot.type = audioDeviceHandle.getType();
-	diSnapshot.format = captureManager.getWaveFormat();
-
 	return true;
+}
+
+std::optional<utils::MediaDeviceWrapper>
+DeviceManager::getDevice(AudioEnumeratorHelper& enumerator, DataSource type, const string& id) {
+	switch (type) {
+	case DataSource::eDEFAULT_INPUT:
+		return enumerator.getDefaultDevice(utils::MediaDeviceType::eINPUT);
+	case DataSource::eDEFAULT_OUTPUT:
+		return enumerator.getDefaultDevice(utils::MediaDeviceType::eOUTPUT);
+	case DataSource::eID:
+		return enumerator.getDevice(id);
+	}
+
+	return { };
 }
 
 void DeviceManager::deviceRelease() {
 	captureManager = { };
-	audioDeviceHandle = { };
 	diSnapshot = { };
 }

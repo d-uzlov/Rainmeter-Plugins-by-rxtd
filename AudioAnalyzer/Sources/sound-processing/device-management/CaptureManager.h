@@ -27,8 +27,9 @@ namespace rxtd::audio_analyzer {
 
 		utils::Rainmeter::Logger logger;
 
-		utils::IAudioClientWrapper audioClient{ };
-		utils::IAudioCaptureClientWrapper audioCaptureClient{ };
+		utils::MediaDeviceWrapper audioDeviceHandle;
+		utils::IAudioClientWrapper audioClient;
+		utils::IAudioCaptureClientWrapper audioCaptureClient;
 		MyWaveFormat waveFormat{ };
 		string formatString{ };
 
@@ -40,7 +41,8 @@ namespace rxtd::audio_analyzer {
 
 	public:
 		CaptureManager() = default;
-		CaptureManager(utils::Rainmeter::Logger logger, utils::MediaDeviceWrapper& audioDeviceHandle);
+		CaptureManager(utils::Rainmeter::Logger logger, utils::MediaDeviceWrapper audioDeviceHandle);
+
 		~CaptureManager() {
 			invalidate();
 		}

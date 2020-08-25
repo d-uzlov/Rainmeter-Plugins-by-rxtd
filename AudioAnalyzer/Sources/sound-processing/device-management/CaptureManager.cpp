@@ -12,8 +12,9 @@
 using namespace audio_analyzer;
 
 CaptureManager::CaptureManager(
-	utils::Rainmeter::Logger _logger, utils::MediaDeviceWrapper& audioDeviceHandle
+	utils::Rainmeter::Logger _logger, utils::MediaDeviceWrapper _audioDeviceHandle
 ) : logger(std::move(_logger)) {
+	audioDeviceHandle = std::move(_audioDeviceHandle);
 	audioClient = audioDeviceHandle.openAudioClient();
 	if (audioDeviceHandle.getLastResult() != S_OK) {
 		valid = false;
@@ -116,6 +117,7 @@ void CaptureManager::capture(const ProcessingCallback& processingCallback) {
 }
 
 void CaptureManager::invalidate() {
+	audioDeviceHandle = { };
 	audioCaptureClient = { };
 	audioClient = { };
 	waveFormat = { };
