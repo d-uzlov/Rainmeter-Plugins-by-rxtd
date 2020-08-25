@@ -111,27 +111,45 @@ bool CaptureManager::capture() {
 
 		const auto queryResult = audioCaptureClient.getLastResult();
 
-		switch (queryResult) {
-		case S_OK:
+		if (queryResult == S_OK) {
 			anyCaptured = true;
 			channelMixer.saveChannelsData(audioCaptureClient.getBuffer(), true);
+			continue;
+		}
+		if (queryResult == AUDCLNT_S_BUFFER_EMPTY) {
 			break;
+		}
 
-		case AUDCLNT_S_BUFFER_EMPTY:
-			return anyCaptured;
-
+		switch (queryResult) {
 		case AUDCLNT_E_BUFFER_ERROR:
 		case AUDCLNT_E_DEVICE_INVALIDATED:
 		case AUDCLNT_E_SERVICE_NOT_RUNNING:
-			state = State::eRECONNECT_NEEDED;
-			return anyCaptured;
-
+			break;
 		default:
 			logger.warning(L"Unexpected buffer query error code {error}", queryResult);
-			state = State::eRECONNECT_NEEDED;
-			return anyCaptured;
 		}
+
+		const auto changes = sessionEventsWrapper.getImpl().takeChanges();
+		switch (changes.disconnectionReason) {
+			using DR = utils::AudioSessionEventsImpl::DisconnectionReason;
+		case DR::eNONE:
+			break;
+		case DR::eUNAVAILABLE:
+			state = State::eDEVICE_CONNECTION_ERROR;
+			break;
+		case DR::eRECONNECT:
+			state = State::eRECONNECT_NEEDED;
+			break;
+		case DR::eEXCLUSIVE:
+			state = State::eDEVICE_IS_EXCLUSIVE;
+			// todo listen to exclusive stream
+			break;
+		}
+
+		break;
 	}
+
+	return anyCaptured;
 }
 
 std::optional<utils::MediaDeviceWrapper> CaptureManager::getDevice(DataSource type, const string& id) {

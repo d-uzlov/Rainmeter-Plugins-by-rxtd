@@ -54,6 +54,10 @@ namespace rxtd::audio_analyzer {
 			};
 		}
 
+		utils::AudioSessionEventsImpl& getImpl() {
+			return *impl.getPointer();
+		}
+
 	private:
 		void destruct() {
 			if (impl.isValid()) {

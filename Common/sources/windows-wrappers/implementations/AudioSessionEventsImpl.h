@@ -36,6 +36,8 @@ namespace rxtd::utils {
 		GenericComWrapper<ISimpleAudioVolume> mainVolumeController;
 		GenericComWrapper<IChannelAudioVolume> channelVolumeController;
 
+		bool preventVolumeChange = false;
+
 		std::atomic<DisconnectionReason> disconnectionReason{ };
 
 		// I'm not sure, but we are changing the volume when someone else changes volume.
@@ -55,6 +57,7 @@ namespace rxtd::utils {
 		AudioSessionEventsImpl() = default;
 
 		AudioSessionEventsImpl(IAudioClientWrapper& audioClient) {
+			preventVolumeChange = true;
 			sessionController = audioClient.getInterface<IAudioSessionControl>();
 			mainVolumeController = audioClient.getInterface<ISimpleAudioVolume>();
 			channelVolumeController = audioClient.getInterface<IChannelAudioVolume>();
@@ -95,9 +98,8 @@ namespace rxtd::utils {
 
 		[[nodiscard]]
 		Changes takeChanges() {
-			std::lock_guard<std::mutex> lock{ mut };
 			Changes result{ };
-			result.disconnectionReason = disconnectionReason.exchange(DisconnectionReason::eNONE);
+			result.disconnectionReason = disconnectionReason.load();
 			return result;
 		}
 
@@ -126,6 +128,10 @@ namespace rxtd::utils {
 		}
 
 		HRESULT STDMETHODCALLTYPE OnSimpleVolumeChanged(float volumeLevel, BOOL isMuted, const GUID* context) override {
+			if (!preventVolumeChange) {
+				return S_OK;
+			}
+
 			if (recursionAtomic.load()) {
 				return S_OK;
 			}
@@ -157,6 +163,10 @@ namespace rxtd::utils {
 
 		HRESULT STDMETHODCALLTYPE
 		OnChannelVolumeChanged(DWORD channelCount, float volumes[], DWORD channel, const GUID* context) override {
+			if (!preventVolumeChange) {
+				return S_OK;
+			}
+
 			if (recursionAtomic.load()) {
 				return S_OK;
 			}
@@ -207,6 +217,11 @@ namespace rxtd::utils {
 		}
 
 		HRESULT STDMETHODCALLTYPE OnSessionDisconnected(AudioSessionDisconnectReason reason) override {
+			if (disconnectionReason.load() != DisconnectionReason::eNONE) {
+				// for some reason DisconnectReasonDeviceRemoval makes 2 calls on my PC
+				return S_OK;
+			}
+
 			switch (reason) {
 			case DisconnectReasonDeviceRemoval:
 			case DisconnectReasonServerShutdown:
