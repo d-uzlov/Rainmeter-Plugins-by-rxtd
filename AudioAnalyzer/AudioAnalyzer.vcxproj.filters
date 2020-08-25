@@ -173,6 +173,9 @@
     <ClInclude Include="Sources\ParentHelper.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="Sources\sound-processing\device-management\AudioSessionEventsWrapper.h">
+      <Filter>Source Files\sound-processing\device-management</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sources\AudioChild.cpp">

@@ -44,7 +44,25 @@ namespace rxtd::utils {
 		auto getType() const {
 			return type;
 		}
-		
-		GenericComWrapper<IAudioSessionControl> getControl();
+
+		template <typename Interface>
+		GenericComWrapper<Interface> getInterface() {
+			static_assert(
+				std::is_base_of<IAudioClock, Interface>::value
+				|| std::is_base_of<IAudioRenderClient, Interface>::value
+				|| std::is_base_of<IAudioSessionControl, Interface>::value
+				|| std::is_base_of<IAudioStreamVolume, Interface>::value
+				|| std::is_base_of<IChannelAudioVolume, Interface>::value
+				|| std::is_base_of<ISimpleAudioVolume, Interface>::value,
+				"Interface is not supported by IAudioClient"
+			);
+
+			return {
+				[&](auto ptr) {
+					lastResult = getPointer()->GetService(__uuidof(Interface), reinterpret_cast<void**>(ptr));
+					return lastResult == S_OK;
+				}
+			};
+		}
 	};
 }

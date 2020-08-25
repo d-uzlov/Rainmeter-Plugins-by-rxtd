@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (C) 2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
@@ -28,25 +28,41 @@ namespace rxtd::utils {
 		};
 
 		struct Changes {
-			bool volumeChanged;
-			bool channelVolumeChanged;
 			DisconnectionReason disconnectionReason{ };
 		};
 
 	private:
-		IAudioSessionControl* control = nullptr;
+		GenericComWrapper<IAudioSessionControl> sessionController;
+		GenericComWrapper<ISimpleAudioVolume> mainVolumeController;
+		GenericComWrapper<IChannelAudioVolume> channelVolumeController;
 
-		std::atomic<bool> volumeChanged{ };
-		std::atomic<bool> channelVolumeChanged{ };
 		std::atomic<DisconnectionReason> disconnectionReason{ };
+
+		// I'm not sure, but we are changing the volume when someone else changes volume.
+		// We can potentially receive event of our own actions.
+		// Due to the use of a mutex deadlock can occur
+		// 
+		// If events are created separately and not recursively,
+		// then this listener in conjunction with some other listener that changes the volume
+		// to some value other than 1.0,
+		//	then, well, there will be an infinite loop, and I can do nothing with it
+		//	press F to pay respect
+		std::atomic<bool> recursionAtomic{ false };
 
 		std::mutex mut;
 
 	public:
 		AudioSessionEventsImpl() = default;
 
+		AudioSessionEventsImpl(IAudioClientWrapper& audioClient) {
+			sessionController = audioClient.getInterface<IAudioSessionControl>();
+			mainVolumeController = audioClient.getInterface<ISimpleAudioVolume>();
+			channelVolumeController = audioClient.getInterface<IChannelAudioVolume>();
+			sessionController.getPointer()->RegisterAudioSessionNotification(this);
+		}
+
 		virtual ~AudioSessionEventsImpl() {
-			unregister();
+			deinit();
 		}
 
 		AudioSessionEventsImpl(const AudioSessionEventsImpl& other) = delete;
@@ -54,25 +70,33 @@ namespace rxtd::utils {
 		AudioSessionEventsImpl& operator=(const AudioSessionEventsImpl& other) = delete;
 		AudioSessionEventsImpl& operator=(AudioSessionEventsImpl&& other) noexcept = delete;
 
-		void init(IAudioSessionControl* _control) {
-			unregister();
-			control = _control;
-			control->RegisterAudioSessionNotification(this);
-		}
+		//	""
+		//	When releasing an IAudioSessionControl interface instance,
+		//	the client must call the interface's Release method
+		//	from the same thread as the call to IAudioClient::GetService
+		//	that created the object.
+		//	""
+		//	Source: https://docs.microsoft.com/en-us/windows/win32/api/audiopolicy/nn-audiopolicy-iaudiosessioncontrol
+		//
+		//	Destructor of AudioSessionEventsImpl can potentially be called from some other threads,
+		//	so AudioSessionEventsImpl has #deinit function,
+		//	which must be manually called when this object is no longer needed
+		void deinit() {
+			std::lock_guard<std::mutex> lock{ mut };
 
-		void unregister() {
-			if (control != nullptr) {
-				control->UnregisterAudioSessionNotification(this);
-				control = nullptr;
+			if (sessionController.isValid()) {
+				sessionController.getPointer()->UnregisterAudioSessionNotification(this);
 			}
+
+			sessionController = { };
+			mainVolumeController = { };
+			channelVolumeController = { };
 		}
 
 		[[nodiscard]]
 		Changes takeChanges() {
 			std::lock_guard<std::mutex> lock{ mut };
 			Changes result{ };
-			result.volumeChanged = volumeChanged.exchange(false);
-			result.channelVolumeChanged = channelVolumeChanged.exchange(false);
 			result.disconnectionReason = disconnectionReason.exchange(DisconnectionReason::eNONE);
 			return result;
 		}
@@ -93,56 +117,113 @@ namespace rxtd::utils {
 			return S_OK;
 		}
 
+		HRESULT STDMETHODCALLTYPE OnDisplayNameChanged(const wchar_t* name, const GUID* context) override {
+			return S_OK;
+		}
+
+		HRESULT STDMETHODCALLTYPE OnIconPathChanged(const wchar_t* iconPath, const GUID* context) override {
+			return S_OK;
+		}
+
+		HRESULT STDMETHODCALLTYPE OnSimpleVolumeChanged(float volumeLevel, BOOL isMuted, const GUID* context) override {
+			if (recursionAtomic.load()) {
+				return S_OK;
+			}
+			recursionAtomic.exchange(true);
+
+			std::lock_guard<std::mutex> lock{ mut };
+
+			if (!mainVolumeController.isValid()) {
+				return S_OK;
+			}
+
+			if (isMuted != 0) {
+				const auto result = mainVolumeController.getPointer()->SetMute(false, nullptr);
+				if (result != S_OK) {
+					mainVolumeController = { };
+				}
+			}
+			if (mainVolumeController.isValid() && volumeLevel != 1.0f) {
+				const auto result = mainVolumeController.getPointer()->SetMasterVolume(1.0f, nullptr);
+				if (result != S_OK) {
+					mainVolumeController = { };
+				}
+			}
+
+			recursionAtomic.exchange(false);
+
+			return S_OK;
+		}
+
 		HRESULT STDMETHODCALLTYPE
-		OnDisplayNameChanged(const wchar_t* NewDisplayName, const GUID* EventContext) override {
+		OnChannelVolumeChanged(DWORD channelCount, float volumes[], DWORD channel, const GUID* context) override {
+			if (recursionAtomic.load()) {
+				return S_OK;
+			}
+			recursionAtomic.exchange(true);
+
+			std::lock_guard<std::mutex> lock{ mut };
+
+			if (!channelVolumeController.isValid()) {
+				return S_OK;
+			}
+
+			bool otherNoneOne = false;
+			for (index i = 0; i < index(channelCount); ++i) {
+				if (i != index(channel) && volumes[i] != 1.0f) {
+					otherNoneOne = true;
+					volumes[i] = 1.0f;
+				}
+			}
+
+			if (otherNoneOne) {
+				volumes[channel] = 1.0f;
+				const auto result = channelVolumeController.getPointer()->SetAllVolumes(
+					channel, volumes, nullptr
+				);
+				if (result != S_OK) {
+					channelVolumeController = { };
+				}
+			} else if (volumes[channel] != 1.0f) {
+				const auto result = channelVolumeController.getPointer()->SetChannelVolume(
+					channel, 1.0f, nullptr
+				);
+				if (result != S_OK) {
+					channelVolumeController = { };
+				}
+			}
+
+			recursionAtomic.exchange(false);
+
 			return S_OK;
 		}
 
-		HRESULT STDMETHODCALLTYPE OnIconPathChanged(const wchar_t* NewIconPath, const GUID* EventContext) override {
+		HRESULT STDMETHODCALLTYPE OnGroupingParamChanged(const GUID* groupingParam, const GUID* context) override {
 			return S_OK;
 		}
 
-		HRESULT STDMETHODCALLTYPE
-		OnSimpleVolumeChanged(float NewVolume, BOOL NewMute, const GUID* EventContext) override {
-			volumeChanged.exchange(true);
-			Rainmeter::sourcelessLog(L"OnSimpleVolumeChanged");
+		HRESULT STDMETHODCALLTYPE OnStateChanged(AudioSessionState state) override {
 			return S_OK;
 		}
 
-		HRESULT STDMETHODCALLTYPE OnChannelVolumeChanged(
-			DWORD ChannelCount, float NewChannelVolumeArray[], DWORD ChangedChannel,
-			const GUID* EventContext
-		) override {
-			channelVolumeChanged.exchange(true);
-			Rainmeter::sourcelessLog(L"OnChannelVolumeChanged");
-			return S_OK;
-		}
-
-		HRESULT STDMETHODCALLTYPE
-		OnGroupingParamChanged(const GUID* NewGroupingParam, const GUID* EventContext) override {
-			return S_OK;
-		}
-
-		HRESULT STDMETHODCALLTYPE OnStateChanged(AudioSessionState NewState) override {
-			return S_OK;
-		}
-
-		HRESULT STDMETHODCALLTYPE OnSessionDisconnected(AudioSessionDisconnectReason DisconnectReason) override {
-			switch (DisconnectReason) {
+		HRESULT STDMETHODCALLTYPE OnSessionDisconnected(AudioSessionDisconnectReason reason) override {
+			switch (reason) {
 			case DisconnectReasonDeviceRemoval:
 			case DisconnectReasonServerShutdown:
 			case DisconnectReasonSessionLogoff:
 			case DisconnectReasonSessionDisconnected:
 				disconnectionReason.exchange(DisconnectionReason::eUNAVAILABLE);
+				Rainmeter::sourcelessLog(L"OnSessionDisconnected eUNAVAILABLE");
 				break;
 			case DisconnectReasonFormatChanged:
 				disconnectionReason.exchange(DisconnectionReason::eRECONNECT);
+				Rainmeter::sourcelessLog(L"OnSessionDisconnected eRECONNECT");
 				break;
 			case DisconnectReasonExclusiveModeOverride:
 				disconnectionReason.exchange(DisconnectionReason::eEXCLUSIVE);
+				Rainmeter::sourcelessLog(L"OnSessionDisconnected eEXCLUSIVE");
 				break;
 			}
-			Rainmeter::sourcelessLog(L"OnSessionDisconnected");
 
 			return S_OK;
 		}

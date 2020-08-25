@@ -16,7 +16,9 @@
 #include <functional>
 
 #include "AudioEnumeratorHelper.h"
+#include "AudioSessionEventsWrapper.h"
 #include "../ChannelMixer.h"
+#include "windows-wrappers/implementations/AudioSessionEventsImpl.h"
 
 namespace rxtd::audio_analyzer {
 	class CaptureManager {
@@ -50,6 +52,7 @@ namespace rxtd::audio_analyzer {
 		AudioEnumeratorHelper enumerator;
 
 		utils::IAudioCaptureClientWrapper audioCaptureClient;
+		AudioSessionEventsWrapper sessionEventsWrapper;
 		ChannelMixer channelMixer;
 
 		State state = State::eDEVICE_CONNECTION_ERROR;
@@ -64,7 +67,6 @@ namespace rxtd::audio_analyzer {
 
 		CaptureManager(const CaptureManager& other) = delete;
 		CaptureManager& operator=(const CaptureManager& other) = delete;
-
 
 		void setLogger(utils::Rainmeter::Logger value) {
 			logger = std::move(value);

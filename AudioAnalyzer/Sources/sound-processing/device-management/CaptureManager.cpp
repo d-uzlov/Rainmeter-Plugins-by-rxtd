@@ -67,6 +67,8 @@ bool CaptureManager::setSource(DataSource type, const string& id) {
 		return true;
 	}
 
+	sessionEventsWrapper.init(audioClient);
+
 	snapshot.type = audioClient.getType();
 	snapshot.format.format = format.format;
 	snapshot.format.samplesPerSec = format.samplesPerSec;
