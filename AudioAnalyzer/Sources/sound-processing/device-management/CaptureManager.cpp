@@ -24,7 +24,7 @@ bool CaptureManager::setSource(DataSource type, const string& id) {
 			logger.error(L"Can't connect to audio device with id '{}'", id);
 		}
 
-		valid = false;
+		state = State::eDEVICE_CONNECTION_ERROR;
 		return true;
 	}
 
@@ -38,23 +38,24 @@ bool CaptureManager::setSource(DataSource type, const string& id) {
 
 	auto audioClient = audioDeviceHandle.openAudioClient();
 	if (audioDeviceHandle.getLastResult() != S_OK) {
-		valid = false;
+		state = State::eDEVICE_CONNECTION_ERROR;
 		logger.error(L"Can't create AudioClient, error code {}", audioDeviceHandle.getLastResult());
 		return true;
 	}
 
 	audioClient.initShared();
+	if (audioClient.getLastResult() == AUDCLNT_E_DEVICE_IN_USE) {
+		// If device is in exclusive mode, then call to Initialize() above leads to leak in Commit memory area
+		// Tested on LTSB 1607, last updates as of 2019-01-10
+		// Google "WASAPI exclusive memory leak"
+		// I consider this error unrecoverable to prevent further leaks
+		state = State::eDEVICE_IS_EXCLUSIVE;
+		logger.error(L"Device operates in exclusive mode, won't recover");
+		return false;
+	}
+
 	if (audioClient.getLastResult() != S_OK) {
-		if (audioClient.getLastResult() == AUDCLNT_E_DEVICE_IN_USE) {
-			// If device is in exclusive mode, then call to Initialize() above leads to leak in Commit memory area
-			// Tested on LTSB 1607, last updates as of 2019-01-10
-			// Google "WASAPI exclusive memory leak"
-			// I consider this error unrecoverable to prevent further leaks
-			valid = false;
-			logger.error(L"Device operates in exclusive mode, won't recover");
-			return false;
-		}
-		valid = false;
+		state = State::eDEVICE_CONNECTION_ERROR;
 		logger.error(L"AudioClient.Initialize() fail, error code {}", audioClient.getLastResult());
 		return true;
 	}
@@ -62,7 +63,7 @@ bool CaptureManager::setSource(DataSource type, const string& id) {
 	const auto format = audioClient.getFormat();
 	if (format.format == utils::WaveDataFormat::eINVALID) {
 		logger.error(L"Invalid sample format");
-		valid = false;
+		state = State::eDEVICE_CONNECTION_ERROR;
 		return true;
 	}
 
@@ -72,7 +73,7 @@ bool CaptureManager::setSource(DataSource type, const string& id) {
 	snapshot.format.channelLayout = ChannelLayouts::layoutFromChannelMask(uint32_t(format.channelMask), true);
 	if (snapshot.format.channelLayout.getChannelsOrderView().empty()) {
 		logger.error(L"zero known channels found in current channel layout");
-		valid = false;
+		state = State::eDEVICE_CONNECTION_ERROR;
 		return true;
 	}
 
@@ -83,19 +84,19 @@ bool CaptureManager::setSource(DataSource type, const string& id) {
 
 	audioCaptureClient = audioClient.openCapture();
 	if (audioClient.getLastResult() != S_OK) {
-		valid = false;
+		state = State::eDEVICE_CONNECTION_ERROR;
 		logger.error(L"Can't create AudioCaptureClient, error code {}", audioClient.getLastResult());
 		return true;
 	}
 
 	HRESULT hr = audioClient.getPointer()->Start();
 	if (hr != S_OK) {
-		valid = false;
+		state = State::eDEVICE_CONNECTION_ERROR;
 		logger.error(L"Can't start stream, error code {}", hr);
 		return true;
 	}
 
-	valid = true;
+	state = State::eOK;
 	return true;
 }
 
@@ -123,14 +124,21 @@ bool CaptureManager::capture() {
 			return anyCaptured;
 
 		case AUDCLNT_E_BUFFER_ERROR:
+			logger.debug(L"AUDCLNT_E_BUFFER_ERROR");
+			state = State::eDEVICE_CONNECTION_ERROR;
+			return anyCaptured;
 		case AUDCLNT_E_DEVICE_INVALIDATED:
+			logger.debug(L"AUDCLNT_E_DEVICE_INVALIDATED");
+			state = State::eDEVICE_CONNECTION_ERROR;
+			return anyCaptured;
 		case AUDCLNT_E_SERVICE_NOT_RUNNING:
-			valid = false;
+			logger.debug(L"AUDCLNT_E_SERVICE_NOT_RUNNING");
+			state = State::eDEVICE_CONNECTION_ERROR;
 			return anyCaptured;
 
 		default:
 			logger.warning(L"Unexpected buffer query error code {error}", queryResult);
-			valid = false;
+			state = State::eDEVICE_CONNECTION_ERROR;
 			return anyCaptured;
 		}
 	}

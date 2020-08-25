@@ -134,8 +134,6 @@ void ParentHelper::separateThreadFunction() {
 void ParentHelper::pUpdate() {
 	const auto changes = notificationClient.takeChanges();
 
-	bool deviceUpdated = false;
-
 	using DS = CaptureManager::DataSource;
 	if (requestedSource.sourceType == DS::eDEFAULT_INPUT || requestedSource.sourceType == DS::eDEFAULT_OUTPUT) {
 		const auto change = requestedSource.sourceType == DS::eDEFAULT_INPUT
@@ -147,7 +145,6 @@ void ParentHelper::pUpdate() {
 		case DDC::eCHANGED: {
 			auto snapshotLock = getSnapshotLock();
 
-			deviceUpdated = true;
 			updateDevice();
 			break;
 		}
@@ -160,22 +157,20 @@ void ParentHelper::pUpdate() {
 		}
 		}
 	}
+
 	if (!changes.devices.empty()) {
 		auto snapshotLock = getSnapshotLock();
 
-		if (!deviceUpdated && changes.devices.count(snapshot.diSnapshot.id) > 0) {
+		if (captureManager.getState() == CaptureManager::State::eDEVICE_CONNECTION_ERROR
+			&& changes.devices.count(snapshot.diSnapshot.id) > 0) {
 			updateDevice();
 		}
 
 		updateDeviceListStrings();
 	}
-	if (!deviceUpdated && !captureManager.isValid()) {
-		auto snapshotLock = getSnapshotLock();
-		updateDevice();
-	}
 
-	if (!deviceIsAvailable) {
-		return;
+	if (captureManager.getState() == CaptureManager::State::eDEVICE_IS_EXCLUSIVE) {
+		// todo
 	}
 
 	const bool anyCaptured = captureManager.capture();
@@ -186,6 +181,10 @@ void ParentHelper::pUpdate() {
 			auto snapshotLock = getSnapshotLock();
 			orchestrator.exchangeData(snapshot.dataSnapshot);
 		}
+	}
+
+	if (!captureManager.isValid()) {
+		updateDevice();
 	}
 }
 

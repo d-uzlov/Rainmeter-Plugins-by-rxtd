@@ -27,6 +27,12 @@ namespace rxtd::audio_analyzer {
 			eID,
 		};
 
+		enum class State {
+			eOK,
+			eDEVICE_CONNECTION_ERROR,
+			eDEVICE_IS_EXCLUSIVE,
+		};
+
 		struct Snapshot {
 			bool status{ };
 			string name;
@@ -46,7 +52,7 @@ namespace rxtd::audio_analyzer {
 		utils::IAudioCaptureClientWrapper audioCaptureClient;
 		ChannelMixer channelMixer;
 
-		bool valid = true;
+		State state = State::eDEVICE_CONNECTION_ERROR;
 
 		Snapshot snapshot;
 
@@ -78,7 +84,12 @@ namespace rxtd::audio_analyzer {
 
 		[[nodiscard]]
 		bool isValid() const {
-			return valid;
+			return state == State::eOK;
+		}
+
+		[[nodiscard]]
+		auto getState() const {
+			return state;
 		}
 
 		// returns true is at least one buffer was captured
