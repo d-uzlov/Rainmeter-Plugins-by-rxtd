@@ -10,48 +10,47 @@
 #include "PropertyStoreWrapper.h"
 #include "MediaDeviceWrapper.h"
 
-namespace rxtd::utils {
-	namespace {
-		class PropVariantWrapper {
-			PROPVARIANT handle{ };
+using namespace utils;
 
-		public:
+namespace {
+	class PropVariantWrapper {
+		PROPVARIANT handle{ };
 
-			PropVariantWrapper() {
-				PropVariantInit(&handle);
-			}
-
-			PropVariantWrapper(const PropVariantWrapper& other) = delete;
-			PropVariantWrapper(PropVariantWrapper&& other) = delete;
-			PropVariantWrapper& operator=(const PropVariantWrapper& other) = delete;
-			PropVariantWrapper& operator=(PropVariantWrapper&& other) = delete;
-
-			~PropVariantWrapper() {
-				PropVariantClear(&handle);
-			}
-
-			[[nodiscard]]
-			PROPVARIANT* getMetaPointer() {
-				return &handle;
-			}
-
-			[[nodiscard]]
-			const wchar_t* getCString() const {
-				return handle.pwszVal;
-			}
-		};
-	}
-
-	PropertyStoreWrapper::PropertyStoreWrapper(InitFunction initFunction) : GenericComWrapper(std::move(initFunction)) {
-	}
-
-	string PropertyStoreWrapper::readProperty(const PROPERTYKEY& key) {
-		PropVariantWrapper prop;
-
-		if (getPointer()->GetValue(key, prop.getMetaPointer()) != S_OK) {
-			return { };
+	public:
+		PropVariantWrapper() {
+			PropVariantInit(&handle);
 		}
 
-		return { prop.getCString() };
+		PropVariantWrapper(const PropVariantWrapper& other) = delete;
+		PropVariantWrapper(PropVariantWrapper&& other) = delete;
+		PropVariantWrapper& operator=(const PropVariantWrapper& other) = delete;
+		PropVariantWrapper& operator=(PropVariantWrapper&& other) = delete;
+
+		~PropVariantWrapper() {
+			PropVariantClear(&handle);
+		}
+
+		[[nodiscard]]
+		PROPVARIANT* getMetaPointer() {
+			return &handle;
+		}
+
+		[[nodiscard]]
+		const wchar_t* getCString() const {
+			return handle.pwszVal;
+		}
+	};
+}
+
+PropertyStoreWrapper::PropertyStoreWrapper(InitFunction initFunction) : GenericComWrapper(std::move(initFunction)) {
+}
+
+string PropertyStoreWrapper::readProperty(const PROPERTYKEY& key) {
+	PropVariantWrapper prop;
+
+	if (getPointer()->GetValue(key, prop.getMetaPointer()) != S_OK) {
+		return { };
 	}
+
+	return { prop.getCString() };
 }
