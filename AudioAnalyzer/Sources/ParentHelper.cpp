@@ -38,8 +38,8 @@ bool ParentHelper::init(
 		return false;
 	}
 
-	deviceManager.setLogger(logger);
-	deviceManager.setLegacyNumber(legacyNumber);
+	captureManager.setLogger(logger);
+	captureManager.setLegacyNumber(legacyNumber);
 
 	updateDeviceListStrings();
 
@@ -136,7 +136,7 @@ void ParentHelper::pUpdate() {
 
 	bool deviceUpdated = false;
 
-	using DS = DeviceManager::DataSource;
+	using DS = CaptureManager::DataSource;
 	if (requestedSource.sourceType == DS::eDEFAULT_INPUT || requestedSource.sourceType == DS::eDEFAULT_OUTPUT) {
 		const auto change = requestedSource.sourceType == DS::eDEFAULT_INPUT
 			                    ? changes.defaultCapture
@@ -176,7 +176,7 @@ void ParentHelper::pUpdate() {
 
 	bool any = false;
 	// todo
-	deviceManager.getCaptureManager().capture([&](utils::array2d_view<float> channelsData) {
+	captureManager.capture([&](utils::array2d_view<float> channelsData) {
 		channelMixer.saveChannelsData(channelsData, true);
 		any = true;
 	});
@@ -195,14 +195,14 @@ void ParentHelper::pUpdate() {
 void ParentHelper::updateDevice() {
 	snapshotIsUpdated = false;
 
-	const bool ok = deviceManager.reconnect(enumerator, requestedSource.sourceType, requestedSource.id);
+	const bool ok = captureManager.setSource(requestedSource.sourceType, requestedSource.id);
 	if (!ok) {
 		snapshot.fatalError = true;
 		deviceIsAvailable = false;
 		return;
 	}
 
-	deviceIsAvailable = deviceManager.isValid();
+	deviceIsAvailable = captureManager.isValid();
 	if (!deviceIsAvailable) {
 		return;
 	}
@@ -211,7 +211,7 @@ void ParentHelper::updateDevice() {
 
 	// it's important that if device is not available
 	// then #updateDeviceInfoSnapshot is not called
-	deviceManager.updateDeviceInfoSnapshot(snapshot.diSnapshot);
+	captureManager.updateSnapshot(snapshot.diSnapshot);
 
 	channelMixer.setFormat(snapshot.diSnapshot.format);
 	orchestrator.patch(

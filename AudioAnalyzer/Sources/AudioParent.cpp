@@ -50,13 +50,14 @@ void AudioParent::vReload() {
 
 		if (!snapshot.deviceIsAvailable) {
 			switch (requestedSource.sourceType) {
-			case DeviceManager::DataSource::eDEFAULT_INPUT:
+				using DS = CaptureManager::DataSource;
+			case DS::eDEFAULT_INPUT:
 				logger.error(L"No input device found");
 				break;
-			case DeviceManager::DataSource::eDEFAULT_OUTPUT:
+			case DS::eDEFAULT_OUTPUT:
 				logger.error(L"No output device found");
 				break;
-			case DeviceManager::DataSource::eID:
+			case DS::eID:
 				logger.error(
 					L"Device '{} ({})' is not found",
 					snapshot.diSnapshot.name,
@@ -80,13 +81,14 @@ double AudioParent::vUpdate() {
 	if (!snapshot.deviceIsAvailable) {
 		if (deviceWasAvailable) {
 			switch (requestedSource.sourceType) {
-			case DeviceManager::DataSource::eDEFAULT_INPUT:
+				using DS = CaptureManager::DataSource;
+			case DS::eDEFAULT_INPUT:
 				logger.error(L"All input devices were disconnected or disabled");
 				break;
-			case DeviceManager::DataSource::eDEFAULT_OUTPUT:
+			case DS::eDEFAULT_OUTPUT:
 				logger.error(L"All output devices were disconnected or disabled");
 				break;
-			case DeviceManager::DataSource::eID:
+			case DS::eID:
 				logger.error(
 					L"Device '{} ({})' was disconnected or disabled",
 					snapshot.diSnapshot.name,
@@ -293,7 +295,7 @@ isview AudioParent::legacy_findProcessingFor(isview handlerName) const {
 ParentHelper::RequestedDeviceDescription AudioParent::readRequest() const {
 	ParentHelper::RequestedDeviceDescription result;
 
-	using DataSource = DeviceManager::DataSource;
+	using DataSource = CaptureManager::DataSource;
 	if (const auto source = rain.read(L"Source").asIString();
 		!source.empty()) {
 		if (source == L"Output") {

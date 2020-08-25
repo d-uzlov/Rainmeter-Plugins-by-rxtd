@@ -11,7 +11,7 @@
 
 #include "RainmeterWrappers.h"
 #include "sound-processing/ProcessingManager.h"
-#include "sound-processing/device-management/DeviceManager.h"
+#include "sound-processing/device-management/CaptureManager.h"
 #include "sound-processing/ProcessingOrchestrator.h"
 #include "windows-wrappers/IMMNotificationClientImpl.h"
 
@@ -19,7 +19,7 @@ namespace rxtd::audio_analyzer {
 	class ParentHelper {
 	public:
 		struct RequestedDeviceDescription {
-			DeviceManager::DataSource sourceType{ };
+			CaptureManager::DataSource sourceType{ };
 			string id;
 
 			friend bool operator==(const RequestedDeviceDescription& lhs, const RequestedDeviceDescription& rhs) {
@@ -34,7 +34,7 @@ namespace rxtd::audio_analyzer {
 
 		struct Snapshot {
 			ProcessingOrchestrator::DataSnapshot dataSnapshot;
-			DeviceManager::DeviceInfoSnapshot diSnapshot;
+			CaptureManager::Snapshot diSnapshot;
 
 			string deviceListInput;
 			string deviceListOutput;
@@ -45,7 +45,7 @@ namespace rxtd::audio_analyzer {
 
 	private:
 		ChannelMixer channelMixer;
-		DeviceManager deviceManager;
+		CaptureManager captureManager;
 		utils::CMMNotificationClient notificationClient;
 
 		ParamParser::ProcessingsInfoMap patches;

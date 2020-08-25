@@ -16,32 +16,51 @@
 #include "windows-wrappers/IAudioCaptureClientWrapper.h"
 #include <functional>
 
+#include "AudioEnumeratorHelper.h"
+
 namespace rxtd::audio_analyzer {
 	class CaptureManager {
 	public:
 		using ProcessingCallback = std::function<void(utils::array2d_view<float> channels)>;
+
+		enum class DataSource {
+			eDEFAULT_INPUT,
+			eDEFAULT_OUTPUT,
+			eID,
+		};
+
+		struct Snapshot {
+			bool status{ };
+			string name;
+			string description;
+			string id;
+			string formatString;
+			utils::MediaDeviceType type{ };
+			MyWaveFormat format;
+		};
 
 	private:
 		using clock = std::chrono::high_resolution_clock;
 		static_assert(clock::is_steady);
 
 		utils::Rainmeter::Logger logger;
+		index legacyNumber = 0;
+
+		AudioEnumeratorHelper enumerator;
 
 		utils::MediaDeviceWrapper audioDeviceHandle;
 		utils::IAudioClientWrapper audioClient;
 		utils::IAudioCaptureClientWrapper audioCaptureClient;
-		MyWaveFormat waveFormat{ };
-		string formatString{ };
 
 		clock::time_point lastBufferFillTime{ };
 		static constexpr clock::duration EMPTY_TIMEOUT = std::chrono::milliseconds(100);
 
 		bool valid = true;
-		bool recoverable = true;
+
+		Snapshot snapshot;
 
 	public:
 		CaptureManager() = default;
-		CaptureManager(utils::Rainmeter::Logger logger, utils::MediaDeviceWrapper audioDeviceHandle);
 
 		~CaptureManager() {
 			invalidate();
@@ -53,14 +72,21 @@ namespace rxtd::audio_analyzer {
 		CaptureManager(const CaptureManager& other) = delete;
 		CaptureManager& operator=(const CaptureManager& other) = delete;
 
-		[[nodiscard]]
-		MyWaveFormat getWaveFormat() const {
-			return waveFormat;
+
+		void setLogger(utils::Rainmeter::Logger value) {
+			logger = std::move(value);
 		}
 
+		void setLegacyNumber(index value) {
+			legacyNumber = value;
+		}
+
+		// returns false on fatal error, true otherwise
 		[[nodiscard]]
-		const string& getFormatString() const {
-			return formatString;
+		bool setSource(DataSource type, const string& id);
+
+		void updateSnapshot(Snapshot& snap) const {
+			snap = snapshot;
 		}
 
 		[[nodiscard]]
@@ -68,15 +94,13 @@ namespace rxtd::audio_analyzer {
 			return valid;
 		}
 
-		[[nodiscard]]
-		bool isRecoverable() const {
-			return recoverable;
-		}
-
 		void capture(const ProcessingCallback& processingCallback);
 
 	private:
 		void invalidate();
+
+		[[nodiscard]]
+		std::optional<utils::MediaDeviceWrapper> getDevice(DataSource type, const string& id);
 
 		[[nodiscard]]
 		static string makeFormatString(MyWaveFormat waveFormat);

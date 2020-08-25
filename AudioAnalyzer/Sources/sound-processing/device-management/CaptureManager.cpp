@@ -11,15 +11,28 @@
 
 using namespace audio_analyzer;
 
-CaptureManager::CaptureManager(
-	utils::Rainmeter::Logger _logger, utils::MediaDeviceWrapper _audioDeviceHandle
-) : logger(std::move(_logger)) {
-	audioDeviceHandle = std::move(_audioDeviceHandle);
+bool CaptureManager::setSource(DataSource type, const string& id) {
+	auto deviceOpt = getDevice(type, id);
+
+	if (!deviceOpt) {
+		valid = false;
+		return true;
+	}
+
+	audioDeviceHandle = std::move(deviceOpt.value());
+
+	auto deviceInfo = audioDeviceHandle.readDeviceInfo();
+	snapshot.status = true; // todo ?
+	snapshot.id = deviceInfo.id;
+	snapshot.description = deviceInfo.desc;
+	snapshot.name = legacyNumber < 104 ? deviceInfo.fullFriendlyName : deviceInfo.name;
+	snapshot.type = audioDeviceHandle.getType();
+
 	audioClient = audioDeviceHandle.openAudioClient();
 	if (audioDeviceHandle.getLastResult() != S_OK) {
 		valid = false;
 		logger.error(L"Can't create AudioClient, error code {}", audioDeviceHandle.getLastResult());
-		return;
+		return true;
 	}
 
 	audioClient.initShared();
@@ -30,48 +43,50 @@ CaptureManager::CaptureManager(
 			// Google "WASAPI exclusive memory leak"
 			// I consider this error unrecoverable to prevent further leaks
 			valid = false;
-			recoverable = false;
 			logger.error(L"Device operates in exclusive mode, won't recover");
-			return;
+			return false;
 		}
 		valid = false;
 		logger.error(L"AudioClient.Initialize() fail, error code {}", audioClient.getLastResult());
-		return;
+		return true;
 	}
 
 	const auto format = audioClient.getFormat();
 	if (format.format == utils::WaveDataFormat::eINVALID) {
 		logger.error(L"Invalid sample format");
 		valid = false;
-		return;
+		return true;
 	}
 
-	waveFormat.format = format.format;
-	waveFormat.samplesPerSec = format.samplesPerSec;
-	waveFormat.channelLayout = ChannelLayouts::layoutFromChannelMask(uint32_t(format.channelMask), true);
-	if (waveFormat.channelLayout.getChannelsOrderView().empty()) {
+	snapshot.format.format = format.format;
+	snapshot.format.samplesPerSec = format.samplesPerSec;
+	snapshot.format.channelLayout = ChannelLayouts::layoutFromChannelMask(uint32_t(format.channelMask), true);
+	if (snapshot.format.channelLayout.getChannelsOrderView().empty()) {
 		logger.error(L"zero known channels found in current channel layout");
 		valid = false;
-		return;
+		return true;
 	}
+
+	snapshot.formatString = makeFormatString(snapshot.format);
+
 
 	audioCaptureClient = audioClient.openCapture();
 	if (audioClient.getLastResult() != S_OK) {
 		valid = false;
 		logger.error(L"Can't create AudioCaptureClient, error code {}", audioClient.getLastResult());
-		return;
+		return true;
 	}
 
 	HRESULT hr = audioClient.getPointer()->Start();
 	if (hr != S_OK) {
 		valid = false;
 		logger.error(L"Can't start stream, error code {}", hr);
-		return;
+		return true;
 	}
 
-	formatString = makeFormatString(waveFormat);
-
 	lastBufferFillTime = clock::now();
+
+	return true;
 }
 
 void CaptureManager::capture(const ProcessingCallback& processingCallback) {
@@ -120,9 +135,20 @@ void CaptureManager::invalidate() {
 	audioDeviceHandle = { };
 	audioCaptureClient = { };
 	audioClient = { };
-	waveFormat = { };
-	formatString = { };
 	valid = false;
+}
+
+std::optional<utils::MediaDeviceWrapper> CaptureManager::getDevice(DataSource type, const string& id) {
+	switch (type) {
+	case DataSource::eDEFAULT_INPUT:
+		return enumerator.getDefaultDevice(utils::MediaDeviceType::eINPUT);
+	case DataSource::eDEFAULT_OUTPUT:
+		return enumerator.getDefaultDevice(utils::MediaDeviceType::eOUTPUT);
+	case DataSource::eID:
+		return enumerator.getDevice(id);
+	}
+
+	return { };
 }
 
 string CaptureManager::makeFormatString(MyWaveFormat waveFormat) {
