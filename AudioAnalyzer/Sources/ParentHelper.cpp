@@ -108,7 +108,14 @@ void ParentHelper::separateThreadFunction() {
 	using namespace std::chrono_literals;
 	const auto sleepTime = 1.0s * updateTime;
 
+	const auto res = CoInitializeEx(nullptr, COINIT_MULTITHREADED | COINIT_DISABLE_OLE1DDE);
+
 	auto fullStateLock = getFullStateLock();
+
+	if (res != S_OK) {
+		logger.error(L"separate thread: CoInitializeEx failed");
+		return;
+	}
 
 	while (true) {
 		if (stopRequest.load()) {
@@ -123,6 +130,8 @@ void ParentHelper::separateThreadFunction() {
 
 		sleepVariable.wait_for(fullStateLock, sleepTime);
 	}
+
+	CoUninitialize();
 }
 
 void ParentHelper::pUpdate() {

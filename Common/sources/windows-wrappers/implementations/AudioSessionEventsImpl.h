@@ -34,7 +34,13 @@ namespace rxtd::utils {
 
 	private:
 		GenericComWrapper<IAudioSessionControl> sessionController;
+
+		// "The client should never release the final reference on a WASAPI object during an event callback."
+		// Source: https://docs.microsoft.com/en-us/windows/win32/api/audiopolicy/nn-audiopolicy-iaudiosessionevents
+		// So I maintain std::atomic instead of deleting object when it should be invalidated
+		std::atomic<bool> mainVolumeControllerIsValid{ false };
 		GenericComWrapper<ISimpleAudioVolume> mainVolumeController;
+		std::atomic<bool> channelVolumeControllerIsValid{ false };
 		GenericComWrapper<IChannelAudioVolume> channelVolumeController;
 
 		bool preventVolumeChange = false;
@@ -47,7 +53,7 @@ namespace rxtd::utils {
 		// Due to the use of a mutex deadlock can occur
 		// 
 		// If events are created separately and not recursively,
-		// then this listener in conjunction with some other listener that changes the volume
+		// and there is some other listener that changes the volume
 		// to some value other than 1.0,
 		//	then, well, there will be an infinite loop, and I can do nothing with it
 		//	press F to pay respect
@@ -65,13 +71,18 @@ namespace rxtd::utils {
 
 			if (sessionController.isValid()) {
 				sessionController.getPointer()->RegisterAudioSessionNotification(this);
+
 				mainVolumeController = audioClient.getInterface<ISimpleAudioVolume>();
+				mainVolumeControllerIsValid.exchange(mainVolumeController.isValid());
+
 				channelVolumeController = audioClient.getInterface<IChannelAudioVolume>();
+				channelVolumeControllerIsValid.exchange(channelVolumeController.isValid());
 			}
 		}
 
 		AudioSessionEventsImpl(GenericComWrapper<IAudioSessionControl>&& _sessionController) {
 			preventVolumeChange = false;
+
 			sessionController = std::move(_sessionController);
 			sessionController.getPointer()->RegisterAudioSessionNotification(this);
 		}
@@ -104,8 +115,12 @@ namespace rxtd::utils {
 			}
 
 			sessionController = { };
+
 			mainVolumeController = { };
+			mainVolumeControllerIsValid.exchange(mainVolumeController.isValid());
+
 			channelVolumeController = { };
+			channelVolumeControllerIsValid.exchange(mainVolumeController.isValid());
 		}
 
 		[[nodiscard]]
@@ -141,7 +156,7 @@ namespace rxtd::utils {
 		}
 
 		HRESULT STDMETHODCALLTYPE OnSimpleVolumeChanged(float volumeLevel, BOOL isMuted, const GUID* context) override {
-			if (!preventVolumeChange) {
+			if (!preventVolumeChange || !mainVolumeControllerIsValid.load()) {
 				return S_OK;
 			}
 
@@ -152,20 +167,16 @@ namespace rxtd::utils {
 
 			std::lock_guard<std::mutex> lock{ mut };
 
-			if (!mainVolumeController.isValid()) {
-				return S_OK;
-			}
-
 			if (isMuted != 0) {
 				const auto result = mainVolumeController.getPointer()->SetMute(false, nullptr);
 				if (result != S_OK) {
-					mainVolumeController = { };
+					mainVolumeControllerIsValid.exchange(false);
 				}
 			}
-			if (mainVolumeController.isValid() && volumeLevel != 1.0f) {
+			if (volumeLevel != 1.0f && mainVolumeControllerIsValid.load()) {
 				const auto result = mainVolumeController.getPointer()->SetMasterVolume(1.0f, nullptr);
 				if (result != S_OK) {
-					mainVolumeController = { };
+					mainVolumeControllerIsValid.exchange(false);
 				}
 			}
 
@@ -176,7 +187,7 @@ namespace rxtd::utils {
 
 		HRESULT STDMETHODCALLTYPE
 		OnChannelVolumeChanged(DWORD channelCount, float volumes[], DWORD channel, const GUID* context) override {
-			if (!preventVolumeChange) {
+			if (!preventVolumeChange || !channelVolumeControllerIsValid.load()) {
 				return S_OK;
 			}
 
@@ -187,14 +198,11 @@ namespace rxtd::utils {
 
 			std::lock_guard<std::mutex> lock{ mut };
 
-			if (!channelVolumeController.isValid()) {
-				return S_OK;
-			}
-
 			bool otherNoneOne = false;
 			for (index i = 0; i < index(channelCount); ++i) {
 				if (i != index(channel) && volumes[i] != 1.0f) {
 					otherNoneOne = true;
+					// no break because we need to set everything to 1.0
 					volumes[i] = 1.0f;
 				}
 			}
@@ -205,14 +213,14 @@ namespace rxtd::utils {
 					channel, volumes, nullptr
 				);
 				if (result != S_OK) {
-					channelVolumeController = { };
+					channelVolumeControllerIsValid.exchange(false);
 				}
 			} else if (volumes[channel] != 1.0f) {
 				const auto result = channelVolumeController.getPointer()->SetChannelVolume(
 					channel, 1.0f, nullptr
 				);
 				if (result != S_OK) {
-					channelVolumeController = { };
+					channelVolumeControllerIsValid.exchange(false);
 				}
 			}
 

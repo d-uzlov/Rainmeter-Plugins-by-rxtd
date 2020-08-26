@@ -53,6 +53,7 @@ void IAudioClientWrapper::testExclusive() {
 		// if provided with minimum buffer size
 		// IAudioClient3#InitializeSharedAudioStream leaks less
 		// but if IAudioClient3 is not available,
+		//	which, by the way, is probably caused by old windows version
 		// then IAudioClient#Initialize also fits the task
 		//
 		// It doesn't matter if we need AUDCLNT_STREAMFLAGS_LOOPBACK for this session
@@ -103,6 +104,26 @@ void IAudioClientWrapper::initShared(index bufferSize100nsUnits) {
 	default: ; // todo
 	}
 
+	// Documentation for IAudioClient::Initialize says
+	// ""
+	// Note  In Windows 8, the first use of IAudioClient to access the audio device
+	// should be on the STA thread. Calls from an MTA thread may result in undefined behavior.
+	// ""
+	// Source: https://docs.microsoft.com/en-us/windows/win32/api/audioclient/nf-audioclient-iaudioclient-initialize
+	// However, there is also a different information:
+	// ""
+	// The MSDN docs for ActivateAudioInterfaceAsync say that <...>
+	// They also say that "In Windows 8, the first use of IAudioClient to access the audio device should be on the STA thread <...>"
+	// That's incorrect. The first use of IAudioClient.Initialize must be inside your
+	// IActivateAudioInterfaceCompletionHandler.ActivateCompleted handler,
+	// which will have been invoked on a background thread by ActivateAudioInterfaceAsync.
+	// ""
+	// Source: https://www.codeproject.com/Articles/460145/Recording-and-playing-PCM-audio-on-Windows-8-VB
+	// In this citation they speak about ActivateAudioInterfaceAsync() function
+	// but I believe that if that is true for that function
+	// then it should be true for all calls to IAudioClient#Initialize
+	//
+	// So I don't do anything to specifically call this function from STA
 	lastResult = getPointer()->Initialize(
 		AUDCLNT_SHAREMODE_SHARED,
 		AUDCLNT_STREAMFLAGS_LOOPBACK,
