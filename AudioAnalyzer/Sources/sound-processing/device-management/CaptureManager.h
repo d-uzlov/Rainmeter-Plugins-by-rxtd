@@ -62,7 +62,7 @@ namespace rxtd::audio_analyzer {
 
 		Snapshot snapshot;
 
-		string currentExclusiveStreamId;
+		index lastExclusiveProcessId = -1;
 
 	public:
 		CaptureManager() = default;
@@ -115,7 +115,8 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		static string makeFormatString(MyWaveFormat waveFormat);
 
-		// when called in sequence, returns true if active stream changed, false otherwise
-		void createExclusiveStreamListener(bool makeLogMessage);
+		void createExclusiveStreamListener();
+
+		std::vector<utils::GenericComWrapper<IAudioSessionControl>> getActiveSessions();
 	};
 }

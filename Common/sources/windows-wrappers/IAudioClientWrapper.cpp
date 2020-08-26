@@ -9,8 +9,6 @@
 
 #include "IAudioClientWrapper.h"
 
-static constexpr long long REF_TIMES_PER_SEC = 1000'000'0; // 1 sec in 100-ns units
-
 using namespace utils;
 
 IAudioClientWrapper::IAudioClientWrapper(InitFunction initFunction) :
@@ -35,7 +33,66 @@ IAudioCaptureClientWrapper IAudioClientWrapper::openCapture() {
 	return result;
 }
 
-void IAudioClientWrapper::initShared() {
+void IAudioClientWrapper::testExclusive() {
+	WAVEFORMATEX* waveFormat;
+	lastResult = getPointer()->GetMixFormat(&waveFormat);
+	if (lastResult != S_OK) {
+		return;
+	}
+
+	auto client3 = utils::GenericComWrapper<IAudioClient3>{
+		[&](auto ptr) {
+			lastResult = getPointer()->QueryInterface<IAudioClient3>(ptr);
+			return S_OK == lastResult;
+		}
+	};
+
+	if (!client3.isValid()) {
+		// Both IAudioClient#Initialize and IAudioClient3#InitializeSharedAudioStream leak commit memory
+		// but according to me tests,
+		// if provided with minimum buffer size
+		// IAudioClient3#InitializeSharedAudioStream leaks less
+		// but if IAudioClient3 is not available,
+		// then IAudioClient#Initialize also fits the task
+		//
+		// It doesn't matter if we need AUDCLNT_STREAMFLAGS_LOOPBACK for this session
+		// exclusive streams don't allow shared connection both with and without loopback
+		lastResult = getPointer()->Initialize(
+			AUDCLNT_SHAREMODE_SHARED,
+			0,
+			0,
+			0,
+			waveFormat,
+			nullptr
+		);
+		return;
+	}
+
+	UINT32 pDefaultPeriodInFrames;
+	UINT32 pFundamentalPeriodInFrames;
+	UINT32 pMinPeriodInFrames;
+	UINT32 pMaxPeriodInFrames;
+	lastResult = client3.getPointer()->GetSharedModeEnginePeriod(
+		waveFormat,
+		&pDefaultPeriodInFrames,
+		&pFundamentalPeriodInFrames,
+		&pMinPeriodInFrames,
+		&pMaxPeriodInFrames
+	);
+	if (lastResult != S_OK) {
+		return;
+	}
+
+	lastResult = client3.getPointer()->InitializeSharedAudioStream(
+		0,
+		pMinPeriodInFrames,
+		waveFormat,
+		nullptr
+	);
+	CoTaskMemFree(waveFormat);
+}
+
+void IAudioClientWrapper::initShared(index bufferSize100nsUnits) {
 	WAVEFORMATEX* waveFormat;
 	lastResult = getPointer()->GetMixFormat(&waveFormat);
 	switch (lastResult) {
@@ -49,18 +106,20 @@ void IAudioClientWrapper::initShared() {
 	lastResult = getPointer()->Initialize(
 		AUDCLNT_SHAREMODE_SHARED,
 		AUDCLNT_STREAMFLAGS_LOOPBACK,
-		REF_TIMES_PER_SEC,
+		bufferSize100nsUnits,
 		0,
 		waveFormat,
-		nullptr);
+		nullptr
+	);
 	if (lastResult == AUDCLNT_E_WRONG_ENDPOINT_TYPE) {
 		lastResult = getPointer()->Initialize(
 			AUDCLNT_SHAREMODE_SHARED,
 			0,
-			REF_TIMES_PER_SEC,
+			bufferSize100nsUnits,
 			0,
 			waveFormat,
-			nullptr);
+			nullptr
+		);
 		type = MediaDeviceType::eINPUT;
 	} else {
 		type = MediaDeviceType::eOUTPUT;

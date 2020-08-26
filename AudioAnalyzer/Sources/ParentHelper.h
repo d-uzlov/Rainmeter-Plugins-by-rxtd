@@ -44,6 +44,7 @@ namespace rxtd::audio_analyzer {
 		};
 
 	private:
+		utils::Rainmeter::Logger logger;
 		CaptureManager captureManager;
 		utils::CMMNotificationClient notificationClient;
 

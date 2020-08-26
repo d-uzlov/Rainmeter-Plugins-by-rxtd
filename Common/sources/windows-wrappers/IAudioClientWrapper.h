@@ -26,6 +26,10 @@ namespace rxtd::utils {
 		IAudioClientWrapper() = default;
 		explicit IAudioClientWrapper(InitFunction initFunction);
 
+		static index get1sec100nsUnits() {
+			return 1000'000'0;
+		}
+
 		IAudioCaptureClientWrapper openCapture();
 
 		[[nodiscard]]
@@ -33,7 +37,16 @@ namespace rxtd::utils {
 			return format;
 		}
 
-		void initShared();
+		// check lastResult after this function
+		// if (lastResult == S_OK) then you can call initShared on another instance of IAudioClientWrapper
+		// if (lastResult == AUDCLNT_E_DEVICE_IN_USE) then device is in exclusive mode
+		// other errors may happen
+		// the meaning of this function is to reduce memory leaks caused by WASAPI exclusive mode
+		//
+		// the object is unusable after this function, so create separate object before calling this
+		void testExclusive();
+
+		void initShared(index bufferSize100nsUnits);
 
 		[[nodiscard]]
 		index getLastResult() const {

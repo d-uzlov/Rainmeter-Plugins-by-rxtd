@@ -37,6 +37,32 @@ bool CaptureManager::setSource(DataSource type, const string& id) {
 	snapshot.name = legacyNumber < 104 ? deviceInfo.fullFriendlyName : deviceInfo.name;
 	snapshot.nameOnly = deviceInfo.name;
 
+	auto testAudioClient = audioDeviceHandle.openAudioClient();
+	if (audioDeviceHandle.getLastResult() != S_OK) {
+		state = State::eDEVICE_CONNECTION_ERROR;
+		logger.error(L"Can't create AudioClient, error code {}", audioDeviceHandle.getLastResult());
+		return true;
+	}
+
+	testAudioClient.testExclusive();
+	if (testAudioClient.getLastResult() == AUDCLNT_E_DEVICE_IN_USE) {
+		state = State::eDEVICE_IS_EXCLUSIVE;
+		createExclusiveStreamListener();
+		return true;
+	}
+
+	// reset lastExclusiveProcessId to invalid value
+	lastExclusiveProcessId = -1;
+
+	if (testAudioClient.getLastResult() != S_OK) {
+		state = State::eDEVICE_CONNECTION_ERROR;
+		logger.error(
+			L"AudioClient3.InitializeSharedAudioStream() fail, error code {}",
+			testAudioClient.getLastResult()
+		);
+		return true;
+	}
+
 	auto audioClient = audioDeviceHandle.openAudioClient();
 	if (audioDeviceHandle.getLastResult() != S_OK) {
 		state = State::eDEVICE_CONNECTION_ERROR;
@@ -44,14 +70,13 @@ bool CaptureManager::setSource(DataSource type, const string& id) {
 		return true;
 	}
 
-	audioClient.initShared();
+	// todo add option for buffer size
+	audioClient.initShared(utils::IAudioClientWrapper::get1sec100nsUnits());
 	if (audioClient.getLastResult() == AUDCLNT_E_DEVICE_IN_USE) {
 		state = State::eDEVICE_IS_EXCLUSIVE;
-		createExclusiveStreamListener(true);
+		createExclusiveStreamListener();
 		return true;
 	}
-
-	currentExclusiveStreamId = { };
 
 	if (audioClient.getLastResult() != S_OK) {
 		state = State::eDEVICE_CONNECTION_ERROR;
@@ -141,7 +166,7 @@ bool CaptureManager::capture() {
 			break;
 		case DR::eEXCLUSIVE:
 			state = State::eDEVICE_IS_EXCLUSIVE;
-			createExclusiveStreamListener(true);
+			createExclusiveStreamListener();
 			break;
 		}
 
@@ -152,63 +177,6 @@ bool CaptureManager::capture() {
 }
 
 void CaptureManager::tryToRecoverFromExclusive() {
-	auto audioClient = audioDeviceHandle.openAudioClient();
-
-	auto client3 = utils::GenericComWrapper<IAudioClient3>{
-		[&](auto ptr) {
-			return S_OK == audioClient.getPointer()->QueryInterface<IAudioClient3>(ptr);
-		}
-	};
-
-	if (!client3.isValid()) {
-		return;
-	}
-
-	WAVEFORMATEX* waveFormat;
-	auto res = client3.getPointer()->GetMixFormat(&waveFormat);
-	if (res != S_OK) {
-		return;
-	}
-
-	UINT32 pDefaultPeriodInFrames;
-	UINT32 pFundamentalPeriodInFrames;
-	UINT32 pMinPeriodInFrames;
-	UINT32 pMaxPeriodInFrames;
-	res = client3.getPointer()->GetSharedModeEnginePeriod(
-		waveFormat,
-		&pDefaultPeriodInFrames,
-		&pFundamentalPeriodInFrames,
-		&pMinPeriodInFrames,
-		&pMaxPeriodInFrames
-	);
-	if (res != S_OK) {
-		return;
-	}
-
-	res = client3.getPointer()->InitializeSharedAudioStream(
-		0,
-		pDefaultPeriodInFrames,
-		waveFormat,
-		nullptr
-	);
-	CoTaskMemFree(waveFormat);
-	if (res == AUDCLNT_E_DEVICE_IN_USE) {
-		// device is still in exclusive mode
-		return;
-	}
-
-	if (res != S_OK) {
-		return;
-	}
-
-	const string prevStreamId = currentExclusiveStreamId;
-	createExclusiveStreamListener(false);
-	if (!currentExclusiveStreamId.empty() && prevStreamId != currentExclusiveStreamId) {
-		logger.debug(L"stream id changed, reconnect");
-		state = State::eRECONNECT_NEEDED;
-		return;
-	}
-
 	const auto changes = sessionEventsWrapper.grabChanges();
 	switch (changes.disconnectionReason) {
 		using DR = utils::AudioSessionEventsImpl::DisconnectionReason;
@@ -216,18 +184,54 @@ void CaptureManager::tryToRecoverFromExclusive() {
 		break;
 	case DR::eUNAVAILABLE:
 		state = State::eDEVICE_CONNECTION_ERROR;
-		break;
+		return;
 	case DR::eRECONNECT:
 		state = State::eRECONNECT_NEEDED;
 		logger.debug(L"exclusive format changed");
-		break;
+		return;
 	case DR::eEXCLUSIVE:
-		// if eEXCLUSIVE happened, then the stream we were listening to was in shared-mode,
+		// if eEXCLUSIVE happened, then the stream we were listening to was shared,
 		// but now we probably have exclusive stream
 		state = State::eDEVICE_IS_EXCLUSIVE;
-		createExclusiveStreamListener(true);
-		break;
+		createExclusiveStreamListener();
+		return;
 	}
+
+	auto activeSessions = getActiveSessions();
+	if (activeSessions.empty()) {
+		return;
+	}
+	if (activeSessions.size() > 1) {
+		state = State::eRECONNECT_NEEDED;
+		return;
+	}
+
+	utils::GenericComWrapper<IAudioSessionControl2> c2{
+		[&](auto ptr) {
+			auto res = activeSessions[0].getPointer()->QueryInterface<IAudioSessionControl2>(ptr);
+			return res == S_OK;
+		}
+	};
+
+	if (!c2.isValid()) {
+		// can't get process id, so just skip
+		return;
+	}
+
+	DWORD processId;
+	const auto res = c2.getPointer()->GetProcessId(&processId);
+
+	if (res != S_OK) {
+		// can't get process id, so just skip
+		return;
+	}
+
+	if (processId == lastExclusiveProcessId) {
+		return;
+	}
+
+	// process id changed, so previous exclusive stream must be closed by now
+	state = State::eRECONNECT_NEEDED;
 }
 
 std::optional<utils::MediaDeviceWrapper> CaptureManager::getDevice(DataSource type, const string& id) {
@@ -273,72 +277,22 @@ string CaptureManager::makeFormatString(MyWaveFormat waveFormat) {
 	return string{ bp.getBufferView() };
 }
 
-void CaptureManager::createExclusiveStreamListener(bool makeLogMessage) {
+void CaptureManager::createExclusiveStreamListener() {
 	sessionEventsWrapper.destruct();
 
-	auto sessionManager = audioDeviceHandle.activateFor<IAudioSessionManager2>();
-	if (!sessionManager.isValid()) {
-		return;
-	}
+	auto activeSessions = getActiveSessions();
 
-	auto sessionEnumerator = utils::GenericComWrapper<IAudioSessionEnumerator>{
-		[&](auto ptr) {
-			auto result = sessionManager.getPointer()->GetSessionEnumerator(ptr);
-			return result == S_OK;
-		}
-	};
-	if (!sessionEnumerator.isValid()) {
-		return;
-	}
-
-	int sessionCount;
-	auto result = sessionEnumerator.getPointer()->GetCount(&sessionCount);
-	if (result != S_OK) {
-		return;
-	}
-
-	utils::GenericComWrapper<IAudioSessionControl> foundControl;
-	index sessionsFound = 0;
-	for (int i = 0; i < sessionCount; ++i) {
-		auto sessionControl = utils::GenericComWrapper<IAudioSessionControl>{
-			[&](auto ptr) {
-				auto res = sessionEnumerator.getPointer()->GetSession(i, ptr);
-				return res == S_OK;
-			}
-		};
-
-		if (!sessionControl.isValid()) {
-			continue;
-		}
-
-		AudioSessionState sessionState = { };
-		auto res = sessionControl.getPointer()->GetState(&sessionState);
-		if (res != S_OK) {
-			continue;
-		}
-
-		if (sessionState != AudioSessionStateActive) {
-			continue;
-		}
-
-		if (sessionsFound > 0) {
-			// then there are at least two active sessions
-			// exclusive mode can't have more than one active session
-			state = State::eRECONNECT_NEEDED;
-			return;
-		}
-
-		sessionsFound++;
-		foundControl = std::move(sessionControl);
-	}
-
-	constexpr sview unknownDeviceStreamId = L"unknown";
-
-	if (sessionsFound == 0) {
+	if (activeSessions.empty()) {
 		// this can happen when device is in exclusive mode,
 		// but the owner process doesn't produce any sound
-		currentExclusiveStreamId = { };
-		sessionEventsWrapper.destruct();
+		lastExclusiveProcessId = -1;
+		return;
+	}
+
+	if (activeSessions.size() > 1) {
+		// exclusive mode only allows one active session
+		lastExclusiveProcessId = -1;
+		state = State::eRECONNECT_NEEDED;
 		return;
 	}
 
@@ -346,13 +300,12 @@ void CaptureManager::createExclusiveStreamListener(bool makeLogMessage) {
 
 	utils::GenericComWrapper<IAudioSessionControl2> c2{
 		[&](auto ptr) {
-			auto res = foundControl.getPointer()
-			                       ->QueryInterface(__uuidof(IAudioSessionControl2), reinterpret_cast<void**>(ptr));
+			auto res = activeSessions[0].getPointer()->QueryInterface<IAudioSessionControl2>(ptr);
 			return res == S_OK;
 		}
 	};
 
-	sessionEventsWrapper.init(std::move(foundControl));
+	sessionEventsWrapper.init(std::move(activeSessions[0]));
 
 	if (!c2.isValid()) {
 		logger.notice(
@@ -365,21 +318,8 @@ void CaptureManager::createExclusiveStreamListener(bool makeLogMessage) {
 		return;
 	}
 
-	wchar_t* sessionInstanceId = nullptr;
-	auto res = c2.getPointer()->GetSessionIdentifier(&sessionInstanceId);
-	if (res == S_OK) {
-		currentExclusiveStreamId = sessionInstanceId;
-		CoTaskMemFree(sessionInstanceId);
-	} else {
-		currentExclusiveStreamId = unknownDeviceStreamId;
-	}
-
-	if (!makeLogMessage) {
-		return;
-	}
-
 	DWORD processId;
-	res = c2.getPointer()->GetProcessId(&processId);
+	auto res = c2.getPointer()->GetProcessId(&processId);
 
 	if (res != S_OK) {
 		logger.notice(
@@ -390,6 +330,8 @@ void CaptureManager::createExclusiveStreamListener(bool makeLogMessage) {
 		);
 		return;
 	}
+
+	lastExclusiveProcessId = processId;
 
 	const auto processHandle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, processId);
 	if (processHandle == nullptr) {
@@ -433,4 +375,56 @@ void CaptureManager::createExclusiveStreamListener(bool makeLogMessage) {
 		processId,
 		snapshot.id
 	);
+}
+
+std::vector<utils::GenericComWrapper<IAudioSessionControl>> CaptureManager::getActiveSessions() {
+	std::vector<utils::GenericComWrapper<IAudioSessionControl>> result;
+
+	auto sessionManager = audioDeviceHandle.activateFor<IAudioSessionManager2>();
+	if (!sessionManager.isValid()) {
+		return { };
+	}
+
+	auto sessionEnumerator = utils::GenericComWrapper<IAudioSessionEnumerator>{
+		[&](auto ptr) {
+			auto res = sessionManager.getPointer()->GetSessionEnumerator(ptr);
+			return res == S_OK;
+		}
+	};
+	if (!sessionEnumerator.isValid()) {
+		return { };
+	}
+
+	int sessionCount;
+	auto res = sessionEnumerator.getPointer()->GetCount(&sessionCount);
+	if (res != S_OK) {
+		return { };
+	}
+
+	for (int i = 0; i < sessionCount; ++i) {
+		auto sessionControl = utils::GenericComWrapper<IAudioSessionControl>{
+			[&](auto ptr) {
+				res = sessionEnumerator.getPointer()->GetSession(i, ptr);
+				return res == S_OK;
+			}
+		};
+
+		if (!sessionControl.isValid()) {
+			continue;
+		}
+
+		AudioSessionState sessionState = { };
+		res = sessionControl.getPointer()->GetState(&sessionState);
+		if (res != S_OK) {
+			continue;
+		}
+
+		if (sessionState != AudioSessionStateActive) {
+			continue;
+		}
+
+		result.push_back(std::move(sessionControl));
+	}
+
+	return result;
 }

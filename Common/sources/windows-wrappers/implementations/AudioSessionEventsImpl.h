@@ -224,21 +224,6 @@ namespace rxtd::utils {
 		HRESULT STDMETHODCALLTYPE OnStateChanged(AudioSessionState state) override {
 			stateChanged.exchange(true);
 
-			if (!preventVolumeChange) {
-				switch (state) {
-				case AudioSessionStateInactive:
-					Rainmeter::sourcelessLog(L"OnStateChanged inactive");
-					break;
-				case AudioSessionStateActive:
-					Rainmeter::sourcelessLog(L"OnStateChanged active");
-					break;
-				case AudioSessionStateExpired:
-					Rainmeter::sourcelessLog(L"OnStateChanged expired");
-					break;
-				default: ;
-				}
-			}
-
 			return S_OK;
 		}
 

@@ -16,6 +16,7 @@ ParentHelper::~ParentHelper() {
 		stopRequest.exchange(true);
 		try {
 			{
+				// todo tryLock
 				auto fullStateLock = getFullStateLock();
 				sleepVariable.notify_one();
 			}
@@ -27,10 +28,12 @@ ParentHelper::~ParentHelper() {
 }
 
 bool ParentHelper::init(
-	utils::Rainmeter::Logger logger,
+	utils::Rainmeter::Logger _logger,
 	utils::OptionMap threadingMap,
 	index _legacyNumber
 ) {
+	logger = std::move(_logger);
+
 	legacyNumber = _legacyNumber;
 
 	if (!enumerator.isValid()) {
@@ -169,8 +172,14 @@ void ParentHelper::pUpdate() {
 		updateDeviceListStrings();
 	}
 
-	if (captureManager.getState() == CaptureManager::State::eDEVICE_IS_EXCLUSIVE) {
-		// todo
+	if (captureManager.isExclusive()) {
+		captureManager.tryToRecoverFromExclusive();
+	}
+
+	if (captureManager.getState() == CaptureManager::State::eRECONNECT_NEEDED) {
+		auto snapshotLock = getSnapshotLock();
+
+		updateDevice();
 	}
 
 	if (captureManager.getState() != CaptureManager::State::eOK) {
