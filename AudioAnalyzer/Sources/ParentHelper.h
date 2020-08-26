@@ -99,6 +99,7 @@ namespace rxtd::audio_analyzer {
 		void update(Snapshot& snap);
 
 	private:
+		void wakeThreadUp();
 		void stopThread();
 		void separateThreadFunction();
 

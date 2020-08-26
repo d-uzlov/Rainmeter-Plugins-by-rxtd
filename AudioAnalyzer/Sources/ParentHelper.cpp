@@ -58,6 +58,8 @@ bool ParentHelper::init(
 		needToInitializeThread = true;
 	}
 
+	notificationClient.setCallback([this]() { wakeThreadUp(); });
+
 	return true;
 }
 
@@ -96,6 +98,21 @@ void ParentHelper::update(Snapshot& snap) {
 	}
 }
 
+void ParentHelper::wakeThreadUp() {
+	if (!useThreading) {
+		return;
+	}
+
+	try {
+		auto lock = std::unique_lock<std::mutex>{ fullStateMutex, std::defer_lock };
+		const bool locked = lock.try_lock();
+		if (locked) {
+			sleepVariable.notify_one();
+		}
+	} catch (...) {
+	}
+}
+
 void ParentHelper::stopThread() {
 	if (!useThreading || needToInitializeThread) {
 		return;
@@ -103,14 +120,7 @@ void ParentHelper::stopThread() {
 
 	stopRequest.exchange(true);
 
-	try {
-		auto lock = std::unique_lock<std::mutex> { fullStateMutex, std::defer_lock };
-		const bool locked = lock.try_lock();
-		if (locked) {
-			sleepVariable.notify_one();
-		}
-	} catch (...) {
-	}
+	wakeThreadUp();
 
 	thread.join();
 

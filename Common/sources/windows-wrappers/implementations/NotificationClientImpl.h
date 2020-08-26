@@ -39,9 +39,13 @@ namespace rxtd::utils {
 		std::atomic<DefaultDeviceChange> defaultCaptureChanged{ };
 		std::set<string, std::less<>> devicesWithChangedState;
 
+		std::function<void()> changesCallback;
+
 		std::mutex mut;
 
 	public:
+		// callback should not call any methods of the object
+		// any such call will result in deadlock
 		CMMNotificationClient() {
 			enumerator.getPointer()->RegisterEndpointNotificationCallback(this);
 		}
@@ -50,10 +54,10 @@ namespace rxtd::utils {
 			enumerator.getPointer()->UnregisterEndpointNotificationCallback(this);
 		}
 
-		CMMNotificationClient(const CMMNotificationClient& other) = delete;
-		CMMNotificationClient(CMMNotificationClient&& other) noexcept = delete;
-		CMMNotificationClient& operator=(const CMMNotificationClient& other) = delete;
-		CMMNotificationClient& operator=(CMMNotificationClient&& other) noexcept = delete;
+		void setCallback(std::function<void()> value) {
+			std::lock_guard<std::mutex> lock{ mut };
+			changesCallback = std::move(value);
+		}
 
 		[[nodiscard]]
 		Changes takeChanges() {
@@ -86,6 +90,8 @@ namespace rxtd::utils {
 				return S_OK;
 			}
 
+			std::lock_guard<std::mutex> lock { mut };
+
 			// if (deviceId == nullptr) then no default device is available
 			// this can only happen in #OnDefaultDeviceChanged
 			const auto change = deviceId == nullptr ? DefaultDeviceChange::eNO_DEVICE : DefaultDeviceChange::eCHANGED;
@@ -96,30 +102,54 @@ namespace rxtd::utils {
 				defaultRenderChanged.exchange(change);
 			}
 
+			if (changesCallback != nullptr) {
+				changesCallback();
+			}
+
 			return S_OK;
 		}
 
 		HRESULT STDMETHODCALLTYPE OnDeviceAdded(const wchar_t* deviceId) override {
 			std::lock_guard<std::mutex> lock{ mut };
 			devicesWithChangedState.insert(deviceId);
+
+			if (changesCallback != nullptr) {
+				changesCallback();
+			}
+
 			return S_OK;
 		}
 
 		HRESULT STDMETHODCALLTYPE OnDeviceRemoved(const wchar_t* deviceId) override {
 			std::lock_guard<std::mutex> lock{ mut };
 			devicesWithChangedState.insert(deviceId);
+
+			if (changesCallback != nullptr) {
+				changesCallback();
+			}
+
 			return S_OK;
 		}
 
-		HRESULT STDMETHODCALLTYPE OnDeviceStateChanged(const wchar_t* deviceId, DWORD dwNewState) override {
+		HRESULT STDMETHODCALLTYPE OnDeviceStateChanged(const wchar_t* deviceId, DWORD newState) override {
 			std::lock_guard<std::mutex> lock{ mut };
 			devicesWithChangedState.insert(deviceId);
+
+			if (changesCallback != nullptr) {
+				changesCallback();
+			}
+
 			return S_OK;
 		}
 
 		HRESULT STDMETHODCALLTYPE OnPropertyValueChanged(const wchar_t* deviceId, const PROPERTYKEY key) override {
 			std::lock_guard<std::mutex> lock{ mut };
 			devicesWithChangedState.insert(deviceId);
+
+			if (changesCallback != nullptr) {
+				changesCallback();
+			}
+
 			return S_OK;
 		}
 	};
