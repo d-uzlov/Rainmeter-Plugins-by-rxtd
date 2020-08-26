@@ -11,6 +11,11 @@
 
 using namespace audio_analyzer;
 
+void CaptureManager::setBufferSizeInSec(double value) {
+	value = std::clamp(value, 0.0, 1.0);
+	bufferSize100NsUnits = std::llround(utils::IAudioClientWrapper::get1sec100nsUnits() * value);
+}
+
 void CaptureManager::setSource(DataSource type, const string& id) {
 	snapshot.state = setSourceAndGetState(type, id);
 }
@@ -75,8 +80,7 @@ CaptureManager::State CaptureManager::setSourceAndGetState(DataSource type, cons
 		return State::eDEVICE_CONNECTION_ERROR;
 	}
 
-	// todo add option for buffer size
-	audioClient.initShared(utils::IAudioClientWrapper::get1sec100nsUnits());
+	audioClient.initShared(bufferSize100NsUnits);
 	if (audioClient.getLastResult() == AUDCLNT_E_DEVICE_IN_USE) {
 		// #createExclusiveStreamListener can change state,
 		// so I set state beforehand

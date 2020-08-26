@@ -17,7 +17,7 @@ ParentHelper::~ParentHelper() {
 
 bool ParentHelper::init(
 	utils::Rainmeter::Logger _logger,
-	utils::OptionMap threadingMap,
+	const utils::OptionMap& threadingMap,
 	index _legacyNumber
 ) {
 	logger = std::move(_logger);
@@ -28,9 +28,6 @@ bool ParentHelper::init(
 		logger.error(L"Fatal error: can't create IMMDeviceEnumerator");
 		return false;
 	}
-
-	captureManager.setLogger(logger);
-	captureManager.setLegacyNumber(legacyNumber);
 
 	updateDeviceListStrings();
 
@@ -59,6 +56,11 @@ bool ParentHelper::init(
 	}
 
 	notificationClient.setCallback([this]() { wakeThreadUp(); });
+
+	captureManager.setLogger(logger);
+	captureManager.setLegacyNumber(legacyNumber);
+	const double bufferSize = threadingMap.get(L"bufferSize").asFloat(updateTime * 2.0);
+	captureManager.setBufferSizeInSec(bufferSize);
 
 	return true;
 }

@@ -36,6 +36,11 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 		return;
 	}
 
+	const auto untouchedOptions = threadingParams.getListOfUntouched();
+	if (!untouchedOptions.empty()) {
+		logger.warning(L"Threading: unused options: {}", untouchedOptions);
+	}
+
 	paramParser.setRainmeter(rain);
 }
 

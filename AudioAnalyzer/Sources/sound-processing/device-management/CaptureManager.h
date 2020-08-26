@@ -50,6 +50,7 @@ namespace rxtd::audio_analyzer {
 	private:
 		utils::Rainmeter::Logger logger;
 		index legacyNumber = 0;
+		index bufferSize100NsUnits{ };
 
 		AudioEnumeratorHelper enumerator;
 
@@ -78,6 +79,8 @@ namespace rxtd::audio_analyzer {
 		void setLegacyNumber(index value) {
 			legacyNumber = value;
 		}
+
+		void setBufferSizeInSec(double value);
 
 		void setSource(DataSource type, const string& id);
 

@@ -88,7 +88,7 @@ namespace rxtd::audio_analyzer {
 		// return true on success, false on fatal error
 		bool init(
 			utils::Rainmeter::Logger _logger,
-			utils::OptionMap threadingMap,
+			const utils::OptionMap& threadingMap,
 			index _legacyNumber
 		);
 
