@@ -12,7 +12,7 @@
 using namespace audio_analyzer;
 
 void CaptureManager::setSource(DataSource type, const string& id) {
-	state = setSourceAndGetState(type, id);
+	snapshot.state = setSourceAndGetState(type, id);
 }
 
 CaptureManager::State CaptureManager::setSourceAndGetState(DataSource type, const string& id) {
@@ -37,7 +37,6 @@ CaptureManager::State CaptureManager::setSourceAndGetState(DataSource type, cons
 	audioDeviceHandle = std::move(deviceOpt.value());
 
 	auto deviceInfo = audioDeviceHandle.readDeviceInfo();
-	snapshot.status = true; // todo ?
 	snapshot.id = deviceInfo.id;
 	snapshot.description = deviceInfo.desc;
 	snapshot.name = legacyNumber < 104 ? deviceInfo.fullFriendlyName : deviceInfo.name;
@@ -54,9 +53,9 @@ CaptureManager::State CaptureManager::setSourceAndGetState(DataSource type, cons
 		// #createExclusiveStreamListener can change state,
 		// so I set state beforehand
 		// and return whatever #createExclusiveStreamListener has set the state to
-		state = State::eDEVICE_IS_EXCLUSIVE;
+		snapshot.state = State::eDEVICE_IS_EXCLUSIVE;
 		createExclusiveStreamListener();
-		return state;
+		return snapshot.state;
 	}
 
 	// reset lastExclusiveProcessId to invalid value
@@ -82,9 +81,9 @@ CaptureManager::State CaptureManager::setSourceAndGetState(DataSource type, cons
 		// #createExclusiveStreamListener can change state,
 		// so I set state beforehand
 		// and return whatever #createExclusiveStreamListener has set the state to
-		state = State::eDEVICE_IS_EXCLUSIVE;
+		snapshot.state = State::eDEVICE_IS_EXCLUSIVE;
 		createExclusiveStreamListener();
-		return state;
+		return snapshot.state;
 	}
 
 	if (audioClient.getLastResult() != S_OK) {
@@ -92,16 +91,15 @@ CaptureManager::State CaptureManager::setSourceAndGetState(DataSource type, cons
 		return State::eDEVICE_CONNECTION_ERROR;
 	}
 
-	const auto format = audioClient.getFormat();
-	if (format.format == utils::WaveDataFormat::eINVALID) {
+	if (!audioClient.isFormatValid()) {
 		logger.error(L"Invalid sample format");
 		return State::eDEVICE_CONNECTION_ERROR;
 	}
 
 	sessionEventsWrapper.init(audioClient);
 
+	const auto format = audioClient.getFormat();
 	snapshot.type = audioClient.getType();
-	snapshot.format.format = format.format;
 	snapshot.format.samplesPerSec = format.samplesPerSec;
 	snapshot.format.channelLayout = ChannelLayouts::layoutFromChannelMask(uint32_t(format.channelMask), true);
 	if (snapshot.format.channelLayout.getChannelsOrderView().empty()) {
@@ -162,13 +160,13 @@ bool CaptureManager::capture() {
 		case DR::eNONE:
 			break;
 		case DR::eUNAVAILABLE:
-			state = State::eDEVICE_CONNECTION_ERROR;
+			snapshot.state = State::eDEVICE_CONNECTION_ERROR;
 			break;
 		case DR::eRECONNECT:
-			state = State::eRECONNECT_NEEDED;
+			snapshot.state = State::eRECONNECT_NEEDED;
 			break;
 		case DR::eEXCLUSIVE:
-			state = State::eDEVICE_IS_EXCLUSIVE;
+			snapshot.state = State::eDEVICE_IS_EXCLUSIVE;
 			createExclusiveStreamListener();
 			break;
 		}
@@ -186,16 +184,16 @@ void CaptureManager::tryToRecoverFromExclusive() {
 	case DR::eNONE:
 		break;
 	case DR::eUNAVAILABLE:
-		state = State::eDEVICE_CONNECTION_ERROR;
+		snapshot.state = State::eDEVICE_CONNECTION_ERROR;
 		return;
 	case DR::eRECONNECT:
-		state = State::eRECONNECT_NEEDED;
+		snapshot.state = State::eRECONNECT_NEEDED;
 		logger.debug(L"exclusive format changed");
 		return;
 	case DR::eEXCLUSIVE:
 		// if eEXCLUSIVE happened, then the stream we were listening to was shared,
 		// but now we probably have exclusive stream
-		state = State::eDEVICE_IS_EXCLUSIVE;
+		snapshot.state = State::eDEVICE_IS_EXCLUSIVE;
 		createExclusiveStreamListener();
 		return;
 	}
@@ -205,7 +203,7 @@ void CaptureManager::tryToRecoverFromExclusive() {
 		return;
 	}
 	if (activeSessions.size() > 1) {
-		state = State::eRECONNECT_NEEDED;
+		snapshot.state = State::eRECONNECT_NEEDED;
 		return;
 	}
 
@@ -234,7 +232,7 @@ void CaptureManager::tryToRecoverFromExclusive() {
 	}
 
 	// process id changed, so previous exclusive stream must be closed by now
-	state = State::eRECONNECT_NEEDED;
+	snapshot.state = State::eRECONNECT_NEEDED;
 }
 
 std::optional<utils::MediaDeviceWrapper> CaptureManager::getDevice(DataSource type, const string& id) {
@@ -251,31 +249,15 @@ std::optional<utils::MediaDeviceWrapper> CaptureManager::getDevice(DataSource ty
 }
 
 string CaptureManager::makeFormatString(MyWaveFormat waveFormat) {
-	using Format = utils::WaveDataFormat;
-
-	if (waveFormat.format == Format::eINVALID) {
-		return L"<invalid>";
-	}
-
 	utils::BufferPrinter bp;
-
-	switch (waveFormat.format) {
-	case Format::ePCM_S16:
-		bp.append(L"PCM 16b");
-		break;
-	case Format::ePCM_F32:
-		bp.append(L"PCM 32b");
-		break;
-	case Format::eINVALID: ;
-	}
-
-	bp.append(L", {} Hz, ", waveFormat.samplesPerSec);
 
 	if (waveFormat.channelLayout.getName().empty()) {
 		bp.append(L"unknown layout: {} recognized channels", waveFormat.channelLayout.getChannelsOrderView().size());
 	} else {
 		bp.append(L"{}", waveFormat.channelLayout.getName());
 	}
+
+	bp.append(L", {} Hz", waveFormat.samplesPerSec);
 
 	return string{ bp.getBufferView() };
 }
@@ -295,7 +277,7 @@ void CaptureManager::createExclusiveStreamListener() {
 	if (activeSessions.size() > 1) {
 		// exclusive mode only allows one active session
 		lastExclusiveProcessId = -1;
-		state = State::eRECONNECT_NEEDED;
+		snapshot.state = State::eRECONNECT_NEEDED;
 		return;
 	}
 

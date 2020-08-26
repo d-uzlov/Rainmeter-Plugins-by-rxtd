@@ -20,7 +20,9 @@ namespace rxtd::utils {
 	class IAudioClientWrapper : public GenericComWrapper<IAudioClient> {
 		index lastResult = { };
 		WaveFormat format;
+		IAudioCaptureClientWrapper::Type formatType{ };
 		MediaDeviceType type{ };
+		bool formatIsValid = false;
 
 	public:
 		IAudioClientWrapper() = default;
@@ -31,11 +33,6 @@ namespace rxtd::utils {
 		}
 
 		IAudioCaptureClientWrapper openCapture();
-
-		[[nodiscard]]
-		WaveFormat getFormat() const {
-			return format;
-		}
 
 		// check lastResult after this function
 		// if (lastResult == S_OK) then you can call initShared on another instance of IAudioClientWrapper
@@ -51,6 +48,16 @@ namespace rxtd::utils {
 		[[nodiscard]]
 		index getLastResult() const {
 			return lastResult;
+		}
+
+		[[nodiscard]]
+		bool isFormatValid() const {
+			return formatIsValid;
+		}
+
+		[[nodiscard]]
+		WaveFormat getFormat() const {
+			return format;
 		}
 
 		[[nodiscard]]

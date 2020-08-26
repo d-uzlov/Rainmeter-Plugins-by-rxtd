@@ -36,7 +36,7 @@ void IAudioCaptureClientWrapper::readBuffer() {
 		buffer.fill(0.0);
 	} else {
 		switch (type) {
-		case Type::eInt:
+		case Type::eInt16:
 			for (index i = 0; i < channelsCount; i++) {
 				copyInt(data, buffer[i], i, channelsCount);
 			}

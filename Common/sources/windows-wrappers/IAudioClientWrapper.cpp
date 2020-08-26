@@ -9,6 +9,8 @@
 
 #include "IAudioClientWrapper.h"
 
+#include "BufferPrinter.h"
+
 using namespace utils;
 
 IAudioClientWrapper::IAudioClientWrapper(InitFunction initFunction) :
@@ -23,12 +25,7 @@ IAudioCaptureClientWrapper IAudioClientWrapper::openCapture() {
 		}
 	};
 
-	result.setParams(
-		format.format == WaveDataFormat::ePCM_F32
-			? IAudioCaptureClientWrapper::Type::eFloat
-			: IAudioCaptureClientWrapper::Type::eInt,
-		format.channelsCount
-	);
+	result.setParams(formatType, format.channelsCount);
 
 	return result;
 }
@@ -151,6 +148,8 @@ void IAudioClientWrapper::initShared(index bufferSize100nsUnits) {
 		return;
 	}
 
+	formatIsValid = true;
+
 	format.channelsCount = waveFormat->nChannels;
 	format.samplesPerSec = waveFormat->nSamplesPerSec;
 
@@ -158,21 +157,21 @@ void IAudioClientWrapper::initShared(index bufferSize100nsUnits) {
 		const auto formatExtensible = reinterpret_cast<const WAVEFORMATEXTENSIBLE*>(waveFormat);
 
 		if (formatExtensible->SubFormat == KSDATAFORMAT_SUBTYPE_PCM && waveFormat->wBitsPerSample == 16) {
-			format.format = WaveDataFormat::ePCM_S16;
+			formatType = IAudioCaptureClientWrapper::Type::eInt16;
 		} else if (formatExtensible->SubFormat == KSDATAFORMAT_SUBTYPE_IEEE_FLOAT) {
-			format.format = WaveDataFormat::ePCM_F32;
+			formatType = IAudioCaptureClientWrapper::Type::eFloat;
 		} else {
-			format.format = WaveDataFormat::eINVALID;
+			formatIsValid = false;
 		}
 
 		format.channelMask = formatExtensible->dwChannelMask;
 	} else {
 		if (waveFormat->wFormatTag == WAVE_FORMAT_PCM && waveFormat->wBitsPerSample == 16) {
-			format.format = WaveDataFormat::ePCM_S16;
+			formatType = IAudioCaptureClientWrapper::Type::eInt16;
 		} else if (waveFormat->wFormatTag == WAVE_FORMAT_IEEE_FLOAT) {
-			format.format = WaveDataFormat::ePCM_F32;
+			formatType = IAudioCaptureClientWrapper::Type::eFloat;
 		} else {
-			format.format = WaveDataFormat::eINVALID;
+			formatIsValid = false;
 		}
 
 		if (waveFormat->nChannels == 1) {
@@ -180,7 +179,7 @@ void IAudioClientWrapper::initShared(index bufferSize100nsUnits) {
 		} else if (waveFormat->nChannels == 2) {
 			format.channelMask = KSAUDIO_SPEAKER_STEREO;
 		} else {
-			format.format = WaveDataFormat::eINVALID;
+			formatIsValid = false;
 		}
 	}
 

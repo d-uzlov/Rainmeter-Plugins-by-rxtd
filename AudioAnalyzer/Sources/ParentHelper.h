@@ -56,7 +56,6 @@ namespace rxtd::audio_analyzer {
 		ParamParser::ProcessingsInfoMap patches;
 		RequestedDeviceDescription requestedSource;
 
-		bool deviceIsAvailable = true;
 		Snapshot snapshot;
 		bool snapshotIsUpdated = false;
 

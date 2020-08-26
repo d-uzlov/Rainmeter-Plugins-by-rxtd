@@ -37,7 +37,7 @@ namespace rxtd::audio_analyzer {
 		};
 
 		struct Snapshot {
-			bool status{ };
+			State state = State::eDEVICE_CONNECTION_ERROR;
 			string name;
 			string nameOnly;
 			string description;
@@ -57,8 +57,6 @@ namespace rxtd::audio_analyzer {
 		utils::IAudioCaptureClientWrapper audioCaptureClient;
 		AudioSessionEventsWrapper sessionEventsWrapper;
 		ChannelMixer channelMixer;
-
-		State state = State::eDEVICE_CONNECTION_ERROR;
 
 		Snapshot snapshot;
 
@@ -94,12 +92,13 @@ namespace rxtd::audio_analyzer {
 
 		[[nodiscard]]
 		auto getState() const {
-			return state;
+			return snapshot.state;
 		}
 
 		// returns true if at least one buffer was captured
 		bool capture();
 
+		[[nodiscard]]
 		const auto& getChannelMixer() const {
 			return channelMixer;
 		}

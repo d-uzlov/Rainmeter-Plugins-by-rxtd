@@ -163,7 +163,6 @@ void ParentHelper::pUpdate() {
 			const sview io = requestedSource.sourceType == DS::eDEFAULT_INPUT ? L"input" : L"output";
 			logger.error(L"Requested default {} audio device, but all {} devices has been disconnected", io, io);
 			auto snapshotLock = getSnapshotLock();
-			deviceIsAvailable = false;
 			snapshot.deviceIsAvailable = false;
 			snapshotIsUpdated = false;
 			break;
@@ -216,12 +215,10 @@ void ParentHelper::updateDevice() {
 
 	captureManager.setSource(requestedSource.sourceType, requestedSource.id);
 
-	deviceIsAvailable = captureManager.getState() == CaptureManager::State::eOK;
-	if (!deviceIsAvailable) {
+	snapshot.deviceIsAvailable = captureManager.getState() == CaptureManager::State::eOK;
+	if (!snapshot.deviceIsAvailable) {
 		return;
 	}
-
-	snapshot.deviceIsAvailable = deviceIsAvailable;
 
 	// it's important that if device is not available
 	// then #updateSnapshot is not called

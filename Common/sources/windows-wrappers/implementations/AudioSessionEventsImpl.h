@@ -12,8 +12,6 @@
 #include "../IUnknownImpl.h"
 #include "audiopolicy.h"
 
-#include "RainmeterWrappers.h"
-
 #include <mutex>
 #include <atomic>
 
@@ -29,7 +27,6 @@ namespace rxtd::utils {
 
 		struct Changes {
 			DisconnectionReason disconnectionReason{ };
-			bool stateChanged{ };
 		};
 
 	private:
@@ -45,7 +42,6 @@ namespace rxtd::utils {
 
 		bool preventVolumeChange = false;
 
-		std::atomic<bool> stateChanged{ false };
 		std::atomic<DisconnectionReason> disconnectionReason{ DisconnectionReason::eNONE };
 
 		// I'm not sure, but we are changing the volume when someone else changes volume.
@@ -91,11 +87,6 @@ namespace rxtd::utils {
 			deinit();
 		}
 
-		AudioSessionEventsImpl(const AudioSessionEventsImpl& other) = delete;
-		AudioSessionEventsImpl(AudioSessionEventsImpl&& other) noexcept = delete;
-		AudioSessionEventsImpl& operator=(const AudioSessionEventsImpl& other) = delete;
-		AudioSessionEventsImpl& operator=(AudioSessionEventsImpl&& other) noexcept = delete;
-
 		//	""
 		//	When releasing an IAudioSessionControl interface instance,
 		//	the client must call the interface's Release method
@@ -127,7 +118,6 @@ namespace rxtd::utils {
 		Changes takeChanges() {
 			Changes result{ };
 			result.disconnectionReason = disconnectionReason.load();
-			result.stateChanged = stateChanged.exchange(false);
 			return result;
 		}
 
@@ -234,8 +224,6 @@ namespace rxtd::utils {
 		}
 
 		HRESULT STDMETHODCALLTYPE OnStateChanged(AudioSessionState state) override {
-			stateChanged.exchange(true);
-
 			return S_OK;
 		}
 

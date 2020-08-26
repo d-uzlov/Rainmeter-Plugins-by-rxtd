@@ -19,7 +19,7 @@ namespace rxtd::utils {
 	class IAudioCaptureClientWrapper : public GenericComWrapper<IAudioCaptureClient> {
 	public:
 		enum class Type {
-			eInt,
+			eInt16,
 			eFloat,
 		};
 
