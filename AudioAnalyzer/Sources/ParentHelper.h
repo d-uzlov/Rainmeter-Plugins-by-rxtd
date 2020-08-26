@@ -39,7 +39,6 @@ namespace rxtd::audio_analyzer {
 			string deviceListInput;
 			string deviceListOutput;
 
-			bool fatalError = false;
 			bool deviceIsAvailable = false;
 		};
 

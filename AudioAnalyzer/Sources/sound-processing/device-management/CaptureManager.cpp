@@ -11,21 +11,27 @@
 
 using namespace audio_analyzer;
 
-bool CaptureManager::setSource(DataSource type, const string& id) {
+void CaptureManager::setSource(DataSource type, const string& id) {
+	state = setSourceAndGetState(type, id);
+}
+
+CaptureManager::State CaptureManager::setSourceAndGetState(DataSource type, const string& id) {
 	auto deviceOpt = getDevice(type, id);
 
 	if (!deviceOpt) {
 		switch (type) {
 		case DataSource::eDEFAULT_INPUT:
-			logger.error(L"Can't connect to default input audio device");
+			logger.error(L"Default input audio device is not found");
+			break;
 		case DataSource::eDEFAULT_OUTPUT:
-			logger.error(L"Can't connect to default output audio device");
+			logger.error(L"Default output audio device is not found");
+			break;
 		case DataSource::eID:
-			logger.error(L"Can't connect to audio device with id '{}'", id);
+			logger.error(L"Audio device with id '{}' is not found", id);
+			break;
 		}
 
-		state = State::eDEVICE_CONNECTION_ERROR;
-		return true;
+		return State::eDEVICE_CONNECTION_ERROR;
 	}
 
 	audioDeviceHandle = std::move(deviceOpt.value());
@@ -39,56 +45,57 @@ bool CaptureManager::setSource(DataSource type, const string& id) {
 
 	auto testAudioClient = audioDeviceHandle.openAudioClient();
 	if (audioDeviceHandle.getLastResult() != S_OK) {
-		state = State::eDEVICE_CONNECTION_ERROR;
 		logger.error(L"Can't create AudioClient, error code {}", audioDeviceHandle.getLastResult());
-		return true;
+		return State::eDEVICE_CONNECTION_ERROR;
 	}
 
 	testAudioClient.testExclusive();
 	if (testAudioClient.getLastResult() == AUDCLNT_E_DEVICE_IN_USE) {
+		// #createExclusiveStreamListener can change state,
+		// so I set state beforehand
+		// and return whatever #createExclusiveStreamListener has set the state to
 		state = State::eDEVICE_IS_EXCLUSIVE;
 		createExclusiveStreamListener();
-		return true;
+		return state;
 	}
 
 	// reset lastExclusiveProcessId to invalid value
 	lastExclusiveProcessId = -1;
 
 	if (testAudioClient.getLastResult() != S_OK) {
-		state = State::eDEVICE_CONNECTION_ERROR;
 		logger.error(
 			L"AudioClient3.InitializeSharedAudioStream() fail, error code {}",
 			testAudioClient.getLastResult()
 		);
-		return true;
+		return State::eDEVICE_CONNECTION_ERROR;
 	}
 
 	auto audioClient = audioDeviceHandle.openAudioClient();
 	if (audioDeviceHandle.getLastResult() != S_OK) {
-		state = State::eDEVICE_CONNECTION_ERROR;
 		logger.error(L"Can't create AudioClient, error code {}", audioDeviceHandle.getLastResult());
-		return true;
+		return State::eDEVICE_CONNECTION_ERROR;
 	}
 
 	// todo add option for buffer size
 	audioClient.initShared(utils::IAudioClientWrapper::get1sec100nsUnits());
 	if (audioClient.getLastResult() == AUDCLNT_E_DEVICE_IN_USE) {
+		// #createExclusiveStreamListener can change state,
+		// so I set state beforehand
+		// and return whatever #createExclusiveStreamListener has set the state to
 		state = State::eDEVICE_IS_EXCLUSIVE;
 		createExclusiveStreamListener();
-		return true;
+		return state;
 	}
 
 	if (audioClient.getLastResult() != S_OK) {
-		state = State::eDEVICE_CONNECTION_ERROR;
 		logger.error(L"AudioClient.Initialize() fail, error code {}", audioClient.getLastResult());
-		return true;
+		return State::eDEVICE_CONNECTION_ERROR;
 	}
 
 	const auto format = audioClient.getFormat();
 	if (format.format == utils::WaveDataFormat::eINVALID) {
 		logger.error(L"Invalid sample format");
-		state = State::eDEVICE_CONNECTION_ERROR;
-		return true;
+		return State::eDEVICE_CONNECTION_ERROR;
 	}
 
 	sessionEventsWrapper.init(audioClient);
@@ -99,8 +106,7 @@ bool CaptureManager::setSource(DataSource type, const string& id) {
 	snapshot.format.channelLayout = ChannelLayouts::layoutFromChannelMask(uint32_t(format.channelMask), true);
 	if (snapshot.format.channelLayout.getChannelsOrderView().empty()) {
 		logger.error(L"zero known channels found in current channel layout");
-		state = State::eDEVICE_CONNECTION_ERROR;
-		return true;
+		return State::eDEVICE_CONNECTION_ERROR;
 	}
 
 	snapshot.formatString = makeFormatString(snapshot.format);
@@ -110,20 +116,17 @@ bool CaptureManager::setSource(DataSource type, const string& id) {
 
 	audioCaptureClient = audioClient.openCapture();
 	if (audioClient.getLastResult() != S_OK) {
-		state = State::eDEVICE_CONNECTION_ERROR;
 		logger.error(L"Can't create AudioCaptureClient, error code {}", audioClient.getLastResult());
-		return true;
+		return State::eDEVICE_CONNECTION_ERROR;
 	}
 
 	HRESULT hr = audioClient.getPointer()->Start();
 	if (hr != S_OK) {
-		state = State::eDEVICE_CONNECTION_ERROR;
 		logger.error(L"Can't start stream, error code {}", hr);
-		return true;
+		return State::eDEVICE_CONNECTION_ERROR;
 	}
 
-	state = State::eOK;
-	return true;
+	return State::eOK;
 }
 
 bool CaptureManager::capture() {

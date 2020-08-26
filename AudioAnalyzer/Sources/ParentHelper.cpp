@@ -109,8 +109,6 @@ void ParentHelper::update(Snapshot& snap) {
 		snap = snapshot;
 		snapshotIsUpdated = true;
 	}
-
-	snap.fatalError = snapshot.fatalError;
 }
 
 void ParentHelper::separateThreadFunction() {
@@ -139,9 +137,10 @@ void ParentHelper::pUpdate() {
 
 	using DS = CaptureManager::DataSource;
 	if (requestedSource.sourceType == DS::eDEFAULT_INPUT || requestedSource.sourceType == DS::eDEFAULT_OUTPUT) {
-		const auto change = requestedSource.sourceType == DS::eDEFAULT_INPUT
-			                    ? changes.defaultCapture
-			                    : changes.defaultRender;
+		const auto change =
+			requestedSource.sourceType == DS::eDEFAULT_INPUT
+				? changes.defaultCapture
+				: changes.defaultRender;
 		switch (change) {
 			using DDC = utils::CMMNotificationClient::DefaultDeviceChange;
 		case DDC::eNONE: break;
@@ -152,6 +151,8 @@ void ParentHelper::pUpdate() {
 			break;
 		}
 		case DDC::eNO_DEVICE: {
+			const sview io = requestedSource.sourceType == DS::eDEFAULT_INPUT ? L"input" : L"output";
+			logger.error(L"Requested default {} audio device, but all {} devices has been disconnected", io, io);
 			auto snapshotLock = getSnapshotLock();
 			deviceIsAvailable = false;
 			snapshot.deviceIsAvailable = false;
@@ -172,7 +173,7 @@ void ParentHelper::pUpdate() {
 		updateDeviceListStrings();
 	}
 
-	if (captureManager.isExclusive()) {
+	if (captureManager.getState() == CaptureManager::State::eDEVICE_IS_EXCLUSIVE) {
 		captureManager.tryToRecoverFromExclusive();
 	}
 
@@ -204,12 +205,7 @@ void ParentHelper::pUpdate() {
 void ParentHelper::updateDevice() {
 	snapshotIsUpdated = false;
 
-	const bool ok = captureManager.setSource(requestedSource.sourceType, requestedSource.id);
-	if (!ok) {
-		snapshot.fatalError = true;
-		deviceIsAvailable = false;
-		return;
-	}
+	captureManager.setSource(requestedSource.sourceType, requestedSource.id);
 
 	deviceIsAvailable = captureManager.getState() == CaptureManager::State::eOK;
 	if (!deviceIsAvailable) {

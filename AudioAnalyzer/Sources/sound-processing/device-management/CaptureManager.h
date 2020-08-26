@@ -81,10 +81,13 @@ namespace rxtd::audio_analyzer {
 			legacyNumber = value;
 		}
 
-		// returns false on fatal error, true otherwise
-		[[nodiscard]]
-		bool setSource(DataSource type, const string& id);
+		void setSource(DataSource type, const string& id);
 
+	private:
+		[[nodiscard]]
+		State setSourceAndGetState(DataSource type, const string& id);
+
+	public:
 		void updateSnapshot(Snapshot& snap) const {
 			snap = snapshot;
 		}
@@ -94,12 +97,7 @@ namespace rxtd::audio_analyzer {
 			return state;
 		}
 
-		[[nodiscard]]
-		bool isExclusive() const {
-			return state == State::eDEVICE_IS_EXCLUSIVE;
-		}
-
-		// returns true is at least one buffer was captured
+		// returns true if at least one buffer was captured
 		bool capture();
 
 		const auto& getChannelMixer() const {

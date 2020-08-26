@@ -49,55 +49,14 @@ void AudioParent::vReload() {
 		helper.setParams(requestedSource, paramParser.getParseResult(), snapshot);
 
 		if (!snapshot.deviceIsAvailable) {
-			switch (requestedSource.sourceType) {
-				using DS = CaptureManager::DataSource;
-			case DS::eDEFAULT_INPUT:
-				logger.error(L"No input device found");
-				break;
-			case DS::eDEFAULT_OUTPUT:
-				logger.error(L"No output device found");
-				break;
-			case DS::eID:
-				logger.error(
-					L"Device '{} ({})' is not found",
-					snapshot.diSnapshot.name,
-					snapshot.diSnapshot.description
-				);
-				break;
-			}
 		}
 	}
 }
 
 double AudioParent::vUpdate() {
-	const bool deviceWasAvailable = snapshot.deviceIsAvailable;
 	helper.update(snapshot);
 
-	if (snapshot.fatalError) {
-		setMeasureState(utils::MeasureState::eBROKEN);
-		return { };
-	}
-
 	if (!snapshot.deviceIsAvailable) {
-		if (deviceWasAvailable) {
-			switch (requestedSource.sourceType) {
-				using DS = CaptureManager::DataSource;
-			case DS::eDEFAULT_INPUT:
-				logger.error(L"All input devices were disconnected or disabled");
-				break;
-			case DS::eDEFAULT_OUTPUT:
-				logger.error(L"All output devices were disconnected or disabled");
-				break;
-			case DS::eID:
-				logger.error(
-					L"Device '{} ({})' was disconnected or disabled",
-					snapshot.diSnapshot.name,
-					snapshot.diSnapshot.description
-				);
-				break;
-			}
-		}
-
 		// todo reset pictures
 		return { };
 	}
