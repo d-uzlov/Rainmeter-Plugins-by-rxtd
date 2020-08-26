@@ -35,7 +35,9 @@ SoundHandler::ParseResult UniformBlur::parseParams(
 	return result;
 }
 
-SoundHandler::ConfigurationResult UniformBlur::vConfigure(Logger& cl) {
+SoundHandler::ConfigurationResult UniformBlur::vConfigure(const std::any& _params, Logger& cl) {
+	params = std::any_cast<Params>(_params);
+
 	auto& config = getConfiguration();
 
 	index startingLayer = 0;

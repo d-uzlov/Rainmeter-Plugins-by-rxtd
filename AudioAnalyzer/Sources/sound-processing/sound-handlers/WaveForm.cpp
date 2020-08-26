@@ -92,7 +92,9 @@ SoundHandler::ParseResult WaveForm::parseParams(
 	return result;
 }
 
-SoundHandler::ConfigurationResult WaveForm::vConfigure(Logger& cl) {
+SoundHandler::ConfigurationResult WaveForm::vConfigure(const std::any& _params, Logger& cl) {
+	params = std::any_cast<Params>(_params);
+
 	auto& config = getConfiguration();
 	const index sampleRate = config.sampleRate;
 	blockSize = index(sampleRate * params.resolution);

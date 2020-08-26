@@ -50,7 +50,9 @@ SoundHandler::ParseResult legacy_FiniteTimeFilter::parseParams(
 	return result;
 }
 
-SoundHandler::ConfigurationResult legacy_FiniteTimeFilter::vConfigure(Logger& cl) {
+SoundHandler::ConfigurationResult legacy_FiniteTimeFilter::vConfigure(const std::any& _params, Logger& cl) {
+	params = std::any_cast<Params>(_params);
+
 	if (params.smoothingFactor <= 1) {
 		smoothingNormConstant = 1.0;
 	} else {

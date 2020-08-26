@@ -43,7 +43,9 @@ SoundHandler::ParseResult legacy_WeightedBlur::parseParams(
 	return result;
 }
 
-SoundHandler::ConfigurationResult legacy_WeightedBlur::vConfigure(Logger& cl) {
+SoundHandler::ConfigurationResult legacy_WeightedBlur::vConfigure(const std::any& _params, Logger& cl) {
+	params = std::any_cast<Params>(_params);
+
 	resamplerPtr = getResampler();
 	if (resamplerPtr == nullptr) {
 		cl.error(L"invalid source: BandResampler is not found in the handler chain");

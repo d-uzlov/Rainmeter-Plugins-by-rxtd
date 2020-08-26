@@ -64,10 +64,6 @@ namespace rxtd::audio_analyzer {
 			return compareParamsEquals(params, p);
 		}
 
-		void setParams(const std::any& p) override {
-			params = std::any_cast<Params>(p);
-		}
-
 		[[nodiscard]]
 		ParseResult parseParams(
 			const OptionMap& om, Logger& cl, const Rainmeter& rain,
@@ -79,7 +75,7 @@ namespace rxtd::audio_analyzer {
 
 	protected:
 		[[nodiscard]]
-		ConfigurationResult vConfigure(Logger& cl) override;
+		ConfigurationResult vConfigure(const std::any& _params, Logger& cl) override;
 
 	public:
 		void vProcess(array_view<float> wave, clock::time_point killTime) override;

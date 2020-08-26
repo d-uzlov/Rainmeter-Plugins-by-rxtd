@@ -108,7 +108,9 @@ SoundHandler::ParseResult FftAnalyzer::parseParams(
 	return result;
 }
 
-SoundHandler::ConfigurationResult FftAnalyzer::vConfigure(Logger& cl) {
+SoundHandler::ConfigurationResult FftAnalyzer::vConfigure(const std::any& _params, Logger& cl) {
+	params = std::any_cast<Params>(_params);
+
 	auto& config = getConfiguration();
 
 	switch (params.legacy_sizeBy) {

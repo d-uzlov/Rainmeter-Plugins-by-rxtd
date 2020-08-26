@@ -172,7 +172,9 @@ std::vector<float> BandResampler::parseFreqList(sview listId, const Rainmeter& r
 	return result;
 }
 
-SoundHandler::ConfigurationResult BandResampler::vConfigure(Logger& cl) {
+SoundHandler::ConfigurationResult BandResampler::vConfigure(const std::any& _params, Logger& cl) {
+	params = std::any_cast<Params>(_params);
+
 	auto& config = getConfiguration();
 	fftSource = dynamic_cast<FftAnalyzer*>(config.sourcePtr);
 	if (fftSource == nullptr) {

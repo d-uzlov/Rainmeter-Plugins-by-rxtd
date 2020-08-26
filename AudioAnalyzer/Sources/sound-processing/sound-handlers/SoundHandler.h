@@ -154,6 +154,8 @@ namespace rxtd::audio_analyzer {
 			bool success = false;
 			DataSize dataSize{ };
 
+			static ConfigurationResult noChanges;
+
 			ConfigurationResult() = default;
 
 			ConfigurationResult(DataSize dataSize): success(true), dataSize(dataSize) {
@@ -175,6 +177,7 @@ namespace rxtd::audio_analyzer {
 			std::vector<ChunkInfo> meta;
 		};
 
+		bool _anyChanges = false;
 		DataSize _dataSize{ };
 		mutable bool _layersAreValid = false;
 		std::vector<float> _buffer;
@@ -217,6 +220,10 @@ namespace rxtd::audio_analyzer {
 			sview channelName, index sampleRate,
 			HandlerFinder& hf, Logger& cl
 		);
+
+		void finishConfiguration() {
+			_anyChanges = false;
+		}
 
 		void configureSnapshot(Snapshot& snapshot) const {
 			snapshot.values.setBuffersCount(_dataSize.layersCount);
@@ -269,10 +276,9 @@ namespace rxtd::audio_analyzer {
 		// should return true when params are the same
 		[[nodiscard]]
 		virtual bool checkSameParams(const std::any& p) const = 0;
-		virtual void setParams(const std::any& p) = 0;
 
 		[[nodiscard]]
-		virtual ConfigurationResult vConfigure(Logger& cl) = 0;
+		virtual ConfigurationResult vConfigure(const std::any& _params, Logger& cl) = 0;
 
 		virtual void vConfigureSnapshot(std::any& handlerSpecificData) const {
 		}

@@ -79,6 +79,12 @@ void ProcessingManager::setParams(
 			break;
 		}
 	}
+
+	for (auto& [channel, channelHandlers] : channelMap) {
+		for (auto& handlerName : order) {
+			channelHandlers.handlerMap[handlerName]->finishConfiguration();
+		}
+	}
 }
 
 bool ProcessingManager::process(const ChannelMixer& mixer, clock::time_point killTime) {

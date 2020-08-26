@@ -21,11 +21,6 @@ bool SoundHandler::patch(
 		throw std::exception{ "no support for multiple sources yet" }; // todo
 	}
 
-	if (!checkSameParams(params)) {
-		// todo add check that source changed and it matters
-		setParams(params);
-	}
-
 	_configuration.sourcePtr = nullptr;
 	if (!sources.empty()) {
 		const auto& sourceName = sources[0];
@@ -42,20 +37,27 @@ bool SoundHandler::patch(
 		}
 	}
 
-	_configuration.sampleRate = sampleRate;
-	_configuration.channelName = channelName;
+	if (_configuration.sourcePtr != nullptr && _configuration.sourcePtr->_anyChanges
+		|| _configuration.sampleRate != sampleRate
+		|| _configuration.channelName != channelName
+		|| !checkSameParams(params)) {
+		_anyChanges = true;
 
-	const auto linkingResult = vConfigure(cl);
-	if (!linkingResult.success) {
-		return { };
+		_configuration.sampleRate = sampleRate;
+		_configuration.channelName = channelName;
+
+		const auto linkingResult = vConfigure(params, cl);
+		if (!linkingResult.success) {
+			return { };
+		}
+
+		_dataSize = linkingResult.dataSize;
+		_layers.clear();
+		_layers.resize(linkingResult.dataSize.layersCount);
+		_lastResults.setBuffersCount(linkingResult.dataSize.layersCount);
+		_lastResults.setBufferSize(linkingResult.dataSize.valuesCount);
+		_lastResults.fill(0.0f);
 	}
-
-	_dataSize = linkingResult.dataSize;
-	_layers.clear();
-	_layers.resize(linkingResult.dataSize.layersCount);
-	_lastResults.setBuffersCount(linkingResult.dataSize.layersCount);
-	_lastResults.setBufferSize(linkingResult.dataSize.valuesCount);
-	_lastResults.fill(0.0f);
 
 	return true;
 }

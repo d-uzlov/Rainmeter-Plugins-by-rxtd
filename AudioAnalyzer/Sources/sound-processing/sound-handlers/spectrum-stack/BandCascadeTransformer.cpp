@@ -63,7 +63,9 @@ SoundHandler::ParseResult BandCascadeTransformer::parseParams(
 	return result;
 }
 
-SoundHandler::ConfigurationResult BandCascadeTransformer::vConfigure(Logger& cl) {
+SoundHandler::ConfigurationResult BandCascadeTransformer::vConfigure(const std::any& _params, Logger& cl) {
+	params = std::any_cast<Params>(_params);
+
 	auto& config = getConfiguration();
 	const auto provider = dynamic_cast<ResamplerProvider*>(config.sourcePtr);
 	if (provider == nullptr) {

@@ -140,7 +140,9 @@ SoundHandler::ParseResult Spectrogram::parseParams(
 	return result;
 }
 
-SoundHandler::ConfigurationResult Spectrogram::vConfigure(Logger& cl) {
+SoundHandler::ConfigurationResult Spectrogram::vConfigure(const std::any& _params, Logger& cl) {
+	params = std::any_cast<Params>(_params);
+
 	auto& config = getConfiguration();
 	const index sampleRate = config.sampleRate;
 	blockSize = index(sampleRate * params.resolution);

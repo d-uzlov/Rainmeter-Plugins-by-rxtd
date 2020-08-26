@@ -47,7 +47,9 @@ SoundHandler::ParseResult BlockHandler::parseParams(
 	return result;
 }
 
-SoundHandler::ConfigurationResult BlockHandler::vConfigure(Logger& cl) {
+SoundHandler::ConfigurationResult BlockHandler::vConfigure(const std::any& _params, Logger& cl) {
+	params = std::any_cast<Params>(_params);
+
 	auto& config = getConfiguration();
 	blockSize = static_cast<decltype(blockSize)>(config.sampleRate * params.updateIntervalMs);
 	blockSize = std::max<index>(blockSize, 1);
