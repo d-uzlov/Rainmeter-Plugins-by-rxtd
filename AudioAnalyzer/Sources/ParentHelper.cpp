@@ -14,16 +14,17 @@ using namespace audio_analyzer;
 ParentHelper::~ParentHelper() {
 	if (useThreading && !needToInitializeThread) {
 		stopRequest.exchange(true);
+
 		try {
-			{
-				// todo tryLock
-				auto fullStateLock = getFullStateLock();
+			auto lock = std::unique_lock<std::mutex>{ fullStateMutex, std::defer_lock };
+			const bool locked = lock.try_lock();
+			if (locked) {
 				sleepVariable.notify_one();
 			}
-			thread.join();
 		} catch (...) {
-			thread.detach();
 		}
+
+		thread.join();
 	}
 }
 
