@@ -172,7 +172,11 @@ SoundHandler::ConfigurationResult Spectrogram::vConfigure(Logger& cl) {
 }
 
 void Spectrogram::vProcess(array_view<float> wave, clock::time_point killTime) {
-	image.removeLast(overpushCount);
+	if (image.isForced()) {
+		image.removeLast(overpushCount);
+	} else {
+		dataShortageEqSize -= blockSize * overpushCount;
+	}
 	overpushCount = 0;
 	dataShortageEqSize += wave.size();
 
