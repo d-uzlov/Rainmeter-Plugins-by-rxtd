@@ -40,17 +40,26 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 }
 
 void AudioParent::vReload() {
-	auto request = readRequest();
+	auto requestOpt = readRequest();
+
 	const bool anythingChanged = paramParser.parse(legacyNumber);
 
-	if (request != requestedSource || anythingChanged) {
-		requestedSource = std::move(request);
+	if (requestOpt != requestedSource || anythingChanged) {
+		requestedSource = std::move(requestOpt);
 
-		helper.setParams(requestedSource, paramParser.getParseResult());
+		if (requestedSource.has_value()) {
+			helper.setParams(requestedSource.value(), paramParser.getParseResult());
+		} else {
+			helper.setInvalid();
+		}
 	}
 }
 
 double AudioParent::vUpdate() {
+	if (!requestedSource.has_value()) {
+		return 0.0;
+	}
+
 	helper.update(snapshot);
 
 	if (!snapshot.deviceIsAvailable) {
@@ -91,6 +100,10 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 	auto cl = logger.context(L"Invalid section variable '{}': ", optionName);
 
 	if (optionName == L"current device") {
+		if (!requestedSource.has_value()) {
+			return;
+		}
+
 		if (args.size() < 2) {
 			cl.error(L"need >= 2 argc, but only {} found", args.size());
 			return;
@@ -137,6 +150,10 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 	}
 
 	if (optionName == L"value") {
+		if (!requestedSource.has_value()) {
+			return;
+		}
+
 		if (args.size() < 5) {
 			cl.error(L"need >= 5 argc, but only {} found", args.size());
 			return;
@@ -169,6 +186,10 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 	}
 
 	if (optionName == L"handler info" || optionName == L"prop") {
+		if (!requestedSource.has_value()) {
+			return;
+		}
+
 		resolveProp(args, resolveBufferString);
 		return;
 	}
@@ -248,29 +269,17 @@ isview AudioParent::legacy_findProcessingFor(isview handlerName) const {
 	return { };
 }
 
-ParentHelper::RequestedDeviceDescription AudioParent::readRequest() const {
+AudioParent::DeviceRequest AudioParent::readRequest() const {
 	ParentHelper::RequestedDeviceDescription result;
 
 	using DataSource = CaptureManager::DataSource;
-	if (const auto source = rain.read(L"Source").asIString();
-		!source.empty()) {
-		if (source == L"Output") {
-			result.sourceType = DataSource::eDEFAULT_OUTPUT;
-		} else if (source == L"Input") {
-			result.sourceType = DataSource::eDEFAULT_INPUT;
-		} else {
-			logger.debug(L"Using '{}' as source audio device ID.", source);
-			result.sourceType = DataSource::eID;
-			result.id = source % csView();
-		}
-	} else {
-		// legacy
-		if (auto legacyID = this->rain.read(L"DeviceID").asString();
+	if (legacyNumber < 104) {
+		if (auto legacyID = rain.read(L"DeviceID").asString();
 			!legacyID.empty()) {
 			result.sourceType = DataSource::eID;
-			result.id = legacyID;
+			result.id = std::move(legacyID);
 		} else {
-			const auto port = this->rain.read(L"Port").asIString(L"Output");
+			const auto port = rain.read(L"Port").asIString(L"Output");
 			if (port == L"Output") {
 				result.sourceType = DataSource::eDEFAULT_OUTPUT;
 			} else if (port == L"Input") {
@@ -279,6 +288,21 @@ ParentHelper::RequestedDeviceDescription AudioParent::readRequest() const {
 				logger.error(L"Invalid Port '{}', must be one of: Output, Input. Set to Output.", port);
 				result.sourceType = DataSource::eDEFAULT_OUTPUT;
 			}
+		}
+	} else {
+		auto sourceOpt = rain.read(L"Source");
+		const auto source = sourceOpt.asIString(L"DefaultOutput");
+		if (source == L"DefaultOutput") {
+			result.sourceType = DataSource::eDEFAULT_OUTPUT;
+		} else if (source == L"DefaultInput") {
+			result.sourceType = DataSource::eDEFAULT_INPUT;
+		} else if (auto [type, value] = sourceOpt.breakFirst(L':');
+			type.asIString() == L"id") {
+			result.sourceType = DataSource::eID;
+			result.id = source % csView();
+		} else {
+			logger.error(L"Source type '{}' is not recognized", type.asString());
+			return { };
 		}
 	}
 

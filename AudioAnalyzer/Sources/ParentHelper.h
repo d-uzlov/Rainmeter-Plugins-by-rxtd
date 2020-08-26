@@ -94,9 +94,12 @@ namespace rxtd::audio_analyzer {
 
 		void setParams(RequestedDeviceDescription request, ParamParser::ProcessingsInfoMap _patches);
 
+		void setInvalid();
+
 		void update(Snapshot& snap);
 
 	private:
+		void stopThread();
 		void separateThreadFunction();
 
 		void pUpdate();

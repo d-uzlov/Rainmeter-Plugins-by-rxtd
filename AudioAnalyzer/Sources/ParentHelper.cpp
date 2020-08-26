@@ -12,20 +12,7 @@
 using namespace audio_analyzer;
 
 ParentHelper::~ParentHelper() {
-	if (useThreading && !needToInitializeThread) {
-		stopRequest.exchange(true);
-
-		try {
-			auto lock = std::unique_lock<std::mutex>{ fullStateMutex, std::defer_lock };
-			const bool locked = lock.try_lock();
-			if (locked) {
-				sleepVariable.notify_one();
-			}
-		} catch (...) {
-		}
-
-		thread.join();
-	}
+	stopThread();
 }
 
 bool ParentHelper::init(
@@ -90,6 +77,10 @@ void ParentHelper::setParams(
 	}
 }
 
+void ParentHelper::setInvalid() {
+	stopThread();
+}
+
 void ParentHelper::update(Snapshot& snap) {
 	if (!useThreading) {
 		pUpdate();
@@ -103,6 +94,27 @@ void ParentHelper::update(Snapshot& snap) {
 		snap = snapshot;
 		snapshotIsUpdated = true;
 	}
+}
+
+void ParentHelper::stopThread() {
+	if (!useThreading || needToInitializeThread) {
+		return;
+	}
+
+	stopRequest.exchange(true);
+
+	try {
+		auto lock = std::unique_lock<std::mutex> { fullStateMutex, std::defer_lock };
+		const bool locked = lock.try_lock();
+		if (locked) {
+			sleepVariable.notify_one();
+		}
+	} catch (...) {
+	}
+
+	thread.join();
+
+	needToInitializeThread = true;
 }
 
 void ParentHelper::separateThreadFunction() {
