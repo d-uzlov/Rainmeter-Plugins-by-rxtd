@@ -33,12 +33,13 @@ namespace rxtd::audio_analyzer {
 			eOK,
 			eDEVICE_CONNECTION_ERROR,
 			eRECONNECT_NEEDED,
-			eDEVICE_IS_EXCLUSIVE,
+			eDEVICE_IS_EXCLUSIVE
 		};
 
 		struct Snapshot {
 			bool status{ };
 			string name;
+			string nameOnly;
 			string description;
 			string id;
 			string formatString;
@@ -52,6 +53,7 @@ namespace rxtd::audio_analyzer {
 
 		AudioEnumeratorHelper enumerator;
 
+		utils::MediaDeviceWrapper audioDeviceHandle;
 		utils::IAudioCaptureClientWrapper audioCaptureClient;
 		AudioSessionEventsWrapper sessionEventsWrapper;
 		ChannelMixer channelMixer;
@@ -59,6 +61,8 @@ namespace rxtd::audio_analyzer {
 		State state = State::eDEVICE_CONNECTION_ERROR;
 
 		Snapshot snapshot;
+
+		string currentExclusiveStreamId;
 
 	public:
 		CaptureManager() = default;
@@ -90,6 +94,11 @@ namespace rxtd::audio_analyzer {
 			return state;
 		}
 
+		[[nodiscard]]
+		bool isExclusive() const {
+			return state == State::eDEVICE_IS_EXCLUSIVE;
+		}
+
 		// returns true is at least one buffer was captured
 		bool capture();
 
@@ -97,11 +106,16 @@ namespace rxtd::audio_analyzer {
 			return channelMixer;
 		}
 
+		void tryToRecoverFromExclusive();
+
 	private:
 		[[nodiscard]]
 		std::optional<utils::MediaDeviceWrapper> getDevice(DataSource type, const string& id);
 
 		[[nodiscard]]
 		static string makeFormatString(MyWaveFormat waveFormat);
+
+		// when called in sequence, returns true if active stream changed, false otherwise
+		void createExclusiveStreamListener(bool makeLogMessage);
 	};
 }

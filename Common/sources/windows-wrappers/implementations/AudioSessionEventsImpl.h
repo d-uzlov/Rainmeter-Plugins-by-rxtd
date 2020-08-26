@@ -29,6 +29,7 @@ namespace rxtd::utils {
 
 		struct Changes {
 			DisconnectionReason disconnectionReason{ };
+			bool stateChanged{ };
 		};
 
 	private:
@@ -38,7 +39,8 @@ namespace rxtd::utils {
 
 		bool preventVolumeChange = false;
 
-		std::atomic<DisconnectionReason> disconnectionReason{ };
+		std::atomic<bool> stateChanged{ false };
+		std::atomic<DisconnectionReason> disconnectionReason{ DisconnectionReason::eNONE };
 
 		// I'm not sure, but we are changing the volume when someone else changes volume.
 		// We can potentially receive event of our own actions.
@@ -61,6 +63,12 @@ namespace rxtd::utils {
 			sessionController = audioClient.getInterface<IAudioSessionControl>();
 			mainVolumeController = audioClient.getInterface<ISimpleAudioVolume>();
 			channelVolumeController = audioClient.getInterface<IChannelAudioVolume>();
+			sessionController.getPointer()->RegisterAudioSessionNotification(this);
+		}
+
+		AudioSessionEventsImpl(GenericComWrapper<IAudioSessionControl>&& _sessionController) {
+			preventVolumeChange = false;
+			sessionController = std::move(_sessionController);
 			sessionController.getPointer()->RegisterAudioSessionNotification(this);
 		}
 
@@ -100,6 +108,7 @@ namespace rxtd::utils {
 		Changes takeChanges() {
 			Changes result{ };
 			result.disconnectionReason = disconnectionReason.load();
+			result.stateChanged = stateChanged.exchange(false);
 			return result;
 		}
 
@@ -213,6 +222,23 @@ namespace rxtd::utils {
 		}
 
 		HRESULT STDMETHODCALLTYPE OnStateChanged(AudioSessionState state) override {
+			stateChanged.exchange(true);
+
+			if (!preventVolumeChange) {
+				switch (state) {
+				case AudioSessionStateInactive:
+					Rainmeter::sourcelessLog(L"OnStateChanged inactive");
+					break;
+				case AudioSessionStateActive:
+					Rainmeter::sourcelessLog(L"OnStateChanged active");
+					break;
+				case AudioSessionStateExpired:
+					Rainmeter::sourcelessLog(L"OnStateChanged expired");
+					break;
+				default: ;
+				}
+			}
+
 			return S_OK;
 		}
 
@@ -228,15 +254,12 @@ namespace rxtd::utils {
 			case DisconnectReasonSessionLogoff:
 			case DisconnectReasonSessionDisconnected:
 				disconnectionReason.exchange(DisconnectionReason::eUNAVAILABLE);
-				Rainmeter::sourcelessLog(L"OnSessionDisconnected eUNAVAILABLE");
 				break;
 			case DisconnectReasonFormatChanged:
 				disconnectionReason.exchange(DisconnectionReason::eRECONNECT);
-				Rainmeter::sourcelessLog(L"OnSessionDisconnected eRECONNECT");
 				break;
 			case DisconnectReasonExclusiveModeOverride:
 				disconnectionReason.exchange(DisconnectionReason::eEXCLUSIVE);
-				Rainmeter::sourcelessLog(L"OnSessionDisconnected eEXCLUSIVE");
 				break;
 			}
 

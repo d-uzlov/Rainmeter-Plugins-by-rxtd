@@ -28,13 +28,14 @@ bool CaptureManager::setSource(DataSource type, const string& id) {
 		return true;
 	}
 
-	auto audioDeviceHandle = std::move(deviceOpt.value());
+	audioDeviceHandle = std::move(deviceOpt.value());
 
 	auto deviceInfo = audioDeviceHandle.readDeviceInfo();
 	snapshot.status = true; // todo ?
 	snapshot.id = deviceInfo.id;
 	snapshot.description = deviceInfo.desc;
 	snapshot.name = legacyNumber < 104 ? deviceInfo.fullFriendlyName : deviceInfo.name;
+	snapshot.nameOnly = deviceInfo.name;
 
 	auto audioClient = audioDeviceHandle.openAudioClient();
 	if (audioDeviceHandle.getLastResult() != S_OK) {
@@ -45,14 +46,12 @@ bool CaptureManager::setSource(DataSource type, const string& id) {
 
 	audioClient.initShared();
 	if (audioClient.getLastResult() == AUDCLNT_E_DEVICE_IN_USE) {
-		// If device is in exclusive mode, then call to Initialize() above leads to leak in Commit memory area
-		// Tested on LTSB 1607, last updates as of 2019-01-10
-		// Google "WASAPI exclusive memory leak"
-		// I consider this error unrecoverable to prevent further leaks
 		state = State::eDEVICE_IS_EXCLUSIVE;
-		logger.error(L"Device operates in exclusive mode, won't recover");
-		return false;
+		createExclusiveStreamListener(true);
+		return true;
 	}
+
+	currentExclusiveStreamId = { };
 
 	if (audioClient.getLastResult() != S_OK) {
 		state = State::eDEVICE_CONNECTION_ERROR;
@@ -129,7 +128,7 @@ bool CaptureManager::capture() {
 			logger.warning(L"Unexpected buffer query error code {error}", queryResult);
 		}
 
-		const auto changes = sessionEventsWrapper.getImpl().takeChanges();
+		const auto changes = sessionEventsWrapper.grabChanges();
 		switch (changes.disconnectionReason) {
 			using DR = utils::AudioSessionEventsImpl::DisconnectionReason;
 		case DR::eNONE:
@@ -142,7 +141,7 @@ bool CaptureManager::capture() {
 			break;
 		case DR::eEXCLUSIVE:
 			state = State::eDEVICE_IS_EXCLUSIVE;
-			// todo listen to exclusive stream
+			createExclusiveStreamListener(true);
 			break;
 		}
 
@@ -150,6 +149,85 @@ bool CaptureManager::capture() {
 	}
 
 	return anyCaptured;
+}
+
+void CaptureManager::tryToRecoverFromExclusive() {
+	auto audioClient = audioDeviceHandle.openAudioClient();
+
+	auto client3 = utils::GenericComWrapper<IAudioClient3>{
+		[&](auto ptr) {
+			return S_OK == audioClient.getPointer()->QueryInterface<IAudioClient3>(ptr);
+		}
+	};
+
+	if (!client3.isValid()) {
+		return;
+	}
+
+	WAVEFORMATEX* waveFormat;
+	auto res = client3.getPointer()->GetMixFormat(&waveFormat);
+	if (res != S_OK) {
+		return;
+	}
+
+	UINT32 pDefaultPeriodInFrames;
+	UINT32 pFundamentalPeriodInFrames;
+	UINT32 pMinPeriodInFrames;
+	UINT32 pMaxPeriodInFrames;
+	res = client3.getPointer()->GetSharedModeEnginePeriod(
+		waveFormat,
+		&pDefaultPeriodInFrames,
+		&pFundamentalPeriodInFrames,
+		&pMinPeriodInFrames,
+		&pMaxPeriodInFrames
+	);
+	if (res != S_OK) {
+		return;
+	}
+
+	res = client3.getPointer()->InitializeSharedAudioStream(
+		0,
+		pDefaultPeriodInFrames,
+		waveFormat,
+		nullptr
+	);
+	CoTaskMemFree(waveFormat);
+	if (res == AUDCLNT_E_DEVICE_IN_USE) {
+		// device is still in exclusive mode
+		return;
+	}
+
+	if (res != S_OK) {
+		return;
+	}
+
+	const string prevStreamId = currentExclusiveStreamId;
+	createExclusiveStreamListener(false);
+	if (!currentExclusiveStreamId.empty() && prevStreamId != currentExclusiveStreamId) {
+		logger.debug(L"stream id changed, reconnect");
+		state = State::eRECONNECT_NEEDED;
+		return;
+	}
+
+	const auto changes = sessionEventsWrapper.grabChanges();
+	switch (changes.disconnectionReason) {
+		using DR = utils::AudioSessionEventsImpl::DisconnectionReason;
+	case DR::eNONE:
+		break;
+	case DR::eUNAVAILABLE:
+		state = State::eDEVICE_CONNECTION_ERROR;
+		break;
+	case DR::eRECONNECT:
+		state = State::eRECONNECT_NEEDED;
+		logger.debug(L"exclusive format changed");
+		break;
+	case DR::eEXCLUSIVE:
+		// if eEXCLUSIVE happened, then the stream we were listening to was in shared-mode,
+		// but now we probably have exclusive stream
+		state = State::eDEVICE_IS_EXCLUSIVE;
+		createExclusiveStreamListener(true);
+		break;
+	}
 }
 
 std::optional<utils::MediaDeviceWrapper> CaptureManager::getDevice(DataSource type, const string& id) {
@@ -193,4 +271,166 @@ string CaptureManager::makeFormatString(MyWaveFormat waveFormat) {
 	}
 
 	return string{ bp.getBufferView() };
+}
+
+void CaptureManager::createExclusiveStreamListener(bool makeLogMessage) {
+	sessionEventsWrapper.destruct();
+
+	auto sessionManager = audioDeviceHandle.activateFor<IAudioSessionManager2>();
+	if (!sessionManager.isValid()) {
+		return;
+	}
+
+	auto sessionEnumerator = utils::GenericComWrapper<IAudioSessionEnumerator>{
+		[&](auto ptr) {
+			auto result = sessionManager.getPointer()->GetSessionEnumerator(ptr);
+			return result == S_OK;
+		}
+	};
+	if (!sessionEnumerator.isValid()) {
+		return;
+	}
+
+	int sessionCount;
+	auto result = sessionEnumerator.getPointer()->GetCount(&sessionCount);
+	if (result != S_OK) {
+		return;
+	}
+
+	utils::GenericComWrapper<IAudioSessionControl> foundControl;
+	index sessionsFound = 0;
+	for (int i = 0; i < sessionCount; ++i) {
+		auto sessionControl = utils::GenericComWrapper<IAudioSessionControl>{
+			[&](auto ptr) {
+				auto res = sessionEnumerator.getPointer()->GetSession(i, ptr);
+				return res == S_OK;
+			}
+		};
+
+		if (!sessionControl.isValid()) {
+			continue;
+		}
+
+		AudioSessionState sessionState = { };
+		auto res = sessionControl.getPointer()->GetState(&sessionState);
+		if (res != S_OK) {
+			continue;
+		}
+
+		if (sessionState != AudioSessionStateActive) {
+			continue;
+		}
+
+		if (sessionsFound > 0) {
+			// then there are at least two active sessions
+			// exclusive mode can't have more than one active session
+			state = State::eRECONNECT_NEEDED;
+			return;
+		}
+
+		sessionsFound++;
+		foundControl = std::move(sessionControl);
+	}
+
+	constexpr sview unknownDeviceStreamId = L"unknown";
+
+	if (sessionsFound == 0) {
+		// this can happen when device is in exclusive mode,
+		// but the owner process doesn't produce any sound
+		currentExclusiveStreamId = { };
+		sessionEventsWrapper.destruct();
+		return;
+	}
+
+	// let's print name of the application to inform user
+
+	utils::GenericComWrapper<IAudioSessionControl2> c2{
+		[&](auto ptr) {
+			auto res = foundControl.getPointer()
+			                       ->QueryInterface(__uuidof(IAudioSessionControl2), reinterpret_cast<void**>(ptr));
+			return res == S_OK;
+		}
+	};
+
+	sessionEventsWrapper.init(std::move(foundControl));
+
+	if (!c2.isValid()) {
+		logger.notice(
+			L"Device '{} ({})' is in exclusive mode, owner process is unknown, device ID: {}",
+			snapshot.description,
+			snapshot.nameOnly,
+			snapshot.id
+		);
+
+		return;
+	}
+
+	wchar_t* sessionInstanceId = nullptr;
+	auto res = c2.getPointer()->GetSessionIdentifier(&sessionInstanceId);
+	if (res == S_OK) {
+		currentExclusiveStreamId = sessionInstanceId;
+		CoTaskMemFree(sessionInstanceId);
+	} else {
+		currentExclusiveStreamId = unknownDeviceStreamId;
+	}
+
+	if (!makeLogMessage) {
+		return;
+	}
+
+	DWORD processId;
+	res = c2.getPointer()->GetProcessId(&processId);
+
+	if (res != S_OK) {
+		logger.notice(
+			L"Device '{} ({})' is in exclusive mode, owner process is unknown, device ID: {}",
+			snapshot.description,
+			snapshot.nameOnly,
+			snapshot.id
+		);
+		return;
+	}
+
+	const auto processHandle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, processId);
+	if (processHandle == nullptr) {
+		logger.notice(
+			L"Device '{} ({})' is in exclusive mode, owner process exe is unknown (process id is {}), device ID: {}",
+			snapshot.description,
+			snapshot.nameOnly,
+			processId,
+			snapshot.id
+		);
+		return;
+	}
+
+	constexpr index buffSize = 1024;
+	wchar_t processNameBuffer[buffSize];
+	DWORD processNameBufferLength = buffSize;
+	const auto success = QueryFullProcessImageNameW(
+		processHandle,
+		0,
+		processNameBuffer,
+		&processNameBufferLength
+	);
+	CloseHandle(processHandle);
+
+	if (!success) {
+		logger.notice(
+			L"Device '{} ({})' is in exclusive mode, owner process exe is unknown (process id is {}), device ID: {}",
+			snapshot.description,
+			snapshot.nameOnly,
+			processId,
+			snapshot.id
+		);
+		return;
+	}
+
+	logger.notice(
+		L"Device '{} ({})' is in exclusive mode, owner is '{}' (process id is {}), device ID: {}",
+		snapshot.description,
+		snapshot.nameOnly,
+		processNameBuffer,
+		processId,
+		snapshot.id
+	);
 }

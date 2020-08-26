@@ -54,11 +54,28 @@ namespace rxtd::audio_analyzer {
 			};
 		}
 
-		utils::AudioSessionEventsImpl& getImpl() {
-			return *impl.getPointer();
+		void init(utils::GenericComWrapper<IAudioSessionControl>&& _sessionController) {
+			destruct();
+			impl = {
+				[&](auto ptr) {
+					*ptr = new utils::AudioSessionEventsImpl{ std::move(_sessionController) };
+					return true;
+				}
+			};
 		}
 
-	private:
+		[[nodiscard]]
+		bool isValid() const {
+			return impl.isValid();
+		}
+
+		utils::AudioSessionEventsImpl::Changes grabChanges() {
+			if (!impl.isValid()) {
+				return { };
+			}
+			return impl.getPointer()->takeChanges();
+		}
+
 		void destruct() {
 			if (impl.isValid()) {
 				impl.getPointer()->deinit();

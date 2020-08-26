@@ -43,7 +43,7 @@ void IAudioClientWrapper::initShared() {
 	case AUDCLNT_E_SERVICE_NOT_RUNNING:
 	case E_OUTOFMEMORY:
 		return;
-	default: ;
+	default: ; // todo
 	}
 
 	lastResult = getPointer()->Initialize(
@@ -67,6 +67,7 @@ void IAudioClientWrapper::initShared() {
 	}
 
 	if (lastResult != S_OK) {
+		CoTaskMemFree(waveFormat);
 		return;
 	}
 
