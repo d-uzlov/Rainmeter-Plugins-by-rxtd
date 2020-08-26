@@ -46,10 +46,7 @@ void AudioParent::vReload() {
 	if (request != requestedSource || anythingChanged) {
 		requestedSource = std::move(request);
 
-		helper.setParams(requestedSource, paramParser.getParseResult(), snapshot);
-
-		if (!snapshot.deviceIsAvailable) {
-		}
+		helper.setParams(requestedSource, paramParser.getParseResult());
 	}
 }
 

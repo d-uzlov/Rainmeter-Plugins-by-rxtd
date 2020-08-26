@@ -47,16 +47,16 @@ namespace rxtd::audio_analyzer {
 		CaptureManager captureManager;
 		utils::CMMNotificationClient notificationClient;
 
-		ParamParser::ProcessingsInfoMap patches;
 		ProcessingOrchestrator orchestrator;
 		AudioEnumeratorHelper enumerator;
 
 		index legacyNumber{ };
 
-		bool deviceIsAvailable = true;
-
+		bool optionsChanged = false;
+		ParamParser::ProcessingsInfoMap patches;
 		RequestedDeviceDescription requestedSource;
 
+		bool deviceIsAvailable = true;
 		Snapshot snapshot;
 		bool snapshotIsUpdated = false;
 
@@ -93,11 +93,7 @@ namespace rxtd::audio_analyzer {
 			index _legacyNumber
 		);
 
-		void setParams(
-			RequestedDeviceDescription request,
-			ParamParser::ProcessingsInfoMap _patches,
-			Snapshot& snap
-		);
+		void setParams(RequestedDeviceDescription request, ParamParser::ProcessingsInfoMap _patches);
 
 		void update(Snapshot& snap);
 

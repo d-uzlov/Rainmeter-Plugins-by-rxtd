@@ -75,20 +75,13 @@ bool ParentHelper::init(
 
 void ParentHelper::setParams(
 	RequestedDeviceDescription request,
-	ParamParser::ProcessingsInfoMap _patches,
-	Snapshot& snap
+	ParamParser::ProcessingsInfoMap _patches
 ) {
 	auto fullStateLock = getFullStateLock();
-	// snapshot lock is not needed
-	// because separate thread either sleeps
-	// or is guarded by fullStateLock
 
+	optionsChanged = true;
 	patches = std::move(_patches);
 	requestedSource = std::move(request);
-	updateDevice();
-
-	snap = snapshot;
-	snapshotIsUpdated = true;
 
 	if (needToInitializeThread) {
 		needToInitializeThread = false;
@@ -133,6 +126,13 @@ void ParentHelper::separateThreadFunction() {
 }
 
 void ParentHelper::pUpdate() {
+	if (optionsChanged) {
+		auto snapshotLock = getSnapshotLock();
+		updateDevice();
+		optionsChanged = false;
+		// todo check why image in reset when I forgot to set optionsChanged = false
+	}
+
 	const auto changes = notificationClient.takeChanges();
 
 	using DS = CaptureManager::DataSource;

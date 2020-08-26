@@ -60,10 +60,14 @@ namespace rxtd::utils {
 
 		AudioSessionEventsImpl(IAudioClientWrapper& audioClient) {
 			preventVolumeChange = true;
+
 			sessionController = audioClient.getInterface<IAudioSessionControl>();
-			mainVolumeController = audioClient.getInterface<ISimpleAudioVolume>();
-			channelVolumeController = audioClient.getInterface<IChannelAudioVolume>();
-			sessionController.getPointer()->RegisterAudioSessionNotification(this);
+
+			if (sessionController.isValid()) {
+				sessionController.getPointer()->RegisterAudioSessionNotification(this);
+				mainVolumeController = audioClient.getInterface<ISimpleAudioVolume>();
+				channelVolumeController = audioClient.getInterface<IChannelAudioVolume>();
+			}
 		}
 
 		AudioSessionEventsImpl(GenericComWrapper<IAudioSessionControl>&& _sessionController) {
