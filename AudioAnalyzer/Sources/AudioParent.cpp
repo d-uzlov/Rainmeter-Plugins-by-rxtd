@@ -383,7 +383,7 @@ void AudioParent::resolveProp(array_view<isview> args, string& resolveBufferStri
 		= paramParser
 		  .getParseResult()
 		  .find(procName)->second.handlersInfo.patchers
-		  .find(handlerName)->second->propGetter;
+		  .find(handlerName)->second.propGetter;
 
 	if (propGetter == nullptr) {
 		cl.error(L"handler '{}:{}' doesn't have any props", procName, handlerName);

@@ -25,7 +25,7 @@ namespace rxtd::audio_analyzer {
 	public:
 		struct HandlerPatchersInfo {
 			std::vector<istring> order;
-			std::map<istring, PatchInfo*, std::less<>> patchers;
+			std::map<istring, PatchInfo, std::less<>> patchers;
 		};
 
 		struct ProcessingData {

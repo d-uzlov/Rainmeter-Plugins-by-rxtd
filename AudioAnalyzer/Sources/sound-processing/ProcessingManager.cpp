@@ -44,7 +44,7 @@ void ProcessingManager::setParams(
 
 	order.clear();
 	for (auto& handlerName : pd.handlersInfo.order) {
-		auto& patchInfo = *pd.handlersInfo.patchers.find(handlerName)->second;
+		auto& patchInfo = pd.handlersInfo.patchers.find(handlerName)->second;
 
 		bool handlerIsValid = true;
 		for (auto channel : channels) {

@@ -12,7 +12,8 @@
 #include "sound-processing/sound-handlers/SoundHandler.h"
 
 namespace rxtd::audio_analyzer {
-	using HandlerPatchingFun = std::unique_ptr<SoundHandler>(*)(std::unique_ptr<SoundHandler> old);
+	using handlerUptr = std::unique_ptr<SoundHandler>;
+	using HandlerPatchingFun = handlerUptr(*)(handlerUptr old);
 
 	struct PatchInfo {
 		std::any params;
