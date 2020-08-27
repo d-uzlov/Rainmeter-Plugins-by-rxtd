@@ -34,8 +34,8 @@ namespace rxtd::utils {
 	public:
 		IAudioCaptureClientWrapper() = default;
 
-		explicit IAudioCaptureClientWrapper(InitFunction initFunction) :
-			GenericComWrapper(std::move(initFunction)) {
+		template<typename InitFunction>
+		IAudioCaptureClientWrapper(InitFunction initFunction) : GenericComWrapper(std::move(initFunction)) {
 		}
 
 		void setParams(Type _type, index _channelsCount) {

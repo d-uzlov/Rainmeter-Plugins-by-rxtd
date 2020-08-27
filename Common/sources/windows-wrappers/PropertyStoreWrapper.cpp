@@ -42,9 +42,6 @@ namespace {
 	};
 }
 
-PropertyStoreWrapper::PropertyStoreWrapper(InitFunction initFunction) : GenericComWrapper(std::move(initFunction)) {
-}
-
 string PropertyStoreWrapper::readProperty(const PROPERTYKEY& key) {
 	PropVariantWrapper prop;
 

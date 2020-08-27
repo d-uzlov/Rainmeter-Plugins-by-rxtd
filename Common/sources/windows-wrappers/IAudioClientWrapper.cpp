@@ -14,10 +14,6 @@
 
 using namespace utils;
 
-IAudioClientWrapper::IAudioClientWrapper(InitFunction initFunction) :
-	GenericComWrapper(std::move(initFunction)) {
-}
-
 IAudioCaptureClientWrapper IAudioClientWrapper::openCapture() {
 	auto result = IAudioCaptureClientWrapper{
 		[&](auto ptr) {

@@ -8,14 +8,11 @@
  */
 
 #pragma once
-#include <functional>
 
 namespace rxtd::utils {
 	template <typename T>
 	class GenericCoTaskMemWrapper {
 	public:
-		using InitFunctionType = bool(T** ptr);
-		using InitFunction = std::function<InitFunctionType>;
 		using ObjectType = T;
 
 	private:
@@ -24,6 +21,7 @@ namespace rxtd::utils {
 	public:
 		GenericCoTaskMemWrapper() = default;
 
+		template<typename InitFunction>
 		GenericCoTaskMemWrapper(InitFunction initFunction) {
 			const bool success = initFunction(&ptr);
 			if (!success) {

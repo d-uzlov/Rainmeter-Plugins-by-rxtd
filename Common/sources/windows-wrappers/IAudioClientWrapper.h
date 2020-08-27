@@ -26,7 +26,10 @@ namespace rxtd::utils {
 
 	public:
 		IAudioClientWrapper() = default;
-		explicit IAudioClientWrapper(InitFunction initFunction);
+
+		template <typename InitFunction>
+		IAudioClientWrapper(InitFunction initFunction) : GenericComWrapper(std::move(initFunction)) {
+		}
 
 		static index get1sec100nsUnits() {
 			return 1000'000'0;

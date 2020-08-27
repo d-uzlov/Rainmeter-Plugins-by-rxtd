@@ -10,14 +10,12 @@
 #pragma once
 #include <type_traits>
 #include <Unknwn.h>
-#include <functional>
 
 namespace rxtd::utils {
 	template <typename T>
 	class GenericComWrapper {
 	public:
 		using InitFunctionType = bool(T** ptr);
-		using InitFunction = std::function<InitFunctionType>;
 		using ObjectType = T;
 		static_assert(std::is_base_of<IUnknown, T>::value, "T must extend IUnknown");
 
@@ -27,6 +25,7 @@ namespace rxtd::utils {
 	public:
 		GenericComWrapper() = default;
 
+		template<typename InitFunction>
 		GenericComWrapper(InitFunction initFunction) {
 			const bool success = initFunction(&ptr);
 			if (!success) {

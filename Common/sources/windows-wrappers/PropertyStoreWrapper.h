@@ -15,9 +15,10 @@
 namespace rxtd::utils {
 	class PropertyStoreWrapper : public GenericComWrapper<IPropertyStore> {
 	public:
-		explicit PropertyStoreWrapper(InitFunction initFunction);
+		template <typename InitFunction>
+		PropertyStoreWrapper(InitFunction initFunction) : GenericComWrapper(std::move(initFunction)) {
+		}
 
-		// I got bored of manually creating and freeing prop wrappers, so I created this function
 		[[nodiscard]]
 		string readProperty(const PROPERTYKEY& key);
 	};

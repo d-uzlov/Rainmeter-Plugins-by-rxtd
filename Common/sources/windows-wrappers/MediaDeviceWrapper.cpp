@@ -16,10 +16,6 @@
 
 using namespace utils;
 
-MediaDeviceWrapper::MediaDeviceWrapper(InitFunction initFunction) :
-	GenericComWrapper(std::move(initFunction)) {
-}
-
 MediaDeviceWrapper::DeviceInfo MediaDeviceWrapper::readDeviceInfo() {
 	if (!isValid()) {
 		return { };

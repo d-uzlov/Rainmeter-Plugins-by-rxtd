@@ -30,7 +30,9 @@ namespace rxtd::utils {
 	public:
 		MediaDeviceWrapper() = default;
 
-		explicit MediaDeviceWrapper(InitFunction initFunction);
+		template <typename InitFunction>
+		MediaDeviceWrapper(InitFunction initFunction) : GenericComWrapper(std::move(initFunction)) {
+		}
 
 		[[nodiscard]]
 		DeviceInfo readDeviceInfo();
