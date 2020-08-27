@@ -170,13 +170,12 @@ void WaveForm::vConfigureSnapshot(std::any& handlerSpecificData) const {
 
 	const index width = params.width;
 	const index height = params.height;
-	if (height == snapshot.pixels.getBuffersCount() && width == snapshot.pixels.getBufferSize()) {
-		return;
-	}
 
 	snapshot.pixels.setBuffersCount(height);
 	snapshot.pixels.setBufferSize(width);
-	snapshot.pixels.fill(params.colors.background);
+
+	auto pixels = drawer.getResultBuffer().getFlat();
+	std::copy(pixels.begin(), pixels.end(), snapshot.pixels.getFlat().begin());
 
 	snapshot.writeNeeded = true;
 	snapshot.empty = false;

@@ -225,9 +225,12 @@ namespace rxtd::audio_analyzer {
 		}
 
 		void configureSnapshot(Snapshot& snapshot) const {
-			snapshot.values.setBuffersCount(_dataSize.layersCount);
-			snapshot.values.setBufferSize(_dataSize.valuesCount);
-			snapshot.values.fill(0.0f);
+			auto& sv = snapshot.values;
+			if (sv.getBuffersCount() != _dataSize.layersCount || sv.getBufferSize() != _dataSize.valuesCount) {
+				snapshot.values.setBuffersCount(_dataSize.layersCount);
+				snapshot.values.setBufferSize(_dataSize.valuesCount);
+				snapshot.values.fill(0.0f);
+			}
 			vConfigureSnapshot(snapshot.handlerSpecificData);
 		}
 

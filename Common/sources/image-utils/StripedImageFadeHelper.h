@@ -23,21 +23,19 @@ namespace rxtd::utils {
 		IntColor border{ };
 
 	public:
-		void setBorderSize(index value) {
-			borderSize = value;
+		void setParams(
+			IntColor _background,
+			index _borderSize, IntColor _border,
+			double _fading
+		) {
+			background = _background;
+			borderSize = _borderSize;
+			border = _border;
+			fading = _fading;
 		}
 
 		void setPastLastStripIndex(index value) {
 			pastLastStripIndex = value;
-		}
-
-		void setFading(double value) {
-			fading = value;
-		}
-
-		void setColors(IntColor _background, IntColor _border) {
-			background = _background;
-			border = _border;
 		}
 
 		[[nodiscard]]

@@ -153,9 +153,19 @@ SoundHandler::ConfigurationResult Spectrogram::vConfigure(const std::any& _param
 	const auto backgroundIntColor = params.colors[0].color.toIntColor();
 	image.setParams(params.length, dataSize.valuesCount, backgroundIntColor, params.stationary);
 
-	sifh.setBorderSize(params.borderSize);
-	sifh.setColors(backgroundIntColor, params.borderColor.toIntColor());
-	sifh.setFading(params.fading);
+	sifh.setParams(backgroundIntColor, params.borderSize, params.borderColor.toIntColor(), params.fading);
+
+	if (params.fading != 0.0) {
+		if (image.isForced() || !writerHelper.isEmptinessWritten()) {
+			sifh.setPastLastStripIndex(image.getPastLastStripIndex());
+			sifh.inflate(image.getPixels());
+		}
+	} else {
+		if (params.borderSize != 0) {
+			sifh.setPastLastStripIndex(image.getPastLastStripIndex());
+			sifh.drawBorderInPlace(image.getPixelsWritable());
+		}
+	}
 
 	stripBuffer.resize(dataSize.valuesCount);
 
@@ -266,13 +276,12 @@ void Spectrogram::vConfigureSnapshot(std::any& handlerSpecificData) const {
 
 	const index width = params.length;
 	const index height = getConfiguration().sourcePtr->getDataSize().valuesCount;
-	if (height == snapshot.pixels.getBuffersCount() && width == snapshot.pixels.getBufferSize()) {
-		return;
-	}
 
 	snapshot.pixels.setBuffersCount(height);
 	snapshot.pixels.setBufferSize(width);
-	snapshot.pixels.fill(params.colors[0].color.toIntColor());
+
+	auto pixels = params.fading != 0.0 ? sifh.getResultBuffer().getFlat() : image.getPixels().getFlat();
+	std::copy(pixels.begin(), pixels.end(), snapshot.pixels.getFlat().begin());
 
 	snapshot.writeNeeded = true;
 	snapshot.empty = false;
