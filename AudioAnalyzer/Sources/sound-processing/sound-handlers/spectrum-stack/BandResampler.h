@@ -75,7 +75,7 @@ namespace rxtd::audio_analyzer {
 
 	protected:
 		[[nodiscard]]
-		ConfigurationResult vConfigure(const std::any& _params, Logger& cl) override;
+		ConfigurationResult vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) override;
 
 	public:
 		void vProcess(array_view<float> wave, clock::time_point killTime) override;
@@ -105,8 +105,6 @@ namespace rxtd::audio_analyzer {
 		}
 
 	private:
-		void vConfigureSnapshot(std::any& handlerSpecificData) const override;
-
 		void sampleCascade(array_view<float> source, array_span<float> dest, double binWidth);
 
 		// depends on fft size and sample rate

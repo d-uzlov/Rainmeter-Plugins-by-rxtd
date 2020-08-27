@@ -172,7 +172,8 @@ std::vector<float> BandResampler::parseFreqList(sview listId, const Rainmeter& r
 	return result;
 }
 
-SoundHandler::ConfigurationResult BandResampler::vConfigure(const std::any& _params, Logger& cl) {
+SoundHandler::ConfigurationResult
+BandResampler::vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) {
 	params = std::any_cast<Params>(_params);
 
 	auto& config = getConfiguration();
@@ -222,6 +223,12 @@ SoundHandler::ConfigurationResult BandResampler::vConfigure(const std::any& _par
 		}
 	}
 
+	if (nullptr == std::any_cast<Snapshot>(&snapshotAny)) {
+		snapshotAny = Snapshot{ };
+	}
+	auto& snapshot = *std::any_cast<Snapshot>(&snapshotAny);
+	snapshot.bandFreqs = params.bandFreqs;
+
 	return { realCascadesCount, bandsCount };
 }
 
@@ -249,17 +256,6 @@ void BandResampler::vProcess(array_view<float> wave, clock::time_point killTime)
 
 		binWidth *= 0.5;
 	}
-}
-
-void BandResampler::vConfigureSnapshot(std::any& handlerSpecificData) const {
-	auto snapshotPtr = std::any_cast<Snapshot>(&handlerSpecificData);
-	if (snapshotPtr == nullptr) {
-		handlerSpecificData = Snapshot{ };
-		snapshotPtr = std::any_cast<Snapshot>(&handlerSpecificData);
-	}
-	auto& snapshot = *snapshotPtr;
-
-	snapshot.bandFreqs = params.bandFreqs;
 }
 
 void BandResampler::sampleCascade(array_view<float> source, array_span<float> dest, double binWidth) {

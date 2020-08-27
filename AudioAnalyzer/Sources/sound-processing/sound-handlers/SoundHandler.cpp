@@ -49,7 +49,7 @@ bool SoundHandler::patch(
 
 		_configuration = newConfig;
 
-		const auto linkingResult = vConfigure(params, cl);
+		const auto linkingResult = vConfigure(params, cl, snapshot.handlerSpecificData);
 		if (!linkingResult.success) {
 			return { };
 		}
@@ -67,7 +67,6 @@ bool SoundHandler::patch(
 			snapshot.values.setBufferSize(_dataSize.valuesCount);
 			snapshot.values.fill(0.0f);
 		}
-		vConfigureSnapshot(snapshot.handlerSpecificData);
 	}
 
 	return true;

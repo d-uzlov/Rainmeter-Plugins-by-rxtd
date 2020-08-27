@@ -102,9 +102,7 @@ namespace rxtd::audio_analyzer {
 
 	protected:
 		[[nodiscard]]
-		ConfigurationResult vConfigure(const std::any& _params, Logger& cl) override;
-
-		void vConfigureSnapshot(std::any& handlerSpecificData) const override;
+		ConfigurationResult vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) override;
 
 		void vUpdateSnapshot(std::any& handlerSpecificData) const override;
 

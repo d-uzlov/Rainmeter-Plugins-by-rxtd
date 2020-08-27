@@ -63,7 +63,8 @@ SoundHandler::ParseResult BandCascadeTransformer::parseParams(
 	return result;
 }
 
-SoundHandler::ConfigurationResult BandCascadeTransformer::vConfigure(const std::any& _params, Logger& cl) {
+SoundHandler::ConfigurationResult
+BandCascadeTransformer::vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) {
 	params = std::any_cast<Params>(_params);
 
 	auto& config = getConfiguration();

@@ -92,7 +92,7 @@ SoundHandler::ParseResult WaveForm::parseParams(
 	return result;
 }
 
-SoundHandler::ConfigurationResult WaveForm::vConfigure(const std::any& _params, Logger& cl) {
+SoundHandler::ConfigurationResult WaveForm::vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) {
 	params = std::any_cast<Params>(_params);
 
 	auto& config = getConfiguration();
@@ -103,7 +103,6 @@ SoundHandler::ConfigurationResult WaveForm::vConfigure(const std::any& _params, 
 	minDistinguishableValue = 1.0 / params.height;
 
 	drawer.setImageParams(params.width, params.height, params.stationary);
-	// drawer.setEdges(params.edges);
 	drawer.setColors(params.colors);
 	drawer.setLineDrawingPolicy(params.lineDrawingPolicy);
 	drawer.setFading(params.fading);
@@ -132,6 +131,25 @@ SoundHandler::ConfigurationResult WaveForm::vConfigure(const std::any& _params, 
 	minTransformer.reset();
 	maxTransformer.reset();
 
+
+	if (nullptr == std::any_cast<Snapshot>(&snapshotAny)) {
+		snapshotAny = Snapshot{ };
+	}
+	auto& snapshot = *std::any_cast<Snapshot>(&snapshotAny);
+
+	snapshot.filepath = filepath;
+	snapshot.blockSize = blockSize;
+
+	snapshot.pixels.setBuffersCount(params.height);
+	snapshot.pixels.setBufferSize(params.width);
+
+	auto pixels = drawer.getResultBuffer().getFlat();
+	std::copy(pixels.begin(), pixels.end(), snapshot.pixels.getFlat().begin());
+
+	snapshot.writeNeeded = true;
+	snapshot.empty = false;
+
+
 	return { 0, 0 };
 }
 
@@ -155,30 +173,6 @@ void WaveForm::vProcess(array_view<float> wave, clock::time_point killTime) {
 	if (!drawer.isEmpty() || wasEmpty != drawer.isEmpty()) {
 		drawer.inflate();
 	}
-}
-
-void WaveForm::vConfigureSnapshot(std::any& handlerSpecificData) const {
-	auto snapshotPtr = std::any_cast<Snapshot>(&handlerSpecificData);
-	if (snapshotPtr == nullptr) {
-		handlerSpecificData = Snapshot{ };
-		snapshotPtr = std::any_cast<Snapshot>(&handlerSpecificData);
-	}
-	auto& snapshot = *snapshotPtr;
-
-	snapshot.filepath = filepath;
-	snapshot.blockSize = blockSize;
-
-	const index width = params.width;
-	const index height = params.height;
-
-	snapshot.pixels.setBuffersCount(height);
-	snapshot.pixels.setBufferSize(width);
-
-	auto pixels = drawer.getResultBuffer().getFlat();
-	std::copy(pixels.begin(), pixels.end(), snapshot.pixels.getFlat().begin());
-
-	snapshot.writeNeeded = true;
-	snapshot.empty = false;
 }
 
 void WaveForm::vUpdateSnapshot(std::any& handlerSpecificData) const {

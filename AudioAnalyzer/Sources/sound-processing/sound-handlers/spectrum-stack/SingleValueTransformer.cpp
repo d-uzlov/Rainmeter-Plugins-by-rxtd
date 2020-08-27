@@ -36,7 +36,7 @@ SoundHandler::ParseResult SingleValueTransformer::parseParams(
 	return result;
 }
 
-SoundHandler::ConfigurationResult SingleValueTransformer::vConfigure(const std::any& _params, Logger& cl) {
+SoundHandler::ConfigurationResult SingleValueTransformer::vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) {
 	params = std::any_cast<Params>(_params);
 
 	auto& config = getConfiguration();

@@ -140,7 +140,7 @@ SoundHandler::ParseResult Spectrogram::parseParams(
 	return result;
 }
 
-SoundHandler::ConfigurationResult Spectrogram::vConfigure(const std::any& _params, Logger& cl) {
+SoundHandler::ConfigurationResult Spectrogram::vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) {
 	params = std::any_cast<Params>(_params);
 
 	auto& config = getConfiguration();
@@ -148,10 +148,11 @@ SoundHandler::ConfigurationResult Spectrogram::vConfigure(const std::any& _param
 	blockSize = index(sampleRate * params.resolution);
 	blockSize = std::max<index>(blockSize, 1);
 
-	const auto dataSize = config.sourcePtr->getDataSize();
+	const index width = params.length;
+	const index height = getConfiguration().sourcePtr->getDataSize().valuesCount;
 
 	const auto backgroundIntColor = params.colors[0].color.toIntColor();
-	image.setParams(params.length, dataSize.valuesCount, backgroundIntColor, params.stationary);
+	image.setParams(width, height, backgroundIntColor, params.stationary);
 
 	sifh.setParams(backgroundIntColor, params.borderSize, params.borderColor.toIntColor(), params.fading);
 
@@ -167,7 +168,7 @@ SoundHandler::ConfigurationResult Spectrogram::vConfigure(const std::any& _param
 		}
 	}
 
-	stripBuffer.resize(dataSize.valuesCount);
+	stripBuffer.resize(height);
 
 	filepath = params.prefix;
 	filepath += config.channelName;
@@ -179,6 +180,25 @@ SoundHandler::ConfigurationResult Spectrogram::vConfigure(const std::any& _param
 	dataShortageEqSize = 0;
 	overpushCount = 0;
 	writeNeeded = true;
+
+
+	if (nullptr == std::any_cast<Snapshot>(&snapshotAny)) {
+		snapshotAny = Snapshot{ };
+	}
+	auto& snapshot = *std::any_cast<Snapshot>(&snapshotAny);
+
+	snapshot.filepath = filepath;
+	snapshot.blockSize = blockSize;
+
+	snapshot.pixels.setBuffersCount(height);
+	snapshot.pixels.setBufferSize(width);
+
+	auto pixels = params.fading != 0.0 ? sifh.getResultBuffer().getFlat() : image.getPixels().getFlat();
+	std::copy(pixels.begin(), pixels.end(), snapshot.pixels.getFlat().begin());
+
+	snapshot.writeNeeded = true;
+	snapshot.empty = false;
+
 
 	return { 0, 0 };
 }
@@ -261,30 +281,6 @@ void Spectrogram::vProcess(array_view<float> wave, clock::time_point killTime) {
 			}
 		}
 	}
-}
-
-void Spectrogram::vConfigureSnapshot(std::any& handlerSpecificData) const {
-	auto snapshotPtr = std::any_cast<Snapshot>(&handlerSpecificData);
-	if (snapshotPtr == nullptr) {
-		handlerSpecificData = Snapshot{ };
-		snapshotPtr = std::any_cast<Snapshot>(&handlerSpecificData);
-	}
-	auto& snapshot = *snapshotPtr;
-
-	snapshot.filepath = filepath;
-	snapshot.blockSize = blockSize;
-
-	const index width = params.length;
-	const index height = getConfiguration().sourcePtr->getDataSize().valuesCount;
-
-	snapshot.pixels.setBuffersCount(height);
-	snapshot.pixels.setBufferSize(width);
-
-	auto pixels = params.fading != 0.0 ? sifh.getResultBuffer().getFlat() : image.getPixels().getFlat();
-	std::copy(pixels.begin(), pixels.end(), snapshot.pixels.getFlat().begin());
-
-	snapshot.writeNeeded = true;
-	snapshot.empty = false;
 }
 
 void Spectrogram::vUpdateSnapshot(std::any& handlerSpecificData) const {

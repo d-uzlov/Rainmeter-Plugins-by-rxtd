@@ -282,10 +282,7 @@ namespace rxtd::audio_analyzer {
 		virtual bool checkSameParams(const std::any& p) const = 0;
 
 		[[nodiscard]]
-		virtual ConfigurationResult vConfigure(const std::any& _params, Logger& cl) = 0;
-
-		virtual void vConfigureSnapshot(std::any& handlerSpecificData) const {
-		}
+		virtual ConfigurationResult vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) = 0;
 
 		virtual void vUpdateSnapshot(std::any& handlerSpecificData) const {
 		}

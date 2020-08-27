@@ -108,7 +108,7 @@ SoundHandler::ParseResult FftAnalyzer::parseParams(
 	return result;
 }
 
-SoundHandler::ConfigurationResult FftAnalyzer::vConfigure(const std::any& _params, Logger& cl) {
+SoundHandler::ConfigurationResult FftAnalyzer::vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) {
 	params = std::any_cast<Params>(_params);
 
 	auto& config = getConfiguration();
@@ -168,20 +168,18 @@ SoundHandler::ConfigurationResult FftAnalyzer::vConfigure(const std::any& _param
 		cascades[i].setParams(cascadeParams, &fft, next, i);
 	}
 
-	return { params.cascadesCount, fftSize / 2 };
-}
 
-void FftAnalyzer::vConfigureSnapshot(std::any& handlerSpecificData) const {
-	auto snapshotPtr = std::any_cast<Snapshot>(&handlerSpecificData);
-	if (snapshotPtr == nullptr) {
-		handlerSpecificData = Snapshot { };
-		snapshotPtr = std::any_cast<Snapshot>(&handlerSpecificData);
+	if (nullptr == std::any_cast<Snapshot>(&snapshotAny)) {
+		snapshotAny = Snapshot{ };
 	}
-	auto& snapshot = *snapshotPtr;
+	auto& snapshot = *std::any_cast<Snapshot>(&snapshotAny);
 
 	snapshot.fftSize = fftSize;
 	snapshot.sampleRate = getConfiguration().sampleRate;
 	snapshot.cascadesCount = cascades.size();
+
+
+	return { params.cascadesCount, fftSize / 2 };
 }
 
 void FftAnalyzer::vUpdateSnapshot(std::any& handlerSpecificData) const {

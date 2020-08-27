@@ -47,7 +47,7 @@ SoundHandler::ParseResult BlockHandler::parseParams(
 	return result;
 }
 
-SoundHandler::ConfigurationResult BlockHandler::vConfigure(const std::any& _params, Logger& cl) {
+SoundHandler::ConfigurationResult BlockHandler::vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) {
 	params = std::any_cast<Params>(_params);
 
 	auto& config = getConfiguration();
@@ -55,6 +55,13 @@ SoundHandler::ConfigurationResult BlockHandler::vConfigure(const std::any& _para
 	blockSize = std::max<index>(blockSize, 1);
 
 	params.transformer.setParams(config.sampleRate, blockSize);
+
+	if (nullptr == std::any_cast<Snapshot>(&snapshotAny)) {
+		snapshotAny = Snapshot{ };
+	}
+	auto& snapshot = *std::any_cast<Snapshot>(&snapshotAny);
+
+	snapshot.blockSize = blockSize;
 
 	return { 1, 1 };
 }
@@ -65,17 +72,6 @@ void BlockHandler::vProcess(array_view<float> wave, clock::time_point killTime) 
 
 void BlockHandler::setNextValue(float value) {
 	pushLayer(0, blockSize)[0] = params.transformer.apply(value);
-}
-
-void BlockHandler::vConfigureSnapshot(std::any& handlerSpecificData) const {
-	auto snapshotPtr = std::any_cast<Snapshot>(&handlerSpecificData);
-	if (snapshotPtr == nullptr) {
-		handlerSpecificData = Snapshot{ };
-		snapshotPtr = std::any_cast<Snapshot>(&handlerSpecificData);
-	}
-	auto& snapshot = *snapshotPtr;
-
-	snapshot.blockSize = blockSize;
 }
 
 bool BlockHandler::getProp(const std::any& handlerSpecificData, isview prop, utils::BufferPrinter& printer) {

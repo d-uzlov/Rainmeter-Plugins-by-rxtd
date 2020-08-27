@@ -60,7 +60,7 @@ namespace rxtd::audio_analyzer {
 
 	protected:
 		[[nodiscard]]
-		ConfigurationResult vConfigure(const std::any& _params, Logger& cl) override;
+		ConfigurationResult vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) override;
 
 		void vProcess(array_view<float> wave, clock::time_point killTime) final;
 
@@ -75,7 +75,6 @@ namespace rxtd::audio_analyzer {
 		virtual void finishBlock() = 0;
 
 	private:
-		void vConfigureSnapshot(std::any& handlerSpecificData) const override;
 		static bool getProp(const std::any& handlerSpecificData, isview prop, utils::BufferPrinter& printer);
 	};
 
