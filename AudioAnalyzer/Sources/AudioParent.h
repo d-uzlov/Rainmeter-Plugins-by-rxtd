@@ -25,13 +25,6 @@ namespace rxtd::audio_analyzer {
 
 	public:
 		explicit AudioParent(utils::Rainmeter&& rain);
-		~AudioParent() = default;
-
-		/** This class is non copyable */
-		AudioParent(const AudioParent& other) = delete;
-		AudioParent(AudioParent&& other) = delete;
-		AudioParent& operator=(const AudioParent& other) = delete;
-		AudioParent& operator=(AudioParent&& other) = delete;
 
 	protected:
 		void vReload() override;

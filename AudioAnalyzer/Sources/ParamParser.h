@@ -55,15 +55,6 @@ namespace rxtd::audio_analyzer {
 		mutable bool anythingChanged = false;
 
 	public:
-		ParamParser() = default;
-
-		~ParamParser() = default;
-		/** This class is non copyable */
-		ParamParser(const ParamParser& other) = delete;
-		ParamParser(ParamParser&& other) = delete;
-		ParamParser& operator=(const ParamParser& other) = delete;
-		ParamParser& operator=(ParamParser&& other) = delete;
-
 		void setRainmeter(Rainmeter value) {
 			rain = value;
 			hch.setRain(value);
