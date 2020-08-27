@@ -8,7 +8,6 @@
  */
 
 #pragma once
-#include "array_view.h"
 #include "AbstractFilter.h"
 
 namespace rxtd::audio_utils {

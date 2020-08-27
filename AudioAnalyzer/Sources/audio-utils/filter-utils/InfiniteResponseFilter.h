@@ -8,7 +8,6 @@
  */
 
 #pragma once
-#include "array_view.h"
 #include <array>
 #include "AbstractFilter.h"
 #include "MyMath.h"

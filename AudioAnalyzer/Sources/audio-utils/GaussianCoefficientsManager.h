@@ -8,13 +8,11 @@
  */
 
 #pragma once
-#include <unordered_map>
-#include "array_view.h"
 
 namespace rxtd::audio_utils {
 	class GaussianCoefficientsManager {
 		// radius -> coefs vector
-		std::unordered_map<index, std::vector<double>> blurCoefficients;
+		std::map<index, std::vector<double>> blurCoefficients;
 		
 	public:
 		array_view<double> forRadius(index radius) {

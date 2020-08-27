@@ -8,7 +8,6 @@
  */
 
 #pragma once
-#include "array_view.h"
 #include "array2d_view.h"
 #include "GrowingVector.h"
 

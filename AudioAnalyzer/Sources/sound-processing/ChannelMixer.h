@@ -9,7 +9,6 @@
 
 #pragma once
 #include "device-management/MyWaveFormat.h"
-#include "array_view.h"
 #include "GrowingVector.h"
 #include "array2d_view.h"
 

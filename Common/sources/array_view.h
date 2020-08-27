@@ -18,6 +18,10 @@
 #include <limits>
 #include <cassert>
 
+// for some reason #pragma once didn't work for me here
+#ifndef ARRAY_VIEW_ARRAY_SPAN_H
+#define ARRAY_VIEW_ARRAY_SPAN_H
+
 template <class T>
 class array_span {
 public:
@@ -359,3 +363,5 @@ private:
 	const_pointer data_;
 	size_type     size_;
 };
+
+#endif

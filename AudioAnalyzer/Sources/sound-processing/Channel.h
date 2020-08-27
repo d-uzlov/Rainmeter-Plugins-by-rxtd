@@ -10,8 +10,6 @@
 #pragma once
 #include <optional>
 
-#include "array_view.h"
-
 namespace rxtd::audio_analyzer {
 	enum class Channel {
 		eFRONT_LEFT,
@@ -73,6 +71,6 @@ namespace rxtd::audio_analyzer {
 		static sview getTechnicalName(Channel channel);
 
 		[[nodiscard]]
-		static ChannelLayout parseLayout(uint32_t bitMask, bool forceBackSpeakers);
+		static ChannelLayout parseLayout(uint32_t bitMask);
 	};
 }

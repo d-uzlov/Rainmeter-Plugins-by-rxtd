@@ -28,7 +28,6 @@
 #include <any>
 #include <chrono>
 
-#include "array_view.h"
 #include "BufferPrinter.h"
 #include "RainmeterWrappers.h"
 #include "Vector2D.h"

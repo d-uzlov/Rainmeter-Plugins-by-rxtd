@@ -8,7 +8,6 @@
  */
 
 #pragma once
-#include "array_view.h"
 #include "Vector2D.h"
 
 namespace rxtd::utils {

@@ -9,7 +9,6 @@
 
 #pragma once
 #include "RainmeterWrappers.h"
-#include "array_view.h"
 
 namespace rxtd::utils {
 	enum class MeasureState {

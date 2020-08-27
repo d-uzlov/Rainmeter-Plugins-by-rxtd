@@ -102,10 +102,15 @@ CaptureManager::State CaptureManager::setSourceAndGetState(DataSource type, cons
 
 	sessionEventsWrapper.init(audioClient);
 
-	const auto format = audioClient.getFormat();
+	auto format = audioClient.getFormat();
 	snapshot.type = audioClient.getType();
 	snapshot.format.samplesPerSec = format.samplesPerSec;
-	snapshot.format.channelLayout = ChannelUtils::parseLayout(format.channelMask, true);
+
+	constexpr bool forceBackSpeakers = true;
+	if (format.channelMask == KSAUDIO_SPEAKER_5POINT1_SURROUND && forceBackSpeakers) {
+		format.channelMask = KSAUDIO_SPEAKER_5POINT1;
+	}
+	snapshot.format.channelLayout = ChannelUtils::parseLayout(format.channelMask);
 	if (snapshot.format.channelLayout.ordered().empty()) {
 		logger.error(L"zero known channels are found in the current channel layout");
 		return State::eDEVICE_CONNECTION_ERROR;

@@ -9,7 +9,6 @@
 
 #pragma once
 #include "kiss_fft-lib/KissFft.hh"
-#include "array_view.h"
 
 namespace rxtd::audio_utils {
 	class FFT {

@@ -12,7 +12,6 @@
 #include "RainmeterWrappers.h"
 #include "filter-utils/LogarithmicIRF.h"
 #include "LinearInterpolator.h"
-#include "array_view.h"
 
 namespace rxtd::audio_utils {
 	class CustomizableValueTransformer {

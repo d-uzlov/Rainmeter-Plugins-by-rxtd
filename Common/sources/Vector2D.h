@@ -8,7 +8,6 @@
  */
 
 #pragma once
-#include "array_view.h"
 
 namespace rxtd::utils {
 	/**
