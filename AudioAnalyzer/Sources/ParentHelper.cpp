@@ -222,7 +222,7 @@ void ParentHelper::pUpdate() {
 		auto requestLock = getRequestLock();
 
 		if (mainFields.captureManager.getState() == CaptureManager::State::eDEVICE_CONNECTION_ERROR
-			&& changes.devices.count(requestFields.snapshot.diSnapshot.id) > 0) {
+			&& changes.devices.count(requestFields.snapshot.deviceInfoSnapshot.id) > 0) {
 			updateDevice();
 		}
 
@@ -275,12 +275,12 @@ void ParentHelper::updateDevice() {
 
 	// it's important that if device is not available
 	// then #updateSnapshot is not called
-	mainFields.captureManager.updateSnapshot(requestFields.snapshot.diSnapshot);
+	mainFields.captureManager.updateSnapshot(requestFields.snapshot.deviceInfoSnapshot);
 
 	mainFields.orchestrator.patch(
 		requestFields.patches, constFields.legacyNumber,
-		requestFields.snapshot.diSnapshot.format.samplesPerSec,
-		requestFields.snapshot.diSnapshot.format.channelLayout
+		requestFields.snapshot.deviceInfoSnapshot.format.samplesPerSec,
+		requestFields.snapshot.deviceInfoSnapshot.format.channelLayout
 	);
 
 	mainFields.orchestrator.configureSnapshot(requestFields.snapshot.dataSnapshot);

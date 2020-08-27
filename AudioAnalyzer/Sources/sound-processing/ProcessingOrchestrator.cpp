@@ -13,17 +13,13 @@
 
 using namespace audio_analyzer;
 
-void ProcessingOrchestrator::exchangeData(DataSnapshot& snapshot) {
-	std::swap(snapshot, dataSnapshot);
-}
-
 void ProcessingOrchestrator::patch(
 	const ParamParser::ProcessingsInfoMap& patches,
 	index legacyNumber,
 	index samplesPerSec, ChannelLayout channelLayout
 ) {
 	utils::MapUtils::intersectKeyCollection(saMap, patches);
-	utils::MapUtils::intersectKeyCollection(dataSnapshot, patches);
+	utils::MapUtils::intersectKeyCollection(snapshot, patches);
 
 	for (const auto& [name, data] : patches) {
 		auto& sa = saMap[name];
@@ -31,9 +27,13 @@ void ProcessingOrchestrator::patch(
 			logger.context(L"Proc '{}': ", name),
 			data,
 			legacyNumber, samplesPerSec, channelLayout,
-			dataSnapshot[name]
+			snapshot[name]
 		);
 	}
+}
+
+void ProcessingOrchestrator::configureSnapshot(Snapshot& snap) const {
+	snap = snapshot;
 }
 
 void ProcessingOrchestrator::process(const ChannelMixer& channelMixer) {
@@ -65,10 +65,10 @@ void ProcessingOrchestrator::process(const ChannelMixer& channelMixer) {
 	}
 
 	for (auto& [name, sa] : saMap) {
-		sa.updateSnapshot(dataSnapshot[name]);
+		sa.updateSnapshot(snapshot[name]);
 	}
 }
 
-void ProcessingOrchestrator::configureSnapshot(DataSnapshot& snapshot) const {
-	snapshot = dataSnapshot;
+void ProcessingOrchestrator::exchangeData(Snapshot& snap) {
+	std::swap(snap, snapshot);
 }

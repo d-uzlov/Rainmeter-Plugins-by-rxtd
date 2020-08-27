@@ -83,7 +83,7 @@ double AudioParent::vUpdate() {
 		}
 	}
 
-	return snapshot.diSnapshot.state == CaptureManager::State::eOK ? 1.0 : 0.0;
+	return snapshot.deviceInfoSnapshot.state == CaptureManager::State::eOK ? 1.0 : 0.0;
 }
 
 void AudioParent::vCommand(isview bangArgs) {
@@ -114,7 +114,7 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 		}
 
 		const isview deviceProperty = args[1];
-		const auto& state = snapshot.diSnapshot;
+		const auto& state = snapshot.deviceInfoSnapshot;
 
 		if (deviceProperty == L"status") {
 			resolveBufferString = state.state == CaptureManager::State::eOK ? L"1" : L"0";
@@ -147,7 +147,7 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 	}
 	if (optionName == L"device list") {
 		resolveBufferString =
-			snapshot.diSnapshot.type == utils::MediaDeviceType::eINPUT
+			snapshot.deviceInfoSnapshot.type == utils::MediaDeviceType::eINPUT
 				? snapshot.deviceListInput
 				: snapshot.deviceListOutput;
 		return;

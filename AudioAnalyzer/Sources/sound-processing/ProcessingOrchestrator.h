@@ -13,7 +13,7 @@
 namespace rxtd::audio_analyzer {
 	class ProcessingOrchestrator {
 	public:
-		using DataSnapshot = std::map<istring, ProcessingManager::Snapshot, std::less<>>;
+		using Snapshot = std::map<istring, ProcessingManager::Snapshot, std::less<>>;
 
 	private:
 		double warnTimeMs = 33.0;
@@ -22,7 +22,7 @@ namespace rxtd::audio_analyzer {
 		utils::Rainmeter::Logger logger;
 
 		std::map<istring, ProcessingManager, std::less<>> saMap;
-		DataSnapshot dataSnapshot;
+		Snapshot snapshot;
 
 	public:
 		void setLogger(utils::Rainmeter::Logger value) {
@@ -37,15 +37,14 @@ namespace rxtd::audio_analyzer {
 			warnTimeMs = value;
 		}
 
-		void exchangeData(DataSnapshot& snapshot);
-
 		void patch(
 			const ParamParser::ProcessingsInfoMap& patches,
 			index legacyNumber,
 			index samplesPerSec, ChannelLayout channelLayout
 		);
+		void configureSnapshot(Snapshot& snap) const;
 
 		void process(const ChannelMixer& channelMixer);
-		void configureSnapshot(DataSnapshot& snapshot) const;
+		void exchangeData(Snapshot& snap);
 	};
 }
