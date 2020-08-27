@@ -216,11 +216,10 @@ void Spectrogram::vProcess(array_view<float> wave, clock::time_point killTime) {
 	auto& source = *config.sourcePtr;
 
 	bool imageChanged = false;
-
 	for (auto chunk : source.getChunks(0)) {
 		counter += chunk.equivalentWaveSize;
 
-		if (counter < blockSize) {
+		if (counter < blockSize || clock::now() > killTime) {
 			continue;
 		}
 
@@ -250,6 +249,18 @@ void Spectrogram::vProcess(array_view<float> wave, clock::time_point killTime) {
 			counter -= blockSize;
 			dataShortageEqSize -= blockSize;
 		}
+	}
+
+	// in case kill time is exceeded, this ensures that image speed is consistent
+	while (counter >= blockSize) {
+		if (lastDataIsZero) {
+			image.pushEmptyStrip(params.colors[0].color.toIntColor());
+		} else {
+			image.pushStrip(stripBuffer);
+		}
+
+		counter -= blockSize;
+		dataShortageEqSize -= blockSize;
 	}
 
 	index localShortageSize = dataShortageEqSize;

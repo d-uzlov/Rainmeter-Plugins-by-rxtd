@@ -99,6 +99,16 @@ void BandCascadeTransformer::vProcess(array_view<float> wave, clock::time_point 
 	}
 
 	for (auto chunk : source.getChunks(0)) {
+		auto dest = pushLayer(0, chunk.equivalentWaveSize);
+
+		if (clock::now() > killTime) {
+			array_view<float> dataToCopy;
+			auto myChunks = getChunks(0);
+			dataToCopy = myChunks.empty() ? getSavedData(0) : myChunks.back().data;
+			std::copy(dataToCopy.begin(), dataToCopy.end(), dest.begin());
+			continue;
+		}
+
 		for (index i = 0; i < layersCount; i++) {
 			auto& meta = snapshot[i];
 			meta.offset -= chunk.equivalentWaveSize;
@@ -115,7 +125,6 @@ void BandCascadeTransformer::vProcess(array_view<float> wave, clock::time_point 
 			meta.maxValue = *std::max_element(meta.data.begin(), meta.data.end());
 		}
 
-		auto dest = pushLayer(0, chunk.equivalentWaveSize);
 		for (index band = 0; band < dest.size(); ++band) {
 			dest[band] = computeForBand(band);
 		}

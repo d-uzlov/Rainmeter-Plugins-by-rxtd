@@ -43,7 +43,8 @@ SoundHandler::ParseResult legacy_WeightedBlur::parseParams(
 	return result;
 }
 
-SoundHandler::ConfigurationResult legacy_WeightedBlur::vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) {
+SoundHandler::ConfigurationResult legacy_WeightedBlur::vConfigure(const std::any& _params, Logger& cl,
+                                                                  std::any& snapshotAny) {
 	params = std::any_cast<Params>(_params);
 
 	resamplerPtr = getResampler();
@@ -71,8 +72,15 @@ void legacy_WeightedBlur::vProcess(array_view<float> wave, clock::time_point kil
 			const auto cascadeMagnitudes = chunk.data;
 			const auto cascadeWeights = resampler.getLayerWeights(i);
 
-			const auto result = pushLayer(i, chunk.equivalentWaveSize);
-			blurCascade(cascadeMagnitudes, cascadeWeights, result, std::llround(minRadius), std::llround(maxRadius));
+			auto result = pushLayer(i, chunk.equivalentWaveSize);
+			if (maxRadius <= 1.0 || clock::now() > killTime) {
+				std::copy(cascadeMagnitudes.begin(), cascadeMagnitudes.end(), result.begin());
+			} else {
+				blurCascade(
+					cascadeMagnitudes, cascadeWeights, result,
+					std::llround(minRadius), std::llround(maxRadius)
+				);
+			}
 		}
 
 		minRadius *= params.minRadiusAdaptation;

@@ -22,8 +22,7 @@ namespace rxtd::audio_analyzer {
 		using Snapshot = std::map<Channel, ChannelSnapshot, std::less<>>;
 
 	private:
-		using clock = std::chrono::high_resolution_clock;
-		static_assert(clock::is_steady);
+		using clock = SoundHandler::clock;
 
 		using HandlerMap = std::map<istring, std::unique_ptr<SoundHandler>, std::less<>>;
 
@@ -61,8 +60,7 @@ namespace rxtd::audio_analyzer {
 			Snapshot& snapshot
 		);
 
-		// returns true when killed on timeout
-		bool process(const ChannelMixer& mixer, clock::time_point killTime);
+		void process(const ChannelMixer& mixer, clock::time_point killTime);
 		void updateSnapshot(Snapshot& snapshot);
 	};
 }

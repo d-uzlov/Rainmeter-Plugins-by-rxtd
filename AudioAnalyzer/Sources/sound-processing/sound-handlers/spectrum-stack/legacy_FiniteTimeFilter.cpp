@@ -50,7 +50,8 @@ SoundHandler::ParseResult legacy_FiniteTimeFilter::parseParams(
 	return result;
 }
 
-SoundHandler::ConfigurationResult legacy_FiniteTimeFilter::vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) {
+SoundHandler::ConfigurationResult legacy_FiniteTimeFilter::vConfigure(const std::any& _params, Logger& cl,
+                                                                      std::any& snapshotAny) {
 	params = std::any_cast<Params>(_params);
 
 	if (params.smoothingFactor <= 1) {
@@ -118,8 +119,12 @@ void legacy_FiniteTimeFilter::vProcess(array_view<float> wave, clock::time_point
 			const auto sourceValues = chunk.data;
 			std::copy(sourceValues.begin(), sourceValues.end(), layerPastValues[pastValuesIndex].begin());
 
-			const auto dest = pushLayer(layer, chunk.equivalentWaveSize);
-			applyToLayer(layerPastValues, dest);
+			auto dest = pushLayer(layer, chunk.equivalentWaveSize);
+			if (clock::now() > killTime) {
+				std::copy(sourceValues.begin(), sourceValues.end(), dest.begin());
+			} else {
+				applyToLayer(layerPastValues, dest);
+			}
 		}
 	}
 }

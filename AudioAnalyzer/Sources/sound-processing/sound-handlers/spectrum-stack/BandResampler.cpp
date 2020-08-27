@@ -240,11 +240,19 @@ void BandResampler::vProcess(array_view<float> wave, clock::time_point killTime)
 	double binWidth = static_cast<double>(config.sampleRate) / (source.getFftSize() * std::pow(2, startCascade));
 
 	for (index cascadeIndex = startCascade; cascadeIndex < endCascade; ++cascadeIndex) {
-		const auto chunks = source.getChunks(cascadeIndex);
 		const index localCascadeIndex = cascadeIndex - startCascade;
 
-		for (auto chunk : chunks) {
+		for (auto chunk : source.getChunks(cascadeIndex)) {
 			auto dest = pushLayer(localCascadeIndex, chunk.equivalentWaveSize);
+
+			if (clock::now() > killTime) {
+				array_view<float> dataToCopy;
+				auto myChunks = getChunks(cascadeIndex);
+				dataToCopy = myChunks.empty() ? getSavedData(cascadeIndex) : myChunks.back().data;
+				std::copy(dataToCopy.begin(), dataToCopy.end(), dest.begin());
+				continue;
+			}
+
 			sampleCascade(chunk.data, dest, binWidth);
 
 			if (params.legacy_proportionalValues) {

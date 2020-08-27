@@ -68,7 +68,7 @@ void UniformBlur::vProcess(array_view<float> wave, clock::time_point killTime) {
 			auto cascadeResult = pushLayer(i, chunk.equivalentWaveSize);
 
 			const index radius = std::llround(theoreticalRadius);
-			if (radius < 1) {
+			if (radius < 1 || clock::now() > killTime) {
 				std::copy(cascadeSource.begin(), cascadeSource.end(), cascadeResult.begin());
 			} else {
 				blurCascade(cascadeSource, cascadeResult, radius);

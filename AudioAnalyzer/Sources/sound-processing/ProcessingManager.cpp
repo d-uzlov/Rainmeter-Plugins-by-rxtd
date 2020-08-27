@@ -95,7 +95,7 @@ void ProcessingManager::setParams(
 	}
 }
 
-bool ProcessingManager::process(const ChannelMixer& mixer, clock::time_point killTime) {
+void ProcessingManager::process(const ChannelMixer& mixer, clock::time_point killTime) {
 	for (auto& [channel, channelStruct] : channelMap) {
 		auto wave = mixer.getChannelPCM(channel);
 
@@ -113,14 +113,8 @@ bool ProcessingManager::process(const ChannelMixer& mixer, clock::time_point kil
 		for (auto& handlerName : order) {
 			auto& handler = *channelStruct.handlerMap[handlerName];
 			handler.process(waveBuffer, killTime);
-
-			if (clock::now() > killTime) {
-				return true;
-			}
 		}
 	}
-
-	return false;
 }
 
 void ProcessingManager::updateSnapshot(Snapshot& snapshot) {

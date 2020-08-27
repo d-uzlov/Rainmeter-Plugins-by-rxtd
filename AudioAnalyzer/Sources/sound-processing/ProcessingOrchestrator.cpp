@@ -37,39 +37,35 @@ void ProcessingOrchestrator::patch(
 }
 
 void ProcessingOrchestrator::process(const ChannelMixer& channelMixer) {
-	using clock = std::chrono::high_resolution_clock;
-	static_assert(clock::is_steady);
+	using clock = SoundHandler::clock;
 	using namespace std::chrono_literals;
 
-	const auto killTime = clock::now() + std::chrono::duration_cast<std::chrono::milliseconds>(1.0ms * killTimeoutMs);
-
-	bool killed = false;
 	const auto processBeginTime = clock::now();
+	const clock::time_point killTime = processBeginTime + std::chrono::duration_cast<clock::duration>(
+		1.0ms * killTimeoutMs);
+
 	for (auto& [name, sa] : saMap) {
-		killed = sa.process(channelMixer, killTime);
-		if (killed) {
-			break;
+		sa.process(channelMixer, killTime);
+	}
+
+	if (warnTimeMs >= 0.0) {
+		const auto processEndTime = clock::now();
+		const auto processDuration =
+			std::chrono::duration<double, std::milli>{
+				processEndTime - processBeginTime
+			}.count();
+
+		if (processDuration > warnTimeMs) {
+			logger.debug(
+				L"processing overhead {} ms over specified {} ms",
+				processDuration - warnTimeMs,
+				warnTimeMs
+			);
 		}
 	}
-	const auto processEndTime = clock::now();
 
 	for (auto& [name, sa] : saMap) {
 		sa.updateSnapshot(dataSnapshot[name]);
-	}
-
-	const auto processDuration = std::chrono::duration<double, std::milli>{ processEndTime - processBeginTime }.count();
-
-	if (killed) {
-		logger.error(L"handler processing was killed on timeout after {} ms", processDuration);
-		return;
-	}
-
-	if (warnTimeMs >= 0.0 && processDuration > warnTimeMs) {
-		logger.debug(
-			L"processing overhead {} ms over specified {} ms",
-			processDuration - warnTimeMs,
-			warnTimeMs
-		);
 	}
 }
 
