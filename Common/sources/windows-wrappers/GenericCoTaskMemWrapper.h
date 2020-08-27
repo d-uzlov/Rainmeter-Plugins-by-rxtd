@@ -11,7 +11,7 @@
 
 namespace rxtd::utils {
 	template <typename T>
-	class GenericCoTaskMemWrapper {
+	class GenericCoTaskMemWrapper : MovableOnlyBase {
 	public:
 		using ObjectType = T;
 
@@ -21,7 +21,7 @@ namespace rxtd::utils {
 	public:
 		GenericCoTaskMemWrapper() = default;
 
-		template<typename InitFunction>
+		template <typename InitFunction>
 		GenericCoTaskMemWrapper(InitFunction initFunction) {
 			const bool success = initFunction(&ptr);
 			if (!success) {
@@ -46,9 +46,6 @@ namespace rxtd::utils {
 
 			return *this;
 		};
-
-		GenericCoTaskMemWrapper(const GenericCoTaskMemWrapper& other) = delete;
-		GenericCoTaskMemWrapper& operator=(const GenericCoTaskMemWrapper& other) = delete;
 
 		virtual ~GenericCoTaskMemWrapper() {
 			release();

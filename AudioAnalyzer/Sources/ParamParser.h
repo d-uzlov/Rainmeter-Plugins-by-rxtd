@@ -56,11 +56,11 @@ namespace rxtd::audio_analyzer {
 
 	public:
 		void setRainmeter(Rainmeter value) {
-			rain = value;
-			hch.setRain(value);
+			rain = std::move(value);
+			hch.setRain(rain);
 		}
 
-		// return true is there were any changes since last update, false if there were none
+		// return true if there were any changes since last update, false if there were none
 		bool parse(index legacyNumber);
 
 		[[nodiscard]]

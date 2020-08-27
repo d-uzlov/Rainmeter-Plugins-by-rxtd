@@ -12,15 +12,13 @@
  * Modified by rxtd, 2019.
  */
 
-#pragma once
+ // for some reason #pragma once didn't work for me here
+#ifndef ARRAY_VIEW_ARRAY_SPAN_H
+#define ARRAY_VIEW_ARRAY_SPAN_H
 
 #include <iterator>
 #include <limits>
 #include <cassert>
-
-// for some reason #pragma once didn't work for me here
-#ifndef ARRAY_VIEW_ARRAY_SPAN_H
-#define ARRAY_VIEW_ARRAY_SPAN_H
 
 template <class T>
 class array_span {

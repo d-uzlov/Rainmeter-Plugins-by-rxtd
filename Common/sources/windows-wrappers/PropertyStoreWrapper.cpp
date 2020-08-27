@@ -13,18 +13,13 @@
 using namespace utils;
 
 namespace {
-	class PropVariantWrapper {
+	class PropVariantWrapper : NonMovableBase {
 		PROPVARIANT handle{ };
 
 	public:
 		PropVariantWrapper() {
 			PropVariantInit(&handle);
 		}
-
-		PropVariantWrapper(const PropVariantWrapper& other) = delete;
-		PropVariantWrapper(PropVariantWrapper&& other) = delete;
-		PropVariantWrapper& operator=(const PropVariantWrapper& other) = delete;
-		PropVariantWrapper& operator=(PropVariantWrapper&& other) = delete;
 
 		~PropVariantWrapper() {
 			PropVariantClear(&handle);

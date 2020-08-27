@@ -13,19 +13,11 @@
 
 namespace rxtd::utils {
 	template <typename T>
-	class IUnknownImpl : virtual public T {
+	class IUnknownImpl : NonMovableBase, virtual public T {
 		static_assert(std::is_base_of<IUnknown, T>::value, "T must extend IUnknown");
 		LONG _cRef = 1;
 
 	public:
-		IUnknownImpl() = default;
-		virtual ~IUnknownImpl() = default;
-
-		IUnknownImpl(const IUnknownImpl& other) = delete;
-		IUnknownImpl(IUnknownImpl&& other) noexcept = delete;
-		IUnknownImpl& operator=(const IUnknownImpl& other) = delete;
-		IUnknownImpl& operator=(IUnknownImpl&& other) noexcept = delete;
-
 		ULONG STDMETHODCALLTYPE AddRef() final override {
 			return InterlockedIncrement(&_cRef);
 		}

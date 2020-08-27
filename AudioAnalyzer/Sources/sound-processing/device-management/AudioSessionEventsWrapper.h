@@ -15,7 +15,7 @@
 namespace rxtd::audio_analyzer {
 	// the whole and only point of this class is to
 	// automatically call AudioSessionEventsImpl#deinit
-	class AudioSessionEventsWrapper {
+	class AudioSessionEventsWrapper : MovableOnlyBase {
 		utils::GenericComWrapper<utils::AudioSessionEventsImpl> impl;
 
 	public:
@@ -24,9 +24,6 @@ namespace rxtd::audio_analyzer {
 		~AudioSessionEventsWrapper() {
 			destruct();
 		}
-
-		AudioSessionEventsWrapper(const AudioSessionEventsWrapper& other) = delete;
-		AudioSessionEventsWrapper& operator=(const AudioSessionEventsWrapper& other) = delete;
 
 		AudioSessionEventsWrapper(AudioSessionEventsWrapper&& other) noexcept {
 			destruct();

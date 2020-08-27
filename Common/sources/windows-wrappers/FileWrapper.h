@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -10,16 +10,11 @@
 #pragma once
 
 namespace rxtd::utils {
-	class FileWrapper {
+	class FileWrapper : NonMovableBase {
 		void* fileHandle{ };
 
 	public:
 		FileWrapper(const wchar_t* path);
-
-		FileWrapper(FileWrapper&& other) = delete;
-		FileWrapper& operator=(FileWrapper&& other) noexcept = delete;
-		FileWrapper(const FileWrapper& other) = delete;
-		FileWrapper& operator=(const FileWrapper& other) = delete;
 
 		~FileWrapper();
 

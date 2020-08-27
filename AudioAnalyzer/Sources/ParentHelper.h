@@ -16,7 +16,7 @@
 #include "windows-wrappers/implementations/NotificationClientImpl.h"
 
 namespace rxtd::audio_analyzer {
-	class ParentHelper {
+	class ParentHelper : MovableOnlyBase {
 	public:
 		struct RequestedDeviceDescription {
 			CaptureManager::DataSource type{ };
@@ -83,13 +83,6 @@ namespace rxtd::audio_analyzer {
 		} requestFields;
 
 	public:
-		ParentHelper() = default;
-
-		ParentHelper(const ParentHelper& other) = delete;
-		ParentHelper(ParentHelper&& other) noexcept = delete;
-		ParentHelper& operator=(const ParentHelper& other) = delete;
-		ParentHelper& operator=(ParentHelper&& other) noexcept = delete;
-
 		~ParentHelper();
 
 		// throws std::exception on fatal error

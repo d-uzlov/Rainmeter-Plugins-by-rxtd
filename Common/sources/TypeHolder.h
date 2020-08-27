@@ -8,6 +8,7 @@
  */
 
 #pragma once
+
 #include "RainmeterWrappers.h"
 
 namespace rxtd::utils {
@@ -17,7 +18,7 @@ namespace rxtd::utils {
 		eBROKEN
 	};
 
-	class TypeHolder {
+	class TypeHolder : NonMovableBase {
 	protected:
 		Rainmeter rain;
 		Rainmeter::Logger logger;
@@ -36,10 +37,6 @@ namespace rxtd::utils {
 	public:
 		TypeHolder(Rainmeter&& rain);
 		virtual ~TypeHolder() = default;
-		TypeHolder(const TypeHolder& other) = delete;
-		TypeHolder(TypeHolder&& other) = delete;
-		TypeHolder& operator=(const TypeHolder& other) = delete;
-		TypeHolder& operator=(TypeHolder&& other) = delete;
 
 		double update();
 		void reload();
@@ -84,11 +81,6 @@ namespace rxtd::utils {
 		explicit ParentBase(Rainmeter&& _rain);
 
 		~ParentBase();
-
-		ParentBase(const ParentBase& other) = delete;
-		ParentBase(ParentBase&& other) noexcept = delete;
-		ParentBase& operator=(const ParentBase& other) = delete;
-		ParentBase& operator=(ParentBase&& other) noexcept = delete;
 
 		template <typename T>
 		[[nodiscard]]

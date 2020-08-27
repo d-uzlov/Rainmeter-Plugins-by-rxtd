@@ -64,14 +64,6 @@ namespace rxtd::audio_analyzer {
 		index lastExclusiveProcessId = -1;
 
 	public:
-		CaptureManager() = default;
-
-		CaptureManager(CaptureManager&& other) noexcept = default;
-		CaptureManager& operator=(CaptureManager&& other) noexcept = default;
-
-		CaptureManager(const CaptureManager& other) = delete;
-		CaptureManager& operator=(const CaptureManager& other) = delete;
-
 		void setLogger(utils::Rainmeter::Logger value) {
 			logger = std::move(value);
 		}
