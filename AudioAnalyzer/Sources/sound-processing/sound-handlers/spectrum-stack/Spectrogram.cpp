@@ -132,11 +132,11 @@ SoundHandler::ParseResult Spectrogram::parseParams(
 
 	params.stationary = om.get(L"stationary").asBool(false);
 
-	ParseResult result;
-	result.setParams(std::move(params));
-	result.addSource(sourceId);
-	result.setFinisher(staticFinisher);
-	result.setPropGetter(getProp);
+	ParseResult result{ true };
+	result.params = std::move(params);
+	result.finisher = staticFinisher;
+	result.propGetter = getProp;
+	result.sources.emplace_back(sourceId);
 	return result;
 }
 

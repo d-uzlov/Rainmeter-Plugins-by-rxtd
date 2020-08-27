@@ -29,9 +29,9 @@ SoundHandler::ParseResult UniformBlur::parseParams(
 	params.blurRadius = std::max<double>(om.get(L"Radius").asFloat(1.0) * 0.25, 0.0);
 	params.blurRadiusAdaptation = std::max<double>(om.get(L"RadiusAdaptation").asFloat(2.0), 0.0);
 
-	ParseResult result;
-	result.setParams(std::move(params));
-	result.addSource(sourceId);
+	ParseResult result{ true };
+	result.params = params;
+	result.sources.emplace_back(sourceId);
 	return result;
 }
 

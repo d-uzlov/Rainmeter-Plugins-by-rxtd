@@ -37,8 +37,8 @@ SoundHandler::ParseResult Loudness::parseParams(
 
 	params.ignoreGatingForSilence = om.get(L"ignoreGatingForSilence").asBool(true);
 
-	ParseResult result;
-	result.setParams(std::move(params));
+	ParseResult result{ true };
+	result.params = std::move(params);
 	return result;
 }
 

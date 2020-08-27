@@ -37,14 +37,14 @@ SoundHandler::ParseResult legacy_WeightedBlur::parseParams(
 	// params.minWeight = std::max<double>(optionMap.get(L"minWeight"sv).asFloat(0), std::numeric_limits<float>::epsilon());
 	params.minWeight = 0.0; // doesn't work as expected
 
-	ParseResult result;
-	result.setParams(std::move(params));
-	result.addSource(sourceId);
+	ParseResult result{ true };
+	result.params = params;
+	result.sources.emplace_back(sourceId);
 	return result;
 }
 
-SoundHandler::ConfigurationResult legacy_WeightedBlur::vConfigure(const std::any& _params, Logger& cl,
-                                                                  std::any& snapshotAny) {
+SoundHandler::ConfigurationResult
+legacy_WeightedBlur::vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) {
 	params = std::any_cast<Params>(_params);
 
 	resamplerPtr = getResampler();

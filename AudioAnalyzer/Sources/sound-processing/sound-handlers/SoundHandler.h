@@ -72,63 +72,15 @@ namespace rxtd::audio_analyzer {
 		// return true if such prop exists, false otherwise
 		using PropGetter = bool(*)(const std::any& handlerSpecificData, isview prop, utils::BufferPrinter& printer);
 
-		class ParseResult {
+		struct ParseResult {
 			bool valid = false;
 			std::any params;
 			std::vector<istring> sources;
 			Finisher finisher = nullptr;
 			PropGetter propGetter = nullptr;
 
-		public:
-			template <typename Params>
-			void setParams(Params value) {
-				valid = true;
-				params = std::move(value);
-			}
-
-			void addSource(istring value) {
-				valid = true;
-				sources.push_back(std::move(value));
-			}
-
-			void addSource(isview value) {
-				valid = true;
-				sources.push_back(value % own());
-			}
-
-			void setFinisher(Finisher value) {
-				valid = true;
-				finisher = value;
-			}
-
-			void setPropGetter(PropGetter value) {
-				valid = true;
-				propGetter = value;
-			}
-
-			[[nodiscard]]
-			bool isValid() const {
-				return valid;
-			}
-
-			[[nodiscard]]
-			auto takeParams() {
-				return std::move(params);
-			}
-
-			[[nodiscard]]
-			auto takeSources() {
-				return std::move(sources);
-			}
-
-			[[nodiscard]]
-			auto takeFinisher() const {
-				return finisher;
-			}
-
-			[[nodiscard]]
-			auto takePropGetter() const {
-				return propGetter;
+			ParseResult(bool isValid = false) {
+				valid = isValid;
 			}
 		};
 

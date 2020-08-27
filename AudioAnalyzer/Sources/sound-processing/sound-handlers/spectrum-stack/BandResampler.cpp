@@ -63,10 +63,10 @@ SoundHandler::ParseResult BandResampler::parseParams(
 	const bool defaultCubicResampling = !(legacyNumber < 104);
 	params.useCubicResampling = om.get(L"cubicInterpolation").asBool(defaultCubicResampling);
 
-	ParseResult result;
-	result.setParams(std::move(params));
-	result.addSource(sourceId);
-	result.setPropGetter(getProp);
+	ParseResult result{ true };
+	result.params = std::move(params);
+	result.propGetter = getProp;
+	result.sources.emplace_back(sourceId);
 	return result;
 }
 

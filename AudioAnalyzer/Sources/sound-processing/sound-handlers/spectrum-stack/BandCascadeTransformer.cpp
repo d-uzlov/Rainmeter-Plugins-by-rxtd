@@ -57,9 +57,9 @@ SoundHandler::ParseResult BandCascadeTransformer::parseParams(
 		params.mixFunction = MixFunction::PRODUCT;
 	}
 
-	ParseResult result;
-	result.setParams(std::move(params));
-	result.addSource(sourceId);
+	ParseResult result{ true };
+	result.params = params;
+	result.sources.emplace_back(sourceId);
 	return result;
 }
 

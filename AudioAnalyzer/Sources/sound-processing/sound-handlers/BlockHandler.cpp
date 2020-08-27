@@ -41,9 +41,9 @@ SoundHandler::ParseResult BlockHandler::parseParams(
 		params.transformer = audio_utils::TransformationParser::parse(om.get(L"transform").asString(), transformLogger);
 	}
 
-	ParseResult result;
-	result.setParams(std::move(params));
-	result.setPropGetter(getProp);
+	ParseResult result{ true };
+	result.params = std::move(params);
+	result.propGetter = getProp;
 	return result;
 }
 

@@ -83,16 +83,16 @@ namespace rxtd::audio_analyzer {
 			SoundHandler& ref = instance;
 			SoundHandler::ParseResult parseResult = ref.parseParams(om, cl, rain, legacyNumber);
 
-			if (!parseResult.isValid()) {
+			if (!parseResult.valid) {
 				return { };
 			}
 
 			PatchInfo result;
-			result.params = parseResult.takeParams();
+			result.params = std::move(parseResult.params);
 			result.fun = SoundHandler::patchHandlerImpl<T>;
-			result.sources = parseResult.takeSources();
-			result.finisher = parseResult.takeFinisher();
-			result.propGetter = parseResult.takePropGetter();
+			result.sources = std::move(parseResult.sources);
+			result.finisher = parseResult.finisher;
+			result.propGetter = parseResult.propGetter;
 			return result;
 		}
 
