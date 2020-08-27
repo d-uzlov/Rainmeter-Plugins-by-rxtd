@@ -43,37 +43,40 @@ namespace rxtd::audio_analyzer {
 		};
 
 	private:
-		utils::Rainmeter::Logger logger;
-		CaptureManager captureManager;
-		utils::CMMNotificationClient notificationClient;
-
-		ProcessingOrchestrator orchestrator;
 		AudioEnumeratorHelper enumerator;
 
-		index legacyNumber{ };
+		struct {
+			index legacyNumber{ };
+			bool useThreading = false;
+			double updateTime{ };
+		} constFields;
 
-		bool optionsChanged = false;
-		ParamParser::ProcessingsInfoMap patches;
-		RequestedDeviceDescription requestedSource;
+		struct {
+			std::atomic_bool stopRequest{ false };
+			utils::CMMNotificationClient notificationClient;
+		} threadSafeFields;
 
-		Snapshot snapshot;
-		bool snapshotIsUpdated = false;
+		struct {
+			std::mutex mutex;
+			std::condition_variable sleepVariable;
 
-		bool useThreading = false;
-		bool needToInitializeThread = false;
-		std::thread thread;
-		std::atomic_bool stopRequest{ false };
-		double updateTime{ };
+			utils::Rainmeter::Logger logger;
+			CaptureManager captureManager;
+			bool needToInitializeThread = false;
+			std::thread thread;
+			ProcessingOrchestrator orchestrator;
+		} mainFields;
 
-		// #fullStateMutex guards all fields except those guarded by #snapshotMutex
-		std::mutex fullStateMutex;
-		std::condition_variable sleepVariable;
+		struct {
+			std::mutex mutex;
 
-		// snapshotMutex guards following fields:
-		//		#snapshot
-		//		#snapshotIsUpdated
-		//		#snapshotIsUpdated
-		std::mutex snapshotMutex;
+			ParamParser::ProcessingsInfoMap patches;
+			RequestedDeviceDescription requestedSource;
+
+			Snapshot snapshot;
+			bool snapshotIsUpdated = false;
+			bool optionsChanged = false;
+		} requestFields;
 
 	public:
 		ParentHelper() = default;
@@ -107,7 +110,7 @@ namespace rxtd::audio_analyzer {
 		void updateDevice();
 		void updateDeviceListStrings();
 
-		std::unique_lock<std::mutex> getFullStateLock();
-		std::unique_lock<std::mutex> getSnapshotLock();
+		std::unique_lock<std::mutex> getMainLock();
+		std::unique_lock<std::mutex> getRequestLock();
 	};
 }

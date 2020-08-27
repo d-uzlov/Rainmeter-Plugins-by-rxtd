@@ -20,47 +20,47 @@ bool ParentHelper::init(
 	const utils::OptionMap& threadingMap,
 	index _legacyNumber
 ) {
-	logger = std::move(_logger);
+	mainFields.logger = std::move(_logger);
 
-	legacyNumber = _legacyNumber;
+	constFields.legacyNumber = _legacyNumber;
 
 	if (!enumerator.isValid()) {
-		logger.error(L"Fatal error: can't create IMMDeviceEnumerator");
+		mainFields.logger.error(L"Fatal error: can't create IMMDeviceEnumerator");
 		return false;
 	}
 
 	updateDeviceListStrings();
 
-	orchestrator.setLogger(logger);
+	mainFields.orchestrator.setLogger(mainFields.logger);
 
 	const double warnTime = threadingMap.get(L"warnTime").asFloat(-1.0);
 	const double killTimeout = std::clamp(threadingMap.get(L"killTimeout").asFloat(33.0), 0.01, 33.0);
 	if (const auto threadingPolicy = threadingMap.get(L"policy").asIString(L"none");
 		threadingPolicy == L"none") {
-		useThreading = false;
+		constFields.useThreading = false;
 	} else if (threadingPolicy == L"separateThread") {
-		useThreading = true;
+		constFields.useThreading = true;
 	} else {
-		logger.error(L"Fatal error: Threading: unknown policy '{}'");
+		mainFields.logger.error(L"Fatal error: Threading: unknown policy '{}'");
 		return false;
 	}
 
-	orchestrator.setWarnTime(warnTime);
-	orchestrator.setKillTimeout(killTimeout);
+	mainFields.orchestrator.setWarnTime(warnTime);
+	mainFields.orchestrator.setKillTimeout(killTimeout);
 
-	updateTime = threadingMap.get(L"updateTime").asFloat(1.0 / 120.0);
-	updateTime = std::clamp(updateTime, 1.0 / 200.0, 1.0);
+	constFields.updateTime = threadingMap.get(L"updateTime").asFloat(1.0 / 120.0);
+	constFields.updateTime = std::clamp(constFields.updateTime, 1.0 / 200.0, 1.0);
 
-	if (useThreading) {
-		needToInitializeThread = true;
+	if (constFields.useThreading) {
+		mainFields.needToInitializeThread = true;
 	}
 
-	notificationClient.setCallback([this]() { wakeThreadUp(); });
+	threadSafeFields.notificationClient.setCallback([this]() { wakeThreadUp(); });
 
-	captureManager.setLogger(logger);
-	captureManager.setLegacyNumber(legacyNumber);
-	const double bufferSize = threadingMap.get(L"bufferSize").asFloat(updateTime * 2.0);
-	captureManager.setBufferSizeInSec(bufferSize);
+	mainFields.captureManager.setLogger(mainFields.logger);
+	mainFields.captureManager.setLegacyNumber(constFields.legacyNumber);
+	const double bufferSize = threadingMap.get(L"bufferSize").asFloat(constFields.updateTime * 2.0);
+	mainFields.captureManager.setBufferSizeInSec(bufferSize);
 
 	return true;
 }
@@ -69,15 +69,15 @@ void ParentHelper::setParams(
 	RequestedDeviceDescription request,
 	ParamParser::ProcessingsInfoMap _patches
 ) {
-	auto fullStateLock = getFullStateLock();
+	auto mainLock = getMainLock();
 
-	optionsChanged = true;
-	patches = std::move(_patches);
-	requestedSource = std::move(request);
+	requestFields.optionsChanged = true;
+	requestFields.patches = std::move(_patches);
+	requestFields.requestedSource = std::move(request);
 
-	if (needToInitializeThread) {
-		needToInitializeThread = false;
-		thread = std::thread{ [this]() { separateThreadFunction(); } };
+	if (mainFields.needToInitializeThread) {
+		mainFields.needToInitializeThread = false;
+		mainFields.thread = std::thread{ [this]() { separateThreadFunction(); } };
 	}
 }
 
@@ -86,199 +86,204 @@ void ParentHelper::setInvalid() {
 }
 
 void ParentHelper::update(Snapshot& snap) {
-	if (!useThreading) {
+	if (!constFields.useThreading) {
 		pUpdate();
 	}
 
-	auto snapshotLock = getSnapshotLock();
+	auto requestLock = getRequestLock();
 
-	if (snapshotIsUpdated) {
-		std::swap(snapshot.dataSnapshot, snap.dataSnapshot);
+	if (requestFields.snapshotIsUpdated) {
+		std::swap(requestFields.snapshot.dataSnapshot, snap.dataSnapshot);
 	} else {
-		snap = snapshot;
-		snapshotIsUpdated = true;
+		snap = requestFields.snapshot;
+		requestFields.snapshotIsUpdated = true;
 	}
 }
 
 void ParentHelper::wakeThreadUp() {
-	if (!useThreading) {
+	if (!constFields.useThreading) {
 		return;
 	}
 
 	try {
-		auto lock = std::unique_lock<std::mutex>{ fullStateMutex, std::defer_lock };
+		auto lock = std::unique_lock<std::mutex>{ mainFields.mutex, std::defer_lock };
 		const bool locked = lock.try_lock();
 		if (locked) {
-			sleepVariable.notify_one();
+			mainFields.sleepVariable.notify_one();
 		}
 	} catch (...) {
 	}
 }
 
 void ParentHelper::stopThread() {
-	if (!useThreading || needToInitializeThread) {
+	if (!constFields.useThreading || mainFields.needToInitializeThread) {
 		return;
 	}
 
-	stopRequest.exchange(true);
+	threadSafeFields.stopRequest.exchange(true);
 
 	wakeThreadUp();
 
-	thread.join();
+	mainFields.thread.join();
 
-	needToInitializeThread = true;
+	mainFields.needToInitializeThread = true;
 }
 
 void ParentHelper::separateThreadFunction() {
 	using namespace std::chrono_literals;
-	const auto sleepTime = 1.0s * updateTime;
+	const auto sleepTime = 1.0s * constFields.updateTime;
 
 	const auto res = CoInitializeEx(nullptr, COINIT_MULTITHREADED | COINIT_DISABLE_OLE1DDE);
 
-	auto fullStateLock = getFullStateLock();
+	auto mainLock = getMainLock();
 
 	if (res != S_OK) {
-		logger.error(L"separate thread: CoInitializeEx failed");
+		mainFields.logger.error(L"separate thread: CoInitializeEx failed");
 		return;
 	}
 
 	while (true) {
-		if (stopRequest.load()) {
+		if (threadSafeFields.stopRequest.load()) {
 			break;
 		}
 
 		pUpdate();
 
-		if (stopRequest.load()) {
+		if (threadSafeFields.stopRequest.load()) {
 			break;
 		}
 
-		sleepVariable.wait_for(fullStateLock, sleepTime);
+		mainFields.sleepVariable.wait_for(mainLock, sleepTime);
 	}
 
 	CoUninitialize();
 }
 
 void ParentHelper::pUpdate() {
-	if (optionsChanged) {
-		auto snapshotLock = getSnapshotLock();
+	if (requestFields.optionsChanged) {
+		auto requestLock = getRequestLock();
 		updateDevice();
-		optionsChanged = false;
+		requestFields.optionsChanged = false;
 		// todo check why image in reset when I forgot to set optionsChanged = false
 	}
 
-	const auto changes = notificationClient.takeChanges();
+	const auto changes = threadSafeFields.notificationClient.takeChanges();
 
 	using DS = CaptureManager::DataSource;
-	if (requestedSource.sourceType == DS::eDEFAULT_INPUT || requestedSource.sourceType == DS::eDEFAULT_OUTPUT) {
+	// todo userRequestFields but no mutex
+	if (requestFields.requestedSource.sourceType == DS::eDEFAULT_INPUT
+		|| requestFields.requestedSource.sourceType == DS::eDEFAULT_OUTPUT) {
 		const auto change =
-			requestedSource.sourceType == DS::eDEFAULT_INPUT
+			requestFields.requestedSource.sourceType == DS::eDEFAULT_INPUT
 				? changes.defaultCapture
 				: changes.defaultRender;
 		switch (change) {
 			using DDC = utils::CMMNotificationClient::DefaultDeviceChange;
 		case DDC::eNONE: break;
 		case DDC::eCHANGED: {
-			auto snapshotLock = getSnapshotLock();
+			auto requestLock = getRequestLock();
 
 			updateDevice();
 			break;
 		}
 		case DDC::eNO_DEVICE: {
-			const sview io = requestedSource.sourceType == DS::eDEFAULT_INPUT ? L"input" : L"output";
-			logger.error(L"Requested default {} audio device, but all {} devices has been disconnected", io, io);
-			auto snapshotLock = getSnapshotLock();
-			snapshot.deviceIsAvailable = false;
-			snapshotIsUpdated = false;
+			const sview io = requestFields.requestedSource.sourceType == DS::eDEFAULT_INPUT ? L"input" : L"output";
+			mainFields.logger.error(L"Requested default {} audio device, but all {} devices has been disconnected", io, io);
+			auto requestLock = getRequestLock();
+			requestFields.snapshot.deviceIsAvailable = false;
+			requestFields.snapshotIsUpdated = false;
 			break;
 		}
 		}
 	}
 
 	if (!changes.devices.empty()) {
-		auto snapshotLock = getSnapshotLock();
+		auto requestLock = getRequestLock();
 
-		if (captureManager.getState() == CaptureManager::State::eDEVICE_CONNECTION_ERROR
-			&& changes.devices.count(snapshot.diSnapshot.id) > 0) {
+		if (mainFields.captureManager.getState() == CaptureManager::State::eDEVICE_CONNECTION_ERROR
+			&& changes.devices.count(requestFields.snapshot.diSnapshot.id) > 0) {
 			updateDevice();
 		}
 
 		updateDeviceListStrings();
 	}
 
-	if (captureManager.getState() == CaptureManager::State::eDEVICE_IS_EXCLUSIVE) {
-		captureManager.tryToRecoverFromExclusive();
+	if (mainFields.captureManager.getState() == CaptureManager::State::eDEVICE_IS_EXCLUSIVE) {
+		mainFields.captureManager.tryToRecoverFromExclusive();
 	}
 
-	if (captureManager.getState() == CaptureManager::State::eRECONNECT_NEEDED) {
-		auto snapshotLock = getSnapshotLock();
+	if (mainFields.captureManager.getState() == CaptureManager::State::eRECONNECT_NEEDED) {
+		auto requestLock = getRequestLock();
 
 		updateDevice();
 	}
 
-	if (captureManager.getState() != CaptureManager::State::eOK) {
+	if (mainFields.captureManager.getState() != CaptureManager::State::eOK) {
 		return;
 	}
 
-	const bool anyCaptured = captureManager.capture();
+	const bool anyCaptured = mainFields.captureManager.capture();
 	if (anyCaptured) {
-		orchestrator.process(captureManager.getChannelMixer());
+		mainFields.orchestrator.process(mainFields.captureManager.getChannelMixer());
 
 		{
-			auto snapshotLock = getSnapshotLock();
-			orchestrator.exchangeData(snapshot.dataSnapshot);
+			auto requestLock = getRequestLock();
+			mainFields.orchestrator.exchangeData(requestFields.snapshot.dataSnapshot);
 		}
 	}
 
-	if (captureManager.getState() == CaptureManager::State::eRECONNECT_NEEDED) {
+	if (mainFields.captureManager.getState() == CaptureManager::State::eRECONNECT_NEEDED) {
 		updateDevice();
 	}
 }
 
 void ParentHelper::updateDevice() {
-	snapshotIsUpdated = false;
+	requestFields.snapshotIsUpdated = false;
 
-	captureManager.setSource(requestedSource.sourceType, requestedSource.id);
+	mainFields.captureManager.setSource(
+		requestFields.requestedSource.sourceType,
+		requestFields.requestedSource.id
+	);
 
-	snapshot.deviceIsAvailable = captureManager.getState() == CaptureManager::State::eOK;
-	if (!snapshot.deviceIsAvailable) {
+	requestFields.snapshot.deviceIsAvailable = mainFields.captureManager.getState() == CaptureManager::State::eOK;
+	if (!requestFields.snapshot.deviceIsAvailable) {
 		return;
 	}
 
 	// it's important that if device is not available
 	// then #updateSnapshot is not called
-	captureManager.updateSnapshot(snapshot.diSnapshot);
+	mainFields.captureManager.updateSnapshot(requestFields.snapshot.diSnapshot);
 
-	orchestrator.patch(
-		patches, legacyNumber,
-		snapshot.diSnapshot.format.samplesPerSec,
-		snapshot.diSnapshot.format.channelLayout
+	mainFields.orchestrator.patch(
+		requestFields.patches, constFields.legacyNumber,
+		requestFields.snapshot.diSnapshot.format.samplesPerSec,
+		requestFields.snapshot.diSnapshot.format.channelLayout
 	);
 
-	orchestrator.configureSnapshot(snapshot.dataSnapshot);
+	mainFields.orchestrator.configureSnapshot(requestFields.snapshot.dataSnapshot);
 }
 
 void ParentHelper::updateDeviceListStrings() {
-	if (legacyNumber < 104) {
-		snapshot.deviceListInput = enumerator.legacy_makeDeviceString(utils::MediaDeviceType::eINPUT);
-		snapshot.deviceListOutput = enumerator.legacy_makeDeviceString(utils::MediaDeviceType::eOUTPUT);
+	if (constFields.legacyNumber < 104) {
+		requestFields.snapshot.deviceListInput = enumerator.legacy_makeDeviceString(utils::MediaDeviceType::eINPUT);
+		requestFields.snapshot.deviceListOutput = enumerator.legacy_makeDeviceString(utils::MediaDeviceType::eOUTPUT);
 	} else {
-		snapshot.deviceListInput = enumerator.makeDeviceString(utils::MediaDeviceType::eINPUT);
-		snapshot.deviceListOutput = enumerator.makeDeviceString(utils::MediaDeviceType::eOUTPUT);
+		requestFields.snapshot.deviceListInput = enumerator.makeDeviceString(utils::MediaDeviceType::eINPUT);
+		requestFields.snapshot.deviceListOutput = enumerator.makeDeviceString(utils::MediaDeviceType::eOUTPUT);
 	}
 }
 
-std::unique_lock<std::mutex> ParentHelper::getFullStateLock() {
-	auto lock = std::unique_lock<std::mutex>{ fullStateMutex, std::defer_lock };
-	if (useThreading) {
+std::unique_lock<std::mutex> ParentHelper::getMainLock() {
+	auto lock = std::unique_lock<std::mutex>{ mainFields.mutex, std::defer_lock };
+	if (constFields.useThreading) {
 		lock.lock();
 	}
 	return lock;
 }
 
-std::unique_lock<std::mutex> ParentHelper::getSnapshotLock() {
-	auto lock = std::unique_lock<std::mutex>{ snapshotMutex, std::defer_lock };
-	if (useThreading) {
+std::unique_lock<std::mutex> ParentHelper::getRequestLock() {
+	auto lock = std::unique_lock<std::mutex>{ requestFields.mutex, std::defer_lock };
+	if (constFields.useThreading) {
 		lock.lock();
 	}
 	return lock;
