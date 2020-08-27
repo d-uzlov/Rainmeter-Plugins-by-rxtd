@@ -53,10 +53,15 @@ void ParentHelper::init(
 	mainFields.orchestrator.setWarnTime(warnTime);
 	mainFields.orchestrator.setKillTimeout(killTimeout);
 
-	constFields.updateTime = threadingMap.get(L"updateTime").asFloat(1.0 / 120.0);
-	constFields.updateTime = std::clamp(constFields.updateTime, 1.0 / 200.0, 1.0);
+	double bufferSize = 1.0;
+	if (constFields.useThreading) {
+		constFields.updateTime = threadingMap.get(L"updateTime").asFloat(1.0 / 120.0);
+		constFields.updateTime = std::clamp(constFields.updateTime, 1.0 / 200.0, 1.0);
 
-	const double bufferSize = threadingMap.get(L"bufferSize").asFloat(constFields.updateTime * 2.0);
+		const double defaultBufferSize = std::max(constFields.updateTime * 2.0, 0.5);
+		bufferSize = threadingMap.get(L"bufferSize").asFloat(defaultBufferSize);
+		bufferSize = std::clamp(bufferSize, 1.0 / 30.0, 4.0);
+	}
 
 	mainFields.captureManager.setLogger(mainFields.logger);
 	mainFields.captureManager.setLegacyNumber(constFields.legacyNumber);
