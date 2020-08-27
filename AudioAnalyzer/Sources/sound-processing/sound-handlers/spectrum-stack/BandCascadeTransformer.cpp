@@ -142,7 +142,7 @@ float BandCascadeTransformer::computeForBand(index band) const {
 
 	const auto bandWeights = resampler.getBandWeights(band);
 
-	for (index cascade = 0; cascade < snapshot.size(); cascade++) {
+	for (index cascade = 0; cascade < index(snapshot.size()); cascade++) {
 		const float bandWeight = bandWeights[cascade];
 		const float magnitude = snapshot[cascade].data[band];
 

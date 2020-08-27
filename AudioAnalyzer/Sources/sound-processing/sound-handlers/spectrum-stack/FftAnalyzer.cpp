@@ -187,7 +187,7 @@ void FftAnalyzer::vUpdateSnapshot(std::any& handlerSpecificData) const {
 	snapshot.dc.clear();
 
 	for (const auto& cascade : cascades) {
-		snapshot.dc.push_back(cascade.legacy_getDC());
+		snapshot.dc.push_back(float(cascade.legacy_getDC()));
 	}
 }
 

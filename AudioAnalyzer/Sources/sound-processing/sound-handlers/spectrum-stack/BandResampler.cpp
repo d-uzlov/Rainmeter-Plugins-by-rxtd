@@ -287,7 +287,7 @@ void BandResampler::sampleCascade(array_view<float> source, array_span<float> de
 		if (params.useCubicResampling && bandMaxFreq - bandMinFreq < binWidth) {
 			const double interpolatedCoordinate = lowerBinBoundInter.toValue((bandMinFreq + bandMaxFreq) * 0.5);
 			const double value = cih.getValueFor(interpolatedCoordinate);
-			dest[band] = std::max<float>(value, 0.0f);
+			dest[band] = float(std::max(value, 0.0));
 		} else {
 			const index minBin = index(std::floor(lowerBinBoundInter.toValue(bandMinFreq)));
 			if (minBin >= fftBinsCount) {
