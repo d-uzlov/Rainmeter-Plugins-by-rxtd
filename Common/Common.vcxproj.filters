@@ -217,6 +217,9 @@
     <ClInclude Include="sources\windows-wrappers\implementations\AudioSessionEventsImpl.h">
       <Filter>Source Files\windows-wrappers\implementations</Filter>
     </ClInclude>
+    <ClInclude Include="sources\windows-wrappers\GenericCoTaskMemWrapper.h">
+      <Filter>Source Files\windows-wrappers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="array_view.natvis" />

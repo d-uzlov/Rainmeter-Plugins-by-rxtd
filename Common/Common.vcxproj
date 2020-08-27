@@ -206,6 +206,7 @@
     <ClInclude Include="sources\TypeHolder.h" />
     <ClInclude Include="sources\windows-wrappers\FileWrapper.h" />
     <ClInclude Include="sources\windows-wrappers\GenericComWrapper.h" />
+    <ClInclude Include="sources\windows-wrappers\GenericCoTaskMemWrapper.h" />
     <ClInclude Include="sources\windows-wrappers\IAudioCaptureClientWrapper.h" />
     <ClInclude Include="sources\windows-wrappers\IAudioClientWrapper.h" />
     <ClInclude Include="sources\windows-wrappers\IMMDeviceEnumeratorWrapper.h" />

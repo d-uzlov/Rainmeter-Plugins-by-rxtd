@@ -34,7 +34,7 @@ namespace rxtd::utils {
 
 		[[nodiscard]]
 		DeviceInfo readDeviceInfo();
-		
+
 		[[nodiscard]]
 		IAudioClientWrapper openAudioClient();
 
@@ -43,7 +43,7 @@ namespace rxtd::utils {
 			return lastResult;
 		}
 
-		template<typename Interface>
+		template <typename Interface>
 		GenericComWrapper<Interface> activateFor() {
 			static_assert(
 				std::is_base_of<IAudioClient, Interface>::value
@@ -53,16 +53,11 @@ namespace rxtd::utils {
 				|| std::is_base_of<IAudioSessionManager2, Interface>::value
 				|| std::is_base_of<IDeviceTopology, Interface>::value,
 				"Interface is not supported by IMMDevice"
-				);
+			);
 
 			return {
 				[&](auto ptr) {
-					lastResult = getPointer()->Activate(
-						__uuidof(Interface),
-						CLSCTX_INPROC_SERVER,
-						nullptr,
-						reinterpret_cast<void**>(ptr)
-					);
+					lastResult = typedQuery(&IMMDevice::Activate, ptr, CLSCTX_INPROC_SERVER, nullptr);
 					return lastResult == S_OK;
 				}
 			};

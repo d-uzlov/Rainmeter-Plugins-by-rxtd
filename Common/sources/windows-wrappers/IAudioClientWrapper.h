@@ -79,7 +79,7 @@ namespace rxtd::utils {
 
 			return {
 				[&](auto ptr) {
-					lastResult = getPointer()->GetService(__uuidof(Interface), reinterpret_cast<void**>(ptr));
+					lastResult = typedQuery(&IAudioClient::GetService, ptr);
 					return lastResult == S_OK;
 				}
 			};

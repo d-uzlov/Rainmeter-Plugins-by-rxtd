@@ -10,9 +10,9 @@
 #include "MediaDeviceWrapper.h"
 
 #include <functiondiscoverykeys_devpkey.h>
-#include "PropertyStoreWrapper.h"
 
-static const IID IID_IAudioClient = __uuidof(IAudioClient);
+#include "GenericCoTaskMemWrapper.h"
+#include "PropertyStoreWrapper.h"
 
 using namespace utils;
 
@@ -25,16 +25,15 @@ MediaDeviceWrapper::DeviceInfo MediaDeviceWrapper::readDeviceInfo() {
 		return { };
 	}
 
-	DeviceInfo deviceInfo;
-
-	wchar_t* idPtr = nullptr;
-	lastResult = getPointer()->GetId(&idPtr);
-	if (lastResult != S_OK) {
+	GenericCoTaskMemWrapper<wchar_t> idWrapper{
+		[&](auto ptr) {
+			lastResult = getPointer()->GetId(ptr);
+			return lastResult == S_OK;
+		}
+	};
+	if (!idWrapper.isValid()) {
 		return { };
 	}
-
-	deviceInfo.id = idPtr;
-	CoTaskMemFree(idPtr);
 
 	PropertyStoreWrapper props{
 		[&](auto ptr) {
@@ -45,6 +44,8 @@ MediaDeviceWrapper::DeviceInfo MediaDeviceWrapper::readDeviceInfo() {
 		return { };
 	}
 
+	DeviceInfo deviceInfo;
+	deviceInfo.id = idWrapper.getPointer();
 	deviceInfo.fullFriendlyName = props.readProperty(PKEY_Device_FriendlyName);
 	deviceInfo.desc = props.readProperty(PKEY_Device_DeviceDesc);
 	deviceInfo.name = props.readProperty(PKEY_DeviceInterface_FriendlyName);
@@ -55,12 +56,7 @@ MediaDeviceWrapper::DeviceInfo MediaDeviceWrapper::readDeviceInfo() {
 IAudioClientWrapper MediaDeviceWrapper::openAudioClient() {
 	return IAudioClientWrapper{
 		[&](auto ptr) {
-			lastResult = getPointer()->Activate(
-				IID_IAudioClient,
-				CLSCTX_INPROC_SERVER,
-				nullptr,
-				reinterpret_cast<void**>(ptr)
-			);
+			lastResult = typedQuery(&IMMDevice::Activate, ptr, CLSCTX_INPROC_SERVER, nullptr);
 			return lastResult == S_OK;
 		}
 	};

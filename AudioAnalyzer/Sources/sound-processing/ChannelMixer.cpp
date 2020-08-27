@@ -34,7 +34,7 @@ void ChannelMixer::setFormat(MyWaveFormat _waveFormat) {
 	} else if (center.has_value()) {
 		aliasOfAuto = Channel::eCENTER;
 	} else {
-		aliasOfAuto = waveFormat.channelLayout.ordered()[0]; // todo when empty there will be a crash
+		aliasOfAuto = waveFormat.channelLayout.ordered()[0];
 	}
 
 	std::vector<Channel> toDelete;

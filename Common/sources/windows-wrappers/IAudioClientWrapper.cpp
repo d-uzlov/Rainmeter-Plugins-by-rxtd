@@ -10,6 +10,7 @@
 #include "IAudioClientWrapper.h"
 
 #include "BufferPrinter.h"
+#include "GenericCoTaskMemWrapper.h"
 
 using namespace utils;
 
@@ -20,7 +21,7 @@ IAudioClientWrapper::IAudioClientWrapper(InitFunction initFunction) :
 IAudioCaptureClientWrapper IAudioClientWrapper::openCapture() {
 	auto result = IAudioCaptureClientWrapper{
 		[&](auto ptr) {
-			lastResult = getPointer()->GetService(__uuidof(IAudioCaptureClient), reinterpret_cast<void**>(ptr));
+			lastResult = typedQuery(&IAudioClient::GetService, ptr);
 			return lastResult == S_OK;
 		}
 	};
@@ -31,9 +32,13 @@ IAudioCaptureClientWrapper IAudioClientWrapper::openCapture() {
 }
 
 void IAudioClientWrapper::testExclusive() {
-	WAVEFORMATEX* waveFormat;
-	lastResult = getPointer()->GetMixFormat(&waveFormat);
-	if (lastResult != S_OK) {
+	GenericCoTaskMemWrapper<WAVEFORMATEX> waveFormat{
+		[&](auto ptr) {
+			lastResult = getPointer()->GetMixFormat(ptr);
+			return lastResult == S_OK;
+		}
+	};
+	if (!waveFormat.isValid()) {
 		return;
 	}
 
@@ -60,7 +65,7 @@ void IAudioClientWrapper::testExclusive() {
 			0,
 			0,
 			0,
-			waveFormat,
+			waveFormat.getPointer(),
 			nullptr
 		);
 		return;
@@ -71,7 +76,7 @@ void IAudioClientWrapper::testExclusive() {
 	UINT32 pMinPeriodInFrames;
 	UINT32 pMaxPeriodInFrames;
 	lastResult = client3.getPointer()->GetSharedModeEnginePeriod(
-		waveFormat,
+		waveFormat.getPointer(),
 		&pDefaultPeriodInFrames,
 		&pFundamentalPeriodInFrames,
 		&pMinPeriodInFrames,
@@ -84,41 +89,42 @@ void IAudioClientWrapper::testExclusive() {
 	lastResult = client3.getPointer()->InitializeSharedAudioStream(
 		0,
 		pMinPeriodInFrames,
-		waveFormat,
+		waveFormat.getPointer(),
 		nullptr
 	);
-	CoTaskMemFree(waveFormat);
 }
 
 void IAudioClientWrapper::initShared(index bufferSize100nsUnits) {
-	WAVEFORMATEX* waveFormat;
-	lastResult = getPointer()->GetMixFormat(&waveFormat);
-	switch (lastResult) {
-	case AUDCLNT_E_DEVICE_INVALIDATED:
-	case AUDCLNT_E_SERVICE_NOT_RUNNING:
-	case E_OUTOFMEMORY:
+	GenericCoTaskMemWrapper<WAVEFORMATEX> waveFormat{
+		[&](auto ptr) {
+			lastResult = getPointer()->GetMixFormat(ptr);
+			return lastResult == S_OK;
+		}
+	};
+	if (!waveFormat.isValid()) {
 		return;
-	default: ; // todo
 	}
 
 	// Documentation for IAudioClient::Initialize says
 	// ""
-	// Note  In Windows 8, the first use of IAudioClient to access the audio device
-	// should be on the STA thread. Calls from an MTA thread may result in undefined behavior.
+	//	Note  In Windows 8, the first use of IAudioClient to access the audio device
+	//	should be on the STA thread. Calls from an MTA thread may result in undefined behavior.
 	// ""
 	// Source: https://docs.microsoft.com/en-us/windows/win32/api/audioclient/nf-audioclient-iaudioclient-initialize
+	//
 	// However, there is also a different information:
 	// ""
-	// The MSDN docs for ActivateAudioInterfaceAsync say that <...>
-	// They also say that "In Windows 8, the first use of IAudioClient to access the audio device should be on the STA thread <...>"
-	// That's incorrect. The first use of IAudioClient.Initialize must be inside your
-	// IActivateAudioInterfaceCompletionHandler.ActivateCompleted handler,
-	// which will have been invoked on a background thread by ActivateAudioInterfaceAsync.
+	//	The MSDN docs for ActivateAudioInterfaceAsync say that <...>
+	//	They also say that "In Windows 8, the first use of IAudioClient to access the audio device should be on the STA thread <...>"
+	//	That's incorrect. The first use of IAudioClient.Initialize must be inside your
+	//	IActivateAudioInterfaceCompletionHandler.ActivateCompleted handler,
+	//	which will have been invoked on a background thread by ActivateAudioInterfaceAsync.
 	// ""
 	// Source: https://www.codeproject.com/Articles/460145/Recording-and-playing-PCM-audio-on-Windows-8-VB
+	//
 	// In this citation they speak about ActivateAudioInterfaceAsync() function
-	// but I believe that if that is true for that function
-	// then it should be true for all calls to IAudioClient#Initialize
+	// but I believe that if that's true for that function
+	// then it should also be true for all calls to IAudioClient#Initialize
 	//
 	// So I don't do anything to specifically call this function from STA
 	lastResult = getPointer()->Initialize(
@@ -126,7 +132,7 @@ void IAudioClientWrapper::initShared(index bufferSize100nsUnits) {
 		AUDCLNT_STREAMFLAGS_LOOPBACK,
 		bufferSize100nsUnits,
 		0,
-		waveFormat,
+		waveFormat.getPointer(),
 		nullptr
 	);
 	if (lastResult == AUDCLNT_E_WRONG_ENDPOINT_TYPE) {
@@ -135,7 +141,7 @@ void IAudioClientWrapper::initShared(index bufferSize100nsUnits) {
 			0,
 			bufferSize100nsUnits,
 			0,
-			waveFormat,
+			waveFormat.getPointer(),
 			nullptr
 		);
 		type = MediaDeviceType::eINPUT;
@@ -144,44 +150,42 @@ void IAudioClientWrapper::initShared(index bufferSize100nsUnits) {
 	}
 
 	if (lastResult != S_OK) {
-		CoTaskMemFree(waveFormat);
 		return;
 	}
 
 	formatIsValid = true;
 
-	format.channelsCount = waveFormat->nChannels;
-	format.samplesPerSec = waveFormat->nSamplesPerSec;
+	auto& waveFormatRaw = *waveFormat.getPointer();
+	format.channelsCount = waveFormatRaw.nChannels;
+	format.samplesPerSec = waveFormatRaw.nSamplesPerSec;
 
-	if (waveFormat->wFormatTag == WAVE_FORMAT_EXTENSIBLE) {
-		const auto formatExtensible = reinterpret_cast<const WAVEFORMATEXTENSIBLE*>(waveFormat);
+	if (waveFormatRaw.wFormatTag == WAVE_FORMAT_EXTENSIBLE) {
+		const auto& formatExtensible = reinterpret_cast<const WAVEFORMATEXTENSIBLE&>(waveFormatRaw);
 
-		if (formatExtensible->SubFormat == KSDATAFORMAT_SUBTYPE_PCM && waveFormat->wBitsPerSample == 16) {
+		if (formatExtensible.SubFormat == KSDATAFORMAT_SUBTYPE_PCM && formatExtensible.Format.wBitsPerSample == 16) {
 			formatType = IAudioCaptureClientWrapper::Type::eInt16;
-		} else if (formatExtensible->SubFormat == KSDATAFORMAT_SUBTYPE_IEEE_FLOAT) {
+		} else if (formatExtensible.SubFormat == KSDATAFORMAT_SUBTYPE_IEEE_FLOAT) {
 			formatType = IAudioCaptureClientWrapper::Type::eFloat;
 		} else {
 			formatIsValid = false;
 		}
 
-		format.channelMask = formatExtensible->dwChannelMask;
+		format.channelMask = formatExtensible.dwChannelMask;
 	} else {
-		if (waveFormat->wFormatTag == WAVE_FORMAT_PCM && waveFormat->wBitsPerSample == 16) {
+		if (waveFormatRaw.wFormatTag == WAVE_FORMAT_PCM && waveFormatRaw.wBitsPerSample == 16) {
 			formatType = IAudioCaptureClientWrapper::Type::eInt16;
-		} else if (waveFormat->wFormatTag == WAVE_FORMAT_IEEE_FLOAT) {
+		} else if (waveFormatRaw.wFormatTag == WAVE_FORMAT_IEEE_FLOAT) {
 			formatType = IAudioCaptureClientWrapper::Type::eFloat;
 		} else {
 			formatIsValid = false;
 		}
 
-		if (waveFormat->nChannels == 1) {
+		if (waveFormatRaw.nChannels == 1) {
 			format.channelMask = KSAUDIO_SPEAKER_MONO;
-		} else if (waveFormat->nChannels == 2) {
+		} else if (waveFormatRaw.nChannels == 2) {
 			format.channelMask = KSAUDIO_SPEAKER_STEREO;
 		} else {
 			formatIsValid = false;
 		}
 	}
-
-	CoTaskMemFree(waveFormat);
 }

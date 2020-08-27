@@ -8,38 +8,35 @@
  */
 
 #pragma once
-#include <type_traits>
-#include <Unknwn.h>
 #include <functional>
 
 namespace rxtd::utils {
 	template <typename T>
-	class GenericComWrapper {
+	class GenericCoTaskMemWrapper {
 	public:
 		using InitFunctionType = bool(T** ptr);
 		using InitFunction = std::function<InitFunctionType>;
 		using ObjectType = T;
-		static_assert(std::is_base_of<IUnknown, T>::value, "T must extend IUnknown");
 
 	private:
 		ObjectType* ptr = nullptr;
 
 	public:
-		GenericComWrapper() = default;
+		GenericCoTaskMemWrapper() = default;
 
-		GenericComWrapper(InitFunction initFunction) {
+		GenericCoTaskMemWrapper(InitFunction initFunction) {
 			const bool success = initFunction(&ptr);
 			if (!success) {
 				release();
 			}
 		}
 
-		GenericComWrapper(GenericComWrapper&& other) noexcept {
+		GenericCoTaskMemWrapper(GenericCoTaskMemWrapper&& other) noexcept {
 			ptr = other.ptr;
 			other.ptr = nullptr;
 		}
 
-		GenericComWrapper& operator=(GenericComWrapper&& other) noexcept {
+		GenericCoTaskMemWrapper& operator=(GenericCoTaskMemWrapper&& other) noexcept {
 			if (this == &other) {
 				return *this;
 			}
@@ -52,35 +49,16 @@ namespace rxtd::utils {
 			return *this;
 		};
 
-		GenericComWrapper(const GenericComWrapper& other) {
-			ptr = other.ptr;
-			if (ptr != nullptr) {
-				ptr->AddRef();
-			}
-		}
+		GenericCoTaskMemWrapper(const GenericCoTaskMemWrapper& other) = delete;
+		GenericCoTaskMemWrapper& operator=(const GenericCoTaskMemWrapper& other) = delete;
 
-		GenericComWrapper& operator=(const GenericComWrapper& other) {
-			if (this == &other) {
-				return *this;
-			}
-
-			release();
-
-			ptr = other.ptr;
-			if (ptr != nullptr) {
-				ptr->AddRef();
-			}
-
-			return *this;
-		}
-
-		virtual ~GenericComWrapper() {
+		virtual ~GenericCoTaskMemWrapper() {
 			release();
 		}
 
 		void release() {
 			if (ptr != nullptr) {
-				ptr->Release();
+				CoTaskMemFree(ptr);
 				ptr = nullptr;
 			}
 		}
@@ -93,11 +71,6 @@ namespace rxtd::utils {
 		[[nodiscard]]
 		ObjectType* getPointer() {
 			return ptr;
-		}
-
-		template<typename Interface, typename MethodType, typename... Args>
-		HRESULT typedQuery(MethodType method, Interface** interfacePtr, Args... args) {
-			return (ptr->*method)(__uuidof(Interface), args..., reinterpret_cast<void**>(interfacePtr));
 		}
 	};
 }
