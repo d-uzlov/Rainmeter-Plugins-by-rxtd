@@ -116,8 +116,6 @@ namespace rxtd::audio_analyzer {
 			bool success = false;
 			DataSize dataSize{ };
 
-			static ConfigurationResult noChanges;
-
 			ConfigurationResult() = default;
 
 			ConfigurationResult(DataSize dataSize): success(true), dataSize(dataSize) {
@@ -165,12 +163,6 @@ namespace rxtd::audio_analyzer {
 			return handlerPtr;
 		}
 
-		void updateSnapshot(Snapshot& snapshot) {
-			purgeCache();
-			snapshot.values = _lastResults;
-			vUpdateSnapshot(snapshot.handlerSpecificData);
-		}
-
 		[[nodiscard]]
 		virtual ParseResult
 		parseParams(const OptionMap& om, Logger& cl, const Rainmeter& rain, index legacyNumber) const = 0;
@@ -188,9 +180,43 @@ namespace rxtd::audio_analyzer {
 			_anyChanges = false;
 		}
 
+		void process(array_view<float> wave, clock::time_point killTime) {
+			clearChunks();
+			vProcess(wave, killTime);
+		}
+
+		void updateSnapshot(Snapshot& snapshot) {
+			clearChunks();
+			snapshot.values = _lastResults;
+			vUpdateSnapshot(snapshot.handlerSpecificData);
+		}
+
+	protected:
+		template <typename Params>
+		static bool compareParamsEquals(const Params& p1, const std::any& p2) {
+			return p1 == *std::any_cast<Params>(&p2);
+		}
+
+		// should return true when params are the same
+		[[nodiscard]]
+		virtual bool checkSameParams(const std::any& p) const = 0;
+
+		[[nodiscard]]
+		virtual ConfigurationResult vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) = 0;
+
+		[[nodiscard]]
+		const Configuration& getConfiguration() const {
+			return _configuration;
+		}
+
 		[[nodiscard]]
 		DataSize getDataSize() const {
 			return _dataSize;
+		}
+
+		[[nodiscard]]
+		virtual index getStartingLayer() const {
+			return 0;
 		}
 
 		[[nodiscard]]
@@ -213,32 +239,6 @@ namespace rxtd::audio_analyzer {
 			return _lastResults[layer];
 		}
 
-		void process(array_view<float> wave, clock::time_point killTime) {
-			purgeCache();
-			vProcess(wave, killTime);
-		}
-
-		[[nodiscard]]
-		virtual index getStartingLayer() const {
-			return 0;
-		}
-
-	protected:
-		template <typename Params>
-		static bool compareParamsEquals(const Params& p1, const std::any& p2) {
-			return p1 == *std::any_cast<Params>(&p2);
-		}
-
-		// should return true when params are the same
-		[[nodiscard]]
-		virtual bool checkSameParams(const std::any& p) const = 0;
-
-		[[nodiscard]]
-		virtual ConfigurationResult vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) = 0;
-
-		virtual void vUpdateSnapshot(std::any& handlerSpecificData) const {
-		}
-
 		[[nodiscard]]
 		array_span<float> pushLayer(index layer, index equivalentWaveSize) {
 			const index offset = index(_buffer.size());
@@ -250,15 +250,13 @@ namespace rxtd::audio_analyzer {
 			return { _buffer.data() + offset, _dataSize.valuesCount };
 		}
 
-		[[nodiscard]]
-		const Configuration& getConfiguration() const {
-			return _configuration;
-		}
-
 		// if handler is potentially heavy,
 		// handler should try to return control to caller
 		// when time is more than killTime
 		virtual void vProcess(array_view<float> wave, clock::time_point killTime) = 0;
+
+		virtual void vUpdateSnapshot(std::any& handlerSpecificData) const {
+		}
 
 		static index legacy_parseIndexProp(const isview& request, const isview& propName, index endBound) {
 			return legacy_parseIndexProp(request, propName, 0, endBound);
@@ -287,7 +285,7 @@ namespace rxtd::audio_analyzer {
 			_layersAreValid = true;
 		}
 
-		void purgeCache() {
+		void clearChunks() {
 			for (index layer = 0; layer < _dataSize.layersCount; layer++) {
 				auto chunks = _layers[layer].chunks;
 				if (chunks.empty()) {
