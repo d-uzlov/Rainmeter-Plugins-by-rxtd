@@ -17,7 +17,8 @@ void ProcessingManager::setParams(
 	utils::Rainmeter::Logger logger,
 	const ParamParser::ProcessingData& pd,
 	index legacyNumber,
-	index sampleRate, ChannelLayout layout
+	index sampleRate, ChannelLayout layout,
+	Snapshot& snapshot
 ) {
 	std::set<Channel> channels;
 	for (const auto channel : pd.channels) {
@@ -42,6 +43,12 @@ void ProcessingManager::setParams(
 		newChannelStruct.downsampleHelper.setFactor(resamplingDivider);
 	}
 
+	utils::MapUtils::intersectKeyCollection(snapshot, channels);
+	for (auto& [channel, channelStruct] : channelMap) {
+		auto& channelSnapshot = snapshot[channel];
+		utils::MapUtils::intersectKeyCollection(channelSnapshot, channelStruct.handlerMap);
+	}
+
 	order.clear();
 	for (auto& handlerName : pd.handlersInfo.order) {
 		auto& patchInfo = pd.handlersInfo.patchers.find(handlerName)->second;
@@ -56,7 +63,8 @@ void ProcessingManager::setParams(
 			const bool success = handlerPtr->patch(
 				patchInfo.params, patchInfo.sources,
 				ChannelUtils::getTechnicalName(channel), finalSampleRate,
-				hf, cl
+				hf, cl,
+				snapshot[channel][handlerName]
 			);
 
 			if (!success) {
@@ -113,20 +121,6 @@ bool ProcessingManager::process(const ChannelMixer& mixer, clock::time_point kil
 	}
 
 	return false;
-}
-
-void ProcessingManager::configureSnapshot(Snapshot& snapshot) {
-	utils::MapUtils::intersectKeyCollection(snapshot, channelMap);
-
-	for (auto& [channel, channelStruct] : channelMap) {
-		auto& channelSnapshot = snapshot[channel];
-		utils::MapUtils::intersectKeyCollection(channelSnapshot, channelStruct.handlerMap);
-
-		for (auto& [handlerName, handler] : channelStruct.handlerMap) {
-			auto& handlerSnapshot = channelSnapshot[handlerName];
-			handler->configureSnapshot(handlerSnapshot);
-		}
-	}
 }
 
 void ProcessingManager::updateSnapshot(Snapshot& snapshot) {

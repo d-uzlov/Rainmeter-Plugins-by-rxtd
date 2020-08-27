@@ -57,12 +57,12 @@ namespace rxtd::audio_analyzer {
 			utils::Rainmeter::Logger logger,
 			const ParamParser::ProcessingData& pd,
 			index _legacyNumber,
-			index sampleRate, ChannelLayout layout
+			index sampleRate, ChannelLayout layout,
+			Snapshot& snapshot
 		);
 
 		// returns true when killed on timeout
 		bool process(const ChannelMixer& mixer, clock::time_point killTime);
-		void configureSnapshot(Snapshot& snapshot);
 		void updateSnapshot(Snapshot& snapshot);
 	};
 }

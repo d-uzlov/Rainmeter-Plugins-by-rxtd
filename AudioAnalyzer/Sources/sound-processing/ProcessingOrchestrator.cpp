@@ -27,8 +27,12 @@ void ProcessingOrchestrator::patch(
 
 	for (const auto& [name, data] : patches) {
 		auto& sa = saMap[name];
-		sa.setParams(logger.context(L"Proc '{}': ", name), data, legacyNumber, samplesPerSec, channelLayout);
-		sa.configureSnapshot(dataSnapshot[name]);
+		sa.setParams(
+			logger.context(L"Proc '{}': ", name),
+			data,
+			legacyNumber, samplesPerSec, channelLayout,
+			dataSnapshot[name]
+		);
 	}
 }
 

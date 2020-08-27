@@ -15,36 +15,39 @@ using namespace audio_analyzer;
 bool SoundHandler::patch(
 	const std::any& params, const std::vector<istring>& sources,
 	sview channelName, index sampleRate,
-	HandlerFinder& hf, Logger& cl
+	HandlerFinder& hf, Logger& cl,
+	Snapshot& snapshot
 ) {
 	if (sources.size() > 1) {
 		throw std::exception{ "no support for multiple sources yet" }; // todo
 	}
 
-	_configuration.sourcePtr = nullptr;
+	Configuration newConfig;
 	if (!sources.empty()) {
 		const auto& sourceName = sources[0];
-		_configuration.sourcePtr = hf.getHandler(sourceName);
-		if (_configuration.sourcePtr == nullptr) {
+		newConfig.sourcePtr = hf.getHandler(sourceName);
+		if (newConfig.sourcePtr == nullptr) {
 			cl.error(L"source '{}' is not found", sourceName);
 			return { };
 		}
 
-		const auto dataSize = _configuration.sourcePtr->getDataSize();
+		const auto dataSize = newConfig.sourcePtr->getDataSize();
 		if (dataSize.isEmpty()) {
 			cl.error(L"source '{}' doesn't produce any data", sourceName);
 			return { };
 		}
+	} else {
+		newConfig.sourcePtr = nullptr;
 	}
+	newConfig.sampleRate = sampleRate;
+	newConfig.channelName = channelName;
 
-	if (_configuration.sourcePtr != nullptr && _configuration.sourcePtr->_anyChanges
-		|| _configuration.sampleRate != sampleRate
-		|| _configuration.channelName != channelName
+	if (_configuration != newConfig
+		|| newConfig.sourcePtr != nullptr && newConfig.sourcePtr->_anyChanges
 		|| !checkSameParams(params)) {
 		_anyChanges = true;
 
-		_configuration.sampleRate = sampleRate;
-		_configuration.channelName = channelName;
+		_configuration = newConfig;
 
 		const auto linkingResult = vConfigure(params, cl);
 		if (!linkingResult.success) {
@@ -57,6 +60,14 @@ bool SoundHandler::patch(
 		_lastResults.setBuffersCount(linkingResult.dataSize.layersCount);
 		_lastResults.setBufferSize(linkingResult.dataSize.valuesCount);
 		_lastResults.fill(0.0f);
+
+		auto& sv = snapshot.values;
+		if (sv.getBuffersCount() != _dataSize.layersCount || sv.getBufferSize() != _dataSize.valuesCount) {
+			snapshot.values.setBuffersCount(_dataSize.layersCount);
+			snapshot.values.setBufferSize(_dataSize.valuesCount);
+			snapshot.values.fill(0.0f);
+		}
+		vConfigureSnapshot(snapshot.handlerSpecificData);
 	}
 
 	return true;
