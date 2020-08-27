@@ -55,7 +55,7 @@ void ProcessingManager::setParams(
 			HandlerFinderImpl hf{ channelDataNew };
 			const bool success = handlerPtr->patch(
 				patchInfo.params, patchInfo.sources,
-				channel.technicalName(), finalSampleRate,
+				ChannelUtils::getTechnicalName(channel), finalSampleRate,
 				hf, cl
 			);
 

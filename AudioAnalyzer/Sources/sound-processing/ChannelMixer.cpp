@@ -34,7 +34,7 @@ void ChannelMixer::setFormat(MyWaveFormat _waveFormat) {
 	} else if (center.has_value()) {
 		aliasOfAuto = Channel::eCENTER;
 	} else {
-		aliasOfAuto = waveFormat.channelLayout.getChannelsOrderView()[0]; // todo when empty there will be a crash
+		aliasOfAuto = waveFormat.channelLayout.ordered()[0]; // todo when empty there will be a crash
 	}
 
 	std::vector<Channel> toDelete;
@@ -49,14 +49,14 @@ void ChannelMixer::setFormat(MyWaveFormat _waveFormat) {
 	}
 
 	// Create missing channels
-	for (const auto channel : waveFormat.channelLayout) {
+	for (const auto channel : waveFormat.channelLayout.ordered()) {
 		channels[channel];
 	}
 	channels[aliasOfAuto];
 }
 
 void ChannelMixer::saveChannelsData(utils::array2d_view<float> channelsData, bool withAuto) {
-	for (auto channel : waveFormat.channelLayout) {
+	for (auto channel : waveFormat.channelLayout.ordered()) {
 		auto channelData = channelsData[waveFormat.channelLayout.indexOf(channel).value()];
 		auto& waveBuffer = channels[channel];
 		auto writeBuffer = waveBuffer.allocateNext(channelData.size());
@@ -74,12 +74,7 @@ array_view<float> ChannelMixer::getChannelPCM(Channel channel) const {
 		channel = aliasOfAuto;
 	}
 
-	const auto dataIter = channels.find(channel);
-	if (dataIter == channels.end()) {
-		return { };
-	}
-
-	return dataIter->second.getAllData();
+	return channels.at(channel).getAllData();
 }
 
 void ChannelMixer::resampleToAuto(index size) {

@@ -34,7 +34,7 @@ void AudioChild::vReload() {
 	}
 
 	const auto channelStr = rain.read(L"Channel").asIString(L"auto");
-	auto channelOpt = Channel::channelParser.find(channelStr);
+	auto channelOpt = ChannelUtils::parse(channelStr);
 	if (!channelOpt.has_value()) {
 		logger.error(L"Invalid Channel '{}', set to Auto.", channelStr);
 		channel = Channel::eAUTO;

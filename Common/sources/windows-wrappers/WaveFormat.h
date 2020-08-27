@@ -13,6 +13,6 @@ namespace rxtd::utils {
 	struct WaveFormat {
 		index samplesPerSec = 0;
 		index channelsCount = 0;
-		index channelMask = 0;
+		uint32_t channelMask = 0;
 	};
 }

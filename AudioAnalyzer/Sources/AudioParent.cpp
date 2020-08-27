@@ -168,7 +168,7 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 		const auto handlerName = args[3];
 		const auto ind = utils::Option{ args[4] }.asInt(0);
 
-		auto channelOpt = Channel::channelParser.find(channelName);
+		auto channelOpt = ChannelUtils::parse(channelName);
 		if (!channelOpt.has_value()) {
 			cl.error(L"channel '{}' is not recognized", channelName);
 			return;
@@ -249,7 +249,7 @@ string AudioParent::checkHandler(isview procName, Channel channel, isview handle
 	auto procData = procDataIter->second;
 	auto& channels = procData.channels;
 	if (channels.find(channel) == channels.end()) {
-		bp.print(L"processing {} doesn't have channel {}", procName, channel.technicalName());
+		bp.print(L"processing {} doesn't have channel {}", procName, ChannelUtils::getTechnicalName(channel));
 		return bp.getBufferPtr();
 	}
 
@@ -351,7 +351,7 @@ void AudioParent::resolveProp(array_view<isview> args, string& resolveBufferStri
 		}
 	}
 
-	auto channelOpt = Channel::channelParser.find(channelName);
+	auto channelOpt = ChannelUtils::parse(channelName);
 	if (!channelOpt.has_value()) {
 		cl.error(L"channel '{}' is not recognized", channelName);
 		return;

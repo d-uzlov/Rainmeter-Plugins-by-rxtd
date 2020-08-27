@@ -105,9 +105,9 @@ CaptureManager::State CaptureManager::setSourceAndGetState(DataSource type, cons
 	const auto format = audioClient.getFormat();
 	snapshot.type = audioClient.getType();
 	snapshot.format.samplesPerSec = format.samplesPerSec;
-	snapshot.format.channelLayout = ChannelLayouts::layoutFromChannelMask(uint32_t(format.channelMask), true);
-	if (snapshot.format.channelLayout.getChannelsOrderView().empty()) {
-		logger.error(L"zero known channels found in current channel layout");
+	snapshot.format.channelLayout = ChannelUtils::parseLayout(format.channelMask, true);
+	if (snapshot.format.channelLayout.ordered().empty()) {
+		logger.error(L"zero known channels are found in the current channel layout");
 		return State::eDEVICE_CONNECTION_ERROR;
 	}
 
@@ -256,7 +256,7 @@ string CaptureManager::makeFormatString(MyWaveFormat waveFormat) {
 	utils::BufferPrinter bp;
 
 	if (waveFormat.channelLayout.getName().empty()) {
-		bp.append(L"unknown layout: {} recognized channels", waveFormat.channelLayout.getChannelsOrderView().size());
+		bp.append(L"unknown layout: {} recognized channels", waveFormat.channelLayout.ordered().size());
 	} else {
 		bp.append(L"{}", waveFormat.channelLayout.getName());
 	}

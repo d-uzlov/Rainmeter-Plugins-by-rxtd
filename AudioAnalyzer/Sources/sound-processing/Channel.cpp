@@ -13,153 +13,157 @@
 
 using namespace audio_analyzer;
 
-Channel::ChannelParser Channel::channelParser{ };
-
-
-ChannelLayout ChannelLayout::create(sview name, const std::vector<Channel::Value>& channels) {
-	ChannelLayout result;
-
-	result.name = name;
-
-	for (index i = 0; i < static_cast<index>(channels.size()); i++) {
-		result.channelMap[channels[i]] = i;
-		result.channelOrder.emplace_back(channels[i]);
-	}
-
-	return result;
-}
-
 namespace {
-	ChannelLayout mono = ChannelLayout::create(
+	ChannelLayout mono = {
 		L"1.0 mono", {
 			Channel::eCENTER
-		});
-	ChannelLayout _1_1 = ChannelLayout::create(
+		}
+	};
+	ChannelLayout _1_1 = {
 		L"1.1", {
 			Channel::eCENTER, Channel::eLOW_FREQUENCY
-		});
-	ChannelLayout stereo = ChannelLayout::create(
+		}
+	};
+	ChannelLayout stereo = {
 		L"2.0 stereo", {
 			Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT
-		});
-	ChannelLayout _2_1 = ChannelLayout::create(
+		}
+	};
+	ChannelLayout _2_1 = {
 		L"2.1", {
 			Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT,
 			Channel::eLOW_FREQUENCY
-		});
-	ChannelLayout _3_0 = ChannelLayout::create(
+		}
+	};
+	ChannelLayout _3_0 = {
 		L"3.0", {
 			Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT,
 			Channel::eCENTER
-		});
-	ChannelLayout _3_1 = ChannelLayout::create(
+		}
+	};
+	ChannelLayout _3_1 = {
 		L"3.1", {
 			Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT,
 			Channel::eCENTER, Channel::eLOW_FREQUENCY
-		});
-	ChannelLayout quad = ChannelLayout::create(
+		}
+	};
+	ChannelLayout quad = {
 		L"4.0 quad", {
 			Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT,
 			Channel::eBACK_LEFT, Channel::eBACK_RIGHT
-		});
-	ChannelLayout quad_surround = ChannelLayout::create(
+		}
+	};
+	ChannelLayout quad_surround = {
 		L"4.0 surround", {
 			Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT,
 			Channel::eCENTER, Channel::eCENTER_BACK
-		});
-	ChannelLayout _5_0 = ChannelLayout::create(
+		}
+	};
+	ChannelLayout _5_0 = {
 		L"5.0", {
 			Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT,
 			Channel::eCENTER,
 			Channel::eSIDE_LEFT, Channel::eSIDE_RIGHT
-		});
-	ChannelLayout _5_1 = ChannelLayout::create(
+		}
+	};
+	ChannelLayout _5_1 = {
 		L"5.1", {
 			Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT,
 			Channel::eCENTER, Channel::eLOW_FREQUENCY,
 			Channel::eBACK_LEFT, Channel::eBACK_RIGHT
-		});
-	ChannelLayout _5_1_surround = ChannelLayout::create(
+		}
+	};
+	ChannelLayout _5_1_surround = {
 		L"5.1 surround", {
 			Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT,
 			Channel::eCENTER, Channel::eLOW_FREQUENCY,
 			Channel::eSIDE_LEFT, Channel::eSIDE_RIGHT
-		});
-	ChannelLayout _7_0 = ChannelLayout::create(
+		}
+	};
+	ChannelLayout _7_0 = {
 		L"7.0", {
 			Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT,
 			Channel::eCENTER,
 			Channel::eBACK_LEFT, Channel::eBACK_RIGHT,
 			Channel::eSIDE_LEFT, Channel::eSIDE_RIGHT
-		});
-	ChannelLayout _7_1surround = ChannelLayout::create(
+		}
+	};
+	ChannelLayout _7_1surround = {
 		L"7.1 surround", {
 			Channel::eFRONT_LEFT, Channel::eFRONT_RIGHT,
 			Channel::eCENTER, Channel::eLOW_FREQUENCY,
 			Channel::eBACK_LEFT, Channel::eBACK_RIGHT,
 			Channel::eSIDE_LEFT, Channel::eSIDE_RIGHT
-		});
+		}
+	};
 }
 
-Channel::ChannelParser::ChannelParser() {
-	addElement(L"Auto", eAUTO);
-
-	addElement(L"Left", eFRONT_LEFT);
-	addElement(L"FrontLeft", eFRONT_LEFT);
-	addElement(L"FL", eFRONT_LEFT);
-
-	addElement(L"Right", eFRONT_RIGHT);
-	addElement(L"FrontRight", eFRONT_RIGHT);
-	addElement(L"FR", eFRONT_RIGHT);
-
-	addElement(L"Center", eCENTER);
-	addElement(L"C", eCENTER);
-
-	addElement(L"CenterBack", eCENTER_BACK);
-	addElement(L"CB", eCENTER_BACK);
-
-	addElement(L"LowFrequency", eLOW_FREQUENCY);
-	addElement(L"LFE", eLOW_FREQUENCY);
-
-	addElement(L"BackLeft", eBACK_LEFT);
-	addElement(L"BL", eBACK_LEFT);
-
-	addElement(L"BackRight", eBACK_RIGHT);
-	addElement(L"BR", eBACK_RIGHT);
-
-	addElement(L"SideLeft", eSIDE_LEFT);
-	addElement(L"SL", eSIDE_LEFT);
-
-	addElement(L"SideRight", eSIDE_RIGHT);
-	addElement(L"SR", eSIDE_RIGHT);
-}
-
-std::optional<Channel> Channel::ChannelParser::find(const isview str) {
-	const auto iter = map.find(str);
-
-	if (iter == map.end()) {
-		return { };
+std::optional<Channel> ChannelUtils::parse(isview string) {
+	if (string == L"Auto") {
+		return Channel::eAUTO;
+	}
+	if (string == L"Left" || string == L"FrontLeft" || string == L"FL") {
+		return Channel::eFRONT_LEFT;
+	}
+	if (string == L"Right" || string == L"FrontRight" || string == L"FR") {
+		return Channel::eFRONT_RIGHT;
+	}
+	if (string == L"Center" || string == L"C") {
+		return Channel::eCENTER;
+	}
+	if (string == L"CenterBack" || string == L"CB") {
+		return Channel::eCENTER_BACK;
+	}
+	if (string == L"LowFrequency" || string == L"LFE") {
+		return Channel::eLOW_FREQUENCY;
+	}
+	if (string == L"BackLeft" || string == L"BL") {
+		return Channel::eBACK_LEFT;
+	}
+	if (string == L"BackRight" || string == L"BR") {
+		return Channel::eBACK_RIGHT;
+	}
+	if (string == L"SideLeft" || string == L"SL") {
+		return Channel::eSIDE_LEFT;
+	}
+	if (string == L"SideRight" || string == L"SR") {
+		return Channel::eSIDE_RIGHT;
 	}
 
-	return iter->second;
+	return { };
 }
 
-sview Channel::technicalName() const {
-	switch (value) {
-	case eFRONT_LEFT: return L"FRONT_LEFT";
-	case eFRONT_RIGHT: return L"FRONT_RIGHT";
-	case eCENTER: return L"CENTER";
-	case eCENTER_BACK: return L"CENTER_BACK";
-	case eLOW_FREQUENCY: return L"LOW_FREQUENCY";
-	case eBACK_LEFT: return L"BACK_LEFT";
-	case eBACK_RIGHT: return L"BACK_RIGHT";
-	case eSIDE_LEFT: return L"SIDE_LEFT";
-	case eSIDE_RIGHT: return L"SIDE_RIGHT";
-	case eAUTO: return L"AUTO";
+sview ChannelUtils::getTechnicalName(Channel channel) {
+	switch (channel) {
+	case Channel::eFRONT_LEFT: return L"FRONT_LEFT";
+	case Channel::eFRONT_RIGHT: return L"FRONT_RIGHT";
+	case Channel::eCENTER: return L"CENTER";
+	case Channel::eCENTER_BACK: return L"CENTER_BACK";
+	case Channel::eLOW_FREQUENCY: return L"LOW_FREQUENCY";
+	case Channel::eBACK_LEFT: return L"BACK_LEFT";
+	case Channel::eBACK_RIGHT: return L"BACK_RIGHT";
+	case Channel::eSIDE_LEFT: return L"SIDE_LEFT";
+	case Channel::eSIDE_RIGHT: return L"SIDE_RIGHT";
+	case Channel::eAUTO: return L"AUTO";
 	}
 	return { };
 }
 
+
+ChannelLayout::ChannelLayout(sview _name, std::vector<std::optional<Channel>> channels) {
+	name = _name;
+
+	for (index i = 0; i < static_cast<index>(channels.size()); i++) {
+		auto channelOpt = channels[i];
+		if (!channelOpt.has_value()) {
+			continue;
+		}
+
+		auto channel = channelOpt.value();
+		channelMap[channel] = i;
+		channelOrder.push_back(channel);
+	}
+}
 
 std::optional<index> ChannelLayout::indexOf(Channel channel) const {
 	const auto iter = channelMap.find(channel);
@@ -170,23 +174,8 @@ std::optional<index> ChannelLayout::indexOf(Channel channel) const {
 }
 
 
-LayoutBuilder& LayoutBuilder::add(Channel channel) {
-	layout.channelMap[channel] = nextIndex;
-	nextIndex++;
-
-	return *this;
-}
-
-ChannelLayout ChannelLayouts::getMono() {
-	return mono;
-}
-
-ChannelLayout ChannelLayouts::getStereo() {
-	return stereo;
-}
-
-ChannelLayout ChannelLayouts::layoutFromChannelMask(uint32_t mask, bool forceBackSpeakers) {
-	switch (mask) {
+ChannelLayout ChannelUtils::parseLayout(uint32_t bitMask, bool forceBackSpeakers) {
+	switch (bitMask) {
 	case KSAUDIO_SPEAKER_MONO: return mono;
 	case KSAUDIO_SPEAKER_1POINT1: return _1_1;
 	case KSAUDIO_SPEAKER_STEREO: return stereo;
@@ -194,6 +183,7 @@ ChannelLayout ChannelLayouts::layoutFromChannelMask(uint32_t mask, bool forceBac
 	case KSAUDIO_SPEAKER_3POINT0: return _3_0;
 	case KSAUDIO_SPEAKER_3POINT1: return _3_1;
 	case KSAUDIO_SPEAKER_QUAD: return quad;
+	case KSAUDIO_SPEAKER_SURROUND: return quad_surround;
 	case KSAUDIO_SPEAKER_5POINT0: return _5_0;
 	case KSAUDIO_SPEAKER_5POINT1: return _5_1;
 	case KSAUDIO_SPEAKER_7POINT0: return _7_0;
@@ -201,7 +191,7 @@ ChannelLayout ChannelLayouts::layoutFromChannelMask(uint32_t mask, bool forceBac
 	default: ;
 	}
 
-	if (mask == KSAUDIO_SPEAKER_5POINT1_SURROUND) {
+	if (bitMask == KSAUDIO_SPEAKER_5POINT1_SURROUND) {
 		if (forceBackSpeakers) {
 			return _5_1;
 		} else {
@@ -233,17 +223,13 @@ ChannelLayout ChannelLayouts::layoutFromChannelMask(uint32_t mask, bool forceBac
 			{ SPEAKER_TOP_BACK_RIGHT, std::nullopt },
 		};
 
-	LayoutBuilder builder;
+	std::vector<std::optional<Channel>> channels;
 	for (auto [bit, channelOpt] : speakers) {
-		if ((mask & bit) == 0) {
+		if ((bitMask & bit) == 0) {
 			continue;
 		}
-		if (channelOpt.has_value()) {
-			builder.add(channelOpt.value());
-		} else {
-			builder.skip();
-		}
+		channels.push_back(channelOpt);
 	}
 
-	return builder.finish();
+	return { L"???", std::move(channels) };
 }
