@@ -19,11 +19,11 @@ namespace rxtd::audio_analyzer {
 	class ParentHelper {
 	public:
 		struct RequestedDeviceDescription {
-			CaptureManager::DataSource sourceType{ };
+			CaptureManager::DataSource type{ };
 			string id;
 
 			friend bool operator==(const RequestedDeviceDescription& lhs, const RequestedDeviceDescription& rhs) {
-				return lhs.sourceType == rhs.sourceType
+				return lhs.type == rhs.type
 					&& lhs.id == rhs.id;
 			}
 
@@ -52,8 +52,9 @@ namespace rxtd::audio_analyzer {
 		} constFields;
 
 		struct {
-			std::atomic_bool stopRequest{ false };
 			utils::CMMNotificationClient notificationClient;
+			std::atomic_bool stopRequest{ false };
+			std::atomic_bool paramsWereUpdated{ false };
 		} threadSafeFields;
 
 		struct {
@@ -62,20 +63,23 @@ namespace rxtd::audio_analyzer {
 
 			utils::Rainmeter::Logger logger;
 			CaptureManager captureManager;
-			bool needToInitializeThread = false;
-			std::thread thread;
 			ProcessingOrchestrator orchestrator;
+			RequestedDeviceDescription requestedSource;
 		} mainFields;
 
 		struct {
 			std::mutex mutex;
 
+			std::thread thread;
+			bool needToInitializeThread = false;
+
 			ParamParser::ProcessingsInfoMap patches;
+			bool patchesWereUpdated = false;
 			RequestedDeviceDescription requestedSource;
+			bool sourceWasUpdated = false;
 
 			Snapshot snapshot;
 			bool snapshotIsUpdated = false;
-			bool optionsChanged = false;
 		} requestFields;
 
 	public:
@@ -95,7 +99,10 @@ namespace rxtd::audio_analyzer {
 			index _legacyNumber
 		);
 
-		void setParams(RequestedDeviceDescription request, ParamParser::ProcessingsInfoMap _patches);
+		void setParams(
+			std::optional<RequestedDeviceDescription> request,
+			std::optional<ParamParser::ProcessingsInfoMap> _patches
+		);
 
 		void setInvalid();
 
@@ -107,6 +114,7 @@ namespace rxtd::audio_analyzer {
 		void threadFunction();
 
 		void pUpdate();
+		// returns true if ProcessingOrchestrator was updated, false otherwise
 		void updateDevice();
 		void updateDeviceListStrings();
 

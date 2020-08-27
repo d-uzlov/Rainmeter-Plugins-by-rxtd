@@ -12,7 +12,10 @@
 using namespace audio_analyzer;
 
 ParentHelper::~ParentHelper() {
-	stopThread();
+	try {
+		stopThread();
+	} catch (...) {
+	}
 }
 
 void ParentHelper::init(
@@ -36,7 +39,7 @@ void ParentHelper::init(
 		constFields.useThreading = false;
 	} else if (threadingPolicy == L"separateThread") {
 		constFields.useThreading = true;
-		mainFields.needToInitializeThread = true;
+		requestFields.needToInitializeThread = true;
 		threadSafeFields.notificationClient.setCallback([this]() { wakeThreadUp(); });
 	} else {
 		mainFields.logger.error(L"Fatal error: Threading: unknown policy '{}'");
@@ -61,18 +64,28 @@ void ParentHelper::init(
 }
 
 void ParentHelper::setParams(
-	RequestedDeviceDescription request,
-	ParamParser::ProcessingsInfoMap _patches
+	std::optional<RequestedDeviceDescription> request,
+	std::optional<ParamParser::ProcessingsInfoMap> patches
 ) {
-	auto mainLock = getMainLock();
+	auto requestLock = getRequestLock();
 
-	requestFields.optionsChanged = true;
-	requestFields.patches = std::move(_patches);
-	requestFields.requestedSource = std::move(request);
+	if (request.has_value()) {
+		requestFields.requestedSource = std::move(request).value();
+		requestFields.sourceWasUpdated = true;
+	}
 
-	if (mainFields.needToInitializeThread) {
-		mainFields.needToInitializeThread = false;
-		mainFields.thread = std::thread{ [this]() { threadFunction(); } };
+	if (patches.has_value()) {
+		requestFields.patches = std::move(patches).value();
+		requestFields.patchesWereUpdated = true;
+	}
+
+	if (requestFields.sourceWasUpdated || requestFields.patchesWereUpdated) {
+		threadSafeFields.paramsWereUpdated.exchange(true);
+	}
+
+	if (requestFields.needToInitializeThread) {
+		requestFields.needToInitializeThread = false;
+		requestFields.thread = std::thread{ [this]() { threadFunction(); } };
 	}
 }
 
@@ -111,7 +124,7 @@ void ParentHelper::wakeThreadUp() {
 }
 
 void ParentHelper::stopThread() {
-	if (!constFields.useThreading || mainFields.needToInitializeThread) {
+	if (!constFields.useThreading || requestFields.needToInitializeThread) {
 		return;
 	}
 
@@ -119,9 +132,9 @@ void ParentHelper::stopThread() {
 
 	wakeThreadUp();
 
-	mainFields.thread.join();
+	requestFields.thread.join();
 
-	mainFields.needToInitializeThread = true;
+	requestFields.needToInitializeThread = true;
 }
 
 void ParentHelper::threadFunction() {
@@ -151,25 +164,30 @@ void ParentHelper::threadFunction() {
 		mainFields.sleepVariable.wait_for(mainLock, sleepTime);
 	}
 
+
 	CoUninitialize();
 }
 
 void ParentHelper::pUpdate() {
-	if (requestFields.optionsChanged) {
+	if (threadSafeFields.paramsWereUpdated.load()) {
 		auto requestLock = getRequestLock();
 		updateDevice();
-		requestFields.optionsChanged = false;
+		threadSafeFields.paramsWereUpdated.exchange(false);
+		mainFields.requestedSource = requestFields.requestedSource;
+
+		requestFields.sourceWasUpdated = false;
+		requestFields.patchesWereUpdated = false;
+
 		// todo check why image in reset when I forgot to set optionsChanged = false
 	}
 
 	const auto changes = threadSafeFields.notificationClient.takeChanges();
 
 	using DS = CaptureManager::DataSource;
-	// todo userRequestFields but no mutex
-	if (requestFields.requestedSource.sourceType == DS::eDEFAULT_INPUT
-		|| requestFields.requestedSource.sourceType == DS::eDEFAULT_OUTPUT) {
+	if (mainFields.requestedSource.type == DS::eDEFAULT_INPUT
+		|| mainFields.requestedSource.type == DS::eDEFAULT_OUTPUT) {
 		const auto change =
-			requestFields.requestedSource.sourceType == DS::eDEFAULT_INPUT
+			mainFields.requestedSource.type == DS::eDEFAULT_INPUT
 				? changes.defaultCapture
 				: changes.defaultRender;
 		switch (change) {
@@ -182,7 +200,7 @@ void ParentHelper::pUpdate() {
 			break;
 		}
 		case DDC::eNO_DEVICE: {
-			const sview io = requestFields.requestedSource.sourceType == DS::eDEFAULT_INPUT ? L"input" : L"output";
+			const sview io = mainFields.requestedSource.type == DS::eDEFAULT_INPUT ? L"input" : L"output";
 			mainFields.logger.error(
 				L"Requested default {} audio device, but all {} devices has been disconnected",
 				io, io
@@ -239,7 +257,7 @@ void ParentHelper::updateDevice() {
 	requestFields.snapshotIsUpdated = false;
 
 	mainFields.captureManager.setSource(
-		requestFields.requestedSource.sourceType,
+		requestFields.requestedSource.type,
 		requestFields.requestedSource.id
 	);
 
@@ -247,6 +265,8 @@ void ParentHelper::updateDevice() {
 	if (!requestFields.snapshot.deviceIsAvailable) {
 		return;
 	}
+
+	// todo if source format changed then update handlers
 
 	// it's important that if device is not available
 	// then #updateSnapshot is not called
