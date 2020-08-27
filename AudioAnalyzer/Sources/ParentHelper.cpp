@@ -15,7 +15,7 @@ ParentHelper::~ParentHelper() {
 	stopThread();
 }
 
-bool ParentHelper::init(
+void ParentHelper::init(
 	utils::Rainmeter::Logger _logger,
 	const utils::OptionMap& threadingMap,
 	index _legacyNumber
@@ -26,43 +26,38 @@ bool ParentHelper::init(
 
 	if (!enumerator.isValid()) {
 		mainFields.logger.error(L"Fatal error: can't create IMMDeviceEnumerator");
-		return false;
+		throw std::exception{ };
 	}
 
 	updateDeviceListStrings();
 
-	mainFields.orchestrator.setLogger(mainFields.logger);
-
-	const double warnTime = threadingMap.get(L"warnTime").asFloat(-1.0);
-	const double killTimeout = std::clamp(threadingMap.get(L"killTimeout").asFloat(33.0), 0.01, 33.0);
 	if (const auto threadingPolicy = threadingMap.get(L"policy").asIString(L"none");
 		threadingPolicy == L"none") {
 		constFields.useThreading = false;
 	} else if (threadingPolicy == L"separateThread") {
 		constFields.useThreading = true;
+		mainFields.needToInitializeThread = true;
+		threadSafeFields.notificationClient.setCallback([this]() { wakeThreadUp(); });
 	} else {
 		mainFields.logger.error(L"Fatal error: Threading: unknown policy '{}'");
-		return false;
+		throw std::exception{ };
 	}
 
+	const double warnTime = threadingMap.get(L"warnTime").asFloat(-1.0);
+	const double killTimeout = std::clamp(threadingMap.get(L"killTimeout").asFloat(33.0), 0.01, 33.0);
+
+	mainFields.orchestrator.setLogger(mainFields.logger);
 	mainFields.orchestrator.setWarnTime(warnTime);
 	mainFields.orchestrator.setKillTimeout(killTimeout);
 
 	constFields.updateTime = threadingMap.get(L"updateTime").asFloat(1.0 / 120.0);
 	constFields.updateTime = std::clamp(constFields.updateTime, 1.0 / 200.0, 1.0);
 
-	if (constFields.useThreading) {
-		mainFields.needToInitializeThread = true;
-	}
-
-	threadSafeFields.notificationClient.setCallback([this]() { wakeThreadUp(); });
+	const double bufferSize = threadingMap.get(L"bufferSize").asFloat(constFields.updateTime * 2.0);
 
 	mainFields.captureManager.setLogger(mainFields.logger);
 	mainFields.captureManager.setLegacyNumber(constFields.legacyNumber);
-	const double bufferSize = threadingMap.get(L"bufferSize").asFloat(constFields.updateTime * 2.0);
 	mainFields.captureManager.setBufferSizeInSec(bufferSize);
-
-	return true;
 }
 
 void ParentHelper::setParams(
@@ -77,7 +72,7 @@ void ParentHelper::setParams(
 
 	if (mainFields.needToInitializeThread) {
 		mainFields.needToInitializeThread = false;
-		mainFields.thread = std::thread{ [this]() { separateThreadFunction(); } };
+		mainFields.thread = std::thread{ [this]() { threadFunction(); } };
 	}
 }
 
@@ -129,7 +124,7 @@ void ParentHelper::stopThread() {
 	mainFields.needToInitializeThread = true;
 }
 
-void ParentHelper::separateThreadFunction() {
+void ParentHelper::threadFunction() {
 	using namespace std::chrono_literals;
 	const auto sleepTime = 1.0s * constFields.updateTime;
 
@@ -188,7 +183,10 @@ void ParentHelper::pUpdate() {
 		}
 		case DDC::eNO_DEVICE: {
 			const sview io = requestFields.requestedSource.sourceType == DS::eDEFAULT_INPUT ? L"input" : L"output";
-			mainFields.logger.error(L"Requested default {} audio device, but all {} devices has been disconnected", io, io);
+			mainFields.logger.error(
+				L"Requested default {} audio device, but all {} devices has been disconnected",
+				io, io
+			);
 			auto requestLock = getRequestLock();
 			requestFields.snapshot.deviceIsAvailable = false;
 			requestFields.snapshotIsUpdated = false;

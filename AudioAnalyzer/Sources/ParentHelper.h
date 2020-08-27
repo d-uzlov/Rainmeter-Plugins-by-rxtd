@@ -88,8 +88,8 @@ namespace rxtd::audio_analyzer {
 
 		~ParentHelper();
 
-		// return true on success, false on fatal error
-		bool init(
+		// throws std::exception on fatal error
+		void init(
 			utils::Rainmeter::Logger _logger,
 			const utils::OptionMap& threadingMap,
 			index _legacyNumber
@@ -104,7 +104,7 @@ namespace rxtd::audio_analyzer {
 	private:
 		void wakeThreadUp();
 		void stopThread();
-		void separateThreadFunction();
+		void threadFunction();
 
 		void pUpdate();
 		void updateDevice();

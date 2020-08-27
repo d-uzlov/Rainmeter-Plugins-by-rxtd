@@ -15,13 +15,13 @@
 namespace rxtd::audio_analyzer {
 	class AudioParent : public utils::ParentBase {
 		using DeviceRequest = std::optional<ParentHelper::RequestedDeviceDescription>;
-		ParentHelper helper;
-		DeviceRequest requestedSource;
-
-		ParamParser paramParser;
-		ParentHelper::Snapshot snapshot;
 
 		index legacyNumber{ };
+		ParamParser paramParser;
+
+		DeviceRequest requestedSource;
+		ParentHelper helper;
+		ParentHelper::Snapshot snapshot;
 
 	public:
 		explicit AudioParent(utils::Rainmeter&& rain);
@@ -53,7 +53,7 @@ namespace rxtd::audio_analyzer {
 		isview legacy_findProcessingFor(isview handlerName) const;
 
 	private:
-		DeviceRequest  readRequest() const;
+		DeviceRequest readRequest() const;
 		void resolveProp(array_view<isview> args, string& resolveBufferString);
 	};
 }

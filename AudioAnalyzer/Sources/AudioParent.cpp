@@ -28,17 +28,16 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 		return;
 	}
 
-	const auto threadingParams = rain.read(L"threading").asMap(L'|', L' ');
-
-	const bool success = helper.init(logger, threadingParams, legacyNumber);
-	if (!success) {
+	try {
+		const auto threadingParams = rain.read(L"threading").asMap(L'|', L' ');
+		helper.init(logger, threadingParams, legacyNumber);
+		const auto untouchedOptions = threadingParams.getListOfUntouched();
+		if (!untouchedOptions.empty()) {
+			logger.warning(L"Threading: unused options: {}", untouchedOptions);
+		}
+	} catch (std::exception& e) {
 		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
-	}
-
-	const auto untouchedOptions = threadingParams.getListOfUntouched();
-	if (!untouchedOptions.empty()) {
-		logger.warning(L"Threading: unused options: {}", untouchedOptions);
 	}
 
 	paramParser.setRainmeter(rain);
