@@ -110,7 +110,7 @@ CaptureManager::State CaptureManager::setSourceAndGetState(DataSource type, cons
 		return State::eDEVICE_CONNECTION_ERROR;
 	}
 
-	sessionEventsWrapper.init(audioClient);
+	sessionEventsWrapper = { audioClient };
 
 	auto format = audioClient.getFormat();
 	snapshot.type = audioClient.getType();
@@ -313,7 +313,7 @@ void CaptureManager::createExclusiveStreamListener() {
 		}
 	};
 
-	sessionEventsWrapper.init(std::move(activeSessions[0]));
+	sessionEventsWrapper = { std::move(activeSessions[0]) };
 
 	if (!c2.isValid()) {
 		logger.notice(
