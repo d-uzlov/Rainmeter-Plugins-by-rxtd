@@ -20,6 +20,16 @@ void CaptureManager::setSource(DataSource type, const string& id) {
 	snapshot.state = setSourceAndGetState(type, id);
 }
 
+void CaptureManager::disconnect() {
+	if (getState() != State::eOK) {
+		return;
+	}
+
+	snapshot.state = State::eRECONNECT_NEEDED;
+	audioCaptureClient = { };
+	sessionEventsWrapper = { };
+}
+
 CaptureManager::State CaptureManager::setSourceAndGetState(DataSource type, const string& id) {
 	auto deviceOpt = getDevice(type, id);
 
@@ -137,6 +147,10 @@ CaptureManager::State CaptureManager::setSourceAndGetState(DataSource type, cons
 }
 
 bool CaptureManager::capture() {
+	if (snapshot.state != State::eOK) {
+		return false;
+	}
+
 	bool anyCaptured = false;
 	channelMixer.reset();
 

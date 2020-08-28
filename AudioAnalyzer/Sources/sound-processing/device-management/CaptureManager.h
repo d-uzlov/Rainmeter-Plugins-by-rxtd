@@ -75,14 +75,15 @@ namespace rxtd::audio_analyzer {
 		void setBufferSizeInSec(double value);
 
 		void setSource(DataSource type, const string& id);
+		void disconnect();
 
 	private:
 		[[nodiscard]]
 		State setSourceAndGetState(DataSource type, const string& id);
 
 	public:
-		void updateSnapshot(Snapshot& snap) const {
-			snap = snapshot;
+		const Snapshot& getSnapshot() const {
+			return snapshot;
 		}
 
 		[[nodiscard]]

@@ -68,27 +68,20 @@ void ParentHelper::init(
 }
 
 void ParentHelper::setParams(
-	std::optional<RequestedDeviceDescription> request,
+	std::optional<RequestedDeviceDescription> device,
 	std::optional<ParamParser::ProcessingsInfoMap> patches
 ) {
-	if (!request.has_value()) {
+	if (!device.has_value()) {
 		stopThread();
-		requestFields.sourceIsValid = false;
+		mainFields.captureManager.disconnect();
+		mainFields.settings.device = { };
 		return;
 	}
 
 	auto requestLock = getRequestLock();
 
-	if (patches.has_value() && requestFields.patches != patches.value()) {
-		requestFields.patches = std::move(patches).value();
-		requestFields.patchesWereUpdated = true;
-	}
-
-	if (!requestFields.sourceIsValid || requestFields.requestedSource != request.value()) {
-		requestFields.requestedSource = std::move(request).value();
-		requestFields.sourceWasUpdated = true;
-		requestFields.sourceIsValid = true;
-	}
+	requestFields.settings.device = std::move(device).value();
+	requestFields.settings.patches = std::move(patches);
 
 	if (constFields.useThreading && !requestFields.thread.joinable()) {
 		threadSafeFields.stopRequest.exchange(false);
@@ -174,60 +167,67 @@ void ParentHelper::threadFunction() {
 }
 
 void ParentHelper::pUpdate() {
+	bool needToUpdateDevice = false;
+	bool needToUpdateHandlers = false;
+
 	{
 		auto requestLock = getRequestLock();
-		if (requestFields.sourceWasUpdated) {
-			mainFields.requestedSource = requestFields.requestedSource;
-			updateDevice(requestFields.patchesWereUpdated);
-		} else if (requestFields.patchesWereUpdated) {
-			updateProcessings();
+		if (requestFields.settings.device != mainFields.settings.device) {
+			mainFields.settings.device = requestFields.settings.device;
+			needToUpdateDevice = true;
 		}
-
-		requestFields.sourceWasUpdated = false;
-		requestFields.patchesWereUpdated = false;
+		if (requestFields.settings.patches.has_value()) {
+			mainFields.settings.patches = std::exchange(requestFields.settings.patches, { }).value();
+			needToUpdateHandlers = true;
+		}
 	}
 
 	const auto changes = threadSafeFields.notificationClient.takeChanges();
 
+	using DDC = utils::CMMNotificationClient::DefaultDeviceChange;
 	using DS = CaptureManager::DataSource;
-	if (mainFields.requestedSource.type == DS::eDEFAULT_INPUT
-		|| mainFields.requestedSource.type == DS::eDEFAULT_OUTPUT) {
-		const auto change =
-			mainFields.requestedSource.type == DS::eDEFAULT_INPUT
-				? changes.defaultCapture
-				: changes.defaultRender;
-		switch (change) {
-			using DDC = utils::CMMNotificationClient::DefaultDeviceChange;
-		case DDC::eNONE: break;
-		case DDC::eCHANGED: {
-			auto requestLock = getRequestLock();
+	DDC defaultDeviceChange{ };
+	switch (mainFields.settings.device.type) {
+	case DS::eDEFAULT_INPUT:
+		defaultDeviceChange = changes.defaultCapture;
+		break;
+	case DS::eDEFAULT_OUTPUT:
+		defaultDeviceChange = changes.defaultRender;
+		break;
+	case DS::eID:
+		defaultDeviceChange = DDC::eNONE;
+		break;
+	}
 
-			updateDevice(false);
-			break;
-		}
-		case DDC::eNO_DEVICE: {
-			const sview io = mainFields.requestedSource.type == DS::eDEFAULT_INPUT ? L"input" : L"output";
-			mainFields.logger.error(
-				L"Requested default {} audio device, but all {} devices has been disconnected",
-				io, io
-			);
-			auto requestLock = getRequestLock();
-			requestFields.snapshot.deviceIsAvailable = false;
-			requestFields.snapshotIsUpdated = false;
-			break;
-		}
-		}
+	switch (defaultDeviceChange) {
+	case DDC::eNONE: break;
+	case DDC::eCHANGED:
+		needToUpdateDevice = true;
+		break;
+	case DDC::eNO_DEVICE: {
+		const sview io = mainFields.settings.device.type == DS::eDEFAULT_INPUT ? L"input" : L"output";
+		mainFields.logger.error(
+			L"Requested default {} audio device, but all {} devices has been disconnected",
+			io, io
+		);
+
+		// todo
+		// requestFields.snapshot.deviceIsAvailable = false;
+		// requestFields.snapshotIsUpdated = false;
+		break;
+	}
 	}
 
 	if (!changes.devices.empty()) {
-		auto requestLock = getRequestLock();
-
-		if (mainFields.captureManager.getState() == CaptureManager::State::eDEVICE_CONNECTION_ERROR
-			&& changes.devices.count(requestFields.snapshot.deviceInfoSnapshot.id) > 0) {
-			updateDevice(false);
+		{
+			auto requestLock = getRequestLock();
+			updateDeviceListStrings();
 		}
 
-		updateDeviceListStrings();
+		if (mainFields.captureManager.getState() == CaptureManager::State::eDEVICE_CONNECTION_ERROR
+			&& changes.devices.count(mainFields.captureManager.getSnapshot().id) > 0) {
+			needToUpdateDevice = true;
+		}
 	}
 
 	if (mainFields.captureManager.getState() == CaptureManager::State::eDEVICE_IS_EXCLUSIVE) {
@@ -235,16 +235,46 @@ void ParentHelper::pUpdate() {
 	}
 
 	if (mainFields.captureManager.getState() == CaptureManager::State::eRECONNECT_NEEDED) {
-		auto requestLock = getRequestLock();
-
-		updateDevice(false);
+		needToUpdateDevice = true;
 	}
 
-	if (mainFields.captureManager.getState() != CaptureManager::State::eOK) {
+	if (!needToUpdateDevice && mainFields.captureManager.getState() != CaptureManager::State::eOK) {
 		return;
 	}
 
+	// after we know if we need to reconnect to audio device
+	// we grab data from current device buffer, so that wave flow don't hiccup
+	// then instantly update device if need be
+	//	so that on next update we have something in buffer
+	// then process current captured data
+
 	const bool anyCaptured = mainFields.captureManager.capture();
+
+	bool formatChanged = false;
+	if (needToUpdateDevice) {
+		formatChanged = updateDevice();
+		needToUpdateHandlers = formatChanged;
+
+	}
+	if (needToUpdateHandlers) {
+		updateProcessings();
+	}
+
+	if (needToUpdateDevice || needToUpdateHandlers) {
+		auto requestLock = getRequestLock();
+		requestFields.snapshotIsUpdated = false;
+		requestFields.snapshot.deviceIsAvailable = mainFields.captureManager.getState() == CaptureManager::State::eOK;
+
+		if (formatChanged) {
+			// todo check this
+			// it's important that if device is not available
+			// then #snapshot is not updated
+			requestFields.snapshot.deviceInfoSnapshot = mainFields.captureManager.getSnapshot();
+		}
+
+		mainFields.orchestrator.configureSnapshot(requestFields.snapshot.dataSnapshot);
+	}
+
 	if (anyCaptured) {
 		mainFields.orchestrator.process(mainFields.captureManager.getChannelMixer());
 
@@ -253,44 +283,28 @@ void ParentHelper::pUpdate() {
 			mainFields.orchestrator.exchangeData(requestFields.snapshot.dataSnapshot);
 		}
 	}
-
-	if (mainFields.captureManager.getState() == CaptureManager::State::eRECONNECT_NEEDED) {
-		updateDevice(false);
-	}
 }
 
-void ParentHelper::updateDevice(bool forceUpdateProcessings) {
-	requestFields.snapshotIsUpdated = false;
-
+bool ParentHelper::updateDevice() {
+	const auto oldFormat = mainFields.captureManager.getSnapshot().format;
 	mainFields.captureManager.setSource(
-		requestFields.requestedSource.type,
-		requestFields.requestedSource.id
+		mainFields.settings.device.type,
+		mainFields.settings.device.id
 	);
 
-	requestFields.snapshot.deviceIsAvailable = mainFields.captureManager.getState() == CaptureManager::State::eOK;
-	if (!requestFields.snapshot.deviceIsAvailable) {
-		return;
+	if (mainFields.captureManager.getState() != CaptureManager::State::eOK) {
+		return false;
 	}
 
-	const auto oldFormat = requestFields.snapshot.deviceInfoSnapshot.format;
-
-	// it's important that if device is not available
-	// then #updateSnapshot is not called
-	mainFields.captureManager.updateSnapshot(requestFields.snapshot.deviceInfoSnapshot);
-
-	if (forceUpdateProcessings || oldFormat != requestFields.snapshot.deviceInfoSnapshot.format) {
-		updateProcessings();
-	}
+	return oldFormat != mainFields.captureManager.getSnapshot().format;
 }
 
 void ParentHelper::updateProcessings() {
 	mainFields.orchestrator.patch(
-		requestFields.patches, constFields.legacyNumber,
-		requestFields.snapshot.deviceInfoSnapshot.format.samplesPerSec,
-		requestFields.snapshot.deviceInfoSnapshot.format.channelLayout
+		mainFields.settings.patches, constFields.legacyNumber,
+		mainFields.captureManager.getSnapshot().format.samplesPerSec,
+		mainFields.captureManager.getSnapshot().format.channelLayout
 	);
-
-	mainFields.orchestrator.configureSnapshot(requestFields.snapshot.dataSnapshot);
 }
 
 void ParentHelper::updateDeviceListStrings() {

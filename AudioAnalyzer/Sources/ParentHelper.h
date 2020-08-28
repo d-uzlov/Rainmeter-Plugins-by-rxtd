@@ -63,7 +63,11 @@ namespace rxtd::audio_analyzer {
 			utils::Rainmeter::Logger logger;
 			CaptureManager captureManager;
 			ProcessingOrchestrator orchestrator;
-			RequestedDeviceDescription requestedSource;
+
+			struct {
+				RequestedDeviceDescription device;
+				ParamParser::ProcessingsInfoMap patches;
+			} settings;
 		} mainFields;
 
 		struct {
@@ -71,11 +75,10 @@ namespace rxtd::audio_analyzer {
 
 			std::thread thread;
 
-			bool sourceIsValid = false;
-			ParamParser::ProcessingsInfoMap patches;
-			bool patchesWereUpdated = false;
-			RequestedDeviceDescription requestedSource;
-			bool sourceWasUpdated = false;
+			struct {
+				RequestedDeviceDescription device;
+				std::optional<ParamParser::ProcessingsInfoMap> patches;
+			} settings;
 
 			Snapshot snapshot;
 			bool snapshotIsUpdated = false;
@@ -92,8 +95,8 @@ namespace rxtd::audio_analyzer {
 		);
 
 		void setParams(
-			std::optional<RequestedDeviceDescription> request,
-			std::optional<ParamParser::ProcessingsInfoMap> _patches
+			std::optional<RequestedDeviceDescription> device,
+			std::optional<ParamParser::ProcessingsInfoMap> patches
 		);
 
 		void update(Snapshot& snap);
@@ -107,8 +110,8 @@ namespace rxtd::audio_analyzer {
 		void threadFunction();
 
 		void pUpdate();
-		// returns true if ProcessingOrchestrator was updated, false otherwise
-		void updateDevice(bool forceUpdateProcessings);
+		// returns true device format changed, false otherwise
+		bool updateDevice();
 		void updateProcessings();
 		void updateDeviceListStrings();
 
