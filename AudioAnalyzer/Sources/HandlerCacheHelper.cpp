@@ -59,7 +59,8 @@ HandlerCacheHelper::HandlerRawInfo HandlerCacheHelper::parseHandler(sview name, 
 	string rawDescription2;
 	readRawDescription2(optionMap.get(L"type").asIString(), optionMap, rawDescription2);
 
-	if (handler.rawDescription == descriptionOption.asString() && handler.rawDescription2 == rawDescription2) {
+	if (handler.patchInfo.rawDescription == descriptionOption.asString()
+		&& handler.patchInfo.rawDescription2 == rawDescription2) {
 		return handler;
 	}
 	anythingChanged = true;
@@ -71,8 +72,8 @@ HandlerCacheHelper::HandlerRawInfo HandlerCacheHelper::parseHandler(sview name, 
 		cl.warning(L"unused options: '{}'", unusedOptions);
 	}
 
-	handler.rawDescription2 = std::move(rawDescription2);
-	handler.rawDescription = descriptionOption.asString();
+	handler.patchInfo.rawDescription2 = std::move(rawDescription2);
+	handler.patchInfo.rawDescription = descriptionOption.asString();
 
 	return handler;
 }
