@@ -76,17 +76,17 @@ namespace rxtd::utils {
 			return { array.data(), buffersCount * bufferSize };
 		}
 
-		constexpr void transferTo(array2d_span<T> dest) const;
+		constexpr void transferToSpan(array2d_span<T> dest) const;
 
-		constexpr void transferTo(Vector2D<T>& dest) const {
+		constexpr void transferToVector(Vector2D<T>& dest) const {
 			dest.setBuffersCount(buffersCount);
 			dest.setBufferSize(bufferSize);
-			getFlat().transferTo(dest.getFlat());
+			getFlat().transferToSpan(dest.getFlat());
 		}
 
-		constexpr void transferFrom(array2d_view<T> source);
+		constexpr void copyFrom(array2d_view<T> source);
 
-		constexpr void transferFromChecked(array2d_view<T> source);
+		constexpr void copyWithResize(array2d_view<T> source);
 	};
 
 
@@ -157,21 +157,19 @@ namespace rxtd::utils {
 			return { ptr, buffersCount * bufferSize };
 		}
 
-		constexpr void transferTo(array2d_span<T> dest) const {
+		constexpr void transferToSpan(array2d_span<T> dest) const {
 			if (dest.buffersCount != buffersCount || dest.bufferSize != bufferSize)
-				throw std::out_of_range("array2d_view::transferTo");
-			getFlat().transferTo(dest.getFlat());
+				throw std::out_of_range("array2d_view::transferToSpan");
+			getFlat().transferToSpan(dest.getFlat());
 		}
 
-		constexpr void transferTo(Vector2D<T>& dest) const {
+		constexpr void transferToVector(Vector2D<T>& dest) const {
 			dest.setBuffersCount(buffersCount);
 			dest.setBufferSize(bufferSize);
-			getFlat().transferTo(dest.getFlat());
+			getFlat().transferToSpan(dest.getFlat());
 		}
 
-		constexpr void transferFrom(array2d_view<T> source);
-
-		constexpr void transferFrom(const Vector2D<T>& source);
+		constexpr void copyFrom(array2d_view<T> source);
 	};
 
 	template <typename T>
@@ -231,44 +229,41 @@ namespace rxtd::utils {
 			return { ptr, buffersCount * bufferSize };
 		}
 
-		constexpr void transferTo(array2d_span<T> dest) const {
+		constexpr void transferToSpan(array2d_span<T> dest) const {
 			if (dest.buffersCount != buffersCount || dest.bufferSize != bufferSize)
-				throw std::out_of_range("array2d_view::transferTo");
-			getFlat().transferTo(dest.getFlat());
+				throw std::out_of_range("array2d_view::transferToSpan");
+			getFlat().transferToSpan(dest.getFlat());
 		}
 
-		constexpr void transferTo(Vector2D<T>& dest) const {
+		constexpr void transferToVector(Vector2D<T>& dest) const {
 			dest.setBuffersCount(buffersCount);
 			dest.setBufferSize(bufferSize);
-			getFlat().transferTo(dest.getFlat());
+			getFlat().transferToSpan(dest.getFlat());
 		}
 	};
 
 
 	template <typename T>
-	constexpr void array2d_span<T>::transferFrom(array2d_view<T> source) {
-		source.transferTo(*this);
+	constexpr void array2d_span<T>::copyFrom(array2d_view<T> source) {
+		source.transferToSpan(*this);
 	}
 
 	template <typename T>
-	constexpr void array2d_span<T>::transferFrom(const Vector2D<T>& source) {
-		transferFrom(array2d_view<T>{ source });
-	}
-
-	template <typename T>
-	constexpr void Vector2D<T>::transferTo(array2d_span<T> dest) const {
+	constexpr void Vector2D<T>::transferToSpan(array2d_span<T> dest) const {
 		if (dest.getBuffersCount() != buffersCount || dest.getBufferSize() != bufferSize)
-			throw std::out_of_range("array2d_view::transferTo");
-		getFlat().transferTo(dest.getFlat());
+			throw std::out_of_range("Vector2D::transferToSpan");
+		getFlat().transferToSpan(dest.getFlat());
 	}
 
 	template <typename T>
-	constexpr void Vector2D<T>::transferFrom(array2d_view<T> source) {
-		source.transferTo(*this);
-	}
-
-	template <typename T>
-	constexpr void Vector2D<T>::transferFromChecked(array2d_view<T> source) {
+	constexpr void Vector2D<T>::copyFrom(array2d_view<T> source) {
 		source.transferToChecked(*this);
+	}
+
+	template <typename T>
+	constexpr void Vector2D<T>::copyWithResize(array2d_view<T> source) {
+		setBuffersCount(source.getBuffersCount());
+		setBufferSize(source.getBufferSize());
+		source.transferToSpan(*this);
 	}
 }

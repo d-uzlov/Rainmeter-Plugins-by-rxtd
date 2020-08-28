@@ -206,9 +206,9 @@ public:
 
 
 	// Copyright (C) 2020 rxtd
-	constexpr void transferTo(array_span<value_type> dest) const {
+	constexpr void transferToSpan(array_span<value_type> dest) const {
 		if (dest.size() != size())
-			throw std::out_of_range("array_view1d::transferTo");
+			throw std::out_of_range("array_view1d::transferToSpan");
 		for (auto iter = begin(),
 			destIter = dest.begin();
 			iter != end();
@@ -219,24 +219,13 @@ public:
 	}
 
 	// Copyright (C) 2020 rxtd
-	constexpr void transferTo(std::vector<value_type>& dest) const {
+	constexpr void transferToVector(std::vector<value_type>& dest) const {
 		dest.resize(size());
-		transferTo(array_span<value_type>{dest});
+		transferToSpan(array_span<value_type>{dest});
 	}
 
 	// Copyright (C) 2020 rxtd
-	constexpr void transferToChecked(array_span<value_type> dest) const {
-		transferTo(dest);
-	}
-
-	// Copyright (C) 2020 rxtd
-	constexpr void transferToChecked(std::vector<value_type>& dest) const {
-		transferTo(array_span<value_type>{ dest });
-	}
-
-
-	// Copyright (C) 2020 rxtd
-	constexpr void transferFrom(array_view<value_type> source);
+	constexpr void copyFrom(array_view<value_type> source);
 
 
 private:
@@ -398,7 +387,7 @@ public:
 
 
 	// Copyright (C) 2020 rxtd
-	constexpr void transferTo(array_span<value_type> dest) const {
+	constexpr void transferToSpan(array_span<value_type> dest) const {
 		if (dest.size() != size())
 			throw std::out_of_range("array_view1d::transferTo");
 		for (auto iter = begin(),
@@ -411,16 +400,9 @@ public:
 	}
 
 	// Copyright (C) 2020 rxtd
-	constexpr void transferTo(std::vector<value_type>& dest) const {
+	constexpr void transferToVector(std::vector<value_type>& dest) const {
 		dest.resize(size());
-		transferTo(array_span<T>{dest});
-	}
-
-	// Copyright (C) 2020 rxtd
-	constexpr void transferToChecked(std::vector<value_type>& dest) const {
-		if (dest.size() != size())
-			throw std::out_of_range("array_view1d::transferTo");
-		transferTo(array_span<value_type>{dest});
+		transferToSpan(array_span<T>{dest});
 	}
 
 
@@ -431,8 +413,8 @@ private:
 
 
 template <class T>
-constexpr void array_span<T>::transferFrom(array_view<value_type> source) {
-	source.transferTo(*this);
+constexpr void array_span<T>::copyFrom(array_view<value_type> source) {
+	source.transferToSpan(*this);
 }
 
 #endif
