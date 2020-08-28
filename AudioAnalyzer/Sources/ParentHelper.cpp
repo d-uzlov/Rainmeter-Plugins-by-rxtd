@@ -89,6 +89,7 @@ void ParentHelper::setParams(
 	}
 
 	if (requestFields.needToInitializeThread) {
+		threadSafeFields.stopRequest.exchange(false);
 		requestFields.needToInitializeThread = false;
 		requestFields.thread = std::thread{ [this]() { threadFunction(); } };
 	}
