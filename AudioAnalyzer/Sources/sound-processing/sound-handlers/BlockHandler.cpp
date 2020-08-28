@@ -8,7 +8,6 @@
  */
 
 #include "BlockHandler.h"
-#include "option-parser/OptionMap.h"
 
 using namespace audio_analyzer;
 

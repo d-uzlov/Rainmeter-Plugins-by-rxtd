@@ -11,7 +11,6 @@
 
 #include "LinearInterpolator.h"
 #include "../../../audio-utils/CubicInterpolationHelper.h"
-#include "option-parser/OptionMap.h"
 #include "option-parser/OptionList.h"
 
 using namespace std::string_literals;

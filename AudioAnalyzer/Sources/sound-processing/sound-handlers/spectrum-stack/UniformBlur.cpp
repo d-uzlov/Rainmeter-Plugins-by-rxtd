@@ -9,7 +9,6 @@
 
 #include "UniformBlur.h"
 #include "BandResampler.h"
-#include "option-parser/OptionMap.h"
 
 using namespace audio_analyzer;
 

@@ -10,7 +10,6 @@
 #include "Loudness.h"
 
 #include "MyMath.h"
-#include "option-parser/OptionMap.h"
 
 using namespace audio_analyzer;
 

@@ -9,7 +9,6 @@
 
 #include "BandCascadeTransformer.h"
 #include "BandResampler.h"
-#include "option-parser/OptionMap.h"
 #include "ResamplerProvider.h"
 
 using namespace audio_analyzer;

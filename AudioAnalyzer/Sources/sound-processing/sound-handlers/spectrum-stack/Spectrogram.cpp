@@ -11,7 +11,6 @@
 #include <filesystem>
 
 #include "windows-wrappers/FileWrapper.h"
-#include "option-parser/OptionMap.h"
 #include "option-parser/OptionList.h"
 #include "LinearInterpolator.h"
 

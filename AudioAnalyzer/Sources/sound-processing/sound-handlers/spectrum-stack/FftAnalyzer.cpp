@@ -11,7 +11,6 @@
 #include "../../../audio-utils/RandomGenerator.h"
 
 #include "FftAnalyzer.h"
-#include "option-parser/OptionMap.h"
 
 using namespace audio_analyzer;
 

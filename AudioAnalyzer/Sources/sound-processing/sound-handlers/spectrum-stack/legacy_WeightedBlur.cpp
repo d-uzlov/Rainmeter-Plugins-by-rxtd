@@ -8,7 +8,6 @@
  */
 
 #include "legacy_WeightedBlur.h"
-#include "option-parser/OptionMap.h"
 
 using namespace audio_analyzer;
 
