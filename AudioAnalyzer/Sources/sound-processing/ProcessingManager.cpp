@@ -27,8 +27,6 @@ void ProcessingManager::setParams(
 		}
 	}
 
-	auto oldChannelMap = std::exchange(channelMap, { });
-
 	if (pd.targetRate == 0) {
 		resamplingDivider = 1;
 	} else {
@@ -37,16 +35,12 @@ void ProcessingManager::setParams(
 	}
 	const index finalSampleRate = sampleRate / resamplingDivider;
 
+	auto oldChannelMap = std::exchange(channelMap, { });
+
 	for (auto channel : channels) {
 		auto& newChannelStruct = channelMap[channel];
 		newChannelStruct.filter = pd.fcc.getInstance(double(finalSampleRate));
 		newChannelStruct.downsampleHelper.setFactor(resamplingDivider);
-	}
-
-	utils::MapUtils::intersectKeyCollection(snapshot, channels);
-	for (auto& [channel, channelStruct] : channelMap) {
-		auto& channelSnapshot = snapshot[channel];
-		utils::MapUtils::intersectKeyCollection(channelSnapshot, channelStruct.handlerMap);
 	}
 
 	order.clear();
@@ -86,6 +80,12 @@ void ProcessingManager::setParams(
 			order.clear();
 			break;
 		}
+	}
+
+	utils::MapUtils::intersectKeyCollection(snapshot, channels);
+	for (auto& [channel, channelStruct] : channelMap) {
+		auto& channelSnapshot = snapshot[channel];
+		utils::MapUtils::intersectKeyCollection(channelSnapshot, channelStruct.handlerMap);
 	}
 
 	for (auto& [channel, channelHandlers] : channelMap) {

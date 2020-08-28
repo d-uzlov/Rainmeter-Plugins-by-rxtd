@@ -13,7 +13,7 @@
 
 namespace rxtd::utils {
 	template <typename T>
-	class IUnknownImpl : NonMovableBase, virtual public T {
+	class IUnknownImpl : NonMovableBase, VirtualDestructorBase, virtual public T {
 		static_assert(std::is_base_of<IUnknown, T>::value, "T must extend IUnknown");
 		LONG _cRef = 1;
 

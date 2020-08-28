@@ -11,6 +11,11 @@
 #define COPY_MOVE_BASE_CLASSES_H
 
 namespace rxtd {
+	class VirtualDestructorBase {
+	public:
+		virtual ~VirtualDestructorBase() = default;
+	};
+	
 	class MovableOnlyBase {
 	public:
 		MovableOnlyBase() = default;

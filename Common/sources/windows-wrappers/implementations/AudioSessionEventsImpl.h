@@ -11,6 +11,8 @@
 
 #include "../IUnknownImpl.h"
 #include "audiopolicy.h"
+#include "../GenericComWrapper.h"
+#include "../IAudioClientWrapper.h"
 
 #include <mutex>
 #include <atomic>

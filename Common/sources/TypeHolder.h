@@ -18,7 +18,7 @@ namespace rxtd::utils {
 		eBROKEN
 	};
 
-	class TypeHolder : NonMovableBase {
+	class TypeHolder : NonMovableBase, VirtualDestructorBase {
 	protected:
 		Rainmeter rain;
 		Rainmeter::Logger logger;
@@ -36,7 +36,6 @@ namespace rxtd::utils {
 
 	public:
 		TypeHolder(Rainmeter&& rain);
-		virtual ~TypeHolder() = default;
 
 		double update();
 		void reload();

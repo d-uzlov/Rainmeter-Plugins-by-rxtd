@@ -21,7 +21,7 @@
 #include "array_view.h"
 #include "typedefs.h"
 #include "CaseInsensitiveString.h"
-#include "CopyMoveBaseClasses.h"
+#include "GenericBaseClasses.h"
 
 #ifndef NOMINMAX
 #define NOMINMAX

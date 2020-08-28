@@ -13,7 +13,7 @@
 
 namespace rxtd::utils {
 	template <typename T>
-	class GenericComWrapper {
+	class GenericComWrapper : VirtualDestructorBase {
 	public:
 		using InitFunctionType = bool(T** ptr);
 		using ObjectType = T;

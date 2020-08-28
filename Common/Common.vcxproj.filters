@@ -217,7 +217,7 @@
     <ClInclude Include="sources\windows-wrappers\GenericCoTaskMemWrapper.h">
       <Filter>Source Files\windows-wrappers</Filter>
     </ClInclude>
-    <ClInclude Include="sources\CopyMoveBaseClasses.h">
+    <ClInclude Include="sources\GenericBaseClasses.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
