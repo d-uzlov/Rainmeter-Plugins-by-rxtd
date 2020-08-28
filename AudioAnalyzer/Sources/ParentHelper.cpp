@@ -39,7 +39,6 @@ void ParentHelper::init(
 		constFields.useThreading = false;
 	} else if (threadingPolicy == L"separateThread") {
 		constFields.useThreading = true;
-		requestFields.needToInitializeThread = true;
 		threadSafeFields.notificationClient.setCallback([this]() { wakeThreadUp(); });
 	} else {
 		mainFields.logger.error(L"Fatal error: Threading: unknown policy '{}'");
@@ -72,31 +71,29 @@ void ParentHelper::setParams(
 	std::optional<RequestedDeviceDescription> request,
 	std::optional<ParamParser::ProcessingsInfoMap> patches
 ) {
-	auto requestLock = getRequestLock();
-
-	if (request.has_value()) {
-		requestFields.requestedSource = std::move(request).value();
-		requestFields.sourceWasUpdated = true;
+	if (!request.has_value()) {
+		stopThread();
+		requestFields.sourceIsValid = false;
+		return;
 	}
 
-	if (patches.has_value()) {
+	auto requestLock = getRequestLock();
+
+	if (patches.has_value() && requestFields.patches != patches.value()) {
 		requestFields.patches = std::move(patches).value();
 		requestFields.patchesWereUpdated = true;
 	}
 
-	if (requestFields.sourceWasUpdated || requestFields.patchesWereUpdated) {
-		threadSafeFields.paramsWereUpdated.exchange(true);
+	if (!requestFields.sourceIsValid || requestFields.requestedSource != request.value()) {
+		requestFields.requestedSource = std::move(request).value();
+		requestFields.sourceWasUpdated = true;
+		requestFields.sourceIsValid = true;
 	}
 
-	if (requestFields.needToInitializeThread) {
+	if (constFields.useThreading && !requestFields.thread.joinable()) {
 		threadSafeFields.stopRequest.exchange(false);
-		requestFields.needToInitializeThread = false;
 		requestFields.thread = std::thread{ [this]() { threadFunction(); } };
 	}
-}
-
-void ParentHelper::setInvalid() {
-	stopThread();
 }
 
 void ParentHelper::update(Snapshot& snap) {
@@ -130,17 +127,16 @@ void ParentHelper::wakeThreadUp() {
 }
 
 void ParentHelper::stopThread() {
-	if (!constFields.useThreading || requestFields.needToInitializeThread) {
+	if (!constFields.useThreading) {
 		return;
 	}
 
 	threadSafeFields.stopRequest.exchange(true);
-
 	wakeThreadUp();
 
-	requestFields.thread.join();
-
-	requestFields.needToInitializeThread = true;
+	if (requestFields.thread.joinable()) {
+		requestFields.thread.join();
+	}
 }
 
 void ParentHelper::threadFunction() {
@@ -156,6 +152,8 @@ void ParentHelper::threadFunction() {
 		return;
 	}
 
+	mainFields.logger.debug(L"thread started");
+
 	while (true) {
 		if (threadSafeFields.stopRequest.load()) {
 			break;
@@ -170,21 +168,23 @@ void ParentHelper::threadFunction() {
 		mainFields.sleepVariable.wait_for(mainLock, sleepTime);
 	}
 
+	mainFields.logger.debug(L"threadEnded");
 
 	CoUninitialize();
 }
 
 void ParentHelper::pUpdate() {
-	if (threadSafeFields.paramsWereUpdated.load()) {
+	{
 		auto requestLock = getRequestLock();
-		updateDevice();
-		threadSafeFields.paramsWereUpdated.exchange(false);
-		mainFields.requestedSource = requestFields.requestedSource;
+		if (requestFields.sourceWasUpdated) {
+			mainFields.requestedSource = requestFields.requestedSource;
+			updateDevice(requestFields.patchesWereUpdated);
+		} else if (requestFields.patchesWereUpdated) {
+			updateProcessings();
+		}
 
 		requestFields.sourceWasUpdated = false;
 		requestFields.patchesWereUpdated = false;
-
-		// todo check why image in reset when I forgot to set optionsChanged = false
 	}
 
 	const auto changes = threadSafeFields.notificationClient.takeChanges();
@@ -202,7 +202,7 @@ void ParentHelper::pUpdate() {
 		case DDC::eCHANGED: {
 			auto requestLock = getRequestLock();
 
-			updateDevice();
+			updateDevice(false);
 			break;
 		}
 		case DDC::eNO_DEVICE: {
@@ -224,7 +224,7 @@ void ParentHelper::pUpdate() {
 
 		if (mainFields.captureManager.getState() == CaptureManager::State::eDEVICE_CONNECTION_ERROR
 			&& changes.devices.count(requestFields.snapshot.deviceInfoSnapshot.id) > 0) {
-			updateDevice();
+			updateDevice(false);
 		}
 
 		updateDeviceListStrings();
@@ -237,7 +237,7 @@ void ParentHelper::pUpdate() {
 	if (mainFields.captureManager.getState() == CaptureManager::State::eRECONNECT_NEEDED) {
 		auto requestLock = getRequestLock();
 
-		updateDevice();
+		updateDevice(false);
 	}
 
 	if (mainFields.captureManager.getState() != CaptureManager::State::eOK) {
@@ -255,11 +255,11 @@ void ParentHelper::pUpdate() {
 	}
 
 	if (mainFields.captureManager.getState() == CaptureManager::State::eRECONNECT_NEEDED) {
-		updateDevice();
+		updateDevice(false);
 	}
 }
 
-void ParentHelper::updateDevice() {
+void ParentHelper::updateDevice(bool forceUpdateProcessings) {
 	requestFields.snapshotIsUpdated = false;
 
 	mainFields.captureManager.setSource(
@@ -272,12 +272,18 @@ void ParentHelper::updateDevice() {
 		return;
 	}
 
-	// todo if source format changed then update handlers
+	const auto oldFormat = requestFields.snapshot.deviceInfoSnapshot.format;
 
 	// it's important that if device is not available
 	// then #updateSnapshot is not called
 	mainFields.captureManager.updateSnapshot(requestFields.snapshot.deviceInfoSnapshot);
 
+	if (forceUpdateProcessings || oldFormat != requestFields.snapshot.deviceInfoSnapshot.format) {
+		updateProcessings();
+	}
+}
+
+void ParentHelper::updateProcessings() {
 	mainFields.orchestrator.patch(
 		requestFields.patches, constFields.legacyNumber,
 		requestFields.snapshot.deviceInfoSnapshot.format.samplesPerSec,

@@ -54,7 +54,6 @@ namespace rxtd::audio_analyzer {
 		struct {
 			utils::CMMNotificationClient notificationClient;
 			std::atomic_bool stopRequest{ false };
-			std::atomic_bool paramsWereUpdated{ false };
 		} threadSafeFields;
 
 		struct {
@@ -71,8 +70,8 @@ namespace rxtd::audio_analyzer {
 			std::mutex mutex;
 
 			std::thread thread;
-			bool needToInitializeThread = false;
 
+			bool sourceIsValid = false;
 			ParamParser::ProcessingsInfoMap patches;
 			bool patchesWereUpdated = false;
 			RequestedDeviceDescription requestedSource;
@@ -97,18 +96,20 @@ namespace rxtd::audio_analyzer {
 			std::optional<ParamParser::ProcessingsInfoMap> _patches
 		);
 
-		void setInvalid();
-
 		void update(Snapshot& snap);
 
 	private:
 		void wakeThreadUp();
+
+		// Caller of this function must *NOT* have RequestLock
+		// this function joins the thread, which might be waiting on it before finishing
 		void stopThread();
 		void threadFunction();
 
 		void pUpdate();
 		// returns true if ProcessingOrchestrator was updated, false otherwise
-		void updateDevice();
+		void updateDevice(bool forceUpdateProcessings);
+		void updateProcessings();
 		void updateDeviceListStrings();
 
 		std::unique_lock<std::mutex> getMainLock();

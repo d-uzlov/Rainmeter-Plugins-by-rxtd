@@ -51,11 +51,12 @@ void AudioParent::vReload() {
 	if (requestOpt != requestedSource || anythingChanged) {
 		requestedSource = std::move(requestOpt);
 
-		if (requestedSource.has_value()) {
-			helper.setParams(requestedSource.value(), paramParser.getParseResult());
-		} else {
-			helper.setInvalid();
+		std::optional<ParamParser::ProcessingsInfoMap> paramsOpt = { };
+		if (anythingChanged) {
+			paramsOpt = paramParser.getParseResult();
 		}
+
+		helper.setParams(requestedSource, std::move(paramsOpt));
 	}
 }
 
