@@ -295,8 +295,7 @@ namespace rxtd::audio_analyzer {
 					continue;
 				}
 
-				auto chunkData = chunks.back().data;
-				std::copy(chunkData.begin(), chunkData.end(), _lastResults[layer].begin());
+				_lastResults[layer].copyFrom(chunks.back().data);
 			}
 
 			for (auto& data : _layers) {

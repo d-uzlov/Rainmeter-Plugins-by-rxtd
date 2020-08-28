@@ -245,10 +245,8 @@ void BandResampler::vProcess(array_view<float> wave, clock::time_point killTime)
 			auto dest = pushLayer(localCascadeIndex, chunk.equivalentWaveSize);
 
 			if (clock::now() > killTime) {
-				array_view<float> dataToCopy;
 				auto myChunks = getChunks(cascadeIndex);
-				dataToCopy = myChunks.empty() ? getSavedData(cascadeIndex) : myChunks.back().data;
-				std::copy(dataToCopy.begin(), dataToCopy.end(), dest.begin());
+				dest.copyFrom(myChunks.empty() ? getSavedData(cascadeIndex) : myChunks.back().data);
 				continue;
 			}
 

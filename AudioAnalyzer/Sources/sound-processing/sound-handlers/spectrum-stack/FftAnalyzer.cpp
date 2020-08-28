@@ -159,7 +159,7 @@ SoundHandler::ConfigurationResult FftAnalyzer::vConfigure(const std::any& _param
 	cascadeParams.legacy_correctZero = params.legacy_correctZero;
 	cascadeParams.callback = [this](array_view<float> result, index cascade) {
 		auto buffer = pushLayer(cascade, inputStride * index(std::pow(2, cascade)));
-		std::copy(result.begin(), result.end(), buffer.begin());
+		result.transferToSpan(buffer);
 	};
 
 	for (index i = 0; i < index(cascades.size()); i++) {

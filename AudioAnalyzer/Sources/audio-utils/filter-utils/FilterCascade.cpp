@@ -12,8 +12,7 @@
 using namespace audio_utils;
 
 void FilterCascade::apply(array_view<float> wave) {
-	processed.resize(wave.size());
-	std::copy(wave.begin(), wave.end(), processed.begin());
+	wave.transferToVector(processed);
 	applyInPlace(processed);
 }
 

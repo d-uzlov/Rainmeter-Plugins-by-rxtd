@@ -102,9 +102,10 @@ void legacy_FiniteTimeFilter::vProcess(array_view<float> wave, clock::time_point
 	const index layersCount = source.getDataSize().layersCount;
 	for (index layer = 0; layer < layersCount; ++layer) {
 		for (auto chunk : source.getChunks(layer)) {
+			auto dest = pushLayer(layer, chunk.equivalentWaveSize);
+
 			if (params.smoothingFactor <= 1) {
-				auto dest = pushLayer(layer, chunk.equivalentWaveSize);
-				std::copy(chunk.data.begin(), chunk.data.end(), dest.begin());
+				dest.copyFrom(chunk.data);
 				continue;
 			}
 
@@ -114,13 +115,10 @@ void legacy_FiniteTimeFilter::vProcess(array_view<float> wave, clock::time_point
 			}
 
 			auto& layerPastValues = pastValues[layer];
+			layerPastValues[pastValuesIndex].copyFrom(chunk.data);
 
-			const auto sourceValues = chunk.data;
-			std::copy(sourceValues.begin(), sourceValues.end(), layerPastValues[pastValuesIndex].begin());
-
-			auto dest = pushLayer(layer, chunk.equivalentWaveSize);
 			if (clock::now() > killTime) {
-				std::copy(sourceValues.begin(), sourceValues.end(), dest.begin());
+				dest.copyFrom(chunk.data);
 			} else {
 				applyToLayer(layerPastValues, dest);
 			}

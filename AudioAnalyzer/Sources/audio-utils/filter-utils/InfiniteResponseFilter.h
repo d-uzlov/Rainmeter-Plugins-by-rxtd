@@ -74,7 +74,7 @@ namespace rxtd::audio_utils {
 			std::move(params.a), std::move(params.b), params.gainAmp) {
 		}
 
-		InfiniteResponseFilterFixed(std::vector<double> _a, std::vector<double> _b, double gainAmp) {
+		InfiniteResponseFilterFixed(array_view<double> _a, array_view<double> _b, double gainAmp) {
 			if (_a.size() > order || _b.size() > order) {
 				throw std::exception{ };
 			}

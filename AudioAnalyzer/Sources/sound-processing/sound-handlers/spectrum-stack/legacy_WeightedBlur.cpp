@@ -73,7 +73,7 @@ void legacy_WeightedBlur::vProcess(array_view<float> wave, clock::time_point kil
 
 			auto result = pushLayer(i, chunk.equivalentWaveSize);
 			if (maxRadius <= 1.0 || clock::now() > killTime) {
-				std::copy(cascadeMagnitudes.begin(), cascadeMagnitudes.end(), result.begin());
+				cascadeMagnitudes.transferToSpan(result);
 			} else {
 				blurCascade(
 					cascadeMagnitudes, cascadeWeights, result,

@@ -44,7 +44,7 @@ void FftCascade::process(array_view<float> wave, clock::time_point killTime) {
 		downsampleHelper.downsampleFixed<2>(newChunk);
 	} else {
 		newChunk = buffer.allocateNext(wave.size());
-		std::copy(wave.begin(), wave.end(), newChunk.begin());
+		wave.transferToSpan(newChunk);
 	}
 
 	if (successorPtr != nullptr) {

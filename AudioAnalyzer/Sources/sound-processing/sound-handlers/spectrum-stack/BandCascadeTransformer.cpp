@@ -101,10 +101,8 @@ void BandCascadeTransformer::vProcess(array_view<float> wave, clock::time_point 
 		auto dest = pushLayer(0, chunk.equivalentWaveSize);
 
 		if (clock::now() > killTime) {
-			array_view<float> dataToCopy;
 			auto myChunks = getChunks(0);
-			dataToCopy = myChunks.empty() ? getSavedData(0) : myChunks.back().data;
-			std::copy(dataToCopy.begin(), dataToCopy.end(), dest.begin());
+			dest.copyFrom(myChunks.empty() ? getSavedData(0) : myChunks.back().data);
 			continue;
 		}
 

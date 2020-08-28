@@ -230,7 +230,7 @@ namespace rxtd::utils {
 		}
 
 		constexpr void transferToSpan(array2d_span<T> dest) const {
-			if (dest.buffersCount != buffersCount || dest.bufferSize != bufferSize)
+			if (dest.getBuffersCount() != buffersCount || dest.getBufferSize() != bufferSize)
 				throw std::out_of_range("array2d_view::transferToSpan");
 			getFlat().transferToSpan(dest.getFlat());
 		}

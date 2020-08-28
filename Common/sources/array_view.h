@@ -209,12 +209,10 @@ public:
 	constexpr void transferToSpan(array_span<value_type> dest) const {
 		if (dest.size() != size())
 			throw std::out_of_range("array_view1d::transferToSpan");
-		for (auto iter = begin(),
-			destIter = dest.begin();
-			iter != end();
-			++iter, ++destIter
-			) {
-			*iter = *destIter;
+		auto myIter = begin();
+		auto destIter = dest.begin();
+		for (; myIter != end(); ++myIter, ++destIter) {
+			*destIter = *myIter;
 		}
 	}
 
@@ -389,13 +387,11 @@ public:
 	// Copyright (C) 2020 rxtd
 	constexpr void transferToSpan(array_span<value_type> dest) const {
 		if (dest.size() != size())
-			throw std::out_of_range("array_view1d::transferTo");
-		for (auto iter = begin(),
-			destIter = dest.begin();
-			iter != end();
-			++iter, ++destIter
-			) {
-			*iter = *destIter;
+			throw std::out_of_range("array_view1d::transferToSpan");
+		auto myIter = begin();
+		auto destIter = dest.begin();
+		for (; myIter != end(); ++myIter, ++destIter) {
+			*destIter = *myIter;
 		}
 	}
 

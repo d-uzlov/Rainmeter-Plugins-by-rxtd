@@ -189,11 +189,7 @@ SoundHandler::ConfigurationResult Spectrogram::vConfigure(const std::any& _param
 	snapshot.filepath = filepath;
 	snapshot.blockSize = blockSize;
 
-	snapshot.pixels.setBuffersCount(height);
-	snapshot.pixels.setBufferSize(width);
-
-	auto pixels = params.fading != 0.0 ? sifh.getResultBuffer().getFlat() : image.getPixels().getFlat();
-	std::copy(pixels.begin(), pixels.end(), snapshot.pixels.getFlat().begin());
+	snapshot.pixels.copyWithResize(params.fading != 0.0 ? sifh.getResultBuffer() : image.getPixels());
 
 	snapshot.writeNeeded = true;
 	snapshot.empty = false;
@@ -302,8 +298,7 @@ void Spectrogram::vUpdateSnapshot(std::any& handlerSpecificData) const {
 	snapshot.writeNeeded = true;
 	snapshot.empty = !image.isForced();
 
-	auto pixels = params.fading != 0.0 ? sifh.getResultBuffer().getFlat() : image.getPixels().getFlat();
-	std::copy(pixels.begin(), pixels.end(), snapshot.pixels.getFlat().begin());
+	snapshot.pixels.copyWithResize(params.fading != 0.0 ? sifh.getResultBuffer() : image.getPixels());
 
 	writeNeeded = false;
 }

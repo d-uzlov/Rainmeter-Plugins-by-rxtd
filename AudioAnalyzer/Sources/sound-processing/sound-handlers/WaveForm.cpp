@@ -143,8 +143,7 @@ SoundHandler::ConfigurationResult WaveForm::vConfigure(const std::any& _params, 
 	snapshot.pixels.setBuffersCount(params.height);
 	snapshot.pixels.setBufferSize(params.width);
 
-	auto pixels = drawer.getResultBuffer().getFlat();
-	std::copy(pixels.begin(), pixels.end(), snapshot.pixels.getFlat().begin());
+	snapshot.pixels.copyWithResize(drawer.getResultBuffer());
 
 	snapshot.writeNeeded = true;
 	snapshot.empty = false;
@@ -184,8 +183,7 @@ void WaveForm::vUpdateSnapshot(std::any& handlerSpecificData) const {
 	snapshot.writeNeeded = true;
 	snapshot.empty = drawer.isEmpty();
 
-	auto pixels = drawer.getResultBuffer().getFlat();
-	std::copy(pixels.begin(), pixels.end(), snapshot.pixels.getFlat().begin());
+	snapshot.pixels.copyWithResize(drawer.getResultBuffer());
 
 	writeNeeded = false;
 }

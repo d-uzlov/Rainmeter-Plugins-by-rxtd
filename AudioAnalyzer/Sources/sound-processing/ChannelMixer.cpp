@@ -60,7 +60,7 @@ void ChannelMixer::saveChannelsData(utils::array2d_view<float> channelsData, boo
 		auto channelData = channelsData[waveFormat.channelLayout.indexOf(channel).value()];
 		auto& waveBuffer = channels[channel];
 		auto writeBuffer = waveBuffer.allocateNext(channelData.size());
-		std::copy(channelData.begin(), channelData.end(), writeBuffer.begin());
+		channelData.transferToSpan(writeBuffer);
 	}
 
 	if (withAuto && aliasOfAuto == Channel::eAUTO) {

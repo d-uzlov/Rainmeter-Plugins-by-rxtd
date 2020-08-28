@@ -100,8 +100,7 @@ void ProcessingManager::process(const ChannelMixer& mixer, clock::time_point kil
 		auto wave = mixer.getChannelPCM(channel);
 
 		if (resamplingDivider <= 1) {
-			waveBuffer.resize(wave.size());
-			std::copy(wave.begin(), wave.end(), waveBuffer.begin());
+			wave.transferToVector(waveBuffer);
 		} else {
 			const index nextBufferSize = channelStruct.downsampleHelper.pushData(wave);
 			waveBuffer.resize(nextBufferSize);

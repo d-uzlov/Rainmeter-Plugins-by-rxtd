@@ -51,7 +51,7 @@ namespace rxtd::audio_utils {
 			buffer.compact();
 
 			auto chunk = buffer.allocateNext(source.size());
-			std::copy(source.begin(), source.end(), chunk.begin());
+			source.transferToSpan(chunk);
 			filter1.apply(chunk);
 			filter2.apply(chunk);
 			filter3.apply(chunk);
@@ -74,7 +74,7 @@ namespace rxtd::audio_utils {
 		}
 
 		// returns count of downsampled elements
-		template<index fixedFactor>
+		template <index fixedFactor>
 		index downsampleFixed(array_span<float> dest) {
 			const index size = buffer.getRemainingSize();
 			const index resultSize = std::min(size / fixedFactor, dest.size());
