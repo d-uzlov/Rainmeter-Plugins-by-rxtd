@@ -119,8 +119,8 @@ void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldData
 	}
 
 	for (const auto& [name, info] : oldData.handlersInfo.patchers) {
-		if (info.finisher != nullptr) {
-			oldData.finishers[name] = info.finisher;
+		if (info.externalMethods.finish != nullptr) {
+			oldData.finishers[name] = info.externalMethods.finish;
 		}
 	}
 

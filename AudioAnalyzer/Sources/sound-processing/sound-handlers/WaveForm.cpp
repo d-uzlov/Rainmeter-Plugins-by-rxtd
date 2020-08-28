@@ -87,8 +87,8 @@ SoundHandler::ParseResult WaveForm::parseParams(
 
 	ParseResult result{ true };
 	result.params = std::move(params);
-	result.finisher = staticFinisher;
-	result.propGetter = getProp;
+	result.externalMethods.finish = wrapExternalMethod<Snapshot, &staticFinisher>();
+	result.externalMethods.getProp = wrapExternalMethod<Snapshot, &getProp>();
 	return result;
 }
 
@@ -188,9 +188,7 @@ void WaveForm::vUpdateSnapshot(std::any& handlerSpecificData) const {
 	writeNeeded = false;
 }
 
-void WaveForm::staticFinisher(std::any& handlerSpecificData) {
-	auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
-
+void WaveForm::staticFinisher(Snapshot& snapshot) {
 	auto& writeNeeded = snapshot.writeNeeded;
 	if (!writeNeeded) {
 		return;
@@ -211,9 +209,7 @@ void WaveForm::pushStrip(double min, double max) {
 	}
 }
 
-bool WaveForm::getProp(const std::any& handlerSpecificData, isview prop, utils::BufferPrinter& printer) {
-	auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
-
+bool WaveForm::getProp(const Snapshot& snapshot, isview prop, utils::BufferPrinter& printer) {
 	if (prop == L"file") {
 		printer.print(snapshot.filepath);
 		return true;

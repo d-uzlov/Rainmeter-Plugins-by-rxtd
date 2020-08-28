@@ -103,7 +103,7 @@ SoundHandler::ParseResult FftAnalyzer::parseParams(
 
 	ParseResult result{ true };
 	result.params = std::move(params);
-	result.propGetter = getProp;
+	result.externalMethods.getProp = wrapExternalMethod<Snapshot, &getProp>();
 	return result;
 }
 
@@ -202,9 +202,7 @@ void FftAnalyzer::vProcess(array_view<float> wave, clock::time_point killTime) {
 	}
 }
 
-bool FftAnalyzer::getProp(const std::any& handlerSpecificData, isview prop, utils::BufferPrinter& printer) {
-	auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
-
+bool FftAnalyzer::getProp(const Snapshot& snapshot, isview prop, utils::BufferPrinter& printer) {
 	if (prop == L"size") {
 		printer.print(snapshot.fftSize);
 		return true;

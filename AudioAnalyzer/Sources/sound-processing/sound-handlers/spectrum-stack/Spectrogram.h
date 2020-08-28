@@ -123,11 +123,11 @@ namespace rxtd::audio_analyzer {
 		void vUpdateSnapshot(std::any& handlerSpecificData) const override;
 
 	private:
-		static void staticFinisher(std::any& handlerSpecificData);
+		static void staticFinisher(Snapshot& snapshot);
 
 		void fillStrip(array_view<float> data, array_span<utils::IntColor> buffer) const;
 		void fillStripMulticolor(array_view<float> data, array_span<utils::IntColor> buffer) const;
 
-		static bool getProp(const std::any& handlerSpecificData, isview prop, utils::BufferPrinter& printer);
+		static bool getProp(const Snapshot& snapshot, isview prop, utils::BufferPrinter& printer);
 	};
 }

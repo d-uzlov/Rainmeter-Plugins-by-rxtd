@@ -130,9 +130,9 @@ namespace rxtd::audio_analyzer {
 		void vUpdateSnapshot(std::any& handlerSpecificData) const override;
 
 	private:
-		static void staticFinisher(std::any& handlerSpecificData);
+		static void staticFinisher(Snapshot& handlerSpecificData);
 		void pushStrip(double min, double max);
 
-		static bool getProp(const std::any& handlerSpecificData, isview prop, utils::BufferPrinter& printer);
+		static bool getProp(const Snapshot& handlerSpecificData, isview prop, utils::BufferPrinter& printer);
 	};
 }

@@ -379,11 +379,11 @@ void AudioParent::resolveProp(array_view<isview> args, string& resolveBufferStri
 	}
 
 	auto& handlerSnapshot = handlerSnapshotIter->second;
-	const SoundHandler::PropGetter propGetter
+	const auto propGetter
 		= paramParser
 		  .getParseResult()
 		  .find(procName)->second.handlersInfo.patchers
-		  .find(handlerName)->second.propGetter;
+		  .find(handlerName)->second.externalMethods.getProp;
 
 	if (propGetter == nullptr) {
 		cl.error(L"handler '{}:{}' doesn't have any props", procName, handlerName);

@@ -113,6 +113,6 @@ namespace rxtd::audio_analyzer {
 
 		void legacy_generateBandMultipliers();
 
-		static bool getProp(const std::any& handlerSpecificData, isview prop, utils::BufferPrinter& printer);
+		static bool getProp(const Snapshot& snapshot, isview prop, utils::BufferPrinter& printer);
 	};
 }

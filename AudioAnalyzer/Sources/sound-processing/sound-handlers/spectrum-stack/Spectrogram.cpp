@@ -133,8 +133,8 @@ SoundHandler::ParseResult Spectrogram::parseParams(
 
 	ParseResult result{ true };
 	result.params = std::move(params);
-	result.finisher = staticFinisher;
-	result.propGetter = getProp;
+	result.externalMethods.finish = wrapExternalMethod<Snapshot, &staticFinisher>();
+	result.externalMethods.getProp = wrapExternalMethod<Snapshot, &getProp>();
 	result.sources.emplace_back(sourceId);
 	return result;
 }
@@ -303,16 +303,13 @@ void Spectrogram::vUpdateSnapshot(std::any& handlerSpecificData) const {
 	writeNeeded = false;
 }
 
-void Spectrogram::staticFinisher(std::any& handlerSpecificData) {
-	auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
-
-	auto& writeNeeded = snapshot.writeNeeded;
-	if (!writeNeeded) {
+void Spectrogram::staticFinisher(Snapshot& snapshot) {
+	if (!snapshot.writeNeeded) {
 		return;
 	}
 
 	snapshot.writerHelper.write(snapshot.pixels, snapshot.empty, snapshot.filepath);
-	writeNeeded = false;
+	snapshot.writeNeeded = false;
 }
 
 void Spectrogram::fillStrip(array_view<float> data, array_span<utils::IntColor> buffer) const {
@@ -352,9 +349,7 @@ void Spectrogram::fillStripMulticolor(array_view<float> data, array_span<utils::
 	}
 }
 
-bool Spectrogram::getProp(const std::any& handlerSpecificData, isview prop, utils::BufferPrinter& printer) {
-	auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
-
+bool Spectrogram::getProp(const Snapshot& snapshot, isview prop, utils::BufferPrinter& printer) {
 	if (prop == L"file") {
 		printer.print(snapshot.filepath);
 		return true;

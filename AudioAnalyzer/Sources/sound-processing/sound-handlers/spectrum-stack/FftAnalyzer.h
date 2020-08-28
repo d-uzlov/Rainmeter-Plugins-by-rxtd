@@ -112,7 +112,7 @@ namespace rxtd::audio_analyzer {
 		void vProcess(array_view<float> wave, clock::time_point killTime) override;
 
 	private:
-		static bool getProp(const std::any& handlerSpecificData, isview prop, utils::BufferPrinter& printer);
+		static bool getProp(const Snapshot& snapshot, isview prop, utils::BufferPrinter& printer);
 
 		void processRandom(index waveSize, clock::time_point killTime);
 	};

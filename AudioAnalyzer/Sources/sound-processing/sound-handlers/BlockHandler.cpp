@@ -42,7 +42,7 @@ SoundHandler::ParseResult BlockHandler::parseParams(
 
 	ParseResult result{ true };
 	result.params = std::move(params);
-	result.propGetter = getProp;
+	result.externalMethods.getProp = wrapExternalMethod<Snapshot, &getProp>();
 	return result;
 }
 
@@ -73,9 +73,7 @@ void BlockHandler::setNextValue(float value) {
 	pushLayer(0, blockSize)[0] = params.transformer.apply(value);
 }
 
-bool BlockHandler::getProp(const std::any& handlerSpecificData, isview prop, utils::BufferPrinter& printer) {
-	auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
-
+bool BlockHandler::getProp(const Snapshot& snapshot, isview prop, utils::BufferPrinter& printer) {
 	if (prop == L"block size") {
 		printer.print(snapshot.blockSize);
 		return true;

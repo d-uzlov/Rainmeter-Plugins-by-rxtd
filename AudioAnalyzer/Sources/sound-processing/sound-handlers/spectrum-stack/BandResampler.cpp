@@ -64,7 +64,7 @@ SoundHandler::ParseResult BandResampler::parseParams(
 
 	ParseResult result{ true };
 	result.params = std::move(params);
-	result.propGetter = getProp;
+	result.externalMethods.getProp = wrapExternalMethod<Snapshot, &getProp>();
 	result.sources.emplace_back(sourceId);
 	return result;
 }
@@ -354,9 +354,7 @@ void BandResampler::legacy_generateBandMultipliers() {
 	}
 }
 
-bool BandResampler::getProp(const std::any& handlerSpecificData, isview prop, utils::BufferPrinter& printer) {
-	auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
-
+bool BandResampler::getProp(const Snapshot& snapshot, isview prop, utils::BufferPrinter& printer) {
 	const index bandsCount = snapshot.bandFreqs.size();
 
 	if (prop == L"bands count") {
