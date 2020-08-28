@@ -20,6 +20,9 @@
 #include <limits>
 #include <cassert>
 
+template<typename T>
+class array_view;
+
 template <class T>
 class array_span {
 public:
@@ -201,10 +204,46 @@ public:
 		return false;
 	}
 
+
+	// Copyright (C) 2020 rxtd
+	constexpr void transferTo(array_span<value_type> dest) const {
+		if (dest.size() != size())
+			throw std::out_of_range("array_view1d::transferTo");
+		for (auto iter = begin(),
+			destIter = dest.begin();
+			iter != end();
+			++iter, ++destIter
+			) {
+			*iter = *destIter;
+		}
+	}
+
+	// Copyright (C) 2020 rxtd
+	constexpr void transferTo(std::vector<value_type>& dest) const {
+		dest.resize(size());
+		transferTo(array_span<value_type>{dest});
+	}
+
+	// Copyright (C) 2020 rxtd
+	constexpr void transferToChecked(array_span<value_type> dest) const {
+		transferTo(dest);
+	}
+
+	// Copyright (C) 2020 rxtd
+	constexpr void transferToChecked(std::vector<value_type>& dest) const {
+		transferTo(array_span<value_type>{ dest });
+	}
+
+
+	// Copyright (C) 2020 rxtd
+	constexpr void transferFrom(array_view<value_type> source);
+
+
 private:
 	pointer data_;
 	size_type     size_;
 };
+
 
 template <class T>
 class array_view {
@@ -357,9 +396,43 @@ public:
 		return false;
 	}
 
+
+	// Copyright (C) 2020 rxtd
+	constexpr void transferTo(array_span<value_type> dest) const {
+		if (dest.size() != size())
+			throw std::out_of_range("array_view1d::transferTo");
+		for (auto iter = begin(),
+			destIter = dest.begin();
+			iter != end();
+			++iter, ++destIter
+			) {
+			*iter = *destIter;
+		}
+	}
+
+	// Copyright (C) 2020 rxtd
+	constexpr void transferTo(std::vector<value_type>& dest) const {
+		dest.resize(size());
+		transferTo(array_span<T>{dest});
+	}
+
+	// Copyright (C) 2020 rxtd
+	constexpr void transferToChecked(std::vector<value_type>& dest) const {
+		if (dest.size() != size())
+			throw std::out_of_range("array_view1d::transferTo");
+		transferTo(array_span<value_type>{dest});
+	}
+
+
 private:
 	const_pointer data_;
 	size_type     size_;
 };
+
+
+template <class T>
+constexpr void array_span<T>::transferFrom(array_view<value_type> source) {
+	source.transferTo(*this);
+}
 
 #endif

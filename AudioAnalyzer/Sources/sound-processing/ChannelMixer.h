@@ -10,7 +10,7 @@
 #pragma once
 #include "device-management/MyWaveFormat.h"
 #include "GrowingVector.h"
-#include "array2d_view.h"
+#include "Vector2D.h"
 
 namespace rxtd::audio_analyzer {
 	class ChannelMixer {

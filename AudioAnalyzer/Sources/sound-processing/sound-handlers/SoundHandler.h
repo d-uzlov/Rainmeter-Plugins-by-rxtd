@@ -191,24 +191,8 @@ namespace rxtd::audio_analyzer {
 			vUpdateSnapshot(snapshot.handlerSpecificData);
 		}
 
-	protected:
-		template <typename Params>
-		static bool compareParamsEquals(const Params& p1, const std::any& p2) {
-			return p1 == *std::any_cast<Params>(&p2);
-		}
 
-		// should return true when params are the same
-		[[nodiscard]]
-		virtual bool checkSameParams(const std::any& p) const = 0;
-
-		[[nodiscard]]
-		virtual ConfigurationResult vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) = 0;
-
-		[[nodiscard]]
-		const Configuration& getConfiguration() const {
-			return _configuration;
-		}
-
+		// following public members are public for access between handlers
 		[[nodiscard]]
 		DataSize getDataSize() const {
 			return _dataSize;
@@ -237,6 +221,25 @@ namespace rxtd::audio_analyzer {
 			}
 
 			return _lastResults[layer];
+		}
+
+
+	protected:
+		template <typename Params>
+		static bool compareParamsEquals(const Params& p1, const std::any& p2) {
+			return p1 == *std::any_cast<Params>(&p2);
+		}
+
+		// should return true when params are the same
+		[[nodiscard]]
+		virtual bool checkSameParams(const std::any& p) const = 0;
+
+		[[nodiscard]]
+		virtual ConfigurationResult vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) = 0;
+
+		[[nodiscard]]
+		const Configuration& getConfiguration() const {
+			return _configuration;
 		}
 
 		[[nodiscard]]

@@ -8,9 +8,7 @@
  */
 
 #pragma once
-#include "array2d_view.h"
 #include "../SoundHandler.h"
-#include "Vector2D.h"
 #include "BandResampler.h"
 #include "ResamplerProvider.h"
 

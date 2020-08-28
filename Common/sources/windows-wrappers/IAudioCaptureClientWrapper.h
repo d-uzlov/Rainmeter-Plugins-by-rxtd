@@ -12,7 +12,6 @@
 #include "GenericComWrapper.h"
 #include <Audioclient.h>
 
-#include "array2d_view.h"
 #include "Vector2D.h"
 
 namespace rxtd::utils {
