@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "../IUnknownImpl.h"
+#include "IUnknownImpl.h"
 #include "../IMMDeviceEnumeratorWrapper.h"
 #include <mmdeviceapi.h>
 #include <mutex>

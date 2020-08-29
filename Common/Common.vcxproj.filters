@@ -184,9 +184,6 @@
     <ClInclude Include="sources\image-utils\StripedImageFadeHelper.h">
       <Filter>Source Files\image-utils</Filter>
     </ClInclude>
-    <ClInclude Include="sources\windows-wrappers\IUnknownImpl.h">
-      <Filter>Source Files\windows-wrappers</Filter>
-    </ClInclude>
     <ClInclude Include="sources\IntMixer.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -216,6 +213,9 @@
     </ClInclude>
     <ClInclude Include="sources\GenericBaseClasses.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\windows-wrappers\implementations\IUnknownImpl.h">
+      <Filter>Source Files\windows-wrappers\implementations</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

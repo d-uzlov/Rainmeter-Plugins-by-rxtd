@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "../IUnknownImpl.h"
+#include "IUnknownImpl.h"
 #include "audiopolicy.h"
 #include "../GenericComWrapper.h"
 #include "../IAudioClientWrapper.h"

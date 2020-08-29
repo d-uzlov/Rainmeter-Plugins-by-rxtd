@@ -9,25 +9,27 @@
 
 #pragma once
 
+#include <atomic>
 #include <Unknwn.h>
 
 namespace rxtd::utils {
 	template <typename T>
 	class IUnknownImpl : NonMovableBase, VirtualDestructorBase, virtual public T {
 		static_assert(std::is_base_of<IUnknown, T>::value, "T must extend IUnknown");
-		LONG _cRef = 1;
+		std::atomic_int referenceCounter{ 1 };
 
 	public:
 		ULONG STDMETHODCALLTYPE AddRef() final override {
-			return InterlockedIncrement(&_cRef);
+			const auto prevValue = referenceCounter.fetch_add(1);
+			return prevValue + 1;
 		}
 
 		ULONG STDMETHODCALLTYPE Release() final override {
-			const ULONG ulRef = InterlockedDecrement(&_cRef);
-			if (0 == ulRef) {
+			const auto newValue = referenceCounter.fetch_sub(1) - 1;
+			if (newValue == 0) {
 				delete this;
 			}
-			return ulRef;
+			return newValue;
 		}
 
 		HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvInterface) override {
