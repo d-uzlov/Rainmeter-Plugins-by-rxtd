@@ -28,7 +28,7 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		std::optional<utils::MediaDeviceWrapper> getDefaultDevice(utils::MediaDeviceType type);
 
-		string makeDeviceString(utils::MediaDeviceType type);
-		string legacy_makeDeviceString(utils::MediaDeviceType type);
+		string makeDeviceListString(utils::MediaDeviceType type);
+		string legacy_makeDeviceListString(utils::MediaDeviceType type);
 	};
 }

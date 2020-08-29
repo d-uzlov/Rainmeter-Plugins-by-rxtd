@@ -31,7 +31,7 @@ std::optional<utils::MediaDeviceWrapper> AudioEnumeratorHelper::getDefaultDevice
 	return audioDeviceHandle;
 }
 
-string AudioEnumeratorHelper::makeDeviceString(utils::MediaDeviceType type) {
+string AudioEnumeratorHelper::makeDeviceListString(utils::MediaDeviceType type) {
 	string result;
 
 	auto collection = enumeratorWrapper.getActiveDevices(type);
@@ -52,7 +52,7 @@ string AudioEnumeratorHelper::makeDeviceString(utils::MediaDeviceType type) {
 	return result;
 }
 
-string AudioEnumeratorHelper::legacy_makeDeviceString(utils::MediaDeviceType type) {
+string AudioEnumeratorHelper::legacy_makeDeviceListString(utils::MediaDeviceType type) {
 	string result;
 
 	auto collection = enumeratorWrapper.getActiveDevices(type);

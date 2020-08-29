@@ -23,11 +23,25 @@
 namespace rxtd::audio_analyzer {
 	class CaptureManager {
 	public:
-		enum class DataSource {
-			eDEFAULT_INPUT,
-			eDEFAULT_OUTPUT,
-			eID,
+		struct SourceDesc {
+			enum class Type {
+				eDEFAULT_INPUT,
+				eDEFAULT_OUTPUT,
+				eID,
+			} type{ };
+
+			string id;
+
+			friend bool operator==(const SourceDesc& lhs, const SourceDesc& rhs) {
+				return lhs.type == rhs.type
+					&& lhs.id == rhs.id;
+			}
+
+			friend bool operator!=(const SourceDesc& lhs, const SourceDesc& rhs) {
+				return !(lhs == rhs);
+			}
 		};
+
 
 		enum class State {
 			eOK,
@@ -74,12 +88,12 @@ namespace rxtd::audio_analyzer {
 
 		void setBufferSizeInSec(double value);
 
-		void setSource(DataSource type, const string& id);
+		void setSource(SourceDesc desc);
 		void disconnect();
 
 	private:
 		[[nodiscard]]
-		State setSourceAndGetState(DataSource type, const string& id);
+		State setSourceAndGetState(SourceDesc desc);
 
 	public:
 		const Snapshot& getSnapshot() const {
@@ -103,7 +117,7 @@ namespace rxtd::audio_analyzer {
 
 	private:
 		[[nodiscard]]
-		std::optional<utils::MediaDeviceWrapper> getDevice(DataSource type, const string& id);
+		std::optional<utils::MediaDeviceWrapper> getDevice(SourceDesc desc);
 
 		[[nodiscard]]
 		static string makeFormatString(MyWaveFormat waveFormat);

@@ -74,11 +74,11 @@ void ParentHelper::setInvalid() {
 	mainFields.orchestrator.reset();
 	mainFields.settings.device = { };
 
-	requestFields.snapshot.dataSnapshot = { };
+	requestFields.snapshot.data = { };
 }
 
 void ParentHelper::setParams(
-	std::optional<RequestedDeviceDescription> device,
+	std::optional<CaptureManager::SourceDesc> device,
 	std::optional<ParamParser::ProcessingsInfoMap> patches
 ) {
 	auto requestLock = getRequestLock();
@@ -101,7 +101,7 @@ void ParentHelper::update(Snapshot& snap) {
 	snap.deviceIsAvailable = requestFields.snapshot.deviceIsAvailable;
 
 	if (requestFields.snapshotIsUpdated) {
-		std::swap(requestFields.snapshot.dataSnapshot, snap.dataSnapshot);
+		std::swap(requestFields.snapshot.data, snap.data);
 	} else {
 		snap = requestFields.snapshot;
 		requestFields.snapshotIsUpdated = true;
@@ -187,16 +187,16 @@ void ParentHelper::pUpdate() {
 	const auto changes = threadSafeFields.notificationClient.takeChanges();
 
 	using DDC = utils::CMMNotificationClient::DefaultDeviceChange;
-	using DS = CaptureManager::DataSource;
+	using ST = CaptureManager::SourceDesc::Type;
 	DDC defaultDeviceChange{ };
 	switch (mainFields.settings.device.type) {
-	case DS::eDEFAULT_INPUT:
+	case ST::eDEFAULT_INPUT:
 		defaultDeviceChange = changes.defaultCapture;
 		break;
-	case DS::eDEFAULT_OUTPUT:
+	case ST::eDEFAULT_OUTPUT:
 		defaultDeviceChange = changes.defaultRender;
 		break;
-	case DS::eID:
+	case ST::eID:
 		defaultDeviceChange = DDC::eNONE;
 		break;
 	}
@@ -207,7 +207,7 @@ void ParentHelper::pUpdate() {
 		needToUpdateDevice = true;
 		break;
 	case DDC::eNO_DEVICE: {
-		const sview io = mainFields.settings.device.type == DS::eDEFAULT_INPUT ? L"input" : L"output";
+		const sview io = mainFields.settings.device.type == ST::eDEFAULT_INPUT ? L"input" : L"output";
 		mainFields.logger.error(
 			L"Requested default {} audio device, but all {} devices has been disconnected",
 			io, io
@@ -255,7 +255,7 @@ void ParentHelper::pUpdate() {
 
 	bool formatChanged = false;
 	if (needToUpdateDevice) {
-		formatChanged = updateDevice();
+		formatChanged = reconnectToDevice();
 		needToUpdateHandlers |= formatChanged;
 	}
 	if (needToUpdateHandlers) {
@@ -271,10 +271,10 @@ void ParentHelper::pUpdate() {
 			// todo check this
 			// it's important that if device is not available
 			// then #snapshot is not updated
-			requestFields.snapshot.deviceInfoSnapshot = mainFields.captureManager.getSnapshot();
+			requestFields.snapshot.deviceInfo = mainFields.captureManager.getSnapshot();
 		}
 
-		mainFields.orchestrator.configureSnapshot(requestFields.snapshot.dataSnapshot);
+		mainFields.orchestrator.configureSnapshot(requestFields.snapshot.data);
 	}
 
 	if (anyCaptured) {
@@ -282,17 +282,14 @@ void ParentHelper::pUpdate() {
 
 		{
 			auto requestLock = getRequestLock();
-			mainFields.orchestrator.exchangeData(requestFields.snapshot.dataSnapshot);
+			mainFields.orchestrator.exchangeData(requestFields.snapshot.data);
 		}
 	}
 }
 
-bool ParentHelper::updateDevice() {
+bool ParentHelper::reconnectToDevice() {
 	const auto oldFormat = mainFields.captureManager.getSnapshot().format;
-	mainFields.captureManager.setSource(
-		mainFields.settings.device.type,
-		mainFields.settings.device.id
-	);
+	mainFields.captureManager.setSource(mainFields.settings.device);
 
 	if (mainFields.captureManager.getState() != CaptureManager::State::eOK) {
 		return false;
@@ -311,11 +308,11 @@ void ParentHelper::updateProcessings() {
 
 void ParentHelper::updateDeviceListStrings() {
 	if (constFields.legacyNumber < 104) {
-		requestFields.snapshot.deviceListInput = enumerator.legacy_makeDeviceString(utils::MediaDeviceType::eINPUT);
-		requestFields.snapshot.deviceListOutput = enumerator.legacy_makeDeviceString(utils::MediaDeviceType::eOUTPUT);
+		requestFields.snapshot.deviceListInput = enumerator.legacy_makeDeviceListString(utils::MediaDeviceType::eINPUT);
+		requestFields.snapshot.deviceListOutput = enumerator.legacy_makeDeviceListString(utils::MediaDeviceType::eOUTPUT);
 	} else {
-		requestFields.snapshot.deviceListInput = enumerator.makeDeviceString(utils::MediaDeviceType::eINPUT);
-		requestFields.snapshot.deviceListOutput = enumerator.makeDeviceString(utils::MediaDeviceType::eOUTPUT);
+		requestFields.snapshot.deviceListInput = enumerator.makeDeviceListString(utils::MediaDeviceType::eINPUT);
+		requestFields.snapshot.deviceListOutput = enumerator.makeDeviceListString(utils::MediaDeviceType::eOUTPUT);
 	}
 }
 

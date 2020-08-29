@@ -45,8 +45,8 @@ void ProcessingOrchestrator::process(const ChannelMixer& channelMixer) {
 	using namespace std::chrono_literals;
 
 	const auto processBeginTime = clock::now();
-	const clock::time_point killTime = processBeginTime + std::chrono::duration_cast<clock::duration>(
-		1.0ms * killTimeoutMs);
+	const clock::time_point killTime = processBeginTime
+		+ std::chrono::duration_cast<clock::duration>(1.0ms * killTimeoutMs);
 
 	for (auto& [name, sa] : saMap) {
 		sa.process(channelMixer, killTime);

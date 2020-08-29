@@ -18,23 +18,9 @@
 namespace rxtd::audio_analyzer {
 	class ParentHelper : MovableOnlyBase {
 	public:
-		struct RequestedDeviceDescription {
-			CaptureManager::DataSource type{ };
-			string id;
-
-			friend bool operator==(const RequestedDeviceDescription& lhs, const RequestedDeviceDescription& rhs) {
-				return lhs.type == rhs.type
-					&& lhs.id == rhs.id;
-			}
-
-			friend bool operator!=(const RequestedDeviceDescription& lhs, const RequestedDeviceDescription& rhs) {
-				return !(lhs == rhs);
-			}
-		};
-
 		struct Snapshot {
-			ProcessingOrchestrator::Snapshot dataSnapshot;
-			CaptureManager::Snapshot deviceInfoSnapshot;
+			ProcessingOrchestrator::Snapshot data;
+			CaptureManager::Snapshot deviceInfo;
 
 			string deviceListInput;
 			string deviceListOutput;
@@ -65,7 +51,7 @@ namespace rxtd::audio_analyzer {
 			ProcessingOrchestrator orchestrator;
 
 			struct {
-				RequestedDeviceDescription device;
+				CaptureManager::SourceDesc device;
 				ParamParser::ProcessingsInfoMap patches;
 			} settings;
 		} mainFields;
@@ -76,7 +62,7 @@ namespace rxtd::audio_analyzer {
 			std::thread thread;
 
 			struct {
-				std::optional<RequestedDeviceDescription> device;
+				std::optional<CaptureManager::SourceDesc> device;
 				std::optional<ParamParser::ProcessingsInfoMap> patches;
 			} settings;
 
@@ -97,7 +83,7 @@ namespace rxtd::audio_analyzer {
 		void setInvalid();
 
 		void setParams(
-			std::optional<RequestedDeviceDescription> device,
+			std::optional<CaptureManager::SourceDesc> device,
 			std::optional<ParamParser::ProcessingsInfoMap> patches
 		);
 
@@ -113,7 +99,7 @@ namespace rxtd::audio_analyzer {
 
 		void pUpdate();
 		// returns true device format changed, false otherwise
-		bool updateDevice();
+		bool reconnectToDevice();
 		void updateProcessings();
 		void updateDeviceListStrings();
 

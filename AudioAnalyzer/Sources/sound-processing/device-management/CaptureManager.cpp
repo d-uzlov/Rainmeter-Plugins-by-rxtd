@@ -16,8 +16,8 @@ void CaptureManager::setBufferSizeInSec(double value) {
 	bufferSize100NsUnits = std::llround(utils::IAudioClientWrapper::get1sec100nsUnits() * value);
 }
 
-void CaptureManager::setSource(DataSource type, const string& id) {
-	snapshot.state = setSourceAndGetState(type, id);
+void CaptureManager::setSource(SourceDesc desc) {
+	snapshot.state = setSourceAndGetState(desc);
 }
 
 void CaptureManager::disconnect() {
@@ -30,19 +30,19 @@ void CaptureManager::disconnect() {
 	sessionEventsWrapper = { };
 }
 
-CaptureManager::State CaptureManager::setSourceAndGetState(DataSource type, const string& id) {
-	auto deviceOpt = getDevice(type, id);
+CaptureManager::State CaptureManager::setSourceAndGetState(SourceDesc desc) {
+	auto deviceOpt = getDevice(desc);
 
 	if (!deviceOpt) {
-		switch (type) {
-		case DataSource::eDEFAULT_INPUT:
+		switch (desc.type) {
+		case SourceDesc::Type::eDEFAULT_INPUT:
 			logger.error(L"Default input audio device is not found");
 			break;
-		case DataSource::eDEFAULT_OUTPUT:
+		case SourceDesc::Type::eDEFAULT_OUTPUT:
 			logger.error(L"Default output audio device is not found");
 			break;
-		case DataSource::eID:
-			logger.error(L"Audio device with id '{}' is not found", id);
+		case SourceDesc::Type::eID:
+			logger.error(L"Audio device with id '{}' is not found", desc.id);
 			break;
 		}
 
@@ -258,14 +258,14 @@ void CaptureManager::tryToRecoverFromExclusive() {
 	snapshot.state = State::eRECONNECT_NEEDED;
 }
 
-std::optional<utils::MediaDeviceWrapper> CaptureManager::getDevice(DataSource type, const string& id) {
-	switch (type) {
-	case DataSource::eDEFAULT_INPUT:
+std::optional<utils::MediaDeviceWrapper> CaptureManager::getDevice(SourceDesc desc) {
+	switch (desc.type) {
+	case SourceDesc::Type::eDEFAULT_INPUT:
 		return enumerator.getDefaultDevice(utils::MediaDeviceType::eINPUT);
-	case DataSource::eDEFAULT_OUTPUT:
+	case SourceDesc::Type::eDEFAULT_OUTPUT:
 		return enumerator.getDefaultDevice(utils::MediaDeviceType::eOUTPUT);
-	case DataSource::eID:
-		return enumerator.getDevice(id);
+	case SourceDesc::Type::eID:
+		return enumerator.getDevice(desc.id);
 	}
 
 	return { };

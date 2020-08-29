@@ -14,7 +14,7 @@
 
 namespace rxtd::audio_analyzer {
 	class AudioParent : public utils::ParentBase {
-		using DeviceRequest = std::optional<ParentHelper::RequestedDeviceDescription>;
+		using DeviceRequest = std::optional<CaptureManager::SourceDesc>;
 
 		index legacyNumber{ };
 		ParamParser paramParser;

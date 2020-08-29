@@ -293,35 +293,35 @@ isview AudioParent::legacy_findProcessingFor(isview handlerName) const {
 }
 
 AudioParent::DeviceRequest AudioParent::readRequest() const {
-	ParentHelper::RequestedDeviceDescription result;
+	CaptureManager::SourceDesc result;
 
-	using DataSource = CaptureManager::DataSource;
+	using ST = CaptureManager::SourceDesc::Type;
 	if (legacyNumber < 104) {
 		if (auto legacyID = rain.read(L"DeviceID").asString();
 			!legacyID.empty()) {
-			result.type = DataSource::eID;
+			result.type = ST::eID;
 			result.id = std::move(legacyID);
 		} else {
 			const auto port = rain.read(L"Port").asIString(L"Output");
 			if (port == L"Output") {
-				result.type = DataSource::eDEFAULT_OUTPUT;
+				result.type = ST::eDEFAULT_OUTPUT;
 			} else if (port == L"Input") {
-				result.type = DataSource::eDEFAULT_INPUT;
+				result.type = ST::eDEFAULT_INPUT;
 			} else {
 				logger.error(L"Invalid Port '{}', must be one of: Output, Input. Set to Output.", port);
-				result.type = DataSource::eDEFAULT_OUTPUT;
+				result.type = ST::eDEFAULT_OUTPUT;
 			}
 		}
 	} else {
 		auto sourceOpt = rain.read(L"Source");
 		const auto source = sourceOpt.asIString(L"DefaultOutput");
 		if (source == L"DefaultOutput") {
-			result.type = DataSource::eDEFAULT_OUTPUT;
+			result.type = ST::eDEFAULT_OUTPUT;
 		} else if (source == L"DefaultInput") {
-			result.type = DataSource::eDEFAULT_INPUT;
+			result.type = ST::eDEFAULT_INPUT;
 		} else if (auto [type, value] = sourceOpt.breakFirst(L':');
 			type.asIString() == L"id") {
-			result.type = DataSource::eID;
+			result.type = ST::eID;
 			result.id = source % csView();
 		} else {
 			logger.error(L"Source type '{}' is not recognized", type.asString());
