@@ -76,7 +76,7 @@ namespace rxtd::audio_analyzer {
 			std::thread thread;
 
 			struct {
-				RequestedDeviceDescription device;
+				std::optional<RequestedDeviceDescription> device;
 				std::optional<ParamParser::ProcessingsInfoMap> patches;
 			} settings;
 
@@ -93,6 +93,8 @@ namespace rxtd::audio_analyzer {
 			const utils::OptionMap& threadingMap,
 			index _legacyNumber
 		);
+
+		void setInvalid();
 
 		void setParams(
 			std::optional<RequestedDeviceDescription> device,

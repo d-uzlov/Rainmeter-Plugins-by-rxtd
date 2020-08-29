@@ -51,16 +51,21 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 }
 
 void AudioParent::vReload() {
-	auto requestOpt = readRequest();
+	const auto oldSource = requestedSource;
+	requestedSource = readRequest();
 
-	const bool anythingChanged = paramParser.parse(legacyNumber, false) || firstReload;
+	if (oldSource != requestedSource && !requestedSource.has_value()) {
+		helper.setInvalid();
+		return;
+	}
 
-	if (requestOpt != requestedSource || anythingChanged) {
+	const bool paramsChanged = paramParser.parse(legacyNumber, false) || firstReload;
+
+	if (oldSource != requestedSource || paramsChanged) {
 		firstReload = false;
-		requestedSource = std::move(requestOpt);
 
 		std::optional<ParamParser::ProcessingsInfoMap> paramsOpt = { };
-		if (anythingChanged) {
+		if (paramsChanged || !oldSource.has_value()) {
 			paramsOpt = paramParser.getParseResult();
 		}
 

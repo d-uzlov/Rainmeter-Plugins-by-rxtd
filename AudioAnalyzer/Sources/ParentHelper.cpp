@@ -67,21 +67,20 @@ void ParentHelper::init(
 	mainFields.captureManager.setBufferSizeInSec(bufferSize);
 }
 
+void ParentHelper::setInvalid() {
+	stopThread();
+	mainFields.captureManager.disconnect();
+	mainFields.orchestrator.reset();
+	mainFields.settings.device = { };
+}
+
 void ParentHelper::setParams(
 	std::optional<RequestedDeviceDescription> device,
 	std::optional<ParamParser::ProcessingsInfoMap> patches
 ) {
-	if (!device.has_value()) {
-		stopThread();
-		mainFields.captureManager.disconnect();
-		mainFields.orchestrator.reset();
-		mainFields.settings.device = { };
-		return;
-	}
-
 	auto requestLock = getRequestLock();
 
-	requestFields.settings.device = std::move(device).value();
+	requestFields.settings.device = std::move(device);
 	requestFields.settings.patches = std::move(patches);
 
 	if (constFields.useThreading && !requestFields.thread.joinable()) {
@@ -172,8 +171,8 @@ void ParentHelper::pUpdate() {
 
 	{
 		auto requestLock = getRequestLock();
-		if (requestFields.settings.device != mainFields.settings.device) {
-			mainFields.settings.device = requestFields.settings.device;
+		if (requestFields.settings.device.has_value()) {
+			mainFields.settings.device = std::exchange(requestFields.settings.device, { }).value();
 			needToUpdateDevice = true;
 		}
 		if (requestFields.settings.patches.has_value()) {
@@ -254,8 +253,7 @@ void ParentHelper::pUpdate() {
 	bool formatChanged = false;
 	if (needToUpdateDevice) {
 		formatChanged = updateDevice();
-		needToUpdateHandlers = formatChanged;
-
+		needToUpdateHandlers |= formatChanged;
 	}
 	if (needToUpdateHandlers) {
 		updateProcessings();
