@@ -42,7 +42,7 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 
 	paramParser.setRainmeter(rain);
 
-	paramParser.parse(legacyNumber);
+	paramParser.parse(legacyNumber, true);
 	for (auto& [processingName, pd] : paramParser.getParseResult()) {
 		cleanersMap[processingName] = createCleanersFor(pd);
 	}
@@ -53,7 +53,7 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 void AudioParent::vReload() {
 	auto requestOpt = readRequest();
 
-	const bool anythingChanged = paramParser.parse(legacyNumber) || firstReload;
+	const bool anythingChanged = paramParser.parse(legacyNumber, false) || firstReload;
 
 	if (requestOpt != requestedSource || anythingChanged) {
 		firstReload = false;
@@ -431,32 +431,33 @@ AudioParent::ProcessingCleanersMap AudioParent::createCleanersFor(const ParamPar
 			auto& channelDataNew = tempChannelMap[channel].handlerMap;
 			auto handlerPtr = patchInfo.fun({ });
 
-			// todo silent logger
-			auto cl = logger.context(L"handler '{}': ", handlerName);
+			auto cl = logger.silent();
 			ProcessingManager::HandlerFinderImpl hf{ channelDataNew };
+			SoundHandler::Snapshot handlerSpecificData;
 			const bool success = handlerPtr->patch(
 				patchInfo.params, patchInfo.sources,
 				ChannelUtils::getTechnicalName(channel), 48000,
 				hf, cl,
-				tempSnapshot[channel][handlerName]
+				handlerSpecificData
 			);
 
-			if (!success) {
-				cl.error(L"invalid handler");
-
+			if (success) {
+				channelDataNew[handlerName] = std::move(handlerPtr);
+				tempSnapshot[channel][handlerName] = std::move(handlerSpecificData);
 				handlerIsValid = false;
+			} else {
+				break;
 			}
-
-			channelDataNew[handlerName] = std::move(handlerPtr);
 		}
-
-		// invalid handlers don't matter here
 	}
 
 	ProcessingCleanersMap result;
 	for (const auto& [handlerName, finisher] : pd.finishers) {
 		for (auto& [channel, channelSnapshot] : tempSnapshot) {
-			result[channel][handlerName] = std::move(channelSnapshot[handlerName].handlerSpecificData);
+			auto dataIter = channelSnapshot.find(handlerName);
+			if (dataIter != channelSnapshot.end()) {
+				result[channel][handlerName] = std::move(dataIter->second.handlerSpecificData);
+			}
 		}
 	}
 

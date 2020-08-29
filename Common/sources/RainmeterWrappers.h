@@ -18,6 +18,7 @@ namespace rxtd::utils {
 		class Logger {
 			friend Rainmeter;
 
+			bool isSilent = false;
 			void* rm{ };
 			string prefix{ };
 
@@ -59,7 +60,12 @@ namespace rxtd::utils {
 			}
 
 			template <typename... Args>
+			[[nodiscard]]
 			Logger context(const wchar_t* formatString, const Args&... args) const {
+				if (isSilent) {
+					return *this;
+				}
+
 				printer.print(formatString, args...);
 				string newPrefix = prefix + printer.getBufferPtr();
 				printer.reset();
@@ -67,9 +73,20 @@ namespace rxtd::utils {
 				return { rm, std::move(newPrefix) };
 			}
 
+			[[nodiscard]]
+			static Logger silent() {
+				Logger result{ };
+				result.isSilent = true;
+				return result;
+			}
+
 		private:
 			template <typename... Args>
 			void log(LogLevel logLevel, const wchar_t* formatString, const Args&... args) const {
+				if (isSilent) {
+					return;
+				}
+
 				printer.print(prefix.c_str());
 
 				printer.append(formatString, args...);

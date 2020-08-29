@@ -16,11 +16,11 @@ using namespace std::string_literals;
 
 using namespace audio_analyzer;
 
-bool ParamParser::parse(index _legacyNumber) {
+bool ParamParser::parse(index _legacyNumber, bool suppressLogger) {
 	anythingChanged = false;
 	legacyNumber = _legacyNumber;
 
-	auto logger = rain.createLogger();
+	auto logger = suppressLogger ? Logger::silent() : rain.createLogger();
 
 	auto defaultTargetRate = rain.read(L"TargetRate").asInt(44100);
 	if (defaultTargetRate < 0) {

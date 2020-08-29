@@ -65,6 +65,7 @@ void ProcessingManager::setParams(
 				cl.error(L"invalid handler");
 
 				handlerIsValid = false;
+				break;
 			}
 
 			channelDataNew[handlerName] = std::move(handlerPtr);
