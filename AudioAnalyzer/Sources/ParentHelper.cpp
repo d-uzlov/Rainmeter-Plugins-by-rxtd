@@ -19,10 +19,12 @@ ParentHelper::~ParentHelper() {
 }
 
 void ParentHelper::init(
+	utils::Rainmeter _rain,
 	utils::Rainmeter::Logger _logger,
 	const utils::OptionMap& threadingMap,
 	index _legacyNumber
 ) {
+	mainFields.rain = std::move(_rain);
 	mainFields.logger = std::move(_logger);
 
 	constFields.legacyNumber = _legacyNumber;
@@ -66,8 +68,8 @@ void ParentHelper::init(
 	mainFields.captureManager.setLegacyNumber(constFields.legacyNumber);
 	mainFields.captureManager.setBufferSizeInSec(bufferSize);
 
-	mainFields.useThreading = constFields.useThreading;
-	requestFields.useThreading = constFields.useThreading;
+	mainFields.useLocking = constFields.useThreading;
+	requestFields.useLocking = constFields.useThreading;
 	snapshot.setThreading(constFields.useThreading);
 }
 
@@ -143,6 +145,7 @@ void ParentHelper::threadFunction() {
 		return;
 	}
 
+
 	mainFields.sleepVariable.wait_for(mainLock, sleepTime);
 
 	while (true) {
@@ -150,6 +153,8 @@ void ParentHelper::threadFunction() {
 			break;
 		}
 
+		// mainFields.rain.executeCommand(LR"([!log "hi from another thread"])");
+		
 		pUpdate();
 
 		if (threadSafeFields.stopRequest.load()) {

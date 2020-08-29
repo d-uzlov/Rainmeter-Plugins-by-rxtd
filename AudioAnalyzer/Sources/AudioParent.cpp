@@ -30,7 +30,7 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 
 	try {
 		const auto threadingParams = rain.read(L"threading").asMap(L'|', L' ');
-		helper.init(logger, threadingParams, legacyNumber);
+		helper.init(rain, logger, threadingParams, legacyNumber);
 		const auto untouchedOptions = threadingParams.getListOfUntouched();
 		if (!untouchedOptions.empty()) {
 			logger.warning(L"Threading: unused options: {}", untouchedOptions);

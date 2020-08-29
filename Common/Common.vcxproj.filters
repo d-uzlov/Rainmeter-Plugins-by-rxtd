@@ -217,6 +217,9 @@
     <ClInclude Include="sources\windows-wrappers\implementations\IUnknownImpl.h">
       <Filter>Source Files\windows-wrappers\implementations</Filter>
     </ClInclude>
+    <ClInclude Include="sources\DataWithLock.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="array_view.natvis" />

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (C) 2019-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
@@ -19,9 +19,11 @@
 static_assert(std::is_same<WCHAR, wchar_t>::value);
 static_assert(std::is_same<LPCWSTR, const wchar_t*>::value);
 
-
 PLUGIN_EXPORT void Initialize(void** data, void* rm) {
+	utils::Rainmeter::incrementLibraryCounter();
+
 	utils::Rainmeter rain(rm);
+
 	const auto typeString = rain.read(L"Type").asIString();
 	if (typeString == L"Parent") {
 		*data = new audio_analyzer::AudioParent(std::move(rain));
@@ -31,8 +33,6 @@ PLUGIN_EXPORT void Initialize(void** data, void* rm) {
 		}
 		*data = new audio_analyzer::AudioChild(std::move(rain));
 	}
-
-	utils::Rainmeter::printLogMessages();
 }
 
 PLUGIN_EXPORT void Reload(void* data, void*, double*) {
@@ -40,7 +40,6 @@ PLUGIN_EXPORT void Reload(void* data, void*, double*) {
 		return;
 	}
 	static_cast<utils::TypeHolder*>(data)->reload();
-	utils::Rainmeter::printLogMessages();
 }
 
 PLUGIN_EXPORT double Update(void* data) {
@@ -48,7 +47,6 @@ PLUGIN_EXPORT double Update(void* data) {
 		return 0.0;
 	}
 	const auto result = static_cast<utils::TypeHolder*>(data)->update();
-	utils::Rainmeter::printLogMessages();
 	return result;
 }
 
@@ -57,7 +55,6 @@ PLUGIN_EXPORT const wchar_t* GetString(void* data) {
 		return nullptr;
 	}
 	const auto result = static_cast<utils::TypeHolder*>(data)->getString();
-	utils::Rainmeter::printLogMessages();
 	return result;
 }
 
@@ -66,7 +63,10 @@ PLUGIN_EXPORT void Finalize(void* data) {
 		return;
 	}
 	delete static_cast<utils::TypeHolder*>(data);
-	utils::Rainmeter::printLogMessages();
+
+	// decrement ↓↓ must be after that delete above ↑↑
+	// so that all log messages and commands are handled before the object is destroyed
+	utils::Rainmeter::decrementLibraryCounter();
 }
 
 PLUGIN_EXPORT void ExecuteBang(void* data, const wchar_t* args) {
@@ -74,7 +74,6 @@ PLUGIN_EXPORT void ExecuteBang(void* data, const wchar_t* args) {
 		return;
 	}
 	static_cast<utils::TypeHolder*>(data)->command(args);
-	utils::Rainmeter::printLogMessages();
 }
 
 PLUGIN_EXPORT const wchar_t* resolve(void* data, const int argc, const wchar_t* argv[]) {
@@ -82,6 +81,5 @@ PLUGIN_EXPORT const wchar_t* resolve(void* data, const int argc, const wchar_t* 
 		return nullptr;
 	}
 	const auto result = static_cast<utils::TypeHolder*>(data)->resolve(argc, argv);
-	utils::Rainmeter::printLogMessages();
 	return result;
 }

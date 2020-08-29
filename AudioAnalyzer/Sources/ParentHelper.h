@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include "DataWithLock.h"
 #include "RainmeterWrappers.h"
 #include "sound-processing/ProcessingManager.h"
 #include "sound-processing/device-management/CaptureManager.h"
@@ -18,18 +19,6 @@
 namespace rxtd::audio_analyzer {
 	class ParentHelper : MovableOnlyBase {
 	public:
-		struct DataWithLock {
-			bool useThreading{ };
-			std::mutex mutex;
-
-			std::unique_lock<std::mutex> getLock() {
-				auto lock = std::unique_lock<std::mutex>{ mutex, std::defer_lock };
-				if (useThreading) {
-					lock.lock();
-				}
-				return lock;
-			}
-		};
 
 		struct SnapshotStruct {
 			struct LockableData : DataWithLock {
@@ -48,9 +37,9 @@ namespace rxtd::audio_analyzer {
 			std::atomic<bool> deviceIsAvailable{ false };
 
 			void setThreading(bool value) {
-				data.useThreading = value;
-				deviceInfo.useThreading = value;
-				deviceLists.useThreading = value;
+				data.useLocking = value;
+				deviceInfo.useLocking = value;
+				deviceLists.useLocking = value;
 			}
 		};
 
@@ -71,6 +60,7 @@ namespace rxtd::audio_analyzer {
 		struct MainFields : DataWithLock {
 			std::condition_variable sleepVariable;
 
+			utils::Rainmeter rain;
 			utils::Rainmeter::Logger logger;
 			CaptureManager captureManager;
 			ProcessingOrchestrator orchestrator;
@@ -97,6 +87,7 @@ namespace rxtd::audio_analyzer {
 
 		// throws std::exception on fatal error
 		void init(
+			utils::Rainmeter _rain,
 			utils::Rainmeter::Logger _logger,
 			const utils::OptionMap& threadingMap,
 			index _legacyNumber

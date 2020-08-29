@@ -177,6 +177,7 @@
     <ClInclude Include="precompiled.h" />
     <ClInclude Include="sources\BufferPrinter.h" />
     <ClInclude Include="sources\CaseInsensitiveString.h" />
+    <ClInclude Include="sources\DataWithLock.h" />
     <ClInclude Include="sources\GenericBaseClasses.h" />
     <ClInclude Include="sources\DiscreetInterpolator.h" />
     <ClInclude Include="sources\GrowingVector.h" />
