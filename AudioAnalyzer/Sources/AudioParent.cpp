@@ -41,14 +41,22 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 	}
 
 	paramParser.setRainmeter(rain);
+
+	paramParser.parse(legacyNumber);
+	for (auto& [processingName, pd] : paramParser.getParseResult()) {
+		cleanersMap[processingName] = createCleanersFor(pd);
+	}
+	runCleaners();
+	cleanersExecuted = true;
 }
 
 void AudioParent::vReload() {
 	auto requestOpt = readRequest();
 
-	const bool anythingChanged = paramParser.parse(legacyNumber);
+	const bool anythingChanged = paramParser.parse(legacyNumber) || firstReload;
 
 	if (requestOpt != requestedSource || anythingChanged) {
+		firstReload = false;
 		requestedSource = std::move(requestOpt);
 
 		std::optional<ParamParser::ProcessingsInfoMap> paramsOpt = { };
@@ -68,8 +76,13 @@ double AudioParent::vUpdate() {
 	helper.update(snapshot);
 
 	if (!snapshot.deviceIsAvailable) {
-		// todo reset pictures
+		if (!cleanersExecuted) {
+			runCleaners();
+			cleanersExecuted = true;
+		}
 		return { };
+	} else {
+		cleanersExecuted = false;
 	}
 
 	for (const auto& [procName, procInfo] : paramParser.getParseResult()) {
@@ -397,4 +410,81 @@ void AudioParent::resolveProp(array_view<isview> args, string& resolveBufferStri
 	}
 
 	resolveBufferString = cl.printer.getBufferView();
+}
+
+AudioParent::ProcessingCleanersMap AudioParent::createCleanersFor(const ParamParser::ProcessingData& pd) const {
+	std::set<Channel> channels = pd.channels;
+
+	using HandlerMap = std::map<istring, std::unique_ptr<SoundHandler>, std::less<>>;
+	struct HandlerMapStruct {
+		HandlerMap handlerMap;
+	};
+
+	ProcessingManager::Snapshot tempSnapshot;
+	std::map<Channel, HandlerMapStruct> tempChannelMap;
+
+	for (auto& handlerName : pd.handlersInfo.order) {
+		auto& patchInfo = pd.handlersInfo.patchers.find(handlerName)->second;
+
+		bool handlerIsValid = true;
+		for (auto channel : channels) {
+			auto& channelDataNew = tempChannelMap[channel].handlerMap;
+			auto handlerPtr = patchInfo.fun({ });
+
+			// todo silent logger
+			auto cl = logger.context(L"handler '{}': ", handlerName);
+			ProcessingManager::HandlerFinderImpl hf{ channelDataNew };
+			const bool success = handlerPtr->patch(
+				patchInfo.params, patchInfo.sources,
+				ChannelUtils::getTechnicalName(channel), 48000,
+				hf, cl,
+				tempSnapshot[channel][handlerName]
+			);
+
+			if (!success) {
+				cl.error(L"invalid handler");
+
+				handlerIsValid = false;
+			}
+
+			channelDataNew[handlerName] = std::move(handlerPtr);
+		}
+
+		// invalid handlers don't matter here
+	}
+
+	ProcessingCleanersMap result;
+	for (const auto& [handlerName, finisher] : pd.finishers) {
+		for (auto& [channel, channelSnapshot] : tempSnapshot) {
+			result[channel][handlerName] = std::move(channelSnapshot[handlerName].handlerSpecificData);
+		}
+	}
+
+	return result;
+}
+
+void AudioParent::runCleaners() const {
+	for (const auto& [procName, procInfo] : paramParser.getParseResult()) {
+		auto processingCleanersIter = cleanersMap.find(procName);
+		if (processingCleanersIter == cleanersMap.end()) {
+			// in case options were updated
+			// we only generate cleaners for initial options
+			// so if someone changes them and add more channels,
+			// then cleanersMap won't contain some of the channels from paramParser
+			continue;
+		}
+
+		auto& processingCleaners = processingCleanersIter->second;
+		for (const auto& [handlerName, finisher] : procInfo.finishers) {
+			for (auto& [channel, channelSnapshot] : processingCleaners) {
+				auto handlerDataIter = channelSnapshot.find(handlerName);
+				if (handlerDataIter == channelSnapshot.end()) {
+					continue;
+				}
+
+				std::any dataCopy = handlerDataIter->second;
+				finisher(dataCopy);
+			}
+		}
+	}
 }

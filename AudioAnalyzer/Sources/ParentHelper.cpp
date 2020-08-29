@@ -74,6 +74,7 @@ void ParentHelper::setParams(
 	if (!device.has_value()) {
 		stopThread();
 		mainFields.captureManager.disconnect();
+		mainFields.orchestrator.reset();
 		mainFields.settings.device = { };
 		return;
 	}
@@ -95,6 +96,7 @@ void ParentHelper::update(Snapshot& snap) {
 	}
 
 	auto requestLock = getRequestLock();
+	snap.deviceIsAvailable = requestFields.snapshot.deviceIsAvailable;
 
 	if (requestFields.snapshotIsUpdated) {
 		std::swap(requestFields.snapshot.dataSnapshot, snap.dataSnapshot);
@@ -145,7 +147,7 @@ void ParentHelper::threadFunction() {
 		return;
 	}
 
-	mainFields.logger.debug(L"thread started");
+	mainFields.sleepVariable.wait_for(mainLock, sleepTime);
 
 	while (true) {
 		if (threadSafeFields.stopRequest.load()) {
@@ -160,8 +162,6 @@ void ParentHelper::threadFunction() {
 
 		mainFields.sleepVariable.wait_for(mainLock, sleepTime);
 	}
-
-	mainFields.logger.debug(L"threadEnded");
 
 	CoUninitialize();
 }
@@ -211,9 +211,10 @@ void ParentHelper::pUpdate() {
 			io, io
 		);
 
-		// todo
-		// requestFields.snapshot.deviceIsAvailable = false;
-		// requestFields.snapshotIsUpdated = false;
+		{
+			auto requestLock = getRequestLock();
+			requestFields.snapshot.deviceIsAvailable = false;
+		}
 		break;
 	}
 	}

@@ -13,6 +13,10 @@
 
 using namespace audio_analyzer;
 
+void ProcessingOrchestrator::reset() {
+	saMap.clear();
+}
+
 void ProcessingOrchestrator::patch(
 	const ParamParser::ProcessingsInfoMap& patches,
 	index legacyNumber,

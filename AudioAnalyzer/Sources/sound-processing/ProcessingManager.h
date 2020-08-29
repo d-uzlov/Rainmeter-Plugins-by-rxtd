@@ -21,7 +21,6 @@ namespace rxtd::audio_analyzer {
 		using ChannelSnapshot = std::map<istring, SoundHandler::Snapshot, std::less<>>;
 		using Snapshot = std::map<Channel, ChannelSnapshot, std::less<>>;
 
-	private:
 		using clock = SoundHandler::clock;
 
 		using HandlerMap = std::map<istring, std::unique_ptr<SoundHandler>, std::less<>>;
@@ -46,6 +45,7 @@ namespace rxtd::audio_analyzer {
 			}
 		};
 
+	private:
 		std::vector<istring> order;
 		std::map<Channel, ChannelStruct> channelMap;
 		index resamplingDivider{ };

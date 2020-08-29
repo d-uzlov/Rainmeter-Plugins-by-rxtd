@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (C) 2019-2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
@@ -22,6 +22,18 @@ namespace rxtd::audio_analyzer {
 		DeviceRequest requestedSource;
 		ParentHelper helper;
 		ParentHelper::Snapshot snapshot;
+
+		bool firstReload = true;
+
+		// handlerName → handlerData for cleanup
+		// it's necessary to hold identical blank data for each channel
+		// because this data also contains channel name, which is required for writing files
+		using ChannelCleanersMap = std::map<istring, std::any, std::less<>>;
+		using ProcessingCleanersMap = std::map<Channel, ChannelCleanersMap, std::less<>>;
+		using CleanersMap = std::map<istring, ProcessingCleanersMap, std::less<>>;
+
+		bool cleanersExecuted = false;
+		CleanersMap cleanersMap;
 
 	public:
 		explicit AudioParent(utils::Rainmeter&& rain);
@@ -48,5 +60,7 @@ namespace rxtd::audio_analyzer {
 	private:
 		DeviceRequest readRequest() const;
 		void resolveProp(array_view<isview> args, string& resolveBufferString);
+		ProcessingCleanersMap createCleanersFor(const ParamParser::ProcessingData& pd) const;
+		void runCleaners() const;
 	};
 }

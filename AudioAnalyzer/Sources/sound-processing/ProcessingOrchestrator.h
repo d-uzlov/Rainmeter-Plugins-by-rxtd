@@ -37,6 +37,8 @@ namespace rxtd::audio_analyzer {
 			warnTimeMs = value;
 		}
 
+		void reset();
+
 		void patch(
 			const ParamParser::ProcessingsInfoMap& patches,
 			index legacyNumber,

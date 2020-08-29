@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (C) 2020 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
