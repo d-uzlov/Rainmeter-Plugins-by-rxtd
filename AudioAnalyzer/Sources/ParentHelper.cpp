@@ -69,9 +69,12 @@ void ParentHelper::init(
 
 void ParentHelper::setInvalid() {
 	stopThread();
+
 	mainFields.captureManager.disconnect();
 	mainFields.orchestrator.reset();
 	mainFields.settings.device = { };
+
+	requestFields.snapshot.dataSnapshot = { };
 }
 
 void ParentHelper::setParams(

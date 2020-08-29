@@ -56,6 +56,7 @@ void AudioParent::vReload() {
 
 	if (oldSource != requestedSource && !requestedSource.has_value()) {
 		helper.setInvalid();
+		snapshot.deviceIsAvailable = false;
 		return;
 	}
 
@@ -70,15 +71,14 @@ void AudioParent::vReload() {
 		}
 
 		helper.setParams(requestedSource, std::move(paramsOpt));
+		snapshot.dataSnapshot = { };
 	}
 }
 
 double AudioParent::vUpdate() {
-	if (!requestedSource.has_value()) {
-		return 0.0;
+	if (requestedSource.has_value()) {
+		helper.update(snapshot);
 	}
-
-	helper.update(snapshot);
 
 	if (!snapshot.deviceIsAvailable) {
 		if (!cleanersExecuted) {
