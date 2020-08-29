@@ -123,9 +123,5 @@ ParentBase* ParentBase::findParent(Rainmeter::Skin skin, isview measureName) {
 		return nullptr;
 	}
 
-	auto result = measureIter->second;
-	if (result->getState() == MeasureState::eBROKEN) {
-		return nullptr;
-	}
-	return result;
+	return measureIter->second;
 }

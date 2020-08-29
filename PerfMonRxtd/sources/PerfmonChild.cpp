@@ -24,13 +24,23 @@ PerfmonChild::PerfmonChild(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rai
 	parent = utils::ParentBase::find<PerfmonParent>(rain.getSkin(), parentName);
 
 	if (parent == nullptr) {
-		logger.error(L"Parent '{}' not found", parentName);
+		logger.error(L"Parent '{}' doesn't exist", parentName);
+		setMeasureState(utils::MeasureState::eBROKEN);
+		return;
+	}
+
+	if (parent->getState() == utils::MeasureState::eBROKEN) {
 		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
 	}
 }
 
 void PerfmonChild::vReload() {
+	if (parent->getState() == utils::MeasureState::eTEMP_BROKEN) {
+		setMeasureState(utils::MeasureState::eTEMP_BROKEN);
+		return;
+	}
+
 	instanceIndex = rain.read(L"InstanceIndex").asInt<item_t>();
 	ref.counter = rain.read(L"CounterIndex").asInt<counter_t>();
 	ref.useOrigName = rain.read(L"SearchOriginalName").asBool();

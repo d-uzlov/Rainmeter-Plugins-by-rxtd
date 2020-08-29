@@ -28,11 +28,12 @@ namespace rxtd::audio_analyzer {
 				eDB,
 			};
 
-			bool use = false;
 			bool clamp01 = false;
 			NumberTransform numberTransform = NumberTransform::eNONE;
 			double correctingConstant = 0.0;
 		} legacy;
+
+		index legacyNumber;
 
 	public:
 		explicit AudioChild(utils::Rainmeter&& _rain);

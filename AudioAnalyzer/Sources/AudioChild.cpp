@@ -22,14 +22,22 @@ AudioChild::AudioChild(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rain)) 
 	parent = utils::ParentBase::find<AudioParent>(rain.getSkin(), parentName);
 
 	if (parent == nullptr) {
-		logger.error(L"Parent '{}' doesn't exist or is broken", parentName);
+		logger.error(L"Parent '{}' doesn't exist", parentName);
 		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
 	}
+
+	if (parent->getState() == utils::MeasureState::eBROKEN) {
+		setMeasureState(utils::MeasureState::eBROKEN);
+		return;
+	}
+
+	legacyNumber = parent->getLegacyNumber();
 }
 
 void AudioChild::vReload() {
-	if (parent->getState() != utils::MeasureState::eWORKING) {
+	if (parent->getState() == utils::MeasureState::eTEMP_BROKEN) {
+		setMeasureState(utils::MeasureState::eTEMP_BROKEN);
 		return;
 	}
 
@@ -43,13 +51,14 @@ void AudioChild::vReload() {
 	}
 
 	handlerName = rain.read(L"ValueId").asIString();
-	if (handlerName.empty()) {
-		logger.error(L"ValueID can't be empty");
-		setMeasureState(utils::MeasureState::eTEMP_BROKEN);
-		return;
-	}
 
 	procName = rain.read(L"Processing").asIString();
+
+	valueIndex = rain.read(L"Index").asInt();
+	if (valueIndex < 0) {
+		logger.error(L"Invalid Index {}. Index should be > 0. Set to 0.", valueIndex);
+		valueIndex = 0;
+	}
 
 	const auto stringValueStr = rain.read(L"StringValue").asIString(L"Number");
 	if (stringValueStr == L"Number") {
@@ -73,41 +82,26 @@ void AudioChild::vReload() {
 		setUseResultString(false);
 	}
 
-	auto signedIndex = rain.read(L"Index").asInt();
-	if (signedIndex < 0) {
-		logger.error(L"Invalid Index {}. Index should be > 0. Set to 0.", signedIndex);
-		signedIndex = 0;
-	}
-	valueIndex = static_cast<decltype(valueIndex)>(signedIndex);
+	if (!handlerName.empty()) {
+		if (legacyNumber < 104) {
+			legacy_readOptions();
+			procName = parent->legacy_findProcessingFor(handlerName);
+		}
 
-	const index legacyNumber = parent->getLegacyNumber();
-	if (legacyNumber < 104) {
-		legacy_readOptions();
-		legacy.use = true;
-
-		procName = parent->legacy_findProcessingFor(handlerName);
-	} else {
-		legacy.use = false;
-	}
-
-	const auto error = parent->checkHandler(procName, channel, handlerName);
-	if (!error.empty()) {
-		logger.error(L"Invalid options: {}", error);
-		setMeasureState(utils::MeasureState::eTEMP_BROKEN);
+		const auto error = parent->checkHandler(procName, channel, handlerName);
+		if (!error.empty()) {
+			logger.error(L"Invalid options: {}", error);
+			handlerName = { };
+		}
 	}
 }
 
 double AudioChild::vUpdate() {
-	switch (parent->getState()) {
-	case utils::MeasureState::eWORKING: break;
-	case utils::MeasureState::eTEMP_BROKEN: return 0.0;
-	case utils::MeasureState::eBROKEN:
-		logger.error(L"stopping updating because parent measure is broken");
-		setMeasureState(utils::MeasureState::eBROKEN);
-		break;
+	if (handlerName.empty()) {
+		return 0.0;
 	}
 
-	if (legacy.use) {
+	if (legacyNumber < 104) {
 		return legacy_update();
 	}
 
