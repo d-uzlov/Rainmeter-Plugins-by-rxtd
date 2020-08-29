@@ -154,6 +154,9 @@ namespace rxtd::utils {
 		sview transformPathToAbsolute(sview path) const;
 
 		void executeCommand(sview command) {
+			if (command.empty()) {
+				return;
+			}
 			executeCommand(command, skin);
 		}
 

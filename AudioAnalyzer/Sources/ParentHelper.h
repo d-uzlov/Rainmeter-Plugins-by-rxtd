@@ -69,6 +69,12 @@ namespace rxtd::audio_analyzer {
 				CaptureManager::SourceDesc device;
 				ParamParser::ProcessingsInfoMap patches;
 			} settings;
+
+			struct {
+				string onUpdate;
+				string onDeviceChange;
+				string onDeviceListChange;
+			} callbacks;
 		} mainFields;
 
 		struct RequestFields : DataWithLock {

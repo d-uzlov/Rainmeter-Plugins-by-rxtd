@@ -71,6 +71,10 @@ void ParentHelper::init(
 	mainFields.useLocking = constFields.useThreading;
 	requestFields.useLocking = constFields.useThreading;
 	snapshot.setThreading(constFields.useThreading);
+
+	mainFields.callbacks.onUpdate = mainFields.rain.read(L"callback-onUpdate").asString();
+	mainFields.callbacks.onDeviceChange = mainFields.rain.read(L"callback-onDeviceChange").asString();
+	mainFields.callbacks.onDeviceListChange = mainFields.rain.read(L"callback-onDeviceListChange").asString();
 }
 
 void ParentHelper::setInvalid() {
@@ -154,7 +158,7 @@ void ParentHelper::threadFunction() {
 		}
 
 		// mainFields.rain.executeCommand(LR"([!log "hi from another thread"])");
-		
+
 		pUpdate();
 
 		if (threadSafeFields.stopRequest.load()) {
@@ -230,6 +234,8 @@ void ParentHelper::pUpdate() {
 			updateDeviceListStrings();
 		}
 
+		mainFields.rain.executeCommand(mainFields.callbacks.onDeviceListChange);
+
 		if (mainFields.captureManager.getState() == CaptureManager::State::eDEVICE_CONNECTION_ERROR
 			&& changes.devices.count(mainFields.captureManager.getSnapshot().id) > 0) {
 			needToUpdateDevice = true;
@@ -253,18 +259,14 @@ void ParentHelper::pUpdate() {
 	// then instantly update device if need be
 	//	so that on next update we have something in buffer
 	// then process current captured data
+	//	which may take some time, so we would miss some data if we didn't reconnect to device
 
 	const bool anyCaptured = mainFields.captureManager.capture();
 
 	if (needToUpdateDevice) {
 		const bool formatChanged = reconnectToDevice();
 		needToUpdateHandlers |= formatChanged;
-	}
-	if (needToUpdateHandlers) {
-		updateProcessings();
-	}
 
-	if (needToUpdateDevice || needToUpdateHandlers) {
 		snapshot.deviceIsAvailable = mainFields.captureManager.getState() == CaptureManager::State::eOK;
 
 		{
@@ -272,6 +274,11 @@ void ParentHelper::pUpdate() {
 			snapshot.deviceInfo._ = mainFields.captureManager.getSnapshot();
 		}
 
+		mainFields.rain.executeCommand(mainFields.callbacks.onDeviceChange);
+
+	}
+	if (needToUpdateHandlers) {
+		updateProcessings();
 		{
 			auto dataLock = snapshot.data.getLock();
 			mainFields.orchestrator.configureSnapshot(snapshot.data._);
@@ -285,6 +292,8 @@ void ParentHelper::pUpdate() {
 			auto dataLock = snapshot.data.getLock();
 			mainFields.orchestrator.exchangeData(snapshot.data._);
 		}
+
+		mainFields.rain.executeCommand(mainFields.callbacks.onUpdate);
 	}
 }
 
