@@ -15,14 +15,18 @@
 #include "WaveFormat.h"
 #include "MediaDeviceType.h"
 #include "audiopolicy.h"
+#include "GenericCoTaskMemWrapper.h"
 
 namespace rxtd::utils {
 	class IAudioClientWrapper : public GenericComWrapper<IAudioClient> {
 		index lastResult = { };
+
+		GenericCoTaskMemWrapper<WAVEFORMATEX> nativeFormat{ };
 		WaveFormat format;
-		IAudioCaptureClientWrapper::Type formatType{ };
-		MediaDeviceType type{ };
 		bool formatIsValid = false;
+
+		MediaDeviceType type{ };
+		IAudioCaptureClientWrapper::Type formatType{ };
 
 	public:
 		IAudioClientWrapper() = default;
@@ -57,6 +61,8 @@ namespace rxtd::utils {
 		bool isFormatValid() const {
 			return formatIsValid;
 		}
+
+		void readFormat();
 
 		[[nodiscard]]
 		WaveFormat getFormat() const {

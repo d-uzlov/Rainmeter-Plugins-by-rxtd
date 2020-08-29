@@ -29,9 +29,6 @@ namespace rxtd::utils {
 		[[nodiscard]]
 		std::vector<MediaDeviceWrapper> getActiveDevices(MediaDeviceType type);
 		
-		[[nodiscard]]
-		std::vector<MediaDeviceWrapper> getAllDevices(MediaDeviceType type);
-
 	private:
 		[[nodiscard]]
 		std::vector<MediaDeviceWrapper> getCollection(MediaDeviceType type, uint32_t deviceStateMask);

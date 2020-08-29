@@ -27,7 +27,7 @@ void ParentHelper::init(
 
 	constFields.legacyNumber = _legacyNumber;
 
-	if (!enumerator.isValid()) {
+	if (!enumeratorWrapper.isValid()) {
 		mainFields.logger.error(L"Fatal error: can't create IMMDeviceEnumerator");
 		throw std::exception{ };
 	}
@@ -307,13 +307,121 @@ void ParentHelper::updateProcessings() {
 }
 
 void ParentHelper::updateDeviceListStrings() {
+	auto& lists = requestFields.snapshot.deviceLists;
 	if (constFields.legacyNumber < 104) {
-		requestFields.snapshot.deviceListInput = enumerator.legacy_makeDeviceListString(utils::MediaDeviceType::eINPUT);
-		requestFields.snapshot.deviceListOutput = enumerator.legacy_makeDeviceListString(utils::MediaDeviceType::eOUTPUT);
+		lists.input = legacy_makeDeviceListString(utils::MediaDeviceType::eINPUT);
+		lists.output = legacy_makeDeviceListString(utils::MediaDeviceType::eOUTPUT);
 	} else {
-		requestFields.snapshot.deviceListInput = enumerator.makeDeviceListString(utils::MediaDeviceType::eINPUT);
-		requestFields.snapshot.deviceListOutput = enumerator.makeDeviceListString(utils::MediaDeviceType::eOUTPUT);
+		lists.input = makeDeviceListString(utils::MediaDeviceType::eINPUT);
+		lists.output = makeDeviceListString(utils::MediaDeviceType::eOUTPUT);
 	}
+}
+
+string ParentHelper::makeDeviceListString(utils::MediaDeviceType type) {
+	string result;
+
+	auto collection = enumeratorWrapper.getActiveDevices(type);
+	if (collection.empty()) {
+		return result;
+	}
+
+	utils::BufferPrinter bp;
+	auto append = [&](sview str, bool semicolon = true) {
+		if (str.empty()) {
+			bp.append(L"<unknown>");
+		} else {
+			bp.append(L"{}", str);
+		}
+		if (semicolon) {
+			bp.append(L";");
+		}
+	};
+
+	// returns success
+	auto appendFormat = [&](utils::MediaDeviceWrapper& device)-> bool {
+		auto audioClient = device.openAudioClient();
+		if (!audioClient.isValid()) {
+			return false;
+		}
+
+		audioClient.readFormat();
+		if (!audioClient.isFormatValid()) {
+			return false;
+		}
+
+		auto format = audioClient.getFormat();
+		bp.append(L"{};", format.samplesPerSec);
+
+		auto layout = ChannelUtils::parseLayout(format.channelMask);
+		if (layout.ordered().empty()) {
+			bp.append(L"<unknown>;");
+		} else {
+			auto channels = layout.ordered();
+			channels.remove_suffix(1);
+			for (auto channel : channels) {
+				bp.append(L"{},", ChannelUtils::getTechnicalName(channel));
+			}
+			bp.append(L"{};", ChannelUtils::getTechnicalName(layout.ordered().back()));
+		}
+
+		return true;
+	};
+
+	for (auto& device : collection) {
+		auto id = device.readId();
+		if (id.empty()) {
+			continue;
+		}
+
+		bp.append(L"{}", id);
+
+		const auto deviceInfo = device.readDeviceInfo();
+		append(deviceInfo.name);
+		append(deviceInfo.desc);
+		append(deviceInfo.formFactor);
+
+		bool formatAppendSuccess = appendFormat(device);
+		if (!formatAppendSuccess) {
+			append({ });
+			append({ });
+		}
+
+		bp.append(L"\n");
+	}
+
+	result = bp.getBufferView();
+	result.pop_back(); // removes \0
+	result.pop_back(); // removes \n
+
+	return result;
+}
+
+string ParentHelper::legacy_makeDeviceListString(utils::MediaDeviceType type) {
+	string result;
+
+	auto collection = enumeratorWrapper.getActiveDevices(type);
+	if (collection.empty()) {
+		return result;;
+	}
+
+	utils::BufferPrinter bp;
+	for (auto& device : collection) {
+		auto id = device.readId();
+		if (id.empty()) {
+			continue;
+		}
+
+		const auto deviceInfo = device.readDeviceInfo();
+		bp.append(L"{}", id);
+		bp.append(L" ");
+		bp.append(L"{}\n", deviceInfo.fullFriendlyName);
+	}
+
+	result = bp.getBufferView();
+	result.pop_back();
+	result.pop_back();
+
+	return result;
 }
 
 std::unique_lock<std::mutex> ParentHelper::getMainLock() {

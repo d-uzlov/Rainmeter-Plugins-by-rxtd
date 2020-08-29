@@ -16,7 +16,7 @@ void CaptureManager::setBufferSizeInSec(double value) {
 	bufferSize100NsUnits = std::llround(utils::IAudioClientWrapper::get1sec100nsUnits() * value);
 }
 
-void CaptureManager::setSource(SourceDesc desc) {
+void CaptureManager::setSource(const SourceDesc& desc) {
 	snapshot.state = setSourceAndGetState(desc);
 }
 
@@ -30,10 +30,10 @@ void CaptureManager::disconnect() {
 	sessionEventsWrapper = { };
 }
 
-CaptureManager::State CaptureManager::setSourceAndGetState(SourceDesc desc) {
-	auto deviceOpt = getDevice(desc);
+CaptureManager::State CaptureManager::setSourceAndGetState(const SourceDesc& desc) {
+	audioDeviceHandle = getDevice(desc);
 
-	if (!deviceOpt) {
+	if (!audioDeviceHandle.isValid()) {
 		switch (desc.type) {
 		case SourceDesc::Type::eDEFAULT_INPUT:
 			logger.error(L"Default input audio device is not found");
@@ -49,10 +49,8 @@ CaptureManager::State CaptureManager::setSourceAndGetState(SourceDesc desc) {
 		return State::eDEVICE_CONNECTION_ERROR;
 	}
 
-	audioDeviceHandle = std::move(deviceOpt.value());
-
 	auto deviceInfo = audioDeviceHandle.readDeviceInfo();
-	snapshot.id = deviceInfo.id;
+	snapshot.id = audioDeviceHandle.readId();
 	snapshot.description = deviceInfo.desc;
 	snapshot.name = legacyNumber < 104 ? deviceInfo.fullFriendlyName : deviceInfo.name;
 	snapshot.nameOnly = deviceInfo.name;
@@ -258,14 +256,14 @@ void CaptureManager::tryToRecoverFromExclusive() {
 	snapshot.state = State::eRECONNECT_NEEDED;
 }
 
-std::optional<utils::MediaDeviceWrapper> CaptureManager::getDevice(SourceDesc desc) {
+utils::MediaDeviceWrapper CaptureManager::getDevice(const SourceDesc& desc) {
 	switch (desc.type) {
 	case SourceDesc::Type::eDEFAULT_INPUT:
-		return enumerator.getDefaultDevice(utils::MediaDeviceType::eINPUT);
+		return enumeratorWrapper.getDefaultDevice(utils::MediaDeviceType::eINPUT);
 	case SourceDesc::Type::eDEFAULT_OUTPUT:
-		return enumerator.getDefaultDevice(utils::MediaDeviceType::eOUTPUT);
+		return enumeratorWrapper.getDefaultDevice(utils::MediaDeviceType::eOUTPUT);
 	case SourceDesc::Type::eID:
-		return enumerator.getDevice(desc.id);
+		return enumeratorWrapper.getDeviceByID(desc.id);
 	}
 
 	return { };

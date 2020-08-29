@@ -22,14 +22,16 @@ namespace rxtd::audio_analyzer {
 			ProcessingOrchestrator::Snapshot data;
 			CaptureManager::Snapshot deviceInfo;
 
-			string deviceListInput;
-			string deviceListOutput;
+			struct {
+				string input;
+				string output;
+			} deviceLists;
 
 			bool deviceIsAvailable = false;
 		};
 
 	private:
-		AudioEnumeratorHelper enumerator;
+		utils::IMMDeviceEnumeratorWrapper enumeratorWrapper;
 
 		struct {
 			index legacyNumber{ };
@@ -102,6 +104,9 @@ namespace rxtd::audio_analyzer {
 		bool reconnectToDevice();
 		void updateProcessings();
 		void updateDeviceListStrings();
+
+		string makeDeviceListString(utils::MediaDeviceType type);
+		string legacy_makeDeviceListString(utils::MediaDeviceType type);
 
 		std::unique_lock<std::mutex> getMainLock();
 		std::unique_lock<std::mutex> getRequestLock();

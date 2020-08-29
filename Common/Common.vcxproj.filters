@@ -50,9 +50,6 @@
     <ClCompile Include="sources\windows-wrappers\MediaDeviceWrapper.cpp">
       <Filter>Source Files\windows-wrappers</Filter>
     </ClCompile>
-    <ClCompile Include="sources\windows-wrappers\PropertyStoreWrapper.cpp">
-      <Filter>Source Files\windows-wrappers</Filter>
-    </ClCompile>
     <ClCompile Include="sources\windows-wrappers\IAudioClientWrapper.cpp">
       <Filter>Source Files\windows-wrappers</Filter>
     </ClCompile>

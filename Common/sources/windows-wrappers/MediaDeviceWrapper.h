@@ -12,16 +12,17 @@
 #include "GenericComWrapper.h"
 #include <mmdeviceapi.h>
 #include <endpointvolume.h>
+
 #include "IAudioClientWrapper.h"
 
 namespace rxtd::utils {
 	class MediaDeviceWrapper : public GenericComWrapper<IMMDevice> {
 	public:
 		struct DeviceInfo {
-			string id;
 			string name;
 			string desc;
 			string fullFriendlyName;
+			string formFactor;
 		};
 
 	private:
@@ -33,6 +34,9 @@ namespace rxtd::utils {
 		template <typename InitFunction>
 		MediaDeviceWrapper(InitFunction initFunction) : GenericComWrapper(std::move(initFunction)) {
 		}
+
+		[[nodiscard]]
+		string readId();
 
 		[[nodiscard]]
 		DeviceInfo readDeviceInfo();
@@ -64,5 +68,9 @@ namespace rxtd::utils {
 				}
 			};
 		}
+
+	private:
+		[[nodiscard]]
+		static sview convertFormFactor(EndpointFormFactor value);
 	};
 }

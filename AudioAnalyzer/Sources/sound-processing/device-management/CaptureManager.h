@@ -15,9 +15,9 @@
 #include "windows-wrappers/IAudioCaptureClientWrapper.h"
 #include <functional>
 
-#include "AudioEnumeratorHelper.h"
 #include "AudioSessionEventsWrapper.h"
 #include "../ChannelMixer.h"
+#include "windows-wrappers/IMMDeviceEnumeratorWrapper.h"
 #include "windows-wrappers/implementations/AudioSessionEventsImpl.h"
 
 namespace rxtd::audio_analyzer {
@@ -66,7 +66,7 @@ namespace rxtd::audio_analyzer {
 		index legacyNumber = 0;
 		index bufferSize100NsUnits{ };
 
-		AudioEnumeratorHelper enumerator;
+		utils::IMMDeviceEnumeratorWrapper enumeratorWrapper;
 
 		utils::MediaDeviceWrapper audioDeviceHandle;
 		utils::IAudioCaptureClientWrapper audioCaptureClient;
@@ -88,12 +88,12 @@ namespace rxtd::audio_analyzer {
 
 		void setBufferSizeInSec(double value);
 
-		void setSource(SourceDesc desc);
+		void setSource(const SourceDesc& desc);
 		void disconnect();
 
 	private:
 		[[nodiscard]]
-		State setSourceAndGetState(SourceDesc desc);
+		State setSourceAndGetState(const SourceDesc& desc);
 
 	public:
 		const Snapshot& getSnapshot() const {
@@ -117,7 +117,7 @@ namespace rxtd::audio_analyzer {
 
 	private:
 		[[nodiscard]]
-		std::optional<utils::MediaDeviceWrapper> getDevice(SourceDesc desc);
+		utils::MediaDeviceWrapper getDevice(const SourceDesc& desc);
 
 		[[nodiscard]]
 		static string makeFormatString(MyWaveFormat waveFormat);

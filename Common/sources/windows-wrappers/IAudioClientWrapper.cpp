@@ -28,13 +28,8 @@ IAudioCaptureClientWrapper IAudioClientWrapper::openCapture() {
 }
 
 void IAudioClientWrapper::testExclusive() {
-	GenericCoTaskMemWrapper<WAVEFORMATEX> waveFormat{
-		[&](auto ptr) {
-			lastResult = getPointer()->GetMixFormat(ptr);
-			return lastResult == S_OK;
-		}
-	};
-	if (!waveFormat.isValid()) {
+	readFormat();
+	if (!formatIsValid) {
 		return;
 	}
 
@@ -47,7 +42,7 @@ void IAudioClientWrapper::testExclusive() {
 
 	if (!client3.isValid()) {
 		// Both IAudioClient#Initialize and IAudioClient3#InitializeSharedAudioStream leak commit memory
-		// but according to me tests,
+		// but according to my tests,
 		// if provided with minimum buffer size
 		// IAudioClient3#InitializeSharedAudioStream leaks less
 		// but if IAudioClient3 is not available,
@@ -61,7 +56,7 @@ void IAudioClientWrapper::testExclusive() {
 			0,
 			0,
 			0,
-			waveFormat.getPointer(),
+			nativeFormat.getPointer(),
 			nullptr
 		);
 		return;
@@ -72,7 +67,7 @@ void IAudioClientWrapper::testExclusive() {
 	UINT32 pMinPeriodInFrames;
 	UINT32 pMaxPeriodInFrames;
 	lastResult = client3.getPointer()->GetSharedModeEnginePeriod(
-		waveFormat.getPointer(),
+		nativeFormat.getPointer(),
 		&pDefaultPeriodInFrames,
 		&pFundamentalPeriodInFrames,
 		&pMinPeriodInFrames,
@@ -85,19 +80,14 @@ void IAudioClientWrapper::testExclusive() {
 	lastResult = client3.getPointer()->InitializeSharedAudioStream(
 		0,
 		pMinPeriodInFrames,
-		waveFormat.getPointer(),
+		nativeFormat.getPointer(),
 		nullptr
 	);
 }
 
 void IAudioClientWrapper::initShared(index bufferSize100nsUnits) {
-	GenericCoTaskMemWrapper<WAVEFORMATEX> waveFormat{
-		[&](auto ptr) {
-			lastResult = getPointer()->GetMixFormat(ptr);
-			return lastResult == S_OK;
-		}
-	};
-	if (!waveFormat.isValid()) {
+	readFormat();
+	if (!formatIsValid) {
 		return;
 	}
 
@@ -128,7 +118,7 @@ void IAudioClientWrapper::initShared(index bufferSize100nsUnits) {
 		AUDCLNT_STREAMFLAGS_LOOPBACK,
 		bufferSize100nsUnits,
 		0,
-		waveFormat.getPointer(),
+		nativeFormat.getPointer(),
 		nullptr
 	);
 	if (lastResult == AUDCLNT_E_WRONG_ENDPOINT_TYPE) {
@@ -137,21 +127,30 @@ void IAudioClientWrapper::initShared(index bufferSize100nsUnits) {
 			0,
 			bufferSize100nsUnits,
 			0,
-			waveFormat.getPointer(),
+			nativeFormat.getPointer(),
 			nullptr
 		);
 		type = MediaDeviceType::eINPUT;
 	} else {
 		type = MediaDeviceType::eOUTPUT;
 	}
+}
 
-	if (lastResult != S_OK) {
+void IAudioClientWrapper::readFormat() {
+	nativeFormat = {
+		[&](auto ptr) {
+			lastResult = getPointer()->GetMixFormat(ptr);
+			return lastResult == S_OK;
+		}
+	};
+	if (!nativeFormat.isValid()) {
+		formatIsValid = false;
 		return;
 	}
 
 	formatIsValid = true;
 
-	auto& waveFormatRaw = *waveFormat.getPointer();
+	auto& waveFormatRaw = *nativeFormat.getPointer();
 	format.channelsCount = waveFormatRaw.nChannels;
 	format.samplesPerSec = waveFormatRaw.nSamplesPerSec;
 

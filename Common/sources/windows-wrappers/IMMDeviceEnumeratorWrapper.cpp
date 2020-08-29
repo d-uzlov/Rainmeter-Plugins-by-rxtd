@@ -46,10 +46,6 @@ std::vector<MediaDeviceWrapper> IMMDeviceEnumeratorWrapper::getActiveDevices(Med
 	return getCollection(type, DEVICE_STATE_ACTIVE);
 }
 
-std::vector<MediaDeviceWrapper> IMMDeviceEnumeratorWrapper::getAllDevices(MediaDeviceType type) {
-	return getCollection(type, DEVICE_STATEMASK_ALL);
-}
-
 std::vector<MediaDeviceWrapper> IMMDeviceEnumeratorWrapper::getCollection(
 	MediaDeviceType type, uint32_t deviceStateMask) {
 	GenericComWrapper<IMMDeviceCollection> collection{

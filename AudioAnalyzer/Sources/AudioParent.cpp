@@ -71,7 +71,7 @@ void AudioParent::vReload() {
 		}
 
 		helper.setParams(requestedSource, std::move(paramsOpt));
-		snapshot.dataSnapshot = { };
+		snapshot.data = { };
 	}
 }
 
@@ -91,7 +91,7 @@ double AudioParent::vUpdate() {
 	}
 
 	for (const auto& [procName, procInfo] : paramParser.getParseResult()) {
-		auto& processingSnapshot = snapshot.dataSnapshot[procName];
+		auto& processingSnapshot = snapshot.data[procName];
 		for (const auto& [handlerName, finisher] : procInfo.finishers) {
 			for (auto& [channel, channelSnapshot] : processingSnapshot) {
 				auto handlerDataIter = channelSnapshot.find(handlerName);
@@ -102,7 +102,7 @@ double AudioParent::vUpdate() {
 		}
 	}
 
-	return snapshot.deviceInfoSnapshot.state == CaptureManager::State::eOK ? 1.0 : 0.0;
+	return snapshot.deviceInfo.state == CaptureManager::State::eOK ? 1.0 : 0.0;
 }
 
 void AudioParent::vCommand(isview bangArgs) {
@@ -133,7 +133,7 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 		}
 
 		const isview deviceProperty = args[1];
-		const auto& state = snapshot.deviceInfoSnapshot;
+		const auto& state = snapshot.deviceInfo;
 
 		if (deviceProperty == L"status") {
 			resolveBufferString = state.state == CaptureManager::State::eOK ? L"1" : L"0";
@@ -157,18 +157,18 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 	}
 
 	if (optionName == L"device list input") {
-		resolveBufferString = snapshot.deviceListInput;
+		resolveBufferString = snapshot.deviceLists.input;
 		return;
 	}
 	if (optionName == L"device list output") {
-		resolveBufferString = snapshot.deviceListOutput;
+		resolveBufferString = snapshot.deviceLists.output;
 		return;
 	}
 	if (optionName == L"device list") {
 		resolveBufferString =
-			snapshot.deviceInfoSnapshot.type == utils::MediaDeviceType::eINPUT
-				? snapshot.deviceListInput
-				: snapshot.deviceListOutput;
+			snapshot.deviceInfo.type == utils::MediaDeviceType::eINPUT
+				? snapshot.deviceLists.input
+				: snapshot.deviceLists.output;
 		return;
 	}
 
@@ -225,8 +225,8 @@ double AudioParent::getValue(isview proc, isview id, Channel channel, index ind)
 		return 0.0;
 	}
 
-	auto procIter = snapshot.dataSnapshot.find(proc);
-	if (procIter == snapshot.dataSnapshot.end()) {
+	auto procIter = snapshot.data.find(proc);
+	if (procIter == snapshot.data.end()) {
 		return 0.0;
 	}
 
@@ -376,8 +376,8 @@ void AudioParent::resolveProp(array_view<isview> args, string& resolveBufferStri
 		return;
 	}
 
-	auto procIter = snapshot.dataSnapshot.find(procName);
-	if (procIter == snapshot.dataSnapshot.end()) {
+	auto procIter = snapshot.data.find(procName);
+	if (procIter == snapshot.data.end()) {
 		cl.error(L"processing '{}' is not found", procName);
 		return;
 	}

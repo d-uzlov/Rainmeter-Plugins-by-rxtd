@@ -7,6 +7,10 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
+// this must be the first include
+// source: https://social.msdn.microsoft.com/Forums/Windowsapps/en-US/00853e55-51dd-46bc-bceb-04c0c2e5cc06/unresolved-external-symbols?forum=mediafoundationdevelopment
+#include <initguid.h>
+
 #include "MediaDeviceWrapper.h"
 
 #include <functiondiscoverykeys_devpkey.h>
@@ -16,20 +20,21 @@
 
 using namespace utils;
 
-MediaDeviceWrapper::DeviceInfo MediaDeviceWrapper::readDeviceInfo() {
-	if (!isValid()) {
-		return { };
-	}
-
+string MediaDeviceWrapper::readId() {
 	GenericCoTaskMemWrapper<wchar_t> idWrapper{
 		[&](auto ptr) {
 			lastResult = getPointer()->GetId(ptr);
 			return lastResult == S_OK;
 		}
 	};
-	if (!idWrapper.isValid()) {
+	return idWrapper.isValid() ? idWrapper.getPointer() : string{ };
+}
+
+MediaDeviceWrapper::DeviceInfo MediaDeviceWrapper::readDeviceInfo() {
+	if (!isValid()) {
 		return { };
 	}
+
 
 	PropertyStoreWrapper props{
 		[&](auto ptr) {
@@ -41,10 +46,13 @@ MediaDeviceWrapper::DeviceInfo MediaDeviceWrapper::readDeviceInfo() {
 	}
 
 	DeviceInfo deviceInfo;
-	deviceInfo.id = idWrapper.getPointer();
-	deviceInfo.fullFriendlyName = props.readProperty(PKEY_Device_FriendlyName);
-	deviceInfo.desc = props.readProperty(PKEY_Device_DeviceDesc);
-	deviceInfo.name = props.readProperty(PKEY_DeviceInterface_FriendlyName);
+	deviceInfo.fullFriendlyName = props.readPropertyString(PKEY_Device_FriendlyName);
+	deviceInfo.desc = props.readPropertyString(PKEY_Device_DeviceDesc);
+	deviceInfo.name = props.readPropertyString(PKEY_DeviceInterface_FriendlyName);
+
+	deviceInfo.formFactor = convertFormFactor(static_cast<EndpointFormFactor>(
+		props.readPropertyInt(PKEY_AudioEndpoint_FormFactor)
+	));
 
 	return deviceInfo;
 }
@@ -56,4 +64,24 @@ IAudioClientWrapper MediaDeviceWrapper::openAudioClient() {
 			return lastResult == S_OK;
 		}
 	};
+}
+
+sview MediaDeviceWrapper::convertFormFactor(EndpointFormFactor value) {
+	switch (value) {
+	case RemoteNetworkDevice: return L"RemoteNetworkDevice";
+	case Speakers: return L"Speakers";
+	case LineLevel: return L"LineLevel";
+	case Headphones: return L"Headphones";
+	case Microphone: return L"Microphone";
+	case Headset: return L"Headset";
+	case Handset: return L"Handset";
+	case UnknownDigitalPassthrough: return L"UnknownDigitalPassthrough";
+	case SPDIF: return L"SPDIF";
+	case DigitalAudioDisplayDevice: return L"DigitalAudioDisplayDevice";
+
+	case UnknownFormFactor:
+	case EndpointFormFactor_enum_count:
+		break;
+	}
+	return L"UnknownFormFactor";
 }

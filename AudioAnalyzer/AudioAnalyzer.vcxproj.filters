@@ -62,9 +62,6 @@
     <ClInclude Include="Sources\sound-processing\ChannelMixer.h">
       <Filter>Source Files\sound-processing</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\device-management\AudioEnumeratorHelper.h">
-      <Filter>Source Files\sound-processing\device-management</Filter>
-    </ClInclude>
     <ClInclude Include="Sources\sound-processing\sound-handlers\BlockHandler.h">
       <Filter>Source Files\sound-processing\sound-handlers</Filter>
     </ClInclude>
@@ -201,9 +198,6 @@
     </ClCompile>
     <ClCompile Include="Sources\dllmain.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\sound-processing\device-management\AudioEnumeratorHelper.cpp">
-      <Filter>Source Files\sound-processing\device-management</Filter>
     </ClCompile>
     <ClCompile Include="Sources\sound-processing\sound-handlers\BlockHandler.cpp">
       <Filter>Source Files\sound-processing\sound-handlers</Filter>
