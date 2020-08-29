@@ -61,6 +61,11 @@ void AudioParent::vReload() {
 
 	const bool paramsChanged = paramParser.parse(legacyNumber, false) || firstReload;
 
+	ParentHelper::Callbacks callbacks;
+	callbacks.onUpdate = rain.read(L"callback-onUpdate").asString();
+	callbacks.onDeviceChange = rain.read(L"callback-onDeviceChange").asString();
+	callbacks.onDeviceListChange = rain.read(L"callback-onDeviceListChange").asString();
+
 	if (oldSource != requestedSource || paramsChanged) {
 		firstReload = false;
 
@@ -69,7 +74,7 @@ void AudioParent::vReload() {
 			paramsOpt = paramParser.getParseResult();
 		}
 
-		helper.setParams(requestedSource, std::move(paramsOpt));
+		helper.setParams(callbacks, requestedSource, std::move(paramsOpt));
 	}
 }
 

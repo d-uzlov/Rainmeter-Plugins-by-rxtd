@@ -36,8 +36,8 @@ void ParentHelper::init(
 
 	updateDeviceListStrings();
 
-	if (const auto threadingPolicy = threadingMap.get(L"policy").asIString(L"none");
-		threadingPolicy == L"none") {
+	if (const auto threadingPolicy = threadingMap.get(L"policy").asIString(L"separateThread");
+		threadingPolicy == L"uiThread") {
 		constFields.useThreading = false;
 	} else if (threadingPolicy == L"separateThread") {
 		constFields.useThreading = true;
@@ -56,10 +56,10 @@ void ParentHelper::init(
 
 	double bufferSize = 1.0;
 	if (constFields.useThreading) {
-		constFields.updateTime = threadingMap.get(L"updateTime").asFloat(1.0 / 120.0);
+		constFields.updateTime = threadingMap.get(L"updateTime").asFloat(1.0 / 60.0);
 		constFields.updateTime = std::clamp(constFields.updateTime, 1.0 / 200.0, 1.0);
 
-		const double defaultBufferSize = std::max(constFields.updateTime * 2.0, 0.5);
+		const double defaultBufferSize = std::max(constFields.updateTime * 4.0, 0.5);
 		bufferSize = threadingMap.get(L"bufferSize").asFloat(defaultBufferSize);
 		bufferSize = std::clamp(bufferSize, 1.0 / 30.0, 4.0);
 	}
@@ -71,10 +71,6 @@ void ParentHelper::init(
 	mainFields.useLocking = constFields.useThreading;
 	requestFields.useLocking = constFields.useThreading;
 	snapshot.setThreading(constFields.useThreading);
-
-	mainFields.callbacks.onUpdate = mainFields.rain.read(L"callback-onUpdate").asString();
-	mainFields.callbacks.onDeviceChange = mainFields.rain.read(L"callback-onDeviceChange").asString();
-	mainFields.callbacks.onDeviceListChange = mainFields.rain.read(L"callback-onDeviceListChange").asString();
 }
 
 void ParentHelper::setInvalid() {
@@ -88,11 +84,13 @@ void ParentHelper::setInvalid() {
 }
 
 void ParentHelper::setParams(
+	std::optional<Callbacks> callbacks,
 	std::optional<CaptureManager::SourceDesc> device,
 	std::optional<ParamParser::ProcessingsInfoMap> patches
 ) {
 	auto requestLock = requestFields.getLock();
 
+	requestFields.settings.callbacks = std::move(callbacks);
 	requestFields.settings.device = std::move(device);
 	requestFields.settings.patches = std::move(patches);
 
@@ -184,6 +182,9 @@ void ParentHelper::pUpdate() {
 		if (requestFields.settings.patches.has_value()) {
 			mainFields.settings.patches = std::exchange(requestFields.settings.patches, { }).value();
 			needToUpdateHandlers = true;
+		}
+		if (requestFields.settings.callbacks.has_value()) {
+			mainFields.callbacks = std::exchange(requestFields.settings.callbacks, { }).value();
 		}
 	}
 

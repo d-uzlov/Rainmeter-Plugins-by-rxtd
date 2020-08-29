@@ -19,7 +19,6 @@
 namespace rxtd::audio_analyzer {
 	class ParentHelper : MovableOnlyBase {
 	public:
-
 		struct SnapshotStruct {
 			struct LockableData : DataWithLock {
 				ProcessingOrchestrator::Snapshot _;
@@ -43,6 +42,11 @@ namespace rxtd::audio_analyzer {
 			}
 		};
 
+		struct Callbacks {
+			string onUpdate;
+			string onDeviceChange;
+			string onDeviceListChange;
+		};
 	private:
 		utils::IMMDeviceEnumeratorWrapper enumeratorWrapper;
 
@@ -70,17 +74,14 @@ namespace rxtd::audio_analyzer {
 				ParamParser::ProcessingsInfoMap patches;
 			} settings;
 
-			struct {
-				string onUpdate;
-				string onDeviceChange;
-				string onDeviceListChange;
-			} callbacks;
+			Callbacks callbacks;
 		} mainFields;
 
 		struct RequestFields : DataWithLock {
 			std::thread thread;
 
 			struct {
+				std::optional<Callbacks> callbacks;
 				std::optional<CaptureManager::SourceDesc> device;
 				std::optional<ParamParser::ProcessingsInfoMap> patches;
 			} settings;
@@ -102,6 +103,7 @@ namespace rxtd::audio_analyzer {
 		void setInvalid();
 
 		void setParams(
+			std::optional<Callbacks> callbacks,
 			std::optional<CaptureManager::SourceDesc> device,
 			std::optional<ParamParser::ProcessingsInfoMap> patches
 		);
