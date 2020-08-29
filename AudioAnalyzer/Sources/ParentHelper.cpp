@@ -65,6 +65,10 @@ void ParentHelper::init(
 	mainFields.captureManager.setLogger(mainFields.logger);
 	mainFields.captureManager.setLegacyNumber(constFields.legacyNumber);
 	mainFields.captureManager.setBufferSizeInSec(bufferSize);
+
+	mainFields.useThreading = constFields.useThreading;
+	requestFields.useThreading = constFields.useThreading;
+	snapshot.setThreading(constFields.useThreading);
 }
 
 void ParentHelper::setInvalid() {
@@ -74,14 +78,14 @@ void ParentHelper::setInvalid() {
 	mainFields.orchestrator.reset();
 	mainFields.settings.device = { };
 
-	requestFields.snapshot.data = { };
+	snapshot.deviceIsAvailable = false;
 }
 
 void ParentHelper::setParams(
 	std::optional<CaptureManager::SourceDesc> device,
 	std::optional<ParamParser::ProcessingsInfoMap> patches
 ) {
-	auto requestLock = getRequestLock();
+	auto requestLock = requestFields.getLock();
 
 	requestFields.settings.device = std::move(device);
 	requestFields.settings.patches = std::move(patches);
@@ -92,19 +96,9 @@ void ParentHelper::setParams(
 	}
 }
 
-void ParentHelper::update(Snapshot& snap) {
+void ParentHelper::update() {
 	if (!constFields.useThreading) {
 		pUpdate();
-	}
-
-	auto requestLock = getRequestLock();
-	snap.deviceIsAvailable = requestFields.snapshot.deviceIsAvailable;
-
-	if (requestFields.snapshotIsUpdated) {
-		std::swap(requestFields.snapshot.data, snap.data);
-	} else {
-		snap = requestFields.snapshot;
-		requestFields.snapshotIsUpdated = true;
 	}
 }
 
@@ -142,7 +136,7 @@ void ParentHelper::threadFunction() {
 
 	const auto res = CoInitializeEx(nullptr, COINIT_MULTITHREADED | COINIT_DISABLE_OLE1DDE);
 
-	auto mainLock = getMainLock();
+	auto mainLock = mainFields.getLock();
 
 	if (res != S_OK) {
 		mainFields.logger.error(L"separate thread: CoInitializeEx failed");
@@ -173,7 +167,7 @@ void ParentHelper::pUpdate() {
 	bool needToUpdateHandlers = !mainFields.orchestrator.isValid();
 
 	{
-		auto requestLock = getRequestLock();
+		auto requestLock = requestFields.getLock();
 		if (requestFields.settings.device.has_value()) {
 			mainFields.settings.device = std::exchange(requestFields.settings.device, { }).value();
 			needToUpdateDevice = true;
@@ -208,8 +202,9 @@ void ParentHelper::pUpdate() {
 		break;
 	case DDC::eNO_DEVICE: {
 		{
-			auto requestLock = getRequestLock();
-			requestFields.snapshot.deviceIsAvailable = false;
+			auto lock = snapshot.data.getLock();
+			snapshot.data._ = { };
+			snapshot.deviceIsAvailable = false;
 		}
 
 		const sview io = mainFields.settings.device.type == ST::eDEFAULT_INPUT ? L"input" : L"output";
@@ -220,15 +215,13 @@ void ParentHelper::pUpdate() {
 		mainFields.captureManager.disconnect();
 		mainFields.orchestrator.reset();
 
-		requestFields.snapshot.data = { };
-
 		break;
 	}
 	}
 
 	if (!changes.devices.empty()) {
 		{
-			auto requestLock = getRequestLock();
+			auto lock = snapshot.deviceLists.getLock();
 			updateDeviceListStrings();
 		}
 
@@ -258,9 +251,8 @@ void ParentHelper::pUpdate() {
 
 	const bool anyCaptured = mainFields.captureManager.capture();
 
-	bool formatChanged = false;
 	if (needToUpdateDevice) {
-		formatChanged = reconnectToDevice();
+		const bool formatChanged = reconnectToDevice();
 		needToUpdateHandlers |= formatChanged;
 	}
 	if (needToUpdateHandlers) {
@@ -268,26 +260,25 @@ void ParentHelper::pUpdate() {
 	}
 
 	if (needToUpdateDevice || needToUpdateHandlers) {
-		auto requestLock = getRequestLock();
-		requestFields.snapshotIsUpdated = false;
-		requestFields.snapshot.deviceIsAvailable = mainFields.captureManager.getState() == CaptureManager::State::eOK;
+		snapshot.deviceIsAvailable = mainFields.captureManager.getState() == CaptureManager::State::eOK;
 
-		if (formatChanged) {
-			// todo check this
-			// it's important that if device is not available
-			// then #snapshot is not updated
-			requestFields.snapshot.deviceInfo = mainFields.captureManager.getSnapshot();
+		{
+			auto diLock = snapshot.deviceInfo.getLock();
+			snapshot.deviceInfo._ = mainFields.captureManager.getSnapshot();
 		}
 
-		mainFields.orchestrator.configureSnapshot(requestFields.snapshot.data);
+		{
+			auto dataLock = snapshot.data.getLock();
+			mainFields.orchestrator.configureSnapshot(snapshot.data._);
+		}
 	}
 
 	if (anyCaptured) {
 		mainFields.orchestrator.process(mainFields.captureManager.getChannelMixer());
 
 		{
-			auto requestLock = getRequestLock();
-			mainFields.orchestrator.exchangeData(requestFields.snapshot.data);
+			auto dataLock = snapshot.data.getLock();
+			mainFields.orchestrator.exchangeData(snapshot.data._);
 		}
 	}
 }
@@ -312,7 +303,7 @@ void ParentHelper::updateProcessings() {
 }
 
 void ParentHelper::updateDeviceListStrings() {
-	auto& lists = requestFields.snapshot.deviceLists;
+	auto& lists = snapshot.deviceLists;
 	if (constFields.legacyNumber < 104) {
 		lists.input = legacy_makeDeviceListString(utils::MediaDeviceType::eINPUT);
 		lists.output = legacy_makeDeviceListString(utils::MediaDeviceType::eOUTPUT);
@@ -427,20 +418,4 @@ string ParentHelper::legacy_makeDeviceListString(utils::MediaDeviceType type) {
 	result.pop_back();
 
 	return result;
-}
-
-std::unique_lock<std::mutex> ParentHelper::getMainLock() {
-	auto lock = std::unique_lock<std::mutex>{ mainFields.mutex, std::defer_lock };
-	if (constFields.useThreading) {
-		lock.lock();
-	}
-	return lock;
-}
-
-std::unique_lock<std::mutex> ParentHelper::getRequestLock() {
-	auto lock = std::unique_lock<std::mutex>{ requestFields.mutex, std::defer_lock };
-	if (constFields.useThreading) {
-		lock.lock();
-	}
-	return lock;
 }

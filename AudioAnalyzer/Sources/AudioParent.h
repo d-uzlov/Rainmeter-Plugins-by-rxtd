@@ -21,7 +21,6 @@ namespace rxtd::audio_analyzer {
 
 		DeviceRequest requestedSource;
 		ParentHelper helper;
-		ParentHelper::Snapshot snapshot;
 
 		bool firstReload = true;
 
@@ -46,7 +45,7 @@ namespace rxtd::audio_analyzer {
 
 	public:
 		[[nodiscard]]
-		double getValue(isview proc, isview id, Channel channel, index ind) const;
+		double getValue(isview proc, isview id, Channel channel, index ind);
 
 		index getLegacyNumber() const {
 			return paramParser.getLegacyNumber();

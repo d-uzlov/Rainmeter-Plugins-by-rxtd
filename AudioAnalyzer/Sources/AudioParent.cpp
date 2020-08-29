@@ -56,7 +56,6 @@ void AudioParent::vReload() {
 
 	if (oldSource != requestedSource && !requestedSource.has_value()) {
 		helper.setInvalid();
-		snapshot.deviceIsAvailable = false;
 		return;
 	}
 
@@ -71,16 +70,15 @@ void AudioParent::vReload() {
 		}
 
 		helper.setParams(requestedSource, std::move(paramsOpt));
-		snapshot.data = { };
 	}
 }
 
 double AudioParent::vUpdate() {
 	if (requestedSource.has_value()) {
-		helper.update(snapshot);
+		helper.update();
 	}
 
-	if (!snapshot.deviceIsAvailable) {
+	if (!helper.getSnapshot().deviceIsAvailable.load()) {
 		if (!cleanersExecuted) {
 			runCleaners();
 			cleanersExecuted = true;
@@ -90,19 +88,24 @@ double AudioParent::vUpdate() {
 		cleanersExecuted = false;
 	}
 
-	for (const auto& [procName, procInfo] : paramParser.getParseResult()) {
-		auto& processingSnapshot = snapshot.data[procName];
-		for (const auto& [handlerName, finisher] : procInfo.finishers) {
-			for (auto& [channel, channelSnapshot] : processingSnapshot) {
-				auto handlerDataIter = channelSnapshot.find(handlerName);
-				if (handlerDataIter != channelSnapshot.end()) {
-					finisher(handlerDataIter->second.handlerSpecificData);
+	{
+		auto& data = helper.getSnapshot().data;
+		auto lock = data.getLock();
+
+		for (const auto& [procName, procInfo] : paramParser.getParseResult()) {
+			auto& processingSnapshot = data._[procName];
+			for (const auto& [handlerName, finisher] : procInfo.finishers) {
+				for (auto& [channel, channelSnapshot] : processingSnapshot) {
+					auto handlerDataIter = channelSnapshot.find(handlerName);
+					if (handlerDataIter != channelSnapshot.end()) {
+						finisher(handlerDataIter->second.handlerSpecificData);
+					}
 				}
 			}
 		}
 	}
 
-	return snapshot.deviceInfo.state == CaptureManager::State::eOK ? 1.0 : 0.0;
+	return 1.0;
 }
 
 void AudioParent::vCommand(isview bangArgs) {
@@ -132,23 +135,25 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 			return;
 		}
 
-		const isview deviceProperty = args[1];
-		const auto& state = snapshot.deviceInfo;
+		auto& info = helper.getSnapshot().deviceInfo;
+		auto lock = info.getLock();
+		const auto& di = info._;
 
+		const isview deviceProperty = args[1];
 		if (deviceProperty == L"status") {
-			resolveBufferString = state.state == CaptureManager::State::eOK ? L"1" : L"0";
+			resolveBufferString = di.state == CaptureManager::State::eOK ? L"1" : L"0";
 		} else if (deviceProperty == L"status string") {
-			resolveBufferString = state.state == CaptureManager::State::eOK ? L"active" : L"down";
+			resolveBufferString = di.state == CaptureManager::State::eOK ? L"active" : L"down";
 		} else if (deviceProperty == L"type") {
-			resolveBufferString = state.type == utils::MediaDeviceType::eINPUT ? L"input" : L"output";
+			resolveBufferString = di.type == utils::MediaDeviceType::eINPUT ? L"input" : L"output";
 		} else if (deviceProperty == L"name") {
-			resolveBufferString = state.name;
+			resolveBufferString = di.name;
 		} else if (deviceProperty == L"description") {
-			resolveBufferString = state.description;
+			resolveBufferString = di.description;
 		} else if (deviceProperty == L"id") {
-			resolveBufferString = state.id;
+			resolveBufferString = di.id;
 		} else if (deviceProperty == L"format") {
-			resolveBufferString = state.formatString;
+			resolveBufferString = di.formatString;
 		} else {
 			cl.warning(L"unknown device property '{}'", deviceProperty);
 		}
@@ -157,16 +162,23 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 	}
 
 	if (optionName == L"device list input") {
-		resolveBufferString = snapshot.deviceLists.input;
+		auto& lists = helper.getSnapshot().deviceLists;
+		auto lock = lists.getLock();
+		resolveBufferString = lists.input;
 		return;
 	}
 	if (optionName == L"device list output") {
-		resolveBufferString = snapshot.deviceLists.output;
+		auto& lists = helper.getSnapshot().deviceLists;
+		auto lock = lists.getLock();
+		resolveBufferString = lists.output;
 		return;
 	}
 	if (optionName == L"device list") {
+		auto& snapshot = helper.getSnapshot();
+		auto listsLock = snapshot.deviceLists.getLock();
+		auto diLock = snapshot.deviceInfo.getLock();
 		resolveBufferString =
-			snapshot.deviceInfo.type == utils::MediaDeviceType::eINPUT
+			snapshot.deviceInfo._.type == utils::MediaDeviceType::eINPUT
 				? snapshot.deviceLists.input
 				: snapshot.deviceLists.output;
 		return;
@@ -220,13 +232,12 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 	cl.error(L"unknown section variable");
 }
 
-double AudioParent::getValue(isview proc, isview id, Channel channel, index ind) const {
-	if (!snapshot.deviceIsAvailable) {
-		return 0.0;
-	}
+double AudioParent::getValue(isview proc, isview id, Channel channel, index ind) {
+	auto& data = helper.getSnapshot().data;
+	auto lock = data.getLock();
 
-	auto procIter = snapshot.data.find(proc);
-	if (procIter == snapshot.data.end()) {
+	auto procIter = data._.find(proc);
+	if (procIter == data._.end()) {
 		return 0.0;
 	}
 
@@ -376,8 +387,11 @@ void AudioParent::resolveProp(array_view<isview> args, string& resolveBufferStri
 		return;
 	}
 
-	auto procIter = snapshot.data.find(procName);
-	if (procIter == snapshot.data.end()) {
+	auto& data = helper.getSnapshot().data;
+	auto lock = data.getLock();
+
+	auto procIter = data._.find(procName);
+	if (procIter == data._.end()) {
 		cl.error(L"processing '{}' is not found", procName);
 		return;
 	}

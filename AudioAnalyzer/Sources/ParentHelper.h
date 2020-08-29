@@ -18,16 +18,40 @@
 namespace rxtd::audio_analyzer {
 	class ParentHelper : MovableOnlyBase {
 	public:
-		struct Snapshot {
-			ProcessingOrchestrator::Snapshot data;
-			CaptureManager::Snapshot deviceInfo;
+		struct DataWithLock {
+			bool useThreading{ };
+			std::mutex mutex;
 
-			struct {
+			std::unique_lock<std::mutex> getLock() {
+				auto lock = std::unique_lock<std::mutex>{ mutex, std::defer_lock };
+				if (useThreading) {
+					lock.lock();
+				}
+				return lock;
+			}
+		};
+
+		struct SnapshotStruct {
+			struct LockableData : DataWithLock {
+				ProcessingOrchestrator::Snapshot _;
+			} data;
+
+			struct LockableDeviceInfo : DataWithLock {
+				CaptureManager::Snapshot _;
+			} deviceInfo;
+
+			struct LockableDeviceListStrings : DataWithLock {
 				string input;
 				string output;
 			} deviceLists;
 
-			bool deviceIsAvailable = false;
+			std::atomic<bool> deviceIsAvailable{ false };
+
+			void setThreading(bool value) {
+				data.useThreading = value;
+				deviceInfo.useThreading = value;
+				deviceLists.useThreading = value;
+			}
 		};
 
 	private:
@@ -44,8 +68,7 @@ namespace rxtd::audio_analyzer {
 			std::atomic_bool stopRequest{ false };
 		} threadSafeFields;
 
-		struct {
-			std::mutex mutex;
+		struct MainFields : DataWithLock {
 			std::condition_variable sleepVariable;
 
 			utils::Rainmeter::Logger logger;
@@ -58,19 +81,16 @@ namespace rxtd::audio_analyzer {
 			} settings;
 		} mainFields;
 
-		struct {
-			std::mutex mutex;
-
+		struct RequestFields : DataWithLock {
 			std::thread thread;
 
 			struct {
 				std::optional<CaptureManager::SourceDesc> device;
 				std::optional<ParamParser::ProcessingsInfoMap> patches;
 			} settings;
-
-			Snapshot snapshot;
-			bool snapshotIsUpdated = false;
 		} requestFields;
+
+		SnapshotStruct snapshot;
 
 	public:
 		~ParentHelper();
@@ -89,7 +109,11 @@ namespace rxtd::audio_analyzer {
 			std::optional<ParamParser::ProcessingsInfoMap> patches
 		);
 
-		void update(Snapshot& snap);
+		SnapshotStruct& getSnapshot() {
+			return snapshot;
+		}
+
+		void update();
 
 	private:
 		void wakeThreadUp();
@@ -107,8 +131,5 @@ namespace rxtd::audio_analyzer {
 
 		string makeDeviceListString(utils::MediaDeviceType type);
 		string legacy_makeDeviceListString(utils::MediaDeviceType type);
-
-		std::unique_lock<std::mutex> getMainLock();
-		std::unique_lock<std::mutex> getRequestLock();
 	};
 }
