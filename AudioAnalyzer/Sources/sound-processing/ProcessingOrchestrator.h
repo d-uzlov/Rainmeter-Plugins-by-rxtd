@@ -24,6 +24,8 @@ namespace rxtd::audio_analyzer {
 		std::map<istring, ProcessingManager, std::less<>> saMap;
 		Snapshot snapshot;
 
+		bool valid = false;
+
 	public:
 		void setLogger(utils::Rainmeter::Logger value) {
 			logger = std::move(value);
@@ -35,6 +37,11 @@ namespace rxtd::audio_analyzer {
 
 		void setWarnTime(double value) {
 			warnTimeMs = value;
+		}
+
+		[[nodiscard]]
+		bool isValid() const {
+			return valid;
 		}
 
 		void reset();

@@ -170,7 +170,7 @@ void ParentHelper::threadFunction() {
 
 void ParentHelper::pUpdate() {
 	bool needToUpdateDevice = false;
-	bool needToUpdateHandlers = false;
+	bool needToUpdateHandlers = !mainFields.orchestrator.isValid();
 
 	{
 		auto requestLock = getRequestLock();
@@ -207,16 +207,21 @@ void ParentHelper::pUpdate() {
 		needToUpdateDevice = true;
 		break;
 	case DDC::eNO_DEVICE: {
-		const sview io = mainFields.settings.device.type == ST::eDEFAULT_INPUT ? L"input" : L"output";
-		mainFields.logger.error(
-			L"Requested default {} audio device, but all {} devices has been disconnected",
-			io, io
-		);
-
 		{
 			auto requestLock = getRequestLock();
 			requestFields.snapshot.deviceIsAvailable = false;
 		}
+
+		const sview io = mainFields.settings.device.type == ST::eDEFAULT_INPUT ? L"input" : L"output";
+		mainFields.logger.error(
+			L"Either all {} devices has been disconnected, or windows audio service was stopped",
+			io
+		);
+		mainFields.captureManager.disconnect();
+		mainFields.orchestrator.reset();
+
+		requestFields.snapshot.data = { };
+
 		break;
 	}
 	}

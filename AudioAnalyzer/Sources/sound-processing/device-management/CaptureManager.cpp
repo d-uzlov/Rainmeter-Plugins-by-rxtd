@@ -209,7 +209,6 @@ void CaptureManager::tryToRecoverFromExclusive() {
 		return;
 	case DR::eRECONNECT:
 		snapshot.state = State::eRECONNECT_NEEDED;
-		logger.debug(L"exclusive format changed");
 		return;
 	case DR::eEXCLUSIVE:
 		// if eEXCLUSIVE happened, then the stream we were listening to was shared,

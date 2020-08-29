@@ -15,6 +15,7 @@ using namespace audio_analyzer;
 
 void ProcessingOrchestrator::reset() {
 	saMap.clear();
+	valid = false;
 }
 
 void ProcessingOrchestrator::patch(
@@ -34,6 +35,8 @@ void ProcessingOrchestrator::patch(
 			snapshot[name]
 		);
 	}
+
+	valid = true;
 }
 
 void ProcessingOrchestrator::configureSnapshot(Snapshot& snap) const {
@@ -60,7 +63,7 @@ void ProcessingOrchestrator::process(const ChannelMixer& channelMixer) {
 			}.count();
 
 		if (processDuration > warnTimeMs) {
-			logger.debug(
+			logger.warning(
 				L"processing overhead {} ms over specified {} ms",
 				processDuration - warnTimeMs,
 				warnTimeMs

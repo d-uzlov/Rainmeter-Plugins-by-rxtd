@@ -66,7 +66,7 @@ void AudioParent::vReload() {
 		firstReload = false;
 
 		std::optional<ParamParser::ProcessingsInfoMap> paramsOpt = { };
-		if (paramsChanged || !oldSource.has_value()) {
+		if (paramsChanged) {
 			paramsOpt = paramParser.getParseResult();
 		}
 
