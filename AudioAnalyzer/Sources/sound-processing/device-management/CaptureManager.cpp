@@ -125,6 +125,13 @@ CaptureManager::State CaptureManager::setSourceAndGetState(const SourceDesc& des
 	}
 
 	snapshot.formatString = makeFormatString(snapshot.format);
+	snapshot.channelsString.clear();
+	auto channels = snapshot.format.channelLayout.ordered();
+	for (int i = 0; i < channels.size() - 1; ++i) {
+		snapshot.channelsString += ChannelUtils::getTechnicalName(channels[i]);
+		snapshot.channelsString += L',';
+	}
+	snapshot.channelsString += ChannelUtils::getTechnicalName(channels.back());
 
 	channelMixer.setFormat(snapshot.format);
 

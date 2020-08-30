@@ -59,6 +59,7 @@ namespace rxtd::audio_analyzer {
 			string formatString;
 			utils::MediaDeviceType type{ };
 			MyWaveFormat format;
+			string channelsString;
 		};
 
 	private:

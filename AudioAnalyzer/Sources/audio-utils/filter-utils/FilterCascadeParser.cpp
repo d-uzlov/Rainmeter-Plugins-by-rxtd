@@ -55,11 +55,11 @@ FilterCascadeParser::parseFilter(const utils::OptionList& description, utils::Ra
 	auto cl = logger.context(L"'{}': ", name);
 	const auto args = description.get(1).asMap(L',', L' ');
 
-	if (utils::StringUtils::checkStartsWith(name, { L"bq" })) {
+	if (utils::StringUtils::checkStartsWith(name, L"bq")) {
 		return parseBQ(name, args, cl);
 	}
 
-	if (utils::StringUtils::checkStartsWith(name, { L"bw" })) {
+	if (utils::StringUtils::checkStartsWith(name, L"bw")) {
 		return parseBW(name, args, cl);
 	}
 
@@ -83,7 +83,10 @@ FilterCascadeParser::parseBQ(isview name, const utils::OptionMap& description, u
 		description.get(L"freq").asFloat(),
 		std::numeric_limits<float>::epsilon()
 	);
-	double gain = description.get(L"gain").asFloat();
+	double gain = 0.0;
+	if (name == L"bqHighShelf" || name == L"bqLowShelf" || name == L"bqPeak") {
+		gain = description.get(L"gain").asFloat();
+	}
 	const double forcedGain = description.get(L"forcedGain").asFloat();
 
 	const auto unused = description.getListOfUntouched();
@@ -96,10 +99,8 @@ FilterCascadeParser::parseBQ(isview name, const utils::OptionMap& description, u
 
 	if (name == L"bqHighPass") {
 		filterCreationFunc = BQFilterBuilder::createHighPass;
-		gain = 0.0;
 	} else if (name == L"bqLowPass") {
 		filterCreationFunc = BQFilterBuilder::createLowPass;
-		gain = 0.0;
 	} else if (name == L"bqHighShelf") {
 		if (description.get(L"gain").empty()) {
 			cl.error(L"gain is not found", name);

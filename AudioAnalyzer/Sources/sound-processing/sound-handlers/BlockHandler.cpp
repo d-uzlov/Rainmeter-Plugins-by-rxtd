@@ -30,7 +30,7 @@ SoundHandler::ParseResult BlockHandler::parseParams(
 		params.legacy_decayTime = std::max(om.get(L"decay").asFloat(params.legacy_attackTime), 0.0);
 
 		utils::BufferPrinter printer;
-		printer.print(L"filter[attack {}, decay {}]", params.legacy_attackTime, params.legacy_decayTime);
+		printer.print(L"lowPass[attack {}, decay {}]", params.legacy_attackTime, params.legacy_decayTime);
 		params.transformer = audio_utils::TransformationParser::parse(printer.getBufferView(), cl);
 	} else {
 		params.legacy_attackTime = 0.0;

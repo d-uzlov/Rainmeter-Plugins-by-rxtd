@@ -143,7 +143,7 @@ float BandCascadeTransformer::computeForBand(index band) const {
 		const float bandWeight = bandWeights[cascade];
 		const float magnitude = snapshot[cascade].data[band];
 
-		if (snapshot[cascade].maxValue < params.zeroLevelHard) {
+		if (snapshot[cascade].maxValue <= params.zeroLevelHard) {
 			// this most often happens when there was a silence, and then some sound,
 			// so cascade with index more than N haven't updated yet
 			// so in that case we ignore values of all these cascades

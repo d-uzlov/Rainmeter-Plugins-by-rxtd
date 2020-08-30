@@ -9,15 +9,19 @@
 
 #pragma once
 #include "AudioParent.h"
+#include "audio-utils/CustomizableValueTransformer.h"
 
 namespace rxtd::audio_analyzer {
 	class AudioChild : public utils::TypeHolder {
+		using CVT = audio_utils::CustomizableValueTransformer;
+
 		Channel channel = Channel::eFRONT_LEFT;
 		index valueIndex = 0;
 		istring handlerName;
 		istring procName;
 		std::vector<istring> infoRequest;
 		std::vector<isview> infoRequestC;
+		CVT transformer;
 
 		AudioParent* parent = nullptr;
 

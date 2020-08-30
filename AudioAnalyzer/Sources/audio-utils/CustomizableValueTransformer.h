@@ -17,7 +17,7 @@ namespace rxtd::audio_utils {
 	class CustomizableValueTransformer {
 	public:
 		enum class TransformType {
-			eFILTER,
+			eLOW_PASS_FILTER,
 			eDB,
 			eMAP,
 			eCLAMP,
@@ -79,7 +79,12 @@ namespace rxtd::audio_utils {
 		}
 
 		[[nodiscard]]
-		float apply(float value);
+		float apply(double value);
+
+		[[nodiscard]]
+		float apply(float value) {
+			return float(apply(double(value)));
+		}
 
 		void applyToArray(array_view<float> source, array_span<float> dest);
 

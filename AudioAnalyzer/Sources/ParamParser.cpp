@@ -146,6 +146,7 @@ void ParamParser::parseFilters(const utils::OptionMap& optionMap, ProcessingData
 	data.rawFccDescription = filterDescription.asString();
 
 	const auto [filterTypeOpt, filterParams] = filterDescription.breakFirst(L' ');
+
 	const auto filterType = filterTypeOpt.asIString(L"none");
 	auto filterLogger = cl.context(L"filter: ");
 

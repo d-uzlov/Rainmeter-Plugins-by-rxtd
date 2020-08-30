@@ -20,22 +20,22 @@ using namespace audio_utils;
 CustomizableValueTransformer::CustomizableValueTransformer(std::vector<TransformationInfo> transformations):
 	transforms(std::move(transformations)) {
 	for (const auto& tr : transforms) {
-		if (tr.type == TransformType::eFILTER) {
+		if (tr.type == TransformType::eLOW_PASS_FILTER) {
 			_hasState = true;
 			break;
 		}
 	}
 }
 
-float CustomizableValueTransformer::apply(float value) {
+float CustomizableValueTransformer::apply(double value) {
 	for (auto& transform : transforms) {
 		switch (transform.type) {
-		case TransformType::eFILTER: {
+		case TransformType::eLOW_PASS_FILTER: {
 			value = transform.state.filter.next(value);
 			break;
 		}
 		case TransformType::eDB: {
-			value = std::max(value, std::numeric_limits<float>::min());
+			value = std::max<double>(value, std::numeric_limits<float>::min());
 			value = 10.0f * std::log10(value);
 			break;
 		}
@@ -44,7 +44,7 @@ float CustomizableValueTransformer::apply(float value) {
 			break;
 		}
 		case TransformType::eCLAMP: {
-			value = std::clamp(value, transform.args[0], transform.args[1]);
+			value = std::clamp<double>(value, transform.args[0], transform.args[1]);
 			break;
 		}
 		}
@@ -58,7 +58,7 @@ void CustomizableValueTransformer::applyToArray(array_view<float> source, array_
 
 	for (auto& transform : transforms) {
 		switch (transform.type) {
-		case TransformType::eFILTER: {
+		case TransformType::eLOW_PASS_FILTER: {
 			auto sourceIter = source.begin();
 			auto pastIter = transform.pastFilterValues.begin();
 			auto destIter = dest.begin();
@@ -133,7 +133,7 @@ void CustomizableValueTransformer::applyToArray(array_view<float> source, array_
 
 void CustomizableValueTransformer::setParams(index samplesPerSec, index blockSize) {
 	for (auto& transform : transforms) {
-		if (transform.type == TransformType::eFILTER) {
+		if (transform.type == TransformType::eLOW_PASS_FILTER) {
 			transform.state.filter.setParams(
 				transform.args[0] * 0.001,
 				transform.args[1] * 0.001,
@@ -146,7 +146,7 @@ void CustomizableValueTransformer::setParams(index samplesPerSec, index blockSiz
 
 void CustomizableValueTransformer::resetState() {
 	for (auto& transform : transforms) {
-		if (transform.type == TransformType::eFILTER) {
+		if (transform.type == TransformType::eLOW_PASS_FILTER) {
 			transform.state.filter.reset();
 		}
 	}
@@ -158,7 +158,7 @@ void CustomizableValueTransformer::setHistoryWidth(index value) {
 	}
 
 	for (auto& transform : transforms) {
-		if (transform.type == TransformType::eFILTER) {
+		if (transform.type == TransformType::eLOW_PASS_FILTER) {
 			transform.pastFilterValues.resize(value);
 			std::fill(transform.pastFilterValues.begin(), transform.pastFilterValues.end(), 0.0f);
 		}
@@ -194,8 +194,8 @@ std::optional<TransformationParser::Transformation> TransformationParser::parseT
 		params = list.get(1).asMap(L',', L' ');
 	}
 
-	if (transformName == L"filter") {
-		tr.type = TransformType::eFILTER;
+	if (transformName == L"lowPass") {
+		tr.type = TransformType::eLOW_PASS_FILTER;
 
 		tr.args[0] = std::max(params.get(L"attack").asFloatF(), 0.0f);
 		tr.args[1] = std::max(params.get(L"decay").asFloatF(tr.args[0]), 0.0f);

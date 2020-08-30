@@ -71,7 +71,9 @@ namespace rxtd::audio_analyzer {
 		) const override;
 
 	private:
-		static std::vector<float> parseFreqList(sview listId, const Rainmeter& rain);
+		static bool parseFreqListElement(utils::OptionList& options, std::vector<float>& freqs, Logger& cl);
+		static std::vector<float> parseFreqList(utils::Option freqListOption, Logger& cl);
+		static std::vector<float> makeBandsFromFreqs(array_span<float> freqs, Logger& cl);
 
 	protected:
 		[[nodiscard]]

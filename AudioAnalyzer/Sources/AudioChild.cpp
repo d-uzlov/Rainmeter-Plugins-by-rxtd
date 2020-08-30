@@ -60,6 +60,10 @@ void AudioChild::vReload() {
 		valueIndex = 0;
 	}
 
+	auto transformDesc = rain.read(L"Transform");
+	auto transformLogger = logger.context(L"Transform: ");
+	transformer = audio_utils::TransformationParser::parse(transformDesc.asString(), transformLogger);
+
 	const auto stringValueStr = rain.read(L"StringValue").asIString(L"Number");
 	if (stringValueStr == L"Number") {
 		setUseResultString(false);
@@ -101,11 +105,17 @@ double AudioChild::vUpdate() {
 		return 0.0;
 	}
 
+	double result;
 	if (legacyNumber < 104) {
-		return legacy_update();
+		result = legacy_update();
+	} else {
+		result = parent->getValue(procName, handlerName, channel, valueIndex);
 	}
 
-	return parent->getValue(procName, handlerName, channel, valueIndex);
+	// transformer.setParams(); // todo
+	result = transformer.apply(result);
+
+	return result;
 }
 
 void AudioChild::vUpdateString(string& resultStringBuffer) {

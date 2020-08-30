@@ -29,14 +29,36 @@ SoundHandler::ParseResult BandResampler::parseParams(
 		return { };
 	}
 
-	const auto freqListIndex = om.get(L"freqList").asString();
-	if (freqListIndex.empty()) {
-		cl.error(L"freqList is not found");
+	utils::Option freqListOption;
+	Logger bandLogger;
+	if (!om.get(L"bands").empty()) {
+		freqListOption = om.get(L"bands");
+		bandLogger = cl.context(L"bands: ");
+	} else if (!om.get(L"freqList").empty()) {
+		const auto freqListIndex = om.get(L"freqList").asString();
+
+		auto freqListOptionName = L"FreqList-"s += freqListIndex;
+		freqListOption = rain.read(freqListOptionName);
+		if (freqListOption.empty()) {
+			freqListOptionName = L"FreqList_"s += freqListIndex;
+			freqListOption = rain.read(freqListOptionName);
+		}
+
+		bandLogger = rain.createLogger().context(L"FreqList {}: ", freqListIndex);
+
+		if (freqListOption.empty()) {
+			cl.error(L"description is not found");
+			return { };
+		}
+	} else {
+		cl.error(L"bands option is not found");
 		return { };
 	}
 
-	params.bandFreqs = parseFreqList(freqListIndex, rain);
-	if (params.bandFreqs.empty()) {
+	params.bandFreqs = parseFreqList(freqListOption, bandLogger);
+
+	if (params.bandFreqs.size() < 2) {
+		cl.error(L"need >= 2 frequencies but only {} found", params.bandFreqs.size());
 		return { };
 	}
 
@@ -69,82 +91,82 @@ SoundHandler::ParseResult BandResampler::parseParams(
 	return result;
 }
 
-std::vector<float> BandResampler::parseFreqList(sview listId, const Rainmeter& rain) {
-	auto freqListOptionName = L"FreqList-"s += listId;
-	auto freqListOption = rain.read(freqListOptionName);
-	if (freqListOption.empty()) {
-		freqListOptionName = L"FreqList_"s += listId;
-		freqListOption = rain.read(freqListOptionName);
+bool BandResampler::parseFreqListElement(utils::OptionList& options, std::vector<float>& freqs, Logger& cl) {
+	auto type = options.get(0).asIString();
+
+	if (type == L"custom") {
+		if (options.size() < 2) {
+			cl.error(L"custom must have at least two frequencies specified but {} found", options.size());
+			return { };
+		}
+		for (index i = 1; i < options.size(); ++i) {
+			freqs.push_back(options.get(i).asFloatF());
+		}
+		return true;
 	}
 
-	Logger cl = rain.createLogger().context(L"FreqList {}: ", listId);
-	if (freqListOption.empty()) {
-		cl.error(L"description is not found");
+	if (type != L"linear" && type != L"log") {
+		cl.error(L"unknown type '{}'", type);
 		return { };
 	}
 
+	if (options.size() != 4) {
+		cl.error(L"{} must have 3 options (count, min, max)", type);
+		return { };
+	}
+
+	const index count = options.get(1).asInt(0);
+	if (count < 1) {
+		cl.error(L"count must be >= 1");
+		return { };
+	}
+
+	const auto min = options.get(2).asFloatF();
+	const auto max = options.get(3).asFloatF();
+	if (max <= min) {
+		cl.error(L"max must be > min");
+		return { };
+	}
+
+	if (type == L"linear") {
+		const auto delta = max - min;
+
+		for (index i = 0; i <= count; ++i) {
+			freqs.push_back(min + delta * i / count);
+		}
+	} else {
+		// log
+		const auto step = std::pow(2.0f, std::log2(max / min) / count);
+		auto freq = min;
+		freqs.push_back(freq);
+
+		for (index i = 0; i < count; ++i) {
+			freq *= step;
+			freqs.push_back(freq);
+		}
+	}
+
+	return true;
+}
+
+std::vector<float> BandResampler::parseFreqList(utils::Option freqListOption, Logger& cl) {
 	std::vector<float> freqs;
 
 	for (auto boundOption : freqListOption.asList(L'|')) {
 		auto options = boundOption.asList(L' ');
-		auto type = options.get(0).asIString();
-
-		if (type == L"custom") {
-			if (options.size() < 2) {
-				cl.error(L"custom must have at least two frequencies specified but {} found", options.size());
-				return { };
-			}
-			for (index i = 1; i < options.size(); ++i) {
-				freqs.push_back(options.get(i).asFloatF());
-			}
-			continue;
-		}
-
-		if (type != L"linear" && type != L"log") {
-			cl.error(L"unknown list type '{}'", type);
+		const auto success = parseFreqListElement(options, freqs, cl);
+		if (!success) {
 			return { };
-		}
-
-		if (options.size() != 4) {
-			cl.error(L"{} must have 3 options (count, min, max)", type);
-			return { };
-		}
-
-		const index count = options.get(1).asInt(0);
-		if (count < 1) {
-			cl.error(L"count must be >= 1");
-			return { };
-		}
-
-		const auto min = options.get(2).asFloatF();
-		const auto max = options.get(3).asFloatF();
-		if (max <= min) {
-			cl.error(L"max must be > min");
-			return { };
-		}
-
-		if (type == L"linear") {
-			const auto delta = max - min;
-
-			for (index i = 0; i <= count; ++i) {
-				freqs.push_back(min + delta * i / count);
-			}
-		} else {
-			// log
-			const auto step = std::pow(2.0f, std::log2(max / min) / count);
-			auto freq = min;
-			freqs.push_back(freq);
-
-			for (index i = 0; i < count; ++i) {
-				freq *= step;
-				freqs.push_back(freq);
-			}
 		}
 	}
 
+	return makeBandsFromFreqs(freqs, cl);
+}
+
+std::vector<float> BandResampler::makeBandsFromFreqs(array_span<float> freqs, Logger& cl) {
 	std::sort(freqs.begin(), freqs.end());
 
-	const double threshold = rain.readDouble(L"FreqSimThreshold", 0.07);
+	const double threshold = 0.07;
 	// 0.07 is a random constant that I feel appropriate
 
 	std::vector<float> result;
@@ -161,11 +183,6 @@ std::vector<float> BandResampler::parseFreqList(sview listId, const Rainmeter& r
 
 		result.push_back(value);
 		lastValue = value;
-	}
-
-	if (result.size() < 2) {
-		cl.error(L"need >= 2 frequencies but only {} found", result.size());
-		return { };
 	}
 
 	return result;

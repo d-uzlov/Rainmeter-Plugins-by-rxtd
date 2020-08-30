@@ -32,15 +32,16 @@ utils::Color utils::Color::parse(sview desc, Color defaultValue) {
 		}
 
 		for (Option opt : attr.asList(L'@')) {
-			if (opt.asIString() == L"rgb") {
+			auto str = opt.asIString();
+			if (str == L"rgb") {
 				result.mode = Mode::eRGB;
-			} else if (opt.asIString() == L"hsv") {
+			} else if (str == L"hsv") {
 				result.mode = Mode::eHSV;
-			} else if (opt.asIString() == L"hsl") {
+			} else if (str == L"hsl") {
 				result.mode = Mode::eHSL;
-			} else if (opt.asIString() == L"ycbcr") {
+			} else if (str == L"ycbcr") {
 				result.mode = Mode::eYCBCR;
-			} else if (opt.asIString() == L"hex") {
+			} else if (str == L"hex") {
 				result.mode = Mode::eRGB;
 
 				if (colorDesc.asString().size() != 6 && colorDesc.asString().size() != 8) {

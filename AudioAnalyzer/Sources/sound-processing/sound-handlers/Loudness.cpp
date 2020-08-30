@@ -45,7 +45,7 @@ SoundHandler::ConfigurationResult Loudness::vConfigure(const std::any& _params, 
 	params = std::any_cast<Params>(_params);
 
 	blocksCount = index(params.timeWindowMs / 1000.0 * params.updatesPerSecond);
-	blocksCount = std::max<index>(blocksCount, 0);
+	blocksCount = std::max<index>(blocksCount, 1);
 
 	auto& config = getConfiguration();
 	const index sampleRate = config.sampleRate;
@@ -88,11 +88,11 @@ void Loudness::pushMicroBlock(double value) {
 	double newValue = 0.0;
 	index counter = 0;
 	for (const auto blockEnergy : blocks.getLast(blocksCount)) {
-		if (!(params.ignoreGatingForSilence && blockEnergy == 0.0) && blockEnergy < gatingValue) {
-			continue;
+		if (params.ignoreGatingForSilence && blockEnergy == 0.0
+			|| blockEnergy >= gatingValue) {
+			newValue += blockEnergy;
+			counter++;
 		}
-		newValue += blockEnergy;
-		counter++;
 	}
 	if (counter != 0) {
 		counter = std::max(counter, minBlocksCount);

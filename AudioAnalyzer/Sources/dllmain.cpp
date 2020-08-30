@@ -29,6 +29,7 @@ PLUGIN_EXPORT void Initialize(void** data, void* rm) {
 		*data = new audio_analyzer::AudioParent(std::move(rain));
 	} else {
 		if (typeString != L"Child") {
+			// todo move this to child measure
 			rain.createLogger().warning(L"Unknown type '{}', defaulting to Child is deprecated", typeString);
 		}
 		*data = new audio_analyzer::AudioChild(std::move(rain));

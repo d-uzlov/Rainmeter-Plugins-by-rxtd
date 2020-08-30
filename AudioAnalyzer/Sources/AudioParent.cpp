@@ -159,6 +159,10 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 			resolveBufferString = di.id;
 		} else if (deviceProperty == L"format") {
 			resolveBufferString = di.formatString;
+		} else if (deviceProperty == L"channels") {
+			resolveBufferString = di.channelsString;
+		} else if (deviceProperty == L"sample rate") {
+			resolveBufferString = std::to_wstring(di.format.samplesPerSec);
 		} else {
 			cl.warning(L"unknown device property '{}'", deviceProperty);
 		}
@@ -234,6 +238,7 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 		return;
 	}
 
+	// todo remove log messages here
 	cl.error(L"unknown section variable");
 }
 
@@ -331,6 +336,16 @@ AudioParent::DeviceRequest AudioParent::readRequest() const {
 	} else {
 		auto sourceOpt = rain.read(L"Source");
 		const auto source = sourceOpt.asIString(L"DefaultOutput");
+
+		if (source == L"Output") {
+			logger.error(L"Source type 'Output' is not recognized. Did you mean DefaultOutput?");
+			return { };
+		}
+		if (source == L"Input") {
+			logger.error(L"Source type 'Input' is not recognized. Did you mean DefaultInput?");
+			return { };
+		}
+
 		if (source == L"DefaultOutput") {
 			result.type = ST::eDEFAULT_OUTPUT;
 		} else if (source == L"DefaultInput") {
