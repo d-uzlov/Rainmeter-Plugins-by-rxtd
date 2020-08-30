@@ -59,7 +59,7 @@ class AsyncRainmeterMessageSender {
 public:
 	AsyncRainmeterMessageSender() = default;
 
-	void init() {
+	void init(void* rm) {
 		auto handlerLock = handlerInfo.getLock();
 
 		if (handlerInfo.invalid) {
@@ -72,17 +72,84 @@ public:
 			return;
 		}
 
-		const auto success = GetModuleHandleExW(
+		const auto handlerReadSuccess = GetModuleHandleExW(
 			GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
 			reinterpret_cast<LPCTSTR>(asyncSender_run),
 			&handlerInfo.dllHandle
 		);
-		if (!success) {
+		if (!handlerReadSuccess) {
 			handlerInfo.invalid = true;
+
+			const auto errorCode = GetLastError();
+			BufferPrinter bp;
+			bp.print(L"Log and bangs are not available, GetModuleHandleExW failed (error {})", errorCode);
+			RmLog(rm, LOG_ERROR, bp.getBufferPtr());
+
+			wchar_t* receiveBuffer = nullptr;
+			const auto messageLength = FormatMessageW(
+				FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
+				nullptr,
+				errorCode,
+				0,
+				reinterpret_cast<LPWSTR>(&receiveBuffer),
+				0,
+				nullptr
+			);
+			if (messageLength != 0) {
+				bp.print(L"More info: {}", receiveBuffer);
+			} else {
+				bp.print(
+					L"Can't get readable explanation of error because FormatMessageW failed (error {})",
+					GetLastError()
+				);
+			}
+			RmLog(rm, LOG_ERROR, bp.getBufferPtr());
+
+			LocalFree(receiveBuffer);
+
 			return;
 		}
 
-		CreateThread(nullptr, 0, &asyncSender_run, nullptr, 0, nullptr);
+		const auto threadHandle = CreateThread(
+			nullptr,
+			0,
+			&asyncSender_run,
+			nullptr,
+			0,
+			nullptr
+		);
+
+		if (threadHandle == nullptr) {
+			handlerInfo.invalid = true;
+
+			const auto errorCode = GetLastError();
+			BufferPrinter bp;
+			bp.print(L"Log and bangs are not available, CreateThread failed (error {})", errorCode);
+			RmLog(rm, LOG_ERROR, bp.getBufferPtr());
+
+			wchar_t* receiveBuffer = nullptr;
+			const auto messageLength = FormatMessageW(
+				FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
+				nullptr,
+				errorCode,
+				0,
+				reinterpret_cast<LPWSTR>(&receiveBuffer),
+				0,
+				nullptr
+			);
+			if (messageLength != 0) {
+				bp.print(L"More info: {}", receiveBuffer);
+			} else {
+				bp.print(
+					L"Can't get readable explanation of error because FormatMessageW failed (error {})",
+					GetLastError()
+				);
+			}
+			RmLog(rm, LOG_ERROR, bp.getBufferPtr());
+
+			LocalFree(receiveBuffer);
+		}
+
 	}
 
 	void deinit() {
@@ -173,7 +240,7 @@ DWORD WINAPI asyncSender_run(void* param) {
 				}
 			}
 
-			asyncSender.threadInfo.sleepVariable.wait_for(mainLock, 10.0s);
+			asyncSender.threadInfo.sleepVariable.wait_for(mainLock, 1.0s);
 		}
 	label_OUTER_LOOP_END:;
 	}
@@ -231,8 +298,8 @@ void Rainmeter::sourcelessLog(const wchar_t* message) {
 	asyncSender.log(nullptr, message, Logger::LogLevel::eDEBUG);
 }
 
-void Rainmeter::incrementLibraryCounter() {
-	asyncSender.init();
+void Rainmeter::incrementLibraryCounter(void* rm) {
+	asyncSender.init(rm);
 }
 
 void Rainmeter::decrementLibraryCounter() {

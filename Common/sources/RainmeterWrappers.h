@@ -182,7 +182,7 @@ namespace rxtd::utils {
 
 		static void sourcelessLog(const wchar_t* message);
 
-		static void incrementLibraryCounter();
+		static void incrementLibraryCounter(void* rm);
 		static void decrementLibraryCounter();
 
 	private:

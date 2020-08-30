@@ -20,7 +20,7 @@ static_assert(std::is_same<WCHAR, wchar_t>::value);
 static_assert(std::is_same<LPCWSTR, const wchar_t*>::value);
 
 PLUGIN_EXPORT void Initialize(void** data, void* rm) {
-	utils::Rainmeter::incrementLibraryCounter();
+	utils::Rainmeter::incrementLibraryCounter(rm);
 
 	utils::Rainmeter rain(rm);
 

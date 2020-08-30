@@ -34,8 +34,10 @@ LocalPluginLoader::LocalPluginLoader(void* rm) {
 	hLib = LoadLibraryW(pluginPath.c_str());
 	if (hLib == nullptr) {
 		const auto errorCode = GetLastError();
+		logger.error(L"Can't load library in path '{}' (error {})", pluginPath, errorCode);
+
 		wchar_t* receiveBuffer = nullptr;
-		FormatMessageW(
+		const auto messageLength = FormatMessageW(
 			FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
 			nullptr,
 			errorCode,
@@ -44,9 +46,14 @@ LocalPluginLoader::LocalPluginLoader(void* rm) {
 			0,
 			nullptr
 		);
-
-		logger.error(L"Can't load library in path '{}' (error {})", pluginPath, errorCode);
-		logger.error(L"More info: {}", receiveBuffer);
+		if (messageLength != 0) {
+			logger.error(L"More info: {}", receiveBuffer);
+		} else {
+			logger.debug(
+				L"Can't get readable explanation of error because FormatMessageW failed (error {})",
+				GetLastError()
+			);
+		}
 
 		LocalFree(receiveBuffer);
 		return;
