@@ -210,15 +210,12 @@ void Spectrogram::vProcess(array_view<float> wave, clock::time_point killTime) {
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
 
-	bool imageChanged = false;
 	for (auto chunk : source.getChunks(0)) {
 		counter += chunk.equivalentWaveSize;
 
 		if (counter < blockSize || clock::now() > killTime) {
 			continue;
 		}
-
-		imageChanged = true;
 
 		const auto data = chunk.data;
 
@@ -235,12 +232,7 @@ void Spectrogram::vProcess(array_view<float> wave, clock::time_point killTime) {
 		}
 
 		while (counter >= blockSize) {
-			if (lastDataIsZero) {
-				image.pushEmptyStrip(params.colors[0].color.toIntColor());
-			} else {
-				image.pushStrip(stripBuffer);
-			}
-
+			pushStrip();
 			counter -= blockSize;
 			dataShortageEqSize -= blockSize;
 		}
@@ -248,33 +240,20 @@ void Spectrogram::vProcess(array_view<float> wave, clock::time_point killTime) {
 
 	// in case kill time is exceeded, this ensures that image speed is consistent
 	while (counter >= blockSize) {
-		if (lastDataIsZero) {
-			image.pushEmptyStrip(params.colors[0].color.toIntColor());
-		} else {
-			image.pushStrip(stripBuffer);
-		}
-
+		pushStrip();
 		counter -= blockSize;
 		dataShortageEqSize -= blockSize;
 	}
 
 	index localShortageSize = dataShortageEqSize;
 	while (localShortageSize >= blockSize && overpushCount < params.length) {
-		imageChanged = true;
-
-		if (lastDataIsZero) {
-			image.pushEmptyStrip(params.colors[0].color.toIntColor());
-		} else {
-			image.pushStrip(stripBuffer);
-		}
+		pushStrip();
 
 		localShortageSize -= blockSize;
 		overpushCount++;
 	}
 
-	if (imageChanged) {
-		writeNeeded = true;
-
+	if (writeNeeded) {
 		if (params.fading != 0.0) {
 			if (image.isForced() || !writerHelper.isEmptinessWritten()) {
 				sifh.setPastLastStripIndex(image.getPastLastStripIndex());
@@ -286,6 +265,16 @@ void Spectrogram::vProcess(array_view<float> wave, clock::time_point killTime) {
 				sifh.drawBorderInPlace(image.getPixelsWritable());
 			}
 		}
+	}
+}
+
+void Spectrogram::pushStrip() {
+	writeNeeded = true;
+
+	if (lastDataIsZero) {
+		image.pushEmptyStrip(params.colors[0].color.toIntColor());
+	} else {
+		image.pushStrip(stripBuffer);
 	}
 }
 

@@ -77,7 +77,7 @@ namespace rxtd::audio_analyzer {
 			utils::Vector2D<utils::IntColor> pixels;
 			utils::ImageWriteHelper writerHelper{ };
 			string filepath;
-			index blockSize { };
+			index blockSize{ };
 			bool writeNeeded{ };
 			bool empty{ };
 		};
@@ -124,6 +124,8 @@ namespace rxtd::audio_analyzer {
 
 	private:
 		static void staticFinisher(Snapshot& snapshot);
+
+		void pushStrip();
 
 		void fillStrip(array_view<float> data, array_span<utils::IntColor> buffer) const;
 		void fillStripMulticolor(array_view<float> data, array_span<utils::IntColor> buffer) const;
