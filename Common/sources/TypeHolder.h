@@ -31,7 +31,6 @@ namespace rxtd::utils {
 		string resolveString{ };
 		bool useResultString = false;
 
-		istring resolveBuffer;
 		std::vector<isview> resolveVector;
 
 	public:

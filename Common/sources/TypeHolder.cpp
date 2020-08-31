@@ -55,12 +55,10 @@ const wchar_t* TypeHolder::resolve(int argc, const wchar_t* argv[]) {
 		return L"";
 	}
 
-	resolveBuffer.clear();
+	resolveVector.clear();
 	for (index i = 0; i < argc; ++i) {
 		const isview arg = argv[i];
-		const index bufferEnd = resolveBuffer.size();
-		resolveBuffer += arg;
-		resolveVector.emplace_back(resolveBuffer.data() + bufferEnd, arg.size());
+		resolveVector.emplace_back(arg);
 	}
 
 	resolveString = { };
