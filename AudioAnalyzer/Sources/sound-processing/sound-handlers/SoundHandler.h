@@ -72,7 +72,7 @@ namespace rxtd::audio_analyzer {
 		};
 
 		struct ExternalMethods {
-			using FinishMethodType = void(*)(std::any& data, const ExternCallContext& context);
+			using FinishMethodType = void(*)(const std::any& data, const ExternCallContext& context);
 			using GetPropMethodType = bool(*)(
 				const std::any& data,
 				isview prop,
@@ -192,7 +192,7 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		bool patch(
 			const std::any& params, const std::vector<istring>& sources,
-			sview channelName, index sampleRate,
+			index sampleRate,
 			HandlerFinder& hf, Logger& cl,
 			Snapshot& snapshot
 		);
@@ -253,8 +253,12 @@ namespace rxtd::audio_analyzer {
 
 		template <typename DataStructType, auto methodPtr>
 		static auto wrapExternalMethod() {
-			if constexpr (std::is_invocable<decltype(methodPtr), DataStructType&, const ExternCallContext&>::value) {
-				return [](std::any& handlerSpecificData, const ExternCallContext& context) {
+			if constexpr (std::is_invocable<
+					decltype(methodPtr),
+					const DataStructType&,
+					const ExternCallContext&>::value
+			) {
+				return [](const std::any& handlerSpecificData, const ExternCallContext& context) {
 					return methodPtr(*std::any_cast<DataStructType>(&handlerSpecificData), context);
 				};
 			} else if constexpr (

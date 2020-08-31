@@ -460,48 +460,36 @@ AudioParent::ProcessingCleanersMap AudioParent::createCleanersFor(const ParamPar
 	std::set<Channel> channels = pd.channels;
 
 	using HandlerMap = std::map<istring, std::unique_ptr<SoundHandler>, std::less<>>;
-	struct HandlerMapStruct {
-		HandlerMap handlerMap;
-	};
 
-	ProcessingManager::Snapshot tempSnapshot;
-	std::map<Channel, HandlerMapStruct> tempChannelMap;
+	ProcessingManager::ChannelSnapshot tempSnapshot;
+	HandlerMap tempChannelMap;
 
 	for (auto& handlerName : pd.handlersInfo.order) {
 		auto& patchInfo = pd.handlersInfo.patchers.find(handlerName)->second;
 
-		bool handlerIsValid = true;
-		for (auto channel : channels) {
-			auto& channelDataNew = tempChannelMap[channel].handlerMap;
-			auto handlerPtr = patchInfo.fun({ });
+		auto handlerPtr = patchInfo.fun({ });
 
-			auto cl = logger.silent();
-			ProcessingManager::HandlerFinderImpl hf{ channelDataNew };
-			SoundHandler::Snapshot handlerSpecificData;
-			const bool success = handlerPtr->patch(
-				patchInfo.params, patchInfo.sources,
-				ChannelUtils::getTechnicalName(channel), 48000,
-				hf, cl,
-				handlerSpecificData
-			);
+		auto cl = logger.silent();
+		ProcessingManager::HandlerFinderImpl hf { tempChannelMap };
+		SoundHandler::Snapshot handlerSpecificData;
+		const bool success = handlerPtr->patch(
+			patchInfo.params, patchInfo.sources,
+			48000,
+			hf, cl,
+			handlerSpecificData
+		);
 
-			if (success) {
-				channelDataNew[handlerName] = std::move(handlerPtr);
-				tempSnapshot[channel][handlerName] = std::move(handlerSpecificData);
-				handlerIsValid = false;
-			} else {
-				break;
-			}
+		if (success) {
+			tempChannelMap[handlerName] = std::move(handlerPtr);
+			tempSnapshot[handlerName] = std::move(handlerSpecificData);
 		}
 	}
 
 	ProcessingCleanersMap result;
 	for (const auto& [handlerName, finisher] : pd.finishers) {
-		for (auto& [channel, channelSnapshot] : tempSnapshot) {
-			auto dataIter = channelSnapshot.find(handlerName);
-			if (dataIter != channelSnapshot.end()) {
-				result[channel][handlerName] = std::move(dataIter->second.handlerSpecificData);
-			}
+		auto dataIter = tempSnapshot.find(handlerName);
+		if (dataIter != tempSnapshot.end()) {
+			result[handlerName] = std::move(dataIter->second.handlerSpecificData);
 		}
 	}
 
@@ -514,24 +502,21 @@ void AudioParent::runCleaners() const {
 		if (processingCleanersIter == cleanersMap.end()) {
 			// in case options were updated
 			// we only generate cleaners for initial options
-			// so if someone changes them and add more channels,
-			// then cleanersMap won't contain some of the channels from paramParser
+			// so if someone changes them and add more processings,
+			// then cleanersMap won't contain some of the processings from paramParser
 			continue;
 		}
 
 		auto& processingCleaners = processingCleanersIter->second;
 		for (const auto& [handlerName, finisher] : procInfo.finishers) {
-			for (auto& [channel, channelSnapshot] : processingCleaners) {
-				auto handlerDataIter = channelSnapshot.find(handlerName);
-				if (handlerDataIter == channelSnapshot.end()) {
-					continue;
-				}
-
-				// todo make function const, so I don't need a copy
-				std::any dataCopy = handlerDataIter->second;
+			auto handlerDataIter = processingCleaners.find(handlerName);
+			if (handlerDataIter == processingCleaners.end()) {
+				continue;
+			}
+			for (auto channel : procInfo.channels) {
 				SoundHandler::ExternCallContext context;
 				context.channelName = ChannelUtils::getTechnicalName(channel);
-				finisher(dataCopy, context);
+				finisher(handlerDataIter->second, context);
 			}
 		}
 	}

@@ -185,7 +185,7 @@ void WaveForm::vUpdateSnapshot(std::any& handlerSpecificData) const {
 	writeNeeded = false;
 }
 
-void WaveForm::staticFinisher(Snapshot& snapshot, const ExternCallContext& context) {
+void WaveForm::staticFinisher(const Snapshot& snapshot, const ExternCallContext& context) {
 	auto& writeNeeded = snapshot.writeNeeded;
 	if (!writeNeeded) {
 		return;

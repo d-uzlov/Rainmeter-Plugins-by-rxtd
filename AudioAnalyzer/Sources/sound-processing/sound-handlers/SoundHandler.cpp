@@ -14,7 +14,7 @@ using namespace audio_analyzer;
 
 bool SoundHandler::patch(
 	const std::any& params, const std::vector<istring>& sources,
-	sview channelName, index sampleRate,
+	index sampleRate,
 	HandlerFinder& hf, Logger& cl,
 	Snapshot& snapshot
 ) {

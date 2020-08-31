@@ -25,10 +25,7 @@ namespace rxtd::audio_analyzer {
 		bool firstReload = true;
 
 		// handlerName → handlerData for cleanup
-		// it's necessary to hold identical blank data for each channel
-		// because this data also contains channel name, which is required for writing files
-		using ChannelCleanersMap = std::map<istring, std::any, std::less<>>;
-		using ProcessingCleanersMap = std::map<Channel, ChannelCleanersMap, std::less<>>;
+		using ProcessingCleanersMap = std::map<istring, std::any, std::less<>>;
 		using CleanersMap = std::map<istring, ProcessingCleanersMap, std::less<>>;
 
 		bool cleanersExecuted = false;

@@ -74,13 +74,17 @@ namespace rxtd::audio_analyzer {
 		};
 
 		struct Snapshot {
-			utils::Vector2D<utils::IntColor> pixels;
-			utils::ImageWriteHelper writerHelper{ };
+			index blockSize { };
+
 			string prefix;
+
+			utils::Vector2D<utils::IntColor> pixels;
+			bool empty { };
+
+			mutable utils::ImageWriteHelper writerHelper { };
+			mutable bool writeNeeded { };
+
 			mutable string filenameBuffer;
-			index blockSize{ };
-			bool writeNeeded{ };
-			bool empty{ };
 		};
 
 	private:
@@ -122,7 +126,7 @@ namespace rxtd::audio_analyzer {
 		void vUpdateSnapshot(std::any& handlerSpecificData) const override;
 
 	private:
-		static void staticFinisher(Snapshot& snapshot, const ExternCallContext& context);
+		static void staticFinisher(const Snapshot& snapshot, const ExternCallContext& context);
 
 		void pushStrip();
 

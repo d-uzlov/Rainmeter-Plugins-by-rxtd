@@ -24,14 +24,14 @@ namespace rxtd::audio_analyzer {
 			double resolution{ };
 			index width{ };
 			index height{ };
-			string folder = L".";
+			string folder;
 			Colors colors{ };
 			LDP lineDrawingPolicy{ };
 			bool stationary{ };
 			bool connected{ };
 			index borderSize{ };
 			double fading{ };
-			CVT transformer{ };
+			CVT transformer;
 
 			// generated
 			friend bool operator==(const Params& lhs, const Params& rhs) {
@@ -54,13 +54,17 @@ namespace rxtd::audio_analyzer {
 		};
 
 		struct Snapshot {
-			utils::Vector2D<utils::IntColor> pixels;
-			utils::ImageWriteHelper writerHelper{ };
-			string prefix;
-			mutable string filenameBuffer;
 			index blockSize{ };
-			bool writeNeeded{ };
+
+			string prefix;
+
+			utils::Vector2D<utils::IntColor> pixels;
 			bool empty{ };
+
+			mutable utils::ImageWriteHelper writerHelper{ };
+			mutable bool writeNeeded{ };
+
+			mutable string filenameBuffer;
 		};
 
 	private:
@@ -129,7 +133,7 @@ namespace rxtd::audio_analyzer {
 		void vUpdateSnapshot(std::any& handlerSpecificData) const override;
 
 	private:
-		static void staticFinisher(Snapshot& handlerSpecificData, const ExternCallContext& context);
+		static void staticFinisher(const Snapshot& handlerSpecificData, const ExternCallContext& context);
 		void pushStrip(double min, double max);
 
 		static bool getProp(

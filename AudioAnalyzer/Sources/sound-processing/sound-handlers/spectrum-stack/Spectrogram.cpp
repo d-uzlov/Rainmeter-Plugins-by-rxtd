@@ -290,7 +290,7 @@ void Spectrogram::vUpdateSnapshot(std::any& handlerSpecificData) const {
 	writeNeeded = false;
 }
 
-void Spectrogram::staticFinisher(Snapshot& snapshot, const ExternCallContext& context) {
+void Spectrogram::staticFinisher(const Snapshot& snapshot, const ExternCallContext& context) {
 	if (!snapshot.writeNeeded) {
 		return;
 	}
