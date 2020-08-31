@@ -15,6 +15,36 @@
 namespace rxtd::utils {
 	class Rainmeter {
 	public:
+		class InstanceKeeper final {
+			bool initialized = false;
+
+		public:
+			InstanceKeeper() = default;
+			explicit InstanceKeeper(void* rm);
+
+			~InstanceKeeper() {
+				deinit();
+			}
+
+			InstanceKeeper(const InstanceKeeper& other) = delete;
+			InstanceKeeper& operator=(const InstanceKeeper& other) = delete;
+
+			InstanceKeeper(InstanceKeeper&& other) noexcept : initialized(other.initialized) {
+				other.initialized = false;
+			}
+
+			InstanceKeeper& operator=(InstanceKeeper&& other) noexcept {
+				if (this == &other)
+					return *this;
+				deinit();
+				initialized = std::exchange(other.initialized, false);
+				return *this;
+			}
+
+		private:
+			void deinit();
+		};
+
 		class Logger {
 			friend Rainmeter;
 
@@ -153,14 +183,14 @@ namespace rxtd::utils {
 		[[nodiscard]]
 		sview transformPathToAbsolute(sview path) const;
 
-		void executeCommand(sview command) {
+		void executeCommandAsync(sview command) {
 			if (command.empty()) {
 				return;
 			}
-			executeCommand(command, skin);
+			executeCommandAsync(command, skin);
 		}
 
-		void executeCommand(sview command, Skin skin);
+		void executeCommandAsync(sview command, Skin skin);
 
 		[[nodiscard]]
 		Logger createLogger() const {
@@ -182,8 +212,7 @@ namespace rxtd::utils {
 
 		static void sourcelessLog(const wchar_t* message);
 
-		static void incrementLibraryCounter(void* rm);
-		static void decrementLibraryCounter();
+		InstanceKeeper getInstanceKeeper();
 
 	private:
 		[[nodiscard]]

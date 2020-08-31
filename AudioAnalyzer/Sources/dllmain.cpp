@@ -20,8 +20,6 @@ static_assert(std::is_same<WCHAR, wchar_t>::value);
 static_assert(std::is_same<LPCWSTR, const wchar_t*>::value);
 
 PLUGIN_EXPORT void Initialize(void** data, void* rm) {
-	utils::Rainmeter::incrementLibraryCounter(rm);
-
 	utils::Rainmeter rain(rm);
 
 	const auto typeString = rain.read(L"Type").asIString();
@@ -60,10 +58,6 @@ PLUGIN_EXPORT void Finalize(void* data) {
 		return;
 	}
 	delete static_cast<utils::TypeHolder*>(data);
-
-	// decrement ↓↓ must be after that delete above ↑↑
-	// so that all log messages and commands are handled before the object is destroyed
-	utils::Rainmeter::decrementLibraryCounter();
 }
 
 PLUGIN_EXPORT void ExecuteBang(void* data, const wchar_t* args) {

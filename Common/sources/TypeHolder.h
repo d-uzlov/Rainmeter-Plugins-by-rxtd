@@ -27,6 +27,7 @@ namespace rxtd::utils {
 		Logger logger;
 
 	private:
+		Rainmeter::InstanceKeeper instanceKeeper;
 		MeasureState measureState = MeasureState::eWORKING;
 
 		double resultDouble = 0.0;

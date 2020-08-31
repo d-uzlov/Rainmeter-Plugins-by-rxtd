@@ -240,7 +240,7 @@ void ParentHelper::pUpdate() {
 			updateDeviceListStrings();
 		}
 
-		mainFields.rain.executeCommand(mainFields.callbacks.onDeviceListChange);
+		mainFields.rain.executeCommandAsync(mainFields.callbacks.onDeviceListChange);
 
 		if (mainFields.captureManager.getState() == CaptureManager::State::eDEVICE_CONNECTION_ERROR
 			&& changes.devices.count(mainFields.captureManager.getSnapshot().id) > 0) {
@@ -280,7 +280,7 @@ void ParentHelper::pUpdate() {
 			snapshot.deviceInfo._ = mainFields.captureManager.getSnapshot();
 		}
 
-		mainFields.rain.executeCommand(mainFields.callbacks.onDeviceChange);
+		mainFields.rain.executeCommandAsync(mainFields.callbacks.onDeviceChange);
 
 	}
 	if (needToUpdateHandlers) {
@@ -299,7 +299,7 @@ void ParentHelper::pUpdate() {
 			mainFields.orchestrator.exchangeData(snapshot.data._);
 		}
 
-		mainFields.rain.executeCommand(mainFields.callbacks.onUpdate);
+		mainFields.rain.executeCommandAsync(mainFields.callbacks.onUpdate);
 	}
 }
 

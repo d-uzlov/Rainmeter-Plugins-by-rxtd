@@ -9,6 +9,8 @@
 
 #include "RainmeterWrappers.h"
 
+
+#include <atomic>
 #include <mutex>
 
 
@@ -19,67 +21,64 @@
 
 using namespace utils;
 
+enum class MessageType {
+	eNONE,
+	eLOG,
+	eEXECUTE,
+	eKILL,
+};
+
+struct Message {
+	MessageType type = MessageType::eNONE;
+	string messageText;
+	int logLevel = 0;
+	void* rainmeterData = nullptr;
+};
+
+struct MessageQueue : DataWithLock {
+	std::vector<Message> buffer;
+	std::condition_variable sleepVariable;
+
+	MessageQueue() : DataWithLock(true) {
+	}
+};
+
+struct ThreadArguments {
+	HMODULE dllHandle = nullptr;
+	MessageQueue* queue = nullptr;
+};
+
 DWORD WINAPI asyncSender_run(void* param);
 
 class AsyncRainmeterMessageSender {
-	enum class MessageType {
-		eNONE,
-		eLOG,
-		eEXECUTE,
-		eFINALIZE,
-	};
 
-	struct Message {
-		MessageType type = MessageType::eNONE;
-		string messageText;
-		int logLevel = 0;
-		void* rainmeterData = nullptr;
-	};
+	// only main rainmeter UI thread should access this variable
+	bool initialized = false;
 
-	struct MyDataWithLock : DataWithLock {
-		MyDataWithLock() : DataWithLock(true) {
-		}
-	};
+	std::atomic<int32_t> counter{ 0 };
 
-	struct HandlerInfo : MyDataWithLock {
-		bool invalid = false;
-		HMODULE dllHandle = nullptr;
-		index counter = 0;
-	} handlerInfo;
-
-	struct {
-		std::mutex mutex;
-		std::condition_variable sleepVariable;
-	} threadInfo;
-
-	struct MessageQueue : MyDataWithLock {
-		std::vector<Message> queue;
-	} messagesStruct;
+	MessageQueue queue;
 
 public:
 	AsyncRainmeterMessageSender() = default;
 
 	void init(void* rm) {
-		auto handlerLock = handlerInfo.getLock();
+		counter.fetch_add(1);
 
-		if (handlerInfo.invalid) {
+		if (initialized) {
+			// regardless of if it was success or failure, we only try to initialize once
 			return;
 		}
 
-		handlerInfo.counter++;
+		initialized = true;
 
-		if (handlerInfo.dllHandle != nullptr) {
-			return;
-		}
-
+		HMODULE dllHandle = nullptr;
 		const auto handlerReadSuccess = GetModuleHandleExW(
 			GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
 			reinterpret_cast<LPCTSTR>(asyncSender_run),
-			&handlerInfo.dllHandle
+			&dllHandle
 		);
 		if (!handlerReadSuccess) {
-			handlerInfo.invalid = true;
-
 			const auto errorCode = GetLastError();
 			BufferPrinter bp;
 			bp.print(L"Log and bangs are not available, GetModuleHandleExW failed (error {})", errorCode);
@@ -110,18 +109,19 @@ public:
 			return;
 		}
 
+		auto threadArgs = new ThreadArguments;
+		threadArgs->dllHandle = dllHandle;
+		threadArgs->queue = &queue;
 		const auto threadHandle = CreateThread(
 			nullptr,
 			0,
 			&asyncSender_run,
-			nullptr,
+			threadArgs,
 			0,
 			nullptr
 		);
 
 		if (threadHandle == nullptr) {
-			handlerInfo.invalid = true;
-
 			const auto errorCode = GetLastError();
 			BufferPrinter bp;
 			bp.print(L"Log and bangs are not available, CreateThread failed (error {})", errorCode);
@@ -149,13 +149,21 @@ public:
 
 			LocalFree(receiveBuffer);
 		}
-
 	}
 
 	void deinit() {
-		Message mes;
-		mes.type = MessageType::eFINALIZE;
-		sendMessage(mes);
+		counter.fetch_add(-1);
+		if (counter.load() == 0) {
+			try {
+				Message mes{ };
+				mes.type = MessageType::eKILL;
+				auto lock = queue.getLock();
+				queue.buffer.push_back(mes);
+				queue.sleepVariable.notify_one();
+				initialized = false;
+			} catch (...) {
+			}
+		}
 	}
 
 	void log(void* rm, string text, Rainmeter::Logger::LogLevel level) {
@@ -176,19 +184,14 @@ public:
 	}
 
 private:
-
 	void sendMessage(Message value) {
-		auto lock = messagesStruct.getLock();
-		messagesStruct.queue.push_back(std::move(value));
-
-		auto mainLock = std::unique_lock<std::mutex>{ threadInfo.mutex, std::defer_lock };
-		const auto locked = mainLock.try_lock();
-		if (locked) {
-			threadInfo.sleepVariable.notify_one();
-		}
+		auto lock = queue.getLock();
+		queue.buffer.push_back(std::move(value));
+		queue.sleepVariable.notify_one();
 	}
 
-	void processMessage(const Message& value) {
+public:
+	static void processMessage(const Message& value) {
 		switch (value.type) {
 		case MessageType::eNONE: break;
 		case MessageType::eLOG:
@@ -197,15 +200,9 @@ private:
 		case MessageType::eEXECUTE:
 			RmExecute(value.rainmeterData, value.messageText.c_str());
 			break;
-		case MessageType::eFINALIZE: {
-			auto handlerLock = handlerInfo.getLock();
-			handlerInfo.counter--;
-			break;
-		}
+		default: break;
 		}
 	}
-
-	friend DWORD WINAPI asyncSender_run(void* param);
 };
 
 AsyncRainmeterMessageSender asyncSender{ };
@@ -214,47 +211,55 @@ AsyncRainmeterMessageSender asyncSender{ };
 DWORD WINAPI asyncSender_run(void* param) {
 	using namespace std::chrono_literals;
 
+	auto args = static_cast<ThreadArguments*>(param);
+	HMODULE handle = args->dllHandle;
+	auto& queue = *args->queue;
+	delete args;
+
+	// RmLog(nullptr, 0, L"asyncSender_run started");
+
 	{
-		auto mainLock = std::unique_lock<std::mutex>{ asyncSender.threadInfo.mutex };
+		auto lock = queue.getLock();
+		std::vector<Message> localQueueBuffer;
 		while (true) {
-			while (true) {
-				std::vector<AsyncRainmeterMessageSender::Message> queue;
-				{
-					auto lock = asyncSender.messagesStruct.getLock();
-					queue = std::exchange(asyncSender.messagesStruct.queue, { });
-				}
+			std::swap(localQueueBuffer, queue.buffer);
 
-				if (queue.empty()) {
-					break;
-				}
+			if (!localQueueBuffer.empty()) {
+				lock.unlock();
 
-				for (auto& mes : queue) {
+				for (auto& mes : localQueueBuffer) {
+					if (mes.type == MessageType::eKILL) {
+						goto label_LOOP_END;
+					}
 					asyncSender.processMessage(mes);
 				}
+				localQueueBuffer.clear();
 
-				{
-					auto handlerLock = asyncSender.handlerInfo.getLock();
-					if (asyncSender.handlerInfo.counter == 0) {
-						goto label_OUTER_LOOP_END;
-					}
-				}
+				lock.lock();
 			}
 
-			asyncSender.threadInfo.sleepVariable.wait_for(mainLock, 1.0s);
+			queue.sleepVariable.wait(lock);
 		}
-	label_OUTER_LOOP_END:;
+	label_LOOP_END:;
 	}
 
-	HMODULE handle;
-	{
-		auto handlerLock = asyncSender.handlerInfo.getLock();
-		handle = std::exchange(asyncSender.handlerInfo.dllHandle, nullptr);
-		handlerLock.unlock();
-	}
+	// RmLog(nullptr, 0, L"asyncSender_run finished");
 
 	FreeLibraryAndExitThread(handle, 0);
 }
 
+
+Rainmeter::InstanceKeeper::InstanceKeeper(void* rm) {
+	asyncSender.init(rm);
+	initialized = true;
+}
+
+void Rainmeter::InstanceKeeper::deinit() {
+	if (initialized) {
+		asyncSender.deinit();
+		initialized = false;
+	}
+}
 
 void Rainmeter::Logger::logRainmeter(LogLevel logLevel, sview message) const {
 	asyncSender.log(rm, message % own(), logLevel);
@@ -286,7 +291,7 @@ sview Rainmeter::transformPathToAbsolute(sview path) const {
 	return RmPathToAbsolute(rm, makeNullTerminated(path));
 }
 
-void Rainmeter::executeCommand(sview command, Skin skin) {
+void Rainmeter::executeCommandAsync(sview command, Skin skin) {
 	asyncSender.execute(skin.getRawPointer(), command % own());
 }
 
@@ -298,12 +303,8 @@ void Rainmeter::sourcelessLog(const wchar_t* message) {
 	asyncSender.log(nullptr, message, Logger::LogLevel::eDEBUG);
 }
 
-void Rainmeter::incrementLibraryCounter(void* rm) {
-	asyncSender.init(rm);
-}
-
-void Rainmeter::decrementLibraryCounter() {
-	asyncSender.deinit();
+Rainmeter::InstanceKeeper Rainmeter::getInstanceKeeper() {
+	return InstanceKeeper{ rm };
 }
 
 const wchar_t* Rainmeter::makeNullTerminated(sview view) const {

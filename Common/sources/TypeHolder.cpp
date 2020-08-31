@@ -15,6 +15,7 @@ std::map<Rainmeter::Skin, std::map<istring, ParentBase*, std::less<>>> ParentBas
 
 TypeHolder::TypeHolder(Rainmeter&& _rain) : rain(std::move(_rain)) {
 	logger = rain.createLogger();
+	instanceKeeper = rain.getInstanceKeeper();
 }
 
 double TypeHolder::update() {
