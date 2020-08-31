@@ -103,7 +103,9 @@ double AudioParent::vUpdate() {
 				for (auto& [channel, channelSnapshot] : processingSnapshot) {
 					auto handlerDataIter = channelSnapshot.find(handlerName);
 					if (handlerDataIter != channelSnapshot.end()) {
-						finisher(handlerDataIter->second.handlerSpecificData);
+						SoundHandler::ExternCallContext context;
+						context.channelName = ChannelUtils::getTechnicalName(channel);
+						finisher(handlerDataIter->second.handlerSpecificData, context);
 					}
 				}
 			}
@@ -442,7 +444,10 @@ void AudioParent::resolveProp(array_view<isview> args, string& resolveBufferStri
 		return;
 	}
 
-	const bool found = propGetter(handlerSnapshot.handlerSpecificData, propName, cl.printer);
+	SoundHandler::ExternCallContext context;
+	context.channelName = ChannelUtils::getTechnicalName(channelOpt.value());
+
+	const bool found = propGetter(handlerSnapshot.handlerSpecificData, propName, cl.printer, context);
 	if (!found) {
 		cl.error(L"prop '{}:{}:{}' is not found", procName, handlerName, propName);
 		return;
@@ -522,8 +527,11 @@ void AudioParent::runCleaners() const {
 					continue;
 				}
 
+				// todo make function const, so I don't need a copy
 				std::any dataCopy = handlerDataIter->second;
-				finisher(dataCopy);
+				SoundHandler::ExternCallContext context;
+				context.channelName = ChannelUtils::getTechnicalName(channel);
+				finisher(dataCopy, context);
 			}
 		}
 	}

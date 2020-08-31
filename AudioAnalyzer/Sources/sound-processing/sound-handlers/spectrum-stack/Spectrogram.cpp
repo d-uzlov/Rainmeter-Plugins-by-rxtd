@@ -169,10 +169,6 @@ SoundHandler::ConfigurationResult Spectrogram::vConfigure(const std::any& _param
 
 	stripBuffer.resize(height);
 
-	filepath = params.prefix;
-	filepath += config.channelName;
-	filepath += L".bmp";
-
 	std::fill(stripBuffer.begin(), stripBuffer.end(), backgroundIntColor);
 
 	counter = 0;
@@ -186,7 +182,9 @@ SoundHandler::ConfigurationResult Spectrogram::vConfigure(const std::any& _param
 	}
 	auto& snapshot = *std::any_cast<Snapshot>(&snapshotAny);
 
-	snapshot.filepath = filepath;
+	snapshot.prefix = params.prefix;
+	snapshot.prefix += L"wave-";
+
 	snapshot.blockSize = blockSize;
 
 	snapshot.pixels.copyWithResize(params.fading != 0.0 ? sifh.getResultBuffer() : image.getPixels());
@@ -292,12 +290,16 @@ void Spectrogram::vUpdateSnapshot(std::any& handlerSpecificData) const {
 	writeNeeded = false;
 }
 
-void Spectrogram::staticFinisher(Snapshot& snapshot) {
+void Spectrogram::staticFinisher(Snapshot& snapshot, const ExternCallContext& context) {
 	if (!snapshot.writeNeeded) {
 		return;
 	}
 
-	snapshot.writerHelper.write(snapshot.pixels, snapshot.empty, snapshot.filepath);
+	snapshot.filenameBuffer = snapshot.prefix;
+	snapshot.filenameBuffer += context.channelName;
+	snapshot.filenameBuffer += L".bmp";
+
+	snapshot.writerHelper.write(snapshot.pixels, snapshot.empty, snapshot.filenameBuffer);
 	snapshot.writeNeeded = false;
 }
 
@@ -338,9 +340,18 @@ void Spectrogram::fillStripMulticolor(array_view<float> data, array_span<utils::
 	}
 }
 
-bool Spectrogram::getProp(const Snapshot& snapshot, isview prop, utils::BufferPrinter& printer) {
+bool Spectrogram::getProp(
+	const Snapshot& snapshot,
+	isview prop,
+	utils::BufferPrinter& printer,
+	const ExternCallContext& context
+) {
 	if (prop == L"file") {
-		printer.print(snapshot.filepath);
+		snapshot.filenameBuffer = snapshot.prefix;
+		snapshot.filenameBuffer += context.channelName;
+		snapshot.filenameBuffer += L".bmp";
+
+		printer.print(snapshot.filenameBuffer);
 		return true;
 	}
 	if (prop == L"block size") {

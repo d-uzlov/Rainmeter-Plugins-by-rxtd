@@ -40,7 +40,6 @@ bool SoundHandler::patch(
 		newConfig.sourcePtr = nullptr;
 	}
 	newConfig.sampleRate = sampleRate;
-	newConfig.channelName = channelName;
 
 	if (_configuration != newConfig
 		|| newConfig.sourcePtr != nullptr && newConfig.sourcePtr->_anyChanges

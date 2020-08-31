@@ -73,7 +73,12 @@ void BlockHandler::setNextValue(float value) {
 	pushLayer(0, blockSize)[0] = params.transformer.apply(value);
 }
 
-bool BlockHandler::getProp(const Snapshot& snapshot, isview prop, utils::BufferPrinter& printer) {
+bool BlockHandler::getProp(
+	const Snapshot& snapshot,
+	isview prop,
+	utils::BufferPrinter& printer,
+	const ExternCallContext& context
+) {
 	if (prop == L"block size") {
 		printer.print(snapshot.blockSize);
 		return true;

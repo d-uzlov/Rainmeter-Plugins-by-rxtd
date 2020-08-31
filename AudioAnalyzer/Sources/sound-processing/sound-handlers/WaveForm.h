@@ -56,7 +56,8 @@ namespace rxtd::audio_analyzer {
 		struct Snapshot {
 			utils::Vector2D<utils::IntColor> pixels;
 			utils::ImageWriteHelper writerHelper{ };
-			string filepath;
+			string prefix;
+			mutable string filenameBuffer;
 			index blockSize{ };
 			bool writeNeeded{ };
 			bool empty{ };
@@ -107,8 +108,6 @@ namespace rxtd::audio_analyzer {
 
 		utils::WaveFormDrawer drawer{ };
 
-		string filepath{ };
-
 	public:
 		[[nodiscard]]
 		bool checkSameParams(const std::any& p) const override {
@@ -130,9 +129,14 @@ namespace rxtd::audio_analyzer {
 		void vUpdateSnapshot(std::any& handlerSpecificData) const override;
 
 	private:
-		static void staticFinisher(Snapshot& handlerSpecificData);
+		static void staticFinisher(Snapshot& handlerSpecificData, const ExternCallContext& context);
 		void pushStrip(double min, double max);
 
-		static bool getProp(const Snapshot& handlerSpecificData, isview prop, utils::BufferPrinter& printer);
+		static bool getProp(
+			const Snapshot& handlerSpecificData,
+			isview prop,
+			utils::BufferPrinter& printer,
+			const ExternCallContext& context
+		);
 	};
 }

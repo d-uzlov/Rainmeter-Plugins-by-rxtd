@@ -371,7 +371,12 @@ void BandResampler::legacy_generateBandMultipliers() {
 	}
 }
 
-bool BandResampler::getProp(const Snapshot& snapshot, isview prop, utils::BufferPrinter& printer) {
+bool BandResampler::getProp(
+	const Snapshot& snapshot,
+	isview prop,
+	utils::BufferPrinter& printer,
+	const ExternCallContext& context
+) {
 	const index bandsCount = snapshot.bandFreqs.size();
 
 	if (prop == L"bands count") {

@@ -111,11 +111,6 @@ SoundHandler::ConfigurationResult WaveForm::vConfigure(const std::any& _params, 
 
 	drawer.inflate();
 
-	filepath = params.folder;
-	filepath += L"wave-";
-	filepath += config.channelName;
-	filepath += L".bmp";
-
 	minTransformer = { params.transformer };
 	maxTransformer = { params.transformer };
 
@@ -137,7 +132,9 @@ SoundHandler::ConfigurationResult WaveForm::vConfigure(const std::any& _params, 
 	}
 	auto& snapshot = *std::any_cast<Snapshot>(&snapshotAny);
 
-	snapshot.filepath = filepath;
+	snapshot.prefix = params.folder;
+	snapshot.prefix += L"wave-";
+
 	snapshot.blockSize = blockSize;
 
 	snapshot.pixels.setBuffersCount(params.height);
@@ -188,13 +185,17 @@ void WaveForm::vUpdateSnapshot(std::any& handlerSpecificData) const {
 	writeNeeded = false;
 }
 
-void WaveForm::staticFinisher(Snapshot& snapshot) {
+void WaveForm::staticFinisher(Snapshot& snapshot, const ExternCallContext& context) {
 	auto& writeNeeded = snapshot.writeNeeded;
 	if (!writeNeeded) {
 		return;
 	}
 
-	snapshot.writerHelper.write(snapshot.pixels, snapshot.empty, snapshot.filepath);
+	snapshot.filenameBuffer = snapshot.prefix;
+	snapshot.filenameBuffer += context.channelName;
+	snapshot.filenameBuffer += L".bmp";
+
+	snapshot.writerHelper.write(snapshot.pixels, snapshot.empty, snapshot.filenameBuffer);
 	writeNeeded = false;
 }
 
@@ -209,9 +210,18 @@ void WaveForm::pushStrip(double min, double max) {
 	}
 }
 
-bool WaveForm::getProp(const Snapshot& snapshot, isview prop, utils::BufferPrinter& printer) {
+bool WaveForm::getProp(
+	const Snapshot& snapshot,
+	isview prop,
+	utils::BufferPrinter& printer,
+	const ExternCallContext& context
+) {
 	if (prop == L"file") {
-		printer.print(snapshot.filepath);
+		snapshot.filenameBuffer = snapshot.prefix;
+		snapshot.filenameBuffer += context.channelName;
+		snapshot.filenameBuffer += L".bmp";
+
+		printer.print(snapshot.filenameBuffer);
 		return true;
 	}
 	if (prop == L"block size") {

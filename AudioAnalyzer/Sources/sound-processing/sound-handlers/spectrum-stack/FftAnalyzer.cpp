@@ -202,7 +202,12 @@ void FftAnalyzer::vProcess(array_view<float> wave, clock::time_point killTime) {
 	}
 }
 
-bool FftAnalyzer::getProp(const Snapshot& snapshot, isview prop, utils::BufferPrinter& printer) {
+bool FftAnalyzer::getProp(
+	const Snapshot& snapshot,
+	isview prop,
+	utils::BufferPrinter& printer,
+	const ExternCallContext& context
+) {
 	if (prop == L"size") {
 		printer.print(snapshot.fftSize);
 		return true;
