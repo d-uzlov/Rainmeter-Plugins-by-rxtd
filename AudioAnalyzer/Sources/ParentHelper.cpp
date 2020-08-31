@@ -94,9 +94,13 @@ void ParentHelper::setParams(
 	requestFields.settings.device = std::move(device);
 	requestFields.settings.patches = std::move(patches);
 
-	if (constFields.useThreading && !requestFields.thread.joinable()) {
-		threadSafeFields.stopRequest.exchange(false);
-		requestFields.thread = std::thread{ [this]() { threadFunction(); } };
+	if (constFields.useThreading) {
+		if (requestFields.thread.joinable()) {
+			wakeThreadUp();
+		} else {
+			threadSafeFields.stopRequest.exchange(false);
+			requestFields.thread = std::thread{ [this]() { threadFunction(); } };
+		}
 	}
 }
 
@@ -136,7 +140,8 @@ void ParentHelper::stopThread() {
 
 void ParentHelper::threadFunction() {
 	using namespace std::chrono_literals;
-	const auto sleepTime = 1.0s * constFields.updateTime;
+	using clock = std::chrono::high_resolution_clock;
+	static_assert(clock::is_steady);
 
 	const auto res = CoInitializeEx(nullptr, COINIT_MULTITHREADED | COINIT_DISABLE_OLE1DDE);
 
@@ -147,15 +152,15 @@ void ParentHelper::threadFunction() {
 		return;
 	}
 
-
-	mainFields.sleepVariable.wait_for(mainLock, sleepTime);
+	const auto sleepTime = std::chrono::duration_cast<clock::duration>(1.0s * constFields.updateTime);
+	// mainFields.sleepVariable.wait_for(mainLock, sleepTime);
 
 	while (true) {
 		if (threadSafeFields.stopRequest.load()) {
 			break;
 		}
 
-		// mainFields.rain.executeCommand(LR"([!log "hi from another thread"])");
+		auto nextWakeTime = clock::now() + sleepTime;
 
 		pUpdate();
 
@@ -163,7 +168,7 @@ void ParentHelper::threadFunction() {
 			break;
 		}
 
-		mainFields.sleepVariable.wait_for(mainLock, sleepTime);
+		mainFields.sleepVariable.wait_until(mainLock, nextWakeTime);
 	}
 
 	CoUninitialize();

@@ -470,7 +470,7 @@ void AudioParent::resolveProp(array_view<isview> args, string& resolveBufferStri
 		auto& processingChannels = procIter->second.channels;
 		auto channelSnapshotIter = processingChannels.find(channelOpt.value());
 		if (channelSnapshotIter == processingChannels.end()) {
-			logHelpers.processingDoesNotHaveChannel.log(channelName);
+			logHelpers.processingDoesNotHaveChannel.log(procName, channelName);
 			return;
 		}
 
