@@ -33,6 +33,12 @@ AudioChild::AudioChild(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rain)) 
 	}
 
 	legacyNumber = parent->getLegacyNumber();
+	if (!(legacyNumber < 104)) {
+		auto type = rain.read(L"Type").asIString();
+		if (type != L"Child") {
+			rain.createLogger().warning(L"Unknown type '{}', defaulting to Child is deprecated", type);
+		}
+	}
 }
 
 void AudioChild::vReload() {
