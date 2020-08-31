@@ -17,8 +17,6 @@
 
 namespace rxtd::audio_analyzer {
 	class Spectrogram : public SoundHandler {
-	public:
-
 		struct Params {
 		private:
 			friend Spectrogram;
@@ -74,34 +72,36 @@ namespace rxtd::audio_analyzer {
 		};
 
 		struct Snapshot {
-			index blockSize { };
+			index blockSize{ };
 
 			string prefix;
 
 			utils::Vector2D<utils::IntColor> pixels;
-			bool empty { };
+			bool empty{ };
 
-			mutable utils::ImageWriteHelper writerHelper { };
-			mutable bool writeNeeded { };
+			mutable utils::ImageWriteHelper writerHelper{ };
+			mutable bool writeNeeded{ };
 
 			mutable string filenameBuffer;
 		};
 
-	private:
 		Params params;
 
 		index blockSize{ };
 
-		std::vector<utils::IntColor> stripBuffer{ };
 		index counter = 0;
 		mutable bool writeNeeded = false;
 
 		index dataShortageEqSize{ };
 		index overpushCount{ };
-		bool lastDataIsZero{ };
+
+		struct {
+			bool isZero{ };
+			std::vector<utils::IntColor> buffer{ };
+		} lastStrip;
 
 		utils::StripedImage<utils::IntColor> image{ };
-		utils::StripedImageFadeHelper sifh{ };
+		utils::StripedImageFadeHelper fadeHelper{ };
 		utils::ImageWriteHelper writerHelper{ };
 
 	public:

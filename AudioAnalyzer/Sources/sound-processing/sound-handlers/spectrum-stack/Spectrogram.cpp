@@ -153,23 +153,22 @@ SoundHandler::ConfigurationResult Spectrogram::vConfigure(const std::any& _param
 	const auto backgroundIntColor = params.colors[0].color.toIntColor();
 	image.setParams(width, height, backgroundIntColor, params.stationary);
 
-	sifh.setParams(backgroundIntColor, params.borderSize, params.borderColor.toIntColor(), params.fading);
+	fadeHelper.setParams(backgroundIntColor, params.borderSize, params.borderColor.toIntColor(), params.fading);
 
 	if (params.fading != 0.0) {
 		if (image.isForced() || !writerHelper.isEmptinessWritten()) {
-			sifh.setPastLastStripIndex(image.getPastLastStripIndex());
-			sifh.inflate(image.getPixels());
+			fadeHelper.setPastLastStripIndex(image.getPastLastStripIndex());
+			fadeHelper.inflate(image.getPixels());
 		}
 	} else {
 		if (params.borderSize != 0) {
-			sifh.setPastLastStripIndex(image.getPastLastStripIndex());
-			sifh.drawBorderInPlace(image.getPixelsWritable());
+			fadeHelper.setPastLastStripIndex(image.getPastLastStripIndex());
+			fadeHelper.drawBorderInPlace(image.getPixelsWritable());
 		}
 	}
 
-	stripBuffer.resize(height);
-
-	std::fill(stripBuffer.begin(), stripBuffer.end(), backgroundIntColor);
+	lastStrip.isZero = true;
+	lastStrip.buffer.resize(height);
 
 	counter = 0;
 	dataShortageEqSize = 0;
@@ -187,7 +186,7 @@ SoundHandler::ConfigurationResult Spectrogram::vConfigure(const std::any& _param
 
 	snapshot.blockSize = blockSize;
 
-	snapshot.pixels.copyWithResize(params.fading != 0.0 ? sifh.getResultBuffer() : image.getPixels());
+	snapshot.pixels.copyWithResize(params.fading != 0.0 ? fadeHelper.getResultBuffer() : image.getPixels());
 
 	snapshot.writeNeeded = true;
 	snapshot.empty = false;
@@ -217,15 +216,15 @@ void Spectrogram::vProcess(array_view<float> wave, clock::time_point killTime) {
 
 		const auto data = chunk.data;
 
-		lastDataIsZero = *std::max_element(data.begin(), data.end()) < params.colorMinValue;
+		lastStrip.isZero = *std::max_element(data.begin(), data.end()) < params.colorMinValue;
 
-		if (!lastDataIsZero) {
+		if (!lastStrip.isZero) {
 			if (params.colors.size() == 2) {
 				// only use 2 colors
-				fillStrip(data, stripBuffer);
+				fillStrip(data, lastStrip.buffer);
 			} else {
 				// many colors, but slightly slower
-				fillStripMulticolor(data, stripBuffer);
+				fillStripMulticolor(data, lastStrip.buffer);
 			}
 		}
 
@@ -254,13 +253,13 @@ void Spectrogram::vProcess(array_view<float> wave, clock::time_point killTime) {
 	if (writeNeeded) {
 		if (params.fading != 0.0) {
 			if (image.isForced() || !writerHelper.isEmptinessWritten()) {
-				sifh.setPastLastStripIndex(image.getPastLastStripIndex());
-				sifh.inflate(image.getPixels());
+				fadeHelper.setPastLastStripIndex(image.getPastLastStripIndex());
+				fadeHelper.inflate(image.getPixels());
 			}
 		} else {
 			if (params.borderSize != 0) {
-				sifh.setPastLastStripIndex(image.getPastLastStripIndex());
-				sifh.drawBorderInPlace(image.getPixelsWritable());
+				fadeHelper.setPastLastStripIndex(image.getPastLastStripIndex());
+				fadeHelper.drawBorderInPlace(image.getPixelsWritable());
 			}
 		}
 	}
@@ -269,10 +268,10 @@ void Spectrogram::vProcess(array_view<float> wave, clock::time_point killTime) {
 void Spectrogram::pushStrip() {
 	writeNeeded = true;
 
-	if (lastDataIsZero) {
+	if (lastStrip.isZero) {
 		image.pushEmptyStrip(params.colors[0].color.toIntColor());
 	} else {
-		image.pushStrip(stripBuffer);
+		image.pushStrip(lastStrip.buffer);
 	}
 }
 
@@ -285,7 +284,7 @@ void Spectrogram::vUpdateSnapshot(std::any& handlerSpecificData) const {
 	snapshot.writeNeeded = true;
 	snapshot.empty = !image.isForced();
 
-	snapshot.pixels.copyWithResize(params.fading != 0.0 ? sifh.getResultBuffer() : image.getPixels());
+	snapshot.pixels.copyWithResize(params.fading != 0.0 ? fadeHelper.getResultBuffer() : image.getPixels());
 
 	writeNeeded = false;
 }
