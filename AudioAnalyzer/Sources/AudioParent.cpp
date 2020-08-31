@@ -450,12 +450,12 @@ void AudioParent::resolveProp(array_view<isview> args, string& resolveBufferStri
 		return;
 	}
 
-	const auto& handlerInfo
-		= paramParser
-		  .getParseResult()
-		  .find(procName)->second.handlersInfo.patchers
-		  .find(handlerName)->second;
-	const auto propGetter = handlerInfo.externalMethods.getProp;
+	const PatchInfo* handlerInfo = nullptr;
+	// = paramParser
+	//   .getParseResult()
+	//   .find(procName)->second.handlersInfo.patchers
+	//   .find(handlerName)->second;
+	SoundHandler::ExternalMethods::GetPropMethodType propGetter = nullptr;
 
 	auto pd = paramParser.getParseResult();
 	{
@@ -468,21 +468,23 @@ void AudioParent::resolveProp(array_view<isview> args, string& resolveBufferStri
 		}
 
 		auto& processingChannels = procIter->second.channels;
-		auto channelSnapshotIter = processingChannels.find(channelOpt.value());
-		if (channelSnapshotIter == processingChannels.end()) {
+		if (processingChannels.find(channelOpt.value()) == processingChannels.end()) {
 			logHelpers.processingDoesNotHaveChannel.log(procName, channelName);
 			return;
 		}
 
 		auto& handlerPatchers = procIter->second.handlersInfo.patchers;
-		auto handlerSnapshotIter = handlerPatchers.find(handlerName);
-		if (handlerSnapshotIter == handlerPatchers.end()) {
+		auto handlerInfoIter = handlerPatchers.find(handlerName);
+		if (handlerInfoIter == handlerPatchers.end()) {
 			logHelpers.processingDoesNotHaveHandler.log(procName, handlerName);
 			return;
 		}
 
+		handlerInfo = &handlerInfoIter->second;
+		propGetter = handlerInfo->externalMethods.getProp;
+
 		if (propGetter == nullptr) {
-			logHelpers.handlerDoesNotHaveProps.log(handlerInfo.type);
+			logHelpers.handlerDoesNotHaveProps.log(handlerInfo->type);
 			return;
 		}
 	}
@@ -518,7 +520,7 @@ void AudioParent::resolveProp(array_view<isview> args, string& resolveBufferStri
 
 	const bool found = propGetter(handlerSnapshot.handlerSpecificData, propName, logger.printer, context);
 	if (!found) {
-		logHelpers.propNotFound.log(handlerInfo.type, propName);
+		logHelpers.propNotFound.log(handlerInfo->type, propName);
 		return;
 	}
 
