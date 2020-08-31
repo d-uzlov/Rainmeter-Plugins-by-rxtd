@@ -36,6 +36,9 @@
     <Filter Include="Source Files\audio-utils\cheby_win-lib">
       <UniqueIdentifier>{ff8b7d47-9950-4cac-9aa1-d513095c24a3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\image-utils">
+      <UniqueIdentifier>{3b0cca31-00be-46d7-9c2b-2190ca8c84e6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Sources\AudioChild.h">
@@ -176,6 +179,27 @@
     <ClInclude Include="Sources\LogErrorHelper.h">
       <Filter>Source Files\sound-processing</Filter>
     </ClInclude>
+    <ClInclude Include="Sources\image-utils\BmpWriter.h">
+      <Filter>Source Files\image-utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\image-utils\Color.h">
+      <Filter>Source Files\image-utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\image-utils\ImageWriteHelper.h">
+      <Filter>Source Files\image-utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\image-utils\IntColor.h">
+      <Filter>Source Files\image-utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\image-utils\StripedImage.h">
+      <Filter>Source Files\image-utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\image-utils\StripedImageFadeHelper.h">
+      <Filter>Source Files\image-utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\image-utils\WaveFormDrawer.h">
+      <Filter>Source Files\image-utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sources\AudioChild.cpp">
@@ -294,6 +318,18 @@
     </ClCompile>
     <ClCompile Include="Sources\ParentHelper.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\image-utils\BmpWriter.cpp">
+      <Filter>Source Files\image-utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\image-utils\Color.cpp">
+      <Filter>Source Files\image-utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\image-utils\StripedImageFadeHelper.cpp">
+      <Filter>Source Files\image-utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\image-utils\WaveFormDrawer.cpp">
+      <Filter>Source Files\image-utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

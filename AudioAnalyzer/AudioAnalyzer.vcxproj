@@ -131,16 +131,40 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Test|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="local-version.h" />
@@ -166,6 +190,13 @@
     <ClInclude Include="Sources\AudioChild.h" />
     <ClInclude Include="Sources\AudioParent.h" />
     <ClInclude Include="Sources\HandlerCacheHelper.h" />
+    <ClInclude Include="Sources\image-utils\BmpWriter.h" />
+    <ClInclude Include="Sources\image-utils\Color.h" />
+    <ClInclude Include="Sources\image-utils\ImageWriteHelper.h" />
+    <ClInclude Include="Sources\image-utils\IntColor.h" />
+    <ClInclude Include="Sources\image-utils\StripedImage.h" />
+    <ClInclude Include="Sources\image-utils\StripedImageFadeHelper.h" />
+    <ClInclude Include="Sources\image-utils\WaveFormDrawer.h" />
     <ClInclude Include="Sources\LogErrorHelper.h" />
     <ClInclude Include="Sources\ParamParser.h" />
     <ClInclude Include="Sources\ParentHelper.h" />
@@ -217,6 +248,10 @@
     <ClCompile Include="Sources\dllmain.cpp" />
     <ClCompile Include="Sources\AudioParent.cpp" />
     <ClCompile Include="Sources\HandlerCacheHelper.cpp" />
+    <ClCompile Include="Sources\image-utils\BmpWriter.cpp" />
+    <ClCompile Include="Sources\image-utils\Color.cpp" />
+    <ClCompile Include="Sources\image-utils\StripedImageFadeHelper.cpp" />
+    <ClCompile Include="Sources\image-utils\WaveFormDrawer.cpp" />
     <ClCompile Include="Sources\ParamParser.cpp" />
     <ClCompile Include="Sources\ParentHelper.cpp" />
     <ClCompile Include="Sources\sound-processing\Channel.cpp" />

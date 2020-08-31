@@ -15,9 +15,6 @@
     <Filter Include="Source Files\option-parser">
       <UniqueIdentifier>{f56a22ca-0b8d-451f-8bdb-b5ebc4f1b7d7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\image-utils">
-      <UniqueIdentifier>{08fa18ac-6900-4055-bbf4-97d851946a26}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\windows-wrappers\implementations">
       <UniqueIdentifier>{574a5653-cea6-48c5-831f-c229edf3cce4}</UniqueIdentifier>
     </Filter>
@@ -68,20 +65,8 @@
     <ClCompile Include="sources\option-parser\OptionMap.cpp">
       <Filter>Source Files\option-parser</Filter>
     </ClCompile>
-    <ClCompile Include="sources\image-utils\WaveFormDrawer.cpp">
-      <Filter>Source Files\image-utils</Filter>
-    </ClCompile>
     <ClCompile Include="sources\MyMath.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\image-utils\StripedImageFadeHelper.cpp">
-      <Filter>Source Files\image-utils</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\image-utils\BmpWriter.cpp">
-      <Filter>Source Files\image-utils</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\image-utils\Color.cpp">
-      <Filter>Source Files\image-utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -169,35 +154,14 @@
     <ClInclude Include="sources\DiscreetInterpolator.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="sources\image-utils\ImageWriteHelper.h">
-      <Filter>Source Files\image-utils</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\image-utils\StripedImage.h">
-      <Filter>Source Files\image-utils</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\image-utils\WaveFormDrawer.h">
-      <Filter>Source Files\image-utils</Filter>
-    </ClInclude>
     <ClInclude Include="sources\MyMath.h">
       <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\image-utils\StripedImageFadeHelper.h">
-      <Filter>Source Files\image-utils</Filter>
     </ClInclude>
     <ClInclude Include="sources\IntMixer.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="sources\GrowingVector.h">
       <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\image-utils\BmpWriter.h">
-      <Filter>Source Files\image-utils</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\image-utils\Color.h">
-      <Filter>Source Files\image-utils</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\image-utils\IntColor.h">
-      <Filter>Source Files\image-utils</Filter>
     </ClInclude>
     <ClInclude Include="sources\MapUtils.h">
       <Filter>Source Files</Filter>

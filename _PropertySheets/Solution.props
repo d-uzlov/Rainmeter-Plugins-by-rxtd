@@ -3,7 +3,7 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <IncludePath>$(SolutionDir)/Common/sources/;$(SolutionDir)/Common/includes/;$(SolutionDir)/Common/;$(SolutionDir)/Common/resources/;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)\include\;</IncludePath>
+    <IncludePath>$(SolutionDir)/Common/sources/;$(SolutionDir)/Common/includes/;$(SolutionDir)/Common/;$(SolutionDir)/Common/resources/;$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)\include\;$(ProjectDir)/Sources;</IncludePath>
     <SourcePath>$(SolutionDir)/Common/sources/;$(VC_SourcePath);</SourcePath>
     <OutDir>$(ProjectDir)/_Build/$(Platform)-$(Configuration)/</OutDir>
     <IntDir>$(ProjectDir)/_Build/intermediate/$(Platform)-$(Configuration)/</IntDir>
