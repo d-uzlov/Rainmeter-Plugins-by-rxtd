@@ -1,0 +1,90 @@
+Some of the values that are used in this plugin have relatively complex syntax.
+
+Colors:
+Colors may be defined in several color spaces: RGB (actually sRGB), HSV, HSL, YCbCr.
+Color description syntax is:
+@<color space>$ <val1>, <val2>, <val3>, <alpha>
+All values are in range [0.0, 1.0].
+Alpha parameter is options. When it is not defined, color is considered opaque, as if alpha was 1.0.
+"@<color space>$" part is optional. If it isn't defined, then color space is RGB.
+
+You can read about different color spaces in the internet, they are out of scope of this documentation.
+
+Syntax for different color spaces:
+
+RGB: a classic color space, used almost everywhere
+Syntax: R, G, B
+Example: 0.0, 1.0, 1.0 would define cyan color.
+Alternatively, you can define colors in hex, like in most places in rainmeter. For this syntax is: @hex$ AABBCC
+Where AA is a red component, BB is green, CC is blue
+In case you need alpha component, then it also uses this notation: AABBCCDD, where DD represents alpha component.
+
+HSV:
+Syntax: @hsv$ Hue, Saturation, Value
+Unlike most other values in colors, Hue is defined in range [0.0, 360.0]
+Example: @hsv$ 52.0, 0.0, 0.102
+
+HSL:
+Syntax: @hsl$ Hue, Saturation, Lightness
+Unlike most other values in colors, Hue is defined in range [0.0, 360.0]
+Example: @hsl$ 52.0, 0.0, 0.102
+
+YCbCr:
+Syntax: @ycbcr$ Y, Cb, Cr
+Example: @ycbcr$ 0.5, 1.0, 0.75
+
+HSV and HSL color spaces have singularity points. That is: points where their exact values are not defined. The most obvious point is full black color: it only has Value (or Lightness), Hue and Saturation may be anything and nothing will change. Points when Saturation is zero doesn't have Hue.
+Except: when using HSV or HSL color spaces in the spectrogram, it uses linear interpolation and Hue and Saturation are always used.
+If you define color in some other space, then automatic conversion from that color space into HSV will not know what to set Hue and Saturation to, and they will end up as zeros. This may significantly alter resulting colors, so keep this in mind. You can define color in HSV or HSL spaces, so that all values are explicitly defined by you, to prevent color interpolation artifacts.
+
+
+Transformations:
+AudioLevel plugin has misterious attack, decay, gain, sensitivity options. You set them to something, and it works. In some way, and you probably have no idea on how they actually work. Maybe you have looked them in the source code, so you have some ideas, but you still can't really control them.
+And if something doesn't work as you expect, them you can do nothing about it.
+
+Transformations solve this problem!
+What is a transformation?
+It's a chain of math operations on a value, that change it.
+Available operations:
+Transform to decibels. Syntax: db
+Linear interpolation. Syntax: map[from <min> : <max>, to <min> : <max>]. "From" parameter is mandatory, "to" parameter is optional. If "to" is not present, then source range is transformed to range [0, 1]
+Limiting value to some range. Syntax: clamp[min <min>, max <max>]. Parameters are optional. Default min value is 0, default max value is 1.
+Simple low pass filtering. Syntax: lowPass[attack <value>, decay <value>]. Yes, this corresponds to attack and decay options in AudioLevel. Unlike AudioLevel, you can choose where filtering is applied. Will it be before clamp or after? Before transform to db or after? Or in both places? Your choice.
+
+Transformations are defined as chains. Transformation chain is a sequence of operations separated by spaces.
+Example: db map[from -70 : 0] clamp filter[attack 0, decay 1000]
+Example above is something that audio peak meter could be using.
+
+
+Filters
+Signal filtering is a very complex topic. However, actually using filters in this plugin is simple.
+Filter is something, that alters audio stream. Filters usually affect certain frequencies. For example, filters that remove low frequencies, are usually caled high pass filters.
+This plugin have relatively large set of usable filters. They are from two classes: biquad filters and Butterworth filters.
+
+All filters have the following syntax: <filter name>[<arg1 name> <arg1 value>, <arg2 name> <arg2 value>]
+
+Biquad filters:
+bqHighPass : bqHighPass[Q <value>, freq <value>]
+bqLowPass : bqLowPass[Q <value>, freq <value>]
+bqHighShelf : bqHighPass[Q <value>, freq <value>, gain <value>]
+bqLowShelf : bqLowShelf[Q <value>, freq <value>, gain <value>]
+bqPeak : bqPeak[Q <value>, freq <value>, gain <value>]
+Gain is defined in decibels.
+
+Butterworth filters:
+bwLowPass : bwLowPass[order <value>, freq <value>]
+bwHighPass : bwHighPass[order <value>, freq <value>]
+bwBandPass : bwBandPass[order <value>, freqLow <value>, freqHigh <value>]
+bwBandStop : bwBandStop[order <value>, freqLow <value>, freqHigh <value>]
+
+Order is limited to range [1, 5] due to possible issues with precision. You can use several filters in sequence if you want stronger effect that high orders could provide.
+
+Besides filter-specific parameters each filter can have a forcedGain parameter (defined in decibels) that controls upper level of the filter.
+Traditionally filters like bqPeak[Q 0.5, freq 100, gain 5] would make frequencies near 100 Hz 5 db stronger. However, my plugin alters this behavior: upper level is kept at 0 db no matter the parameters. However, forcedGain is not compensated for, so if you write bqPeak[Q 0.5, freq 100, gain 5, forcedGain 5] then this filter would behave like traditional biquad peak filter.
+
+I am really not a pro at signal filtering, so if you want to know how it works, which you should use for which purpose and which values must be in parameters, then just google it. It's too complex to describe in this documentation.
+
+If you are interested, standard filters are also defined as a sequence of these biquad and Butterworth filters.
+like-rg: bqHighPass[q 0.8, freq 160, forcedGain 3.65] bqPeak[q 3.0, freq 1125, gain -3.8] bqPeak[q 3.0, freq 3665, gain 5.28] bwLowPass[order 5, freq 10000]
+like-a: bqHighPass[q 0.3, freq 200, forcedGain 3.58] bwLowPass[order 5, freq 10000]
+like-d: bqHighPass[q 0.3, freq 200, forcedGain 3.65] bqPeak[q 1.0, freq 6000, gain 5.28] bwLowPass[order 5, freq 10000]

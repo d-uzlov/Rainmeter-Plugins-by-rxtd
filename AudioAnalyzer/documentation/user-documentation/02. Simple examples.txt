@@ -1,0 +1,5 @@
+
+Following skin displays a spectrogram image:
+
+
+Loudness:

@@ -1,0 +1,207 @@
+A plugin is designed around a central computing point: a parent measure. It has all the descriptions of what should be calculated, and how it is named.
+To access this data you can either use child measures or section variables.
+
+Parent measures are distinguished from child measures by Type option, which must be either Parent or Child.
+
+Plugin is very complex, and so does its syntax. But you don't have to use all the options. Bare minimum versions of skins using this plugin are quite simple.
+
+Documentation uses the following notation structure: <opion name> : <possible values> : <default value>
+MyOption : { fancyValue1, fancyValue2 } : fancyValue2
+means that option MyOption has two possible valid values, and if you don't specify anything, fancyValue2 will be used as a default.
+AnotherOption : float : 10.0
+means that option AnotherOption can have any numeric value, and the default value is 10.
+There are options with integer values, string values, limited number values (such as "integer in range [2, 5]") and some more complex values.
+
+This plugin heavily relies on option enumerations inside one string. Imagine you need to describe object named ABCD which has properties length and color.
+Most of the rainmeter meters and measures would write it like this:
+ObjectABCDlength=10
+ObjectABCDcolor=black
+Imagine you have 10 objects each having 10 properties: now you have to manage 100 lines describing options for just a one plugin. Maybe some of the properties are complex and require several options for full descriptions. And each option has a very long name. Yikes.
+This plugin would write it like this:
+Object-ABCD=length 10 | color black
+Much simple to write and read, infinitely easier to manage complex description.
+Very similar approach is used in Shape meter which also used complex objects that require some way to conveniently describe them, so you might already be familiar with it.
+In the documentation options that use that syntax to define properties are called <list of named properties>. In such a list different options are separated with '|' (pipe symbol) and option name is separated from option value with ' ' (white space symbol).
+
+All options are case-insensitive. ABC, abc and aBc will be treated the same, and if this documentation specifies value Abc, then all three of these will match it.
+
+
+
+Syntax for parent measure options:
+Type : { Parent }
+
+MagicNumber : { 104 } : 0
+This plugin had a old version which is partially compatible with the new one. To avoid breaking changes, option MagicNumber was introduced. It is used to determine whether plugin should run in new or legacy mode. Always set it to value 104, or else it will run in legacy mode which doesn't correspond to this documentation.
+
+Source : { DefaultInput, DefaultOutput, <device description> }
+Specifies device from which to capture audio.
+DefaultInput will grab default input device (such as microphone), DefaultOutput will grab default output device, such as speakers.
+You can specify an exact device to capture data from it instead of default devices. Device description syntax is the following:
+id: <id_string>
+Possible id_string values may be obtained from plugin section variables. 
+If you are distributing you skin, don't just set Source to exact device, because other computers will have different devices with different ids. If you want to provide user with a way to capture one exact device, create a LUA script that will read ids from section variable and give user 
+
+Processing : <list of pipe-separated strings> : <empty>
+List of processing unit names separated by pipe symbol.
+Names in the list must be unique.
+Example: Processing=proc1|proc2
+
+Processing-<name> : <list of named properties>
+Description of processing unit.
+Properties:
+Channels : <list of comma-separated channel names> : <empty>
+list of channels that this processing must process of they are present in the audio device
+Handlers : <list of comma-separated strings> : <empty>
+list of handlers that this processing must call in the specifier order.
+TargetRate : integer : 44100
+Very high sample rates aren't very helpful, because humans only hear sounds below 22 KHz, and 44.1 KHz sample rate is enough to describe any wave with frequencies below 22.05 KHz. But high sample rates significantly increase CPU demands, so it makes sense to downsample sound wave. And typical modern PC is capable of running 192 KHz, which is totally redundant.
+Final rate is always >= than TargetRate. So if you rate is 48000 and TargetRate is 44100, then nothing will happen. If you sampling rate is less than TargetRate then nothing will happen.
+Setting this to 0 disables downsampling completely.
+Filter : { none, like-a, like-d, like-rg, custom <filter description> } : none
+Human hearing is not uniform across different frequencies. To accommodate for that, filters are usually used. They alter sound way in some way.
+none means no filtering
+like-a means filter that is similar to A-weighting
+like-d means filter that is similar to D-weighting
+like-rg means filter that is similar to ReplayGain filtering
+I personally find like-d to work the best, despite A-weighting being considered more accurate for home usage.
+See Filters discussion for details on how to describe custom filter.
+Note, that any filter aside from "none" will alter the audio signal, so if you want to use Waveform handler to display actual sound wave, then it's a good idea to create a separate processing with disabled filter.
+Example: channels FrontLeft, FrontRigth | handlers loudness, fft, resampler
+
+Handler-<id> : <list of named properties>
+Description of a sound handler.
+Contains handler type and handler-specific properties.
+Possible types are: Loudness, Peak, FFT, BandResampler, BandCascadeTransformer, UniformBlur, ValueTransformer, Spectrogram, Waveform.
+See description of certain types of handlers for details.
+
+UnusedOptionsWarning : boolean : true
+When this option is true, then plugin will report a log warning message if some of the properties in processings or handlers aren't actually used by handlers. If you see such messages in your log, then maybe you have made a mistake in option name, or tried to use option that doesn't exist.
+
+Threading : <list of named properties>
+Configuration of a computing thread. These properties doesn't do anything when ui thread is used.
+Properties:
+Policy : { uiThread, separateThread } : separateThread
+Define the way the plugin will work.
+uiThread means only using main rainmeter thread
+separateThread means that each parent measure will create its own working thread
+UpdateTime : float in range [1/200, 1] : 16.667
+Time specified in seconds.
+Length of the time interval of computing thread update
+WarnTime : float : -1
+Time specified in milliseconds.
+When processing time exceeds WarnTime, a warning message in the log will be generated. You can use it to check how much of a CPU time the plugin consumes with your settings.
+Negative values disable logging.
+Example: Threading= Policy separateThread | UpdateTime 1/30
+
+callback-onUpdate : <rainmeter bang> : <empty>
+Bang that is called every time values are updated
+
+callback-onDeviceChange : <rainmeter bang> : <empty>
+Bang that is called every time device has changed, including first time
+Events that cause onDeviceChange include, but are not limited to:
+There was no device, but now there is
+Plugin captures audio stream from default device, and default device has changed
+Device settings were changed
+Device was disconnected
+
+callback-onDeviceListChange : <rainmeter bang> : <empty>
+Bang that is called every time something happens to any audio device in the system.
+Events that cause onDeviceListChange include, but are not limited to:
+New device was added
+Device settings changed
+Device was disabled or disconnected
+
+
+
+Child measures
+Child measures grab some data from parent measures.
+You must specify where it should grab data from: processing, channel, handler name (in ValueId option), index — everything must be specified.
+
+Child measure options:
+Type : { Child }
+
+Parent : string : <empty>
+Name of the parent measure. Parent measure should be in the same skin.
+
+Processing : string : <empty>
+Name of the processing to get data from
+
+Channel : <channel name> : Auto
+Channel to get data from.
+
+ValueId : string : <empty>
+Name of the handler in parent measure.
+
+Index : integer : 0
+Index of value in handler.
+
+Transform : <transform description> : <empty>
+Description of transforms that are applied to values.
+See transforms discussion for full list of possible values.
+
+StringValue : { Number, Info } : Number
+When Number: string values of measure match number value.
+When Info: InfoRequest option determines string value of measure.
+
+InfoRequest : string
+When StringValue=Info determines string value of measure.
+Usage: same as SectionVariables on parent measure, but without function call
+Example: InfoRequest=current device, description
+See section variables documentation for possible values.
+
+
+
+Section variables
+You can get information about parent measure itself and about properties of handlers using section variable "resolve".
+Like this:
+[&ParentMeasureName:resolve(<arg1>, <arg2>)]
+
+Possible arguments:
+
+First argument: "current device"
+Information about current device
+Possible second arguments:
+"status" : 1 if everything works, 0 otherwise
+"status string" : 'active' if everything works, 'down' otherwise
+"type": type of current device. Possible values are "input" and "output".
+"name": name of current device. For example, "Realtek High Definition Audio".
+"description": specific type of current device. For example, "speakers".
+"id" : id of current audio device. Can be used in Source option in parent measure
+"format" : human readable description of format of current device. E.g., "2.0 stereo, 192000Hz"
+"channels": a comma-separated list of technical names of channels that exist in current layout. For example, 5.1 layout will have "FRONT_LEFT,FRONT_RIGHT,CENTER,LOW_FREQUENCY,BACK_LEFT,BACK_RIGHT".
+"sample rate": sample rate of current device. For example, 48000.
+
+Example:
+[&MeasureParent:resolve(current device, name)]
+[&MeasureParent:resolve(current device, sample rate)]
+
+First argument: "device list input" : list of existing input devices
+First argument: "device list output" : list of existing output devices
+First argument: "device list" : maps to one of the 2 values above. Input or output is decided based on current device type
+
+All three values are not meant to be human readable. Grab them with a LUA script and process before showing to user.
+Format is the following:
+Value consists of several lines. Each line has the following format:
+<id>;<name>;<description>;<form factor>;<sample rate>;<channels>
+Description and form factor are the same for me, however it's unknown if this is always the case. Microsoft documentation doesn't says anything certain about description, but <form factor> is a well defined set of possible values: https://docs.microsoft.com/en-us/windows/win32/coreaudio/pkey-audioendpoint-formfactor 
+
+Example:
+[&MeasureParent:resolve(device list output)]
+
+First argument: "value"
+Allows you to get number values without child measures.
+You have to specify full name to the handler in argument, and then specify value index.
+Like this:
+[&MeasureParent:resolve(value, <processing name>, <channel>, <handler name>, <index>)]
+If handler doesn't exist or if index is outside of the range, then returned value is 0. No log message is generated, unlike with child measures.
+Example: [&MeasureParent:resolve(value,proc1,auto,resampler,10)]
+
+First argument: "handler info"
+Allows you to get additional information from sound handlers.
+Like with values, you have to specify full name to the handler in argument, and then specify what you want to get from the handler.
+To access info from handlers use the following syntax:
+[&MeasureParent:resolve(prop, <channel>, <handler name>, <handler specific argument>)]
+Different handlers can give you different values. See certain handlers' description for possible values of <handler specific argument>.
+For example:
+Example: [&MeasureParent:resolve(handler info,proc1,auto,resampler,bands count)]
+
