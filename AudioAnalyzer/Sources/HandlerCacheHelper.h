@@ -18,6 +18,7 @@ namespace rxtd::audio_analyzer {
 	struct PatchInfo {
 		string rawDescription;
 		string rawDescription2;
+		istring type;
 		std::any params;
 		std::vector<istring> sources;
 		HandlerPatchingFun fun = nullptr;

@@ -66,6 +66,7 @@ HandlerCacheHelper::HandlerRawInfo HandlerCacheHelper::parseHandler(sview name, 
 	anythingChanged = true;
 
 	handler.patchInfo = createHandlerPatcher(optionMap, cl);
+	handler.patchInfo.type = optionMap.get(L"type").asIString();
 
 	const auto unusedOptions = optionMap.getListOfUntouched();
 	if (unusedOptionsWarning && !unusedOptions.empty()) {

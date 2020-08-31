@@ -166,6 +166,7 @@
     <ClInclude Include="Sources\AudioChild.h" />
     <ClInclude Include="Sources\AudioParent.h" />
     <ClInclude Include="Sources\HandlerCacheHelper.h" />
+    <ClInclude Include="Sources\LogErrorHelper.h" />
     <ClInclude Include="Sources\ParamParser.h" />
     <ClInclude Include="Sources\ParentHelper.h" />
     <ClInclude Include="Sources\sound-processing\Channel.h" />

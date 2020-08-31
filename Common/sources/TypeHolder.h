@@ -20,8 +20,11 @@ namespace rxtd::utils {
 
 	class TypeHolder : NonMovableBase, VirtualDestructorBase {
 	protected:
+		using Rainmeter = Rainmeter;
+		using Logger = Rainmeter::Logger;
+		
 		Rainmeter rain;
-		Rainmeter::Logger logger;
+		Logger logger;
 
 	private:
 		MeasureState measureState = MeasureState::eWORKING;

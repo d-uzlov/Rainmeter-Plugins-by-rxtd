@@ -16,6 +16,45 @@ using namespace audio_analyzer;
 AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 	ParentBase(std::move(_rain)) {
 	setUseResultString(false);
+	logHelpers.setLogger(logger);
+
+	logHelpers.sourceTypeIsNotRecognized.setLogFunction([](Logger& logger, istring type) {
+		logger.error(L"Source type '{}' is not recognized", type);
+	});
+	logHelpers.unknownCommand.setLogFunction([](Logger& logger, istring command) {
+		logger.error(L"unknown command '{}'", command);
+	});
+	logHelpers.currentDeviceUnknownProp.setLogFunction([](Logger& logger, istring deviceProperty) {
+		logger.error(L"unknown device property '{}'", deviceProperty);
+	});
+	logHelpers.unknownSectionVariable.setLogFunction([](Logger& logger, istring optionName) {
+		logger.error(L"unknown section variable '{}'", optionName);
+	});
+	logHelpers.legacy_invalidPort.setLogFunction([](Logger& logger, istring port) {
+		logger.error(L"Invalid Port '{}', must be one of: Output, Input. Set to Output.", port);
+	});
+
+	logHelpers.processingNotFound.setLogFunction([](Logger& logger, istring procName) {
+		logger.error(L"Processing doesn't exist: {}", procName);
+	});
+	logHelpers.channelNotRecognized.setLogFunction([](Logger& logger, istring channelName) {
+		logger.error(L"Channel is not recognized: {}", channelName);
+	});
+	logHelpers.processingDoesNotHaveHandler.setLogFunction([](Logger& logger, istring procName, istring handlerName) {
+		logger.error(L"Processing '{}' doesn't have handler '{}'", procName, handlerName);
+	});
+	logHelpers.processingDoesNotHaveChannel.setLogFunction([](Logger& logger, istring procName, istring channelName) {
+		logger.error(L"Processing '{}' doesn't have channel '{}'", procName, channelName);
+	});
+	logHelpers.legacy_handlerNotFound.setLogFunction([](Logger& logger, istring handlerName) {
+		logger.error(L"Handler '{}' is not found", handlerName);
+	});
+	logHelpers.handlerDoesNotHaveProps.setLogFunction([](Logger& logger, istring type) {
+		logger.error(L"handler type '{}' doesn't have any props", type);
+	});
+	logHelpers.propNotFound.setLogFunction([](Logger& logger, istring type, istring propName) {
+		logger.error(L"Handler type '{}' doesn't have info '{}'", type, propName);
+	});
 
 	legacyNumber = rain.read(L"MagicNumber").asInt(0);
 	switch (legacyNumber) {
@@ -75,6 +114,8 @@ void AudioParent::vReload() {
 		}
 
 		helper.setParams(callbacks, requestedSource, std::move(paramsOpt));
+
+		logHelpers.reset();
 	}
 }
 
@@ -98,7 +139,12 @@ double AudioParent::vUpdate() {
 		auto lock = data.getLock();
 
 		for (const auto& [procName, procInfo] : paramParser.getParseResult()) {
-			auto& processingSnapshot = data._[procName];
+			auto iter = data._.find(procName);
+			if (iter == data._.end()) {
+				continue;
+			}
+
+			auto& processingSnapshot = iter->second;
 			for (const auto& [handlerName, finisher] : procInfo.finishers) {
 				for (auto& [channel, channelSnapshot] : processingSnapshot) {
 					auto handlerDataIter = channelSnapshot.find(handlerName);
@@ -120,17 +166,16 @@ void AudioParent::vCommand(isview bangArgs) {
 		return;
 	}
 
-	logger.error(L"unknown command '{}'", bangArgs);
+	logHelpers.unknownCommand.log(bangArgs);
 }
 
 void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString) {
 	if (args.empty()) {
-		logger.error(L"Invalid section variable: args needed");
+		logHelpers.generic.log(L"Invalid section variable: at least 1 argument is needed");
 		return;
 	}
 
 	const isview optionName = args[0];
-	auto cl = logger.context(L"Invalid section variable '{}': ", optionName);
 
 	if (optionName == L"current device") {
 		if (!requestedSource.has_value()) {
@@ -138,7 +183,7 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 		}
 
 		if (args.size() < 2) {
-			cl.error(L"need >= 2 argc, but only {} found", args.size());
+			logHelpers.generic.log(L"'current device' section variable need 2 args, but only 1 is found");
 			return;
 		}
 
@@ -166,7 +211,7 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 		} else if (deviceProperty == L"sample rate") {
 			resolveBufferString = std::to_wstring(di.format.samplesPerSec);
 		} else {
-			cl.warning(L"unknown device property '{}'", deviceProperty);
+			logHelpers.currentDeviceUnknownProp.log(deviceProperty);
 		}
 
 		return;
@@ -200,8 +245,8 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 			return;
 		}
 
-		if (args.size() < 5) {
-			cl.error(L"need >= 5 argc, but only {} found", args.size());
+		if (args.size() != 5) {
+			logHelpers.generic.log(L"'value' section variable need 5 arguments");
 			return;
 		}
 
@@ -212,7 +257,7 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 
 		auto channelOpt = ChannelUtils::parse(channelName);
 		if (!channelOpt.has_value()) {
-			cl.error(L"channel '{}' is not recognized", channelName);
+			logHelpers.channelNotRecognized.log(channelName);
 			return;
 		}
 
@@ -225,9 +270,8 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 		// const auto value = procIter->second.getAudioChildHelper().getValue(channelOpt.value(), handlerName, ind);
 
 		const auto value = getValue(procName, handlerName, channelOpt.value(), ind);
-		cl.printer.print(value);
-
-		resolveBufferString = cl.printer.getBufferView();
+		logger.printer.print(value);
+		resolveBufferString = logger.printer.getBufferView();
 		return;
 	}
 
@@ -240,8 +284,7 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 		return;
 	}
 
-	// todo remove log messages here
-	cl.error(L"unknown section variable");
+	logHelpers.unknownSectionVariable.log(optionName);
 }
 
 double AudioParent::getValue(isview proc, isview id, Channel channel, index ind) {
@@ -284,7 +327,7 @@ string AudioParent::checkHandler(isview procName, Channel channel, isview handle
 
 	const auto procDataIter = paramParser.getParseResult().find(procName);
 	if (procDataIter == paramParser.getParseResult().end()) {
-		bp.print(L"processing {} is not found", procName);
+		logHelpers.processingNotFound.log(procName);
 		return bp.getBufferPtr();
 	}
 
@@ -331,7 +374,7 @@ AudioParent::DeviceRequest AudioParent::readRequest() const {
 			} else if (port == L"Input") {
 				result.type = ST::eDEFAULT_INPUT;
 			} else {
-				logger.error(L"Invalid Port '{}', must be one of: Output, Input. Set to Output.", port);
+				logHelpers.legacy_invalidPort.log(port);
 				result.type = ST::eDEFAULT_OUTPUT;
 			}
 		}
@@ -340,11 +383,11 @@ AudioParent::DeviceRequest AudioParent::readRequest() const {
 		const auto source = sourceOpt.asIString(L"DefaultOutput");
 
 		if (source == L"Output") {
-			logger.error(L"Source type 'Output' is not recognized. Did you mean DefaultOutput?");
+			logHelpers.generic.log(L"Source type 'Output' is not recognized. Did you mean DefaultOutput?");
 			return { };
 		}
 		if (source == L"Input") {
-			logger.error(L"Source type 'Input' is not recognized. Did you mean DefaultInput?");
+			logHelpers.generic.log(L"Source type 'Input' is not recognized. Did you mean DefaultInput?");
 			return { };
 		}
 
@@ -357,7 +400,7 @@ AudioParent::DeviceRequest AudioParent::readRequest() const {
 			result.type = ST::eID;
 			result.id = source % csView();
 		} else {
-			logger.error(L"Source type '{}' is not recognized", type.asString());
+			logHelpers.sourceTypeIsNotRecognized.log(type.asIString());
 			return { };
 		}
 	}
@@ -368,16 +411,14 @@ AudioParent::DeviceRequest AudioParent::readRequest() const {
 void AudioParent::resolveProp(array_view<isview> args, string& resolveBufferString) {
 	const isview optionName = args[0];
 
-	isview procName = args[1];
-	isview channelName = args[2];
-	isview handlerName = args[3];
-	isview propName = args[4];
-
-	auto cl = logger.context(L"Invalid section variable '{}': ", optionName);
+	isview procName;
+	isview channelName;
+	isview handlerName;
+	isview propName;
 
 	if (optionName == L"handler info") {
-		if (args.size() < 5) {
-			cl.error(L"need >= 5 argc, but only {} found", args.size());
+		if (args.size() != 5) {
+			logHelpers.generic.log(L"'handler info' need 5 arguments");
 			return;
 		}
 
@@ -387,8 +428,8 @@ void AudioParent::resolveProp(array_view<isview> args, string& resolveBufferStri
 		propName = args[4];
 	} else if (optionName == L"prop") {
 		// legacy
-		if (args.size() < 4) {
-			cl.error(L"need >= 4 argc, but only {} found", args.size());
+		if (args.size() != 4) {
+			logHelpers.generic.log(L"'prop' need 4 arguments");
 			return;
 		}
 
@@ -398,62 +439,90 @@ void AudioParent::resolveProp(array_view<isview> args, string& resolveBufferStri
 
 		procName = legacy_findProcessingFor(handlerName);
 		if (procName.empty()) {
-			cl.error(L"handler '{}' is not found", handlerName);
+			logHelpers.legacy_handlerNotFound.log(handlerName);
 			return;
 		}
 	}
 
 	auto channelOpt = ChannelUtils::parse(channelName);
 	if (!channelOpt.has_value()) {
-		cl.error(L"channel '{}' is not recognized", channelName);
+		logHelpers.channelNotRecognized.log(channelName);
 		return;
+	}
+
+	const auto& handlerInfo
+		= paramParser
+		  .getParseResult()
+		  .find(procName)->second.handlersInfo.patchers
+		  .find(handlerName)->second;
+	const auto propGetter = handlerInfo.externalMethods.getProp;
+
+	auto pd = paramParser.getParseResult();
+	{
+		// check that this prop should exist
+
+		auto procIter = pd.find(procName);
+		if (procIter == pd.end()) {
+			logHelpers.processingNotFound.log(procName);
+			return;
+		}
+
+		auto& processingChannels = procIter->second.channels;
+		auto channelSnapshotIter = processingChannels.find(channelOpt.value());
+		if (channelSnapshotIter == processingChannels.end()) {
+			logHelpers.processingDoesNotHaveChannel.log(channelName);
+			return;
+		}
+
+		auto& handlerPatchers = procIter->second.handlersInfo.patchers;
+		auto handlerSnapshotIter = handlerPatchers.find(handlerName);
+		if (handlerSnapshotIter == handlerPatchers.end()) {
+			logHelpers.processingDoesNotHaveHandler.log(procName, handlerName);
+			return;
+		}
+
+		if (propGetter == nullptr) {
+			logHelpers.handlerDoesNotHaveProps.log(handlerInfo.type);
+			return;
+		}
 	}
 
 	auto& data = helper.getSnapshot().data;
 	auto lock = data.getLock();
 
+	// "not found" errors below are not logged because we have already checked everything above,
+	// and if do still don't find requested info then it is caused by either delay in updating second thread
+	// or by device not having requested channel
+
 	auto procIter = data._.find(procName);
 	if (procIter == data._.end()) {
-		cl.error(L"processing '{}' is not found", procName);
 		return;
 	}
 
 	auto& processingSnapshot = procIter->second;
 	auto channelSnapshotIter = processingSnapshot.find(channelOpt.value());
 	if (channelSnapshotIter == processingSnapshot.end()) {
-		// "channel not found" is a relaxed error, so no log message for this one
 		return;
 	}
 
 	auto& channelSnapshot = channelSnapshotIter->second;
 	auto handlerSnapshotIter = channelSnapshot.find(handlerName);
 	if (handlerSnapshotIter == channelSnapshot.end()) {
-		cl.error(L"handler '{}:{}' is not found", procName, handlerName);
 		return;
 	}
 
 	auto& handlerSnapshot = handlerSnapshotIter->second;
-	const auto propGetter
-		= paramParser
-		  .getParseResult()
-		  .find(procName)->second.handlersInfo.patchers
-		  .find(handlerName)->second.externalMethods.getProp;
-
-	if (propGetter == nullptr) {
-		cl.error(L"handler '{}:{}' doesn't have any props", procName, handlerName);
-		return;
-	}
 
 	SoundHandler::ExternCallContext context;
 	context.channelName = ChannelUtils::getTechnicalName(channelOpt.value());
 
-	const bool found = propGetter(handlerSnapshot.handlerSpecificData, propName, cl.printer, context);
+	const bool found = propGetter(handlerSnapshot.handlerSpecificData, propName, logger.printer, context);
 	if (!found) {
-		cl.error(L"prop '{}:{}:{}' is not found", procName, handlerName, propName);
+		logHelpers.propNotFound.log(handlerInfo.type, propName);
 		return;
 	}
 
-	resolveBufferString = cl.printer.getBufferView();
+	resolveBufferString = logger.printer.getBufferView();
 }
 
 AudioParent::ProcessingCleanersMap AudioParent::createCleanersFor(const ParamParser::ProcessingData& pd) const {
@@ -470,7 +539,7 @@ AudioParent::ProcessingCleanersMap AudioParent::createCleanersFor(const ParamPar
 		auto handlerPtr = patchInfo.fun({ });
 
 		auto cl = logger.silent();
-		ProcessingManager::HandlerFinderImpl hf { tempChannelMap };
+		ProcessingManager::HandlerFinderImpl hf{ tempChannelMap };
 		SoundHandler::Snapshot handlerSpecificData;
 		const bool success = handlerPtr->patch(
 			patchInfo.params, patchInfo.sources,

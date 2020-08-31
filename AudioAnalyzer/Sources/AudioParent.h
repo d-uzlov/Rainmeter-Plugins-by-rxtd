@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include "LogErrorHelper.h"
 #include "TypeHolder.h"
 #include "ParentHelper.h"
 
@@ -18,6 +19,59 @@ namespace rxtd::audio_analyzer {
 
 		index legacyNumber{ };
 		ParamParser paramParser;
+
+		struct {
+			NoArgLogErrorHelper generic;
+			LogErrorHelper<istring> sourceTypeIsNotRecognized;
+			LogErrorHelper<istring> unknownCommand;
+			LogErrorHelper<istring> currentDeviceUnknownProp;
+			LogErrorHelper<istring> unknownSectionVariable;
+			LogErrorHelper<istring> legacy_invalidPort;
+
+			LogErrorHelper<istring> processingNotFound;
+			LogErrorHelper<istring> channelNotRecognized;
+			LogErrorHelper<istring, istring> processingDoesNotHaveHandler;
+			LogErrorHelper<istring, istring> processingDoesNotHaveChannel;
+			LogErrorHelper<istring> legacy_handlerNotFound;
+			LogErrorHelper<istring> handlerDoesNotHaveProps;
+			LogErrorHelper<istring, istring> propNotFound;
+
+			void setLogger(utils::Rainmeter::Logger logger) {
+				generic.setLogger(logger);
+				sourceTypeIsNotRecognized.setLogger(logger);
+				unknownCommand.setLogger(logger);
+				currentDeviceUnknownProp.setLogger(logger);
+				unknownSectionVariable.setLogger(logger);
+				legacy_invalidPort.setLogger(logger);
+				processingNotFound.setLogger(logger);
+				channelNotRecognized.setLogger(logger);
+				processingDoesNotHaveHandler.setLogger(logger);
+				processingDoesNotHaveChannel.setLogger(logger);
+				legacy_handlerNotFound.setLogger(logger);
+				handlerDoesNotHaveProps.setLogger(logger);
+				propNotFound.setLogger(logger);
+			}
+
+			void reset() {
+				// helpers that are commented don't need to be reset
+				// because it doesn't make sense to repeat their messages after measure is reloaded
+
+				// generic.reset();
+				// sourceTypeIsNotRecognized.reset();
+				// unknownCommand.reset();
+				// currentDeviceUnknownProp.reset();
+				// unknownSectionVariable.reset();
+				// legacy_invalidPort.reset();
+
+				processingNotFound.reset();
+				channelNotRecognized.reset();
+				processingDoesNotHaveHandler.reset();
+				processingDoesNotHaveChannel.reset();
+				legacy_handlerNotFound.reset();
+				// handlerDoesNotHaveProps.reset();
+				// propNotFound.reset();
+			}
+		} logHelpers;
 
 		DeviceRequest requestedSource;
 		ParentHelper helper;
@@ -29,6 +83,7 @@ namespace rxtd::audio_analyzer {
 		using CleanersMap = std::map<istring, ProcessingCleanersMap, std::less<>>;
 
 		bool cleanersExecuted = false;
+
 		CleanersMap cleanersMap;
 
 	public:
