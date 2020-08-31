@@ -111,10 +111,6 @@ void ParentHelper::update() {
 }
 
 void ParentHelper::wakeThreadUp() {
-	if (!constFields.useThreading) {
-		return;
-	}
-
 	try {
 		auto lock = std::unique_lock<std::mutex>{ mainFields.mutex, std::defer_lock };
 		const bool locked = lock.try_lock();
@@ -126,10 +122,6 @@ void ParentHelper::wakeThreadUp() {
 }
 
 void ParentHelper::stopThread() {
-	if (!constFields.useThreading) {
-		return;
-	}
-
 	threadSafeFields.stopRequest.exchange(true);
 	wakeThreadUp();
 

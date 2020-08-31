@@ -148,6 +148,9 @@ public:
 			RmLog(rm, LOG_ERROR, bp.getBufferPtr());
 
 			LocalFree(receiveBuffer);
+
+			FreeLibrary(dllHandle);
+			delete threadArgs;
 		}
 	}
 
@@ -238,7 +241,9 @@ DWORD WINAPI asyncSender_run(void* param) {
 				lock.lock();
 			}
 
-			queue.sleepVariable.wait(lock);
+			if (queue.buffer.empty()) {
+				queue.sleepVariable.wait(lock);
+			}
 		}
 	label_LOOP_END:;
 	}
