@@ -29,7 +29,11 @@ namespace rxtd::utils {
 
 	public:
 		void setParams(index _width, index _height, PixelValueType _backgroundValue, bool _stationary) {
-			if (width == _width && height == _height && backgroundValue == _backgroundValue && stationary == _stationary) {
+			if (width == _width
+				&& height == _height
+				&& backgroundValue == _backgroundValue
+				&& stationary == _stationary
+			) {
 				return;
 			}
 
@@ -60,13 +64,11 @@ namespace rxtd::utils {
 		}
 
 		void pushEmptyStrip(PixelValueType value) {
-			if (lastFillValue != value) {
+			if (lastFillValue != value || sameStripsCount == 0) {
 				lastFillValue = value;
 				sameStripsCount = 1;
 			} else if (isEmpty()) {
-				if (!isForced()) {
-					return;
-				}
+				return;
 			} else {
 				sameStripsCount++;
 			}
@@ -78,27 +80,19 @@ namespace rxtd::utils {
 			}
 		}
 
-		void correctLastLine(index pixelIndex, PixelValueType value) {
-			auto lastStripIndex = getLastStripIndex();
-			auto imageLines = getCurrentLinesArray();
-			auto line = imageLines[pixelIndex];
-			line[lastStripIndex] = value;
-		}
-
 		[[nodiscard]]
 		bool isEmpty() const {
-			return sameStripsCount >= width;
-		}
+			const bool bufferIsEmpty = sameStripsCount >= width;
+			if (!stationary) {
+				return bufferIsEmpty;
+			} else {
+				index lastStripIndex = stationaryOffset - 1;
+				if (lastStripIndex < 0) {
+					lastStripIndex += width;
+				}
 
-		[[nodiscard]]
-		bool isForced() const {
-			// should be used to ensure
-			// that when image is stationary it will be cleared fully
-			// instead of stopping in the middle
-
-			const index lastStripIndex = getLastStripIndex();
-			const bool forced = lastStripIndex != width - 1;
-			return forced || !isEmpty();
+				return bufferIsEmpty && lastStripIndex == width - 1;
+			}
 		}
 
 		[[nodiscard]]
@@ -117,10 +111,7 @@ namespace rxtd::utils {
 				return width - 1;
 			}
 
-			index offset = stationaryOffset - 1;
-			if (offset < 0) {
-				offset += width;
-			}
+
 			return offset;
 		}
 

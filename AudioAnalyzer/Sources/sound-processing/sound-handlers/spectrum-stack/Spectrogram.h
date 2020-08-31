@@ -102,7 +102,6 @@ namespace rxtd::audio_analyzer {
 
 		utils::StripedImage<utils::IntColor> image{ };
 		utils::StripedImageFadeHelper fadeHelper{ };
-		utils::ImageWriteHelper writerHelper{ };
 
 	public:
 		[[nodiscard]]

@@ -106,7 +106,7 @@ namespace rxtd::utils {
 
 		[[nodiscard]]
 		bool isEmpty() const {
-			return !minMaxBuffer.isForced();
+			return minMaxBuffer.isEmpty();
 		}
 
 		void inflate();

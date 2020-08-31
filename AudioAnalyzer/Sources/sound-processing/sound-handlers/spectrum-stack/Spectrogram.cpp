@@ -156,10 +156,8 @@ SoundHandler::ConfigurationResult Spectrogram::vConfigure(const std::any& _param
 	fadeHelper.setParams(backgroundIntColor, params.borderSize, params.borderColor.toIntColor(), params.fading);
 
 	if (params.fading != 0.0) {
-		if (image.isForced() || !writerHelper.isEmptinessWritten()) {
-			fadeHelper.setPastLastStripIndex(image.getPastLastStripIndex());
-			fadeHelper.inflate(image.getPixels());
-		}
+		fadeHelper.setPastLastStripIndex(image.getPastLastStripIndex());
+		fadeHelper.inflate(image.getPixels());
 	} else {
 		if (params.borderSize != 0) {
 			fadeHelper.setPastLastStripIndex(image.getPastLastStripIndex());
@@ -196,7 +194,7 @@ SoundHandler::ConfigurationResult Spectrogram::vConfigure(const std::any& _param
 }
 
 void Spectrogram::vProcess(array_view<float> wave, clock::time_point killTime) {
-	if (image.isForced()) {
+	if (!image.isEmpty()) {
 		image.removeLast(overpushCount);
 	} else {
 		dataShortageEqSize -= blockSize * overpushCount;
@@ -206,6 +204,8 @@ void Spectrogram::vProcess(array_view<float> wave, clock::time_point killTime) {
 
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
+
+	const bool imageWasEmpty = image.isEmpty();
 
 	for (auto chunk : source.getChunks(0)) {
 		counter += chunk.equivalentWaveSize;
@@ -252,7 +252,7 @@ void Spectrogram::vProcess(array_view<float> wave, clock::time_point killTime) {
 
 	if (writeNeeded) {
 		if (params.fading != 0.0) {
-			if (image.isForced() || !writerHelper.isEmptinessWritten()) {
+			if (!image.isEmpty() || (image.isEmpty() && !imageWasEmpty)) {
 				fadeHelper.setPastLastStripIndex(image.getPastLastStripIndex());
 				fadeHelper.inflate(image.getPixels());
 			}
@@ -282,7 +282,7 @@ void Spectrogram::vUpdateSnapshot(std::any& handlerSpecificData) const {
 
 	auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
 	snapshot.writeNeeded = true;
-	snapshot.empty = !image.isForced();
+	snapshot.empty = image.isEmpty();
 
 	snapshot.pixels.copyWithResize(params.fading != 0.0 ? fadeHelper.getResultBuffer() : image.getPixels());
 
