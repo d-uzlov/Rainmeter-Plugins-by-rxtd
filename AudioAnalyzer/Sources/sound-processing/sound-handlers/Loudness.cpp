@@ -56,8 +56,8 @@ SoundHandler::ConfigurationResult Loudness::vConfigure(const std::any& _params, 
 
 	params.transformer.setParams(sampleRate, blockSize);
 
-	blocks.reset(blocksCount, 0.0);
-	blocks.setMaxSize(blocksCount * 5);
+	blocks.resize(blocksCount);
+	std::fill(blocks.begin(), blocks.end(), 0.0);
 	prevValue = 0.0;
 
 	gatingValueCoefficient = utils::MyMath::db2amplitude(params.gatingDb) * blockSize;
@@ -80,14 +80,17 @@ void Loudness::vProcess(array_view<float> wave, array_view<float> originalWave, 
 }
 
 void Loudness::pushMicroBlock(double value) {
-	blocks.removeFirst(1);
-	blocks.allocateNext(1)[0] = value;
+	blocks[nextBlockIndex] = value;
+	nextBlockIndex++;
+	if (nextBlockIndex >= blocksCount) {
+		nextBlockIndex = 0;
+	}
 
 	const double gatingValue = prevValue * gatingValueCoefficient;
 
 	double newValue = 0.0;
 	index counter = 0;
-	for (const auto blockEnergy : blocks.getLast(blocksCount)) {
+	for (const auto blockEnergy : blocks) {
 		if (params.ignoreGatingForSilence && blockEnergy == 0.0
 			|| blockEnergy >= gatingValue) {
 			newValue += blockEnergy;

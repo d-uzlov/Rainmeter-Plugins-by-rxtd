@@ -133,7 +133,7 @@ CaptureManager::State CaptureManager::setSourceAndGetState(const SourceDesc& des
 	}
 	snapshot.channelsString += ChannelUtils::getTechnicalName(channels.back());
 
-	channelMixer.setFormat(snapshot.format);
+	channelMixer.setLayout(snapshot.format.channelLayout);
 
 
 	audioCaptureClient = audioClient.openCapture();
@@ -166,7 +166,7 @@ bool CaptureManager::capture() {
 
 		if (queryResult == S_OK) {
 			anyCaptured = true;
-			channelMixer.saveChannelsData(audioCaptureClient.getBuffer(), true);
+			channelMixer.saveChannelsData(audioCaptureClient.getBuffer());
 			continue;
 		}
 		if (queryResult == AUDCLNT_S_BUFFER_EMPTY) {
@@ -201,6 +201,8 @@ bool CaptureManager::capture() {
 
 		break;
 	}
+
+	channelMixer.createAuto();
 
 	return anyCaptured;
 }

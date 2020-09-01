@@ -47,7 +47,7 @@ namespace rxtd::utils {
 
 			array.resize(index(array.size()) + chunkSize);
 
-			return getLast(chunkSize);
+			return { array.data() + index(array.size()) - chunkSize, chunkSize };
 		}
 
 
@@ -69,7 +69,6 @@ namespace rxtd::utils {
 			return result;
 		}
 
-
 		array_span<T> removeFirst(index chunkSize) {
 			if (chunkSize > getRemainingSize()) {
 				return { };
@@ -79,24 +78,6 @@ namespace rxtd::utils {
 			return result;
 		}
 
-
-		[[nodiscard]]
-		array_span<T> getLast(index chunkSize) {
-			return { array.data() + index(array.size()) - chunkSize, chunkSize };
-		}
-
-		[[nodiscard]]
-		array_view<T> getLast(index chunkSize) const {
-			return { array.data() + index(array.size()) - chunkSize, chunkSize };
-		}
-
-		void eraseLast(index chunkSize) {
-			if (chunkSize > getRemainingSize()) {
-				return;
-			}
-
-			array.resize(array.size() - chunkSize);
-		}
 
 		[[nodiscard]]
 		array_span<T> getAllData() {
@@ -121,6 +102,7 @@ namespace rxtd::utils {
 
 
 		// functionally does nothing
+		// decreases memory usage by physically removing old unneeded elements
 		void compact() {
 			array.erase(array.begin(), array.begin() + offset);
 			offset = 0;

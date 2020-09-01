@@ -49,7 +49,8 @@ namespace rxtd::audio_analyzer {
 		index blockCounter{ };
 
 		double blockIntermediate{ };
-		utils::GrowingVector<double> blocks;
+		std::vector<double> blocks;
+		index nextBlockIndex{ };
 
 		double prevValue{ };
 		double gatingValueCoefficient{ };

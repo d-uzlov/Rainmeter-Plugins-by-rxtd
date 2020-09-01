@@ -14,16 +14,16 @@
 
 using namespace audio_analyzer;
 
-void ChannelMixer::setFormat(MyWaveFormat _waveFormat) {
-	if (waveFormat == _waveFormat) {
+void ChannelMixer::setLayout(const ChannelLayout& _layout) {
+	if (layout == _layout) {
 		return;
 	}
 
-	waveFormat = std::move(_waveFormat);
+	layout = _layout;
 
-	auto left = waveFormat.channelLayout.indexOf(Channel::eFRONT_LEFT);
-	auto right = waveFormat.channelLayout.indexOf(Channel::eFRONT_RIGHT);
-	auto center = waveFormat.channelLayout.indexOf(Channel::eCENTER);
+	auto left = layout.indexOf(Channel::eFRONT_LEFT);
+	auto right = layout.indexOf(Channel::eFRONT_RIGHT);
+	auto center = layout.indexOf(Channel::eCENTER);
 
 	if (left.has_value() && right.has_value()) {
 		aliasOfAuto = Channel::eAUTO;
@@ -34,12 +34,12 @@ void ChannelMixer::setFormat(MyWaveFormat _waveFormat) {
 	} else if (center.has_value()) {
 		aliasOfAuto = Channel::eCENTER;
 	} else {
-		aliasOfAuto = waveFormat.channelLayout.ordered()[0];
+		aliasOfAuto = layout.ordered()[0];
 	}
 
 	std::vector<Channel> toDelete;
 	for (const auto& [channel, _] : channels) {
-		const bool exists = channel == Channel::eAUTO || waveFormat.channelLayout.contains(channel);
+		const bool exists = channel == Channel::eAUTO || layout.contains(channel);
 		if (!exists) {
 			toDelete.push_back(channel);
 		}
@@ -49,23 +49,34 @@ void ChannelMixer::setFormat(MyWaveFormat _waveFormat) {
 	}
 
 	// Create missing channels
-	for (const auto channel : waveFormat.channelLayout.ordered()) {
+	for (const auto channel : layout.ordered()) {
 		channels[channel];
 	}
 	channels[aliasOfAuto];
 }
 
-void ChannelMixer::saveChannelsData(utils::array2d_view<float> channelsData, bool withAuto) {
-	for (auto channel : waveFormat.channelLayout.ordered()) {
-		auto channelData = channelsData[waveFormat.channelLayout.indexOf(channel).value()];
+void ChannelMixer::saveChannelsData(utils::array2d_view<float> channelsData) {
+	for (auto channel : layout.ordered()) {
+		auto channelData = channelsData[layout.indexOf(channel).value()];
 		auto& waveBuffer = channels[channel];
 		auto writeBuffer = waveBuffer.allocateNext(channelData.size());
 		channelData.transferToSpan(writeBuffer);
 	}
+}
 
-	if (withAuto && aliasOfAuto == Channel::eAUTO) {
-		const auto valuesCount = channelsData[0].size();
-		resampleToAuto(valuesCount);
+void ChannelMixer::createAuto() {
+	if (aliasOfAuto != Channel::eAUTO) {
+		return;
+	}
+
+	const auto& bufferFirst = channels[Channel::eFRONT_LEFT].getAllData();
+	const auto& bufferSecond = channels[Channel::eFRONT_RIGHT].getAllData();
+
+	const index size = bufferFirst.size();
+	auto writeBuffer = channels[Channel::eAUTO].allocateNext(size);
+
+	for (index i = 0; i < size; ++i) {
+		writeBuffer[i] = (bufferFirst[i] + bufferSecond[i]) * 0.5f;
 	}
 }
 
@@ -75,14 +86,4 @@ array_view<float> ChannelMixer::getChannelPCM(Channel channel) const {
 	}
 
 	return channels.at(channel).getAllData();
-}
-
-void ChannelMixer::resampleToAuto(index size) {
-	auto writeBuffer = channels[Channel::eAUTO].allocateNext(size);
-	const auto& bufferFirst = channels[Channel::eFRONT_LEFT].getLast(size);
-	const auto& bufferSecond = channels[Channel::eFRONT_RIGHT].getLast(size);
-
-	for (index i = 0; i < size; ++i) {
-		writeBuffer[i] = (bufferFirst[i] + bufferSecond[i]) * 0.5f;
-	}
 }

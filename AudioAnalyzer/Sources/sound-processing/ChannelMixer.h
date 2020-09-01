@@ -14,13 +14,15 @@
 
 namespace rxtd::audio_analyzer {
 	class ChannelMixer {
-		MyWaveFormat waveFormat;
+		ChannelLayout layout;
 		std::map<Channel, utils::GrowingVector<float>> channels;
 		Channel aliasOfAuto = Channel::eAUTO;
 
 	public:
-		void setFormat(MyWaveFormat waveFormat);
-		void saveChannelsData(utils::array2d_view<float> channelsData, bool withAuto);
+		void setLayout(const ChannelLayout& _layout);
+
+		void saveChannelsData(utils::array2d_view<float> channelsData);
+		void createAuto();
 
 		[[nodiscard]]
 		array_view<float> getChannelPCM(Channel channel) const;
@@ -30,8 +32,5 @@ namespace rxtd::audio_analyzer {
 				buffer.reset();
 			}
 		}
-
-	private:
-		void resampleToAuto(index size);
 	};
 }
