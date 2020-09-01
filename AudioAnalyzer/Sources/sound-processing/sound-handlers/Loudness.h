@@ -72,7 +72,7 @@ namespace rxtd::audio_analyzer {
 		ConfigurationResult vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) override;
 
 		// void vReset() final;
-		void vProcess(array_view<float> wave, clock::time_point killTime) override;
+		void vProcess(array_view<float> wave, array_view<float> originalWave, clock::time_point killTime) override;
 
 		// bool vGetProp(const isview& prop, utils::BufferPrinter& printer) const override;
 

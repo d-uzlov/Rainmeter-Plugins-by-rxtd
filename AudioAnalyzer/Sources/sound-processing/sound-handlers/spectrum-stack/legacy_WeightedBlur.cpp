@@ -57,7 +57,7 @@ legacy_WeightedBlur::vConfigure(const std::any& _params, Logger& cl, std::any& s
 	return dataSize;
 }
 
-void legacy_WeightedBlur::vProcess(array_view<float> wave, clock::time_point killTime) {
+void legacy_WeightedBlur::vProcess(array_view<float> wave, array_view<float> originalWave, clock::time_point killTime) {
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
 	const BandResampler& resampler = *resamplerPtr;

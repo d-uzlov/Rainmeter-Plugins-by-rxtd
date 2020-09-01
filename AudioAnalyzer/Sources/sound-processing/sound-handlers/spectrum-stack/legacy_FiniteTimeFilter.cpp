@@ -95,7 +95,7 @@ legacy_FiniteTimeFilter::vConfigure(const std::any& _params, Logger& cl, std::an
 	return dataSize;
 }
 
-void legacy_FiniteTimeFilter::vProcess(array_view<float> wave, clock::time_point killTime) {
+void legacy_FiniteTimeFilter::vProcess(array_view<float> wave, array_view<float> originalWave, clock::time_point killTime) {
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
 

@@ -201,9 +201,9 @@ namespace rxtd::audio_analyzer {
 			_anyChanges = false;
 		}
 
-		void process(array_view<float> wave, clock::time_point killTime) {
+		void process(array_view<float> wave, array_view<float> originalWave, clock::time_point killTime) {
 			clearChunks();
-			vProcess(wave, killTime);
+			vProcess(wave, originalWave, killTime);
 		}
 
 		void updateSnapshot(Snapshot& snapshot) {
@@ -306,7 +306,7 @@ namespace rxtd::audio_analyzer {
 		// if handler is potentially heavy,
 		// handler should try to return control to caller
 		// when time is more than killTime
-		virtual void vProcess(array_view<float> wave, clock::time_point killTime) = 0;
+		virtual void vProcess(array_view<float> wave, array_view<float> originalWave, clock::time_point killTime) = 0;
 
 		virtual void vUpdateSnapshot(std::any& handlerSpecificData) const {
 		}

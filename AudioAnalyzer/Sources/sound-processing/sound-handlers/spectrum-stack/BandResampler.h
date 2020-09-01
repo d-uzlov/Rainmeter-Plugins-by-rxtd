@@ -80,7 +80,7 @@ namespace rxtd::audio_analyzer {
 		ConfigurationResult vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) override;
 
 	public:
-		void vProcess(array_view<float> wave, clock::time_point killTime) override;
+		void vProcess(array_view<float> wave, array_view<float> originalWave, clock::time_point killTime) override;
 
 		[[nodiscard]]
 		index getStartingLayer() const override {

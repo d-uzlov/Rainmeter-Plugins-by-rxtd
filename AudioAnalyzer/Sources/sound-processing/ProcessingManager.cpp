@@ -112,7 +112,7 @@ void ProcessingManager::process(const ChannelMixer& mixer, clock::time_point kil
 
 		for (auto& handlerName : order) {
 			auto& handler = *channelStruct.handlerMap[handlerName];
-			handler.process(waveBuffer, killTime);
+			handler.process(waveBuffer, wave, killTime);
 		}
 	}
 }

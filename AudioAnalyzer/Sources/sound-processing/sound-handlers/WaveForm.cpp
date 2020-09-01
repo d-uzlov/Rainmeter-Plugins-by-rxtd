@@ -149,7 +149,7 @@ SoundHandler::ConfigurationResult WaveForm::vConfigure(const std::any& _params, 
 	return { 0, 0 };
 }
 
-void WaveForm::vProcess(array_view<float> wave, clock::time_point killTime) {
+void WaveForm::vProcess(array_view<float> wave, array_view<float> originalWave, clock::time_point killTime) {
 	const bool wasEmpty = drawer.isEmpty();
 
 	for (const auto value : wave) {

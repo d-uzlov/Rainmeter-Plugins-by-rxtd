@@ -109,7 +109,7 @@ namespace rxtd::audio_analyzer {
 	public:
 		index getFftSize() const;
 
-		void vProcess(array_view<float> wave, clock::time_point killTime) override;
+		void vProcess(array_view<float> wave, array_view<float> originalWave, clock::time_point killTime) override;
 
 	private:
 		static bool getProp(

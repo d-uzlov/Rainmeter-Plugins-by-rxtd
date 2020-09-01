@@ -248,7 +248,7 @@ BandResampler::vConfigure(const std::any& _params, Logger& cl, std::any& snapsho
 	return { realCascadesCount, bandsCount };
 }
 
-void BandResampler::vProcess(array_view<float> wave, clock::time_point killTime) {
+void BandResampler::vProcess(array_view<float> wave, array_view<float> originalWave, clock::time_point killTime) {
 	auto& config = getConfiguration();
 
 	auto& source = *fftSource;
