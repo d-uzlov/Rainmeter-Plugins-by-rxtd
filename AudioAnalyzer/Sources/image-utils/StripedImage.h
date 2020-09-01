@@ -25,7 +25,6 @@ namespace rxtd::utils {
 		index sameStripsCount = 0;
 		bool stationary = false;
 		index stationaryOffset = 0;
-		index allocationShortage = 0;
 
 	public:
 		void setParams(index _width, index _height, PixelValueType _backgroundValue, bool _stationary) {
@@ -47,7 +46,6 @@ namespace rxtd::utils {
 
 			pixelData.reset(imagePixelsCount, backgroundValue);
 			pixelData.setMaxSize(imagePixelsCount + maxOffset);
-			allocationShortage = 0;
 
 			lastFillValue = backgroundValue;
 			sameStripsCount = _width - 1;
@@ -106,36 +104,12 @@ namespace rxtd::utils {
 		}
 
 		[[nodiscard]]
-		index getLastStripIndex() const {
-			if (!stationary) {
-				return width - 1;
-			}
-
-
-			return offset;
-		}
-
-		[[nodiscard]]
 		index getPastLastStripIndex() const {
 			if (!stationary) {
 				return 0;
 			}
 
 			return stationaryOffset;
-		}
-
-		void removeLast(index count) {
-			if (stationary) {
-				stationaryOffset -= count;
-				if (stationaryOffset < 0) {
-					stationaryOffset += width;
-				}
-			} else {
-				pixelData.eraseLast(count);
-				allocationShortage += count;
-			}
-
-			sameStripsCount = std::max<index>(sameStripsCount - count, 0);
 		}
 
 	private:
@@ -172,11 +146,7 @@ namespace rxtd::utils {
 		}
 
 		void incrementStrip() {
-			if (allocationShortage == 0) {
-				pixelData.removeFirst(1);
-			} else {
-				allocationShortage--;
-			}
+			pixelData.removeFirst(1);
 			(void)pixelData.allocateNext(1);
 		}
 

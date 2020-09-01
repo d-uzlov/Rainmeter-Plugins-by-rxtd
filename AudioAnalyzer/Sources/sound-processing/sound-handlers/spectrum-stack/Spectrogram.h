@@ -89,11 +89,10 @@ namespace rxtd::audio_analyzer {
 
 		index blockSize{ };
 
-		index counter = 0;
-		mutable bool writeNeeded = false;
+		index dataCounter = 0;
+		index waveCounter{ };
 
-		index dataShortageEqSize{ };
-		index overpushCount{ };
+		mutable bool imageHasChanged = false;
 
 		struct {
 			bool isZero{ };

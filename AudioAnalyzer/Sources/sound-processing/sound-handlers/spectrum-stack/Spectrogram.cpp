@@ -167,11 +167,11 @@ SoundHandler::ConfigurationResult Spectrogram::vConfigure(const std::any& _param
 
 	lastStrip.isZero = true;
 	lastStrip.buffer.resize(height);
+	std::fill(lastStrip.buffer.begin(), lastStrip.buffer.end(), backgroundIntColor);
 
-	counter = 0;
-	dataShortageEqSize = 0;
-	overpushCount = 0;
-	writeNeeded = true;
+	dataCounter = 0;
+	waveCounter = 0;
+	imageHasChanged = true;
 
 
 	if (nullptr == std::any_cast<Snapshot>(&snapshotAny)) {
@@ -194,13 +194,7 @@ SoundHandler::ConfigurationResult Spectrogram::vConfigure(const std::any& _param
 }
 
 void Spectrogram::vProcess(array_view<float> wave, clock::time_point killTime) {
-	if (!image.isEmpty()) {
-		image.removeLast(overpushCount);
-	} else {
-		dataShortageEqSize -= blockSize * overpushCount;
-	}
-	overpushCount = 0;
-	dataShortageEqSize += wave.size();
+	waveCounter += wave.size();
 
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
@@ -208,9 +202,9 @@ void Spectrogram::vProcess(array_view<float> wave, clock::time_point killTime) {
 	const bool imageWasEmpty = image.isEmpty();
 
 	for (auto chunk : source.getChunks(0)) {
-		counter += chunk.equivalentWaveSize;
+		dataCounter += chunk.equivalentWaveSize;
 
-		if (counter < blockSize || clock::now() > killTime) {
+		if (dataCounter < blockSize || clock::now() > killTime) {
 			continue;
 		}
 
@@ -228,29 +222,17 @@ void Spectrogram::vProcess(array_view<float> wave, clock::time_point killTime) {
 			}
 		}
 
-		while (counter >= blockSize) {
+		while (dataCounter >= blockSize && waveCounter >= blockSize) {
 			pushStrip();
-			counter -= blockSize;
-			dataShortageEqSize -= blockSize;
 		}
 	}
 
-	// in case kill time is exceeded, this ensures that image speed is consistent
-	while (counter >= blockSize) {
+	// this ensures that image speed is consistent
+	while (waveCounter >= blockSize) {
 		pushStrip();
-		counter -= blockSize;
-		dataShortageEqSize -= blockSize;
 	}
 
-	index localShortageSize = dataShortageEqSize;
-	while (localShortageSize >= blockSize && overpushCount < params.length) {
-		pushStrip();
-
-		localShortageSize -= blockSize;
-		overpushCount++;
-	}
-
-	if (writeNeeded) {
+	if (imageHasChanged) {
 		if (params.fading != 0.0) {
 			if (!image.isEmpty() || (image.isEmpty() && !imageWasEmpty)) {
 				fadeHelper.setPastLastStripIndex(image.getPastLastStripIndex());
@@ -266,17 +248,20 @@ void Spectrogram::vProcess(array_view<float> wave, clock::time_point killTime) {
 }
 
 void Spectrogram::pushStrip() {
-	writeNeeded = true;
+	imageHasChanged = true;
 
 	if (lastStrip.isZero) {
 		image.pushEmptyStrip(params.colors[0].color.toIntColor());
 	} else {
 		image.pushStrip(lastStrip.buffer);
 	}
+
+	dataCounter -= blockSize;
+	waveCounter -= blockSize;
 }
 
 void Spectrogram::vUpdateSnapshot(std::any& handlerSpecificData) const {
-	if (!writeNeeded) {
+	if (!imageHasChanged) {
 		return;
 	}
 
@@ -286,7 +271,7 @@ void Spectrogram::vUpdateSnapshot(std::any& handlerSpecificData) const {
 
 	snapshot.pixels.copyWithResize(params.fading != 0.0 ? fadeHelper.getResultBuffer() : image.getPixels());
 
-	writeNeeded = false;
+	imageHasChanged = false;
 }
 
 void Spectrogram::staticFinisher(const Snapshot& snapshot, const ExternCallContext& context) {
