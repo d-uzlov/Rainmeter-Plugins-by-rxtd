@@ -268,7 +268,9 @@ void BandResampler::vProcess(ProcessContext context) {
 
 			if (clock::now() > context.killTime) {
 				auto myChunks = getChunks(cascadeIndex);
+				myChunks.remove_suffix(1);
 				dest.copyFrom(myChunks.empty() ? getSavedData(cascadeIndex) : myChunks.back());
+				Rainmeter::sourcelessLog(L"BandResampler kill");
 				continue;
 			}
 

@@ -349,17 +349,12 @@ namespace rxtd::audio_analyzer {
 		}
 
 		void clearChunks() {
-			for (index layer = 0; layer < index(_dataSize.eqWaveSizes.size()); layer++) {
-				auto chunks = _layers[layer].chunksView;
-				if (chunks.empty()) {
-					continue;
+			for (index layer = 0; layer < _dataSize.layersCount; layer++) {
+				auto& offsets = _layers[layer].offsets;
+				if (!offsets.empty()) {
+					_lastResults[layer].copyFrom({ _buffer.data() + offsets.back(), _dataSize.valuesCount });
 				}
-
-				_lastResults[layer].copyFrom(chunks.back());
-			}
-
-			for (auto& data : _layers) {
-				data.offsets.clear();
+				offsets.clear();
 			}
 
 			_layersAreValid = false;
