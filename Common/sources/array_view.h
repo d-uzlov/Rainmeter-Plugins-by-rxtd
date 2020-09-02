@@ -52,14 +52,9 @@ public:
 	constexpr array_span(std::vector<value_type>& vec)
 		: data_(vec.data()), size_(vec.size()) { }
 
-	constexpr array_span(const array_span &rhs) noexcept
-		: data_(rhs.data_), size_(rhs.size_) { }
+	constexpr array_span(const array_span &rhs) noexcept = default;
 
-	constexpr array_span& operator=(const array_span &rhs) noexcept {
-		data_ = rhs.data_;
-		size_ = rhs.size_;
-		return *this;
-	}
+	constexpr array_span& operator=(const array_span &rhs) noexcept = default;
 
 	array_span(array_span&& other) noexcept = default;
 	array_span& operator=(array_span&& other) noexcept = default;
@@ -261,17 +256,12 @@ public:
 	constexpr array_view(const std::vector<value_type>& vec)
 		: data_(vec.data()), size_(vec.size()) { }
 
-	constexpr array_view(const array_view<value_type> &rhs) noexcept
-		: data_(rhs.data_), size_(rhs.size_) { }
+	constexpr array_view(const array_view<value_type> &rhs) noexcept = default;
 
 	constexpr array_view(const array_span<value_type> &rhs) noexcept
 		: data_(rhs.data()), size_(rhs.size()) { }
 
-	constexpr array_view& operator=(const array_view &rhs) noexcept {
-		data_ = rhs.data_;
-		size_ = rhs.size_;
-		return *this;
-	}
+	constexpr array_view& operator=(const array_view &rhs) noexcept = default;
 
 	array_view(array_view&& other) noexcept = default;
 	array_view& operator=(array_view&& other) noexcept = default;

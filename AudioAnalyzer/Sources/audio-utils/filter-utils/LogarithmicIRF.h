@@ -30,8 +30,14 @@ namespace rxtd::audio_utils {
 		}
 
 		[[nodiscard]]
-		float apply(float prev, float value) {
+		float apply(float prev, float value) const {
 			return value + attackDecayConstants[(value < prev)] * (prev - value);
+		}
+
+		void arrayApply(array_span<float> dest, array_view<float> source) const {
+			for (int i = 0; i < source.size(); ++i) {
+				dest[i] = apply(dest[i], source[i]);
+			}
 		}
 
 		[[nodiscard]]

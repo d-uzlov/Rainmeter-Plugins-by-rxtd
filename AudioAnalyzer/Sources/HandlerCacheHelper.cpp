@@ -19,6 +19,7 @@
 #include "sound-processing/sound-handlers/spectrum-stack/UniformBlur.h"
 #include "sound-processing/sound-handlers/spectrum-stack/Spectrogram.h"
 #include "sound-processing/sound-handlers/spectrum-stack/SingleValueTransformer.h"
+#include "sound-processing/sound-handlers/spectrum-stack/TimeResampler.h"
 
 #include "sound-processing/sound-handlers/spectrum-stack/legacy_WeightedBlur.h"
 #include "sound-processing/sound-handlers/spectrum-stack/legacy_FiniteTimeFilter.h"
@@ -119,6 +120,9 @@ PatchInfo HandlerCacheHelper::createHandlerPatcher(
 	}
 	if (type == L"ValueTransformer") {
 		return createPatcherT<SingleValueTransformer>(optionMap, cl);
+	}
+	if (type == L"TimeResampler") {
+		return createPatcherT<TimeResampler>(optionMap, cl);
 	}
 
 	if (type == L"WeightedBlur") {

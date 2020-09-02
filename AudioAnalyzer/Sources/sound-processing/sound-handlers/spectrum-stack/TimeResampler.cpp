@@ -1,0 +1,116 @@
+﻿/*
+ * Copyright (C) 2020 rxtd
+ *
+ * This Source Code Form is subject to the terms of the GNU General Public
+ * License; either version 2 of the License, or (at your option) any later
+ * version. If a copy of the GPL was not distributed with this file, You can
+ * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
+ */
+
+#include "TimeResampler.h"
+
+using namespace audio_analyzer;
+
+SoundHandler::ParseResult TimeResampler::parseParams(
+	const OptionMap& om, Logger& cl, const Rainmeter& rain,
+	index legacyNumber
+) const {
+	Params params;
+
+	const auto sourceId = om.get(L"source").asIString();
+	if (sourceId.empty()) {
+		cl.error(L"source is not found");
+		return { };
+	}
+
+	params.granularity = om.get(L"granularity").asFloat(0.0);
+	params.granularity *= 0.001;
+
+	params.attack = om.get(L"attack").asFloat(0.0);
+	params.decay = om.get(L"decay").asFloat(params.attack);
+
+	params.attack = params.attack * 0.001;
+	params.decay = params.decay * 0.001;
+
+	ParseResult result{ true };
+	result.params = params;
+	result.sources.emplace_back(sourceId);
+	return result;
+}
+
+SoundHandler::ConfigurationResult
+TimeResampler::vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) {
+	params = std::any_cast<Params>(_params);
+
+	auto& config = getConfiguration();
+	const auto dataSize = config.sourcePtr->getDataSize();
+
+	if (index(layersData.size()) != dataSize.layersCount) {
+		layersData.resize(dataSize.layersCount);
+		for (auto& ld : layersData) {
+			ld.values.resize(dataSize.valuesCount);
+			std::fill(ld.values.begin(), ld.values.end(), 0.0f);
+			ld.dataCounter = 0;
+			ld.waveCounter = 0;
+		}
+	} else if (index(layersData.front().values.size()) != dataSize.valuesCount) {
+		for (auto& ld : layersData) {
+			ld.values.resize(dataSize.valuesCount);
+			std::fill(ld.values.begin(), ld.values.end(), 0.0f);
+			// no need for resetting counters here
+		}
+	}
+
+	blockSize = index(params.granularity * config.sampleRate);
+
+	return dataSize;
+}
+
+void TimeResampler::vProcess(ProcessContext context) {
+	const auto& source = *getConfiguration().sourcePtr;
+	const index layersCount = source.getDataSize().layersCount;
+	for (int i = 0; i < layersCount; ++i) {
+		processLayer(context.wave.size(), i);
+	}
+}
+
+void TimeResampler::processLayer(index waveSize, index layer) {
+	LayerData& ld = layersData[layer];
+	const auto& source = *getConfiguration().sourcePtr;
+	ld.waveCounter += waveSize;
+
+	auto lastValue = source.getSavedData(layer);
+
+	for (auto chunk : source.getChunks(layer)) {
+		ld.dataCounter += chunk.equivalentWaveSize;
+		lastValue = chunk.data;
+
+		ld.lowPass.setParams(
+			params.attack, params.decay,
+			getConfiguration().sampleRate,
+			std::min(chunk.equivalentWaveSize, blockSize)
+		);
+
+		if (ld.dataCounter < blockSize) {
+			ld.lowPass.arrayApply(ld.values, chunk.data);
+			continue;
+		}
+
+		while (ld.dataCounter >= blockSize && ld.waveCounter >= blockSize) {
+			ld.lowPass.arrayApply(ld.values, chunk.data);
+			pushLayer(layer, blockSize).copyFrom(ld.values);
+
+			ld.dataCounter -= blockSize;
+			ld.waveCounter -= blockSize;
+		}
+	}
+
+	// this ensures that push speed is consistent regardless of input latency
+	while (ld.waveCounter >= blockSize) {
+		ld.lowPass.arrayApply(ld.values, lastValue);
+		pushLayer(layer, blockSize).copyFrom(ld.values);
+
+		ld.dataCounter -= blockSize;
+		ld.waveCounter -= blockSize;
+	}
+}

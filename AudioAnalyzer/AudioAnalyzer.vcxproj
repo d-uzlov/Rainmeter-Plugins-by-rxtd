@@ -216,6 +216,7 @@
     <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\ResamplerProvider.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\Spectrogram.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\SingleValueTransformer.h" />
+    <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\TimeResampler.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\UniformBlur.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\legacy_WeightedBlur.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\WaveForm.h" />
@@ -268,6 +269,7 @@
     <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\ResamplerProvider.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\Spectrogram.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\SingleValueTransformer.cpp" />
+    <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\TimeResampler.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\UniformBlur.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\legacy_WeightedBlur.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\WaveForm.cpp" />

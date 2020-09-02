@@ -233,7 +233,7 @@ namespace rxtd::audio_analyzer {
 
 		[[nodiscard]]
 		virtual index getStartingLayer() const {
-			return 0;
+			return _configuration.sourcePtr == nullptr ? 0 : _configuration.sourcePtr->getStartingLayer();
 		}
 
 		[[nodiscard]]

@@ -200,6 +200,9 @@
     <ClInclude Include="Sources\image-utils\WaveFormDrawer.h">
       <Filter>Source Files\image-utils</Filter>
     </ClInclude>
+    <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\TimeResampler.h">
+      <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sources\AudioChild.cpp">
@@ -330,6 +333,9 @@
     </ClCompile>
     <ClCompile Include="Sources\image-utils\WaveFormDrawer.cpp">
       <Filter>Source Files\image-utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\TimeResampler.cpp">
+      <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
