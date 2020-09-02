@@ -17,30 +17,17 @@
 
 using namespace audio_utils;
 
-CustomizableValueTransformer::CustomizableValueTransformer(std::vector<TransformationInfo> transformations):
-	transforms(std::move(transformations)) {
-	for (const auto& tr : transforms) {
-		if (tr.type == TransformType::eLOW_PASS_FILTER) {
-			_hasState = true;
-			break;
-		}
-	}
-}
-
+// todo double/float?
 float CustomizableValueTransformer::apply(double value) {
 	for (auto& transform : transforms) {
 		switch (transform.type) {
-		case TransformType::eLOW_PASS_FILTER: {
-			value = transform.state.filter.next(value);
-			break;
-		}
 		case TransformType::eDB: {
 			value = std::max<double>(value, std::numeric_limits<float>::min());
 			value = 10.0f * std::log10(value);
 			break;
 		}
 		case TransformType::eMAP: {
-			value = transform.state.interpolator.toValue(value);
+			value = transform.interpolator.toValue(value);
 			break;
 		}
 		case TransformType::eCLAMP: {
@@ -58,23 +45,6 @@ void CustomizableValueTransformer::applyToArray(array_view<float> source, array_
 
 	for (auto& transform : transforms) {
 		switch (transform.type) {
-		case TransformType::eLOW_PASS_FILTER: {
-			auto sourceIter = source.begin();
-			auto pastIter = transform.pastFilterValues.begin();
-			auto destIter = dest.begin();
-
-			for (; sourceIter != source.end();
-			       ++sourceIter, ++pastIter, ++destIter) {
-				const float sourceValue = *sourceIter;
-				float& prev = *pastIter;
-				float& destValue = *destIter;
-
-				destValue = transform.state.filter.apply(prev, sourceValue);
-				prev = destValue;
-			}
-
-			break;
-		}
 		case TransformType::eDB: {
 			auto sourceIter = source.begin();
 			auto destIter = dest.begin();
@@ -102,7 +72,7 @@ void CustomizableValueTransformer::applyToArray(array_view<float> source, array_
 				float value = *sourceIter;
 				float& destValue = *destIter;
 
-				value = transform.state.interpolator.toValue(value);
+				value = transform.interpolator.toValue(value);
 
 				destValue = value;
 			}
@@ -131,44 +101,9 @@ void CustomizableValueTransformer::applyToArray(array_view<float> source, array_
 	}
 }
 
-void CustomizableValueTransformer::setParams(index samplesPerSec, index blockSize) {
-	for (auto& transform : transforms) {
-		if (transform.type == TransformType::eLOW_PASS_FILTER) {
-			transform.state.filter.setParams(
-				transform.args[0] * 0.001,
-				transform.args[1] * 0.001,
-				samplesPerSec,
-				blockSize
-			);
-		}
-	}
-}
-
-void CustomizableValueTransformer::resetState() {
-	for (auto& transform : transforms) {
-		if (transform.type == TransformType::eLOW_PASS_FILTER) {
-			transform.state.filter.reset();
-		}
-	}
-}
-
-void CustomizableValueTransformer::setHistoryWidth(index value) {
-	if (historyWidth == value) {
-		return;
-	}
-
-	for (auto& transform : transforms) {
-		if (transform.type == TransformType::eLOW_PASS_FILTER) {
-			transform.pastFilterValues.resize(value);
-			std::fill(transform.pastFilterValues.begin(), transform.pastFilterValues.end(), 0.0f);
-		}
-	}
-
-	historyWidth = value;
-}
-
-CustomizableValueTransformer TransformationParser::parse(sview transformDescription, utils::Rainmeter::Logger& cl) {
-	std::vector<Transformation> transforms;
+CustomizableValueTransformer
+CustomizableValueTransformer::parse(sview transformDescription, utils::Rainmeter::Logger& cl) {
+	std::vector<TransformationInfo> transforms;
 
 	for (auto list : utils::Option{ transformDescription }.asSequence()) {
 		auto logger = cl.context(L"{}: ", list.get(0).asString());
@@ -182,24 +117,19 @@ CustomizableValueTransformer TransformationParser::parse(sview transformDescript
 	return CustomizableValueTransformer{ transforms };
 }
 
-std::optional<TransformationParser::Transformation> TransformationParser::parseTransformation(
+std::optional<CustomizableValueTransformer::TransformationInfo> CustomizableValueTransformer::parseTransformation(
 	utils::OptionList list,
 	utils::Rainmeter::Logger& cl
 ) {
 	const auto transformName = list.get(0).asIString();
-	Transformation tr{ };
+	TransformationInfo tr{ };
 
 	utils::OptionMap params;
 	if (list.size() >= 2) {
 		params = list.get(1).asMap(L',', L' ');
 	}
 
-	if (transformName == L"lowPass") {
-		tr.type = TransformType::eLOW_PASS_FILTER;
-
-		tr.args[0] = std::max(params.get(L"attack").asFloatF(), 0.0f);
-		tr.args[1] = std::max(params.get(L"decay").asFloatF(tr.args[0]), 0.0f);
-	} else if (transformName == L"db") {
+	if (transformName == L"db") {
 		tr.type = TransformType::eDB;
 	} else if (transformName == L"map") {
 		tr.type = TransformType::eMAP;
@@ -237,7 +167,7 @@ std::optional<TransformationParser::Transformation> TransformationParser::parseT
 			valMax = range.get(1).asFloatF();
 		}
 
-		tr.state.interpolator.setParams(linMin, linMax, valMin, valMax);
+		tr.interpolator.setParams(linMin, linMax, valMin, valMax);
 
 	} else if (transformName == L"clamp") {
 		tr.type = TransformType::eCLAMP;

@@ -68,7 +68,7 @@ void AudioChild::vReload() {
 
 	auto transformDesc = rain.read(L"Transform");
 	auto transformLogger = logger.context(L"Transform: ");
-	transformer = audio_utils::TransformationParser::parse(transformDesc.asString(), transformLogger);
+	transformer = CVT::parse(transformDesc.asString(), transformLogger);
 
 	const auto stringValueStr = rain.read(L"StringValue").asIString(L"Number");
 	if (stringValueStr == L"Number") {
@@ -118,7 +118,6 @@ double AudioChild::vUpdate() {
 		result = parent->getValue(procName, handlerName, channel, valueIndex);
 	}
 
-	// transformer.setParams(); // todo
 	result = transformer.apply(result);
 
 	return result;

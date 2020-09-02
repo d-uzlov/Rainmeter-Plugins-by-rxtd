@@ -25,20 +25,11 @@ SoundHandler::ParseResult BlockHandler::parseParams(
 	}
 	params.updateIntervalMs *= 0.001;
 
-	if (legacyNumber < 104) {
-		params.legacy_attackTime = std::max(om.get(L"attack").asFloat(100), 0.0);
-		params.legacy_decayTime = std::max(om.get(L"decay").asFloat(params.legacy_attackTime), 0.0);
+	params.legacy_attackTime = std::max(om.get(L"attack").asFloat(100), 0.0);
+	params.legacy_decayTime = std::max(om.get(L"decay").asFloat(params.legacy_attackTime), 0.0);
 
-		utils::BufferPrinter printer;
-		printer.print(L"lowPass[attack {}, decay {}]", params.legacy_attackTime, params.legacy_decayTime);
-		params.transformer = audio_utils::TransformationParser::parse(printer.getBufferView(), cl);
-	} else {
-		params.legacy_attackTime = 0.0;
-		params.legacy_decayTime = 0.0;
-
-		auto transformLogger = cl.context(L"transform: ");
-		params.transformer = audio_utils::TransformationParser::parse(om.get(L"transform").asString(), transformLogger);
-	}
+	auto transformLogger = cl.context(L"transform: ");
+	params.transformer = CVT::parse(om.get(L"transform").asString(), transformLogger);
 
 	ParseResult result{ true };
 	result.params = std::move(params);
@@ -53,7 +44,7 @@ SoundHandler::ConfigurationResult BlockHandler::vConfigure(const std::any& _para
 	blockSize = static_cast<decltype(blockSize)>(config.sampleRate * params.updateIntervalMs);
 	blockSize = std::max<index>(blockSize, 1);
 
-	params.transformer.setParams(config.sampleRate, blockSize);
+	legacy_filter.setParams(params.legacy_attackTime, params.legacy_decayTime, config.sampleRate, blockSize);
 
 	if (nullptr == std::any_cast<Snapshot>(&snapshotAny)) {
 		snapshotAny = Snapshot{ };
@@ -70,6 +61,7 @@ void BlockHandler::vProcess(ProcessContext context) {
 }
 
 void BlockHandler::setNextValue(float value) {
+	value = legacy_filter.next(value);
 	pushLayer(0)[0] = params.transformer.apply(value);
 }
 

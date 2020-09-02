@@ -20,7 +20,7 @@ SoundHandler::ParseResult Loudness::parseParams(
 	Params params;
 
 	auto transformLogger = cl.context(L"transform: ");
-	params.transformer = audio_utils::TransformationParser::parse(om.get(L"transform").asString(), transformLogger);
+	params.transformer = CVT::parse(om.get(L"transform").asString(), transformLogger);
 
 	params.gatingLimit = om.get(L"gatingLimit").asFloat(0.5);
 	params.gatingLimit = std::clamp(params.gatingLimit, 0.0, 1.0);
@@ -53,8 +53,6 @@ SoundHandler::ConfigurationResult Loudness::vConfigure(const std::any& _params, 
 	blockSize = index(sampleRate / params.updatesPerSecond);
 	blockNormalizer = 1.0 / blockSize;
 	blockCounter = 0;
-
-	params.transformer.setParams(sampleRate, blockSize);
 
 	blocks.resize(blocksCount);
 	std::fill(blocks.begin(), blocks.end(), 0.0);

@@ -23,11 +23,8 @@ SoundHandler::ParseResult SingleValueTransformer::parseParams(
 		return { };
 	}
 
-	params.granularity = om.get(L"granularity").asFloat(0.0);
-	params.granularity *= 0.001;
-
 	auto transformLogger = cl.context(L"transform: ");
-	params.transformer = audio_utils::TransformationParser::parse(om.get(L"transform").asString(), transformLogger);
+	params.transformer = CVT::parse(om.get(L"transform").asString(), transformLogger);
 
 	ParseResult result{ true };
 	result.params = std::move(params);
@@ -42,30 +39,15 @@ SingleValueTransformer::vConfigure(const std::any& _params, Logger& cl, std::any
 	auto& config = getConfiguration();
 	const auto dataSize = config.sourcePtr->getDataSize();
 
-	params.transformer.setHistoryWidth(dataSize.valuesCount);
-
 	transformersPerLayer.resize(dataSize.layersCount);
 	for (auto& tr : transformersPerLayer) {
 		tr = params.transformer;
-	}
-
-	granularityBlock = index(params.granularity * config.sampleRate);
-	for (auto& transformer : transformersPerLayer) {
-		transformer.setParams(config.sampleRate, granularityBlock);
 	}
 
 	return dataSize;
 }
 
 void SingleValueTransformer::vProcess(ProcessContext context) {
-	if (params.transformer.hasState()) {
-		processStateful();
-	} else {
-		processStateless();
-	}
-}
-
-void SingleValueTransformer::processStateless() {
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
 	const index layersCount = source.getDataSize().layersCount;
@@ -77,8 +59,4 @@ void SingleValueTransformer::processStateless() {
 			params.transformer.applyToArray(chunk, dest);
 		}
 	}
-}
-
-void SingleValueTransformer::processStateful() {
-	// todo remove function
 }

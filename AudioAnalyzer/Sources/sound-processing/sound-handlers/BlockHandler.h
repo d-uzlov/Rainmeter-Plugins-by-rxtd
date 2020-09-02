@@ -10,6 +10,7 @@
 #pragma once
 #include "SoundHandler.h"
 #include "../../audio-utils/CustomizableValueTransformer.h"
+#include "audio-utils/filter-utils/LogarithmicIRF.h"
 
 namespace rxtd::audio_analyzer {
 	class BlockHandler : public SoundHandler {
@@ -42,6 +43,8 @@ namespace rxtd::audio_analyzer {
 		Params params{ };
 
 		index blockSize{ };
+
+		audio_utils::LogarithmicIRF legacy_filter;
 
 	protected:
 		index counter = 0;

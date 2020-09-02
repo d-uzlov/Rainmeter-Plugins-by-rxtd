@@ -74,15 +74,14 @@ SoundHandler::ParseResult WaveForm::parseParams(
 
 	params.fading = om.get(L"fadingPercent").asFloat(0.0);
 
-	using TP = audio_utils::TransformationParser;
 	if (legacyNumber < 104) {
 		const auto gain = om.get(L"gain").asFloat(1.0);
 		utils::BufferPrinter printer;
 		printer.print(L"map[from 0 : 1, to 0 : {}]", gain);
-		params.transformer = TP::parse(printer.getBufferView(), cl);
+		params.transformer = CVT::parse(printer.getBufferView(), cl);
 	} else {
 		auto transformLogger = cl.context(L"transform: ");
-		params.transformer = TP::parse(om.get(L"transform").asString(), transformLogger);
+		params.transformer = CVT::parse(om.get(L"transform").asString(), transformLogger);
 	}
 
 	ParseResult result{ true };
@@ -113,12 +112,6 @@ SoundHandler::ConfigurationResult WaveForm::vConfigure(const std::any& _params, 
 
 	minTransformer = { params.transformer };
 	maxTransformer = { params.transformer };
-
-	minTransformer.setParams(sampleRate, blockSize);
-	maxTransformer.setParams(sampleRate, blockSize);
-
-	minTransformer.resetState();
-	maxTransformer.resetState();
 
 	writeNeeded = true;
 
