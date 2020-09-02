@@ -68,46 +68,17 @@ namespace rxtd::audio_analyzer {
 		};
 
 	private:
-		class WaveformValueTransformer {
-			CVT cvt;
-
-		public:
-			WaveformValueTransformer() = default;
-
-			WaveformValueTransformer(CVT cvt) : cvt(std::move(cvt)) {
-			}
-
-			double apply(double value) {
-				const bool positive = value > 0;
-				value = cvt.apply(float(std::abs(value)));
-
-				if (!positive) {
-					value *= -1;
-				}
-
-				return value;
-			}
-
-			void updateTransformations(index sampleRate, index blockSize) {
-				cvt.setParams(sampleRate, blockSize);
-			}
-
-			void reset() {
-				cvt.resetState();
-			}
-		};
-
 		Params params;
 
 		index blockSize{ };
 
 		index counter = 0;
-		double min{ };
-		double max{ };
+		float min{ };
+		float max{ };
 		mutable bool writeNeeded = false;
 
-		WaveformValueTransformer minTransformer{ };
-		WaveformValueTransformer maxTransformer{ };
+		CVT minTransformer{ };
+		CVT maxTransformer{ };
 		double minDistinguishableValue{ };
 
 		utils::WaveFormDrawer drawer{ };

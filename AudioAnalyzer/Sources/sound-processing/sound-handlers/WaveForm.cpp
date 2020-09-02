@@ -114,17 +114,17 @@ SoundHandler::ConfigurationResult WaveForm::vConfigure(const std::any& _params, 
 	minTransformer = { params.transformer };
 	maxTransformer = { params.transformer };
 
-	minTransformer.updateTransformations(sampleRate, blockSize);
-	maxTransformer.updateTransformations(sampleRate, blockSize);
+	minTransformer.setParams(sampleRate, blockSize);
+	maxTransformer.setParams(sampleRate, blockSize);
+
+	minTransformer.resetState();
+	maxTransformer.resetState();
 
 	writeNeeded = true;
 
 	counter = 0;
 	min = 10.0;
 	max = -10.0;
-
-	minTransformer.reset();
-	maxTransformer.reset();
 
 
 	if (nullptr == std::any_cast<Snapshot>(&snapshotAny)) {
@@ -152,22 +152,35 @@ SoundHandler::ConfigurationResult WaveForm::vConfigure(const std::any& _params, 
 void WaveForm::vProcess(ProcessContext context) {
 	const bool wasEmpty = drawer.isEmpty();
 
-	for (const auto value : context.wave) {
-		min = std::min<double>(min, value);
-		max = std::max<double>(max, value);
-		counter++;
-		if (counter >= blockSize) {
-			pushStrip(min, max);
-			writeNeeded = true;
+	bool anyChanges = false;
 
-			counter = 0;
-			min = 10.0;
-			max = -10.0;
+	auto localWave = context.wave;
+	while (true) {
+		const index remainingBlockSize = blockSize - counter;
+		if (remainingBlockSize > localWave.size()) {
+			auto [wMin, wMax] = std::minmax_element(localWave.begin(), localWave.end());
+			min = std::min(min, *wMin);
+			max = std::max(max, *wMax);
+			counter += localWave.size();
+			break;
 		}
+
+		auto [wMin, wMax] = std::minmax_element(localWave.begin(), localWave.begin() + remainingBlockSize);
+		min = std::min(min, *wMin);
+		max = std::max(max, *wMax);
+
+		localWave.remove_prefix(remainingBlockSize);
+		pushStrip(min, max);
+		anyChanges = true;
+
+		counter = 0;
+		min = std::numeric_limits<float>::infinity();
+		max = -std::numeric_limits<float>::infinity();
 	}
 
-	if (!drawer.isEmpty() || wasEmpty != drawer.isEmpty()) {
+	if (anyChanges && (!drawer.isEmpty() || wasEmpty != drawer.isEmpty())) {
 		drawer.inflate();
+		writeNeeded = true;
 	}
 }
 
@@ -200,13 +213,13 @@ void WaveForm::staticFinisher(const Snapshot& snapshot, const ExternCallContext&
 }
 
 void WaveForm::pushStrip(double min, double max) {
-	min = minTransformer.apply(min);
-	max = maxTransformer.apply(max);
+	const auto transformedMin = std::abs(minTransformer.apply(std::abs(min)));
+	const auto transformedMax = std::abs(maxTransformer.apply(std::abs(max)));
 
-	if (std::abs(min) < minDistinguishableValue && std::abs(max) < minDistinguishableValue) {
+	if (std::abs(transformedMin) < minDistinguishableValue && std::abs(transformedMax) < minDistinguishableValue) {
 		drawer.fillSilence();
 	} else {
-		drawer.fillStrip(min, max);
+		drawer.fillStrip(std::copysign(transformedMin, min), std::copysign(transformedMax, max));
 	}
 }
 
