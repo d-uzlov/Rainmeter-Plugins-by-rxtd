@@ -119,7 +119,9 @@ void TimeResampler::processLayer(index waveSize, index layer) {
 		ld.lowPass.arrayApply(ld.values, lastValue);
 		pushLayer(layer).copyFrom(ld.values);
 
-		ld.dataCounter -= blockSize;
 		ld.waveCounter -= blockSize;
+		if (ld.dataCounter >= blockSize) {
+			ld.dataCounter -= blockSize;
+		}
 	}
 }

@@ -206,7 +206,11 @@ void Spectrogram::vProcess(ProcessContext context) {
 	for (auto chunk : source.getChunks(0)) {
 		dataCounter += equivalentWaveSize;
 
-		if (dataCounter < blockSize || clock::now() > context.killTime) {
+		if (dataCounter < blockSize) {
+			continue;
+		}
+
+		if (clock::now() > context.killTime) {
 			continue;
 		}
 
@@ -224,12 +228,16 @@ void Spectrogram::vProcess(ProcessContext context) {
 
 		while (dataCounter >= blockSize && waveCounter >= blockSize) {
 			pushStrip();
+			dataCounter -= blockSize;
 		}
 	}
 
 	// this ensures that image speed is consistent
 	while (waveCounter >= blockSize) {
 		pushStrip();
+		if (dataCounter >= blockSize) {
+			dataCounter -= blockSize;
+		}
 	}
 
 	if (imageHasChanged) {
@@ -256,7 +264,6 @@ void Spectrogram::pushStrip() {
 		image.pushStrip(lastStrip.buffer);
 	}
 
-	dataCounter -= blockSize;
 	waveCounter -= blockSize;
 }
 

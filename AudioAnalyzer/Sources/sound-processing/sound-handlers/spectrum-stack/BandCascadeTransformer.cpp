@@ -106,7 +106,6 @@ void BandCascadeTransformer::vProcess(ProcessContext context) {
 			auto myChunks = getChunks(0);
 			myChunks.remove_suffix(1);
 			dest.copyFrom(myChunks.empty() ? getSavedData(0) : myChunks.back());
-			Rainmeter::sourcelessLog(L"BandCascadeTransformer kill");
 			continue;
 		}
 
