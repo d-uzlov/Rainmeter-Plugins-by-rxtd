@@ -110,10 +110,10 @@ void ProcessingManager::process(const ChannelMixer& mixer, clock::time_point kil
 
 		channelStruct.filter.applyInPlace(waveBuffer);
 
-		SoundHandler::ProcessContext context {};
+		SoundHandler::ProcessContext context{ };
 		context.wave = waveBuffer;
 		context.originalWave.data = wave;
-		auto[min, max] = std::minmax_element(wave.begin(), wave.end());
+		auto [min, max] = std::minmax_element(wave.begin(), wave.end());
 		context.originalWave.min = *min;
 		context.originalWave.max = *max;
 		context.killTime = killTime;

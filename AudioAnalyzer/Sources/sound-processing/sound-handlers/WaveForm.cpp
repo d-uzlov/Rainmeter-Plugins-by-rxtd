@@ -115,10 +115,7 @@ SoundHandler::ConfigurationResult WaveForm::vConfigure(const std::any& _params, 
 
 	writeNeeded = true;
 
-	counter = 0;
-	min = 10.0;
-	max = -10.0;
-
+	resetMinMax();
 
 	if (nullptr == std::any_cast<Snapshot>(&snapshotAny)) {
 		snapshotAny = Snapshot{ };
@@ -148,6 +145,10 @@ void WaveForm::vProcess(ProcessContext context) {
 
 	auto localWave = context.wave;
 	while (true) {
+		if (localWave.empty()) {
+			break;
+		}
+
 		const index remainingBlockSize = blockSize - counter;
 		if (remainingBlockSize > localWave.size()) {
 			auto [wMin, wMax] = std::minmax_element(localWave.begin(), localWave.end());
@@ -165,9 +166,7 @@ void WaveForm::vProcess(ProcessContext context) {
 		pushStrip(min, max);
 		anyChanges = true;
 
-		counter = 0;
-		min = std::numeric_limits<float>::infinity();
-		max = -std::numeric_limits<float>::infinity();
+		resetMinMax();
 	}
 
 	if (anyChanges && (!drawer.isEmpty() || wasEmpty != drawer.isEmpty())) {
@@ -188,6 +187,12 @@ void WaveForm::vUpdateSnapshot(std::any& handlerSpecificData) const {
 	snapshot.pixels.copyWithResize(drawer.getResultBuffer());
 
 	writeNeeded = false;
+}
+
+void WaveForm::resetMinMax() {
+	counter = 0;
+	min = std::numeric_limits<float>::infinity();
+	max = -std::numeric_limits<float>::infinity();
 }
 
 void WaveForm::staticFinisher(const Snapshot& snapshot, const ExternCallContext& context) {

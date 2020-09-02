@@ -104,6 +104,8 @@ namespace rxtd::audio_analyzer {
 		void vUpdateSnapshot(std::any& handlerSpecificData) const override;
 
 	private:
+		void resetMinMax();
+
 		static void staticFinisher(const Snapshot& handlerSpecificData, const ExternCallContext& context);
 		void pushStrip(double min, double max);
 
