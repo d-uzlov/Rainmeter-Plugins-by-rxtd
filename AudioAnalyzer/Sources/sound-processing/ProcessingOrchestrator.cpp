@@ -52,7 +52,7 @@ void ProcessingOrchestrator::process(const ChannelMixer& channelMixer) {
 		+ std::chrono::duration_cast<clock::duration>(1.0ms * killTimeoutMs);
 
 	for (auto& [name, sa] : saMap) {
-		sa.process(channelMixer, killTime);
+		sa.process(channelMixer, killTime, snapshot[name]);
 	}
 
 	if (warnTimeMs >= 0.0) {
@@ -69,10 +69,6 @@ void ProcessingOrchestrator::process(const ChannelMixer& channelMixer) {
 				warnTimeMs
 			);
 		}
-	}
-
-	for (auto& [name, sa] : saMap) {
-		sa.updateSnapshot(snapshot[name]);
 	}
 }
 

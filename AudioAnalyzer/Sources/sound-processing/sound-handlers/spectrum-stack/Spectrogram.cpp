@@ -210,7 +210,7 @@ void Spectrogram::vProcess(ProcessContext context) {
 			continue;
 		}
 
-		lastStrip.isZero = *std::max_element(chunk.begin(), chunk.end()) < params.colorMinValue;
+		lastStrip.isZero = *std::max_element(chunk.begin(), chunk.end()) <= params.colorMinValue;
 
 		if (!lastStrip.isZero) {
 			if (params.colors.size() == 2) {

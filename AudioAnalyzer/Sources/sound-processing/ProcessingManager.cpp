@@ -96,8 +96,10 @@ void ProcessingManager::setParams(
 	}
 }
 
-void ProcessingManager::process(const ChannelMixer& mixer, clock::time_point killTime) {
+void ProcessingManager::process(const ChannelMixer& mixer, clock::time_point killTime, Snapshot& snapshot) {
 	for (auto& [channel, channelStruct] : channelMap) {
+		auto& channelSnapshot = snapshot[channel];
+
 		auto wave = mixer.getChannelPCM(channel);
 
 		if (resamplingDivider <= 1) {
@@ -120,17 +122,7 @@ void ProcessingManager::process(const ChannelMixer& mixer, clock::time_point kil
 
 		for (auto& handlerName : order) {
 			auto& handler = *channelStruct.handlerMap[handlerName];
-			handler.process(context);
-		}
-	}
-}
-
-void ProcessingManager::updateSnapshot(Snapshot& snapshot) {
-	for (auto& [channel, channelStruct] : channelMap) {
-		auto& channelSnapshot = snapshot[channel];
-		for (auto& [handlerName, handler] : channelStruct.handlerMap) {
-			// order is not important
-			handler->updateSnapshot(channelSnapshot[handlerName]);
+			handler.process(context, channelSnapshot[handlerName]);
 		}
 	}
 }

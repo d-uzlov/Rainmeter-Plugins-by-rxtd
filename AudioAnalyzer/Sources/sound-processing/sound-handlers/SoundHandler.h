@@ -208,17 +208,21 @@ namespace rxtd::audio_analyzer {
 			_anyChanges = false;
 		}
 
-		void process(ProcessContext context) {
+		void process(ProcessContext context, Snapshot& snapshot) {
 			clearChunks();
-			vProcess(context);
-		}
 
-		void updateSnapshot(Snapshot& snapshot) {
-			clearChunks();
-			snapshot.values = _lastResults;
+			vProcess(context);
+
+			for (index layer = 0; layer < index(_dataSize.eqWaveSizes.size()); layer++) {
+				auto chunks = _layers[layer].chunksView;
+				if (!chunks.empty()) {
+					snapshot.values[layer].copyFrom(chunks.back());
+				} else {
+					snapshot.values[layer].copyFrom(_lastResults[layer]);
+				}
+			}
 			vUpdateSnapshot(snapshot.handlerSpecificData);
 		}
-
 
 		// following public members are public for access between handlers
 		[[nodiscard]]

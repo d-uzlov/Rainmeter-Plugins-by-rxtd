@@ -36,7 +36,8 @@ namespace rxtd::audio_analyzer {
 			const HandlerMap& channelData;
 
 		public:
-			explicit HandlerFinderImpl(const HandlerMap& channelData) : channelData(channelData) { }
+			explicit HandlerFinderImpl(const HandlerMap& channelData) : channelData(channelData) {
+			}
 
 			[[nodiscard]]
 			SoundHandler* getHandler(isview id) const override {
@@ -60,7 +61,6 @@ namespace rxtd::audio_analyzer {
 			Snapshot& snapshot
 		);
 
-		void process(const ChannelMixer& mixer, clock::time_point killTime);
-		void updateSnapshot(Snapshot& snapshot);
+		void process(const ChannelMixer& mixer, clock::time_point killTime, Snapshot& snapshot);
 	};
 }
