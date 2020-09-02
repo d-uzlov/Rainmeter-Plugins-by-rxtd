@@ -63,14 +63,13 @@ void UniformBlur::vProcess(ProcessContext context) {
 	const index cascadesCount = source.getDataSize().layersCount;
 	for (index i = 0; i < cascadesCount; ++i) {
 		for (auto chunk : source.getChunks(i)) {
-			const auto cascadeSource = chunk.data;
-			auto cascadeResult = pushLayer(i, chunk.equivalentWaveSize);
+			auto cascadeResult = pushLayer(i);
 
 			const index radius = std::llround(theoreticalRadius);
 			if (radius < 1 || clock::now() > context.killTime) {
-				cascadeSource.transferToSpan(cascadeResult);
+				chunk.transferToSpan(cascadeResult);
 			} else {
-				blurCascade(cascadeSource, cascadeResult, radius);
+				blurCascade(chunk, cascadeResult, radius);
 			}
 		}
 

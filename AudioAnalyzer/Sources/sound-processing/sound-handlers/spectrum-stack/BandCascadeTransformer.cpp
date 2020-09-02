@@ -83,7 +83,7 @@ BandCascadeTransformer::vConfigure(const std::any& _params, Logger& cl, std::any
 	snapshot.clear();
 	snapshot.resize(dataSize.layersCount);
 
-	return { 1, dataSize.valuesCount };
+	return { dataSize.valuesCount, { config.sourcePtr->getDataSize().eqWaveSizes[0] } };
 }
 
 void BandCascadeTransformer::vProcess(ProcessContext context) {
@@ -97,28 +97,29 @@ void BandCascadeTransformer::vProcess(ProcessContext context) {
 		meta.data = source.getSavedData(i);
 	}
 
+	auto& eqWS = source.getDataSize().eqWaveSizes;
+
 	for (auto chunk : source.getChunks(0)) {
-		auto dest = pushLayer(0, chunk.equivalentWaveSize);
+		auto dest = pushLayer(0);
 
 		if (clock::now() > context.killTime) {
 			auto myChunks = getChunks(0);
-			dest.copyFrom(myChunks.empty() ? getSavedData(0) : myChunks.back().data);
+			dest.copyFrom(myChunks.empty() ? getSavedData(0) : myChunks.back());
 			continue;
 		}
 
 		for (index i = 0; i < layersCount; i++) {
 			auto& meta = snapshot[i];
-			meta.offset -= chunk.equivalentWaveSize;
+			meta.offset -= eqWS[0];
 
 			auto layerChunks = source.getChunks(i);
 			if (meta.nextChunkIndex >= layerChunks.size() || meta.offset >= 0) {
 				continue;
 			}
 
-			auto nextChunk = layerChunks[meta.nextChunkIndex];
-			meta.data = nextChunk.data;
+			meta.data = layerChunks[meta.nextChunkIndex];
 			meta.nextChunkIndex++;
-			meta.offset += nextChunk.equivalentWaveSize;
+			meta.offset += eqWS[i];
 			meta.maxValue = *std::max_element(meta.data.begin(), meta.data.end());
 		}
 

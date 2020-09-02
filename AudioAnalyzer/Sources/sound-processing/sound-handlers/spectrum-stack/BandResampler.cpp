@@ -245,7 +245,12 @@ BandResampler::vConfigure(const std::any& _params, Logger& cl, std::any& snapsho
 	auto& snapshot = *std::any_cast<Snapshot>(&snapshotAny);
 	snapshot.bandFreqs = params.bandFreqs;
 
-	return { realCascadesCount, bandsCount };
+	auto& sourceDataSize = fftSource->getDataSize();
+	std::vector<index> eqWS;
+	for (index i = startCascade; i < endCascade; i++) {
+		eqWS.push_back(sourceDataSize.eqWaveSizes[i]);
+	}
+	return { bandsCount, std::move(eqWS) };
 }
 
 void BandResampler::vProcess(ProcessContext context) {
@@ -259,15 +264,15 @@ void BandResampler::vProcess(ProcessContext context) {
 		const index localCascadeIndex = cascadeIndex - startCascade;
 
 		for (auto chunk : source.getChunks(cascadeIndex)) {
-			auto dest = pushLayer(localCascadeIndex, chunk.equivalentWaveSize);
+			auto dest = pushLayer(localCascadeIndex);
 
 			if (clock::now() > context.killTime) {
 				auto myChunks = getChunks(cascadeIndex);
-				dest.copyFrom(myChunks.empty() ? getSavedData(cascadeIndex) : myChunks.back().data);
+				dest.copyFrom(myChunks.empty() ? getSavedData(cascadeIndex) : myChunks.back());
 				continue;
 			}
 
-			sampleCascade(chunk.data, dest, binWidth);
+			sampleCascade(chunk, dest, binWidth);
 
 			if (params.legacy_proportionalValues) {
 				for (index band = 0; band < bandsCount; ++band) {

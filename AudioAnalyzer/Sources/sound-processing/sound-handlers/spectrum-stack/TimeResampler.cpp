@@ -63,6 +63,11 @@ TimeResampler::vConfigure(const std::any& _params, Logger& cl, std::any& snapsho
 
 	blockSize = index(params.granularity * config.sampleRate);
 
+	std::vector<index> eqWS;
+	eqWS.resize(dataSize.layersCount);
+	for (int i = 0; i < dataSize.layersCount; ++i) {
+		eqWS.push_back(blockSize);
+	}
 	return dataSize;
 }
 
@@ -81,24 +86,26 @@ void TimeResampler::processLayer(index waveSize, index layer) {
 
 	auto lastValue = source.getSavedData(layer);
 
+	const index equivalentWaveSize = source.getDataSize().eqWaveSizes[layer];
+
 	for (auto chunk : source.getChunks(layer)) {
-		ld.dataCounter += chunk.equivalentWaveSize;
-		lastValue = chunk.data;
+		ld.dataCounter += equivalentWaveSize;
+		lastValue = chunk;
 
 		ld.lowPass.setParams(
 			params.attack, params.decay,
 			getConfiguration().sampleRate,
-			std::min(chunk.equivalentWaveSize, blockSize)
+			std::min(equivalentWaveSize, blockSize)
 		);
 
 		if (ld.dataCounter < blockSize) {
-			ld.lowPass.arrayApply(ld.values, chunk.data);
+			ld.lowPass.arrayApply(ld.values, chunk);
 			continue;
 		}
 
 		while (ld.dataCounter >= blockSize && ld.waveCounter >= blockSize) {
-			ld.lowPass.arrayApply(ld.values, chunk.data);
-			pushLayer(layer, blockSize).copyFrom(ld.values);
+			ld.lowPass.arrayApply(ld.values, chunk);
+			pushLayer(layer).copyFrom(ld.values);
 
 			ld.dataCounter -= blockSize;
 			ld.waveCounter -= blockSize;
@@ -108,7 +115,7 @@ void TimeResampler::processLayer(index waveSize, index layer) {
 	// this ensures that push speed is consistent regardless of input latency
 	while (ld.waveCounter >= blockSize) {
 		ld.lowPass.arrayApply(ld.values, lastValue);
-		pushLayer(layer, blockSize).copyFrom(ld.values);
+		pushLayer(layer).copyFrom(ld.values);
 
 		ld.dataCounter -= blockSize;
 		ld.waveCounter -= blockSize;

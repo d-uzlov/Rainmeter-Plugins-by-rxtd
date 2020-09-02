@@ -102,10 +102,10 @@ void legacy_FiniteTimeFilter::vProcess(ProcessContext context) {
 	const index layersCount = source.getDataSize().layersCount;
 	for (index layer = 0; layer < layersCount; ++layer) {
 		for (auto chunk : source.getChunks(layer)) {
-			auto dest = pushLayer(layer, chunk.equivalentWaveSize);
+			auto dest = pushLayer(layer);
 
 			if (params.smoothingFactor <= 1) {
-				dest.copyFrom(chunk.data);
+				dest.copyFrom(chunk);
 				continue;
 			}
 
@@ -115,10 +115,10 @@ void legacy_FiniteTimeFilter::vProcess(ProcessContext context) {
 			}
 
 			auto& layerPastValues = pastValues[layer];
-			layerPastValues[pastValuesIndex].copyFrom(chunk.data);
+			layerPastValues[pastValuesIndex].copyFrom(chunk);
 
 			if (clock::now() > context.killTime) {
-				dest.copyFrom(chunk.data);
+				dest.copyFrom(chunk);
 			} else {
 				applyToLayer(layerPastValues, dest);
 			}

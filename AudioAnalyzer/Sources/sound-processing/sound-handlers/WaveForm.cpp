@@ -145,8 +145,7 @@ SoundHandler::ConfigurationResult WaveForm::vConfigure(const std::any& _params, 
 	snapshot.writeNeeded = true;
 	snapshot.empty = false;
 
-
-	return { 0, 0 };
+	return { 0, { } };
 }
 
 void WaveForm::vProcess(ProcessContext context) {

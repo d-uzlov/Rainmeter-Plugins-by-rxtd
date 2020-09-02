@@ -62,7 +62,7 @@ SoundHandler::ConfigurationResult BlockHandler::vConfigure(const std::any& _para
 
 	snapshot.blockSize = blockSize;
 
-	return { 1, 1 };
+	return { 1, { blockSize } };
 }
 
 void BlockHandler::vProcess(ProcessContext context) {
@@ -70,7 +70,7 @@ void BlockHandler::vProcess(ProcessContext context) {
 }
 
 void BlockHandler::setNextValue(float value) {
-	pushLayer(0, blockSize)[0] = params.transformer.apply(value);
+	pushLayer(0)[0] = params.transformer.apply(value);
 }
 
 bool BlockHandler::getProp(

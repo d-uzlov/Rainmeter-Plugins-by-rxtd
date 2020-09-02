@@ -68,10 +68,10 @@ void legacy_WeightedBlur::vProcess(ProcessContext context) {
 
 	for (index i = 0; i < layersCount; ++i) {
 		for (auto chunk : source.getChunks(i)) {
-			const auto cascadeMagnitudes = chunk.data;
+			const auto cascadeMagnitudes = chunk;
 			const auto cascadeWeights = resampler.getLayerWeights(i);
 
-			auto result = pushLayer(i, chunk.equivalentWaveSize);
+			auto result = pushLayer(i);
 			if (maxRadius <= 1.0 || clock::now() > context.killTime) {
 				cascadeMagnitudes.transferToSpan(result);
 			} else {

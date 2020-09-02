@@ -27,6 +27,7 @@
 #pragma once
 #include <any>
 #include <chrono>
+#include <utility>
 
 #include "BufferPrinter.h"
 #include "RainmeterWrappers.h"
@@ -53,17 +54,21 @@ namespace rxtd::audio_analyzer {
 		static_assert(clock::is_steady);
 
 		struct DataSize {
-			index layersCount{ };
 			index valuesCount{ };
+			index layersCount{ };
+			std::vector<index> eqWaveSizes;
 
 			DataSize() = default;
 
-			DataSize(index layersCount, index valuesCount) : layersCount(layersCount), valuesCount(valuesCount) {
+			DataSize(index valuesCount, std::vector<index> _eqWaveSizes) :
+				valuesCount(valuesCount),
+				eqWaveSizes(std::move(_eqWaveSizes)) {
+				layersCount = eqWaveSizes.size();
 			}
 
 			[[nodiscard]]
 			bool isEmpty() const {
-				return layersCount == 0 || valuesCount == 0;
+				return eqWaveSizes.empty() || valuesCount == 0;
 			}
 		};
 
@@ -119,11 +124,6 @@ namespace rxtd::audio_analyzer {
 			}
 		};
 
-		struct DataChunk {
-			index equivalentWaveSize{ };
-			array_view<float> data;
-		};
-
 		struct Snapshot {
 			utils::Vector2D<float> values;
 			std::any handlerSpecificData;
@@ -151,23 +151,18 @@ namespace rxtd::audio_analyzer {
 
 			ConfigurationResult() = default;
 
-			ConfigurationResult(DataSize dataSize): success(true), dataSize(dataSize) {
+			ConfigurationResult(DataSize dataSize): success(true), dataSize(std::move(dataSize)) {
 			}
 
-			ConfigurationResult(index layersCount, index valuesCount):
-				ConfigurationResult(DataSize{ layersCount, valuesCount }) {
+			ConfigurationResult(index valuesCount, std::vector<index> eqWaveSizes):
+				ConfigurationResult(DataSize{ valuesCount, std::move(eqWaveSizes) }) {
 			}
 		};
 
 	private:
 		struct LayerCache {
-			struct ChunkInfo {
-				index offset{ };
-				index equivalentWaveSize{ };
-			};
-
-			mutable std::vector<DataChunk> chunks;
-			std::vector<ChunkInfo> meta;
+			mutable std::vector<array_view<float>> chunksView;
+			std::vector<index> offsets;
 		};
 
 		bool _anyChanges = false;
@@ -227,7 +222,7 @@ namespace rxtd::audio_analyzer {
 
 		// following public members are public for access between handlers
 		[[nodiscard]]
-		DataSize getDataSize() const {
+		const DataSize& getDataSize() const {
 			return _dataSize;
 		}
 
@@ -237,19 +232,19 @@ namespace rxtd::audio_analyzer {
 		}
 
 		[[nodiscard]]
-		array_view<DataChunk> getChunks(index layer) const {
-			if (layer >= _dataSize.layersCount) {
+		array_view<array_view<float>> getChunks(index layer) const {
+			if (layer >= index(_dataSize.eqWaveSizes.size())) {
 				return { };
 			}
 
 			inflateLayers();
-			return _layers[layer].chunks;
+			return _layers[layer].chunksView;
 		}
 
 		// returns saved data from previous iteration
 		[[nodiscard]]
 		array_view<float> getSavedData(index layer) const {
-			if (layer >= _dataSize.layersCount) {
+			if (layer >= index(_dataSize.eqWaveSizes.size())) {
 				return { };
 			}
 
@@ -305,12 +300,12 @@ namespace rxtd::audio_analyzer {
 		}
 
 		[[nodiscard]]
-		array_span<float> pushLayer(index layer, index equivalentWaveSize) {
+		array_span<float> pushLayer(index layer) {
 			const index offset = index(_buffer.size());
 			_buffer.resize(offset + _dataSize.valuesCount);
 			_layersAreValid = false;
 
-			_layers[layer].meta.push_back({ offset, equivalentWaveSize });
+			_layers[layer].offsets.push_back(offset);
 
 			return { _buffer.data() + offset, _dataSize.valuesCount };
 		}
@@ -340,10 +335,9 @@ namespace rxtd::audio_analyzer {
 			}
 
 			for (auto& data : _layers) {
-				data.chunks.resize(data.meta.size());
-				for (index i = 0; i < index(data.meta.size()); i++) {
-					data.chunks[i].equivalentWaveSize = data.meta[i].equivalentWaveSize;
-					data.chunks[i].data = { _buffer.data() + data.meta[i].offset, _dataSize.valuesCount };
+				data.chunksView.resize(data.offsets.size());
+				for (index i = 0; i < index(data.offsets.size()); i++) {
+					data.chunksView[i] = { _buffer.data() + data.offsets[i], _dataSize.valuesCount };
 				}
 			}
 
@@ -351,17 +345,17 @@ namespace rxtd::audio_analyzer {
 		}
 
 		void clearChunks() {
-			for (index layer = 0; layer < _dataSize.layersCount; layer++) {
-				auto chunks = _layers[layer].chunks;
+			for (index layer = 0; layer < index(_dataSize.eqWaveSizes.size()); layer++) {
+				auto chunks = _layers[layer].chunksView;
 				if (chunks.empty()) {
 					continue;
 				}
 
-				_lastResults[layer].copyFrom(chunks.back().data);
+				_lastResults[layer].copyFrom(chunks.back());
 			}
 
 			for (auto& data : _layers) {
-				data.meta.clear();
+				data.offsets.clear();
 			}
 
 			_layersAreValid = false;

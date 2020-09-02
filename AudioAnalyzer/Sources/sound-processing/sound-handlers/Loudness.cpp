@@ -64,7 +64,7 @@ SoundHandler::ConfigurationResult Loudness::vConfigure(const std::any& _params, 
 
 	minBlocksCount = index(blocksCount * (1.0 - params.gatingLimit));
 
-	return { 1, 1 };
+	return { 1, { blockSize } };
 }
 
 void Loudness::vProcess(ProcessContext context) {
@@ -109,6 +109,6 @@ void Loudness::pushMicroBlock(double value) {
 void Loudness::pushNextValue(double value) {
 	prevValue = value;
 
-	auto result = pushLayer(0, blockSize);
+	auto result = pushLayer(0);
 	result[0] = params.transformer.apply(float(value));
 }

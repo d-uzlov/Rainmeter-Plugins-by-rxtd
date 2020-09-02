@@ -72,32 +72,13 @@ void SingleValueTransformer::processStateless() {
 
 	for (index i = 0; i < layersCount; ++i) {
 		for (auto chunk : source.getChunks(i)) {
-			auto layerData = chunk.data;
-			auto dest = pushLayer(i, chunk.equivalentWaveSize);
+			auto dest = pushLayer(i);
 
-			params.transformer.applyToArray(layerData, dest);
+			params.transformer.applyToArray(chunk, dest);
 		}
 	}
 }
 
 void SingleValueTransformer::processStateful() {
-	auto& config = getConfiguration();
-	auto& source = *config.sourcePtr;
-	const index layersCount = source.getDataSize().layersCount;
-
-	for (index i = 0; i < layersCount; ++i) {
-		index& counter = countersPerLayer[i];
-
-		for (auto chunk : source.getChunks(i)) {
-			counter += chunk.equivalentWaveSize;
-
-			while (counter >= granularityBlock) {
-				counter -= granularityBlock;
-				auto layerData = chunk.data;
-				auto dest = pushLayer(i, granularityBlock);
-
-				params.transformer.applyToArray(layerData, dest);
-			}
-		}
-	}
+	// todo remove function
 }

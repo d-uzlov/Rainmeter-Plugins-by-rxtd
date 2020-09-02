@@ -190,7 +190,7 @@ SoundHandler::ConfigurationResult Spectrogram::vConfigure(const std::any& _param
 	snapshot.empty = false;
 
 
-	return { 0, 0 };
+	return { 0, { } };
 }
 
 void Spectrogram::vProcess(ProcessContext context) {
@@ -201,24 +201,24 @@ void Spectrogram::vProcess(ProcessContext context) {
 
 	const bool imageWasEmpty = image.isEmpty();
 
+	const index equivalentWaveSize = source.getDataSize().eqWaveSizes[0];
+
 	for (auto chunk : source.getChunks(0)) {
-		dataCounter += chunk.equivalentWaveSize;
+		dataCounter += equivalentWaveSize;
 
 		if (dataCounter < blockSize || clock::now() > context.killTime) {
 			continue;
 		}
 
-		const auto data = chunk.data;
-
-		lastStrip.isZero = *std::max_element(data.begin(), data.end()) < params.colorMinValue;
+		lastStrip.isZero = *std::max_element(chunk.begin(), chunk.end()) < params.colorMinValue;
 
 		if (!lastStrip.isZero) {
 			if (params.colors.size() == 2) {
 				// only use 2 colors
-				fillStrip(data, lastStrip.buffer);
+				fillStrip(chunk, lastStrip.buffer);
 			} else {
 				// many colors, but slightly slower
-				fillStripMulticolor(data, lastStrip.buffer);
+				fillStripMulticolor(chunk, lastStrip.buffer);
 			}
 		}
 

@@ -158,11 +158,10 @@ SoundHandler::ConfigurationResult FftAnalyzer::vConfigure(const std::any& _param
 	cascadeParams.inputStride = inputStride;
 	cascadeParams.legacy_correctZero = params.legacy_correctZero;
 	cascadeParams.callback = [this](array_view<float> result, index cascade) {
-		auto buffer = pushLayer(cascade, inputStride * index(std::pow(2, cascade)));
-		result.transferToSpan(buffer);
+		pushLayer(cascade).copyFrom(result);
 	};
 
-	for (index i = 0; i < index(cascades.size()); i++) {
+	for (index i = 0; i < params.cascadesCount; i++) {
 		const auto next = i + 1 < index(cascades.size()) ? &cascades[i + 1] : nullptr;
 		cascades[i].setParams(cascadeParams, &fft, next, i);
 	}
@@ -177,8 +176,14 @@ SoundHandler::ConfigurationResult FftAnalyzer::vConfigure(const std::any& _param
 	snapshot.sampleRate = getConfiguration().sampleRate;
 	snapshot.cascadesCount = cascades.size();
 
+	std::vector<index> eqWS;
+	index equivalentSize = inputStride;
+	for (int i = 0; i < params.cascadesCount; ++i) {
+		eqWS.push_back(equivalentSize);
+		equivalentSize *= 2;
+	}
 
-	return { params.cascadesCount, fftSize / 2 };
+	return { fftSize / 2, std::move(eqWS) };
 }
 
 void FftAnalyzer::vUpdateSnapshot(std::any& handlerSpecificData) const {
