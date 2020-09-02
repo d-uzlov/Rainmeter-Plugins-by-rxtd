@@ -58,5 +58,4 @@ namespace rxtd::audio_utils {
 			return std::exp(-2.0f * stride / (sampleRate * time));
 		}
 	};
-
 }

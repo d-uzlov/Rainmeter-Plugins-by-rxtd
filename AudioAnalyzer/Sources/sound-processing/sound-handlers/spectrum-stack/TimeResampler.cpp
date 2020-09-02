@@ -43,7 +43,7 @@ TimeResampler::vConfigure(const std::any& _params, Logger& cl, std::any& snapsho
 	params = std::any_cast<Params>(_params);
 
 	auto& config = getConfiguration();
-	const auto dataSize = config.sourcePtr->getDataSize();
+	auto& dataSize = config.sourcePtr->getDataSize();
 
 	if (index(layersData.size()) != dataSize.layersCount) {
 		layersData.resize(dataSize.layersCount);
@@ -62,6 +62,14 @@ TimeResampler::vConfigure(const std::any& _params, Logger& cl, std::any& snapsho
 	}
 
 	blockSize = index(params.granularity * config.sampleRate);
+
+	for (index i = 0; i < dataSize.layersCount; ++i) {
+		layersData[i].lowPass.setParams(
+			params.attack, params.decay,
+			getConfiguration().sampleRate,
+			std::min(dataSize.eqWaveSizes[i], blockSize)
+		);
+	}
 
 	std::vector<index> eqWS;
 	eqWS.resize(dataSize.layersCount);
@@ -91,12 +99,6 @@ void TimeResampler::processLayer(index waveSize, index layer) {
 	for (auto chunk : source.getChunks(layer)) {
 		ld.dataCounter += equivalentWaveSize;
 		lastValue = chunk;
-
-		ld.lowPass.setParams(
-			params.attack, params.decay,
-			getConfiguration().sampleRate,
-			std::min(equivalentWaveSize, blockSize)
-		);
 
 		if (ld.dataCounter < blockSize) {
 			ld.lowPass.arrayApply(ld.values, chunk);
