@@ -193,8 +193,8 @@ SoundHandler::ConfigurationResult Spectrogram::vConfigure(const std::any& _param
 	return { 0, 0 };
 }
 
-void Spectrogram::vProcess(array_view<float> wave, array_view<float> originalWave, clock::time_point killTime) {
-	waveCounter += wave.size();
+void Spectrogram::vProcess(ProcessContext context) {
+	waveCounter += context.wave.size();
 
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
@@ -204,7 +204,7 @@ void Spectrogram::vProcess(array_view<float> wave, array_view<float> originalWav
 	for (auto chunk : source.getChunks(0)) {
 		dataCounter += chunk.equivalentWaveSize;
 
-		if (dataCounter < blockSize || clock::now() > killTime) {
+		if (dataCounter < blockSize || clock::now() > context.killTime) {
 			continue;
 		}
 

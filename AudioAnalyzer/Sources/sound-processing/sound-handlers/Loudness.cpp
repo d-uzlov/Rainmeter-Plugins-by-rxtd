@@ -67,8 +67,8 @@ SoundHandler::ConfigurationResult Loudness::vConfigure(const std::any& _params, 
 	return { 1, 1 };
 }
 
-void Loudness::vProcess(array_view<float> wave, array_view<float> originalWave, clock::time_point killTime) {
-	for (const auto value : wave) {
+void Loudness::vProcess(ProcessContext context) {
+	for (const auto value : context.wave) {
 		blockIntermediate += value * value;
 		blockCounter++;
 		if (blockCounter == blockSize) {

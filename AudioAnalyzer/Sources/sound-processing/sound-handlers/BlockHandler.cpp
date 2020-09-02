@@ -65,8 +65,8 @@ SoundHandler::ConfigurationResult BlockHandler::vConfigure(const std::any& _para
 	return { 1, 1 };
 }
 
-void BlockHandler::vProcess(array_view<float> wave, array_view<float> originalWave, clock::time_point killTime) {
-	_process(wave);
+void BlockHandler::vProcess(ProcessContext context) {
+	_process(context.wave);
 }
 
 void BlockHandler::setNextValue(float value) {

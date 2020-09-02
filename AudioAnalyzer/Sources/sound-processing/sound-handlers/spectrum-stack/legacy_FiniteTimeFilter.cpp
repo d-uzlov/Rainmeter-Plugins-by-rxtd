@@ -95,7 +95,7 @@ legacy_FiniteTimeFilter::vConfigure(const std::any& _params, Logger& cl, std::an
 	return dataSize;
 }
 
-void legacy_FiniteTimeFilter::vProcess(array_view<float> wave, array_view<float> originalWave, clock::time_point killTime) {
+void legacy_FiniteTimeFilter::vProcess(ProcessContext context) {
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
 
@@ -117,7 +117,7 @@ void legacy_FiniteTimeFilter::vProcess(array_view<float> wave, array_view<float>
 			auto& layerPastValues = pastValues[layer];
 			layerPastValues[pastValuesIndex].copyFrom(chunk.data);
 
-			if (clock::now() > killTime) {
+			if (clock::now() > context.killTime) {
 				dest.copyFrom(chunk.data);
 			} else {
 				applyToLayer(layerPastValues, dest);

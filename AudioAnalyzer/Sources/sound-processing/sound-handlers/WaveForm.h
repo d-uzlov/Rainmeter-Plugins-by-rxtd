@@ -128,7 +128,7 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		ConfigurationResult vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) override;
 
-		void vProcess(array_view<float> wave, array_view<float> originalWave, clock::time_point killTime) override;
+		void vProcess(ProcessContext context) override;
 
 		void vUpdateSnapshot(std::any& handlerSpecificData) const override;
 

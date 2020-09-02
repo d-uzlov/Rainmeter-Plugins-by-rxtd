@@ -54,7 +54,7 @@ SoundHandler::ConfigurationResult UniformBlur::vConfigure(const std::any& _param
 	return dataSize;
 }
 
-void UniformBlur::vProcess(array_view<float> wave, array_view<float> originalWave, clock::time_point killTime) {
+void UniformBlur::vProcess(ProcessContext context) {
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
 
@@ -67,7 +67,7 @@ void UniformBlur::vProcess(array_view<float> wave, array_view<float> originalWav
 			auto cascadeResult = pushLayer(i, chunk.equivalentWaveSize);
 
 			const index radius = std::llround(theoreticalRadius);
-			if (radius < 1 || clock::now() > killTime) {
+			if (radius < 1 || clock::now() > context.killTime) {
 				cascadeSource.transferToSpan(cascadeResult);
 			} else {
 				blurCascade(cascadeSource, cascadeResult, radius);

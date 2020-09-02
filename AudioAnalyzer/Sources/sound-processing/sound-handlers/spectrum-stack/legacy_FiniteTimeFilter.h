@@ -64,7 +64,7 @@ namespace rxtd::audio_analyzer {
 		ConfigurationResult vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) override;
 
 	public:
-		void vProcess(array_view<float> wave, array_view<float> originalWave, clock::time_point killTime) override;
+		void vProcess(ProcessContext context) override;
 
 	private:
 		void applyToLayer(utils::array2d_view<float> layerPastValues, array_span<float> dest) const;

@@ -86,7 +86,7 @@ BandCascadeTransformer::vConfigure(const std::any& _params, Logger& cl, std::any
 	return { 1, dataSize.valuesCount };
 }
 
-void BandCascadeTransformer::vProcess(array_view<float> wave, array_view<float> originalWave, clock::time_point killTime) {
+void BandCascadeTransformer::vProcess(ProcessContext context) {
 	auto& source = *getConfiguration().sourcePtr;
 
 	const index layersCount = source.getDataSize().layersCount;
@@ -100,7 +100,7 @@ void BandCascadeTransformer::vProcess(array_view<float> wave, array_view<float> 
 	for (auto chunk : source.getChunks(0)) {
 		auto dest = pushLayer(0, chunk.equivalentWaveSize);
 
-		if (clock::now() > killTime) {
+		if (clock::now() > context.killTime) {
 			auto myChunks = getChunks(0);
 			dest.copyFrom(myChunks.empty() ? getSavedData(0) : myChunks.back().data);
 			continue;

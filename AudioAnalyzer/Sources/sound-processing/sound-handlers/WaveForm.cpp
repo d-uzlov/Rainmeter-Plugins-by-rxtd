@@ -149,10 +149,10 @@ SoundHandler::ConfigurationResult WaveForm::vConfigure(const std::any& _params, 
 	return { 0, 0 };
 }
 
-void WaveForm::vProcess(array_view<float> wave, array_view<float> originalWave, clock::time_point killTime) {
+void WaveForm::vProcess(ProcessContext context) {
 	const bool wasEmpty = drawer.isEmpty();
 
-	for (const auto value : wave) {
+	for (const auto value : context.wave) {
 		min = std::min<double>(min, value);
 		max = std::max<double>(max, value);
 		counter++;

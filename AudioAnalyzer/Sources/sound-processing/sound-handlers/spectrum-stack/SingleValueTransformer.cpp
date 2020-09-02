@@ -57,7 +57,7 @@ SingleValueTransformer::vConfigure(const std::any& _params, Logger& cl, std::any
 	return dataSize;
 }
 
-void SingleValueTransformer::vProcess(array_view<float> wave, array_view<float> originalWave, clock::time_point killTime) {
+void SingleValueTransformer::vProcess(ProcessContext context) {
 	if (params.transformer.hasState()) {
 		processStateful();
 	} else {

@@ -71,6 +71,18 @@ namespace rxtd::audio_analyzer {
 			sview channelName{ };
 		};
 
+		struct ProcessContext {
+			array_view<float> wave;
+
+			struct {
+				array_view<float> data;
+				float min{ };
+				float max{ };
+			} originalWave;
+
+			clock::time_point killTime;
+		};
+
 		struct ExternalMethods {
 			using FinishMethodType = void(*)(const std::any& data, const ExternCallContext& context);
 			using GetPropMethodType = bool(*)(
@@ -201,9 +213,9 @@ namespace rxtd::audio_analyzer {
 			_anyChanges = false;
 		}
 
-		void process(array_view<float> wave, array_view<float> originalWave, clock::time_point killTime) {
+		void process(ProcessContext context) {
 			clearChunks();
-			vProcess(wave, originalWave, killTime);
+			vProcess(context);
 		}
 
 		void updateSnapshot(Snapshot& snapshot) {
@@ -306,7 +318,7 @@ namespace rxtd::audio_analyzer {
 		// if handler is potentially heavy,
 		// handler should try to return control to caller
 		// when time is more than killTime
-		virtual void vProcess(array_view<float> wave, array_view<float> originalWave, clock::time_point killTime) = 0;
+		virtual void vProcess(ProcessContext context) = 0;
 
 		virtual void vUpdateSnapshot(std::any& handlerSpecificData) const {
 		}

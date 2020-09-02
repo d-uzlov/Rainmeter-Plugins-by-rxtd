@@ -57,7 +57,7 @@ legacy_WeightedBlur::vConfigure(const std::any& _params, Logger& cl, std::any& s
 	return dataSize;
 }
 
-void legacy_WeightedBlur::vProcess(array_view<float> wave, array_view<float> originalWave, clock::time_point killTime) {
+void legacy_WeightedBlur::vProcess(ProcessContext context) {
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
 	const BandResampler& resampler = *resamplerPtr;
@@ -72,7 +72,7 @@ void legacy_WeightedBlur::vProcess(array_view<float> wave, array_view<float> ori
 			const auto cascadeWeights = resampler.getLayerWeights(i);
 
 			auto result = pushLayer(i, chunk.equivalentWaveSize);
-			if (maxRadius <= 1.0 || clock::now() > killTime) {
+			if (maxRadius <= 1.0 || clock::now() > context.killTime) {
 				cascadeMagnitudes.transferToSpan(result);
 			} else {
 				blurCascade(

@@ -248,7 +248,7 @@ BandResampler::vConfigure(const std::any& _params, Logger& cl, std::any& snapsho
 	return { realCascadesCount, bandsCount };
 }
 
-void BandResampler::vProcess(array_view<float> wave, array_view<float> originalWave, clock::time_point killTime) {
+void BandResampler::vProcess(ProcessContext context) {
 	auto& config = getConfiguration();
 
 	auto& source = *fftSource;
@@ -261,7 +261,7 @@ void BandResampler::vProcess(array_view<float> wave, array_view<float> originalW
 		for (auto chunk : source.getChunks(cascadeIndex)) {
 			auto dest = pushLayer(localCascadeIndex, chunk.equivalentWaveSize);
 
-			if (clock::now() > killTime) {
+			if (clock::now() > context.killTime) {
 				auto myChunks = getChunks(cascadeIndex);
 				dest.copyFrom(myChunks.empty() ? getSavedData(cascadeIndex) : myChunks.back().data);
 				continue;
