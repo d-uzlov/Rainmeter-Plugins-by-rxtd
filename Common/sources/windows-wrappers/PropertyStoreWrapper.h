@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <optional>
 #include "GenericComWrapper.h"
 
 namespace rxtd::utils {
@@ -19,38 +20,38 @@ namespace rxtd::utils {
 		}
 
 		[[nodiscard]]
-		string readPropertyString(const PROPERTYKEY& key) {
+		std::optional<string> readPropertyString(const PROPERTYKEY& key) {
 			PropVariantWrapper prop;
 
 			if (getPointer()->GetValue(key, prop.getMetaPointer()) != S_OK) {
 				return { };
 			}
 
-			return { prop.getCString() };
+			return string{ prop.getCString() };
 		}
 
+		template <typename ResultType>
 		[[nodiscard]]
-		index readPropertyInt(const PROPERTYKEY& key) {
+		std::optional<ResultType> readPropertyInt(const PROPERTYKEY& key) {
 			PropVariantWrapper prop;
 
 			if (getPointer()->GetValue(key, prop.getMetaPointer()) != S_OK) {
 				return { };
 			}
 
-			return prop.getInt();
+			return static_cast<ResultType>(prop.getInt());
 		}
 
 		template <typename BlobObjectType>
 		[[nodiscard]]
-		BlobObjectType readPropertyBlob(const PROPERTYKEY& key) {
+		std::optional<BlobObjectType> readPropertyBlob(const PROPERTYKEY& key) {
 			PropVariantWrapper prop;
 
 			if (getPointer()->GetValue(key, prop.getMetaPointer()) != S_OK) {
 				return { };
 			}
 
-			const BlobObjectType& format = reinterpret_cast<const BlobObjectType&>(prop.getPointer().blob);
-			const BlobObjectType result = format;
+			const BlobObjectType result = reinterpret_cast<const BlobObjectType&>(prop.ref().blob);
 			return result;
 		}
 
@@ -73,7 +74,7 @@ namespace rxtd::utils {
 			}
 
 			[[nodiscard]]
-			const PROPVARIANT& getPointer() const {
+			const PROPVARIANT& ref() const {
 				return handle;
 			}
 

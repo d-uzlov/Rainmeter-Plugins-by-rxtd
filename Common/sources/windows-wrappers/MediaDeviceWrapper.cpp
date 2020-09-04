@@ -35,7 +35,6 @@ MediaDeviceWrapper::DeviceInfo MediaDeviceWrapper::readDeviceInfo() {
 		return { };
 	}
 
-
 	PropertyStoreWrapper props{
 		[&](auto ptr) {
 			return S_OK == getPointer()->OpenPropertyStore(STGM_READ, ptr);
@@ -46,13 +45,13 @@ MediaDeviceWrapper::DeviceInfo MediaDeviceWrapper::readDeviceInfo() {
 	}
 
 	DeviceInfo deviceInfo;
-	deviceInfo.fullFriendlyName = props.readPropertyString(PKEY_Device_FriendlyName);
-	deviceInfo.desc = props.readPropertyString(PKEY_Device_DeviceDesc);
-	deviceInfo.name = props.readPropertyString(PKEY_DeviceInterface_FriendlyName);
+	deviceInfo.fullFriendlyName = props.readPropertyString(PKEY_Device_FriendlyName).value_or(L"");
+	deviceInfo.desc = props.readPropertyString(PKEY_Device_DeviceDesc).value_or(L"");
+	deviceInfo.name = props.readPropertyString(PKEY_DeviceInterface_FriendlyName).value_or(L"");
 
-	deviceInfo.formFactor = convertFormFactor(static_cast<EndpointFormFactor>(
-		props.readPropertyInt(PKEY_AudioEndpoint_FormFactor)
-	));
+	deviceInfo.formFactor = convertFormFactor(
+		props.readPropertyInt<EndpointFormFactor>(PKEY_AudioEndpoint_FormFactor)
+	);
 
 	return deviceInfo;
 }
@@ -66,8 +65,12 @@ IAudioClientWrapper MediaDeviceWrapper::openAudioClient() {
 	};
 }
 
-sview MediaDeviceWrapper::convertFormFactor(EndpointFormFactor value) {
-	switch (value) {
+sview MediaDeviceWrapper::convertFormFactor(std::optional<EndpointFormFactor> valueOpt) {
+	if (!valueOpt.has_value()) {
+		return L"";
+	}
+
+	switch (valueOpt.value()) {
 	case RemoteNetworkDevice: return L"RemoteNetworkDevice";
 	case Speakers: return L"Speakers";
 	case LineLevel: return L"LineLevel";
@@ -83,5 +86,5 @@ sview MediaDeviceWrapper::convertFormFactor(EndpointFormFactor value) {
 	case EndpointFormFactor_enum_count:
 		break;
 	}
-	return L"UnknownFormFactor";
+	return L"";
 }

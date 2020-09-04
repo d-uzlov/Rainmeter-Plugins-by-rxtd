@@ -9,10 +9,11 @@
 
 #pragma once
 
-#include "GenericComWrapper.h"
 #include <mmdeviceapi.h>
 #include <endpointvolume.h>
+#include <optional>
 
+#include "GenericComWrapper.h"
 #include "IAudioClientWrapper.h"
 
 namespace rxtd::utils {
@@ -71,6 +72,6 @@ namespace rxtd::utils {
 
 	private:
 		[[nodiscard]]
-		static sview convertFormFactor(EndpointFormFactor value);
+		static sview convertFormFactor(std::optional<EndpointFormFactor> value);
 	};
 }
