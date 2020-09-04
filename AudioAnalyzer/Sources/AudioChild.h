@@ -64,7 +64,6 @@ namespace rxtd::audio_analyzer {
 
 		AudioParent* parent = nullptr;
 
-
 		index legacyNumber;
 
 	public:

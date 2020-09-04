@@ -96,22 +96,30 @@ AudioChild::Options AudioChild::readOptions() const {
 		result.channel = channelOpt.value();
 	}
 
-	result.handlerName = rain.read(L"ValueId").asIString();
-
-	result.procName = rain.read(L"Processing").asIString();
-
-	result.valueIndex = rain.read(L"Index").asInt();
-	if (result.valueIndex < 0) {
-		logger.error(L"Invalid Index {}. Index should be > 0. Set to 0.", result.valueIndex);
-		result.valueIndex = 0;
+	result.handlerName = rain.read(L"handlerName").asIString();
+	if (result.handlerName.empty()) {
+		result.handlerName = rain.read(L"ValueId").asIString();
 	}
 
-	auto transformDesc = rain.read(L"Transform");
-	auto transformLogger = logger.context(L"Transform: ");
-	result.transformer = CVT::parse(transformDesc.asString(), transformLogger);
+	if (!result.handlerName.empty()) {
+		result.procName = rain.read(L"Processing").asIString();
+		if (result.procName.empty()) {
+			result.procName = parent->findProcessingFor(result.handlerName);
+		}
 
-	const auto stringValueStr = rain.read(L"StringValue").asIString(L"Number");
-	if (stringValueStr == L"Info") {
+		result.valueIndex = rain.read(L"Index").asInt();
+		if (result.valueIndex < 0) {
+			logger.error(L"Invalid Index {}. Index should be > 0. Set to 0.", result.valueIndex);
+			result.valueIndex = 0;
+		}
+
+		auto transformDesc = rain.read(L"Transform");
+		auto transformLogger = logger.context(L"Transform: ");
+		result.transformer = CVT::parse(transformDesc.asString(), transformLogger);
+	}
+
+	if (const auto stringValueStr = rain.read(L"StringValue").asIString(L"Number");
+		stringValueStr == L"Info") {
 		auto requestList = rain.read(L"InfoRequest").asList(L',');
 
 		result.infoRequest.clear();
@@ -123,13 +131,14 @@ AudioChild::Options AudioChild::readOptions() const {
 		for (const auto& str : result.infoRequest) {
 			result.infoRequestC.push_back(str);
 		}
+	} else if (stringValueStr == L"Info") {
+		// no need to do anything here
 	} else {
 		logger.error(L"Invalid StringValue '{}', set to Number.", stringValueStr);
 	}
 
 	if (legacyNumber < 104) {
 		result.legacy = legacy_readOptions();
-		result.procName = parent->legacy_findProcessingFor(result.handlerName);
 	}
 
 	return result;

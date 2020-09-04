@@ -404,7 +404,7 @@ bool AudioParent::isHandlerShouldExist(isview procName, Channel channel, isview 
 	return true;
 }
 
-isview AudioParent::legacy_findProcessingFor(isview handlerName) const {
+isview AudioParent::findProcessingFor(isview handlerName) const {
 	for (auto& [name, pd] : paramParser.getParseResult()) {
 		auto& patchers = pd.handlersInfo.patchers;
 		if (patchers.find(handlerName) != patchers.end()) {
@@ -528,7 +528,7 @@ void AudioParent::resolveProp(array_view<isview> args, string& resolveBufferStri
 		handlerName = args[2];
 		propName = args[3];
 
-		procName = legacy_findProcessingFor(handlerName);
+		procName = findProcessingFor(handlerName);
 		if (procName.empty()) {
 			logHelpers.legacy_handlerNotFound.log(handlerName);
 			return;

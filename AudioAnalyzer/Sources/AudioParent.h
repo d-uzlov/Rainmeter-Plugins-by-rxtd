@@ -110,7 +110,7 @@ namespace rxtd::audio_analyzer {
 
 		bool isHandlerShouldExist(isview procName, Channel channel, isview handlerName) const;
 
-		isview legacy_findProcessingFor(isview handlerName) const;
+		isview findProcessingFor(isview handlerName) const;
 
 	private:
 		void updateCleaners();
