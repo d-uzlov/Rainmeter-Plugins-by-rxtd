@@ -65,8 +65,9 @@ void ParentHelper::init(
 
 	double bufferSize = 1.0;
 	if (constFields.useThreading) {
-		constFields.updateTime = threadingMap.get(L"updateTime").asFloat(1.0 / 60.0);
-		constFields.updateTime = std::clamp(constFields.updateTime, 1.0 / 200.0, 1.0);
+		double updateRate = threadingMap.get(L"updateRate").asFloat(60.0);;
+		updateRate = std::clamp(updateRate, 1.0, 200.0);
+		constFields.updateTime = 1.0 / updateRate;
 
 		const double defaultBufferSize = std::max(constFields.updateTime * 4.0, 0.5);
 		bufferSize = threadingMap.get(L"bufferSize").asFloat(defaultBufferSize);
