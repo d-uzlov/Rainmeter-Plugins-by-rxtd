@@ -56,7 +56,7 @@ SoundHandler::ConfigurationResult BlockHandler::vConfigure(const std::any& _para
 	return { 1, { blockSize } };
 }
 
-void BlockHandler::vProcess(ProcessContext context) {
+void BlockHandler::vProcess(ProcessContext context, std::any& handlerSpecificData) {
 	_process(context.wave);
 }
 

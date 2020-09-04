@@ -75,7 +75,6 @@ namespace rxtd::audio_analyzer {
 		index counter = 0;
 		float min{ };
 		float max{ };
-		mutable bool writeNeeded = false;
 
 		CVT minTransformer{ };
 		CVT maxTransformer{ };
@@ -99,9 +98,7 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		ConfigurationResult vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) override;
 
-		void vProcess(ProcessContext context) override;
-
-		void vUpdateSnapshot(std::any& handlerSpecificData) const override;
+		void vProcess(ProcessContext context, std::any& handlerSpecificData) override;
 
 	private:
 		void resetMinMax();

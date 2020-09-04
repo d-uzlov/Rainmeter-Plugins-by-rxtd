@@ -65,7 +65,7 @@ SoundHandler::ConfigurationResult Loudness::vConfigure(const std::any& _params, 
 	return { 1, { blockSize } };
 }
 
-void Loudness::vProcess(ProcessContext context) {
+void Loudness::vProcess(ProcessContext context, std::any& handlerSpecificData) {
 	for (const auto value : context.wave) {
 		blockIntermediate += value * value;
 		blockCounter++;

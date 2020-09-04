@@ -51,7 +51,7 @@ namespace rxtd::audio_analyzer {
 		ConfigurationResult vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) override;
 
 	public:
-		void vProcess(ProcessContext context) override;
+		void vProcess(ProcessContext context, std::any& handlerSpecificData) override;
 
 	private:
 		void blurCascade(array_view<float> source, array_span<float> dest, index radius);

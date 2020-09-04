@@ -193,7 +193,7 @@ SoundHandler::ConfigurationResult Spectrogram::vConfigure(const std::any& _param
 	return { 0, { } };
 }
 
-void Spectrogram::vProcess(ProcessContext context) {
+void Spectrogram::vProcess(ProcessContext context, std::any& handlerSpecificData) {
 	waveCounter += context.wave.size();
 
 	auto& config = getConfiguration();
@@ -252,6 +252,14 @@ void Spectrogram::vProcess(ProcessContext context) {
 				fadeHelper.drawBorderInPlace(image.getPixelsWritable());
 			}
 		}
+
+		auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
+		snapshot.writeNeeded = true;
+		snapshot.empty = image.isEmpty();
+
+		snapshot.pixels.copyWithResize(params.fading != 0.0 ? fadeHelper.getResultBuffer() : image.getPixels());
+
+		imageHasChanged = false;
 	}
 }
 
@@ -265,20 +273,6 @@ void Spectrogram::pushStrip() {
 	}
 
 	waveCounter -= blockSize;
-}
-
-void Spectrogram::vUpdateSnapshot(std::any& handlerSpecificData) const {
-	if (!imageHasChanged) {
-		return;
-	}
-
-	auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
-	snapshot.writeNeeded = true;
-	snapshot.empty = image.isEmpty();
-
-	snapshot.pixels.copyWithResize(params.fading != 0.0 ? fadeHelper.getResultBuffer() : image.getPixels());
-
-	imageHasChanged = false;
 }
 
 void Spectrogram::staticFinisher(const Snapshot& snapshot, const ExternCallContext& context) {

@@ -65,7 +65,7 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		ConfigurationResult vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) override;
 
-		void vProcess(ProcessContext context) final;
+		void vProcess(ProcessContext context, std::any& handlerSpecificData) final;
 
 		void setNextValue(float value);
 

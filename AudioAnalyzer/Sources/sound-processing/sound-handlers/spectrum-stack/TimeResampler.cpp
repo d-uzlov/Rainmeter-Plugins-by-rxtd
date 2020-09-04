@@ -79,7 +79,7 @@ TimeResampler::vConfigure(const std::any& _params, Logger& cl, std::any& snapsho
 	return dataSize;
 }
 
-void TimeResampler::vProcess(ProcessContext context) {
+void TimeResampler::vProcess(ProcessContext context, std::any& handlerSpecificData) {
 	const auto& source = *getConfiguration().sourcePtr;
 	const index layersCount = source.getDataSize().layersCount;
 	for (int i = 0; i < layersCount; ++i) {

@@ -86,7 +86,7 @@ BandCascadeTransformer::vConfigure(const std::any& _params, Logger& cl, std::any
 	return { dataSize.valuesCount, { config.sourcePtr->getDataSize().eqWaveSizes[0] } };
 }
 
-void BandCascadeTransformer::vProcess(ProcessContext context) {
+void BandCascadeTransformer::vProcess(ProcessContext context, std::any& handlerSpecificData) {
 	auto& source = *getConfiguration().sourcePtr;
 
 	const index layersCount = source.getDataSize().layersCount;
@@ -179,9 +179,7 @@ float BandCascadeTransformer::computeForBand(index band) const {
 		return bandWeights.back() != 0.0f ? snapshot.back().data[band] : 0.0f;
 	}
 
-	return float(
-		params.mixFunction == MixFunction::PRODUCT
-			? std::pow(valueProduct, 1.0f / cascadesSummed)
-			: valueSum / cascadesSummed
-	);
+	return params.mixFunction == MixFunction::PRODUCT
+		       ? std::pow(valueProduct, 1.0f / cascadesSummed)
+		       : valueSum / cascadesSummed;
 }

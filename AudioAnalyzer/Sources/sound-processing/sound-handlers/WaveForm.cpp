@@ -113,8 +113,6 @@ SoundHandler::ConfigurationResult WaveForm::vConfigure(const std::any& _params, 
 	minTransformer = { params.transformer };
 	maxTransformer = { params.transformer };
 
-	writeNeeded = true;
-
 	resetMinMax();
 
 	if (nullptr == std::any_cast<Snapshot>(&snapshotAny)) {
@@ -138,7 +136,7 @@ SoundHandler::ConfigurationResult WaveForm::vConfigure(const std::any& _params, 
 	return { 0, { } };
 }
 
-void WaveForm::vProcess(ProcessContext context) {
+void WaveForm::vProcess(ProcessContext context, std::any& handlerSpecificData) {
 	const bool wasEmpty = drawer.isEmpty();
 
 	bool anyChanges = false;
@@ -171,22 +169,13 @@ void WaveForm::vProcess(ProcessContext context) {
 
 	if (anyChanges && (!drawer.isEmpty() || wasEmpty != drawer.isEmpty())) {
 		drawer.inflate();
-		writeNeeded = true;
+
+		auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
+		snapshot.writeNeeded = true;
+		snapshot.empty = drawer.isEmpty();
+
+		snapshot.pixels.copyWithResize(drawer.getResultBuffer());
 	}
-}
-
-void WaveForm::vUpdateSnapshot(std::any& handlerSpecificData) const {
-	if (!writeNeeded) {
-		return;
-	}
-
-	auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
-	snapshot.writeNeeded = true;
-	snapshot.empty = drawer.isEmpty();
-
-	snapshot.pixels.copyWithResize(drawer.getResultBuffer());
-
-	writeNeeded = false;
 }
 
 void WaveForm::resetMinMax() {

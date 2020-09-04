@@ -95,7 +95,7 @@ legacy_FiniteTimeFilter::vConfigure(const std::any& _params, Logger& cl, std::an
 	return dataSize;
 }
 
-void legacy_FiniteTimeFilter::vProcess(ProcessContext context) {
+void legacy_FiniteTimeFilter::vProcess(ProcessContext context, std::any& handlerSpecificData) {
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
 

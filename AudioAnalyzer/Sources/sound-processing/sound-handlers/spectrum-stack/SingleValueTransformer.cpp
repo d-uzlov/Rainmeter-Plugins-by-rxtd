@@ -47,7 +47,7 @@ SingleValueTransformer::vConfigure(const std::any& _params, Logger& cl, std::any
 	return dataSize;
 }
 
-void SingleValueTransformer::vProcess(ProcessContext context) {
+void SingleValueTransformer::vProcess(ProcessContext context, std::any& handlerSpecificData) {
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
 	const index layersCount = source.getDataSize().layersCount;

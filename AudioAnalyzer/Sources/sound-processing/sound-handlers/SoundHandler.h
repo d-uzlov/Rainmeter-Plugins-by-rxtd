@@ -211,7 +211,7 @@ namespace rxtd::audio_analyzer {
 		void process(ProcessContext context, Snapshot& snapshot) {
 			clearChunks();
 
-			vProcess(context);
+			vProcess(context, snapshot.handlerSpecificData);
 
 			for (index layer = 0; layer < index(_dataSize.eqWaveSizes.size()); layer++) {
 				auto chunks = _layers[layer].chunksView;
@@ -221,7 +221,6 @@ namespace rxtd::audio_analyzer {
 					snapshot.values[layer].copyFrom(_lastResults[layer]);
 				}
 			}
-			vUpdateSnapshot(snapshot.handlerSpecificData);
 		}
 
 		// following public members are public for access between handlers
@@ -316,11 +315,8 @@ namespace rxtd::audio_analyzer {
 
 		// if handler is potentially heavy,
 		// handler should try to return control to caller
-		// when time is more than killTime
-		virtual void vProcess(ProcessContext context) = 0;
-
-		virtual void vUpdateSnapshot(std::any& handlerSpecificData) const {
-		}
+		// when time is more than context.killTime
+		virtual void vProcess(ProcessContext context, std::any& handlerSpecificData) = 0;
 
 		static index legacy_parseIndexProp(const isview& request, const isview& propName, index endBound) {
 			return legacy_parseIndexProp(request, propName, 0, endBound);

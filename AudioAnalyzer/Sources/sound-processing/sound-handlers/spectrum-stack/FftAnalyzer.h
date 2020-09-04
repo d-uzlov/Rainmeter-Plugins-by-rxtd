@@ -104,12 +104,13 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		ConfigurationResult vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) override;
 
-		void vUpdateSnapshot(std::any& handlerSpecificData) const override;
-
 	public:
-		index getFftSize() const;
+		index getFftSize() const {
+			// todo is this even needed?
+			return fftSize;
+		}
 
-		void vProcess(ProcessContext context) override;
+		void vProcess(ProcessContext context, std::any& handlerSpecificData) override;
 
 	private:
 		static bool getProp(

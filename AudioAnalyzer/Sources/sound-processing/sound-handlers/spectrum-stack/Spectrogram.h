@@ -119,9 +119,7 @@ namespace rxtd::audio_analyzer {
 		ConfigurationResult vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) override;
 
 	public:
-		void vProcess(ProcessContext context) override;
-
-		void vUpdateSnapshot(std::any& handlerSpecificData) const override;
+		void vProcess(ProcessContext context, std::any& handlerSpecificData) override;
 
 	private:
 		static void staticFinisher(const Snapshot& snapshot, const ExternCallContext& context);

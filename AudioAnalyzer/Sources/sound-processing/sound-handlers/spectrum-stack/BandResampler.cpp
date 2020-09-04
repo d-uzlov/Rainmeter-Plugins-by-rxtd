@@ -253,7 +253,7 @@ BandResampler::vConfigure(const std::any& _params, Logger& cl, std::any& snapsho
 	return { bandsCount, std::move(eqWS) };
 }
 
-void BandResampler::vProcess(ProcessContext context) {
+void BandResampler::vProcess(ProcessContext context, std::any& handlerSpecificData) {
 	auto& config = getConfiguration();
 
 	auto& source = *fftSource;

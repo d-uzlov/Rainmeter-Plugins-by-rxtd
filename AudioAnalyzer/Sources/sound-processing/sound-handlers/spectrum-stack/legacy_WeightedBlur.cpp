@@ -57,7 +57,7 @@ legacy_WeightedBlur::vConfigure(const std::any& _params, Logger& cl, std::any& s
 	return dataSize;
 }
 
-void legacy_WeightedBlur::vProcess(ProcessContext context) {
+void legacy_WeightedBlur::vProcess(ProcessContext context, std::any& handlerSpecificData) {
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
 	const BandResampler& resampler = *resamplerPtr;

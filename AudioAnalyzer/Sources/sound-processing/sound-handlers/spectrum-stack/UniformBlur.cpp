@@ -54,7 +54,7 @@ SoundHandler::ConfigurationResult UniformBlur::vConfigure(const std::any& _param
 	return dataSize;
 }
 
-void UniformBlur::vProcess(ProcessContext context) {
+void UniformBlur::vProcess(ProcessContext context, std::any& handlerSpecificData) {
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
 

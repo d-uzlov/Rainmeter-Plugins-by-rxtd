@@ -186,24 +186,18 @@ SoundHandler::ConfigurationResult FftAnalyzer::vConfigure(const std::any& _param
 	return { fftSize / 2, std::move(eqWS) };
 }
 
-void FftAnalyzer::vUpdateSnapshot(std::any& handlerSpecificData) const {
+void FftAnalyzer::vProcess(ProcessContext context, std::any& handlerSpecificData) {
+	if (params.randomTest != 0.0) {
+		processRandom(context.wave.size(), context.killTime);
+	} else {
+		cascades[0].process(context.wave, context.killTime);
+	}
+
 	auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
 	snapshot.dc.clear();
 
 	for (const auto& cascade : cascades) {
 		snapshot.dc.push_back(float(cascade.legacy_getDC()));
-	}
-}
-
-index FftAnalyzer::getFftSize() const {
-	return fftSize;
-}
-
-void FftAnalyzer::vProcess(ProcessContext context) {
-	if (params.randomTest != 0.0) {
-		processRandom(context.wave.size(), context.killTime);
-	} else {
-		cascades[0].process(context.wave, context.killTime);
 	}
 }
 
