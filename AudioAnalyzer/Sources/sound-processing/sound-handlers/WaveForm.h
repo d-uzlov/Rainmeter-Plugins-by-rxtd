@@ -12,6 +12,7 @@
 #include "image-utils/WaveFormDrawer.h"
 #include "image-utils/ImageWriteHelper.h"
 #include "../../audio-utils/CustomizableValueTransformer.h"
+#include "audio-utils/MinMaxCounter.h"
 
 namespace rxtd::audio_analyzer {
 	class WaveForm : public SoundHandler {
@@ -32,6 +33,7 @@ namespace rxtd::audio_analyzer {
 			index borderSize{ };
 			double fading{ };
 			CVT transformer;
+			float silenceThreshold{ };
 
 			// generated
 			friend bool operator==(const Params& lhs, const Params& rhs) {
@@ -45,7 +47,8 @@ namespace rxtd::audio_analyzer {
 					&& lhs.connected == rhs.connected
 					&& lhs.borderSize == rhs.borderSize
 					&& lhs.fading == rhs.fading
-					&& lhs.transformer == rhs.transformer;
+					&& lhs.transformer == rhs.transformer
+					&& lhs.silenceThreshold == rhs.silenceThreshold;
 			}
 
 			friend bool operator!=(const Params& lhs, const Params& rhs) {
@@ -70,11 +73,8 @@ namespace rxtd::audio_analyzer {
 	private:
 		Params params;
 
-		index blockSize{ };
-
-		index counter = 0;
-		float min{ };
-		float max{ };
+		audio_utils::MinMaxCounter mainCounter;
+		audio_utils::MinMaxCounter originalCounter;
 
 		double minDistinguishableValue{ };
 
@@ -99,10 +99,7 @@ namespace rxtd::audio_analyzer {
 		void vProcess(ProcessContext context, std::any& handlerSpecificData) override;
 
 	private:
-		void resetMinMax();
-
 		static void staticFinisher(const Snapshot& snapshot, const ExternCallContext& context);
-		void pushStrip(double min, double max);
 
 		static bool getProp(
 			const Snapshot& snapshot,

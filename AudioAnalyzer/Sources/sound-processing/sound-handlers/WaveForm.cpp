@@ -10,6 +10,8 @@
 #include "WaveForm.h"
 #include <filesystem>
 
+#include "MyMath.h"
+
 using namespace std::string_literals;
 using utils::Color;
 
@@ -74,6 +76,9 @@ SoundHandler::ParseResult WaveForm::parseParams(
 
 	params.fading = om.get(L"fadingPercent").asFloat(0.0);
 
+	params.silenceThreshold = om.get(L"silenceThreshold").asFloatF(-70);
+	params.silenceThreshold = utils::MyMath::db2amplitude(params.silenceThreshold);
+
 	if (legacyNumber < 104) {
 		const auto gain = om.get(L"gain").asFloat(1.0);
 		utils::BufferPrinter printer;
@@ -96,7 +101,7 @@ SoundHandler::ConfigurationResult WaveForm::vConfigure(const std::any& _params, 
 
 	auto& config = getConfiguration();
 	const index sampleRate = config.sampleRate;
-	blockSize = index(sampleRate * params.resolution);
+	auto blockSize = index(sampleRate * params.resolution);
 	blockSize = std::max<index>(blockSize, 1);
 
 	minDistinguishableValue = 1.0 / params.height;
@@ -110,7 +115,11 @@ SoundHandler::ConfigurationResult WaveForm::vConfigure(const std::any& _params, 
 
 	drawer.inflate();
 
-	resetMinMax();
+	mainCounter.reset();
+	originalCounter.reset();
+
+	mainCounter.setBlockSize(blockSize);
+	originalCounter.setBlockSize(blockSize);
 
 	if (nullptr == std::any_cast<Snapshot>(&snapshotAny)) {
 		snapshotAny = Snapshot{ };
@@ -138,33 +147,33 @@ void WaveForm::vProcess(ProcessContext context, std::any& handlerSpecificData) {
 
 	bool anyChanges = false;
 
-	auto localWave = context.wave;
+	mainCounter.setWave(context.wave);
+	originalCounter.setWave(context.originalWave);
 	while (true) {
-		if (localWave.empty()) {
+		mainCounter.update();
+		originalCounter.update();
+
+		if (!mainCounter.isReady()) {
 			break;
 		}
 
-		const index remainingBlockSize = blockSize - counter;
-		if (remainingBlockSize > localWave.size()) {
-			auto [wMin, wMax] = std::minmax_element(localWave.begin(), localWave.end());
-			min = std::min(min, *wMin);
-			max = std::max(max, *wMax);
-			counter += localWave.size();
-			break;
+		if (originalCounter.isBelowThreshold(params.silenceThreshold)) {
+			drawer.fillSilence();
+		} else {
+			const auto transformedMin = std::abs(params.transformer.apply(std::abs(mainCounter.getMin())));
+			const auto transformedMax = std::abs(params.transformer.apply(std::abs(mainCounter.getMax())));
+			drawer.fillStrip(
+				std::copysign(transformedMin, mainCounter.getMin()),
+				std::copysign(transformedMax, mainCounter.getMax())
+			);
 		}
 
-		auto [wMin, wMax] = std::minmax_element(localWave.begin(), localWave.begin() + remainingBlockSize);
-		min = std::min(min, *wMin);
-		max = std::max(max, *wMax);
-
-		localWave.remove_prefix(remainingBlockSize);
-		pushStrip(min, max);
 		anyChanges = true;
-
-		resetMinMax();
+		mainCounter.reset();
+		originalCounter.reset();
 	}
 
-	if (anyChanges && (!drawer.isEmpty() || wasEmpty != drawer.isEmpty())) {
+	if (anyChanges) {
 		drawer.inflate();
 
 		auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
@@ -173,12 +182,6 @@ void WaveForm::vProcess(ProcessContext context, std::any& handlerSpecificData) {
 
 		snapshot.pixels.copyWithResize(drawer.getResultBuffer());
 	}
-}
-
-void WaveForm::resetMinMax() {
-	counter = 0;
-	min = std::numeric_limits<float>::infinity();
-	max = -std::numeric_limits<float>::infinity();
 }
 
 void WaveForm::staticFinisher(const Snapshot& snapshot, const ExternCallContext& context) {
@@ -193,17 +196,6 @@ void WaveForm::staticFinisher(const Snapshot& snapshot, const ExternCallContext&
 
 	snapshot.writerHelper.write(snapshot.pixels, snapshot.empty, snapshot.filenameBuffer);
 	writeNeeded = false;
-}
-
-void WaveForm::pushStrip(double min, double max) {
-	const auto transformedMin = std::abs(params.transformer.apply(std::abs(min)));
-	const auto transformedMax = std::abs(params.transformer.apply(std::abs(max)));
-
-	if (std::abs(transformedMin) < minDistinguishableValue && std::abs(transformedMax) < minDistinguishableValue) {
-		drawer.fillSilence();
-	} else {
-		drawer.fillStrip(std::copysign(transformedMin, min), std::copysign(transformedMax, max));
-	}
 }
 
 bool WaveForm::getProp(

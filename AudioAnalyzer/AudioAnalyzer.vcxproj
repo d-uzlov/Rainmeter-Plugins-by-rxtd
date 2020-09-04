@@ -185,6 +185,7 @@
     <ClInclude Include="Sources\audio-utils\GaussianCoefficientsManager.h" />
     <ClInclude Include="Sources\audio-utils\kiss_fft-lib\KissFft.hh" />
     <ClInclude Include="Sources\audio-utils\CubicInterpolationHelper.h" />
+    <ClInclude Include="Sources\audio-utils\MinMaxCounter.h" />
     <ClInclude Include="Sources\audio-utils\RandomGenerator.h" />
     <ClInclude Include="Sources\audio-utils\WindowFunctionHelper.h" />
     <ClInclude Include="Sources\AudioChild.h" />

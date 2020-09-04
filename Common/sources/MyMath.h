@@ -25,6 +25,9 @@ namespace rxtd::utils {
 		static float fastSqrt(float value);
 
 		[[nodiscard]]
+		static float db2amplitude(float value);
+
+		[[nodiscard]]
 		static double db2amplitude(double value);
 	};
 }

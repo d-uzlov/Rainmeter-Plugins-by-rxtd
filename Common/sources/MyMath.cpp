@@ -64,6 +64,10 @@ float MyMath::fastSqrt(float value) {
 	return u.f;
 }
 
+float MyMath::db2amplitude(float value) {
+	return std::pow(10.0f, value / 10.0f);
+}
+
 double MyMath::db2amplitude(double value) {
 	return std::pow(10.0, value / 10.0);
 }
