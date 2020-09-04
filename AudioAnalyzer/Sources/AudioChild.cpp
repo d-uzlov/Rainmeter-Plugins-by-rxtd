@@ -47,67 +47,25 @@ void AudioChild::vReload() {
 		return;
 	}
 
-	const auto channelStr = rain.read(L"Channel").asIString(L"auto");
-	auto channelOpt = ChannelUtils::parse(channelStr);
-	if (!channelOpt.has_value()) {
-		logger.error(L"Invalid Channel '{}', set to Auto.", channelStr);
-		channel = Channel::eAUTO;
-	} else {
-		channel = channelOpt.value();
+	auto newOptions = readOptions();
+	if (newOptions == options) {
+		return;
 	}
 
-	handlerName = rain.read(L"ValueId").asIString();
+	options = std::move(newOptions);
+	setUseResultString(!options.infoRequest.empty());
 
-	procName = rain.read(L"Processing").asIString();
-
-	valueIndex = rain.read(L"Index").asInt();
-	if (valueIndex < 0) {
-		logger.error(L"Invalid Index {}. Index should be > 0. Set to 0.", valueIndex);
-		valueIndex = 0;
-	}
-
-	auto transformDesc = rain.read(L"Transform");
-	auto transformLogger = logger.context(L"Transform: ");
-	transformer = CVT::parse(transformDesc.asString(), transformLogger);
-
-	const auto stringValueStr = rain.read(L"StringValue").asIString(L"Number");
-	if (stringValueStr == L"Number") {
-		setUseResultString(false);
-	} else if (stringValueStr == L"Info") {
-		setUseResultString(true);
-
-		auto requestList = rain.read(L"InfoRequest").asList(L',');
-
-		infoRequest.clear();
-		for (auto view : requestList) {
-			infoRequest.emplace_back(view.asIString());
-		}
-
-		infoRequestC.clear();
-		for (const auto& str : infoRequest) {
-			infoRequestC.push_back(str);
-		}
-	} else {
-		logger.error(L"Invalid StringValue '{}', set to Number.", stringValueStr);
-		setUseResultString(false);
-	}
-
-	if (!handlerName.empty()) {
-		if (legacyNumber < 104) {
-			legacy_readOptions();
-			procName = parent->legacy_findProcessingFor(handlerName);
-		}
-
-		const auto error = parent->checkHandler(procName, channel, handlerName);
-		if (!error.empty()) {
-			logger.error(L"Invalid options: {}", error);
-			handlerName = { };
+	if (!options.handlerName.empty()) {
+		const auto success = parent->isHandlerShouldExist(options.procName, options.channel, options.handlerName);
+		if (!success) {
+			logger.error(L"Measure is invalid, see parent measure log message for reason");
+			setMeasureState(utils::MeasureState::eTEMP_BROKEN);
 		}
 	}
 }
 
 double AudioChild::vUpdate() {
-	if (handlerName.empty()) {
+	if (options.handlerName.empty()) {
 		return 0.0;
 	}
 
@@ -115,29 +73,81 @@ double AudioChild::vUpdate() {
 	if (legacyNumber < 104) {
 		result = legacy_update();
 	} else {
-		result = parent->getValue(procName, handlerName, channel, valueIndex);
+		result = parent->getValue(options.procName, options.handlerName, options.channel, options.valueIndex);
 	}
 
-	result = transformer.apply(result);
+	result = options.transformer.apply(result);
 
 	return result;
 }
 
 void AudioChild::vUpdateString(string& resultStringBuffer) {
-	resultStringBuffer = parent->resolve(infoRequestC);
+	resultStringBuffer = parent->resolve(options.infoRequestC);
 }
 
-void AudioChild::legacy_readOptions() {
+AudioChild::Options AudioChild::readOptions() const {
+	Options result{ };
+	const auto channelStr = rain.read(L"Channel").asIString(L"auto");
+	auto channelOpt = ChannelUtils::parse(channelStr);
+	if (!channelOpt.has_value()) {
+		logger.error(L"Invalid Channel '{}', set to Auto.", channelStr);
+		result.channel = Channel::eAUTO;
+	} else {
+		result.channel = channelOpt.value();
+	}
+
+	result.handlerName = rain.read(L"ValueId").asIString();
+
+	result.procName = rain.read(L"Processing").asIString();
+
+	result.valueIndex = rain.read(L"Index").asInt();
+	if (result.valueIndex < 0) {
+		logger.error(L"Invalid Index {}. Index should be > 0. Set to 0.", result.valueIndex);
+		result.valueIndex = 0;
+	}
+
+	auto transformDesc = rain.read(L"Transform");
+	auto transformLogger = logger.context(L"Transform: ");
+	result.transformer = CVT::parse(transformDesc.asString(), transformLogger);
+
+	const auto stringValueStr = rain.read(L"StringValue").asIString(L"Number");
+	if (stringValueStr == L"Info") {
+		auto requestList = rain.read(L"InfoRequest").asList(L',');
+
+		result.infoRequest.clear();
+		for (auto view : requestList) {
+			result.infoRequest.emplace_back(view.asIString());
+		}
+
+		result.infoRequestC.clear();
+		for (const auto& str : result.infoRequest) {
+			result.infoRequestC.push_back(str);
+		}
+	} else {
+		logger.error(L"Invalid StringValue '{}', set to Number.", stringValueStr);
+	}
+
+	if (legacyNumber < 104) {
+		result.legacy = legacy_readOptions();
+		result.procName = parent->legacy_findProcessingFor(result.handlerName);
+	}
+
+	return result;
+}
+
+AudioChild::Options::Legacy AudioChild::legacy_readOptions() const {
+	Options::Legacy legacy{ };
+
 	if (const auto numTr = rain.read(L"NumberTransform").asIString(L"Linear");
 		numTr == L"Linear") {
-		legacy.numberTransform = Legacy::NumberTransform::eLINEAR;
+		legacy.numberTransform = Options::Legacy::NumberTransform::eLINEAR;
 	} else if (numTr == L"DB") {
-		legacy.numberTransform = Legacy::NumberTransform::eDB;
+		legacy.numberTransform = Options::Legacy::NumberTransform::eDB;
 	} else if (numTr == L"None") {
-		legacy.numberTransform = Legacy::NumberTransform::eNONE;
+		legacy.numberTransform = Options::Legacy::NumberTransform::eNONE;
 	} else {
 		logger.error(L"Invalid NumberTransform '{}', set to Linear.", numTr);
-		legacy.numberTransform = Legacy::NumberTransform::eLINEAR;
+		legacy.numberTransform = Options::Legacy::NumberTransform::eLINEAR;
 	}
 	legacy.clamp01 = rain.read(L"Clamp01").asBool(true);
 
@@ -145,26 +155,28 @@ void AudioChild::legacy_readOptions() {
 	if (legacy.correctingConstant <= 0) {
 		legacy.correctingConstant = 1.0;
 	}
+
+	return legacy;
 }
 
-double AudioChild::legacy_update() {
+double AudioChild::legacy_update() const {
 	double result = 0.0;
 
-	switch (legacy.numberTransform) {
-	case Legacy::NumberTransform::eLINEAR:
-		result = parent->getValue(procName, handlerName, channel, valueIndex);
-		result = result * legacy.correctingConstant;
+	switch (options.legacy.numberTransform) {
+	case Options::Legacy::NumberTransform::eLINEAR:
+		result = parent->getValue(options.procName, options.handlerName, options.channel, options.valueIndex);
+		result = result * options.legacy.correctingConstant;
 		break;
 
-	case Legacy::NumberTransform::eDB:
-		result = parent->getValue(procName, handlerName, channel, valueIndex);
-		result = 20.0 / legacy.correctingConstant * std::log10(result) + 1.0;
+	case Options::Legacy::NumberTransform::eDB:
+		result = parent->getValue(options.procName, options.handlerName, options.channel, options.valueIndex);
+		result = 20.0 / options.legacy.correctingConstant * std::log10(result) + 1.0;
 		break;
 
-	case Legacy::NumberTransform::eNONE:
+	case Options::Legacy::NumberTransform::eNONE:
 		break;
 	}
-	if (legacy.clamp01) {
+	if (options.legacy.clamp01) {
 		result = std::clamp(result, 0.0, 1.0);
 	}
 

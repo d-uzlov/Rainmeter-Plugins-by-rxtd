@@ -322,29 +322,27 @@ double AudioParent::getValue(isview proc, isview id, Channel channel, index ind)
 	return values[0][ind];
 }
 
-string AudioParent::checkHandler(isview procName, Channel channel, isview handlerName) const {
-	utils::BufferPrinter bp;
-
+bool AudioParent::isHandlerShouldExist(isview procName, Channel channel, isview handlerName) const {
 	const auto procDataIter = paramParser.getParseResult().find(procName);
 	if (procDataIter == paramParser.getParseResult().end()) {
 		logHelpers.processingNotFound.log(procName);
-		return bp.getBufferPtr();
+		return false;
 	}
 
 	auto procData = procDataIter->second;
 	auto& channels = procData.channels;
 	if (channels.find(channel) == channels.end()) {
-		bp.print(L"processing {} doesn't have channel {}", procName, ChannelUtils::getTechnicalName(channel));
-		return bp.getBufferPtr();
+		logHelpers.processingDoesNotHaveChannel.log(procName, ChannelUtils::getTechnicalName(channel) % ciView());
+		return false;
 	}
 
 	auto& handlerMap = procData.handlersInfo.patchers;
 	if (handlerMap.find(handlerName) == handlerMap.end()) {
-		bp.print(L"processing {} doesn't have handler {}", procName, handlerName);
-		return bp.getBufferPtr();
+		logHelpers.processingDoesNotHaveHandler.log(procName, handlerName);
+		return false;
 	}
 
-	return { };
+	return true;
 }
 
 isview AudioParent::legacy_findProcessingFor(isview handlerName) const {

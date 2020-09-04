@@ -104,8 +104,7 @@ namespace rxtd::audio_analyzer {
 			return paramParser.getLegacyNumber();
 		}
 
-		// returns error message or empty string
-		string checkHandler(isview procName, Channel channel, isview handlerName) const;
+		bool isHandlerShouldExist(isview procName, Channel channel, isview handlerName) const;
 
 		isview legacy_findProcessingFor(isview handlerName) const;
 
