@@ -76,7 +76,13 @@ SoundHandler::ParseResult FftAnalyzer::parseParams(
 		params.legacy_sizeBy = SizeBy::BIN_WIDTH;
 	}
 
-	params.overlap = std::clamp(om.get(L"overlap").asFloat(0.5), 0.0, 1.0);
+	if (om.has(L"overlapBoost")) {
+		double overlapBoost = om.get(L"overlapBoost").asFloat(2.0);
+		overlapBoost = std::max(overlapBoost, 1.0);
+		params.overlap = (overlapBoost - 1.0) / overlapBoost;
+	} else {
+		params.overlap = std::clamp(om.get(L"overlap").asFloat(0.5), 0.0, 1.0);
+	}
 
 	params.cascadesCount = om.get(L"cascadesCount").asInt(5);
 	if (params.cascadesCount <= 0) {
