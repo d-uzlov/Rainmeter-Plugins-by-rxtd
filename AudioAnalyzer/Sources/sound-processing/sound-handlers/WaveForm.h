@@ -76,8 +76,6 @@ namespace rxtd::audio_analyzer {
 		float min{ };
 		float max{ };
 
-		CVT minTransformer{ };
-		CVT maxTransformer{ };
 		double minDistinguishableValue{ };
 
 		utils::WaveFormDrawer drawer{ };
@@ -103,11 +101,11 @@ namespace rxtd::audio_analyzer {
 	private:
 		void resetMinMax();
 
-		static void staticFinisher(const Snapshot& handlerSpecificData, const ExternCallContext& context);
+		static void staticFinisher(const Snapshot& snapshot, const ExternCallContext& context);
 		void pushStrip(double min, double max);
 
 		static bool getProp(
-			const Snapshot& handlerSpecificData,
+			const Snapshot& snapshot,
 			isview prop,
 			utils::BufferPrinter& printer,
 			const ExternCallContext& context

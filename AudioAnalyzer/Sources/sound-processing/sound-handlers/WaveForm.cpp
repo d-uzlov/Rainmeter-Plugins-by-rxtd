@@ -110,9 +110,6 @@ SoundHandler::ConfigurationResult WaveForm::vConfigure(const std::any& _params, 
 
 	drawer.inflate();
 
-	minTransformer = { params.transformer };
-	maxTransformer = { params.transformer };
-
 	resetMinMax();
 
 	if (nullptr == std::any_cast<Snapshot>(&snapshotAny)) {
@@ -199,8 +196,8 @@ void WaveForm::staticFinisher(const Snapshot& snapshot, const ExternCallContext&
 }
 
 void WaveForm::pushStrip(double min, double max) {
-	const auto transformedMin = std::abs(minTransformer.apply(std::abs(min)));
-	const auto transformedMax = std::abs(maxTransformer.apply(std::abs(max)));
+	const auto transformedMin = std::abs(params.transformer.apply(std::abs(min)));
+	const auto transformedMax = std::abs(params.transformer.apply(std::abs(max)));
 
 	if (std::abs(transformedMin) < minDistinguishableValue && std::abs(transformedMax) < minDistinguishableValue) {
 		drawer.fillSilence();
