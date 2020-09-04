@@ -21,7 +21,7 @@ void IAudioCaptureClientWrapper::readBuffer() {
 	uint8_t* data = nullptr;
 	DWORD flags{ };
 	uint32_t dataSize;
-	lastResult = getPointer()->GetBuffer(&data, &dataSize, &flags, nullptr, nullptr);
+	lastResult = ref().GetBuffer(&data, &dataSize, &flags, nullptr, nullptr);
 
 	if (lastResult != S_OK || dataSize == 0) {
 		return;
@@ -49,7 +49,7 @@ void IAudioCaptureClientWrapper::readBuffer() {
 		}
 	}
 
-	getPointer()->ReleaseBuffer(dataSize);
+	ref().ReleaseBuffer(dataSize);
 }
 
 void IAudioCaptureClientWrapper::copyFloat(void* source, array_span<float> dest, index offset, index stride) {

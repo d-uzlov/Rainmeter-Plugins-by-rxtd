@@ -90,8 +90,8 @@ namespace rxtd::utils {
 		}
 
 		[[nodiscard]]
-		ObjectType* getPointer() {
-			return ptr;
+		ObjectType& ref() {
+			return *ptr;
 		}
 
 		template<typename Interface, typename MethodType, typename... Args>

@@ -47,11 +47,11 @@ namespace rxtd::utils {
 		// callback should not call any methods of the object
 		// any such call will result in deadlock
 		CMMNotificationClient() {
-			enumerator.getPointer()->RegisterEndpointNotificationCallback(this);
+			enumerator.ref().RegisterEndpointNotificationCallback(this);
 		}
 
 		virtual ~CMMNotificationClient() {
-			enumerator.getPointer()->UnregisterEndpointNotificationCallback(this);
+			enumerator.ref().UnregisterEndpointNotificationCallback(this);
 		}
 
 		void setCallback(std::function<void()> value) {

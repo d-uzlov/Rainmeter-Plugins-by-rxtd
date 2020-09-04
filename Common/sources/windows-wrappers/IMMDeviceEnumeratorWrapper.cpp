@@ -25,7 +25,7 @@ IMMDeviceEnumeratorWrapper::IMMDeviceEnumeratorWrapper() : GenericComWrapper([](
 MediaDeviceWrapper IMMDeviceEnumeratorWrapper::getDeviceByID(const string& id) {
 	return MediaDeviceWrapper{
 		[&](auto ptr) {
-			return S_OK == getPointer()->GetDevice(id.c_str(), ptr);
+			return S_OK == ref().GetDevice(id.c_str(), ptr);
 		}
 	};
 }
@@ -33,7 +33,7 @@ MediaDeviceWrapper IMMDeviceEnumeratorWrapper::getDeviceByID(const string& id) {
 MediaDeviceWrapper IMMDeviceEnumeratorWrapper::getDefaultDevice(MediaDeviceType type) {
 	return MediaDeviceWrapper{
 		[&](auto ptr) {
-			return S_OK == getPointer()->GetDefaultAudioEndpoint(
+			return S_OK == ref().GetDefaultAudioEndpoint(
 				type == MediaDeviceType::eOUTPUT ? eRender : eCapture,
 				eConsole,
 				ptr
@@ -50,7 +50,7 @@ std::vector<MediaDeviceWrapper> IMMDeviceEnumeratorWrapper::getCollection(
 	MediaDeviceType type, uint32_t deviceStateMask) {
 	GenericComWrapper<IMMDeviceCollection> collection{
 		[&](auto ptr) {
-			return S_OK == getPointer()->EnumAudioEndpoints(
+			return S_OK == ref().EnumAudioEndpoints(
 				type == MediaDeviceType::eOUTPUT ? eRender : eCapture,
 				deviceStateMask,
 				ptr
@@ -61,14 +61,14 @@ std::vector<MediaDeviceWrapper> IMMDeviceEnumeratorWrapper::getCollection(
 	static_assert(std::is_same<UINT, uint32_t>::value);
 
 	uint32_t devicesCountUINT;
-	collection.getPointer()->GetCount(&devicesCountUINT);
+	collection.ref().GetCount(&devicesCountUINT);
 	const index devicesCount = devicesCountUINT;
 
 	std::vector<MediaDeviceWrapper> result;
 	for (index i = 0; i < devicesCount; ++i) {
 		MediaDeviceWrapper device{
 			[&](auto ptr) {
-				return S_OK == collection.getPointer()->Item(UINT(i), ptr);
+				return S_OK == collection.ref().Item(UINT(i), ptr);
 			}
 		};
 

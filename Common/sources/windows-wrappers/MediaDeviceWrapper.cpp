@@ -23,7 +23,7 @@ using namespace utils;
 string MediaDeviceWrapper::readId() {
 	GenericCoTaskMemWrapper<wchar_t> idWrapper{
 		[&](auto ptr) {
-			lastResult = getPointer()->GetId(ptr);
+			lastResult = ref().GetId(ptr);
 			return lastResult == S_OK;
 		}
 	};
@@ -37,7 +37,7 @@ MediaDeviceWrapper::DeviceInfo MediaDeviceWrapper::readDeviceInfo() {
 
 	PropertyStoreWrapper props{
 		[&](auto ptr) {
-			return S_OK == getPointer()->OpenPropertyStore(STGM_READ, ptr);
+			return S_OK == ref().OpenPropertyStore(STGM_READ, ptr);
 		}
 	};
 	if (!props.isValid()) {

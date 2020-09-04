@@ -68,7 +68,7 @@ namespace rxtd::utils {
 			sessionController = audioClient.getInterface<IAudioSessionControl>();
 
 			if (sessionController.isValid()) {
-				sessionController.getPointer()->RegisterAudioSessionNotification(this);
+				sessionController.ref().RegisterAudioSessionNotification(this);
 
 				mainVolumeController = audioClient.getInterface<ISimpleAudioVolume>();
 				mainVolumeControllerIsValid.exchange(mainVolumeController.isValid());
@@ -82,7 +82,7 @@ namespace rxtd::utils {
 			preventVolumeChange = false;
 
 			sessionController = std::move(_sessionController);
-			sessionController.getPointer()->RegisterAudioSessionNotification(this);
+			sessionController.ref().RegisterAudioSessionNotification(this);
 		}
 
 		virtual ~AudioSessionEventsImpl() {
@@ -104,7 +104,7 @@ namespace rxtd::utils {
 			std::lock_guard<std::mutex> lock{ mut };
 
 			if (sessionController.isValid()) {
-				sessionController.getPointer()->UnregisterAudioSessionNotification(this);
+				sessionController.ref().UnregisterAudioSessionNotification(this);
 			}
 
 			sessionController = { };
@@ -160,13 +160,13 @@ namespace rxtd::utils {
 			std::lock_guard<std::mutex> lock{ mut };
 
 			if (isMuted != 0) {
-				const auto result = mainVolumeController.getPointer()->SetMute(false, nullptr);
+				const auto result = mainVolumeController.ref().SetMute(false, nullptr);
 				if (result != S_OK) {
 					mainVolumeControllerIsValid.exchange(false);
 				}
 			}
 			if (volumeLevel != 1.0f && mainVolumeControllerIsValid.load()) {
-				const auto result = mainVolumeController.getPointer()->SetMasterVolume(1.0f, nullptr);
+				const auto result = mainVolumeController.ref().SetMasterVolume(1.0f, nullptr);
 				if (result != S_OK) {
 					mainVolumeControllerIsValid.exchange(false);
 				}
@@ -201,14 +201,14 @@ namespace rxtd::utils {
 
 			if (otherNoneOne) {
 				volumes[channel] = 1.0f;
-				const auto result = channelVolumeController.getPointer()->SetAllVolumes(
+				const auto result = channelVolumeController.ref().SetAllVolumes(
 					channel, volumes, nullptr
 				);
 				if (result != S_OK) {
 					channelVolumeControllerIsValid.exchange(false);
 				}
 			} else if (volumes[channel] != 1.0f) {
-				const auto result = channelVolumeController.getPointer()->SetChannelVolume(
+				const auto result = channelVolumeController.ref().SetChannelVolume(
 					channel, 1.0f, nullptr
 				);
 				if (result != S_OK) {

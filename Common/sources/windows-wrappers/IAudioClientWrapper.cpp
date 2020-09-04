@@ -35,7 +35,7 @@ void IAudioClientWrapper::testExclusive() {
 
 	auto client3 = utils::GenericComWrapper<IAudioClient3>{
 		[&](auto ptr) {
-			lastResult = getPointer()->QueryInterface<IAudioClient3>(ptr);
+			lastResult = ref().QueryInterface<IAudioClient3>(ptr);
 			return S_OK == lastResult;
 		}
 	};
@@ -51,7 +51,7 @@ void IAudioClientWrapper::testExclusive() {
 		//
 		// It doesn't matter if we need AUDCLNT_STREAMFLAGS_LOOPBACK for this session
 		// exclusive streams don't allow shared connection both with and without loopback
-		lastResult = getPointer()->Initialize(
+		lastResult = ref().Initialize(
 			AUDCLNT_SHAREMODE_SHARED,
 			0,
 			0,
@@ -66,7 +66,7 @@ void IAudioClientWrapper::testExclusive() {
 	UINT32 pFundamentalPeriodInFrames;
 	UINT32 pMinPeriodInFrames;
 	UINT32 pMaxPeriodInFrames;
-	lastResult = client3.getPointer()->GetSharedModeEnginePeriod(
+	lastResult = client3.ref().GetSharedModeEnginePeriod(
 		nativeFormat.getPointer(),
 		&pDefaultPeriodInFrames,
 		&pFundamentalPeriodInFrames,
@@ -77,7 +77,7 @@ void IAudioClientWrapper::testExclusive() {
 		return;
 	}
 
-	lastResult = client3.getPointer()->InitializeSharedAudioStream(
+	lastResult = client3.ref().InitializeSharedAudioStream(
 		0,
 		pMinPeriodInFrames,
 		nativeFormat.getPointer(),
@@ -113,7 +113,7 @@ void IAudioClientWrapper::initShared(index bufferSize100nsUnits) {
 	// then it should also be true for all calls to IAudioClient#Initialize
 	//
 	// So I don't do anything to specifically call this function from STA
-	lastResult = getPointer()->Initialize(
+	lastResult = ref().Initialize(
 		AUDCLNT_SHAREMODE_SHARED,
 		AUDCLNT_STREAMFLAGS_LOOPBACK,
 		bufferSize100nsUnits,
@@ -122,7 +122,7 @@ void IAudioClientWrapper::initShared(index bufferSize100nsUnits) {
 		nullptr
 	);
 	if (lastResult == AUDCLNT_E_WRONG_ENDPOINT_TYPE) {
-		lastResult = getPointer()->Initialize(
+		lastResult = ref().Initialize(
 			AUDCLNT_SHAREMODE_SHARED,
 			0,
 			bufferSize100nsUnits,
@@ -139,7 +139,7 @@ void IAudioClientWrapper::initShared(index bufferSize100nsUnits) {
 void IAudioClientWrapper::readFormat() {
 	nativeFormat = {
 		[&](auto ptr) {
-			lastResult = getPointer()->GetMixFormat(ptr);
+			lastResult = ref().GetMixFormat(ptr);
 			return lastResult == S_OK;
 		}
 	};

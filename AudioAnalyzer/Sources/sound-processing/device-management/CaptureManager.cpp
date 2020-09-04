@@ -142,7 +142,7 @@ CaptureManager::State CaptureManager::setSourceAndGetState(const SourceDesc& des
 		return State::eDEVICE_CONNECTION_ERROR;
 	}
 
-	HRESULT hr = audioClient.getPointer()->Start();
+	HRESULT hr = audioClient.ref().Start();
 	if (hr != S_OK) {
 		logger.error(L"Can't start stream, error code {}", hr);
 		return State::eDEVICE_CONNECTION_ERROR;
@@ -238,7 +238,7 @@ void CaptureManager::tryToRecoverFromExclusive() {
 
 	utils::GenericComWrapper<IAudioSessionControl2> c2{
 		[&](auto ptr) {
-			auto res = activeSessions[0].getPointer()->QueryInterface<IAudioSessionControl2>(ptr);
+			auto res = activeSessions[0].ref().QueryInterface<IAudioSessionControl2>(ptr);
 			return res == S_OK;
 		}
 	};
@@ -249,7 +249,7 @@ void CaptureManager::tryToRecoverFromExclusive() {
 	}
 
 	DWORD processId;
-	const auto res = c2.getPointer()->GetProcessId(&processId);
+	const auto res = c2.ref().GetProcessId(&processId);
 
 	if (res != S_OK) {
 		// can't get process id, so just skip
@@ -314,7 +314,7 @@ void CaptureManager::createExclusiveStreamListener() {
 
 	utils::GenericComWrapper<IAudioSessionControl2> c2{
 		[&](auto ptr) {
-			auto res = activeSessions[0].getPointer()->QueryInterface<IAudioSessionControl2>(ptr);
+			auto res = activeSessions[0].ref().QueryInterface<IAudioSessionControl2>(ptr);
 			return res == S_OK;
 		}
 	};
@@ -333,7 +333,7 @@ void CaptureManager::createExclusiveStreamListener() {
 	}
 
 	DWORD processId;
-	auto res = c2.getPointer()->GetProcessId(&processId);
+	auto res = c2.ref().GetProcessId(&processId);
 
 	if (res != S_OK) {
 		logger.notice(
@@ -401,7 +401,7 @@ std::vector<utils::GenericComWrapper<IAudioSessionControl>> CaptureManager::getA
 
 	auto sessionEnumerator = utils::GenericComWrapper<IAudioSessionEnumerator>{
 		[&](auto ptr) {
-			auto res = sessionManager.getPointer()->GetSessionEnumerator(ptr);
+			auto res = sessionManager.ref().GetSessionEnumerator(ptr);
 			return res == S_OK;
 		}
 	};
@@ -410,7 +410,7 @@ std::vector<utils::GenericComWrapper<IAudioSessionControl>> CaptureManager::getA
 	}
 
 	int sessionCount;
-	auto res = sessionEnumerator.getPointer()->GetCount(&sessionCount);
+	auto res = sessionEnumerator.ref().GetCount(&sessionCount);
 	if (res != S_OK) {
 		return { };
 	}
@@ -418,7 +418,7 @@ std::vector<utils::GenericComWrapper<IAudioSessionControl>> CaptureManager::getA
 	for (int i = 0; i < sessionCount; ++i) {
 		auto sessionControl = utils::GenericComWrapper<IAudioSessionControl>{
 			[&](auto ptr) {
-				res = sessionEnumerator.getPointer()->GetSession(i, ptr);
+				res = sessionEnumerator.ref().GetSession(i, ptr);
 				return res == S_OK;
 			}
 		};
@@ -428,7 +428,7 @@ std::vector<utils::GenericComWrapper<IAudioSessionControl>> CaptureManager::getA
 		}
 
 		AudioSessionState sessionState = { };
-		res = sessionControl.getPointer()->GetState(&sessionState);
+		res = sessionControl.ref().GetState(&sessionState);
 		if (res != S_OK) {
 			continue;
 		}

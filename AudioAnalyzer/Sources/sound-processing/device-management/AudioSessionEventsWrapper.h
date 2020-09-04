@@ -68,12 +68,12 @@ namespace rxtd::audio_analyzer {
 			if (!impl.isValid()) {
 				return { };
 			}
-			return impl.getPointer()->takeChanges();
+			return impl.ref().takeChanges();
 		}
 
 		void destruct() {
 			if (impl.isValid()) {
-				impl.getPointer()->deinit();
+				impl.ref().deinit();
 			}
 			impl = { };
 		}

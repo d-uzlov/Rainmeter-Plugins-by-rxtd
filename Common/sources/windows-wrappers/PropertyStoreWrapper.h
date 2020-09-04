@@ -23,7 +23,7 @@ namespace rxtd::utils {
 		std::optional<string> readPropertyString(const PROPERTYKEY& key) {
 			PropVariantWrapper prop;
 
-			if (getPointer()->GetValue(key, prop.getMetaPointer()) != S_OK) {
+			if (ref().GetValue(key, prop.getMetaPointer()) != S_OK) {
 				return { };
 			}
 
@@ -35,7 +35,7 @@ namespace rxtd::utils {
 		std::optional<ResultType> readPropertyInt(const PROPERTYKEY& key) {
 			PropVariantWrapper prop;
 
-			if (getPointer()->GetValue(key, prop.getMetaPointer()) != S_OK) {
+			if (ref().GetValue(key, prop.getMetaPointer()) != S_OK) {
 				return { };
 			}
 
