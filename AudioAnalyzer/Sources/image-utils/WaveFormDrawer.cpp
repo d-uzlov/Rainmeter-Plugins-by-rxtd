@@ -18,16 +18,16 @@ void WaveFormDrawer::setImageParams(index width, index height, bool stationary) 
 		return;
 	}
 
-	minMaxBuffer.setParams(width, 1, { 0, 0 }, stationary);
+	interpolator = { -1.0, 1.0, 0, height - 1 };
+	const index centerLineIndex = interpolator.toValueD(0.0);
+
+	minMaxBuffer.setParams(width, 1, { centerLineIndex, centerLineIndex }, stationary);
 	resultBuffer.setBufferSize(width);
 	resultBuffer.setBuffersCount(height);
-
-	interpolator = { -1.0, 1.0, 0, height - 1 };
 
 	this->width = width;
 	this->height = height;
 
-	const index centerLineIndex = interpolator.toValueD(0.0);
 	prev.minPixel = centerLineIndex;
 	prev.maxPixel = centerLineIndex;
 }
@@ -54,14 +54,6 @@ void WaveFormDrawer::fillStrip(double min, double max) {
 		prev.maxPixel = maxPixel;
 	}
 
-	if (minPixel == maxPixel) {
-		if (minPixel > 0) {
-			minPixel--;
-		} else {
-			maxPixel++;
-		}
-	}
-
 	MinMax mm{ minPixel, maxPixel };
 	minMaxBuffer.pushStrip({ &mm, 1 });
 }
@@ -73,19 +65,25 @@ void WaveFormDrawer::inflate() {
 		inflateLine(lineIndex, resultBuffer[lineIndex], colors.background);
 	}
 
-	for (index lineIndex = centerLineIndex + 1; lineIndex < height; ++lineIndex) {
-		inflateLine(lineIndex, resultBuffer[lineIndex], colors.background);
+	switch (lineDrawingPolicy) {
+	case LineDrawingPolicy::eNEVER: {
+		inflateLine(centerLineIndex, resultBuffer[centerLineIndex], colors.background);
+		break;
+	}
+	case LineDrawingPolicy::eBELOW_WAVE: {
+		inflateLine(centerLineIndex, resultBuffer[centerLineIndex], colors.line);
+		break;
+	}
+	case LineDrawingPolicy::eALWAYS: {
+		for (auto& pixel : resultBuffer[centerLineIndex]) {
+			pixel = colors.line;
+		}
+		break;
+	}
 	}
 
-	if (lineDrawingPolicy == LineDrawingPolicy::eALWAYS) {
-		auto destCenter = resultBuffer[centerLineIndex];
-		for (index i = 0; i < width; ++i) {
-			destCenter[i] = colors.line;
-		}
-	} else if (lineDrawingPolicy == LineDrawingPolicy::eBELOW_WAVE) {
-		inflateLine(centerLineIndex, resultBuffer[centerLineIndex], colors.line);
-	} else {
-		inflateLine(centerLineIndex, resultBuffer[centerLineIndex], colors.background);
+	for (index lineIndex = centerLineIndex + 1; lineIndex < height; ++lineIndex) {
+		inflateLine(lineIndex, resultBuffer[lineIndex], colors.background);
 	}
 }
 
