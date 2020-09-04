@@ -34,7 +34,8 @@ void WaveFormDrawer::setImageParams(index width, index height, bool stationary) 
 
 void WaveFormDrawer::fillSilence() {
 	const index centerLineIndex = interpolator.toValueD(0.0);
-	minMaxBuffer.pushEmptyStrip({ centerLineIndex, centerLineIndex });
+	const MinMax mm{ centerLineIndex, centerLineIndex };
+	minMaxBuffer.pushEmptyStrip(mm);
 }
 
 void WaveFormDrawer::fillStrip(double min, double max) {
@@ -60,27 +61,31 @@ void WaveFormDrawer::fillStrip(double min, double max) {
 
 void WaveFormDrawer::inflate() {
 	const index centerLineIndex = interpolator.toValueD(0.0);
+	const index lowLineBound = centerLineIndex - (lineThickness - 1) / 2;
+	const index highLineBound = centerLineIndex + (lineThickness) / 2;
 
-	for (index lineIndex = 0; lineIndex < centerLineIndex; ++lineIndex) {
+	for (index lineIndex = 0; lineIndex < lowLineBound; ++lineIndex) {
 		inflateLine(lineIndex, resultBuffer[lineIndex], colors.background);
 	}
 
-	switch (lineDrawingPolicy) {
-	case LineDrawingPolicy::eNEVER: {
-		inflateLine(centerLineIndex, resultBuffer[centerLineIndex], colors.background);
-		break;
-	}
-	case LineDrawingPolicy::eBELOW_WAVE: {
-		inflateLine(centerLineIndex, resultBuffer[centerLineIndex], colors.line);
-		break;
-	}
-	case LineDrawingPolicy::eALWAYS: {
-		std::fill_n(resultBuffer[centerLineIndex], resultBuffer.getBufferSize(), colors.line);
-		break;
-	}
+	for (index i = lowLineBound; i <= highLineBound; ++i) {
+		switch (lineDrawingPolicy) {
+		case LineDrawingPolicy::eNEVER: {
+			inflateLine(i, resultBuffer[i], colors.background);
+			break;
+		}
+		case LineDrawingPolicy::eBELOW_WAVE: {
+			inflateLine(i, resultBuffer[i], colors.line);
+			break;
+		}
+		case LineDrawingPolicy::eALWAYS: {
+			std::fill_n(resultBuffer[i].data(), resultBuffer.getBufferSize(), colors.line);
+			break;
+		}
+		}
 	}
 
-	for (index lineIndex = centerLineIndex + 1; lineIndex < height; ++lineIndex) {
+	for (index lineIndex = highLineBound + 1; lineIndex < height; ++lineIndex) {
 		inflateLine(lineIndex, resultBuffer[lineIndex], colors.background);
 	}
 }

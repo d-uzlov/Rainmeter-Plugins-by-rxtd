@@ -74,6 +74,9 @@ SoundHandler::ParseResult WaveForm::parseParams(
 	params.borderSize = om.get(L"borderSize").asInt(0);
 	params.borderSize = std::clamp<index>(params.borderSize, 0, params.width / 2);
 
+	params.lineThickness = om.get(L"lineThickness").asInt(2 - (params.height & 1));
+	params.lineThickness = std::clamp<index>(params.lineThickness, 0, params.height);
+
 	params.fading = om.get(L"fadingPercent").asFloat(0.0);
 
 	params.silenceThreshold = om.get(L"silenceThreshold").asFloatF(-70);
@@ -107,7 +110,7 @@ SoundHandler::ConfigurationResult WaveForm::vConfigure(const std::any& _params, 
 	minDistinguishableValue = 1.0 / params.height;
 
 	drawer.setImageParams(params.width, params.height, params.stationary);
-	drawer.setParams(params.connected, params.borderSize, params.fading, params.lineDrawingPolicy, params.colors);
+	drawer.setParams(params.connected, params.borderSize, params.fading, params.lineDrawingPolicy, params.lineThickness, params.colors);
 
 	drawer.inflate();
 

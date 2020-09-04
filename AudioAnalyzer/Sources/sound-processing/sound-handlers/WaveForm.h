@@ -28,6 +28,7 @@ namespace rxtd::audio_analyzer {
 			string folder;
 			Colors colors{ };
 			LDP lineDrawingPolicy{ };
+			index lineThickness{ };
 			bool stationary{ };
 			bool connected{ };
 			index borderSize{ };
@@ -43,6 +44,7 @@ namespace rxtd::audio_analyzer {
 					&& lhs.folder == rhs.folder
 					&& lhs.colors == rhs.colors
 					&& lhs.lineDrawingPolicy == rhs.lineDrawingPolicy
+					&& lhs.lineThickness == rhs.lineThickness
 					&& lhs.stationary == rhs.stationary
 					&& lhs.connected == rhs.connected
 					&& lhs.borderSize == rhs.borderSize
