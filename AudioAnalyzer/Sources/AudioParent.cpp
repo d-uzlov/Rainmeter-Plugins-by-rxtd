@@ -100,12 +100,12 @@ void AudioParent::vReload() {
 
 	const bool paramsChanged = paramParser.parse(legacyNumber, false) || firstReload;
 
-	ParentHelper::Callbacks callbacks;
+	const auto oldCallbacks = std::move(callbacks);
 	callbacks.onUpdate = rain.read(L"callback-onUpdate", false).asString();
 	callbacks.onDeviceChange = rain.read(L"callback-onDeviceChange", false).asString();
 	callbacks.onDeviceListChange = rain.read(L"callback-onDeviceListChange", false).asString();
 
-	if (oldSource != requestedSource || paramsChanged) {
+	if (oldCallbacks != callbacks || oldSource != requestedSource || paramsChanged) {
 		firstReload = false;
 
 		std::optional<ParamParser::ProcessingsInfoMap> paramsOpt = { };

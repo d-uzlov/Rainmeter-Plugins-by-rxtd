@@ -74,6 +74,7 @@ namespace rxtd::audio_analyzer {
 		} logHelpers;
 
 		DeviceRequest requestedSource;
+		ParentHelper::Callbacks callbacks;
 		ParentHelper helper;
 
 		bool firstReload = true;
