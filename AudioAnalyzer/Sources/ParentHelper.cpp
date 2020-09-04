@@ -308,7 +308,17 @@ void ParentHelper::pUpdate() {
 		// callback may want to use some data from snapshot.data,
 		// that is updated in the "if (needToUpdateHandlers)" branch
 		// so we call the callback in this separate if() branch
-		mainFields.rain.executeCommandAsync(mainFields.callbacks.onDeviceChange);
+		switch (mainFields.captureManager.getState()) {
+		case CaptureManager::State::eOK:
+			mainFields.rain.executeCommandAsync(mainFields.callbacks.onDeviceChange);
+			break;
+		case CaptureManager::State::eRECONNECT_NEEDED:
+		case CaptureManager::State::eMANUALLY_DISCONNECTED: break;
+		case CaptureManager::State::eDEVICE_CONNECTION_ERROR:
+		case CaptureManager::State::eDEVICE_IS_EXCLUSIVE:
+			mainFields.rain.executeCommandAsync(mainFields.callbacks.onDeviceDisconnected);
+			break;
+		}
 	}
 
 	if (anyCaptured) {
