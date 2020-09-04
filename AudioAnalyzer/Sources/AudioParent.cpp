@@ -587,7 +587,8 @@ void AudioParent::runCleaners() const {
 			for (auto channel : procInfo.channels) {
 				SoundHandler::ExternCallContext context;
 				context.channelName = ChannelUtils::getTechnicalName(channel);
-				finisher(handlerDataIter->second, context);
+				auto snapshotCopy = handlerDataIter->second;
+				finisher(snapshotCopy, context);
 			}
 		}
 	}
