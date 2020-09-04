@@ -238,9 +238,18 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 
 		if (deviceProperty == L"status") {
 			resolveBufferString = di.state == CaptureManager::State::eOK ? L"1" : L"0";
-		} else if (deviceProperty == L"status string") {
+			return;
+		}
+		if (deviceProperty == L"status string") {
 			resolveBufferString = di.state == CaptureManager::State::eOK ? L"active" : L"down";
-		} else if (deviceProperty == L"type") {
+			return;
+		}
+
+		if (di.state != CaptureManager::State::eOK) {
+			return;
+		}
+
+		if (deviceProperty == L"type") {
 			resolveBufferString = di.type == utils::MediaDeviceType::eINPUT ? L"input" : L"output";
 		} else if (deviceProperty == L"name") {
 			resolveBufferString = di.name;
@@ -287,12 +296,12 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 	if (optionName == L"value") {
 		resolveBufferString = L"0";
 
-		if (!requestedSource.has_value()) {
+		if (args.size() != 5) {
+			logHelpers.generic.log(L"'value' section variable need 5 arguments");
 			return;
 		}
 
-		if (args.size() != 5) {
-			logHelpers.generic.log(L"'value' section variable need 5 arguments");
+		if (!helper.getSnapshot().deviceIsAvailable) {
 			return;
 		}
 
@@ -319,6 +328,11 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 
 	if (optionName == L"handler info" || optionName == L"prop") {
 		if (!requestedSource.has_value()) {
+			// if requestedSource.has_value() then
+			//	even if handlers are not valid due to device connection error
+			// we should return correct prop values
+			// because someone could try to read file names
+			// before we actually connect to device and make handlers valid
 			return;
 		}
 
@@ -330,6 +344,10 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 }
 
 double AudioParent::getValue(isview proc, isview id, Channel channel, index ind) {
+	if (!helper.getSnapshot().deviceIsAvailable) {
+		return 0.0;
+	}
+
 	auto& data = helper.getSnapshot().data;
 	auto lock = data.getLock();
 

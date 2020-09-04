@@ -77,18 +77,13 @@ void ParentHelper::init(
 	mainFields.captureManager.setLegacyNumber(constFields.legacyNumber);
 	mainFields.captureManager.setBufferSizeInSec(bufferSize);
 
-	mainFields.useLocking = constFields.useThreading;
 	requestFields.useLocking = constFields.useThreading;
+	threadSleepFields.useLocking = constFields.useThreading;
 	snapshot.setThreading(constFields.useThreading);
 }
 
 void ParentHelper::setInvalid() {
-	stopThread();
-
-	mainFields.captureManager.disconnect();
-	mainFields.orchestrator.reset();
-	mainFields.settings.device = { };
-
+	requestFields.runGuarded([&] { requestFields.disconnect = true; });
 	snapshot.deviceIsAvailable = false;
 }
 
@@ -107,7 +102,8 @@ void ParentHelper::setParams(
 		if (requestFields.thread.joinable()) {
 			wakeThreadUp();
 		} else {
-			mainFields.stopRequest = false;
+			threadSleepFields.stopRequest = false;
+			threadSleepFields.updateRequest = false;
 			requestFields.thread = std::thread{ [this]() { threadFunction(); } };
 		}
 	}
@@ -121,9 +117,10 @@ void ParentHelper::update() {
 
 void ParentHelper::wakeThreadUp() {
 	try {
-		auto mainLock = mainFields.getLock();
-		mainFields.updateRequest = true;
-		mainFields.sleepVariable.notify_one();
+		threadSleepFields.runGuarded([&] {
+			threadSleepFields.updateRequest = true;
+			threadSleepFields.sleepVariable.notify_one();
+		});
 	} catch (...) {
 	}
 }
@@ -133,11 +130,10 @@ void ParentHelper::stopThread() {
 		return;
 	}
 
-	{
-		auto mainLock = mainFields.getLock();
-		mainFields.stopRequest = true;
-		mainFields.sleepVariable.notify_one();
-	}
+	threadSleepFields.runGuarded([&] {
+		threadSleepFields.stopRequest = true;
+		threadSleepFields.sleepVariable.notify_one();
+	});
 
 	requestFields.thread.join();
 }
@@ -161,17 +157,17 @@ void ParentHelper::threadFunction() {
 		pUpdate();
 
 		{
-			auto mainLock = mainFields.getLock();
-			if (mainFields.stopRequest) {
+			auto sleepLock = threadSleepFields.getLock();
+			if (threadSleepFields.stopRequest) {
 				break;
 			}
-			if (!mainFields.updateRequest) {
-				mainFields.sleepVariable.wait_until(mainLock, nextWakeTime);
-				if (mainFields.stopRequest) {
+			if (!threadSleepFields.updateRequest) {
+				threadSleepFields.sleepVariable.wait_until(sleepLock, nextWakeTime);
+				if (threadSleepFields.stopRequest) {
 					break;
 				}
 			} else {
-				mainFields.updateRequest = false;
+				threadSleepFields.updateRequest = false;
 			}
 		}
 	}
@@ -185,56 +181,90 @@ void ParentHelper::pUpdate() {
 
 	{
 		auto requestLock = requestFields.getLock();
-		if (requestFields.settings.device.has_value()) {
-			mainFields.settings.device = std::exchange(requestFields.settings.device, { }).value();
-			needToUpdateDevice = true;
-		}
-		if (requestFields.settings.patches.has_value()) {
-			mainFields.settings.patches = std::exchange(requestFields.settings.patches, { }).value();
-			needToUpdateHandlers = true;
-		}
-		if (requestFields.settings.callbacks.has_value()) {
-			mainFields.callbacks = std::exchange(requestFields.settings.callbacks, { }).value();
+		if (requestFields.disconnect) {
+			mainFields.disconnected = true;
+
+			mainFields.captureManager.disconnect();
+			mainFields.orchestrator.reset();
+
+			requestFields.settings.device = { };
+			requestFields.settings.patches = { };
+			requestFields.settings.callbacks = { };
+			requestFields.disconnect = false;
+		} else {
+			if (requestFields.settings.device.has_value()) {
+				mainFields.disconnected = false;
+				mainFields.settings.device = std::exchange(requestFields.settings.device, { }).value();
+				needToUpdateDevice = true;
+			}
+			if (requestFields.settings.patches.has_value()) {
+				mainFields.settings.patches = std::exchange(requestFields.settings.patches, { }).value();
+				needToUpdateHandlers = true;
+			}
+			if (requestFields.settings.callbacks.has_value()) {
+				mainFields.callbacks = std::exchange(requestFields.settings.callbacks, { }).value();
+			}
 		}
 	}
 
 	const auto changes = threadSafeFields.notificationClient.ref().takeChanges();
 
-	using DDC = utils::MediaDeviceListNotificationClient::DefaultDeviceChange;
-	using ST = CaptureManager::SourceDesc::Type;
-	DDC defaultDeviceChange{ };
-	switch (mainFields.settings.device.type) {
-	case ST::eDEFAULT_INPUT:
-		defaultDeviceChange = changes.defaultInputChange;
-		break;
-	case ST::eDEFAULT_OUTPUT:
-		defaultDeviceChange = changes.defaultOutputChange;
-		break;
-	case ST::eID:
-		defaultDeviceChange = DDC::eNONE;
-		break;
-	}
+	if (!mainFields.disconnected) {
+		using DDC = utils::MediaDeviceListNotificationClient::DefaultDeviceChange;
+		using ST = CaptureManager::SourceDesc::Type;
+		DDC defaultDeviceChange{ };
+		switch (mainFields.settings.device.type) {
+		case ST::eDEFAULT_INPUT:
+			defaultDeviceChange = changes.defaultInputChange;
+			break;
+		case ST::eDEFAULT_OUTPUT:
+			defaultDeviceChange = changes.defaultOutputChange;
+			break;
+		case ST::eID:
+			defaultDeviceChange = DDC::eNONE;
+			break;
+		}
 
-	switch (defaultDeviceChange) {
-	case DDC::eNONE: break;
-	case DDC::eCHANGED:
-		needToUpdateDevice = true;
-		break;
-	case DDC::eNO_DEVICE: {
-		snapshot.deviceIsAvailable = false;
-		snapshot.data.runGuarded([&] { snapshot.data._ = { }; });
+		switch (defaultDeviceChange) {
+		case DDC::eNONE: break;
+		case DDC::eCHANGED:
+			needToUpdateDevice = true;
+			break;
+		case DDC::eNO_DEVICE: {
+			snapshot.deviceIsAvailable = false;
 
-		const sview io = mainFields.settings.device.type == ST::eDEFAULT_INPUT ? L"input" : L"output";
-		mainFields.logger.error(
-			L"Either all {} devices has been disconnected, or windows audio service was stopped",
-			io
-		);
-		mainFields.captureManager.disconnect();
-		mainFields.orchestrator.reset();
-		snapshot.deviceInfo.runGuarded([&] { snapshot.deviceInfo._.state = mainFields.captureManager.getState(); });
-		mainFields.rain.executeCommandAsync(mainFields.callbacks.onDeviceDisconnected);
-		break;
-	}
+			const sview io = mainFields.settings.device.type == ST::eDEFAULT_INPUT ? L"input" : L"output";
+			mainFields.logger.error(
+				L"Either all {} devices has been disconnected, or windows audio service was stopped",
+				io
+			);
+			mainFields.captureManager.disconnect();
+			mainFields.orchestrator.reset();
+			snapshot.deviceInfo.runGuarded([&] { snapshot.deviceInfo._.state = mainFields.captureManager.getState(); });
+			mainFields.rain.executeCommandAsync(mainFields.callbacks.onDeviceDisconnected);
+			break;
+		}
+		}
+
+		if (mainFields.settings.device.type == CaptureManager::SourceDesc::Type::eID
+			&& changes.removed.find(mainFields.captureManager.getSnapshot().id) != changes.removed.end()) {
+			mainFields.logger.warning(L"Specified device has been disabled or disconnected");
+			mainFields.captureManager.disconnect();
+			needToUpdateDevice = false;
+			snapshot.deviceInfo.runGuarded([&] { snapshot.deviceInfo._.state = mainFields.captureManager.getState(); });
+			mainFields.rain.executeCommandAsync(mainFields.callbacks.onDeviceDisconnected);
+		} else if (mainFields.captureManager.getState() == CaptureManager::State::eDEVICE_CONNECTION_ERROR
+			&& changes.stateChanged.count(mainFields.captureManager.getSnapshot().id) > 0) {
+			needToUpdateDevice = true;
+		}
+
+		if (mainFields.captureManager.getState() == CaptureManager::State::eDEVICE_IS_EXCLUSIVE) {
+			mainFields.captureManager.tryToRecoverFromExclusive();
+		}
+
+		if (mainFields.captureManager.getState() == CaptureManager::State::eRECONNECT_NEEDED) {
+			needToUpdateDevice = true;
+		}
 	}
 
 	if (!changes.stateChanged.empty() || !changes.removed.empty()) {
@@ -242,26 +272,6 @@ void ParentHelper::pUpdate() {
 		if (deviceListChanged) {
 			mainFields.rain.executeCommandAsync(mainFields.callbacks.onDeviceListChange);
 		}
-	}
-
-	if (mainFields.settings.device.type == CaptureManager::SourceDesc::Type::eID
-		&& changes.removed.find(mainFields.captureManager.getSnapshot().id) != changes.removed.end()) {
-		mainFields.logger.warning(L"Specified device has been disabled or disconnected");
-		mainFields.captureManager.disconnect();
-		needToUpdateDevice = false;
-		snapshot.deviceInfo.runGuarded([&] { snapshot.deviceInfo._.state = mainFields.captureManager.getState(); });
-		mainFields.rain.executeCommandAsync(mainFields.callbacks.onDeviceDisconnected);
-	} else if (mainFields.captureManager.getState() == CaptureManager::State::eDEVICE_CONNECTION_ERROR
-		&& changes.stateChanged.count(mainFields.captureManager.getSnapshot().id) > 0) {
-		needToUpdateDevice = true;
-	}
-
-	if (mainFields.captureManager.getState() == CaptureManager::State::eDEVICE_IS_EXCLUSIVE) {
-		mainFields.captureManager.tryToRecoverFromExclusive();
-	}
-
-	if (mainFields.captureManager.getState() == CaptureManager::State::eRECONNECT_NEEDED) {
-		needToUpdateDevice = true;
 	}
 
 	if (!needToUpdateDevice && mainFields.captureManager.getState() != CaptureManager::State::eOK) {
@@ -295,7 +305,7 @@ void ParentHelper::pUpdate() {
 	}
 	if (needToUpdateDevice) {
 		// callback may want to use some data from snapshot.data,
-		// that is updated in case needToUpdateHandlers
+		// that is updated in the "if (needToUpdateHandlers)" branch
 		// so we call the callback in this separate if() branch
 		mainFields.rain.executeCommandAsync(mainFields.callbacks.onDeviceChange);
 	}

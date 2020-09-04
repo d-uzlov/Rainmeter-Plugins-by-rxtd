@@ -74,11 +74,13 @@ namespace rxtd::audio_analyzer {
 			utils::GenericComWrapper<utils::MediaDeviceListNotificationClient> notificationClient;
 		} threadSafeFields;
 
-		struct MainFields : DataWithLock {
+		struct ThreadSleepFields : DataWithLock {
 			std::condition_variable sleepVariable;
 			bool stopRequest = false;
 			bool updateRequest = false;
+		} threadSleepFields;
 
+		struct MainFields {
 			utils::Rainmeter rain;
 			utils::Rainmeter::Logger logger;
 			CaptureManager captureManager;
@@ -90,6 +92,7 @@ namespace rxtd::audio_analyzer {
 			} settings;
 
 			Callbacks callbacks;
+			bool disconnected = false;
 		} mainFields;
 
 		struct RequestFields : DataWithLock {
@@ -100,6 +103,8 @@ namespace rxtd::audio_analyzer {
 				std::optional<CaptureManager::SourceDesc> device;
 				std::optional<ParamParser::ProcessingsInfoMap> patches;
 			} settings;
+
+			bool disconnect = false;
 		} requestFields;
 
 		SnapshotStruct snapshot;
