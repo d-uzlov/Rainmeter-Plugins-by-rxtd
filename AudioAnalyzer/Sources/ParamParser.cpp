@@ -155,18 +155,6 @@ void ParamParser::parseFilters(const utils::OptionMap& optionMap, ProcessingData
 		return;
 	}
 
-	if (filterType == L"like-rg") {
-		data.fcc = audio_utils::FilterCascadeParser::parse(
-			utils::Option{
-				L"bqHighPass[q 0.8, freq 160, forcedGain 3.65] " // spaces in the ends of the strings are necessary
-				L"bqPeak[q 3.0, freq 1125, gain -3.8] "
-				L"bqPeak[q 3.0, freq 3665, gain 5.28] "
-				L"bwLowPass[order 5, freq 10000] "
-			}, filterLogger
-		);
-		return;
-	}
-
 	if (filterType == L"like-a") {
 		data.fcc = audio_utils::FilterCascadeParser::parse(
 			utils::Option{
