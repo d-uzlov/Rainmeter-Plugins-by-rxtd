@@ -100,24 +100,22 @@ void ProcessingManager::process(const ChannelMixer& mixer, clock::time_point kil
 	for (auto& [channel, channelStruct] : channelMap) {
 		auto& channelSnapshot = snapshot[channel];
 
-		auto wave = mixer.getChannelPCM(channel);
+		SoundHandler::ProcessContext context{ };
 
-		if (resamplingDivider <= 1) {
-			wave.transferToVector(waveBuffer);
+		if (auto wave = mixer.getChannelPCM(channel);
+			resamplingDivider <= 1) {
+			context.originalWave = wave;
 		} else {
 			const index nextBufferSize = channelStruct.downsampleHelper.pushData(wave);
-			waveBuffer.resize(nextBufferSize);
-			channelStruct.downsampleHelper.downsample(waveBuffer);
+			downsampledBuffer.resize(nextBufferSize);
+			channelStruct.downsampleHelper.downsample(downsampledBuffer);
+			context.originalWave = downsampledBuffer;
 		}
+		context.originalWave.transferToVector(filteredBuffer);
 
-		channelStruct.filter.applyInPlace(waveBuffer);
+		channelStruct.filter.applyInPlace(filteredBuffer);
 
-		SoundHandler::ProcessContext context{ };
-		context.wave = waveBuffer;
-		context.originalWave.data = wave;
-		auto [min, max] = std::minmax_element(wave.begin(), wave.end());
-		context.originalWave.min = *min;
-		context.originalWave.max = *max;
+		context.wave = filteredBuffer;
 		context.killTime = killTime;
 
 		for (auto& handlerName : order) {

@@ -50,7 +50,8 @@ namespace rxtd::audio_analyzer {
 		std::vector<istring> order;
 		std::map<Channel, ChannelStruct> channelMap;
 		index resamplingDivider{ };
-		std::vector<float> waveBuffer;
+		std::vector<float> downsampledBuffer;
+		std::vector<float> filteredBuffer;
 
 	public:
 		void setParams(

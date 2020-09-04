@@ -78,13 +78,7 @@ namespace rxtd::audio_analyzer {
 
 		struct ProcessContext {
 			array_view<float> wave;
-
-			struct {
-				array_view<float> data;
-				float min{ };
-				float max{ };
-			} originalWave;
-
+			array_view<float> originalWave;
 			clock::time_point killTime;
 		};
 
