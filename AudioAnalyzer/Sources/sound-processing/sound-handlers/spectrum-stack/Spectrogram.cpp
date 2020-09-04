@@ -13,6 +13,7 @@
 #include "windows-wrappers/FileWrapper.h"
 #include "option-parser/OptionList.h"
 #include "LinearInterpolator.h"
+#include "MyMath.h"
 
 using namespace std::string_literals;
 
@@ -74,9 +75,6 @@ SoundHandler::ParseResult Spectrogram::parseParams(
 
 		float prevValue = -std::numeric_limits<float>::infinity();
 
-		params.colorMinValue = std::numeric_limits<float>::infinity();
-		params.colorMaxValue = -std::numeric_limits<float>::infinity();
-
 		bool first = true;
 		for (auto colorsDescription : colorsDescriptionList) {
 			auto [valueOpt, colorOpt] = colorsDescription.breakFirst(L':');
@@ -104,11 +102,9 @@ SoundHandler::ParseResult Spectrogram::parseParams(
 			} else {
 				params.colors.back().widthInverted = 1.0f / (value - prevValue);
 			}
-			params.colors.push_back(Params::ColorDescription{ 0.0f, color });
+			params.colors.push_back(ColorDescription{ 0.0f, color });
 
 			prevValue = value;
-			params.colorMinValue = std::min(params.colorMinValue, value);
-			params.colorMaxValue = std::max(params.colorMaxValue, value);
 		}
 
 		if (params.colors.size() < 2) {
@@ -119,8 +115,8 @@ SoundHandler::ParseResult Spectrogram::parseParams(
 		params.colors.resize(2);
 		params.colors[0].color = Color::parse(om.get(L"baseColor").asString(), { 0, 0, 0 }).convert(params.mixMode);
 		params.colors[1].color = Color::parse(om.get(L"maxColor").asString(), { 1, 1, 1 }).convert(params.mixMode);
-		params.colorMinValue = 0.0f;
-		params.colorMaxValue = 1.0f;
+		params.colorLevels.push_back(0.0f);
+		params.colorLevels.push_back(1.0f);
 	}
 
 	params.borderColor = Color::parse(om.get(L"borderColor").asString(), { 1.0, 0.2, 0.2 });
@@ -130,6 +126,9 @@ SoundHandler::ParseResult Spectrogram::parseParams(
 	params.borderSize = std::clamp<index>(om.get(L"borderSize").asInt(0), 0, params.length / 2);
 
 	params.stationary = om.get(L"stationary").asBool(false);
+
+	params.silenceThreshold = om.get(L"silenceThreshold").asFloatF(-70);
+	params.silenceThreshold = utils::MyMath::db2amplitude(params.silenceThreshold);
 
 	ParseResult result{ true };
 	result.params = std::move(params);
@@ -164,15 +163,17 @@ SoundHandler::ConfigurationResult Spectrogram::vConfigure(const std::any& _param
 			fadeHelper.drawBorderInPlace(image.getPixelsWritable());
 		}
 	}
-
-	lastStrip.isZero = true;
-	lastStrip.buffer.resize(height);
-	std::fill(lastStrip.buffer.begin(), lastStrip.buffer.end(), backgroundIntColor);
-
-	dataCounter = 0;
-	waveCounter = 0;
 	imageHasChanged = true;
 
+	ism.setParams(
+		blockSize,
+		config.sourcePtr->getDataSize().eqWaveSizes[0],
+		height,
+		params.colors, params.colorLevels
+	);
+
+	minMaxCounter.reset();
+	minMaxCounter.setBlockSize(blockSize);
 
 	if (nullptr == std::any_cast<Snapshot>(&snapshotAny)) {
 		snapshotAny = Snapshot{ };
@@ -194,50 +195,30 @@ SoundHandler::ConfigurationResult Spectrogram::vConfigure(const std::any& _param
 }
 
 void Spectrogram::vProcess(ProcessContext context, std::any& handlerSpecificData) {
-	waveCounter += context.wave.size();
+	minMaxCounter.setWave(context.originalWave);
 
-	auto& config = getConfiguration();
-	auto& source = *config.sourcePtr;
+	auto& source = *getConfiguration().sourcePtr;
 
 	const bool imageWasEmpty = image.isEmpty();
 
-	const index equivalentWaveSize = source.getDataSize().eqWaveSizes[0];
+	ism.setChunks(source.getChunks(0));
 
-	for (auto chunk : source.getChunks(0)) {
-		dataCounter += equivalentWaveSize;
+	while (true) {
+		minMaxCounter.update();
 
-		if (dataCounter < blockSize) {
-			continue;
+		if (!minMaxCounter.isReady()) {
+			break;
 		}
 
-		if (clock::now() > context.killTime) {
-			continue;
-		}
+		ism.next();
+		imageHasChanged = true;
 
-		lastStrip.isZero = *std::max_element(chunk.begin(), chunk.end()) <= params.colorMinValue;
-
-		if (!lastStrip.isZero) {
-			if (params.colors.size() == 2) {
-				// only use 2 colors
-				fillStrip(chunk, lastStrip.buffer);
-			} else {
-				// many colors, but slightly slower
-				fillStripMulticolor(chunk, lastStrip.buffer);
-			}
+		if (minMaxCounter.isBelowThreshold(params.silenceThreshold)) {
+			image.pushEmptyStrip(params.colors[0].color.toIntColor());
+		} else {
+			image.pushStrip(ism.getBuffer());
 		}
-
-		while (dataCounter >= blockSize && waveCounter >= blockSize) {
-			pushStrip();
-			dataCounter -= blockSize;
-		}
-	}
-
-	// this ensures that image speed is consistent
-	while (waveCounter >= blockSize) {
-		pushStrip();
-		if (dataCounter >= blockSize) {
-			dataCounter -= blockSize;
-		}
+		minMaxCounter.reset();
 	}
 
 	if (imageHasChanged) {
@@ -263,18 +244,6 @@ void Spectrogram::vProcess(ProcessContext context, std::any& handlerSpecificData
 	}
 }
 
-void Spectrogram::pushStrip() {
-	imageHasChanged = true;
-
-	if (lastStrip.isZero) {
-		image.pushEmptyStrip(params.colors[0].color.toIntColor());
-	} else {
-		image.pushStrip(lastStrip.buffer);
-	}
-
-	waveCounter -= blockSize;
-}
-
 void Spectrogram::staticFinisher(const Snapshot& snapshot, const ExternCallContext& context) {
 	if (!snapshot.writeNeeded) {
 		return;
@@ -288,10 +257,10 @@ void Spectrogram::staticFinisher(const Snapshot& snapshot, const ExternCallConte
 	snapshot.writeNeeded = false;
 }
 
-void Spectrogram::fillStrip(array_view<float> data, array_span<utils::IntColor> buffer) const {
-	const utils::LinearInterpolatorF interpolator{ params.colorMinValue, params.colorMaxValue, 0.0, 1.0 };
-	const auto lowColor = params.colors[0].color;
-	const auto highColor = params.colors[1].color;
+void Spectrogram::InputStripMaker::fillStrip(array_view<float> data, array_span<utils::IntColor> buffer) const {
+	const utils::LinearInterpolatorF interpolator{ colorLevels.front(), colorLevels.back(), 0.0, 1.0 };
+	const auto lowColor = colors[0].color;
+	const auto highColor = colors[1].color;
 
 	for (index i = 0; i < index(buffer.size()); ++i) {
 		auto value = interpolator.toValue(data[i]);
@@ -301,23 +270,24 @@ void Spectrogram::fillStrip(array_view<float> data, array_span<utils::IntColor> 
 	}
 }
 
-void Spectrogram::fillStripMulticolor(array_view<float> data, array_span<utils::IntColor> buffer) const {
+void Spectrogram::InputStripMaker::fillStripMulticolor(array_view<float> data,
+                                                       array_span<utils::IntColor> buffer) const {
 	for (index i = 0; i < buffer.size(); ++i) {
-		const auto value = std::clamp(data[i], params.colorMinValue, params.colorMaxValue);
+		const auto value = std::clamp(data[i], colorLevels.front(), colorLevels.back());
 
 		index lowColorIndex = 0;
-		for (index j = 1; j < index(params.colors.size()); j++) {
-			const auto colorHighValue = params.colorLevels[j];
+		for (index j = 1; j < colors.size(); j++) {
+			const auto colorHighValue = colorLevels[j];
 			if (value <= colorHighValue) {
 				lowColorIndex = j - 1;
 				break;
 			}
 		}
 
-		const auto lowColorValue = params.colorLevels[lowColorIndex];
-		const auto intervalCoef = params.colors[lowColorIndex].widthInverted;
-		const auto lowColor = params.colors[lowColorIndex].color;
-		const auto highColor = params.colors[lowColorIndex + 1].color;
+		const auto lowColorValue = colorLevels[lowColorIndex];
+		const auto intervalCoef = colors[lowColorIndex].widthInverted;
+		const auto lowColor = colors[lowColorIndex].color;
+		const auto highColor = colors[lowColorIndex + 1].color;
 
 		const float percentValue = (value - lowColorValue) * intervalCoef;
 
