@@ -205,10 +205,10 @@ void ParentHelper::pUpdate() {
 	DDC defaultDeviceChange{ };
 	switch (mainFields.settings.device.type) {
 	case ST::eDEFAULT_INPUT:
-		defaultDeviceChange = changes.defaultCapture;
+		defaultDeviceChange = changes.defaultInputChange;
 		break;
 	case ST::eDEFAULT_OUTPUT:
-		defaultDeviceChange = changes.defaultRender;
+		defaultDeviceChange = changes.defaultOutputChange;
 		break;
 	case ST::eID:
 		defaultDeviceChange = DDC::eNONE;
@@ -221,11 +221,8 @@ void ParentHelper::pUpdate() {
 		needToUpdateDevice = true;
 		break;
 	case DDC::eNO_DEVICE: {
-		{
-			auto lock = snapshot.data.getLock();
-			snapshot.data._ = { };
-			snapshot.deviceIsAvailable = false;
-		}
+		snapshot.deviceIsAvailable = false;
+		snapshot.data.runGuarded([&] { snapshot.data._ = { }; });
 
 		const sview io = mainFields.settings.device.type == ST::eDEFAULT_INPUT ? L"input" : L"output";
 		mainFields.logger.error(
@@ -234,23 +231,29 @@ void ParentHelper::pUpdate() {
 		);
 		mainFields.captureManager.disconnect();
 		mainFields.orchestrator.reset();
-
+		snapshot.deviceInfo.runGuarded([&] { snapshot.deviceInfo._.state = mainFields.captureManager.getState(); });
+		mainFields.rain.executeCommandAsync(mainFields.callbacks.onDeviceDisconnected);
 		break;
 	}
 	}
 
-	if (!changes.devices.empty()) {
-		{
-			auto lock = snapshot.deviceLists.getLock();
-			updateDeviceListStrings();
+	if (!changes.stateChanged.empty() || !changes.removed.empty()) {
+		const bool deviceListChanged = updateDeviceListStrings();
+		if (deviceListChanged) {
+			mainFields.rain.executeCommandAsync(mainFields.callbacks.onDeviceListChange);
 		}
+	}
 
-		mainFields.rain.executeCommandAsync(mainFields.callbacks.onDeviceListChange);
-
-		if (mainFields.captureManager.getState() == CaptureManager::State::eDEVICE_CONNECTION_ERROR
-			&& changes.devices.count(mainFields.captureManager.getSnapshot().id) > 0) {
-			needToUpdateDevice = true;
-		}
+	if (mainFields.settings.device.type == CaptureManager::SourceDesc::Type::eID
+		&& changes.removed.find(mainFields.captureManager.getSnapshot().id) != changes.removed.end()) {
+		mainFields.logger.warning(L"Specified device has been disabled or disconnected");
+		mainFields.captureManager.disconnect();
+		needToUpdateDevice = false;
+		snapshot.deviceInfo.runGuarded([&] { snapshot.deviceInfo._.state = mainFields.captureManager.getState(); });
+		mainFields.rain.executeCommandAsync(mainFields.callbacks.onDeviceDisconnected);
+	} else if (mainFields.captureManager.getState() == CaptureManager::State::eDEVICE_CONNECTION_ERROR
+		&& changes.stateChanged.count(mainFields.captureManager.getSnapshot().id) > 0) {
+		needToUpdateDevice = true;
 	}
 
 	if (mainFields.captureManager.getState() == CaptureManager::State::eDEVICE_IS_EXCLUSIVE) {
@@ -266,44 +269,40 @@ void ParentHelper::pUpdate() {
 	}
 
 	// after we know if we need to reconnect to audio device
-	// we grab data from current device buffer, so that wave flow don't hiccup
+	// we grab data from current device buffer, so that wave flow doesn't hiccup
 	// then instantly update device if need be
 	//	so that on next update we have something in buffer
 	// then process current captured data
-	//	which may take some time, so we would miss some data if we didn't reconnect to device
+	//	which may take some time, so we would miss some data
+	//	if we didn't reconnect to device before processing
 
 	const bool anyCaptured = mainFields.captureManager.capture();
+
+	if (mainFields.captureManager.getState() == CaptureManager::State::eRECONNECT_NEEDED) {
+		needToUpdateDevice = true;
+	}
 
 	if (needToUpdateDevice) {
 		const bool formatChanged = reconnectToDevice();
 		needToUpdateHandlers |= formatChanged;
 
 		snapshot.deviceIsAvailable = mainFields.captureManager.getState() == CaptureManager::State::eOK;
-
-		{
-			auto diLock = snapshot.deviceInfo.getLock();
-			snapshot.deviceInfo._ = mainFields.captureManager.getSnapshot();
-		}
-
-		mainFields.rain.executeCommandAsync(mainFields.callbacks.onDeviceChange);
-
+		snapshot.deviceInfo.runGuarded([&] { snapshot.deviceInfo._ = mainFields.captureManager.getSnapshot(); });
 	}
 	if (needToUpdateHandlers) {
 		updateProcessings();
-		{
-			auto dataLock = snapshot.data.getLock();
-			mainFields.orchestrator.configureSnapshot(snapshot.data._);
-		}
+		snapshot.data.runGuarded([&] { mainFields.orchestrator.configureSnapshot(snapshot.data._); });
+	}
+	if (needToUpdateDevice) {
+		// callback may want to use some data from snapshot.data,
+		// that is updated in case needToUpdateHandlers
+		// so we call the callback in this separate if() branch
+		mainFields.rain.executeCommandAsync(mainFields.callbacks.onDeviceChange);
 	}
 
 	if (anyCaptured) {
 		mainFields.orchestrator.process(mainFields.captureManager.getChannelMixer());
-
-		{
-			auto dataLock = snapshot.data.getLock();
-			mainFields.orchestrator.exchangeData(snapshot.data._);
-		}
-
+		snapshot.data.runGuarded([&] { mainFields.orchestrator.exchangeData(snapshot.data._); });
 		mainFields.rain.executeCommandAsync(mainFields.callbacks.onUpdate);
 	}
 }
@@ -327,15 +326,33 @@ void ParentHelper::updateProcessings() {
 	);
 }
 
-void ParentHelper::updateDeviceListStrings() {
-	auto& lists = snapshot.deviceLists;
+bool ParentHelper::updateDeviceListStrings() {
+	string input;
+	string output;
 	if (constFields.legacyNumber < 104) {
-		lists.input = legacy_makeDeviceListString(utils::MediaDeviceType::eINPUT);
-		lists.output = legacy_makeDeviceListString(utils::MediaDeviceType::eOUTPUT);
+		input = legacy_makeDeviceListString(utils::MediaDeviceType::eINPUT);
+		output = legacy_makeDeviceListString(utils::MediaDeviceType::eOUTPUT);
 	} else {
-		lists.input = makeDeviceListString(utils::MediaDeviceType::eINPUT);
-		lists.output = makeDeviceListString(utils::MediaDeviceType::eOUTPUT);
+		input = makeDeviceListString(utils::MediaDeviceType::eINPUT);
+		output = makeDeviceListString(utils::MediaDeviceType::eOUTPUT);
 	}
+
+	auto lock = snapshot.deviceLists.getLock();
+
+	auto& lists = snapshot.deviceLists;
+
+	bool anyChanged = false;
+
+	if (lists.input != input) {
+		lists.input = input;
+		anyChanged = true;
+	}
+	if (lists.output != output) {
+		lists.output = output;
+		anyChanged = true;
+	}
+
+	return anyChanged;
 }
 
 string ParentHelper::makeDeviceListString(utils::MediaDeviceType type) {

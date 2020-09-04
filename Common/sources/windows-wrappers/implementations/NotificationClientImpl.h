@@ -27,21 +27,22 @@ namespace rxtd::utils {
 		};
 
 		struct Changes {
-			DefaultDeviceChange defaultRender;
-			DefaultDeviceChange defaultCapture;
-			std::set<string, std::less<>> devices;
+			DefaultDeviceChange defaultOutputChange = DefaultDeviceChange::eNONE;
+			DefaultDeviceChange defaultInputChange = DefaultDeviceChange::eNONE;
+			std::set<string, std::less<>> stateChanged;
+			std::set<string, std::less<>> removed;
 		};
 
 	private:
 		IMMDeviceEnumeratorWrapper enumerator;
-
-		std::atomic<DefaultDeviceChange> defaultRenderChanged{ };
-		std::atomic<DefaultDeviceChange> defaultCaptureChanged{ };
-		std::set<string, std::less<>> devicesWithChangedState;
+		std::mutex mut;
 
 		std::function<void()> changesCallback;
 
-		std::mutex mut;
+		Changes changes;
+		std::set<string, std::less<>> activeDevices;
+		string defaultInputId;
+		string defaultOutputId;
 
 	public:
 		static MediaDeviceListNotificationClient* create() {
@@ -56,7 +57,35 @@ namespace rxtd::utils {
 
 	public:
 		void init(IMMDeviceEnumeratorWrapper& enumerator) {
+			auto lock = getLock();
 			enumerator.ref().RegisterEndpointNotificationCallback(this);
+
+			for (auto& dev : enumerator.getActiveDevices(MediaDeviceType::eINPUT)) {
+				auto id = dev.readId();
+				if (id.empty()) {
+					continue;
+				}
+				activeDevices.insert(std::move(id));
+			}
+
+			for (auto& dev : enumerator.getActiveDevices(MediaDeviceType::eOUTPUT)) {
+				auto id = dev.readId();
+				if (id.empty()) {
+					continue;
+				}
+				activeDevices.insert(std::move(id));
+			}
+
+
+			auto defaultInput = enumerator.getDefaultDevice(MediaDeviceType::eINPUT);
+			if (defaultInput.isValid()) {
+				defaultInputId = defaultInput.readId();
+			}
+
+			auto defaultOutput = enumerator.getDefaultDevice(MediaDeviceType::eOUTPUT);
+			if (defaultOutput.isValid()) {
+				defaultOutputId = defaultOutput.readId();
+			}
 		}
 
 		void deinit(IMMDeviceEnumeratorWrapper& enumerator) {
@@ -64,20 +93,16 @@ namespace rxtd::utils {
 		}
 
 		// callback should not call any methods of the object
-		// any such call will result in deadlock
+		// any such call will result in a deadlock
 		void setCallback(std::function<void()> value) {
-			std::lock_guard<std::mutex> lock{ mut };
+			auto lock = getLock();
 			changesCallback = std::move(value);
 		}
 
 		[[nodiscard]]
 		Changes takeChanges() {
-			std::lock_guard<std::mutex> lock{ mut };
-			Changes result{ };
-			result.defaultRender = defaultRenderChanged.exchange(DefaultDeviceChange::eNONE);
-			result.defaultCapture = defaultCaptureChanged.exchange(DefaultDeviceChange::eNONE);
-			result.devices = std::move(devicesWithChangedState);
-			return result;
+			auto lock = getLock();
+			return std::exchange(changes, { });
 		}
 
 		HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvInterface) override {
@@ -101,16 +126,26 @@ namespace rxtd::utils {
 				return S_OK;
 			}
 
-			std::lock_guard<std::mutex> lock{ mut };
+			auto lock = getLock();
 
 			// if (deviceId == nullptr) then no default device is available
 			// this can only happen in #OnDefaultDeviceChanged
 			const auto change = deviceId == nullptr ? DefaultDeviceChange::eNO_DEVICE : DefaultDeviceChange::eCHANGED;
 
+			if (deviceId == nullptr) {
+				deviceId = L"";
+			}
+
 			if (flow == eCapture) {
-				defaultCaptureChanged.exchange(change);
+				if (defaultInputId != deviceId) {
+					defaultInputId = deviceId;
+					changes.defaultInputChange = change;
+				}
 			} else {
-				defaultRenderChanged.exchange(change);
+				if (defaultOutputId != deviceId) {
+					defaultOutputId = deviceId;
+					changes.defaultOutputChange = change;
+				}
 			}
 
 			if (changesCallback != nullptr) {
@@ -121,8 +156,14 @@ namespace rxtd::utils {
 		}
 
 		HRESULT STDMETHODCALLTYPE OnDeviceAdded(const wchar_t* deviceId) override {
-			std::lock_guard<std::mutex> lock{ mut };
-			devicesWithChangedState.insert(deviceId);
+			auto lock = getLock();
+			if (activeDevices.find(deviceId) != activeDevices.end()) {
+				return S_OK;
+			}
+
+			activeDevices.insert(deviceId);
+			changes.stateChanged.insert(deviceId);
+			changes.removed.erase(deviceId);
 
 			if (changesCallback != nullptr) {
 				changesCallback();
@@ -132,8 +173,14 @@ namespace rxtd::utils {
 		}
 
 		HRESULT STDMETHODCALLTYPE OnDeviceRemoved(const wchar_t* deviceId) override {
-			std::lock_guard<std::mutex> lock{ mut };
-			devicesWithChangedState.insert(deviceId);
+			auto lock = getLock();
+			if (activeDevices.find(deviceId) == activeDevices.end()) {
+				return S_OK;
+			}
+
+			activeDevices.erase(deviceId);
+			changes.removed.insert(deviceId);
+			changes.stateChanged.erase(deviceId);
 
 			if (changesCallback != nullptr) {
 				changesCallback();
@@ -143,8 +190,25 @@ namespace rxtd::utils {
 		}
 
 		HRESULT STDMETHODCALLTYPE OnDeviceStateChanged(const wchar_t* deviceId, DWORD newState) override {
-			std::lock_guard<std::mutex> lock{ mut };
-			devicesWithChangedState.insert(deviceId);
+			auto lock = getLock();
+
+			if (newState == DEVICE_STATE_ACTIVE) {
+				if (activeDevices.find(deviceId) != activeDevices.end()) {
+					return S_OK;
+				}
+
+				activeDevices.insert(deviceId);
+				changes.stateChanged.insert(deviceId);
+				changes.removed.erase(deviceId);
+			} else {
+				if (activeDevices.find(deviceId) == activeDevices.end()) {
+					return S_OK;
+				}
+
+				activeDevices.insert(deviceId);
+				changes.removed.insert(deviceId);
+				changes.stateChanged.erase(deviceId);
+			}
 
 			if (changesCallback != nullptr) {
 				changesCallback();
@@ -154,14 +218,24 @@ namespace rxtd::utils {
 		}
 
 		HRESULT STDMETHODCALLTYPE OnPropertyValueChanged(const wchar_t* deviceId, const PROPERTYKEY key) override {
-			std::lock_guard<std::mutex> lock{ mut };
-			devicesWithChangedState.insert(deviceId);
+			auto lock = getLock();
+
+			if (activeDevices.find(deviceId) == activeDevices.end()) {
+				return S_OK;
+			}
+
+			changes.stateChanged.insert(deviceId);
 
 			if (changesCallback != nullptr) {
 				changesCallback();
 			}
 
 			return S_OK;
+		}
+
+	private:
+		std::lock_guard<std::mutex> getLock() {
+			return std::lock_guard<std::mutex>{ mut };
 		}
 	};
 }

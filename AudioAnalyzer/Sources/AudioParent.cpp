@@ -108,6 +108,7 @@ void AudioParent::vReload() {
 	callbacks.onUpdate = rain.read(L"callback-onUpdate", false).asString();
 	callbacks.onDeviceChange = rain.read(L"callback-onDeviceChange", false).asString();
 	callbacks.onDeviceListChange = rain.read(L"callback-onDeviceListChange", false).asString();
+	callbacks.onDeviceDisconnected = rain.read(L"callback-onDeviceDisconnected", false).asString();
 
 	if (oldCallbacks != callbacks || oldSource != requestedSource || paramsChanged) {
 		firstReload = false;
@@ -196,6 +197,45 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 		const auto& di = info._;
 
 		const isview deviceProperty = args[1];
+
+		if (deviceProperty == L"detailedState") {
+			switch (di.state) {
+			case CaptureManager::State::eOK:
+				resolveBufferString = L"1";
+				break;
+			case CaptureManager::State::eDEVICE_CONNECTION_ERROR:
+			case CaptureManager::State::eRECONNECT_NEEDED:
+				resolveBufferString = L"2";
+				break;
+			case CaptureManager::State::eMANUALLY_DISCONNECTED:
+				resolveBufferString = L"3";
+				break;
+			case CaptureManager::State::eDEVICE_IS_EXCLUSIVE:
+				resolveBufferString = L"4";
+				break;
+			}
+			return;
+		}
+
+		if (deviceProperty == L"detailedStateString") {
+			switch (di.state) {
+			case CaptureManager::State::eOK:
+				resolveBufferString = L"ok";
+				break;
+			case CaptureManager::State::eDEVICE_CONNECTION_ERROR:
+			case CaptureManager::State::eRECONNECT_NEEDED:
+				resolveBufferString = L"connectionError";
+				break;
+			case CaptureManager::State::eMANUALLY_DISCONNECTED:
+				resolveBufferString = L"disconnected";
+				break;
+			case CaptureManager::State::eDEVICE_IS_EXCLUSIVE:
+				resolveBufferString = L"exclusive";
+				break;
+			}
+			return;
+		}
+
 		if (deviceProperty == L"status") {
 			resolveBufferString = di.state == CaptureManager::State::eOK ? L"1" : L"0";
 		} else if (deviceProperty == L"status string") {

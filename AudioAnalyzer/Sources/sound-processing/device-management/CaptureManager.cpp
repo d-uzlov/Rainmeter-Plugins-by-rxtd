@@ -25,7 +25,7 @@ void CaptureManager::disconnect() {
 		return;
 	}
 
-	snapshot.state = State::eRECONNECT_NEEDED;
+	snapshot.state = State::eMANUALLY_DISCONNECTED;
 	audioCaptureClient = { };
 	sessionEventsWrapper = { };
 }

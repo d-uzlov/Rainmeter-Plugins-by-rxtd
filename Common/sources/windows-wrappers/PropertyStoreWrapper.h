@@ -11,6 +11,7 @@
 
 #include <optional>
 #include "GenericComWrapper.h"
+#include "Propsys.h"
 
 namespace rxtd::utils {
 	class PropertyStoreWrapper : public GenericComWrapper<IPropertyStore> {
@@ -47,7 +48,7 @@ namespace rxtd::utils {
 		std::optional<BlobObjectType> readPropertyBlob(const PROPERTYKEY& key) {
 			PropVariantWrapper prop;
 
-			if (getPointer()->GetValue(key, prop.getMetaPointer()) != S_OK) {
+			if (ref().GetValue(key, prop.getMetaPointer()) != S_OK) {
 				return { };
 			}
 

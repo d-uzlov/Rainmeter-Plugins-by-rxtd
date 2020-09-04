@@ -46,12 +46,13 @@ namespace rxtd::audio_analyzer {
 		enum class State {
 			eOK,
 			eDEVICE_CONNECTION_ERROR,
+			eMANUALLY_DISCONNECTED,
 			eRECONNECT_NEEDED,
-			eDEVICE_IS_EXCLUSIVE
+			eDEVICE_IS_EXCLUSIVE,
 		};
 
 		struct Snapshot {
-			State state = State::eDEVICE_CONNECTION_ERROR;
+			State state = State::eMANUALLY_DISCONNECTED;
 			string name;
 			string nameOnly;
 			string description;

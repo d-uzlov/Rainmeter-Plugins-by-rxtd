@@ -27,5 +27,11 @@ namespace rxtd {
 			}
 			return lock;
 		}
+
+		template<typename Callable>
+		auto runGuarded(Callable callable) {
+			auto lock = getLock();
+			return callable();
+		}
 	};
 }
