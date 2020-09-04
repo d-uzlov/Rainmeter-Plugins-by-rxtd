@@ -241,6 +241,8 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 	}
 
 	if (optionName == L"value") {
+		resolveBufferString = L"0";
+
 		if (!requestedSource.has_value()) {
 			return;
 		}
@@ -261,13 +263,9 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 			return;
 		}
 
-		// auto procIter = saMap.find(procName);
-		// if (procIter == saMap.end()) {
-		// 	cl.error(L"processing '{}' is not found", procName);
-		// 	return;
-		// }
-		//
-		// const auto value = procIter->second.getAudioChildHelper().getValue(channelOpt.value(), handlerName, ind);
+		if (!isHandlerShouldExist(procName, channelOpt.value(), handlerName)) {
+			return;
+		}
 
 		const auto value = getValue(procName, handlerName, channelOpt.value(), ind);
 		logger.printer.print(value);
@@ -306,7 +304,6 @@ double AudioParent::getValue(isview proc, isview id, Channel channel, index ind)
 	auto handlerSnapshotIter = channelSnapshot.find(id);
 	if (handlerSnapshotIter == channelSnapshot.end()) {
 		return 0.0;
-
 	}
 
 	auto& values = handlerSnapshotIter->second.values;
@@ -449,34 +446,16 @@ void AudioParent::resolveProp(array_view<isview> args, string& resolveBufferStri
 	}
 
 	const PatchInfo* handlerInfo = nullptr;
-	// = paramParser
-	//   .getParseResult()
-	//   .find(procName)->second.handlersInfo.patchers
-	//   .find(handlerName)->second;
 	SoundHandler::ExternalMethods::GetPropMethodType propGetter = nullptr;
 
-	auto pd = paramParser.getParseResult();
 	{
-		// check that this prop should exist
-
-		auto procIter = pd.find(procName);
-		if (procIter == pd.end()) {
-			logHelpers.processingNotFound.log(procName);
+		if (!isHandlerShouldExist(procName, channelOpt.value(), handlerName)) {
 			return;
 		}
 
-		auto& processingChannels = procIter->second.channels;
-		if (processingChannels.find(channelOpt.value()) == processingChannels.end()) {
-			logHelpers.processingDoesNotHaveChannel.log(procName, channelName);
-			return;
-		}
-
-		auto& handlerPatchers = procIter->second.handlersInfo.patchers;
-		auto handlerInfoIter = handlerPatchers.find(handlerName);
-		if (handlerInfoIter == handlerPatchers.end()) {
-			logHelpers.processingDoesNotHaveHandler.log(procName, handlerName);
-			return;
-		}
+		const auto procIter = paramParser.getParseResult().find(procName);
+		const auto& handlerPatchers = procIter->second.handlersInfo.patchers;
+		const auto handlerInfoIter = handlerPatchers.find(handlerName);
 
 		handlerInfo = &handlerInfoIter->second;
 		propGetter = handlerInfo->externalMethods.getProp;
@@ -491,7 +470,7 @@ void AudioParent::resolveProp(array_view<isview> args, string& resolveBufferStri
 	auto lock = data.getLock();
 
 	// "not found" errors below are not logged because we have already checked everything above,
-	// and if do still don't find requested info then it is caused by either delay in updating second thread
+	// and if we still don't find requested info then it is caused by either delay in updating second thread
 	// or by device not having requested channel
 
 	auto procIter = data._.find(procName);
