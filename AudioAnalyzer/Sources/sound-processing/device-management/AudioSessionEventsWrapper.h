@@ -24,7 +24,7 @@ namespace rxtd::audio_analyzer {
 		AudioSessionEventsWrapper(utils::IAudioClientWrapper& client) {
 			impl = {
 				[&](auto ptr) {
-					*ptr = new utils::AudioSessionEventsImpl{ client };
+					*ptr = utils::AudioSessionEventsImpl::create(client);
 					return true;
 				}
 			};
@@ -33,7 +33,7 @@ namespace rxtd::audio_analyzer {
 		AudioSessionEventsWrapper(utils::GenericComWrapper<IAudioSessionControl>&& _sessionController) {
 			impl = {
 				[&](auto ptr) {
-					*ptr = new utils::AudioSessionEventsImpl{ std::move(_sessionController) };
+					*ptr = utils::AudioSessionEventsImpl::create(std::move(_sessionController));
 					return true;
 				}
 			};

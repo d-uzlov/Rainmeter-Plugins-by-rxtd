@@ -18,6 +18,9 @@ namespace rxtd::utils {
 		static_assert(std::is_base_of<IUnknown, T>::value, "T must extend IUnknown");
 		std::atomic_int referenceCounter{ 1 };
 
+	protected:
+		~IUnknownImpl() = default;
+
 	public:
 		ULONG STDMETHODCALLTYPE AddRef() final override {
 			const auto prevValue = referenceCounter.fetch_add(1);

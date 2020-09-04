@@ -47,6 +47,7 @@ namespace rxtd::audio_analyzer {
 			string onDeviceChange;
 			string onDeviceListChange;
 		};
+
 	private:
 		utils::IMMDeviceEnumeratorWrapper enumeratorWrapper;
 
@@ -57,7 +58,7 @@ namespace rxtd::audio_analyzer {
 		} constFields;
 
 		struct {
-			utils::CMMNotificationClient notificationClient;
+			utils::GenericComWrapper<utils::MediaDeviceListNotificationClient> notificationClient;
 			std::atomic_bool stopRequest{ false };
 		} threadSafeFields;
 

@@ -18,7 +18,7 @@
 #include <atomic>
 
 namespace rxtd::utils {
-	class CMMNotificationClient : public IUnknownImpl<IMMNotificationClient> {
+	class MediaDeviceListNotificationClient : public IUnknownImpl<IMMNotificationClient> {
 	public:
 		enum class DefaultDeviceChange {
 			eNONE,
@@ -44,16 +44,27 @@ namespace rxtd::utils {
 		std::mutex mut;
 
 	public:
-		// callback should not call any methods of the object
-		// any such call will result in deadlock
-		CMMNotificationClient() {
+		static MediaDeviceListNotificationClient* create() {
+			return new MediaDeviceListNotificationClient;
+		}
+
+	private:
+		MediaDeviceListNotificationClient() = default;
+
+	protected:
+		~MediaDeviceListNotificationClient() = default;
+
+	public:
+		void init(IMMDeviceEnumeratorWrapper& enumerator) {
 			enumerator.ref().RegisterEndpointNotificationCallback(this);
 		}
 
-		virtual ~CMMNotificationClient() {
+		void deinit(IMMDeviceEnumeratorWrapper& enumerator) {
 			enumerator.ref().UnregisterEndpointNotificationCallback(this);
 		}
 
+		// callback should not call any methods of the object
+		// any such call will result in deadlock
 		void setCallback(std::function<void()> value) {
 			std::lock_guard<std::mutex> lock{ mut };
 			changesCallback = std::move(value);
@@ -90,7 +101,7 @@ namespace rxtd::utils {
 				return S_OK;
 			}
 
-			std::lock_guard<std::mutex> lock { mut };
+			std::lock_guard<std::mutex> lock{ mut };
 
 			// if (deviceId == nullptr) then no default device is available
 			// this can only happen in #OnDefaultDeviceChanged

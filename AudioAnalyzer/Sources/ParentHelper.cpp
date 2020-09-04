@@ -12,6 +12,7 @@
 using namespace audio_analyzer;
 
 ParentHelper::~ParentHelper() {
+	threadSafeFields.notificationClient.ref().deinit(enumeratorWrapper);
 	try {
 		stopThread();
 	} catch (...) {
@@ -36,12 +37,20 @@ void ParentHelper::init(
 
 	updateDeviceListStrings();
 
+	threadSafeFields.notificationClient = {
+		[](auto ptr) {
+			*ptr = utils::MediaDeviceListNotificationClient::create();
+			return true;
+		}
+	};
+	threadSafeFields.notificationClient.ref().init(enumeratorWrapper);
+
 	if (const auto threadingPolicy = threadingMap.get(L"policy").asIString(L"separateThread");
 		threadingPolicy == L"uiThread") {
 		constFields.useThreading = false;
 	} else if (threadingPolicy == L"separateThread") {
 		constFields.useThreading = true;
-		threadSafeFields.notificationClient.setCallback([this]() { wakeThreadUp(); });
+		threadSafeFields.notificationClient.ref().setCallback([this]() { wakeThreadUp(); });
 	} else {
 		mainFields.logger.error(L"Fatal error: Threading: unknown policy '{}'");
 		throw std::exception{ };
@@ -185,9 +194,9 @@ void ParentHelper::pUpdate() {
 		}
 	}
 
-	const auto changes = threadSafeFields.notificationClient.takeChanges();
+	const auto changes = threadSafeFields.notificationClient.ref().takeChanges();
 
-	using DDC = utils::CMMNotificationClient::DefaultDeviceChange;
+	using DDC = utils::MediaDeviceListNotificationClient::DefaultDeviceChange;
 	using ST = CaptureManager::SourceDesc::Type;
 	DDC defaultDeviceChange{ };
 	switch (mainFields.settings.device.type) {

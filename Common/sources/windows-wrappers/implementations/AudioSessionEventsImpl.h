@@ -60,35 +60,44 @@ namespace rxtd::utils {
 		std::mutex mut;
 
 	public:
+		static AudioSessionEventsImpl* create(IAudioClientWrapper& audioClient) {
+			AudioSessionEventsImpl& result = *new AudioSessionEventsImpl;
+			result.preventVolumeChange = true;
+
+			result.sessionController = audioClient.getInterface<IAudioSessionControl>();
+
+			if (result.sessionController.isValid()) {
+				result.sessionController.ref().RegisterAudioSessionNotification(&result);
+
+				result.mainVolumeController = audioClient.getInterface<ISimpleAudioVolume>();
+				result.mainVolumeControllerIsValid.exchange(result.mainVolumeController.isValid());
+
+				result.channelVolumeController = audioClient.getInterface<IChannelAudioVolume>();
+				result.channelVolumeControllerIsValid.exchange(result.channelVolumeController.isValid());
+			}
+
+			return &result;
+		}
+
+		static AudioSessionEventsImpl* create(GenericComWrapper<IAudioSessionControl>&& _sessionController) {
+			AudioSessionEventsImpl& result = *new AudioSessionEventsImpl;
+			result.preventVolumeChange = false;
+
+			result.sessionController = std::move(_sessionController);
+			result.sessionController.ref().RegisterAudioSessionNotification(&result);
+
+			return &result;
+		}
+
+	private:
 		AudioSessionEventsImpl() = default;
 
-		AudioSessionEventsImpl(IAudioClientWrapper& audioClient) {
-			preventVolumeChange = true;
-
-			sessionController = audioClient.getInterface<IAudioSessionControl>();
-
-			if (sessionController.isValid()) {
-				sessionController.ref().RegisterAudioSessionNotification(this);
-
-				mainVolumeController = audioClient.getInterface<ISimpleAudioVolume>();
-				mainVolumeControllerIsValid.exchange(mainVolumeController.isValid());
-
-				channelVolumeController = audioClient.getInterface<IChannelAudioVolume>();
-				channelVolumeControllerIsValid.exchange(channelVolumeController.isValid());
-			}
-		}
-
-		AudioSessionEventsImpl(GenericComWrapper<IAudioSessionControl>&& _sessionController) {
-			preventVolumeChange = false;
-
-			sessionController = std::move(_sessionController);
-			sessionController.ref().RegisterAudioSessionNotification(this);
-		}
-
+	protected:
 		virtual ~AudioSessionEventsImpl() {
 			deinit();
 		}
 
+	public:
 		//	""
 		//	When releasing an IAudioSessionControl interface instance,
 		//	the client must call the interface's Release method
@@ -105,9 +114,8 @@ namespace rxtd::utils {
 
 			if (sessionController.isValid()) {
 				sessionController.ref().UnregisterAudioSessionNotification(this);
+				sessionController = { };
 			}
-
-			sessionController = { };
 
 			mainVolumeController = { };
 			mainVolumeControllerIsValid.exchange(mainVolumeController.isValid());
