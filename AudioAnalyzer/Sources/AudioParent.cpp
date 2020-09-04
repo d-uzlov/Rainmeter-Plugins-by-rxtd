@@ -473,29 +473,34 @@ void AudioParent::resolveProp(array_view<isview> args, string& resolveBufferStri
 	// and if we still don't find requested info then it is caused by either delay in updating second thread
 	// or by device not having requested channel
 
-	auto procIter = data._.find(procName);
-	if (procIter == data._.end()) {
+	std::any* handlerSpecificData = nullptr;
+
+	if (auto procIter = data._.find(procName);
+		procIter != data._.end()) {
+
+		auto& processingSnapshot = procIter->second;
+
+		if (auto channelSnapshotIter = processingSnapshot.find(channelOpt.value());
+			channelSnapshotIter != processingSnapshot.end()) {
+			auto& channelSnapshot = channelSnapshotIter->second;
+
+			if (auto handlerSnapshotIter = channelSnapshot.find(handlerName);
+				handlerSnapshotIter != channelSnapshot.end()) {
+				handlerSpecificData = &handlerSnapshotIter->second.handlerSpecificData;
+			}
+		}
+	}
+	if (handlerSpecificData == nullptr) {
+		// todo
+		// we can access paramParser values here without checks
+		// because isHandlerShouldExist above checked that it should be valid to access them
 		return;
 	}
-
-	auto& processingSnapshot = procIter->second;
-	auto channelSnapshotIter = processingSnapshot.find(channelOpt.value());
-	if (channelSnapshotIter == processingSnapshot.end()) {
-		return;
-	}
-
-	auto& channelSnapshot = channelSnapshotIter->second;
-	auto handlerSnapshotIter = channelSnapshot.find(handlerName);
-	if (handlerSnapshotIter == channelSnapshot.end()) {
-		return;
-	}
-
-	auto& handlerSnapshot = handlerSnapshotIter->second;
 
 	SoundHandler::ExternCallContext context;
 	context.channelName = ChannelUtils::getTechnicalName(channelOpt.value());
 
-	const bool found = propGetter(handlerSnapshot.handlerSpecificData, propName, logger.printer, context);
+	const bool found = propGetter(*handlerSpecificData, propName, logger.printer, context);
 	if (!found) {
 		logHelpers.propNotFound.log(handlerInfo->type, propName);
 		return;
