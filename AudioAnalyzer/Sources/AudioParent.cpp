@@ -101,9 +101,9 @@ void AudioParent::vReload() {
 	const bool paramsChanged = paramParser.parse(legacyNumber, false) || firstReload;
 
 	ParentHelper::Callbacks callbacks;
-	callbacks.onUpdate = rain.read(L"callback-onUpdate").asString();
-	callbacks.onDeviceChange = rain.read(L"callback-onDeviceChange").asString();
-	callbacks.onDeviceListChange = rain.read(L"callback-onDeviceListChange").asString();
+	callbacks.onUpdate = rain.read(L"callback-onUpdate", false).asString();
+	callbacks.onDeviceChange = rain.read(L"callback-onDeviceChange", false).asString();
+	callbacks.onDeviceListChange = rain.read(L"callback-onDeviceListChange", false).asString();
 
 	if (oldSource != requestedSource || paramsChanged) {
 		firstReload = false;

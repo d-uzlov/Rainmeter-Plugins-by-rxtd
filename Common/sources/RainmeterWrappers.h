@@ -167,12 +167,12 @@ namespace rxtd::utils {
 		explicit Rainmeter(void* rm);
 
 		[[nodiscard]]
-		Option read(sview optionName) const {
-			return Option{ readString(optionName) }.own();
+		Option read(sview optionName, bool replaceVariables = true) const {
+			return Option{ readString(optionName, L"", replaceVariables) }.own();
 		}
 
 		[[nodiscard]]
-		sview readString(sview optionName, const wchar_t* defaultValue = L"") const;
+		sview readString(sview optionName, const wchar_t* defaultValue = L"", bool replaceVariables = true) const;
 		[[nodiscard]]
 		sview readPath(sview optionName, const wchar_t* defaultValue = L"") const;
 		[[nodiscard]]

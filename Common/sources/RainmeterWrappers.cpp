@@ -276,8 +276,8 @@ Rainmeter::Rainmeter(void* rm) :
 	measureName = RmGetMeasureName(rm);
 }
 
-sview Rainmeter::readString(sview optionName, const wchar_t* defaultValue) const {
-	return RmReadString(rm, makeNullTerminated(optionName), defaultValue);
+sview Rainmeter::readString(sview optionName, const wchar_t* defaultValue, bool replaceVariables) const {
+	return RmReadString(rm, makeNullTerminated(optionName), defaultValue, replaceVariables);
 }
 
 sview Rainmeter::readPath(sview optionName, const wchar_t* defaultValue) const {
