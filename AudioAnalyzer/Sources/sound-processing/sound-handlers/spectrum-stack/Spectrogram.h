@@ -116,10 +116,6 @@ namespace rxtd::audio_analyzer {
 			}
 
 			void next() {
-				if (chunks.empty()) {
-					return;
-				}
-
 				array_view<float> chunk;
 				while (counter < blockSize && !chunks.empty()) {
 					counter += chunkEquivalentWaveSize;
