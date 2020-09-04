@@ -73,24 +73,12 @@ namespace rxtd::utils {
 		MinMax prev;
 
 	public:
-		void setConnected(bool value) {
-			connected = value;
-		}
-
-		void setBorderSize(index value) {
-			borderSize = value;
-		}
-
-		void setFading(double value) {
-			fading = value;
-		}
-
-		void setLineDrawingPolicy(LineDrawingPolicy value) {
-			lineDrawingPolicy = value;
-		}
-
-		void setColors(Colors value) {
-			colors = value;
+		void setParams(bool _connected, index _borderSize, double _fading, LineDrawingPolicy ldp, Colors _colors) {
+			connected = _connected;
+			borderSize = _borderSize;
+			fading = _fading;
+			lineDrawingPolicy = ldp;
+			colors = _colors;
 		}
 
 		void setImageParams(index width, index height, bool stationary);

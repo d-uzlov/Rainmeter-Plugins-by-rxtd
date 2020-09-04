@@ -107,11 +107,7 @@ SoundHandler::ConfigurationResult WaveForm::vConfigure(const std::any& _params, 
 	minDistinguishableValue = 1.0 / params.height;
 
 	drawer.setImageParams(params.width, params.height, params.stationary);
-	drawer.setColors(params.colors);
-	drawer.setLineDrawingPolicy(params.lineDrawingPolicy);
-	drawer.setFading(params.fading);
-	drawer.setConnected(params.connected);
-	drawer.setBorderSize(params.borderSize);
+	drawer.setParams(params.connected, params.borderSize, params.fading, params.lineDrawingPolicy, params.colors);
 
 	drawer.inflate();
 

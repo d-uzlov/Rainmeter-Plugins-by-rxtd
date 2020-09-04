@@ -75,9 +75,7 @@ void WaveFormDrawer::inflate() {
 		break;
 	}
 	case LineDrawingPolicy::eALWAYS: {
-		for (auto& pixel : resultBuffer[centerLineIndex]) {
-			pixel = colors.line;
-		}
+		std::fill_n(resultBuffer[centerLineIndex], resultBuffer.getBufferSize(), colors.line);
 		break;
 	}
 	}
