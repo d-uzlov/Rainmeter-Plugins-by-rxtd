@@ -18,7 +18,7 @@
 using namespace audio_utils;
 
 // todo double/float?
-float CustomizableValueTransformer::apply(double value) {
+double CustomizableValueTransformer::apply(double value) {
 	for (auto& transform : transforms) {
 		switch (transform.type) {
 		case TransformType::eDB: {
@@ -27,7 +27,7 @@ float CustomizableValueTransformer::apply(double value) {
 			break;
 		}
 		case TransformType::eMAP: {
-			value = transform.interpolator.toValue(value);
+			value = transform.interpolator.toValue(float(value));
 			break;
 		}
 		case TransformType::eCLAMP: {

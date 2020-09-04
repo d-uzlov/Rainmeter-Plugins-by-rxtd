@@ -63,7 +63,7 @@ namespace rxtd::audio_utils {
 		}
 
 		[[nodiscard]]
-		float apply(double value);
+		double apply(double value);
 
 		[[nodiscard]]
 		float apply(float value) {

@@ -74,7 +74,7 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 		if (!untouchedOptions.empty()) {
 			logger.warning(L"Threading: unused options: {}", untouchedOptions);
 		}
-	} catch (std::exception& e) {
+	} catch (std::exception&) {
 		setMeasureState(utils::MeasureState::eBROKEN);
 		return;
 	}

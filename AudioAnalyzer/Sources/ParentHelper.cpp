@@ -421,7 +421,7 @@ string ParentHelper::makeDeviceListString(utils::MediaDeviceType type) {
 			continue;
 		}
 
-		bp.append(L"{}", id);
+		append(id);
 
 		const auto deviceInfo = device.readDeviceInfo();
 		append(deviceInfo.name);
