@@ -107,7 +107,7 @@ void ParentHelper::setParams(
 		if (requestFields.thread.joinable()) {
 			wakeThreadUp();
 		} else {
-			threadSafeFields.stopRequest.exchange(false);
+			mainFields.stopRequest = false;
 			requestFields.thread = std::thread{ [this]() { threadFunction(); } };
 		}
 	}
@@ -121,22 +121,25 @@ void ParentHelper::update() {
 
 void ParentHelper::wakeThreadUp() {
 	try {
-		auto lock = std::unique_lock<std::mutex>{ mainFields.mutex, std::defer_lock };
-		const bool locked = lock.try_lock();
-		if (locked) {
-			mainFields.sleepVariable.notify_one();
-		}
+		auto mainLock = mainFields.getLock();
+		mainFields.updateRequest = true;
+		mainFields.sleepVariable.notify_one();
 	} catch (...) {
 	}
 }
 
 void ParentHelper::stopThread() {
-	threadSafeFields.stopRequest.exchange(true);
-	wakeThreadUp();
-
-	if (requestFields.thread.joinable()) {
-		requestFields.thread.join();
+	if (!requestFields.thread.joinable()) {
+		return;
 	}
+
+	{
+		auto mainLock = mainFields.getLock();
+		mainFields.stopRequest = true;
+		mainFields.sleepVariable.notify_one();
+	}
+
+	requestFields.thread.join();
 }
 
 void ParentHelper::threadFunction() {
@@ -146,30 +149,31 @@ void ParentHelper::threadFunction() {
 
 	const auto res = CoInitializeEx(nullptr, COINIT_MULTITHREADED | COINIT_DISABLE_OLE1DDE);
 
-	auto mainLock = mainFields.getLock();
-
 	if (res != S_OK) {
 		mainFields.logger.error(L"separate thread: CoInitializeEx failed");
 		return;
 	}
 
 	const auto sleepTime = std::chrono::duration_cast<clock::duration>(1.0s * constFields.updateTime);
-	// mainFields.sleepVariable.wait_for(mainLock, sleepTime);
 
 	while (true) {
-		if (threadSafeFields.stopRequest.load()) {
-			break;
-		}
-
 		auto nextWakeTime = clock::now() + sleepTime;
-
 		pUpdate();
 
-		if (threadSafeFields.stopRequest.load()) {
-			break;
+		{
+			auto mainLock = mainFields.getLock();
+			if (mainFields.stopRequest) {
+				break;
+			}
+			if (!mainFields.updateRequest) {
+				mainFields.sleepVariable.wait_until(mainLock, nextWakeTime);
+				if (mainFields.stopRequest) {
+					break;
+				}
+			} else {
+				mainFields.updateRequest = false;
+			}
 		}
-
-		mainFields.sleepVariable.wait_until(mainLock, nextWakeTime);
 	}
 
 	CoUninitialize();

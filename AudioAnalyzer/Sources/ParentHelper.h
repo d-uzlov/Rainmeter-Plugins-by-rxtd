@@ -70,11 +70,12 @@ namespace rxtd::audio_analyzer {
 
 		struct {
 			utils::GenericComWrapper<utils::MediaDeviceListNotificationClient> notificationClient;
-			std::atomic_bool stopRequest{ false };
 		} threadSafeFields;
 
 		struct MainFields : DataWithLock {
 			std::condition_variable sleepVariable;
+			bool stopRequest = false;
+			bool updateRequest = false;
 
 			utils::Rainmeter rain;
 			utils::Rainmeter::Logger logger;
