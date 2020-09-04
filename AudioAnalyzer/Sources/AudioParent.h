@@ -79,8 +79,12 @@ namespace rxtd::audio_analyzer {
 
 		bool firstReload = true;
 
+		struct CleanerData {
+			std::any data;
+			SoundHandler::ExternalMethods::FinishMethodType finisher;
+		};
 		// handlerName → handlerData for cleanup
-		using ProcessingCleanersMap = std::map<istring, std::any, std::less<>>;
+		using ProcessingCleanersMap = std::map<istring, CleanerData, std::less<>>;
 		using CleanersMap = std::map<istring, ProcessingCleanersMap, std::less<>>;
 
 		bool cleanersExecuted = false;
@@ -109,6 +113,7 @@ namespace rxtd::audio_analyzer {
 		isview legacy_findProcessingFor(isview handlerName) const;
 
 	private:
+		void updateCleaners();
 		DeviceRequest readRequest() const;
 		void resolveProp(array_view<isview> args, string& resolveBufferString);
 		ProcessingCleanersMap createCleanersFor(const ParamParser::ProcessingData& pd) const;

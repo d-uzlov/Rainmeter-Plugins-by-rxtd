@@ -100,6 +100,10 @@ void AudioParent::vReload() {
 
 	const bool paramsChanged = paramParser.parse(legacyNumber, false) || firstReload;
 
+	if (paramsChanged) {
+		updateCleaners();
+	}
+
 	const auto oldCallbacks = std::move(callbacks);
 	callbacks.onUpdate = rain.read(L"callback-onUpdate", false).asString();
 	callbacks.onDeviceChange = rain.read(L"callback-onDeviceChange", false).asString();
@@ -353,6 +357,40 @@ isview AudioParent::legacy_findProcessingFor(isview handlerName) const {
 	return { };
 }
 
+void AudioParent::updateCleaners() {
+	for (auto& [processingName, pd] : paramParser.getParseResult()) {
+		auto newCleaners = createCleanersFor(pd);
+		auto& oldCleaners = cleanersMap[processingName];
+		for (auto& [handlerName, data] : oldCleaners) {
+			if (newCleaners.find(handlerName) == newCleaners.end()) {
+				// clean old images
+				if (data.finisher != nullptr) {
+					for (auto channel : pd.channels) {
+						SoundHandler::ExternCallContext context;
+						context.channelName = ChannelUtils::getTechnicalName(channel);
+						data.finisher(data.data, context);
+					}
+				}
+			}
+		}
+		for (auto& [handlerName, data] : newCleaners) {
+			if (oldCleaners.find(handlerName) == oldCleaners.end()) {
+				// draw placeholders for new images
+				if (data.finisher != nullptr) {
+					for (auto channel : pd.channels) {
+						SoundHandler::ExternCallContext context;
+						context.channelName = ChannelUtils::getTechnicalName(channel);
+						data.finisher(data.data, context);
+					}
+				}
+			}
+		}
+		// handlers that exist both in old and new options should be fine without any actions
+
+		oldCleaners = std::move(newCleaners);
+	}
+}
+
 AudioParent::DeviceRequest AudioParent::readRequest() const {
 	CaptureManager::SourceDesc result;
 
@@ -491,11 +529,18 @@ void AudioParent::resolveProp(array_view<isview> args, string& resolveBufferStri
 		}
 	}
 	if (handlerSpecificData == nullptr) {
-		// todo
 		// we can access paramParser values here without checks
 		// because isHandlerShouldExist above checked that it should be valid to access them
+		handlerSpecificData = &cleanersMap.find(procName)->second.find(handlerName)->second.data;
+	}
+
+	if (handlerSpecificData == nullptr) {
+		// we should never get here
+		// but just it case there is an error, let's make sure that plugin won't crash the application
+		logHelpers.generic.log(L"unexpected (handlerSpecificData == nullptr), tell the developer about this error");
 		return;
 	}
+
 
 	SoundHandler::ExternCallContext context;
 	context.channelName = ChannelUtils::getTechnicalName(channelOpt.value());
@@ -542,7 +587,7 @@ AudioParent::ProcessingCleanersMap AudioParent::createCleanersFor(const ParamPar
 	for (const auto& [handlerName, finisher] : pd.finishers) {
 		auto dataIter = tempSnapshot.find(handlerName);
 		if (dataIter != tempSnapshot.end()) {
-			result[handlerName] = std::move(dataIter->second.handlerSpecificData);
+			result[handlerName] = { std::move(dataIter->second.handlerSpecificData), finisher };
 		}
 	}
 
@@ -570,7 +615,7 @@ void AudioParent::runCleaners() const {
 				SoundHandler::ExternCallContext context;
 				context.channelName = ChannelUtils::getTechnicalName(channel);
 				auto snapshotCopy = handlerDataIter->second;
-				finisher(snapshotCopy, context);
+				finisher(snapshotCopy.data, context);
 			}
 		}
 	}
