@@ -39,7 +39,8 @@ If you define color in some other space, then automatic conversion from that col
 
 
 Transformations:
-AudioLevel plugin has misterious attack, decay, gain, sensitivity options. You set them to something, and it works. In some way, and you probably have no idea on how they actually work. Maybe you have looked them in the source code, so you have some ideas, but you still can't really control them.
+AudioLevel plugin has mysterious gain, sensitivity options. You set them to something, and it works. In some way.
+You probably have no idea on how they actually work. Maybe you have looked them in the source code, so you have some ideas, but you still can't really control them.
 And if something doesn't work as you expect, them you can do nothing about it.
 
 Transformations solve this problem!
@@ -49,17 +50,20 @@ Available operations:
 Transform to decibels. Syntax: db
 Linear interpolation. Syntax: map[from <min> : <max>, to <min> : <max>]. "From" parameter is mandatory, "to" parameter is optional. If "to" is not present, then source range is transformed to range [0, 1]
 Limiting value to some range. Syntax: clamp[min <min>, max <max>]. Parameters are optional. Default min value is 0, default max value is 1.
-Simple low pass filtering. Syntax: lowPass[attack <value>, decay <value>]. Yes, this corresponds to attack and decay options in AudioLevel. Unlike AudioLevel, you can choose where filtering is applied. Will it be before clamp or after? Before transform to db or after? Or in both places? Your choice.
 
 Transformations are defined as chains. Transformation chain is a sequence of operations separated by spaces.
-Example: db map[from -70 : 0] clamp filter[attack 0, decay 1000]
-Example above is something that audio peak meter could be using.
+Example: db map[from -70 : 0] clamp
+Example above is something that audio peak or loudness meter could be using. It will transform values to decibels and then select range [-70, 0] and interpolate and clamp it in such a way that the result could be used in rainmeter meters, like Bar or Line.
 
 
 Filters
 Signal filtering is a very complex topic. However, actually using filters in this plugin is simple.
-Filter is something, that alters audio stream. Filters usually affect certain frequencies. For example, filters that remove low frequencies, are usually caled high pass filters.
-This plugin have relatively large set of usable filters. They are from two classes: biquad filters and Butterworth filters.
+Filter is something, that alters audio stream. Filters usually affect certain frequencies. For example, filters that remove low frequencies, are usually called high pass filters.
+You can look at these web pages to see how different filters affect frequencies of the sound:
+http://jaggedplanet.com/iir/iir-explorer.asp
+https://www.earlevel.com/main/2013/10/13/biquad-calculator-v2/
+
+This plugin have a set of usable filters. They are from two classes: biquad filters and Butterworth filters.
 
 All filters have the following syntax: <filter name>[<arg1 name> <arg1 value>, <arg2 name> <arg2 value>]
 
@@ -82,9 +86,8 @@ Order is limited to range [1, 5] due to possible issues with precision. You can 
 Besides filter-specific parameters each filter can have a forcedGain parameter (defined in decibels) that controls upper level of the filter.
 Traditionally filters like bqPeak[Q 0.5, freq 100, gain 5] would make frequencies near 100 Hz 5 db stronger. However, my plugin alters this behavior: upper level is kept at 0 db no matter the parameters. However, forcedGain is not compensated for, so if you write bqPeak[Q 0.5, freq 100, gain 5, forcedGain 5] then this filter would behave like traditional biquad peak filter.
 
-I am really not a pro at signal filtering, so if you want to know how it works, which you should use for which purpose and which values must be in parameters, then just google it. It's too complex to describe in this documentation.
+I am really not a pro at signal filtering, so if you want to know details of how it works, which filters should you use for which purpose and which values must be in parameters, then just google it. It's also too complex to describe in this documentation.
 
 If you are interested, standard filters are also defined as a sequence of these biquad and Butterworth filters.
-like-rg: bqHighPass[q 0.8, freq 160, forcedGain 3.65] bqPeak[q 3.0, freq 1125, gain -3.8] bqPeak[q 3.0, freq 3665, gain 5.28] bwLowPass[order 5, freq 10000]
 like-a: bqHighPass[q 0.3, freq 200, forcedGain 3.58] bwLowPass[order 5, freq 10000]
 like-d: bqHighPass[q 0.3, freq 200, forcedGain 3.65] bqPeak[q 1.0, freq 6000, gain 5.28] bwLowPass[order 5, freq 10000]

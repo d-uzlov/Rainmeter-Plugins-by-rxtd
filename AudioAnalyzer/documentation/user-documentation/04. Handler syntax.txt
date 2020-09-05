@@ -1,17 +1,17 @@
 Each handler description is what I call <list of named properties>
 It means that it is written like this:
-Handler-resampler=type BandResampler | source fft | freqList flist | cubicInterpolation | minCascade [#cascadeSelect] | | someCrazyProperty with value
+Handler-resampler=type BandResampler | source fft | bands log 300 20 20000 | cubicInterpolation | minCascade [#cascadeSelect] | | someCrazyProperty with value
 In the line above:
 Rainmeter option name is: Handler-resampler
 Handler name is: resampler
 Handler type is: BandResampler
-property "source" is: fft, which is a name of the handler with type FFT
-property "freqList" is: flist
-property "cubicInterpolation" is empty, which means it uses default value
+property "source" is: fft. Handler with such name must be present in the current processing, and must be preceding current handler
+property "bands" is: log 300 20 20000
+property "cubicInterpolation" is empty, which means it uses default value. If it wasn't specified here, nothing would have changed
 property "minCascade" is: [#cascadeSelect], which is a standard Rainmeter way to dereference a variable. Like all rainmeter variables, it is defined somewhere in the [Variables] section of the skin
 property "someCrazyProperty" is: with value
     This property does not apply to handlers of type BandResampler, which is why there will be a log warning about unused property.
-There is also an empty property description without a name. It doesn't do and doesn't mean anything. Such properties are ignored.
+There is also an empty property description without a name. It doesn't do and doesn't mean anything. Such empty properties are ignored.
 
 
 
@@ -80,22 +80,19 @@ Should always be used with Band handler. You can get values directly from FFT bu
 Properties:
 
 BinWidth : float > 0 : 100
-Width of one FFT result bin. Actual width of one bin can be slightly less than specified value because FFT parameters are adjusted to make performance better.
+Width of one FFT result bin. Also corresponds to the rate at which FFT is natively updated (before taking into account overlapBoost). FFT with BinWidth 10 and overlapBoost 1 will update 10 times per second.
 The less this option is, the more detailed result you get, but the less frequently values change.
-Recommended values are [5, 1000].
-fftSize == sampleRate / binWidth
+Recommended values are [5, 60].
+BinWidth-to-fftSize formula is as following: FftSize == sampleRate / BinWidth
 So if you have an AudioLevel skin with FFTSize=4096, then, assuming sampling rate is 48000, corresponding BinWidth is 11.71875
-Though, if sample rate is 192000, when same FFTSize=4096 corresponds to BinWidth 46.875, which is completely different story in terms of details of fft result.
+Though, if sample rate is 192000, then same FFTSize=4096 corresponds to BinWidth 46.875, which is completely different story in terms of details of fft result.
 This is the reason this plugin uses BinWidth instead of fftSize.
-BinWidth also corresponds to native update rate of FFT. If BinWidth is 20 and Overlap is 0, then handler will update its values 20 times per second.
 
-Overlap : float in range [0, 1] : 0.5
-Specifies how much FFT windows is moved after each iteration.
-Overlap makes FFT update 1 / (1 - overlap) times faster. This makes transitions smoother, but also increases CPU demand.
-"Overlap 0.5" is 2 times heavier on CPU than "Overlap 0"
-"Overlap 0.9" is 10 times heavier on CPU than "Overlap 0"
-"Overlap 0.99" is 100 times heavier on CPU than "Overlap 0"
-"Overlap 1.0" would mean infinite loop if it wasn't specially handled.
+OverlapBoost : float >= 1 : 2
+Increases FFT update rate at the expense of increased CPU load.
+AudioLevel uses Overlap option instead.
+Overlap-to-OverlapBoost is as following: OverlapBoost == 1 / (1 - Overlap), where overlap is calculated as AudioLevel:FFTOverlap / AudioLevel:FFTSize
+So if you have an AudioLevel skin with FFTOverlap 2048 and FFTSize 4096 then Overlap is 0.5, and OverlapBoost is 2.
 
 CascadesCount : integer in range [1, 20] : 5
 Plugin can increase resolution in lower frequencies by using cascades of FFT.
@@ -103,19 +100,19 @@ See FFT Cascades discussion.
 
 WindowFunction : <window function description> : hann
 Window functions make FFT results better. You can read about them in Wikipedia: https://en.wikipedia.org/wiki/Window_function
-They make result look cleaner.
-Window function is defined as type optionally followed by arguments in brakets. Like this: type[10]
+They make result look cleaner. But different functions will give slightly different results.
+Syntax: Window function is defined as a type string optionally followed by arguments in brakets. Like this: someType[10]
 Possible types:
 none — no arguments
 hann — no arguments
 hamming — no arguments
-kaiser — one float argument (names alpha on Wikipedia), default value 3.0
+kaiser — one float argument (named alpha on Wikipedia), default value 3.0
 exponential — one float argument (named D on Wikipedia), default value 8.69
-chebyshev — one float argument (), default value 80.0
+chebyshev — one float argument (attenuation of side lobes in decibels), default value 80.0
 You can read about their advantages and disadvantages on Wikipedia, the link is above.
 I personally find that kaiser with default alpha is the best. You can experiment to see the difference yourself, maybe you will think that another window is better.
 
-Example: type fft | binWidth 20 |cascadesCount 4 | overlap 0.75 | windowFunction kaiser
+Example: type fft | binWidth 20 |cascadesCount 4 | OverlapBoost 3 | windowFunction kaiser
 Handler info:
 "size" : size of the FFT.
 "cascades count" : value of cascadesCount option
@@ -232,16 +229,44 @@ Handler info: none
 
 
 
+TimeResampler
+type : { TimeResampler }
+Downsamples or upsamples values in time.
+If your update rate is too low, the handler will extrapolate values so that they will look smoother.
+If your update rate is too high, the handler will smooth the values out so that they don't look too sharp and you don't lose data by just throwing excessive values away.
+
+Properties:
+
+Granularity : float > 0 : 16.667
+Time in milliseconds of one block that the handler will produce. No matter how fast source handler is updated, this handler will always consistently produce one data block in Granularity milliseconds.
+
+Attack : float > 0 : 0.0
+A parameter for filter that smooths values. This is the same parameter as FFTAttack, etc. in AudioLevel plugin, except AudioLevel don't smooth values when they are updating very rarely.
+Attack only affects how values are smoothed when they are increasing.
+
+Decay : float > 0 : <value of Attack property>
+Same as Attack but only affects how values are decreasing.
+
+Example: type TimeResampler | source mapper | attack 10
+Handler info: none
+
+
+
 Spectrogram
 Type : { Spectrogram }
 Draws a spectrogram picture. That is: band's values changes in time.
-Generates BMP image on disk. Height of the image is determined by number of point in source Handler. Name of the file is: "<folder>\spectrogram-<channel technical name>.bmp". Color of the pixel is linearly interpolated between color points, described by either Colors property, or between BaseColor and MaxColor if Colors property is not present.
-Width of the image is determined by length property, heght of the image is determined by number of values in source value. You can control height by changing number of bands in BandResampler handler.
+Generates BMP image on disk. Name of the file is unspecified. To get it, you should use "handlerInfo" section variable with "file" data property. Like this:
+[&MeasureParent:resolve(handlerInfo, channel auto | handlerName spec | data file)].
+However, a more convenient way to obtain file name is to use a child measure with
+StringValue=Info
+InfoRequest=handlerInfo, channel auto | handlerName spec | data file
+Color of the pixel is linearly interpolated between color points, described by either Colors property, or between BaseColor and MaxColor if Colors property is not present.
+Width of the image is determined by length property, height of the image is determined by number of values in source handler. You can control height by changing number of bands in BandResampler handler.
 
 Properties:
 
 Source : string
-Name of source handler. Should be name of some handler from FFT transform chain (BandResampler, BandCascadeTransformer, ValueTransformer, or some blur).
+Name of source handler. Should be name of some handler from FFT transform chain, so that source handler has many values.
 
 Length : integer > 0 : 100
 Count of points in time to show. Equals to resulting image width.
@@ -282,10 +307,15 @@ It only makes sense to use this property when Stationary is true.
 BorderColor : <color description> : 1.0, 0.2, 0.2
 Color of the border
 
-FadingPercent : float in range [0, 1] : 0
-Oldest FadingPercent * 100% stripes in the image are smoothly faded into the background color.
+FadingRatio : float in range [0, 1] : 0
+Oldest FadingRatio * 100% stripes in the image are smoothly faded into the background color.
 
-Example: type spectrogram | source band | length 600 | resolution 0.1*4.8*20 | folder z:/12/ | mixMode hsv | colors 0.0 : 0.1, 0.1, 0.1 ; 1.0: 0.9, 0.85, 0.5 ; 1.5 1.0, 0.0, 0.0 | stationary true | BorderSize 1 | FadingPercent 0.1
+SilenceThreshold : float < 0 : -70
+Peak value threshold specified in decibels.
+If sound wave is below SilenceThreshold then it is considered silence. Else image is updated. If you set it too high image will not be updating even when it should be.
+The main usage for this property is to synchronize several images, if you have them in one skin. If two images have the same Resolution, SilenceThreshold and image width, and they are in the same parent measure, then they will perfectly synchronized.
+
+Example: type spectrogram | source band | length 600 | resolution 0.1*4.8*20 | folder z:/12/ | mixMode hsv | colors 0.0 : 0.1, 0.1, 0.1 ; 1.0: 0.9, 0.85, 0.5 ; 1.5 1.0, 0.0, 0.0 | stationary true | BorderSize 1 | FadingRatio 0.1
 
 Handler info:
 "file" : path of the file in which image is written.
@@ -295,8 +325,12 @@ Handler info:
 
 Waveform
 Type : { Waveform }
-Draws a waveform pisture. That is: shows min and max values of the sound wave over some past time.
-Generates BMP image on disk. Name of the file is: "<folder>\wave-<channel technical name>.bmp".
+Draws a waveform picture. That is: shows min and max values of the sound wave over some past time.
+Generates BMP image on disk. Name of the file is unspecified. To get it, you should use "handlerInfo" section variable with "file" data property. Like this:
+[&MeasureParent:resolve(handlerInfo, channel auto | handlerName spec | data file)].
+However, a more convenient way to obtain file name is to use a child measure with
+StringValue=Info
+InfoRequest=handlerInfo, channel auto | handlerName spec | data file
 
 Properties:
 
@@ -336,8 +370,8 @@ It only makes sense to use this property when Stationary is true.
 BorderColor : <color description> : 1.0, 0.2, 0.2
 Color of the border
 
-FadingPercent : float in range [0, 1] : 0
-Oldest FadingPercent * 100% stripes in the image are smoothly faded into the background color.
+FadingRatio : float in range [0, 1] : 0
+Oldest FadingRatio * 100% stripes in the image are smoothly faded into the background color.
 
 LineDrawingPolicy : { Always, BelowWave, Never } : always
 Resulting image can have horizontal line indicating zero value.
@@ -348,6 +382,12 @@ never — don't draw line.
 Transform : <transform description> : <empty>
 Description of transforms that are applied to values after calculating min and max.
 Waveform always shows values in range [-1.0, 1.0]. If transform makes values outside of this range, they will not be displayed correctly.
+When writing transform for waveform you may assume that all values are >= 0, and you also should produce values >= 0. Negative values will be calculated the same way, with automatic sign correction.
+
+SilenceThreshold : float < 0 : -70
+Peak value threshold specified in decibels.
+If sound wave is below SilenceThreshold then it is considered silence. Else image is updated. If you set it too high image will not be updating even when it should be.
+The main usage for this property is to synchronize several images, if you have them in one skin. If two images have the same Resolution, SilenceThreshold and image width, and they are in the same parent measure, then they will perfectly synchronized.
 
 Example: type waveform | width 200 | height 100 | resolution 17 | folder "[#@]" | backgroundColor 0.6,0.6,0.6,0.8 | waveColor 0.1,0.1,0.1 | lineColor 0.5,0.5,0.5
 Handler info:

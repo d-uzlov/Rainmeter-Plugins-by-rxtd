@@ -2,9 +2,9 @@ Rainmeter has AudioLevel plugin, which provides you a basic functionality on ext
 What do users want to see regarding audio visualization? Users may want to see a "loudness meter" and some fancy visualization frequencies.
 AudioLevel plugin doesn't really have a correct loudness meter. It has "RMS" and "Peak" calculations, which will show you if there was any sound, but they won't really give you an insight on real loudness level. I will post loudness discussion somewhere nearby.
 For fancy visualizations AudioLevel has Fourier transform. Kind of. It has several issues both from the mathematical nature of FFT algorithm and incorrect implementation.
-There is also a AudioLevel2 version of that plugin out there that can also draw a waveform image.
+There is also a second version of that plugin out there, AudioLevel2, that can also draw a waveform image.
 
 Now, what does AudioAnalyzer plugin has to offer?
-It has much better ways to extract loudness information from audio stream, it has better implementation of fourier transform with ways to fight fundamental flaw of FFT algorithm, it also can draw a waveform, and it can draw a spectrogram.
+It has much better ways to extract loudness information from audio stream, it has better implementation of fourier transform with ways to fight fundamental flaw of FFT algorithm, it also can draw a waveform, and it can draw a spectrogram (not a spectrum which only give you slice of frequency information, but a spectrogram).
 By the way, drawing the spectrogram is the feature I was missing the most, and it was the main reason why I created this plugin in the first place.
-On top of that, among other features, AudioAnalyzer 1.1.5 brings automatic switching between audio devices (including WASAPI exclusive move handling) and async computing for better UI performance.
+On top of that, among other features, AudioAnalyzer 1.1.5 brings automatic switching between audio devices (including WASAPI exclusive mode handling) and async computing for better UI performance.
