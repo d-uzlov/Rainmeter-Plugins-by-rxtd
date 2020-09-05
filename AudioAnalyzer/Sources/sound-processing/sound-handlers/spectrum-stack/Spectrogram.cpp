@@ -49,11 +49,10 @@ SoundHandler::ParseResult Spectrogram::parseParams(
 	}
 	params.resolution *= 0.001;
 
-	params.prefix = utils::FileWrapper::getAbsolutePath(
+	params.folder = utils::FileWrapper::getAbsolutePath(
 		om.get(L"folder").asString() % own(),
 		rain.replaceVariables(L"[#CURRENTPATH]") % own()
 	);
-	params.prefix += L"spectrogram-";
 
 	using MixMode = Color::Mode;
 	if (auto mixMode = om.get(L"mixMode").asIString(L"srgb");
@@ -180,8 +179,10 @@ SoundHandler::ConfigurationResult Spectrogram::vConfigure(const std::any& _param
 	}
 	auto& snapshot = *std::any_cast<Snapshot>(&snapshotAny);
 
-	snapshot.prefix = params.prefix;
-	snapshot.prefix += L"wave-";
+	snapshot.prefix = params.folder;
+	if (config.legacyNumber < 104) {
+		snapshot.prefix += L"spectrogram-";
+	}
 
 	snapshot.blockSize = blockSize;
 
@@ -250,7 +251,7 @@ void Spectrogram::staticFinisher(const Snapshot& snapshot, const ExternCallConte
 	}
 
 	snapshot.filenameBuffer = snapshot.prefix;
-	snapshot.filenameBuffer += context.channelName;
+	snapshot.filenameBuffer += context.legacyNumber < 104 ? context.channelName : context.filePrefix;
 	snapshot.filenameBuffer += L".bmp";
 
 	snapshot.writerHelper.write(snapshot.pixels, snapshot.empty, snapshot.filenameBuffer);
@@ -303,7 +304,7 @@ bool Spectrogram::getProp(
 ) {
 	if (prop == L"file") {
 		snapshot.filenameBuffer = snapshot.prefix;
-		snapshot.filenameBuffer += context.channelName;
+		snapshot.filenameBuffer += context.legacyNumber < 104 ? context.channelName : context.filePrefix;
 		snapshot.filenameBuffer += L".bmp";
 
 		printer.print(snapshot.filenameBuffer);

@@ -14,7 +14,7 @@ using namespace audio_analyzer;
 
 bool SoundHandler::patch(
 	const std::any& params, const std::vector<istring>& sources,
-	index sampleRate,
+	index sampleRate, index legacyNumber,
 	HandlerFinder& hf, Logger& cl,
 	Snapshot& snapshot
 ) {
@@ -40,6 +40,7 @@ bool SoundHandler::patch(
 		newConfig.sourcePtr = nullptr;
 	}
 	newConfig.sampleRate = sampleRate;
+	newConfig.legacyNumber = legacyNumber;
 
 	if (_configuration != newConfig
 		|| newConfig.sourcePtr != nullptr && newConfig.sourcePtr->_anyChanges

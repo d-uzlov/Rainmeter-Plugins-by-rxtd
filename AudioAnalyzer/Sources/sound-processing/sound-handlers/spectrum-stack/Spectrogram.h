@@ -36,7 +36,7 @@ namespace rxtd::audio_analyzer {
 			double resolution{ };
 			index length{ };
 			index borderSize{ };
-			string prefix = { };
+			string folder = { };
 			utils::Color borderColor{ };
 			double fading{ };
 
@@ -52,7 +52,7 @@ namespace rxtd::audio_analyzer {
 				return lhs.resolution == rhs.resolution
 					&& lhs.length == rhs.length
 					&& lhs.borderSize == rhs.borderSize
-					&& lhs.prefix == rhs.prefix
+					&& lhs.folder == rhs.folder
 					&& lhs.borderColor == rhs.borderColor
 					&& lhs.fading == rhs.fading
 					&& lhs.colorLevels == rhs.colorLevels

@@ -67,6 +67,10 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 		return;
 	}
 
+	if (legacyNumber < 104) {
+		logger.warning(L"Measure operated in legacy mode. If you are a skin author, consider modernizing it.");
+	}
+
 	try {
 		const auto threadingParams = rain.read(L"threading").asMap(L'|', L' ');
 		helper.init(rain, logger, threadingParams, legacyNumber);
@@ -82,10 +86,7 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 	paramParser.setRainmeter(rain);
 
 	paramParser.parse(legacyNumber, true);
-	for (auto& [processingName, pd] : paramParser.getParseResult()) {
-		cleanersMap[processingName] = createCleanersFor(pd);
-	}
-	runCleaners();
+	updateCleaners();
 	cleanersExecuted = true;
 }
 
@@ -154,12 +155,8 @@ double AudioParent::vUpdate() {
 				for (auto& [channel, channelSnapshot] : processingSnapshot) {
 					auto handlerDataIter = channelSnapshot.find(handlerName);
 					if (handlerDataIter != channelSnapshot.end()) {
-						SoundHandler::ExternCallContext context;
-						context.channelName =
-							legacyNumber < 104
-							? ChannelUtils::getTechnicalNameLegacy(channel)
-							: ChannelUtils::getTechnicalName(channel);
-						finisher(handlerDataIter->second.handlerSpecificData, context);
+						runFinisher(finisher, handlerDataIter->second.handlerSpecificData, procName, channel,
+						            handlerName);
 					}
 				}
 			}
@@ -485,12 +482,7 @@ void AudioParent::updateCleaners() {
 				// clean old images
 				if (data.finisher != nullptr) {
 					for (auto channel : pd.channels) {
-						SoundHandler::ExternCallContext context;
-						context.channelName =
-							legacyNumber < 104
-							? ChannelUtils::getTechnicalNameLegacy(channel)
-							: ChannelUtils::getTechnicalName(channel);
-						data.finisher(data.data, context);
+						runFinisher(data.finisher, data.data, processingName, channel, handlerName);
 					}
 				}
 			}
@@ -500,12 +492,8 @@ void AudioParent::updateCleaners() {
 				// draw placeholders for new images
 				if (data.finisher != nullptr) {
 					for (auto channel : pd.channels) {
-						SoundHandler::ExternCallContext context;
-						context.channelName =
-							legacyNumber < 104
-							? ChannelUtils::getTechnicalNameLegacy(channel)
-							: ChannelUtils::getTechnicalName(channel);
-						data.finisher(data.data, context);
+						auto dataCopy = data.data;
+						runFinisher(data.finisher, dataCopy, processingName, channel, handlerName);
 					}
 				}
 			}
@@ -624,10 +612,21 @@ void AudioParent::resolveProp(
 
 
 	SoundHandler::ExternCallContext context;
+	context.legacyNumber = legacyNumber;
+
 	context.channelName =
 		legacyNumber < 104
-		? ChannelUtils::getTechnicalNameLegacy(channel)
-		: ChannelUtils::getTechnicalName(channel);
+			? ChannelUtils::getTechnicalNameLegacy(channel)
+			: ChannelUtils::getTechnicalName(channel);
+
+	string filePrefix;
+	filePrefix += procName % csView();
+	filePrefix += L'-';
+	filePrefix += handlerName % csView();
+	filePrefix += L'-';
+	filePrefix += context.channelName;
+
+	context.filePrefix = filePrefix;
 
 	const bool found = propGetter(*handlerSpecificData, propName, logger.printer, context);
 	if (!found) {
@@ -656,7 +655,7 @@ AudioParent::ProcessingCleanersMap AudioParent::createCleanersFor(const ParamPar
 		SoundHandler::Snapshot handlerSpecificData;
 		const bool success = handlerPtr->patch(
 			patchInfo.params, patchInfo.sources,
-			48000,
+			48000, legacyNumber,
 			hf, cl,
 			handlerSpecificData
 		);
@@ -682,10 +681,6 @@ void AudioParent::runCleaners() const {
 	for (const auto& [procName, procInfo] : paramParser.getParseResult()) {
 		auto processingCleanersIter = cleanersMap.find(procName);
 		if (processingCleanersIter == cleanersMap.end()) {
-			// in case options were updated
-			// we only generate cleaners for initial options
-			// so if someone changes them and add more processings,
-			// then cleanersMap won't contain some of the processings from paramParser
 			continue;
 		}
 
@@ -696,13 +691,8 @@ void AudioParent::runCleaners() const {
 				continue;
 			}
 			for (auto channel : procInfo.channels) {
-				SoundHandler::ExternCallContext context;
-				context.channelName =
-					legacyNumber < 104
-						? ChannelUtils::getTechnicalNameLegacy(channel)
-						: ChannelUtils::getTechnicalName(channel);
-				auto snapshotCopy = handlerDataIter->second;
-				finisher(snapshotCopy.data, context);
+				auto dataCopy = handlerDataIter->second;
+				runFinisher(finisher, dataCopy, procName, channel, handlerName);
 			}
 		}
 	}

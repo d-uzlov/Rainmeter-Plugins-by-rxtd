@@ -126,7 +126,9 @@ SoundHandler::ConfigurationResult WaveForm::vConfigure(const std::any& _params, 
 	auto& snapshot = *std::any_cast<Snapshot>(&snapshotAny);
 
 	snapshot.prefix = params.folder;
-	snapshot.prefix += L"wave-";
+	if (config.legacyNumber < 104) {
+		snapshot.prefix += L"wave-";
+	}
 
 	snapshot.blockSize = blockSize;
 
@@ -190,7 +192,7 @@ void WaveForm::staticFinisher(const Snapshot& snapshot, const ExternCallContext&
 	}
 
 	snapshot.filenameBuffer = snapshot.prefix;
-	snapshot.filenameBuffer += context.channelName;
+	snapshot.filenameBuffer += context.legacyNumber < 104 ? context.channelName : context.filePrefix;
 	snapshot.filenameBuffer += L".bmp";
 
 	snapshot.writerHelper.write(snapshot.pixels, snapshot.empty, snapshot.filenameBuffer);
@@ -205,7 +207,7 @@ bool WaveForm::getProp(
 ) {
 	if (prop == L"file") {
 		snapshot.filenameBuffer = snapshot.prefix;
-		snapshot.filenameBuffer += context.channelName;
+		snapshot.filenameBuffer += context.legacyNumber < 104 ? context.channelName : context.filePrefix;
 		snapshot.filenameBuffer += L".bmp";
 
 		printer.print(snapshot.filenameBuffer);

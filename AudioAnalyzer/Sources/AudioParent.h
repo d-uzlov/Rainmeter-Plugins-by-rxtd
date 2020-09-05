@@ -81,8 +81,9 @@ namespace rxtd::audio_analyzer {
 
 		struct CleanerData {
 			std::any data;
-			SoundHandler::ExternalMethods::FinishMethodType finisher;
+			SoundHandler::ExternalMethods::FinishMethodType finisher = nullptr;
 		};
+
 		// handlerName → handlerData for cleanup
 		using ProcessingCleanersMap = std::map<istring, CleanerData, std::less<>>;
 		using CleanersMap = std::map<istring, ProcessingCleanersMap, std::less<>>;
@@ -113,9 +114,37 @@ namespace rxtd::audio_analyzer {
 		isview findProcessingFor(isview handlerName) const;
 
 	private:
+		void runFinisher(
+			SoundHandler::ExternalMethods::FinishMethodType finisher,
+			const std::any& handlerData,
+			isview procName, Channel channel, isview handlerName
+		) const {
+			SoundHandler::ExternCallContext context;
+			context.legacyNumber = legacyNumber;
+
+			context.channelName =
+				legacyNumber < 104
+					? ChannelUtils::getTechnicalNameLegacy(channel)
+					: ChannelUtils::getTechnicalName(channel);
+
+			string filePrefix;
+			filePrefix += procName % csView();
+			filePrefix += L'-';
+			filePrefix += handlerName % csView();
+			filePrefix += L'-';
+			filePrefix += context.channelName;
+
+			context.filePrefix = filePrefix;
+
+			finisher(handlerData, context);
+		}
+
 		void updateCleaners();
 		DeviceRequest readRequest() const;
-		void resolveProp(string& resolveBufferString, isview procName, Channel channel, isview handlerName, isview propName);
+		void resolveProp(
+			string& resolveBufferString,
+			isview procName, Channel channel, isview handlerName, isview propName
+		);
 		ProcessingCleanersMap createCleanersFor(const ParamParser::ProcessingData& pd) const;
 		void runCleaners() const;
 	};
