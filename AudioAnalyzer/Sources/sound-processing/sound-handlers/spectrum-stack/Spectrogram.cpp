@@ -120,7 +120,7 @@ SoundHandler::ParseResult Spectrogram::parseParams(
 
 	params.borderColor = Color::parse(om.get(L"borderColor").asString(), { 1.0, 0.2, 0.2 });
 
-	params.fading = std::clamp(om.get(L"fadingPercent").asFloat(0.0), 0.0, 1.0);
+	params.fading = std::clamp(om.get(L"FadingRatio").asFloat(0.0), 0.0, 1.0);
 
 	params.borderSize = std::clamp<index>(om.get(L"borderSize").asInt(0), 0, params.length / 2);
 

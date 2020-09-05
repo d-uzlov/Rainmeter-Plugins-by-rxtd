@@ -77,7 +77,7 @@ SoundHandler::ParseResult WaveForm::parseParams(
 	params.lineThickness = om.get(L"lineThickness").asInt(2 - (params.height & 1));
 	params.lineThickness = std::clamp<index>(params.lineThickness, 0, params.height);
 
-	params.fading = om.get(L"fadingPercent").asFloat(0.0);
+	params.fading = om.get(L"FadingRatio").asFloat(0.0);
 
 	params.silenceThreshold = om.get(L"silenceThreshold").asFloatF(-70);
 	params.silenceThreshold = utils::MyMath::db2amplitude(params.silenceThreshold);
