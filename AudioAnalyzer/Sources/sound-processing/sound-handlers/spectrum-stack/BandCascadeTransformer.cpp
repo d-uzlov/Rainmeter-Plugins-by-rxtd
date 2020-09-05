@@ -175,8 +175,13 @@ float BandCascadeTransformer::computeForBand(index band) const {
 
 	if (cascadesSummed == 0.0f) {
 		// bandWeight < params.minWeight for all cascades
-		// let's use value of the last cascade
-		return bandWeights.back() != 0.0f ? snapshot.back().data[band] : 0.0f;
+		// let's use value of the last cascade with non zero weight and value
+		for (index i = bandWeights.size() - 1; i >= 0; ++i) {
+			if (bandWeights[i] > 0.0 && snapshot[i].data[band] > params.zeroLevelHard) {
+				return snapshot[i].data[band];
+			}
+		}
+		return 0.0;
 	}
 
 	return params.mixFunction == MixFunction::PRODUCT
