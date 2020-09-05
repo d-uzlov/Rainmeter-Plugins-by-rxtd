@@ -58,8 +58,9 @@ void FileWrapper::write(const void* data, index count) {
 string FileWrapper::getAbsolutePath(string folder, sview currentPath) {
 	std::filesystem::path path{ folder };
 	if (!path.is_absolute()) {
+		string f = std::move(folder);
 		folder = currentPath;
-		folder += folder;
+		folder += f;
 	}
 
 	folder = std::filesystem::absolute(folder).wstring();
