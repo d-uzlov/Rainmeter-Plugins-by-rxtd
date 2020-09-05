@@ -50,6 +50,22 @@ std::optional<Channel> ChannelUtils::parse(isview string) {
 
 sview ChannelUtils::getTechnicalName(Channel channel) {
 	switch (channel) {
+	case Channel::eFRONT_LEFT: return L"fl";
+	case Channel::eFRONT_RIGHT: return L"fr";
+	case Channel::eCENTER: return L"c";
+	case Channel::eCENTER_BACK: return L"cb";
+	case Channel::eLOW_FREQUENCY: return L"lfe";
+	case Channel::eBACK_LEFT: return L"bl";
+	case Channel::eBACK_RIGHT: return L"br";
+	case Channel::eSIDE_LEFT: return L"sl";
+	case Channel::eSIDE_RIGHT: return L"sr";
+	case Channel::eAUTO: return L"a";
+	}
+	return { };
+}
+
+sview ChannelUtils::getTechnicalNameLegacy(Channel channel) {
+	switch (channel) {
 	case Channel::eFRONT_LEFT: return L"FRONT_LEFT";
 	case Channel::eFRONT_RIGHT: return L"FRONT_RIGHT";
 	case Channel::eCENTER: return L"CENTER";

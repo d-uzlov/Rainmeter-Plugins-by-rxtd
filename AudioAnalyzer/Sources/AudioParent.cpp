@@ -155,7 +155,10 @@ double AudioParent::vUpdate() {
 					auto handlerDataIter = channelSnapshot.find(handlerName);
 					if (handlerDataIter != channelSnapshot.end()) {
 						SoundHandler::ExternCallContext context;
-						context.channelName = ChannelUtils::getTechnicalName(channel);
+						context.channelName =
+							legacyNumber < 104
+							? ChannelUtils::getTechnicalNameLegacy(channel)
+							: ChannelUtils::getTechnicalName(channel);
 						finisher(handlerDataIter->second.handlerSpecificData, context);
 					}
 				}
@@ -483,7 +486,10 @@ void AudioParent::updateCleaners() {
 				if (data.finisher != nullptr) {
 					for (auto channel : pd.channels) {
 						SoundHandler::ExternCallContext context;
-						context.channelName = ChannelUtils::getTechnicalName(channel);
+						context.channelName =
+							legacyNumber < 104
+							? ChannelUtils::getTechnicalNameLegacy(channel)
+							: ChannelUtils::getTechnicalName(channel);
 						data.finisher(data.data, context);
 					}
 				}
@@ -495,7 +501,10 @@ void AudioParent::updateCleaners() {
 				if (data.finisher != nullptr) {
 					for (auto channel : pd.channels) {
 						SoundHandler::ExternCallContext context;
-						context.channelName = ChannelUtils::getTechnicalName(channel);
+						context.channelName =
+							legacyNumber < 104
+							? ChannelUtils::getTechnicalNameLegacy(channel)
+							: ChannelUtils::getTechnicalName(channel);
 						data.finisher(data.data, context);
 					}
 				}
@@ -615,7 +624,10 @@ void AudioParent::resolveProp(
 
 
 	SoundHandler::ExternCallContext context;
-	context.channelName = ChannelUtils::getTechnicalName(channel);
+	context.channelName =
+		legacyNumber < 104
+		? ChannelUtils::getTechnicalNameLegacy(channel)
+		: ChannelUtils::getTechnicalName(channel);
 
 	const bool found = propGetter(*handlerSpecificData, propName, logger.printer, context);
 	if (!found) {
@@ -685,7 +697,10 @@ void AudioParent::runCleaners() const {
 			}
 			for (auto channel : procInfo.channels) {
 				SoundHandler::ExternCallContext context;
-				context.channelName = ChannelUtils::getTechnicalName(channel);
+				context.channelName =
+					legacyNumber < 104
+						? ChannelUtils::getTechnicalNameLegacy(channel)
+						: ChannelUtils::getTechnicalName(channel);
 				auto snapshotCopy = handlerDataIter->second;
 				finisher(snapshotCopy.data, context);
 			}
