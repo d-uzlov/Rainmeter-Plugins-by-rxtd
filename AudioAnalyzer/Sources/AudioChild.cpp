@@ -131,7 +131,7 @@ AudioChild::Options AudioChild::readOptions() const {
 		for (const auto& str : result.infoRequest) {
 			result.infoRequestC.push_back(str);
 		}
-	} else if (stringValueStr == L"Info") {
+	} else if (stringValueStr == L"Number") {
 		// no need to do anything here
 	} else {
 		logger.error(L"Invalid StringValue '{}', set to Number.", stringValueStr);
