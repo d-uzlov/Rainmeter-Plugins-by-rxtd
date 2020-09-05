@@ -30,9 +30,9 @@ namespace rxtd::audio_analyzer {
 
 			LogErrorHelper<istring> processingNotFound;
 			LogErrorHelper<istring> channelNotRecognized;
+			LogErrorHelper<istring> noProcessingHaveHandler;
 			LogErrorHelper<istring, istring> processingDoesNotHaveHandler;
 			LogErrorHelper<istring, istring> processingDoesNotHaveChannel;
-			LogErrorHelper<istring> legacy_handlerNotFound;
 			LogErrorHelper<istring> handlerDoesNotHaveProps;
 			LogErrorHelper<istring, istring> propNotFound;
 
@@ -45,9 +45,9 @@ namespace rxtd::audio_analyzer {
 				legacy_invalidPort.setLogger(logger);
 				processingNotFound.setLogger(logger);
 				channelNotRecognized.setLogger(logger);
+				noProcessingHaveHandler.setLogger(logger);
 				processingDoesNotHaveHandler.setLogger(logger);
 				processingDoesNotHaveChannel.setLogger(logger);
-				legacy_handlerNotFound.setLogger(logger);
 				handlerDoesNotHaveProps.setLogger(logger);
 				propNotFound.setLogger(logger);
 			}
@@ -65,9 +65,9 @@ namespace rxtd::audio_analyzer {
 
 				processingNotFound.reset();
 				channelNotRecognized.reset();
+				noProcessingHaveHandler.reset();
 				processingDoesNotHaveHandler.reset();
 				processingDoesNotHaveChannel.reset();
-				legacy_handlerNotFound.reset();
 				// handlerDoesNotHaveProps.reset();
 				// propNotFound.reset();
 			}
@@ -115,7 +115,7 @@ namespace rxtd::audio_analyzer {
 	private:
 		void updateCleaners();
 		DeviceRequest readRequest() const;
-		void resolveProp(array_view<isview> args, string& resolveBufferString);
+		void resolveProp(string& resolveBufferString, isview procName, Channel channel, isview handlerName, isview propName);
 		ProcessingCleanersMap createCleanersFor(const ParamParser::ProcessingData& pd) const;
 		void runCleaners() const;
 	};

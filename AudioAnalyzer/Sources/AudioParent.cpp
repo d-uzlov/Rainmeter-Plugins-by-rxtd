@@ -40,14 +40,14 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 	logHelpers.channelNotRecognized.setLogFunction([](Logger& logger, istring channelName) {
 		logger.error(L"Channel is not recognized: {}", channelName);
 	});
+	logHelpers.noProcessingHaveHandler.setLogFunction([](Logger& logger, istring channelName) {
+		logger.error(L"No processing have handler '{}'", channelName);
+	});
 	logHelpers.processingDoesNotHaveHandler.setLogFunction([](Logger& logger, istring procName, istring handlerName) {
 		logger.error(L"Processing '{}' doesn't have handler '{}'", procName, handlerName);
 	});
 	logHelpers.processingDoesNotHaveChannel.setLogFunction([](Logger& logger, istring procName, istring channelName) {
 		logger.error(L"Processing '{}' doesn't have channel '{}'", procName, channelName);
-	});
-	logHelpers.legacy_handlerNotFound.setLogFunction([](Logger& logger, istring handlerName) {
-		logger.error(L"Handler '{}' is not found", handlerName);
 	});
 	logHelpers.handlerDoesNotHaveProps.setLogFunction([](Logger& logger, istring type) {
 		logger.error(L"handler type '{}' doesn't have any props", type);
@@ -293,40 +293,14 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 		return;
 	}
 
-	if (optionName == L"value") {
-		resolveBufferString = L"0";
+	if (optionName == L"value" || optionName == L"handlerInfo") {
+		if (optionName == L"value") {
+			resolveBufferString = L"0";
 
-		if (args.size() != 5) {
-			logHelpers.generic.log(L"'value' section variable need 5 arguments");
-			return;
+			if (!helper.getSnapshot().deviceIsAvailable) {
+				return;
+			}
 		}
-
-		if (!helper.getSnapshot().deviceIsAvailable) {
-			return;
-		}
-
-		const auto procName = args[1];
-		const auto channelName = args[2];
-		const auto handlerName = args[3];
-		const auto ind = utils::Option{ args[4] }.asInt(0);
-
-		auto channelOpt = ChannelUtils::parse(channelName);
-		if (!channelOpt.has_value()) {
-			logHelpers.channelNotRecognized.log(channelName);
-			return;
-		}
-
-		if (!isHandlerShouldExist(procName, channelOpt.value(), handlerName)) {
-			return;
-		}
-
-		const auto value = getValue(procName, handlerName, channelOpt.value(), ind);
-		logger.printer.print(value);
-		resolveBufferString = logger.printer.getBufferView();
-		return;
-	}
-
-	if (optionName == L"handler info" || optionName == L"prop") {
 		if (!requestedSource.has_value()) {
 			// if requestedSource.has_value() then
 			//	even if handlers are not valid due to device connection error
@@ -336,7 +310,91 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 			return;
 		}
 
-		resolveProp(args, resolveBufferString);
+		auto map = utils::Option{ args[1] }.asMap(L'|', L' ');
+
+		auto procName = map.get(L"proc").asIString();
+		const auto channelName = map.get(L"channel").asIString(L"auto");
+		const auto handlerName = map.get(L"handlerName").asIString();
+
+		if (handlerName.empty()) {
+			logHelpers.generic.log(L"Resolve 'value' and handlerInfo require handlerName to be specified");
+			return;
+		}
+
+		auto channelOpt = ChannelUtils::parse(channelName);
+		if (!channelOpt.has_value()) {
+			logHelpers.channelNotRecognized.log(channelName);
+			return;
+		}
+
+		if (procName.empty()) {
+			procName = findProcessingFor(handlerName);
+
+			if (procName.empty()) {
+				logHelpers.noProcessingHaveHandler.log(handlerName);
+				return;
+			}
+		}
+
+		if (optionName == L"value") {
+			if (!isHandlerShouldExist(procName, channelOpt.value(), handlerName)) {
+				// handlerInfo has its own check for isHandlerShouldExist
+				// inside #resolveProp()
+				return;
+			}
+
+			const auto ind = map.get(L"index").asInt(0);
+
+			const auto value = getValue(procName, handlerName, channelOpt.value(), ind);
+			logger.printer.print(value);
+			resolveBufferString = logger.printer.getBufferView();
+			return;
+		}
+		if (optionName == L"handlerInfo") {
+			auto propName = map.get(L"data").asIString();
+			if (propName.empty()) {
+				logHelpers.generic.log(L"handlerInfo must have 'prop' specified");
+				return;
+			}
+			resolveProp(resolveBufferString, procName, channelOpt.value(), handlerName, propName);
+			return;
+		}
+		return;
+	}
+
+	if (optionName == L"prop") {
+		if (!requestedSource.has_value()) {
+			// if requestedSource.has_value() then
+			//	even if handlers are not valid due to device connection error
+			// we should return correct prop values
+			// because someone could try to read file names
+			// before we actually connect to device and make handlers valid
+			return;
+		}
+
+		// legacy
+		if (args.size() != 4) {
+			logHelpers.generic.log(L"'prop' need 4 arguments");
+			return;
+		}
+
+		const auto channelName = args[1];
+		const auto handlerName = args[2];
+		const auto propName = args[3];
+
+		auto channelOpt = ChannelUtils::parse(channelName);
+		if (!channelOpt.has_value()) {
+			logHelpers.channelNotRecognized.log(channelName);
+			return;
+		}
+
+		auto procName = findProcessingFor(handlerName);
+		if (procName.empty()) {
+			logHelpers.noProcessingHaveHandler.log(handlerName);
+			return;
+		}
+
+		resolveProp(resolveBufferString, procName, channelOpt.value(), handlerName, propName);
 		return;
 	}
 
@@ -499,67 +557,23 @@ AudioParent::DeviceRequest AudioParent::readRequest() const {
 	return result;
 }
 
-void AudioParent::resolveProp(array_view<isview> args, string& resolveBufferString) {
-	const isview optionName = args[0];
-
-	isview procName;
-	isview channelName;
-	isview handlerName;
-	isview propName;
-
-	if (optionName == L"handler info") {
-		if (args.size() != 5) {
-			logHelpers.generic.log(L"'handler info' need 5 arguments");
-			return;
-		}
-
-		procName = args[1];
-		channelName = args[2];
-		handlerName = args[3];
-		propName = args[4];
-	} else if (optionName == L"prop") {
-		// legacy
-		if (args.size() != 4) {
-			logHelpers.generic.log(L"'prop' need 4 arguments");
-			return;
-		}
-
-		channelName = args[1];
-		handlerName = args[2];
-		propName = args[3];
-
-		procName = findProcessingFor(handlerName);
-		if (procName.empty()) {
-			logHelpers.legacy_handlerNotFound.log(handlerName);
-			return;
-		}
-	}
-
-	auto channelOpt = ChannelUtils::parse(channelName);
-	if (!channelOpt.has_value()) {
-		logHelpers.channelNotRecognized.log(channelName);
+void AudioParent::resolveProp(
+	string& resolveBufferString,
+	isview procName, Channel channel, isview handlerName, isview propName
+) {
+	if (!isHandlerShouldExist(procName, channel, handlerName)) {
 		return;
 	}
 
-	const PatchInfo* handlerInfo = nullptr;
-	SoundHandler::ExternalMethods::GetPropMethodType propGetter = nullptr;
+	const auto procIter0 = paramParser.getParseResult().find(procName);
+	const auto handlerInfoIter = procIter0->second.handlersInfo.patchers.find(handlerName);
 
-	{
-		if (!isHandlerShouldExist(procName, channelOpt.value(), handlerName)) {
-			return;
-		}
+	const PatchInfo* const handlerInfo = &handlerInfoIter->second;
+	const auto propGetter = handlerInfo->externalMethods.getProp;
 
-		const auto procIter = paramParser.getParseResult().find(procName);
-		const auto& handlerPatchers = procIter->second.handlersInfo.patchers;
-		const auto handlerInfoIter = handlerPatchers.find(handlerName);
-
-		handlerInfo = &handlerInfoIter->second;
-		propGetter = handlerInfo->externalMethods.getProp;
-
-		if (propGetter == nullptr) {
-			logHelpers.handlerDoesNotHaveProps.log(handlerInfo->type);
-			return;
-		}
+	if (propGetter == nullptr) {
+		logHelpers.handlerDoesNotHaveProps.log(handlerInfo->type);
+		return;
 	}
 
 	auto& data = helper.getSnapshot().data;
@@ -576,7 +590,7 @@ void AudioParent::resolveProp(array_view<isview> args, string& resolveBufferStri
 
 		auto& processingSnapshot = procIter->second;
 
-		if (auto channelSnapshotIter = processingSnapshot.find(channelOpt.value());
+		if (auto channelSnapshotIter = processingSnapshot.find(channel);
 			channelSnapshotIter != processingSnapshot.end()) {
 			auto& channelSnapshot = channelSnapshotIter->second;
 
@@ -601,7 +615,7 @@ void AudioParent::resolveProp(array_view<isview> args, string& resolveBufferStri
 
 
 	SoundHandler::ExternCallContext context;
-	context.channelName = ChannelUtils::getTechnicalName(channelOpt.value());
+	context.channelName = ChannelUtils::getTechnicalName(channel);
 
 	const bool found = propGetter(*handlerSpecificData, propName, logger.printer, context);
 	if (!found) {
