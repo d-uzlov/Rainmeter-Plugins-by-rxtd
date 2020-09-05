@@ -23,11 +23,15 @@ SoundHandler::ParseResult TimeResampler::parseParams(
 		return { };
 	}
 
-	params.granularity = om.get(L"granularity").asFloat(0.0);
+	params.granularity = om.get(L"granularity").asFloat(1000.0 / 60.0);
+	params.granularity = std::max(params.granularity, 0.01);
 	params.granularity *= 0.001;
 
 	params.attack = om.get(L"attack").asFloat(0.0);
 	params.decay = om.get(L"decay").asFloat(params.attack);
+
+	params.attack = std::max(params.attack, 0.0);
+	params.decay = std::max(params.decay, 0.0);
 
 	params.attack = params.attack * 0.001;
 	params.decay = params.decay * 0.001;
