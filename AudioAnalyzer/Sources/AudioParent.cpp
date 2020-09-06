@@ -84,10 +84,6 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 	}
 
 	paramParser.setRainmeter(rain);
-
-	paramParser.parse(legacyNumber, true);
-	updateCleaners();
-	cleanersExecuted = true;
 }
 
 void AudioParent::vReload() {
@@ -99,7 +95,7 @@ void AudioParent::vReload() {
 		return;
 	}
 
-	const bool paramsChanged = paramParser.parse(legacyNumber, false) || firstReload;
+	const bool paramsChanged = paramParser.parse(legacyNumber, false);
 
 	if (paramsChanged) {
 		updateCleaners();
@@ -112,8 +108,6 @@ void AudioParent::vReload() {
 	callbacks.onDeviceDisconnected = rain.read(L"callback-onDeviceDisconnected", false).asString();
 
 	if (oldCallbacks != callbacks || oldSource != requestedSource || paramsChanged) {
-		firstReload = false;
-
 		std::optional<ParamParser::ProcessingsInfoMap> paramsOpt = { };
 		if (paramsChanged) {
 			paramsOpt = paramParser.getParseResult();

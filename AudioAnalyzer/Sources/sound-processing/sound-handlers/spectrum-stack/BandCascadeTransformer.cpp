@@ -41,6 +41,9 @@ SoundHandler::ParseResult BandCascadeTransformer::parseParams(
 
 		params.zeroLevelHard = om.get(L"zeroLevelHardMultiplier").asFloat(0.01);
 		params.zeroLevelHard = std::clamp(params.zeroLevelHard, 0.0, 1.0) * zeroLevel;
+
+		// touch 'weightFallback' option to prevent log warning
+		(void)om.get(L"weightFallback");
 	} else {
 		params.zeroLevelHard = om.get(L"zeroLevelMultiplier").asFloat(1.0);
 		params.zeroLevelHard = std::max(params.zeroLevelHard, 0.0);

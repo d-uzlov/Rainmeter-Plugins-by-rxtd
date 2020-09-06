@@ -77,8 +77,6 @@ namespace rxtd::audio_analyzer {
 		ParentHelper::Callbacks callbacks;
 		ParentHelper helper;
 
-		bool firstReload = true;
-
 		struct CleanerData {
 			SoundHandler::ExternalData data;
 			SoundHandler::ExternalMethods::FinishMethodType finisher = nullptr;
