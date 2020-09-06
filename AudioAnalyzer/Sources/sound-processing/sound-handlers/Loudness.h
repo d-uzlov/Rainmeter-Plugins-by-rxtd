@@ -58,7 +58,7 @@ namespace rxtd::audio_analyzer {
 
 	public:
 		[[nodiscard]]
-		bool checkSameParams(const std::any& p) const override {
+		bool checkSameParams(const ParamsContainer& p) const override {
 			return compareParamsEquals(params, p);
 		}
 
@@ -70,12 +70,9 @@ namespace rxtd::audio_analyzer {
 
 	protected:
 		[[nodiscard]]
-		ConfigurationResult vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) override;
+		ConfigurationResult vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) override;
 
-		// void vReset() final;
-		void vProcess(ProcessContext context, std::any& handlerSpecificData) override;
-
-		// bool vGetProp(const isview& prop, utils::BufferPrinter& printer) const override;
+		void vProcess(ProcessContext context, ExternalData& externalData) override;
 
 		void pushMicroBlock(double value);
 

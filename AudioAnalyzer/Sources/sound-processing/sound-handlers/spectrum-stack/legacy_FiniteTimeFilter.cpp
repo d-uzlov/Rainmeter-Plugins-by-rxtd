@@ -15,7 +15,8 @@ SoundHandler::ParseResult legacy_FiniteTimeFilter::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	index legacyNumber
 ) const {
-	Params params;
+	ParseResult result{ true };
+	auto& params = result.params.clear<Params>();
 
 	const auto sourceId = om.get(L"source").asIString();
 	if (sourceId.empty()) {
@@ -43,15 +44,13 @@ SoundHandler::ParseResult legacy_FiniteTimeFilter::parseParams(
 		params.smoothingCurve = SmoothingCurve::FLAT;
 	}
 
-	ParseResult result{ true };
-	result.params = params;
 	result.sources.emplace_back(sourceId);
 	return result;
 }
 
 SoundHandler::ConfigurationResult
-legacy_FiniteTimeFilter::vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) {
-	params = std::any_cast<Params>(_params);
+legacy_FiniteTimeFilter::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
+	params = _params.cast<Params>();
 
 	if (params.smoothingFactor <= 1) {
 		smoothingNormConstant = 1.0;
@@ -95,7 +94,7 @@ legacy_FiniteTimeFilter::vConfigure(const std::any& _params, Logger& cl, std::an
 	return dataSize;
 }
 
-void legacy_FiniteTimeFilter::vProcess(ProcessContext context, std::any& handlerSpecificData) {
+void legacy_FiniteTimeFilter::vProcess(ProcessContext context, ExternalData& externalData) {
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
 

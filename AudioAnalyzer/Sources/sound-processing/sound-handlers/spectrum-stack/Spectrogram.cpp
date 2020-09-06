@@ -25,7 +25,8 @@ SoundHandler::ParseResult Spectrogram::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	index legacyNumber
 ) const {
-	Params params;
+	ParseResult result{ true };
+	auto& params = result.params.clear<Params>();
 
 	const auto sourceId = om.get(L"source").asIString();
 	if (sourceId.empty()) {
@@ -129,16 +130,15 @@ SoundHandler::ParseResult Spectrogram::parseParams(
 	params.silenceThreshold = om.get(L"silenceThreshold").asFloatF(-70);
 	params.silenceThreshold = utils::MyMath::db2amplitude(params.silenceThreshold);
 
-	ParseResult result{ true };
-	result.params = std::move(params);
 	result.externalMethods.finish = wrapExternalMethod<Snapshot, &staticFinisher>();
 	result.externalMethods.getProp = wrapExternalMethod<Snapshot, &getProp>();
 	result.sources.emplace_back(sourceId);
 	return result;
 }
 
-SoundHandler::ConfigurationResult Spectrogram::vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) {
-	params = std::any_cast<Params>(_params);
+SoundHandler::ConfigurationResult
+Spectrogram::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
+	params = _params.cast<Params>();
 
 	auto& config = getConfiguration();
 	const index sampleRate = config.sampleRate;
@@ -174,10 +174,7 @@ SoundHandler::ConfigurationResult Spectrogram::vConfigure(const std::any& _param
 	minMaxCounter.reset();
 	minMaxCounter.setBlockSize(blockSize);
 
-	if (nullptr == std::any_cast<Snapshot>(&snapshotAny)) {
-		snapshotAny = Snapshot{ };
-	}
-	auto& snapshot = *std::any_cast<Snapshot>(&snapshotAny);
+	auto& snapshot = externalData.clear<Snapshot>();
 
 	snapshot.prefix = params.folder;
 	if (config.legacyNumber < 104) {
@@ -195,7 +192,7 @@ SoundHandler::ConfigurationResult Spectrogram::vConfigure(const std::any& _param
 	return { 0, { } };
 }
 
-void Spectrogram::vProcess(ProcessContext context, std::any& handlerSpecificData) {
+void Spectrogram::vProcess(ProcessContext context, ExternalData& externalData) {
 	minMaxCounter.setWave(context.originalWave);
 
 	auto& source = *getConfiguration().sourcePtr;
@@ -235,7 +232,7 @@ void Spectrogram::vProcess(ProcessContext context, std::any& handlerSpecificData
 			}
 		}
 
-		auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
+		auto& snapshot = externalData.cast<Snapshot>();
 		snapshot.writeNeeded = true;
 		snapshot.empty = image.isEmpty();
 

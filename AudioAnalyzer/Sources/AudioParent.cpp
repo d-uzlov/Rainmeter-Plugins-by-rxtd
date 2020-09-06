@@ -580,7 +580,7 @@ void AudioParent::resolveProp(
 	// and if we still don't find requested info then it is caused by either delay in updating second thread
 	// or by device not having requested channel
 
-	std::any* handlerSpecificData = nullptr;
+	SoundHandler::ExternalData* handlerExternalData = nullptr;
 
 	if (auto procIter = data._.find(procName);
 		procIter != data._.end()) {
@@ -593,17 +593,17 @@ void AudioParent::resolveProp(
 
 			if (auto handlerSnapshotIter = channelSnapshot.find(handlerName);
 				handlerSnapshotIter != channelSnapshot.end()) {
-				handlerSpecificData = &handlerSnapshotIter->second.handlerSpecificData;
+				handlerExternalData = &handlerSnapshotIter->second.handlerSpecificData;
 			}
 		}
 	}
-	if (handlerSpecificData == nullptr) {
+	if (handlerExternalData == nullptr) {
 		// we can access paramParser values here without checks
 		// because isHandlerShouldExist above checked that it should be valid to access them
-		handlerSpecificData = &cleanersMap.find(procName)->second.find(handlerName)->second.data;
+		handlerExternalData = &cleanersMap.find(procName)->second.find(handlerName)->second.data;
 	}
 
-	if (handlerSpecificData == nullptr) {
+	if (handlerExternalData == nullptr) {
 		// we should never get here
 		// but just it case there is an error, let's make sure that plugin won't crash the application
 		logHelpers.generic.log(L"unexpected (handlerSpecificData == nullptr), tell the developer about this error");
@@ -628,7 +628,7 @@ void AudioParent::resolveProp(
 
 	context.filePrefix = filePrefix;
 
-	const bool found = propGetter(*handlerSpecificData, propName, logger.printer, context);
+	const bool found = propGetter(*handlerExternalData, propName, logger.printer, context);
 	if (!found) {
 		logHelpers.propNotFound.log(handlerInfo->type, propName);
 		return;
@@ -691,7 +691,7 @@ void AudioParent::runCleaners() const {
 				continue;
 			}
 			for (auto channel : procInfo.channels) {
-				auto dataCopy = handlerDataIter->second;
+				auto dataCopy = handlerDataIter->second.data;
 				runFinisher(finisher, dataCopy, procName, channel, handlerName);
 			}
 		}

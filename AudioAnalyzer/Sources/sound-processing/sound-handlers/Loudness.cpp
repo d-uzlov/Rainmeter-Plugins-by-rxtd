@@ -17,7 +17,8 @@ SoundHandler::ParseResult Loudness::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	index legacyNumber
 ) const {
-	Params params;
+	ParseResult result { true };
+	auto& params = result.params.clear<Params>();
 
 	auto transformLogger = cl.context(L"transform: ");
 	params.transformer = CVT::parse(om.get(L"transform").asString(), transformLogger);
@@ -36,13 +37,11 @@ SoundHandler::ParseResult Loudness::parseParams(
 
 	params.ignoreGatingForSilence = om.get(L"ignoreGatingForSilence").asBool(true);
 
-	ParseResult result{ true };
-	result.params = std::move(params);
 	return result;
 }
 
-SoundHandler::ConfigurationResult Loudness::vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) {
-	params = std::any_cast<Params>(_params);
+SoundHandler::ConfigurationResult Loudness::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
+	params = _params.cast<Params>();
 
 	blocksCount = index(params.timeWindowMs / 1000.0 * params.updatesPerSecond);
 	blocksCount = std::max<index>(blocksCount, 1);
@@ -65,7 +64,7 @@ SoundHandler::ConfigurationResult Loudness::vConfigure(const std::any& _params, 
 	return { 1, { blockSize } };
 }
 
-void Loudness::vProcess(ProcessContext context, std::any& handlerSpecificData) {
+void Loudness::vProcess(ProcessContext context, ExternalData& externalData) {
 	for (const auto value : context.wave) {
 		blockIntermediate += value * value;
 		blockCounter++;

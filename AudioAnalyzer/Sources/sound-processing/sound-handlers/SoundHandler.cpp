@@ -13,7 +13,7 @@
 using namespace audio_analyzer;
 
 bool SoundHandler::patch(
-	const std::any& params, const std::vector<istring>& sources,
+	const ParamsContainer& params, const std::vector<istring>& sources,
 	index sampleRate, index legacyNumber,
 	HandlerFinder& hf, Logger& cl,
 	Snapshot& snapshot

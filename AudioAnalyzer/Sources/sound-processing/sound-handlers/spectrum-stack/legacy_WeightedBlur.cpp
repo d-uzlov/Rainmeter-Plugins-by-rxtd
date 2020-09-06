@@ -15,7 +15,8 @@ SoundHandler::ParseResult legacy_WeightedBlur::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	index legacyNumber
 ) const {
-	Params params;
+	ParseResult result{ true };
+	auto& params = result.params.clear<Params>();
 
 	const auto sourceId = om.get(L"source").asIString();
 	if (sourceId.empty()) {
@@ -36,15 +37,13 @@ SoundHandler::ParseResult legacy_WeightedBlur::parseParams(
 	// params.minWeight = std::max<double>(optionMap.get(L"minWeight"sv).asFloat(0), std::numeric_limits<float>::epsilon());
 	params.minWeight = 0.0; // doesn't work as expected
 
-	ParseResult result{ true };
-	result.params = params;
 	result.sources.emplace_back(sourceId);
 	return result;
 }
 
 SoundHandler::ConfigurationResult
-legacy_WeightedBlur::vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) {
-	params = std::any_cast<Params>(_params);
+legacy_WeightedBlur::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
+	params = _params.cast<Params>();
 
 	resamplerPtr = getResampler();
 	if (resamplerPtr == nullptr) {
@@ -57,7 +56,7 @@ legacy_WeightedBlur::vConfigure(const std::any& _params, Logger& cl, std::any& s
 	return dataSize;
 }
 
-void legacy_WeightedBlur::vProcess(ProcessContext context, std::any& handlerSpecificData) {
+void legacy_WeightedBlur::vProcess(ProcessContext context, ExternalData& externalData) {
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
 	const BandResampler& resampler = *resamplerPtr;

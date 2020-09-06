@@ -15,7 +15,8 @@ SoundHandler::ParseResult BlockHandler::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	index legacyNumber
 ) const {
-	Params params;
+	ParseResult result{ true };
+	auto& params = result.params.clear<Params>();
 
 	const sview updateIntervalOptionName = om.has(L"updateInterval") ? L"updateInterval" : L"resolution";
 	params.updateIntervalMs = om.get(updateIntervalOptionName).asFloat(1000.0 / 60.0);
@@ -31,14 +32,13 @@ SoundHandler::ParseResult BlockHandler::parseParams(
 	auto transformLogger = cl.context(L"transform: ");
 	params.transformer = CVT::parse(om.get(L"transform").asString(), transformLogger);
 
-	ParseResult result{ true };
-	result.params = std::move(params);
 	result.externalMethods.getProp = wrapExternalMethod<Snapshot, &getProp>();
 	return result;
 }
 
-SoundHandler::ConfigurationResult BlockHandler::vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) {
-	params = std::any_cast<Params>(_params);
+SoundHandler::ConfigurationResult
+BlockHandler::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
+	params = _params.cast<Params>();
 
 	auto& config = getConfiguration();
 	blockSize = static_cast<decltype(blockSize)>(config.sampleRate * params.updateIntervalMs);
@@ -46,17 +46,14 @@ SoundHandler::ConfigurationResult BlockHandler::vConfigure(const std::any& _para
 
 	legacy_filter.setParams(params.legacy_attackTime, params.legacy_decayTime, config.sampleRate, blockSize);
 
-	if (nullptr == std::any_cast<Snapshot>(&snapshotAny)) {
-		snapshotAny = Snapshot{ };
-	}
-	auto& snapshot = *std::any_cast<Snapshot>(&snapshotAny);
+	auto& snapshot = externalData.clear<Snapshot>();
 
 	snapshot.blockSize = blockSize;
 
 	return { 1, { blockSize } };
 }
 
-void BlockHandler::vProcess(ProcessContext context, std::any& handlerSpecificData) {
+void BlockHandler::vProcess(ProcessContext context, ExternalData& externalData) {
 	_process(context.wave);
 }
 

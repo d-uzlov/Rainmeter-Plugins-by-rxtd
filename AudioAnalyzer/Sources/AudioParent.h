@@ -80,7 +80,7 @@ namespace rxtd::audio_analyzer {
 		bool firstReload = true;
 
 		struct CleanerData {
-			std::any data;
+			SoundHandler::ExternalData data;
 			SoundHandler::ExternalMethods::FinishMethodType finisher = nullptr;
 		};
 
@@ -116,7 +116,7 @@ namespace rxtd::audio_analyzer {
 	private:
 		void runFinisher(
 			SoundHandler::ExternalMethods::FinishMethodType finisher,
-			const std::any& handlerData,
+			const SoundHandler::ExternalData& handlerData,
 			isview procName, Channel channel, isview handlerName
 		) const {
 			SoundHandler::ExternCallContext context;

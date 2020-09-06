@@ -15,7 +15,8 @@ SoundHandler::ParseResult TimeResampler::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	index legacyNumber
 ) const {
-	Params params;
+	ParseResult result{ true };
+	auto& params = result.params.clear<Params>();
 
 	const auto sourceId = om.get(L"source").asIString();
 	if (sourceId.empty()) {
@@ -36,15 +37,13 @@ SoundHandler::ParseResult TimeResampler::parseParams(
 	params.attack = params.attack * 0.001;
 	params.decay = params.decay * 0.001;
 
-	ParseResult result{ true };
-	result.params = params;
 	result.sources.emplace_back(sourceId);
 	return result;
 }
 
 SoundHandler::ConfigurationResult
-TimeResampler::vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) {
-	params = std::any_cast<Params>(_params);
+TimeResampler::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
+	params = _params.cast<Params>();
 
 	auto& config = getConfiguration();
 	auto& dataSize = config.sourcePtr->getDataSize();
@@ -83,7 +82,7 @@ TimeResampler::vConfigure(const std::any& _params, Logger& cl, std::any& snapsho
 	return dataSize;
 }
 
-void TimeResampler::vProcess(ProcessContext context, std::any& handlerSpecificData) {
+void TimeResampler::vProcess(ProcessContext context, ExternalData& externalData) {
 	const auto& source = *getConfiguration().sourcePtr;
 	const index layersCount = source.getDataSize().layersCount;
 	for (int i = 0; i < layersCount; ++i) {

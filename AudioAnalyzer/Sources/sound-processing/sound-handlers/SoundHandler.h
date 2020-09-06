@@ -45,7 +45,7 @@ namespace rxtd::audio_analyzer {
 		virtual SoundHandler* getHandler(isview id) const = 0;
 	};
 
-	class SoundHandler {
+	class SoundHandler : VirtualDestructorBase {
 	public:
 		using OptionMap = utils::OptionMap;
 		using Rainmeter = utils::Rainmeter;
@@ -84,10 +84,58 @@ namespace rxtd::audio_analyzer {
 			clock::time_point killTime;
 		};
 
+		class ParamsContainer {
+			std::any erasedParams;
+
+		public:
+			template <typename T>
+			T& clear() {
+				erasedParams = T { };
+				return cast<T>();
+			}
+
+			template <typename T>
+			T& cast() {
+				return *std::any_cast<T>(&erasedParams);
+			}
+
+			template <typename T>
+			const T& cast() const {
+				return *std::any_cast<T>(&erasedParams);
+			}
+
+			// prevent automatic type conversions
+			ParamsContainer() = default;
+		};
+
+		class ExternalData {
+			std::any erasedData;
+
+		public:
+			template <typename T>
+			T& clear() {
+				erasedData = T{ };
+				return cast<T>();
+			}
+
+			template <typename T>
+			T& cast() {
+				return *std::any_cast<T>(&erasedData);
+			}
+
+			template <typename T>
+			const T& cast() const {
+				return *std::any_cast<T>(&erasedData);
+			}
+
+			// prevent automatic type conversions
+			ExternalData() = default;
+		};
+
 		struct ExternalMethods {
-			using FinishMethodType = void(*)(const std::any& data, const ExternCallContext& context);
+			using FinishMethodType = void(*)(const ExternalData& data, const ExternCallContext& context);
 			using GetPropMethodType = bool(*)(
-				const std::any& data,
+				const ExternalData& data,
 				isview prop,
 				utils::BufferPrinter& printer,
 				const ExternCallContext& context
@@ -111,7 +159,7 @@ namespace rxtd::audio_analyzer {
 
 		struct ParseResult {
 			bool valid = false;
-			std::any params;
+			ParamsContainer params;
 			std::vector<istring> sources;
 			ExternalMethods externalMethods{ };
 
@@ -122,7 +170,7 @@ namespace rxtd::audio_analyzer {
 
 		struct Snapshot {
 			utils::Vector2D<float> values;
-			std::any handlerSpecificData;
+			ExternalData handlerSpecificData;
 		};
 
 	protected:
@@ -173,8 +221,6 @@ namespace rxtd::audio_analyzer {
 		Configuration _configuration{ };
 
 	public:
-		virtual ~SoundHandler() = default;
-
 		template <typename _HandlerType>
 		[[nodiscard]]
 		static std::unique_ptr<SoundHandler> patchHandlerImpl(std::unique_ptr<SoundHandler> handlerPtr) {
@@ -196,7 +242,7 @@ namespace rxtd::audio_analyzer {
 		// returns true on success, false on invalid handler
 		[[nodiscard]]
 		bool patch(
-			const std::any& params, const std::vector<istring>& sources,
+			const ParamsContainer& params, const std::vector<istring>& sources,
 			index sampleRate, index legacyNumber,
 			HandlerFinder& hf, Logger& cl,
 			Snapshot& snapshot
@@ -255,8 +301,8 @@ namespace rxtd::audio_analyzer {
 
 	protected:
 		template <typename Params>
-		static bool compareParamsEquals(const Params& p1, const std::any& p2) {
-			return p1 == *std::any_cast<Params>(&p2);
+		static bool compareParamsEquals(const Params& p1, const ParamsContainer& p2) {
+			return p1 == p2.cast<Params>();
 		}
 
 		template <typename DataStructType, auto methodPtr>
@@ -266,8 +312,8 @@ namespace rxtd::audio_analyzer {
 					const DataStructType&,
 					const ExternCallContext&>::value
 			) {
-				return [](const std::any& handlerSpecificData, const ExternCallContext& context) {
-					return methodPtr(*std::any_cast<DataStructType>(&handlerSpecificData), context);
+				return [](const ExternalData& dataWrapper, const ExternCallContext& context) {
+					return methodPtr(dataWrapper.cast<DataStructType>(), context);
 				};
 			} else if constexpr (
 				std::is_invocable_r<
@@ -276,12 +322,12 @@ namespace rxtd::audio_analyzer {
 					const DataStructType&, isview, utils::BufferPrinter&, const ExternCallContext&>::value
 			) {
 				return [](
-					const std::any& handlerSpecificData,
+					const ExternalData& dataWrapper,
 					isview prop,
 					utils::BufferPrinter& bp,
 					const ExternCallContext& context
 				) {
-					return methodPtr(*std::any_cast<DataStructType>(&handlerSpecificData), prop, bp, context);
+					return methodPtr(dataWrapper.cast<DataStructType>(), prop, bp, context);
 				};
 			} else {
 				static_assert(false, L"wrapExternalMethod: unsupported method");
@@ -290,10 +336,13 @@ namespace rxtd::audio_analyzer {
 
 		// should return true when params are the same
 		[[nodiscard]]
-		virtual bool checkSameParams(const std::any& p) const = 0;
+		virtual bool checkSameParams(const ParamsContainer& p) const = 0;
 
 		[[nodiscard]]
-		virtual ConfigurationResult vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) = 0;
+		virtual ConfigurationResult vConfigure(
+			const ParamsContainer& _params, Logger& cl,
+			ExternalData& externalData
+		) = 0;
 
 		[[nodiscard]]
 		const Configuration& getConfiguration() const {
@@ -314,7 +363,7 @@ namespace rxtd::audio_analyzer {
 		// if handler is potentially heavy,
 		// handler should try to return control to caller
 		// when time is more than context.killTime
-		virtual void vProcess(ProcessContext context, std::any& handlerSpecificData) = 0;
+		virtual void vProcess(ProcessContext context, ExternalData& handlerSpecificData) = 0;
 
 		static index legacy_parseIndexProp(const isview& request, const isview& propName, index endBound) {
 			return legacy_parseIndexProp(request, propName, 0, endBound);

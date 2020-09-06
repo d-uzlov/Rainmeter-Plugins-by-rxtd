@@ -19,7 +19,7 @@ namespace rxtd::audio_analyzer {
 		string rawDescription;
 		string rawDescription2;
 		istring type;
-		std::any params;
+		SoundHandler::ParamsContainer params;
 		std::vector<istring> sources;
 		HandlerPatchingFun fun = nullptr;
 		SoundHandler::ExternalMethods externalMethods{};

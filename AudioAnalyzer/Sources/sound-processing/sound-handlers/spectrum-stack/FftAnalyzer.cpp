@@ -18,7 +18,8 @@ SoundHandler::ParseResult FftAnalyzer::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	index legacyNumber
 ) const {
-	Params params;
+	ParseResult result { true };
+	auto& params = result.params.clear<Params>();
 
 	if (legacyNumber < 104) {
 		params.legacy_attackTime = std::max(om.get(L"attack").asFloat(100), 0.0);
@@ -107,14 +108,13 @@ SoundHandler::ParseResult FftAnalyzer::parseParams(
 	params.wcfDescription = om.get(L"windowFunction").asString(L"hann");
 	params.wcf = audio_utils::WindowFunctionHelper::parse(params.wcfDescription, cl);
 
-	ParseResult result{ true };
-	result.params = std::move(params);
 	result.externalMethods.getProp = wrapExternalMethod<Snapshot, &getProp>();
 	return result;
 }
 
-SoundHandler::ConfigurationResult FftAnalyzer::vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) {
-	params = std::any_cast<Params>(_params);
+SoundHandler::ConfigurationResult
+FftAnalyzer::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
+	params = _params.cast<Params>();
 
 	auto& config = getConfiguration();
 
@@ -173,10 +173,7 @@ SoundHandler::ConfigurationResult FftAnalyzer::vConfigure(const std::any& _param
 	}
 
 
-	if (nullptr == std::any_cast<Snapshot>(&snapshotAny)) {
-		snapshotAny = Snapshot{ };
-	}
-	auto& snapshot = *std::any_cast<Snapshot>(&snapshotAny);
+	auto& snapshot = externalData.clear<Snapshot>();
 
 	snapshot.fftSize = fftSize;
 	snapshot.sampleRate = getConfiguration().sampleRate;
@@ -192,14 +189,14 @@ SoundHandler::ConfigurationResult FftAnalyzer::vConfigure(const std::any& _param
 	return { fftSize / 2, std::move(eqWS) };
 }
 
-void FftAnalyzer::vProcess(ProcessContext context, std::any& handlerSpecificData) {
+void FftAnalyzer::vProcess(ProcessContext context, ExternalData& externalData) {
 	if (params.randomTest != 0.0) {
 		processRandom(context.wave.size(), context.killTime);
 	} else {
 		cascades[0].process(context.wave, context.killTime);
 	}
 
-	auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
+	auto& snapshot = externalData.cast<Snapshot>();
 	snapshot.dc.clear();
 
 	for (const auto& cascade : cascades) {

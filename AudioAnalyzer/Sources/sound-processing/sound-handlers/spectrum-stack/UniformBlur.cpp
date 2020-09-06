@@ -16,7 +16,8 @@ SoundHandler::ParseResult UniformBlur::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	index legacyNumber
 ) const {
-	Params params;
+	ParseResult result{ true };
+	auto& params = result.params.clear<Params>();
 
 	const auto sourceId = om.get(L"source").asIString();
 	if (sourceId.empty()) {
@@ -28,14 +29,13 @@ SoundHandler::ParseResult UniformBlur::parseParams(
 	params.blurRadius = std::max<double>(om.get(L"Radius").asFloat(1.0) * 0.25, 0.0);
 	params.blurRadiusAdaptation = std::max<double>(om.get(L"RadiusAdaptation").asFloat(2.0), 0.0);
 
-	ParseResult result{ true };
-	result.params = params;
 	result.sources.emplace_back(sourceId);
 	return result;
 }
 
-SoundHandler::ConfigurationResult UniformBlur::vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) {
-	params = std::any_cast<Params>(_params);
+SoundHandler::ConfigurationResult
+UniformBlur::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
+	params = _params.cast<Params>();
 
 	auto& config = getConfiguration();
 
@@ -54,7 +54,7 @@ SoundHandler::ConfigurationResult UniformBlur::vConfigure(const std::any& _param
 	return dataSize;
 }
 
-void UniformBlur::vProcess(ProcessContext context, std::any& handlerSpecificData) {
+void UniformBlur::vProcess(ProcessContext context, ExternalData& externalData) {
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
 

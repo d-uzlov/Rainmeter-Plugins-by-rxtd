@@ -21,7 +21,8 @@ SoundHandler::ParseResult WaveForm::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	index legacyNumber
 ) const {
-	Params params;
+	ParseResult result{ true };
+	auto& params = result.params.clear<Params>();
 
 	params.width = om.get(L"width").asInt(100);
 	if (params.width < 2) {
@@ -92,15 +93,14 @@ SoundHandler::ParseResult WaveForm::parseParams(
 		params.transformer = CVT::parse(om.get(L"transform").asString(), transformLogger);
 	}
 
-	ParseResult result{ true };
-	result.params = std::move(params);
 	result.externalMethods.finish = wrapExternalMethod<Snapshot, &staticFinisher>();
 	result.externalMethods.getProp = wrapExternalMethod<Snapshot, &getProp>();
 	return result;
 }
 
-SoundHandler::ConfigurationResult WaveForm::vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) {
-	params = std::any_cast<Params>(_params);
+SoundHandler::ConfigurationResult
+WaveForm::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
+	params = _params.cast<Params>();
 
 	auto& config = getConfiguration();
 	const index sampleRate = config.sampleRate;
@@ -110,7 +110,11 @@ SoundHandler::ConfigurationResult WaveForm::vConfigure(const std::any& _params, 
 	minDistinguishableValue = 1.0 / params.height;
 
 	drawer.setImageParams(params.width, params.height, params.stationary);
-	drawer.setParams(params.connected, params.borderSize, params.fading, params.lineDrawingPolicy, params.lineThickness, params.colors);
+	drawer.setParams(
+		params.connected, params.borderSize, params.fading,
+		params.lineDrawingPolicy, params.lineThickness,
+		params.colors
+	);
 
 	drawer.inflate();
 
@@ -120,10 +124,7 @@ SoundHandler::ConfigurationResult WaveForm::vConfigure(const std::any& _params, 
 	mainCounter.setBlockSize(blockSize);
 	originalCounter.setBlockSize(blockSize);
 
-	if (nullptr == std::any_cast<Snapshot>(&snapshotAny)) {
-		snapshotAny = Snapshot{ };
-	}
-	auto& snapshot = *std::any_cast<Snapshot>(&snapshotAny);
+	auto& snapshot = externalData.clear<Snapshot>();
 
 	snapshot.prefix = params.folder;
 	if (config.legacyNumber < 104) {
@@ -143,7 +144,7 @@ SoundHandler::ConfigurationResult WaveForm::vConfigure(const std::any& _params, 
 	return { 0, { } };
 }
 
-void WaveForm::vProcess(ProcessContext context, std::any& handlerSpecificData) {
+void WaveForm::vProcess(ProcessContext context, ExternalData& externalData) {
 	const bool wasEmpty = drawer.isEmpty();
 
 	bool anyChanges = false;
@@ -177,7 +178,7 @@ void WaveForm::vProcess(ProcessContext context, std::any& handlerSpecificData) {
 	if (anyChanges) {
 		drawer.inflate();
 
-		auto& snapshot = *std::any_cast<Snapshot>(&handlerSpecificData);
+		auto& snapshot = externalData.cast<Snapshot>();
 		snapshot.writeNeeded = true;
 		snapshot.empty = drawer.isEmpty();
 

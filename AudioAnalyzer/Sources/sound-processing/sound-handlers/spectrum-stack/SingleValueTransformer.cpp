@@ -15,7 +15,8 @@ SoundHandler::ParseResult SingleValueTransformer::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	index legacyNumber
 ) const {
-	Params params;
+	ParseResult result{ true };
+	auto& params = result.params.clear<Params>();
 
 	const auto sourceId = om.get(L"source").asIString();
 	if (sourceId.empty()) {
@@ -26,15 +27,13 @@ SoundHandler::ParseResult SingleValueTransformer::parseParams(
 	auto transformLogger = cl.context(L"transform: ");
 	params.transformer = CVT::parse(om.get(L"transform").asString(), transformLogger);
 
-	ParseResult result{ true };
-	result.params = std::move(params);
 	result.sources.emplace_back(sourceId);
 	return result;
 }
 
 SoundHandler::ConfigurationResult
-SingleValueTransformer::vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) {
-	params = std::any_cast<Params>(_params);
+SingleValueTransformer::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
+	params = _params.cast<Params>();
 
 	auto& config = getConfiguration();
 	const auto dataSize = config.sourcePtr->getDataSize();
@@ -47,7 +46,7 @@ SingleValueTransformer::vConfigure(const std::any& _params, Logger& cl, std::any
 	return dataSize;
 }
 
-void SingleValueTransformer::vProcess(ProcessContext context, std::any& handlerSpecificData) {
+void SingleValueTransformer::vProcess(ProcessContext context, ExternalData& externalData) {
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
 	const index layersCount = source.getDataSize().layersCount;

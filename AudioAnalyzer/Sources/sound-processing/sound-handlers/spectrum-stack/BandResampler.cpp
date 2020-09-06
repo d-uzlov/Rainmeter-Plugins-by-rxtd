@@ -21,7 +21,8 @@ SoundHandler::ParseResult BandResampler::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	index legacyNumber
 ) const {
-	Params params;
+	ParseResult result{ true };
+	auto& params = result.params.clear<Params>();
 
 	const auto sourceId = om.get(L"source").asIString();
 	if (sourceId.empty()) {
@@ -84,8 +85,6 @@ SoundHandler::ParseResult BandResampler::parseParams(
 	const bool defaultCubicResampling = !(legacyNumber < 104);
 	params.useCubicResampling = om.get(L"cubicInterpolation").asBool(defaultCubicResampling);
 
-	ParseResult result{ true };
-	result.params = std::move(params);
 	result.externalMethods.getProp = wrapExternalMethod<Snapshot, &getProp>();
 	result.sources.emplace_back(sourceId);
 	return result;
@@ -189,8 +188,8 @@ std::vector<float> BandResampler::makeBandsFromFreqs(array_span<float> freqs, Lo
 }
 
 SoundHandler::ConfigurationResult
-BandResampler::vConfigure(const std::any& _params, Logger& cl, std::any& snapshotAny) {
-	params = std::any_cast<Params>(_params);
+BandResampler::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
+	params = _params.cast<Params>();
 
 	auto& config = getConfiguration();
 	fftSource = dynamic_cast<FftAnalyzer*>(config.sourcePtr);
@@ -239,10 +238,7 @@ BandResampler::vConfigure(const std::any& _params, Logger& cl, std::any& snapsho
 		}
 	}
 
-	if (nullptr == std::any_cast<Snapshot>(&snapshotAny)) {
-		snapshotAny = Snapshot{ };
-	}
-	auto& snapshot = *std::any_cast<Snapshot>(&snapshotAny);
+	auto& snapshot = externalData.clear<Snapshot>();
 	snapshot.bandFreqs = params.bandFreqs;
 
 	auto& sourceDataSize = fftSource->getDataSize();
@@ -253,7 +249,7 @@ BandResampler::vConfigure(const std::any& _params, Logger& cl, std::any& snapsho
 	return { bandsCount, std::move(eqWS) };
 }
 
-void BandResampler::vProcess(ProcessContext context, std::any& handlerSpecificData) {
+void BandResampler::vProcess(ProcessContext context, ExternalData& externalData) {
 	auto& config = getConfiguration();
 
 	auto& source = *fftSource;
