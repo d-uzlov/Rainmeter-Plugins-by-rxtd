@@ -25,13 +25,23 @@ namespace rxtd::audio_utils {
 		}
 
 		float next(float value) {
-			result = value + attackDecayConstants[(value < result)] * (result - value);
+			result = apply(result, value);
 			return result;
 		}
 
 		[[nodiscard]]
 		float apply(float prev, float value) const {
-			return value + attackDecayConstants[(value < prev)] * (prev - value);
+			// if infinity or nan, then return without any changes
+			const float delta = prev - value;
+			if (!(delta > -std::numeric_limits<float>::max()
+				&& delta < std::numeric_limits<float>::max())) {
+				return value;
+			}
+			if (std::abs(delta) < 1.0e-30f) {
+				return value;
+			}
+
+			return value + attackDecayConstants[(value < prev)] * delta;
 		}
 
 		void arrayApply(array_span<float> dest, array_view<float> source) const {

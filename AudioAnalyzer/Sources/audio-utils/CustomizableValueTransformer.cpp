@@ -17,12 +17,11 @@
 
 using namespace audio_utils;
 
-// todo double/float?
 double CustomizableValueTransformer::apply(double value) {
 	for (auto& transform : transforms) {
 		switch (transform.type) {
 		case TransformType::eDB: {
-			value = std::max<double>(value, std::numeric_limits<float>::min());
+			value = std::max<double>(value, 0.0);
 			value = 10.0f * std::log10(value);
 			break;
 		}
@@ -54,11 +53,14 @@ void CustomizableValueTransformer::applyToArray(array_view<float> source, array_
 				float value = *sourceIter;
 				float& destValue = *destIter;
 
-				value = std::max(value, std::numeric_limits<float>::min());
-				value = 10.0f * utils::MyMath::fastLog2(value) * logCoef;
-				// value = 10.0 * std::log10(value);
-
-				destValue = value;
+				if (value <= 0.0f) {
+					destValue = -std::numeric_limits<float>::infinity();
+				} else {
+					value = std::max(value, 0.0f);
+					value = 10.0f * utils::MyMath::fastLog2(value) * logCoef;
+					// value = 10.0 * std::log10(value);
+					destValue = value;
+				}
 			}
 
 			break;
