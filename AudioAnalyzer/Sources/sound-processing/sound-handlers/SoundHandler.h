@@ -258,9 +258,10 @@ namespace rxtd::audio_analyzer {
 			vProcess(context, snapshot.handlerSpecificData);
 
 			for (index layer = 0; layer < index(_dataSize.eqWaveSizes.size()); layer++) {
-				auto chunks = _layers[layer].chunksView;
-				if (!chunks.empty()) {
-					snapshot.values[layer].copyFrom(chunks.back());
+				auto& offsets = _layers[layer].offsets;
+				if (!offsets.empty()) {
+					const auto lastChunk = array_view<float> { _buffer.data() + offsets.back(), _dataSize.valuesCount };
+					snapshot.values[layer].copyFrom(lastChunk);
 				} else {
 					snapshot.values[layer].copyFrom(_lastResults[layer]);
 				}

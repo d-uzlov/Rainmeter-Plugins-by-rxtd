@@ -268,8 +268,9 @@ void Spectrogram::InputStripMaker::fillStrip(array_view<float> data, array_span<
 	}
 }
 
-void Spectrogram::InputStripMaker::fillStripMulticolor(array_view<float> data,
-                                                       array_span<utils::IntColor> buffer) const {
+void Spectrogram::InputStripMaker::fillStripMulticolor(
+	array_view<float> data, array_span<utils::IntColor> buffer
+) const {
 	for (index i = 0; i < buffer.size(); ++i) {
 		const auto value = std::clamp(data[i], colorLevels.front(), colorLevels.back());
 

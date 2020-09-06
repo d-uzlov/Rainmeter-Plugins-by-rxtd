@@ -19,15 +19,18 @@ SoundHandler::ParseResult BlockHandler::parseParams(
 	auto& params = result.params.clear<Params>();
 
 	const sview updateIntervalOptionName = om.has(L"updateInterval") ? L"updateInterval" : L"resolution";
-	params.updateIntervalMs = om.get(updateIntervalOptionName).asFloat(1000.0 / 60.0);
+	params.updateIntervalMs = om.get(updateIntervalOptionName).asFloat(10.0);
 	if (params.updateIntervalMs <= 0) {
 		cl.warning(L"{} must be > 0 but {} found. Assume 10", updateIntervalOptionName, params.updateIntervalMs);
 		params.updateIntervalMs = 10;
 	}
 	params.updateIntervalMs *= 0.001;
 
-	params.legacy_attackTime = std::max(om.get(L"attack").asFloat(100), 0.0);
+	const double defaultAttack = legacyNumber < 104 ? 100.0 : 0.0;
+	params.legacy_attackTime = std::max(om.get(L"attack").asFloat(defaultAttack), 0.0);
 	params.legacy_decayTime = std::max(om.get(L"decay").asFloat(params.legacy_attackTime), 0.0);
+	params.legacy_attackTime *= 0.001;
+	params.legacy_decayTime *= 0.001;
 
 	auto transformLogger = cl.context(L"transform: ");
 	params.transformer = CVT::parse(om.get(L"transform").asString(), transformLogger);
