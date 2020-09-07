@@ -105,7 +105,7 @@ Handler info: none
 
 
 Fourier Transform
-Type : { fft }
+Type : { FFT }
 Fourier Transform of the signal. Gives you values of frequencies from 0 to SamplingRate/2 (=Nyquist frequency).
 Should always be used with Band handler. You can get values directly from FFT but that doesn't make much sense: there is a variable number of resulting values, which is difficult to manage in skin.
 

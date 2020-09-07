@@ -182,7 +182,7 @@ Possible second arguments:
 "description": specific type of current device. For example, "speakers".
 "id" : id of current audio device. Can be used in Source option in parent measure
 "format" : human readable description of format of current device. E.g., "2.0 stereo, 192000Hz"
-"channels": a comma-separated list of technical names of channels that exist in current layout. For example, 5.1 layout will have "FRONT_LEFT,FRONT_RIGHT,CENTER,LOW_FREQUENCY,BACK_LEFT,BACK_RIGHT".
+"channels": a comma-separated list of technical names of channels that exist in current layout. For example, 5.1 layout will have "fl,fr,c,lfe,bl,br".
 "sample rate": sample rate of current device. For example, 48000.
 
 Example:
