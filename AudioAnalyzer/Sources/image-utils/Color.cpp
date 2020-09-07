@@ -87,7 +87,7 @@ utils::Color utils::Color::parse(sview desc, Color defaultValue) {
 	result._.rgb.red = components.get(0).asFloatF();
 	result._.rgb.green = components.get(1).asFloatF();
 	result._.rgb.blue = components.get(2).asFloatF();
-	result.alpha = components.get(4).asFloatF(1.0f);
+	result.alpha = components.get(3).asFloatF(1.0f);
 
 	return result;
 }
