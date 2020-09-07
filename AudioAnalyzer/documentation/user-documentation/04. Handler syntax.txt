@@ -17,7 +17,7 @@ There is also an empty property description without a name. It doesn't do and do
 
 Loudness
 Type : { Loudness }
-Measures energy a of a signal in such a way that it can be converted to perceived loudness.
+Measures energy a of a signal in such a way that it can be converted to perceived loudness, or at least something similar to perceived loudness.
 The way it works:
 Signal energy is calculated for blocks of size (1000/UpdatesPerSecond) milliseconds. Blocks are averaged across TimeWindow milliseconds. However, not all blocks are used: blocks that are almost silent are discarded. But at most gatingLimit*100% blocks can be discarded.
 This is similar to how EBU R 128 describes loudness metering.
@@ -55,7 +55,7 @@ Handler info: none
 
 Peak
 Type : { peak }
-Maximum of an [absolute] value of signal over period of time. Use when you need to know if there was any sound on not, or when detecting possible clipping.
+Maximum of an [absolute] value of the signal a over period of time. Use when you need to know if there was any sound on not, or when detecting possible clipping.
 
 Properties:
 
@@ -66,9 +66,41 @@ See Transforms discussion below
 UpdateInterval : float > 0 : 10
 Time in milliseconds of block in which maximum is found.
 
+Attack : float >= 0 : 0
+When not zero, smooths the result in such a way that it takes roughly Attack milliseconds to raise from one stable level to another. Very roughly.
+It may be useful when values are updating too quickly.
+
+Decay : float >= 0 : <value of attack>
+When not zero, smooths the result in such a way that it takes roughly Decay milliseconds to fall from one stable level to another. Very roughly.
+It may be useful when values are updating too quickly.
+
 Example: type peak | UpdateInterval 5
-Handler info:
-"block size" : size of a block in which maximum is found specified in samples count
+Handler info: none
+
+
+RMS
+Type : { RMS }
+Measures energy of the signal over a period of time. It used to be the best way to approximate loudness but now there is a better dedicated Loudness handler, so now you probably don't need this handler. Only use it when you really know what you are doing.
+
+Properties:
+
+Transform : <transform description> : <empty>
+Description on how to transform values before presenting to user.
+See Transforms discussion below
+
+UpdateInterval : float > 0 : 10
+Time in milliseconds of block in which maximum is found.
+
+Attack : float >= 0 : 0
+When not zero, smooths the result in such a way that it takes roughly Attack milliseconds to raise from one stable level to another. Very roughly.
+It may be useful when values are updating too quickly.
+
+Decay : float >= 0 : <value of attack>
+When not zero, smooths the result in such a way that it takes roughly Decay milliseconds to fall from one stable level to another. Very roughly.
+It may be useful when values are updating too quickly.
+
+Example: type rms | UpdateInterval 5
+Handler info: none
 
 
 
@@ -246,6 +278,10 @@ Attack only affects how values are smoothed when they are increasing.
 
 Decay : float > 0 : <value of Attack property>
 Same as Attack but only affects how values are decreasing.
+
+Transform : <transform description> : <empty>
+Description of transforms that are applied to values after filtering
+See transforms discussion for full list of possible values.
 
 Example: type TimeResampler | source mapper | attack 10
 Handler info: none
