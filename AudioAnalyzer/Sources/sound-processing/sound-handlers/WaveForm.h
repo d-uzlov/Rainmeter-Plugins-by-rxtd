@@ -20,7 +20,6 @@ namespace rxtd::audio_analyzer {
 		using Colors = utils::WaveFormDrawer::Colors;
 		using CVT = audio_utils::CustomizableValueTransformer;
 
-	public:
 		struct Params {
 			double resolution{ };
 			index width{ };
@@ -72,7 +71,6 @@ namespace rxtd::audio_analyzer {
 			mutable string filenameBuffer;
 		};
 
-	private:
 		Params params;
 
 		audio_utils::MinMaxCounter mainCounter;

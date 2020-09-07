@@ -44,7 +44,7 @@ namespace rxtd::audio_utils {
 			return value + attackDecayConstants[(value < prev)] * delta;
 		}
 
-		void arrayApply(array_span<float> dest, array_view<float> source) const {
+		void arrayApply(array_view<float> source, array_span<float> dest) const {
 			for (int i = 0; i < source.size(); ++i) {
 				dest[i] = apply(dest[i], source[i]);
 			}

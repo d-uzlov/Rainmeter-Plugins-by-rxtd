@@ -13,7 +13,6 @@
 
 namespace rxtd::audio_analyzer {
 	class BandCascadeTransformer : public SoundHandler {
-	public:
 		enum class MixFunction {
 			AVERAGE,
 			PRODUCT,
@@ -38,7 +37,6 @@ namespace rxtd::audio_analyzer {
 			}
 		};
 
-	private:
 		Params params{ };
 
 		BandResampler* resamplerPtr = nullptr;

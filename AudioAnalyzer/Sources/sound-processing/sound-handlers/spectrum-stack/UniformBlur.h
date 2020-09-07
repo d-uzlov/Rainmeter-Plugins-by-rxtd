@@ -14,7 +14,6 @@
 
 namespace rxtd::audio_analyzer {
 	class UniformBlur : public ResamplerProvider {
-	public:
 		struct Params {
 			double blurRadius{ };
 			double blurRadiusAdaptation{ };
@@ -29,7 +28,6 @@ namespace rxtd::audio_analyzer {
 			}
 		};
 
-	private:
 		Params params{ };
 		audio_utils::GaussianCoefficientsManager gcm;
 		double startingRadius{ };

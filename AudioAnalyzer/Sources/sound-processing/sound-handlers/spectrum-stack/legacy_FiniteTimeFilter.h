@@ -14,7 +14,6 @@
 
 namespace rxtd::audio_analyzer {
 	class legacy_FiniteTimeFilter : public ResamplerProvider {
-	public:
 		enum class SmoothingCurve {
 			FLAT,
 			LINEAR,
@@ -38,7 +37,6 @@ namespace rxtd::audio_analyzer {
 			}
 		};
 
-	private:
 		Params params{ };
 
 		// pastValues[Layer][FilterSize][Band]

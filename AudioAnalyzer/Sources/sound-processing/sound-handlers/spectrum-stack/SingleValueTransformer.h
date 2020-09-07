@@ -16,7 +16,7 @@
 namespace rxtd::audio_analyzer {
 	class SingleValueTransformer : public ResamplerProvider {
 		using CVT = audio_utils::CustomizableValueTransformer;
-	public:
+
 		struct Params {
 			CVT transformer;
 
@@ -30,7 +30,6 @@ namespace rxtd::audio_analyzer {
 			}
 		};
 
-	private:
 		Params params{ };
 		std::vector<CVT> transformersPerLayer;
 		std::vector<index> countersPerLayer;

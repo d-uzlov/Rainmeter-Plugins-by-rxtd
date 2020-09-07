@@ -18,7 +18,6 @@ namespace rxtd::audio_analyzer {
 	class FftAnalyzer : public SoundHandler {
 		using WCF = audio_utils::WindowFunctionHelper::WindowCreationFunc;
 
-	public:
 		enum class SizeBy {
 			BIN_WIDTH,
 			SIZE,
@@ -73,7 +72,6 @@ namespace rxtd::audio_analyzer {
 			std::vector<float> dc;
 		};
 
-	private:
 		Params params{ };
 
 		index fftSize = 0;

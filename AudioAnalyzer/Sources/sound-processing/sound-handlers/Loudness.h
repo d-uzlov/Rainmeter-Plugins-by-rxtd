@@ -8,7 +8,6 @@
  */
 
 #pragma once
-#include "GrowingVector.h"
 #include "SoundHandler.h"
 #include "../../audio-utils/CustomizableValueTransformer.h"
 
@@ -16,7 +15,6 @@ namespace rxtd::audio_analyzer {
 	class Loudness : public SoundHandler {
 		using CVT = audio_utils::CustomizableValueTransformer;
 
-	public:
 		struct Params {
 			CVT transformer{ };
 			double gatingLimit{ };
@@ -40,7 +38,6 @@ namespace rxtd::audio_analyzer {
 			}
 		};
 
-	private:
 		Params params{ };
 
 		index blocksCount{ };

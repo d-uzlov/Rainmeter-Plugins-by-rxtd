@@ -15,7 +15,6 @@
 
 namespace rxtd::audio_analyzer {
 	class BandResampler final : public ResamplerProvider {
-	public:
 		struct Params {
 			index minCascade{ };
 			index maxCascade{ };
@@ -41,7 +40,6 @@ namespace rxtd::audio_analyzer {
 			}
 		};
 
-	private:
 		Params params{ };
 
 		FftAnalyzer* fftSource = nullptr;

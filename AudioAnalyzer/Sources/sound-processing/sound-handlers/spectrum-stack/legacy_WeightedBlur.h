@@ -15,7 +15,6 @@
 
 namespace rxtd::audio_analyzer {
 	class legacy_WeightedBlur : public ResamplerProvider {
-	public:
 		struct Params {
 			double radiusMultiplier{ };
 
@@ -40,7 +39,6 @@ namespace rxtd::audio_analyzer {
 			}
 		};
 
-	private:
 		audio_utils::GaussianCoefficientsManager gcm;
 
 		Params params{ };

@@ -37,6 +37,9 @@ SoundHandler::ParseResult TimeResampler::parseParams(
 	params.attack = params.attack * 0.001;
 	params.decay = params.decay * 0.001;
 
+	auto transformLogger = cl.context(L"transform: ");
+	params.transformer = CVT::parse(om.get(L"transform").asString(), transformLogger);
+
 	result.sources.emplace_back(sourceId);
 	return result;
 }
@@ -104,13 +107,15 @@ void TimeResampler::processLayer(index waveSize, index layer) {
 		lastValue = chunk;
 
 		if (ld.dataCounter < blockSize) {
-			ld.lowPass.arrayApply(ld.values, chunk);
+			ld.lowPass.arrayApply(chunk, ld.values);
 			continue;
 		}
 
 		while (ld.dataCounter >= blockSize && ld.waveCounter >= blockSize) {
-			ld.lowPass.arrayApply(ld.values, chunk);
-			pushLayer(layer).copyFrom(ld.values);
+			ld.lowPass.arrayApply(chunk, ld.values);
+			auto result = pushLayer(layer);
+			result.copyFrom(ld.values);
+			params.transformer.applyToArray(result, result);
 
 			ld.dataCounter -= blockSize;
 			ld.waveCounter -= blockSize;
@@ -119,8 +124,10 @@ void TimeResampler::processLayer(index waveSize, index layer) {
 
 	// this ensures that push speed is consistent regardless of input latency
 	while (ld.waveCounter >= blockSize) {
-		ld.lowPass.arrayApply(ld.values, lastValue);
-		pushLayer(layer).copyFrom(ld.values);
+		ld.lowPass.arrayApply(lastValue, ld.values);
+		auto result = pushLayer(layer);
+		result.copyFrom(ld.values);
+		params.transformer.applyToArray(result, result);
 
 		ld.waveCounter -= blockSize;
 		if (ld.dataCounter >= blockSize) {

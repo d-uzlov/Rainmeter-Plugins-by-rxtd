@@ -27,10 +27,10 @@ SoundHandler::ParseResult BlockHandler::parseParams(
 	params.updateIntervalMs *= 0.001;
 
 	const double defaultAttack = legacyNumber < 104 ? 100.0 : 0.0;
-	params.legacy_attackTime = std::max(om.get(L"attack").asFloat(defaultAttack), 0.0);
-	params.legacy_decayTime = std::max(om.get(L"decay").asFloat(params.legacy_attackTime), 0.0);
-	params.legacy_attackTime *= 0.001;
-	params.legacy_decayTime *= 0.001;
+	params.attackTime = std::max(om.get(L"attack").asFloat(defaultAttack), 0.0);
+	params.decayTime = std::max(om.get(L"decay").asFloat(params.attackTime), 0.0);
+	params.attackTime *= 0.001;
+	params.decayTime *= 0.001;
 
 	auto transformLogger = cl.context(L"transform: ");
 	params.transformer = CVT::parse(om.get(L"transform").asString(), transformLogger);
@@ -47,7 +47,7 @@ BlockHandler::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalDat
 	blockSize = static_cast<decltype(blockSize)>(config.sampleRate * params.updateIntervalMs);
 	blockSize = std::max<index>(blockSize, 1);
 
-	legacy_filter.setParams(params.legacy_attackTime, params.legacy_decayTime, config.sampleRate, blockSize);
+	filter.setParams(params.attackTime, params.decayTime, config.sampleRate, blockSize);
 
 	auto& snapshot = externalData.clear<Snapshot>();
 
@@ -61,7 +61,7 @@ void BlockHandler::vProcess(ProcessContext context, ExternalData& externalData) 
 }
 
 void BlockHandler::setNextValue(float value) {
-	value = legacy_filter.next(value);
+	value = filter.next(value);
 	pushLayer(0)[0] = params.transformer.apply(value);
 }
 
