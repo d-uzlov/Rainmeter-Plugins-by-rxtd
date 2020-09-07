@@ -307,11 +307,24 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 		auto map = utils::Option{ args[1] }.asMap(L'|', L' ');
 
 		auto procName = map.get(L"proc").asIString();
-		const auto channelName = map.get(L"channel").asIString(L"auto");
-		const auto handlerName = map.get(L"handlerName").asIString();
+		const auto channelName = map.get(L"channel").asIString();
+		const auto handlerName = map.get(L"handler").asIString();
+
+		if (channelName.empty()) {
+			if (optionName == L"value") {
+				logHelpers.generic.log(L"Resolve 'value' requires channel to be specified");
+			} else {
+				logHelpers.generic.log(L"Resolve 'handlerInfo' requires channel to be specified");
+			}
+			return;
+		}
 
 		if (handlerName.empty()) {
-			logHelpers.generic.log(L"Resolve 'value' and handlerInfo require handlerName to be specified");
+			if (optionName == L"value") {
+				logHelpers.generic.log(L"Resolve 'value' requires handler to be specified");
+			} else {
+				logHelpers.generic.log(L"Resolve 'handlerInfo' requires handler to be specified");
+			}
 			return;
 		}
 
@@ -325,7 +338,6 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 			procName = findProcessingFor(handlerName);
 
 			if (procName.empty()) {
-				logHelpers.noProcessingHaveHandler.log(handlerName);
 				return;
 			}
 		}
@@ -384,7 +396,6 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 
 		auto procName = findProcessingFor(handlerName);
 		if (procName.empty()) {
-			logHelpers.noProcessingHaveHandler.log(handlerName);
 			return;
 		}
 
@@ -463,6 +474,8 @@ isview AudioParent::findProcessingFor(isview handlerName) const {
 			return name;
 		}
 	}
+
+	logHelpers.noProcessingHaveHandler.log(handlerName);
 
 	return { };
 }

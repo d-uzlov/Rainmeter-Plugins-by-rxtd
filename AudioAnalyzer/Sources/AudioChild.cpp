@@ -55,7 +55,7 @@ void AudioChild::vReload() {
 	options = std::move(newOptions);
 	setUseResultString(!options.infoRequest.empty());
 
-	if (!options.handlerName.empty()) {
+	if (!options.procName.empty()) {
 		const auto success = parent->isHandlerShouldExist(options.procName, options.channel, options.handlerName);
 		if (!success) {
 			logger.error(L"Measure is invalid, see parent measure log message for reason");
@@ -96,7 +96,7 @@ AudioChild::Options AudioChild::readOptions() const {
 		result.channel = channelOpt.value();
 	}
 
-	result.handlerName = rain.read(L"handlerName").asIString();
+	result.handlerName = rain.read(L"handler").asIString();
 	if (result.handlerName.empty()) {
 		result.handlerName = rain.read(L"ValueId").asIString();
 	}

@@ -281,7 +281,7 @@ string CaptureManager::makeFormatString(MyWaveFormat waveFormat) {
 	utils::BufferPrinter bp;
 
 	if (waveFormat.channelLayout.getName().empty()) {
-		bp.append(L"unknown layout: {} recognized channels", waveFormat.channelLayout.ordered().size());
+		bp.append(L"{} channels", waveFormat.channelLayout.ordered().size());
 	} else {
 		bp.append(L"{}", waveFormat.channelLayout.getName());
 	}
