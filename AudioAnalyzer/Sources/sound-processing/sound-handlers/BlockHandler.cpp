@@ -18,13 +18,18 @@ SoundHandler::ParseResult BlockHandler::parseParams(
 	ParseResult result{ true };
 	auto& params = result.params.clear<Params>();
 
-	const sview updateIntervalOptionName = om.has(L"updateInterval") ? L"updateInterval" : L"resolution";
-	params.updateIntervalMs = om.get(updateIntervalOptionName).asFloat(10.0);
-	if (params.updateIntervalMs <= 0) {
-		cl.warning(L"{} must be > 0 but {} found. Assume 10", updateIntervalOptionName, params.updateIntervalMs);
-		params.updateIntervalMs = 10;
+	if (om.has(L"resolution")) {
+		params.updateInterval = om.get(L"resolution").asFloat(10.0);
+		if (params.updateInterval <= 0) {
+			cl.warning(L"resolution must be > 0 but {} found. Assume 10", params.updateInterval);
+			params.updateInterval = 10;
+		}
+		params.updateInterval *= 0.001;
+	} else {
+		double updateRate = om.get(L"UpdateRate").asFloat(60.0);
+		updateRate = std::clamp(updateRate, 0.01, 500.0);
+		params.updateInterval = 1.0 / updateRate;
 	}
-	params.updateIntervalMs *= 0.001;
 
 	const double defaultAttack = legacyNumber < 104 ? 100.0 : 0.0;
 	params.attackTime = std::max(om.get(L"attack").asFloat(defaultAttack), 0.0);
@@ -44,7 +49,7 @@ BlockHandler::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalDat
 	params = _params.cast<Params>();
 
 	auto& config = getConfiguration();
-	blockSize = static_cast<decltype(blockSize)>(config.sampleRate * params.updateIntervalMs);
+	blockSize = static_cast<decltype(blockSize)>(config.sampleRate * params.updateInterval);
 	blockSize = std::max<index>(blockSize, 1);
 
 	filter.setParams(params.attackTime, params.decayTime, config.sampleRate, blockSize);

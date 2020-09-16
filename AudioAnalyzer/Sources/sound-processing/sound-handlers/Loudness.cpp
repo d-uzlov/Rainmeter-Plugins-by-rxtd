@@ -17,7 +17,7 @@ SoundHandler::ParseResult Loudness::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	index legacyNumber
 ) const {
-	ParseResult result { true };
+	ParseResult result{ true };
 	auto& params = result.params.clear<Params>();
 
 	auto transformLogger = cl.context(L"transform: ");
@@ -26,7 +26,7 @@ SoundHandler::ParseResult Loudness::parseParams(
 	params.gatingLimit = om.get(L"gatingLimit").asFloat(0.5);
 	params.gatingLimit = std::clamp(params.gatingLimit, 0.0, 1.0);
 
-	params.updatesPerSecond = om.get(L"updatesPerSecond").asFloat(20.0);
+	params.updatesPerSecond = om.get(L"updateRate").asFloat(20.0);
 	params.updatesPerSecond = std::clamp(params.updatesPerSecond, 0.01, 60.0);
 
 	params.timeWindowMs = om.get(L"timeWindow").asFloat(1000.0);
@@ -40,7 +40,8 @@ SoundHandler::ParseResult Loudness::parseParams(
 	return result;
 }
 
-SoundHandler::ConfigurationResult Loudness::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
+SoundHandler::ConfigurationResult Loudness::vConfigure(const ParamsContainer& _params, Logger& cl,
+                                                       ExternalData& externalData) {
 	params = _params.cast<Params>();
 
 	blocksCount = index(params.timeWindowMs / 1000.0 * params.updatesPerSecond);
@@ -85,20 +86,20 @@ void Loudness::pushMicroBlock(double value) {
 
 	const double gatingValue = prevValue * gatingValueCoefficient;
 
+	tempBlocks = blocks;
+	std::sort(tempBlocks.begin(), tempBlocks.end(), std::greater<>());
+
 	double newValue = 0.0;
 	index counter = 0;
 	for (const auto blockEnergy : blocks) {
 		if (params.ignoreGatingForSilence && blockEnergy == 0.0
-			|| blockEnergy >= gatingValue) {
+			|| blockEnergy >= gatingValue || counter < minBlocksCount) {
 			newValue += blockEnergy;
 			counter++;
 		}
 	}
-	if (counter != 0) {
-		counter = std::max(counter, minBlocksCount);
-		newValue /= counter;
-		newValue *= blockNormalizer;
-	}
+	newValue /= counter;
+	newValue *= blockNormalizer;
 
 	pushNextValue(newValue);
 }
