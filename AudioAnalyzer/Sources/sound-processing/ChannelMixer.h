@@ -17,6 +17,15 @@ namespace rxtd::audio_analyzer {
 		ChannelLayout layout;
 		std::map<Channel, utils::GrowingVector<float>> channels;
 		Channel aliasOfAuto = Channel::eAUTO;
+		bool frontLeft = false;
+		bool frontRight = false;
+		bool center = false;
+		bool centerBack = false;
+		bool lfe = false;
+		bool backLeft = false;
+		bool backRight = false;
+		bool sideLeft = false;
+		bool sideRight = false;
 
 	public:
 		void setLayout(const ChannelLayout& _layout);
