@@ -68,6 +68,9 @@
     <ClCompile Include="sources\MyMath.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="sources\windows-wrappers\BufferPrinterExtensions.cpp">
+      <Filter>Source Files\windows-wrappers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sources\BufferPrinter.h">
@@ -183,6 +186,9 @@
     </ClInclude>
     <ClInclude Include="sources\DataWithLock.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\windows-wrappers\BufferPrinterExtensions.h">
+      <Filter>Source Files\windows-wrappers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

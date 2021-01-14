@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 rxtd
+ * Copyright (C) 2019-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -165,4 +165,9 @@ std::map<SubstringViewInfo, SubstringViewInfo> Option::parseMapParams(
 	}
 
 	return paramsInfo;
+}
+
+std::wostream & utils::operator<<(std::wostream &stream, const Option &opt) {
+	stream << opt.asString();
+	return stream;
 }

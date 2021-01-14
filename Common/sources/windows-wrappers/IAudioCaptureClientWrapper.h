@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 rxtd
+ * Copyright (C) 2020-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -28,7 +28,7 @@ namespace rxtd::utils {
 
 		Vector2D<float> buffer;
 
-		index lastResult{ };
+		HRESULT lastResult{ };
 
 	public:
 		IAudioCaptureClientWrapper() = default;
@@ -45,7 +45,7 @@ namespace rxtd::utils {
 		void readBuffer();
 
 		[[nodiscard]]
-		index getLastResult() const {
+		HRESULT getLastResult() const {
 			return lastResult;
 		}
 

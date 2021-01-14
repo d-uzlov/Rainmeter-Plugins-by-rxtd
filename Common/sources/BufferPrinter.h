@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -10,7 +10,8 @@
 #pragma once
 #include <optional>
 #include <iomanip>
-#include "option-parser/Option.h"
+
+#include "windows-wrappers/BufferPrinterExtensions.h"
 
 namespace rxtd::utils {
 	template <typename E>
@@ -19,22 +20,24 @@ namespace rxtd::utils {
 		return L"<unknown enum>";
 	}
 
-	template <typename E>
-	typename std::enable_if<std::is_enum<E>::value, void>::type
-	writeEnum(std::wostream& stream, const E& e, sview options) {
-		if (options == L"name") {
-			stream << getEnumName(e);
-		} else {
-			stream << std::underlying_type<E>::type(e);
-		}
-	}
-
 	template <typename T>
-	typename std::enable_if<std::is_integral<T>::value, void>::type
-	writeIntegral(std::wostream& stream, T t, sview options) {
-		if (options == L"error") {
-			stream << L"0x";
-			stream << std::setfill(L'0') << std::setw(sizeof(T) * 2) << std::hex;
+	void writeType(std::wostream& stream, const T& t, sview options) {
+		if constexpr (std::is_enum<T>::value) {
+			if (options == L"name") {
+				stream << getEnumName(t);
+			} else {
+				stream << std::underlying_type<T>::type(t);
+			}
+			return;
+		}
+
+		if constexpr (std::is_integral<T>::value) {
+			if (options == L"error") {
+				stream << L"0x";
+				stream << std::setfill(L'0') << std::setw(sizeof(T) * 2) << std::hex;
+				stream << t;
+				return;
+			}
 			stream << t;
 			return;
 		}
@@ -43,21 +46,16 @@ namespace rxtd::utils {
 	}
 
 	template <>
-	void writeIntegral(std::wostream& stream, bool t, sview options);
-
-	template <typename F>
-	typename std::enable_if<std::is_floating_point<F>::value, void>::type
-	writeFloat(std::wostream& stream, const F& t, sview options) {
-		stream << t;
-	}
-
-	template <typename O>
-	void writeObject(std::wostream& stream, const O& t, sview options) {
-		stream << t;
+	inline void writeType(std::wostream& stream, const bool& t, sview options) {
+		if (options == L"number") {
+			stream << index(t);
+		} else {
+			stream << (t ? L"true" : L"false");
+		}
 	}
 
 	template <typename T>
-	void writeObject(std::wostream& stream, const std::vector<T>& vec, sview options) {
+	void writeType(std::wostream& stream, const std::vector<T>& vec, sview options) {
 		stream << L'[';
 		if (!vec.empty()) {
 			bool first = true;
@@ -73,19 +71,17 @@ namespace rxtd::utils {
 		stream << L']';
 	}
 
-	void writeObject(std::wostream& stream, const Option& t, sview options);
-
 	/**
 	 * Type-safe analogue of printf.
 	 * Use format string and a list of arguments.
 	 *
 	 * Format string format: "smth1{options}smth2{}smth3"
 	 *		smth1, smth2, smth3	— will be printed as is
-	 *		{options}			— first argument will be written using "options" as argument to writeObject function
-	 *		{}					— second argument will be written using "" as argument to writeObject function
+	 *		{options}			— first argument will be written using "options" as argument to writeType function
+	 *		{}					— second argument will be written using "" as argument to writeType function
 	 *
-	 * By default writeObject function calls operator<< on object. Specialize template to change this for your class.
-	 * writeObject is specialized for few cases:
+	 * By default writeType function calls operator<< on object. Specialize template to change this for your class.
+	 * writeType is specialized for few cases:
 	 *	1. Integral types:
 	 *		"error"		— print zero-padded value with "0x" prefix
 	 *		""			— print number as is
@@ -178,21 +174,7 @@ namespace rxtd::utils {
 		template <typename T, typename... Args>
 		void writeUnlisted(const T& t, const Args&... args);
 
-		void writeUnlisted() {
-		}
-
-		template <typename T>
-		void writeType(std::wostream& stream, const T& t, sview options) {
-			if constexpr (std::is_enum<T>::value) {
-				writeEnum(stream, t, options);
-			} else if constexpr (std::is_integral<T>::value) {
-				writeIntegral(stream, t, options);
-			} else if constexpr (std::is_floating_point<T>::value) {
-				writeFloat(stream, t, options);
-			} else {
-				writeObject(stream, t, options);
-			}
-		}
+		void writeUnlisted() { }
 	};
 
 	template <typename T, typename ... Args>
@@ -250,7 +232,7 @@ namespace rxtd::utils {
 
 			const auto view = sview(begin, end - begin);
 
-			if (view == L"!"sv) {
+			if (view == L"!") {
 				stream << L'{';
 			} else {
 				option = view;
@@ -272,7 +254,7 @@ namespace rxtd::utils {
 	template <typename T, typename ... Args>
 	void BufferPrinter::writeUnlisted(const T& t, const Args&... args) {
 		std::wostream stream = std::wostream(&buffer);
-		writeType(stream, t, L""sv);
+		writeType(stream, t, {});
 
 		writeUnlisted(args...);
 	}

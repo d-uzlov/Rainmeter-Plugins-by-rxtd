@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2019-2020 rxtd
+ * Copyright (C) 2019-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -111,6 +111,8 @@ namespace rxtd::utils {
 			wchar_t nameDelimiter
 		);
 	};
+
+	std::wostream& operator<<(std::wostream& stream, const Option& opt);
 
 	// same as option but doesn't allocate memory
 	// intended to be created when reading options from already allocated map/list

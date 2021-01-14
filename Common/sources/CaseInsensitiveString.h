@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -8,6 +8,8 @@
  */
 
 #pragma once
+
+#include <ostream>
 
 namespace rxtd {
 	namespace cistring_details {

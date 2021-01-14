@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -9,13 +9,7 @@
 
 #include "BufferPrinter.h"
 
-#include "RainmeterWrappers.h"
-
 using namespace utils;
-
-void utils::writeObject(std::wostream& stream, const Option& t, sview options) {
-	stream << t.asString();
-}
 
 BufferPrinter::ReadableOutputBuffer::ReadableOutputBuffer(ReadableOutputBuffer&& other) noexcept:
 	std::basic_streambuf<wchar_t>(other),
@@ -65,16 +59,4 @@ std::basic_streambuf<wchar_t>::int_type BufferPrinter::ReadableOutputBuffer::ove
 void BufferPrinter::writeToStream() {
 	std::wostream stream = std::wostream(&buffer);
 	stream << formatString;
-}
-
-namespace rxtd::utils {
-
-	template <>
-	void writeIntegral(std::wostream& stream, bool t, sview options) {
-		if (options == L"number"sv) {
-			stream << index(t);
-		} else {
-			stream << (t ? L"true"sv : L"false"sv);
-		}
-	}
 }
