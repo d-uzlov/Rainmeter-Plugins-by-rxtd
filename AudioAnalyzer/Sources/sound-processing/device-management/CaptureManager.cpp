@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 rxtd
+ * Copyright (C) 2019-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -12,8 +12,7 @@
 using namespace audio_analyzer;
 
 void CaptureManager::setBufferSizeInSec(double value) {
-	value = std::clamp(value, 0.0, 1.0);
-	bufferSize100NsUnits = std::llround(utils::IAudioClientWrapper::get1sec100nsUnits() * value);
+	bufferSizeSec = std::clamp(value, 0.0, 1.0);
 }
 
 void CaptureManager::setSource(const SourceDesc& desc) {
@@ -88,7 +87,7 @@ CaptureManager::State CaptureManager::setSourceAndGetState(const SourceDesc& des
 		return State::eDEVICE_CONNECTION_ERROR;
 	}
 
-	audioClient.initShared(bufferSize100NsUnits);
+	audioClient.initShared(bufferSizeSec);
 	if (audioClient.getLastResult() == AUDCLNT_E_DEVICE_IN_USE) {
 		// #createExclusiveStreamListener can change state,
 		// so I set state beforehand

@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <cmath>
+
 namespace rxtd::utils {
 	class MyMath {
 	public:
@@ -29,5 +31,36 @@ namespace rxtd::utils {
 
 		[[nodiscard]]
 		static double db2amplitude(double value);
+
+		template <typename TOut, typename TIn>
+		[[nodiscard]]
+		static TOut roundTo(TIn value) {
+			static_assert(std::is_integral<TOut>::value);
+
+			if constexpr (sizeof(TOut) == sizeof(long)) {
+				return static_cast<TOut>(std::lround(value));
+			} else if constexpr (sizeof(TOut) == sizeof(long)) {
+				return static_cast<TOut>(std::llround(value));
+			} else {
+				static_assert(false);
+				return {};
+			}
+		}
+
+		template <typename TOut, typename TIn>
+		[[nodiscard]]
+		static TOut roundToVar(TIn value, TOut) {
+			static_assert(std::is_integral<TOut>::value);
+			static_assert(sizeof(TOut) == sizeof(long) || sizeof(TOut) == sizeof(long long));
+
+			if constexpr (sizeof(TOut) == sizeof(long)) {
+				return static_cast<TOut>(std::lround(value));
+			} else if constexpr (sizeof(TOut) == sizeof(long long)) {
+				return static_cast<TOut>(std::llround(value));
+			} else {
+				return {};
+			}
+		}
+
 	};
 }

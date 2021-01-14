@@ -35,10 +35,6 @@ namespace rxtd::utils {
 		IAudioClientWrapper(InitFunction initFunction) : GenericComWrapper(std::move(initFunction)) {
 		}
 
-		static index get1sec100nsUnits() {
-			return 1000'000'0;
-		}
-
 		IAudioCaptureClientWrapper openCapture();
 
 		// check lastResult after this function
@@ -50,7 +46,7 @@ namespace rxtd::utils {
 		// the object is unusable after this function, so create separate object before calling this
 		void testExclusive();
 
-		void initShared(index bufferSize100nsUnits);
+		void initShared(double bufferSizeSec);
 
 		[[nodiscard]]
 		HRESULT getLastResult() const {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 rxtd
+ * Copyright (C) 2020-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -11,6 +11,7 @@
 
 #include "BufferPrinter.h"
 #include "GenericCoTaskMemWrapper.h"
+#include "MyMath.h"
 
 using namespace utils;
 
@@ -85,7 +86,7 @@ void IAudioClientWrapper::testExclusive() {
 	);
 }
 
-void IAudioClientWrapper::initShared(index bufferSize100nsUnits) {
+void IAudioClientWrapper::initShared(double bufferSizeSec) {
 	readFormat();
 	if (!formatIsValid) {
 		return;
@@ -113,6 +114,10 @@ void IAudioClientWrapper::initShared(index bufferSize100nsUnits) {
 	// then it should also be true for all calls to IAudioClient#Initialize
 	//
 	// So I don't do anything to specifically call this function from STA
+
+	constexpr double _100nsUnitsIn1sec = 1000'000'0;
+	const index bufferSize100nsUnits = MyMath::roundTo<index>(bufferSizeSec * _100nsUnitsIn1sec);
+
 	lastResult = ref().Initialize(
 		AUDCLNT_SHAREMODE_SHARED,
 		AUDCLNT_STREAMFLAGS_LOOPBACK,
