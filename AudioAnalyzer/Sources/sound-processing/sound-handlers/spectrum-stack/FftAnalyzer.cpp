@@ -18,7 +18,7 @@ SoundHandler::ParseResult FftAnalyzer::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	index legacyNumber
 ) const {
-	ParseResult result { true };
+	ParseResult result{ true };
 	auto& params = result.params.clear<Params>();
 
 	if (legacyNumber < 104) {
@@ -38,7 +38,7 @@ SoundHandler::ParseResult FftAnalyzer::parseParams(
 			params.binWidth = om.get(L"binWidth").asFloat(100.0);
 			if (params.binWidth <= 0.0) {
 				cl.error(L"binWidth must be > 0 but {} found", params.binWidth);
-				return { };
+				return {};
 			}
 			if (params.binWidth <= 1.0) {
 				cl.warning(L"BinWidth {} is dangerously small, use values > 1", params.binWidth);
@@ -57,19 +57,19 @@ SoundHandler::ParseResult FftAnalyzer::parseParams(
 				params.binWidth = om.get(L"size").asInt(1000);
 				if (params.binWidth < 2) {
 					cl.error(L"Size must be >= 2, must be even, but {} found", params.binWidth);
-					return { };
+					return {};
 				}
 				params.legacy_sizeBy = SizeBy::SIZE_EXACT;
 			} else {
 				cl.error(L"Unknown fft sizeBy '{}'", sizeBy);
-				return { };
+				return {};
 			}
 		}
 	} else {
 		params.binWidth = om.get(L"binWidth").asFloat(100.0);
 		if (params.binWidth <= 0.0) {
 			cl.error(L"binWidth must be > 0 but {} found", params.binWidth);
-			return { };
+			return {};
 		}
 		if (params.binWidth <= 1.0) {
 			cl.warning(L"BinWidth {} is dangerously small, use values > 1", params.binWidth);
@@ -127,7 +127,7 @@ FftAnalyzer::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData
 
 		if (fftSize <= 1) {
 			cl.error(L"fft size is too small");
-			return { };
+			return {};
 		}
 
 		break;
@@ -136,7 +136,7 @@ FftAnalyzer::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData
 
 		if (fftSize <= 1) {
 			cl.error(L"fft size is too small");
-			return { };
+			return {};
 		}
 
 		break;

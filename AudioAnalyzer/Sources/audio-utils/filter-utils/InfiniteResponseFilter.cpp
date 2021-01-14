@@ -13,7 +13,7 @@ using namespace audio_utils;
 
 InfiniteResponseFilter::InfiniteResponseFilter(std::vector<double> a, std::vector<double> b, double gainAmp) {
 	if (a.empty()) {
-		throw std::exception{ };
+		throw std::exception{};
 	}
 
 	this->gainAmp = gainAmp;

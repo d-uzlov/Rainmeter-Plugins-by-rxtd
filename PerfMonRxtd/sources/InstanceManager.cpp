@@ -19,7 +19,8 @@ InstanceManager::InstanceManager(
 	const pdh::PdhWrapper& phWrapper,
 	const pdh::PdhSnapshot& idSnapshot,
 	const pdh::PdhSnapshot& snapshotCurrent, const pdh::PdhSnapshot& snapshotPrevious,
-	const BlacklistManager& blacklistManager) :
+	const BlacklistManager& blacklistManager
+) :
 	log(log),
 	pdhWrapper(phWrapper),
 	idSnapshot(idSnapshot),
@@ -65,7 +66,8 @@ const pdh::ModifiedNameItem& InstanceManager::getNames(index index) const {
 	return namesCurrent.get(index);
 }
 
-void InstanceManager::setSortIndex(counter_t value) { // TODO add check for maximum?
+void InstanceManager::setSortIndex(counter_t value) {
+	// TODO add check for maximum?
 	if (value >= 0) {
 		sortIndex = value;
 		return;
@@ -282,16 +284,20 @@ void InstanceManager::sort(const ExpressionResolver& expressionResolver) {
 	if (sortBy == SortBy::eINSTANCE_NAME) {
 		switch (sortOrder) {
 		case SortOrder::eASCENDING:
-			std::sort(instances.begin(), instances.end(),
+			std::sort(
+				instances.begin(), instances.end(),
 				[](const InstanceInfo& lhs, const InstanceInfo& rhs) {
-				return lhs.sortName > rhs.sortName;
-			});
+					return lhs.sortName > rhs.sortName;
+				}
+			);
 			break;
 		case SortOrder::eDESCENDING:
-			std::sort(instances.begin(), instances.end(),
+			std::sort(
+				instances.begin(), instances.end(),
 				[](const InstanceInfo& lhs, const InstanceInfo& rhs) {
-				return lhs.sortName < rhs.sortName;
-			});
+					return lhs.sortName < rhs.sortName;
+				}
+			);
 			break;
 		default:
 			log.error(L"unexpected sortOrder {}", sortOrder);
@@ -301,8 +307,7 @@ void InstanceManager::sort(const ExpressionResolver& expressionResolver) {
 	}
 
 	switch (sortBy) {
-	case SortBy::eRAW_COUNTER:
-	{
+	case SortBy::eRAW_COUNTER: {
 		if (rollup) {
 			for (auto& instance : instances) {
 				instance.sortValue = expressionResolver.getRawRollup(sortRollupFunction, sortIndex, instance);
@@ -314,8 +319,7 @@ void InstanceManager::sort(const ExpressionResolver& expressionResolver) {
 		}
 		break;
 	}
-	case SortBy::eFORMATTED_COUNTER:
-	{
+	case SortBy::eFORMATTED_COUNTER: {
 		if (!canGetFormatted()) {
 			for (auto& instance : instances) {
 				instance.sortValue = 0.0;
@@ -333,8 +337,7 @@ void InstanceManager::sort(const ExpressionResolver& expressionResolver) {
 		}
 		break;
 	}
-	case SortBy::eEXPRESSION:
-	{
+	case SortBy::eEXPRESSION: {
 		if (rollup) {
 			for (auto& instance : instances) {
 				instance.sortValue = expressionResolver.
@@ -347,8 +350,7 @@ void InstanceManager::sort(const ExpressionResolver& expressionResolver) {
 		}
 		break;
 	}
-	case SortBy::eROLLUP_EXPRESSION:
-	{
+	case SortBy::eROLLUP_EXPRESSION: {
 		if (!rollup) {
 			log.error(L"Resolving RollupExpression without rollup");
 			return;
@@ -358,8 +360,7 @@ void InstanceManager::sort(const ExpressionResolver& expressionResolver) {
 		}
 		break;
 	}
-	case SortBy::eCOUNT:
-	{
+	case SortBy::eCOUNT: {
 		if (!rollup) {
 			return;
 		}
@@ -375,14 +376,18 @@ void InstanceManager::sort(const ExpressionResolver& expressionResolver) {
 
 	switch (sortOrder) {
 	case SortOrder::eASCENDING:
-		std::sort(instances.begin(), instances.end(), [](const InstanceInfo& lhs, const InstanceInfo& rhs) {
-			return lhs.sortValue < rhs.sortValue;
-		});
+		std::sort(
+			instances.begin(), instances.end(), [](const InstanceInfo& lhs, const InstanceInfo& rhs) {
+				return lhs.sortValue < rhs.sortValue;
+			}
+		);
 		break;
 	case SortOrder::eDESCENDING:
-		std::sort(instances.begin(), instances.end(), [](const InstanceInfo& lhs, const InstanceInfo& rhs) {
-			return lhs.sortValue > rhs.sortValue;
-		});
+		std::sort(
+			instances.begin(), instances.end(), [](const InstanceInfo& lhs, const InstanceInfo& rhs) {
+				return lhs.sortValue > rhs.sortValue;
+			}
+		);
 		break;
 	default:
 		log.error(L"unexpected sortOrder {}", sortOrder);
@@ -396,7 +401,7 @@ void InstanceManager::buildRollupKeys() {
 	for (const auto& instance : instances) {
 		const Indices& indexes = instance.indices;
 
-		auto &infoOpt = mapRollupKeys[instance.sortName];
+		auto& infoOpt = mapRollupKeys[instance.sortName];
 		if (infoOpt.has_value()) {
 			infoOpt.value().vectorIndices.push_back(indexes);
 		} else {
@@ -439,14 +444,16 @@ const InstanceInfo* InstanceManager::findInstanceByName(const Reference& ref, bo
 	}
 }
 
-const InstanceInfo* InstanceManager::findInstanceByNameInList(const Reference& ref, const std::vector<InstanceInfo> &instances,
-	std::map<std::tuple<bool, bool, sview>, std::optional<const InstanceInfo*>>& cache) const {
-	auto &itemOpt = cache[{ ref.useOrigName, ref.namePartialMatch, ref.name }];
+const InstanceInfo* InstanceManager::findInstanceByNameInList(
+	const Reference& ref, const std::vector<InstanceInfo>& instances,
+	std::map<std::tuple<bool, bool, sview>, std::optional<const InstanceInfo*>>& cache
+) const {
+	auto& itemOpt = cache[{ ref.useOrigName, ref.namePartialMatch, ref.name }];
 	if (itemOpt.has_value()) {
 		return itemOpt.value(); // already cached
 	}
 
-	MatchTestRecord testRecord { ref.name, ref.namePartialMatch };
+	MatchTestRecord testRecord{ ref.name, ref.namePartialMatch };
 	if (ref.useOrigName) {
 		for (const auto& item : instances) {
 			if (testRecord.match(namesCurrent.get(item.indices.current).originalName)) {
@@ -478,4 +485,3 @@ double InstanceManager::calculateFormatted(counter_t counterIndex, Indices origi
 		snapshotPrevious.getItem(counterIndex, originalIndexes.previous)
 	);
 }
-

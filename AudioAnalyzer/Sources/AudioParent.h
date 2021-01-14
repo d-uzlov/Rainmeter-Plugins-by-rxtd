@@ -17,7 +17,7 @@ namespace rxtd::audio_analyzer {
 	class AudioParent : public utils::ParentBase {
 		using DeviceRequest = std::optional<CaptureManager::SourceDesc>;
 
-		index legacyNumber{ };
+		index legacyNumber{};
 		ParamParser paramParser;
 
 		struct {
@@ -122,8 +122,8 @@ namespace rxtd::audio_analyzer {
 
 			context.channelName =
 				legacyNumber < 104
-					? ChannelUtils::getTechnicalNameLegacy(channel)
-					: ChannelUtils::getTechnicalName(channel);
+				? ChannelUtils::getTechnicalNameLegacy(channel)
+				: ChannelUtils::getTechnicalName(channel);
 
 			string filePrefix;
 			filePrefix += procName % csView();

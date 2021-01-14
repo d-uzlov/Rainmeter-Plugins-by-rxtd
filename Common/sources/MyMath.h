@@ -32,7 +32,7 @@ namespace rxtd::utils {
 		[[nodiscard]]
 		static double db2amplitude(double value);
 
-		template <typename TOut, typename TIn>
+		template<typename TOut, typename TIn>
 		[[nodiscard]]
 		static TOut roundTo(TIn value) {
 			static_assert(std::is_integral<TOut>::value);
@@ -47,7 +47,7 @@ namespace rxtd::utils {
 			}
 		}
 
-		template <typename TOut, typename TIn>
+		template<typename TOut, typename TIn>
 		[[nodiscard]]
 		static TOut roundToVar(TIn value, TOut) {
 			static_assert(std::is_integral<TOut>::value);

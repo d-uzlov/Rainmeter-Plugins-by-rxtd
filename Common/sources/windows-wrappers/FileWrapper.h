@@ -11,7 +11,7 @@
 
 namespace rxtd::utils {
 	class FileWrapper : NonMovableBase {
-		void* fileHandle{ };
+		void* fileHandle{};
 
 	public:
 		FileWrapper(const wchar_t* path);

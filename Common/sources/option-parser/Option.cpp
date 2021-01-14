@@ -67,7 +67,7 @@ OptionSeparated Option::breakFirst(wchar_t separator) const {
 
 	const auto delimiterPlace = view.find_first_of(separator);
 	if (delimiterPlace == sview::npos) {
-		return { *this, { } };
+		return { *this, {} };
 	}
 
 	auto first = Option{ StringUtils::trim(sview(view.data(), delimiterPlace)) };
@@ -76,7 +76,7 @@ OptionSeparated Option::breakFirst(wchar_t separator) const {
 }
 
 OptionMap Option::asMap(wchar_t optionDelimiter, wchar_t nameDelimiter) const & {
-	return { getView(), { }, parseMapParams(getView(), optionDelimiter, nameDelimiter) };
+	return { getView(), {}, parseMapParams(getView(), optionDelimiter, nameDelimiter) };
 }
 
 OptionMap Option::asMap(wchar_t optionDelimiter, wchar_t nameDelimiter) && {
@@ -88,7 +88,7 @@ OptionMap Option::asMap(wchar_t optionDelimiter, wchar_t nameDelimiter) && {
 }
 
 OptionList Option::asList(wchar_t delimiter) const & {
-	return { getView(), { }, Tokenizer::parse(getView(), delimiter) };
+	return { getView(), {}, Tokenizer::parse(getView(), delimiter) };
 }
 
 OptionList Option::asList(wchar_t delimiter) && {
@@ -103,7 +103,7 @@ OptionSequence Option::asSequence(
 	wchar_t optionBegin, wchar_t optionEnd,
 	wchar_t optionDelimiter
 ) const & {
-	return { getView(), { }, optionBegin, optionEnd, optionDelimiter };
+	return { getView(), {}, optionBegin, optionEnd, optionDelimiter };
 }
 
 OptionSequence Option::asSequence(
@@ -145,12 +145,12 @@ std::map<SubstringViewInfo, SubstringViewInfo> Option::parseMapParams(
 ) {
 	auto list = Tokenizer::parse(source, optionDelimiter);
 
-	std::map<SubstringViewInfo, SubstringViewInfo> paramsInfo{ };
+	std::map<SubstringViewInfo, SubstringViewInfo> paramsInfo{};
 	for (const auto& viewInfo : list) {
 		const auto delimiterPlace = viewInfo.makeView(source).find_first_of(nameDelimiter);
 		if (delimiterPlace == sview::npos) {
 			// tokenizer.parse is guarantied to return non-empty views
-			paramsInfo[viewInfo] = { };
+			paramsInfo[viewInfo] = {};
 			continue;
 		}
 
@@ -167,7 +167,7 @@ std::map<SubstringViewInfo, SubstringViewInfo> Option::parseMapParams(
 	return paramsInfo;
 }
 
-std::wostream & utils::operator<<(std::wostream &stream, const Option &opt) {
+std::wostream& utils::operator<<(std::wostream& stream, const Option& opt) {
 	stream << opt.asString();
 	return stream;
 }

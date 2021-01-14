@@ -45,7 +45,7 @@ std::optional<Channel> ChannelUtils::parse(isview string) {
 		return Channel::eSIDE_RIGHT;
 	}
 
-	return { };
+	return {};
 }
 
 sview ChannelUtils::getTechnicalName(Channel channel) {
@@ -61,7 +61,7 @@ sview ChannelUtils::getTechnicalName(Channel channel) {
 	case Channel::eSIDE_RIGHT: return L"sr";
 	case Channel::eAUTO: return L"a";
 	}
-	return { };
+	return {};
 }
 
 sview ChannelUtils::getTechnicalNameLegacy(Channel channel) {
@@ -77,7 +77,7 @@ sview ChannelUtils::getTechnicalNameLegacy(Channel channel) {
 	case Channel::eSIDE_RIGHT: return L"SIDE_RIGHT";
 	case Channel::eAUTO: return L"AUTO";
 	}
-	return { };
+	return {};
 }
 
 
@@ -121,7 +121,7 @@ sview getLayoutName(uint32_t bitMask) {
 	case KSAUDIO_SPEAKER_7POINT1_SURROUND: return L"7.1 surround";
 	default: break;
 	}
-	
+
 	return L"";
 }
 

@@ -36,8 +36,7 @@ namespace rxtd::audio_analyzer {
 			const HandlerMap& channelData;
 
 		public:
-			explicit HandlerFinderImpl(const HandlerMap& channelData) : channelData(channelData) {
-			}
+			explicit HandlerFinderImpl(const HandlerMap& channelData) : channelData(channelData) { }
 
 			[[nodiscard]]
 			SoundHandler* getHandler(isview id) const override {
@@ -49,7 +48,7 @@ namespace rxtd::audio_analyzer {
 	private:
 		std::vector<istring> order;
 		std::map<Channel, ChannelStruct> channelMap;
-		index resamplingDivider{ };
+		index resamplingDivider{};
 		std::vector<float> downsampledBuffer;
 		std::vector<float> filteredBuffer;
 

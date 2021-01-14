@@ -111,7 +111,7 @@ CustomizableValueTransformer::parse(sview transformDescription, utils::Rainmeter
 		auto logger = cl.context(L"{}: ", list.get(0).asString());
 		auto transformOpt = parseTransformation(list, logger);
 		if (!transformOpt.has_value()) {
-			return { };
+			return {};
 		}
 		transforms.emplace_back(transformOpt.value());
 	}
@@ -124,7 +124,7 @@ std::optional<CustomizableValueTransformer::TransformationInfo> CustomizableValu
 	utils::Rainmeter::Logger& cl
 ) {
 	const auto transformName = list.get(0).asIString();
-	TransformationInfo tr{ };
+	TransformationInfo tr{};
 
 	utils::OptionMap params;
 	if (list.size() >= 2) {
@@ -142,18 +142,18 @@ std::optional<CustomizableValueTransformer::TransformationInfo> CustomizableValu
 			auto range = params.get(L"from").asList(L':');
 			if (range.size() != 2) {
 				cl.error(L"need 2 params for source range but {} found", range.size());
-				return { };
+				return {};
 			}
 			linMin = range.get(0).asFloatF();
 			linMax = range.get(1).asFloatF();
 
 			if (std::abs(linMin - linMax) < std::numeric_limits<float>::epsilon()) {
 				cl.error(L"source range is too small: {} and {}", linMin, linMax);
-				return { };
+				return {};
 			}
 		} else {
 			cl.error(L"source range is not found");
-			return { };
+			return {};
 		}
 
 		float valMin = 0.0;
@@ -181,7 +181,7 @@ std::optional<CustomizableValueTransformer::TransformationInfo> CustomizableValu
 		tr.args[1] = std::max(tr.args[0], tr.args[1]);
 	} else {
 		cl.error(L"'{}' is not recognized as a transform type", transformName);
-		return { };
+		return {};
 	}
 
 	return tr;

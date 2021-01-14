@@ -22,7 +22,7 @@ namespace rxtd::utils {
 	protected:
 		using Rainmeter = Rainmeter;
 		using Logger = Rainmeter::Logger;
-		
+
 		Rainmeter rain;
 		Logger logger;
 
@@ -31,8 +31,8 @@ namespace rxtd::utils {
 		MeasureState measureState = MeasureState::eWORKING;
 
 		double resultDouble = 0.0;
-		string resultString{ };
-		string resolveString{ };
+		string resultString{};
+		string resolveString{};
 		bool useResultString = false;
 
 		std::vector<isview> resolveVector;
@@ -55,15 +55,13 @@ namespace rxtd::utils {
 		virtual void vReload() = 0;
 		virtual double vUpdate() = 0;
 
-		virtual void vUpdateString(string& resultStringBuffer) {
-		}
+		virtual void vUpdateString(string& resultStringBuffer) { }
 
 		virtual void vCommand(isview bangArgs) {
 			logger.warning(L"Measure does not have commands");
 		}
 
-		virtual void vResolve(array_view<isview> args, string& resolveBufferString) {
-		}
+		virtual void vResolve(array_view<isview> args, string& resolveBufferString) { }
 
 		void setMeasureState(MeasureState value) {
 			measureState = value;
@@ -84,7 +82,7 @@ namespace rxtd::utils {
 
 		~ParentBase();
 
-		template <typename T>
+		template<typename T>
 		[[nodiscard]]
 		static T* find(Rainmeter::Skin skin, isview measureName) {
 			static_assert(std::is_base_of<ParentBase, T>::value, "only parent measures can be searched for");

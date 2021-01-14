@@ -14,8 +14,8 @@ namespace rxtd::audio_utils {
 	class FFT {
 		using FftImpl = kiss_fft::KissFft<float>;
 
-		index fftSize{ };
-		float scalar{ };
+		index fftSize{};
+		float scalar{};
 
 		std::vector<float> window;
 
@@ -32,7 +32,7 @@ namespace rxtd::audio_utils {
 
 		[[nodiscard]]
 		double getDC() const;
-		
+
 		[[nodiscard]]
 		float getBinMagnitude(index binIndex) const;
 

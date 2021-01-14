@@ -65,9 +65,9 @@ namespace rxtd::audio_analyzer {
 		utils::IMMDeviceEnumeratorWrapper enumeratorWrapper;
 
 		struct {
-			index legacyNumber{ };
+			index legacyNumber{};
 			bool useThreading = false;
-			double updateTime{ };
+			double updateTime{};
 		} constFields;
 
 		struct {

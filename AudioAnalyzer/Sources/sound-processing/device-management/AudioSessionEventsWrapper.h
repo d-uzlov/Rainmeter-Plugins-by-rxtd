@@ -66,7 +66,7 @@ namespace rxtd::audio_analyzer {
 
 		utils::AudioSessionEventsImpl::Changes grabChanges() {
 			if (!impl.isValid()) {
-				return { };
+				return {};
 			}
 			return impl.ref().takeChanges();
 		}
@@ -75,7 +75,7 @@ namespace rxtd::audio_analyzer {
 			if (impl.isValid()) {
 				impl.ref().deinit();
 			}
-			impl = { };
+			impl = {};
 		}
 	};
 }

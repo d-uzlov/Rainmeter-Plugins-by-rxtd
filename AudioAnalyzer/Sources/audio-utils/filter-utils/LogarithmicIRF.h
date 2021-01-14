@@ -11,7 +11,7 @@
 
 namespace rxtd::audio_utils {
 	class LogarithmicIRF {
-		float attackDecayConstants[2]{ };
+		float attackDecayConstants[2]{};
 		float result = 0.0;
 
 	public:

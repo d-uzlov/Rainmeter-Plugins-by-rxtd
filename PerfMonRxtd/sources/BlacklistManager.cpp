@@ -28,7 +28,7 @@ bool MatchTestRecord::match(sview string) const {
 }
 
 BlacklistManager::MatchList::MatchList(string sourceString, bool upperCase) {
-	auto[_, optList] = utils::Option { sourceString }.asList(L'|').consume();
+	auto [_, optList] = utils::Option{ sourceString }.asList(L'|').consume();
 
 	source = std::move(sourceString);
 	if (upperCase) {

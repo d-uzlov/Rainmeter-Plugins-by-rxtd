@@ -13,7 +13,7 @@ namespace rxtd::audio_utils {
 	class GaussianCoefficientsManager {
 		// radius -> coefs vector
 		std::map<index, std::vector<double>> blurCoefficients;
-		
+
 	public:
 		array_view<double> forRadius(index radius) {
 			auto& vec = blurCoefficients[radius];

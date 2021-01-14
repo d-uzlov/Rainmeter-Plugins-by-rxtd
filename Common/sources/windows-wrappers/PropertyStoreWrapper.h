@@ -16,40 +16,39 @@
 namespace rxtd::utils {
 	class PropertyStoreWrapper : public GenericComWrapper<IPropertyStore> {
 	public:
-		template <typename InitFunction>
-		PropertyStoreWrapper(InitFunction initFunction) : GenericComWrapper(std::move(initFunction)) {
-		}
+		template<typename InitFunction>
+		PropertyStoreWrapper(InitFunction initFunction) : GenericComWrapper(std::move(initFunction)) { }
 
 		[[nodiscard]]
 		std::optional<string> readPropertyString(const PROPERTYKEY& key) {
 			PropVariantWrapper prop;
 
 			if (ref().GetValue(key, prop.getMetaPointer()) != S_OK) {
-				return { };
+				return {};
 			}
 
 			return string{ prop.getCString() };
 		}
 
-		template <typename ResultType>
+		template<typename ResultType>
 		[[nodiscard]]
 		std::optional<ResultType> readPropertyInt(const PROPERTYKEY& key) {
 			PropVariantWrapper prop;
 
 			if (ref().GetValue(key, prop.getMetaPointer()) != S_OK) {
-				return { };
+				return {};
 			}
 
 			return static_cast<ResultType>(prop.getInt());
 		}
 
-		template <typename BlobObjectType>
+		template<typename BlobObjectType>
 		[[nodiscard]]
 		std::optional<BlobObjectType> readPropertyBlob(const PROPERTYKEY& key) {
 			PropVariantWrapper prop;
 
 			if (ref().GetValue(key, prop.getMetaPointer()) != S_OK) {
-				return { };
+				return {};
 			}
 
 			const BlobObjectType result = reinterpret_cast<const BlobObjectType&>(prop.ref().blob);
@@ -58,7 +57,7 @@ namespace rxtd::utils {
 
 	private:
 		class PropVariantWrapper : NonMovableBase {
-			PROPVARIANT handle{ };
+			PROPVARIANT handle{};
 
 		public:
 			PropVariantWrapper() {

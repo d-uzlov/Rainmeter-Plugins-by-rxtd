@@ -18,9 +18,9 @@ namespace rxtd::audio_utils {
 			double b;
 			double c;
 			double d;
-		} coefs{ };
+		} coefs{};
 
-		index currentIntervalIndex{ };
+		index currentIntervalIndex{};
 
 	public:
 		void setSource(array_view<float> value) {

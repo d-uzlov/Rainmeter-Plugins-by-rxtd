@@ -15,8 +15,8 @@
 namespace rxtd::audio_analyzer {
 	class UniformBlur : public ResamplerProvider {
 		struct Params {
-			double blurRadius{ };
-			double blurRadiusAdaptation{ };
+			double blurRadius{};
+			double blurRadiusAdaptation{};
 
 			friend bool operator==(const Params& lhs, const Params& rhs) {
 				return lhs.blurRadius == rhs.blurRadius
@@ -28,9 +28,9 @@ namespace rxtd::audio_analyzer {
 			}
 		};
 
-		Params params{ };
+		Params params{};
 		audio_utils::GaussianCoefficientsManager gcm;
-		double startingRadius{ };
+		double startingRadius{};
 
 	public:
 		[[nodiscard]]

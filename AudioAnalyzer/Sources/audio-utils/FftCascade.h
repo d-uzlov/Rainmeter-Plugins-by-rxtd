@@ -36,17 +36,17 @@ namespace rxtd::audio_utils {
 		};
 
 	private:
-		FftCascade* successorPtr{ };
-		FFT* fftPtr{ };
+		FftCascade* successorPtr{};
+		FFT* fftPtr{};
 
-		Params params{ };
-		index cascadeIndex{ };
+		Params params{};
+		index cascadeIndex{};
 
 		utils::GrowingVector<float> buffer;
 		DownsampleHelper downsampleHelper{ 2 };
-		LogarithmicIRF filter{ };
+		LogarithmicIRF filter{};
 		std::vector<float> values;
-		float legacy_dc{ };
+		float legacy_dc{};
 		bool hasChanges = false;
 
 	public:

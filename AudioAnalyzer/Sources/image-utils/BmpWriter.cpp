@@ -18,35 +18,35 @@ struct BMPHeader {
 
 	struct {
 		uint16_t id = 0x4d42; // == 'BM' (little-endian)
-		uint32_t fileSizeInBytes{ };
+		uint32_t fileSizeInBytes{};
 		uint16_t reserved1 = 0;
 		uint16_t reserved2 = 0;
-		uint32_t pixelArrayOffsetInBytes{ };
-	} fileHeader{ };
+		uint32_t pixelArrayOffsetInBytes{};
+	} fileHeader{};
 
 	struct {
 		uint32_t headerSizeInBytes = dibSize;
-		uint32_t bitmapWidthInPixels{ };
-		uint32_t bitmapHeightInPixels{ };
+		uint32_t bitmapWidthInPixels{};
+		uint32_t bitmapHeightInPixels{};
 		uint16_t colorPlaneCount = 1;
 		uint16_t bitsPerPixel = 32;
 		uint32_t compressionMethod = 0x03; // BIT_FIELDS
-		uint32_t bitmapSizeInBytes{ };
+		uint32_t bitmapSizeInBytes{};
 		int32_t horizontalResolutionInPixelsPerMeter = 2835; // 72 ppi
 		int32_t verticalResolutionInPixelsPerMeter = 2835; // 72 ppi
 		uint32_t paletteColorCount = 0;
 		uint32_t importantColorCount = 0;
 
 		struct {
-			uint32_t red = IntColor{ }.withR(0xFF).full;
-			uint32_t green = IntColor{ }.withG(0xFF).full;
-			uint32_t blue = IntColor{ }.withB(0xFF).full;
-			uint32_t alpha = IntColor{ }.withA(0xFF).full;
+			uint32_t red = IntColor{}.withR(0xFF).full;
+			uint32_t green = IntColor{}.withG(0xFF).full;
+			uint32_t blue = IntColor{}.withB(0xFF).full;
+			uint32_t alpha = IntColor{}.withA(0xFF).full;
 		} bitMask;
-	} dibHeader{ };
+	} dibHeader{};
 
 private:
-	std::byte padding[dibSize - sizeof(dibHeader)]{ };
+	std::byte padding[dibSize - sizeof(dibHeader)]{};
 
 public:
 	BMPHeader(index width, index height) {

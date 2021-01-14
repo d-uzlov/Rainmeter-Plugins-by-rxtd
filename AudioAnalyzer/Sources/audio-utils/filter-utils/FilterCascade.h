@@ -20,8 +20,7 @@ namespace rxtd::audio_utils {
 		FilterCascade() = default;
 
 		FilterCascade(std::vector<std::unique_ptr<AbstractFilter>> filters) :
-			filters(std::move(filters)) {
-		}
+			filters(std::move(filters)) { }
 
 		void apply(array_view<float> wave);
 

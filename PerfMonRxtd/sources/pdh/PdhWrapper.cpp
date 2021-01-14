@@ -199,8 +199,10 @@ counter_t PdhWrapper::getCountersCount() const {
 	return counterHandlers.size();
 }
 
-double PdhWrapper::extractFormattedValue(counter_t counter, const PDH_RAW_COUNTER& current,
-                                         const PDH_RAW_COUNTER& previous) const {
+double PdhWrapper::extractFormattedValue(
+	counter_t counter, const PDH_RAW_COUNTER& current,
+	const PDH_RAW_COUNTER& previous
+) const {
 
 	// PdhCalculateCounterFromRawValue sometimes fails with the status PDH_CALC_NEGATIVE_VALUE, PDH_CALC_NEGATIVE_DENOMINATOR, or
 	// PDH_CALC_NEGATIVE_TIMEBASE.  This has mainly been observed for "_Total" instances, and occurs when an instance has dropped out
@@ -214,7 +216,8 @@ double PdhWrapper::extractFormattedValue(counter_t counter, const PDH_RAW_COUNTE
 			PDH_FMT_DOUBLE | PDH_FMT_NOCAP100,
 			const_cast<PDH_RAW_COUNTER*>(&current),
 			const_cast<PDH_RAW_COUNTER*>(&previous),
-			&formattedValue);
+			&formattedValue
+		);
 
 	if (pdhStatus == ERROR_SUCCESS) {
 		return formattedValue.doubleValue;

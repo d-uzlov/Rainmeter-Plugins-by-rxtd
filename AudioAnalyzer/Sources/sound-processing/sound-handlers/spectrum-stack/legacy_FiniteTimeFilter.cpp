@@ -21,7 +21,7 @@ SoundHandler::ParseResult legacy_FiniteTimeFilter::parseParams(
 	const auto sourceId = om.get(L"source").asIString();
 	if (sourceId.empty()) {
 		cl.error(L"source not found");
-		return { };
+		return {};
 	}
 
 	params.smoothingFactor = om.get(L"smoothingFactor").asInt(4);

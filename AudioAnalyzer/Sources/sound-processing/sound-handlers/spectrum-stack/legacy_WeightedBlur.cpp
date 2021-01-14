@@ -21,7 +21,7 @@ SoundHandler::ParseResult legacy_WeightedBlur::parseParams(
 	const auto sourceId = om.get(L"source").asIString();
 	if (sourceId.empty()) {
 		cl.error(L"source is not found");
-		return { };
+		return {};
 	}
 
 	//                                                                      ?? ↓↓ looks best ?? at 0.25 ↓↓ ??
@@ -32,7 +32,8 @@ SoundHandler::ParseResult legacy_WeightedBlur::parseParams(
 
 	params.minRadiusAdaptation = std::max<double>(om.get(L"MinRadiusAdaptation").asFloat(2.0), 0.0);
 	params.maxRadiusAdaptation = std::max<double>(
-		om.get(L"MaxRadiusAdaptation").asFloat(params.minRadiusAdaptation), 0.0);
+		om.get(L"MaxRadiusAdaptation").asFloat(params.minRadiusAdaptation), 0.0
+	);
 
 	// params.minWeight = std::max<double>(optionMap.get(L"minWeight"sv).asFloat(0), std::numeric_limits<float>::epsilon());
 	params.minWeight = 0.0; // doesn't work as expected
@@ -48,7 +49,7 @@ legacy_WeightedBlur::vConfigure(const ParamsContainer& _params, Logger& cl, Exte
 	resamplerPtr = getResampler();
 	if (resamplerPtr == nullptr) {
 		cl.error(L"invalid source: BandResampler is not found in the handler chain");
-		return { };
+		return {};
 	}
 
 	auto& config = getConfiguration();

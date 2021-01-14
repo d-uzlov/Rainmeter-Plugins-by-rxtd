@@ -11,11 +11,11 @@
 #include "RainmeterWrappers.h"
 
 namespace rxtd::audio_analyzer {
-	template <typename... CacheTypes>
+	template<typename... CacheTypes>
 	class LogErrorHelper {
 	public:
 		using KeyType = std::tuple<CacheTypes...>;
-		using LogFunctionType = void(*)(utils::Rainmeter::Logger& logger, CacheTypes... args);
+		using LogFunctionType = void(*)(utils::Rainmeter::Logger& logger, CacheTypes ... args);
 
 	private:
 		mutable utils::Rainmeter::Logger logger;
@@ -33,10 +33,10 @@ namespace rxtd::audio_analyzer {
 		}
 
 		void reset() {
-			cache = { };
+			cache = {};
 		}
 
-		template <typename... Args>
+		template<typename... Args>
 		void log(Args ... args) const {
 			auto& logged = cache[KeyType(args...)];
 			if (logged) {
@@ -61,7 +61,7 @@ namespace rxtd::audio_analyzer {
 		}
 
 		void reset() {
-			cache = { };
+			cache = {};
 		}
 
 		void log(const wchar_t* message) const {

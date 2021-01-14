@@ -10,9 +10,9 @@
 #pragma once
 
 namespace rxtd::utils {
-	template <typename T>
+	template<typename T>
 	class array2d_span;
-	template <typename T>
+	template<typename T>
 	class array2d_view;
 
 	/**
@@ -20,14 +20,14 @@ namespace rxtd::utils {
 	 * More cache friendly than vector<vector<>>.
 	 * Continuous, unlike vector<vector<>>.
 	 */
-	template <typename T>
+	template<typename T>
 	class Vector2D {
-		std::vector<T> array{ };
+		std::vector<T> array{};
 		index buffersCount = 0;
 		index bufferSize = 0;
 
 	public:
-		void fill(const T value = { }) {
+		void fill(const T value = {}) {
 			std::fill_n(array.data(), buffersCount * bufferSize, value);
 		}
 
@@ -90,9 +90,9 @@ namespace rxtd::utils {
 	};
 
 
-	template <typename T>
+	template<typename T>
 	class array2d_span {
-		T* ptr{ };
+		T* ptr{};
 		index buffersCount = 0;
 		index bufferSize = 0;
 
@@ -102,14 +102,12 @@ namespace rxtd::utils {
 		array2d_span(T* ptr, index buffersCount, index bufferSize) :
 			ptr(ptr),
 			buffersCount(buffersCount),
-			bufferSize(bufferSize) {
-		}
+			bufferSize(bufferSize) { }
 
 		array2d_span(Vector2D<T>& source) :
 			ptr(source[0].data()),
 			buffersCount(source.getBuffersCount()),
-			bufferSize(source.getBufferSize()) {
-		}
+			bufferSize(source.getBufferSize()) { }
 
 		~array2d_span() = default;
 
@@ -118,7 +116,7 @@ namespace rxtd::utils {
 		array2d_span& operator=(const array2d_span& other) = default;
 		array2d_span& operator=(array2d_span&& other) noexcept = default;
 
-		void fill(const T value = { }) {
+		void fill(const T value = {}) {
 			std::fill_n(ptr, buffersCount * bufferSize, value);
 		}
 
@@ -172,9 +170,9 @@ namespace rxtd::utils {
 		constexpr void copyFrom(array2d_view<T> source);
 	};
 
-	template <typename T>
+	template<typename T>
 	class array2d_view {
-		const T* ptr{ };
+		const T* ptr{};
 		index buffersCount = 0;
 		index bufferSize = 0;
 
@@ -184,14 +182,12 @@ namespace rxtd::utils {
 		array2d_view(const T* ptr, index buffersCount, index bufferSize) :
 			ptr(ptr),
 			buffersCount(buffersCount),
-			bufferSize(bufferSize) {
-		}
+			bufferSize(bufferSize) { }
 
 		array2d_view(const Vector2D<T>& source) :
 			ptr(source[0].data()),
 			buffersCount(source.getBuffersCount()),
-			bufferSize(source.getBufferSize()) {
-		}
+			bufferSize(source.getBufferSize()) { }
 
 		~array2d_view() = default;
 
@@ -200,7 +196,7 @@ namespace rxtd::utils {
 		array2d_view& operator=(const array2d_view& other) = default;
 		array2d_view& operator=(array2d_view&& other) noexcept = default;
 
-		void fill(const T value = { }) {
+		void fill(const T value = {}) {
 			std::fill_n(ptr, buffersCount * bufferSize, value);
 		}
 
@@ -243,24 +239,24 @@ namespace rxtd::utils {
 	};
 
 
-	template <typename T>
+	template<typename T>
 	constexpr void array2d_span<T>::copyFrom(array2d_view<T> source) {
 		source.transferToSpan(*this);
 	}
 
-	template <typename T>
+	template<typename T>
 	constexpr void Vector2D<T>::transferToSpan(array2d_span<T> dest) const {
 		if (dest.getBuffersCount() != buffersCount || dest.getBufferSize() != bufferSize)
 			throw std::out_of_range("Vector2D::transferToSpan");
 		getFlat().transferToSpan(dest.getFlat());
 	}
 
-	template <typename T>
+	template<typename T>
 	constexpr void Vector2D<T>::copyFrom(array2d_view<T> source) {
 		source.transferToChecked(*this);
 	}
 
-	template <typename T>
+	template<typename T>
 	constexpr void Vector2D<T>::copyWithResize(array2d_view<T> source) {
 		setBuffersCount(source.getBuffersCount());
 		setBufferSize(source.getBufferSize());

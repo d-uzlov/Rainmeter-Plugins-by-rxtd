@@ -23,7 +23,7 @@ SoundHandler::ParseResult BandCascadeTransformer::parseParams(
 	const auto sourceId = om.get(L"source").asIString();
 	if (sourceId.empty()) {
 		cl.error(L"source not found");
-		return { };
+		return {};
 	}
 
 	const double epsilon = std::numeric_limits<float>::epsilon();
@@ -72,13 +72,13 @@ BandCascadeTransformer::vConfigure(const ParamsContainer& _params, Logger& cl, E
 	const auto provider = dynamic_cast<ResamplerProvider*>(config.sourcePtr);
 	if (provider == nullptr) {
 		cl.error(L"invalid source: BandResampler is not found in the handler chain");
-		return { };
+		return {};
 	}
 
 	resamplerPtr = provider->getResampler();
 	if (resamplerPtr == nullptr) {
 		cl.error(L"BandResampler is not found in the source chain");
-		return { };
+		return {};
 	}
 
 	const auto dataSize = config.sourcePtr->getDataSize();
@@ -187,6 +187,6 @@ float BandCascadeTransformer::computeForBand(index band) const {
 	}
 
 	return params.mixFunction == MixFunction::PRODUCT
-		       ? std::pow(valueProduct, 1.0f / cascadesSummed)
-		       : valueSum / cascadesSummed;
+	       ? std::pow(valueProduct, 1.0f / cascadesSummed)
+	       : valueSum / cascadesSummed;
 }

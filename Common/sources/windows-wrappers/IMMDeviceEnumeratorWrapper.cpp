@@ -11,16 +11,17 @@
 
 using namespace utils;
 
-IMMDeviceEnumeratorWrapper::IMMDeviceEnumeratorWrapper() : GenericComWrapper([](auto ptr) {
-	return S_OK == CoCreateInstance(
-		__uuidof(MMDeviceEnumerator),
-		nullptr,
-		CLSCTX_INPROC_SERVER,
-		__uuidof(IMMDeviceEnumerator),
-		reinterpret_cast<void**>(ptr)
-	);
-}) {
-}
+IMMDeviceEnumeratorWrapper::IMMDeviceEnumeratorWrapper() : GenericComWrapper(
+	[](auto ptr) {
+		return S_OK == CoCreateInstance(
+			__uuidof(MMDeviceEnumerator),
+			nullptr,
+			CLSCTX_INPROC_SERVER,
+			__uuidof(IMMDeviceEnumerator),
+			reinterpret_cast<void**>(ptr)
+		);
+	}
+) {}
 
 MediaDeviceWrapper IMMDeviceEnumeratorWrapper::getDeviceByID(const string& id) {
 	return MediaDeviceWrapper{
@@ -47,7 +48,8 @@ std::vector<MediaDeviceWrapper> IMMDeviceEnumeratorWrapper::getActiveDevices(Med
 }
 
 std::vector<MediaDeviceWrapper> IMMDeviceEnumeratorWrapper::getCollection(
-	MediaDeviceType type, uint32_t deviceStateMask) {
+	MediaDeviceType type, uint32_t deviceStateMask
+) {
 	GenericComWrapper<IMMDeviceCollection> collection{
 		[&](auto ptr) {
 			return S_OK == ref().EnumAudioEndpoints(

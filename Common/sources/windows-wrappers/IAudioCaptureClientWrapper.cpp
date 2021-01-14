@@ -19,7 +19,7 @@ static_assert(std::is_same<UINT32, uint32_t>::value);
 
 void IAudioCaptureClientWrapper::readBuffer() {
 	uint8_t* data = nullptr;
-	DWORD flags{ };
+	DWORD flags{};
 	uint32_t dataSize;
 	lastResult = ref().GetBuffer(&data, &dataSize, &flags, nullptr, nullptr);
 

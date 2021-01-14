@@ -24,10 +24,10 @@ namespace rxtd::utils {
 
 		uint32_t full;
 
-		template <typename MixType, uint8_t precision>
+		template<typename MixType, uint8_t precision>
 		[[nodiscard]]
 		IntColor mixWith(IntColor other, IntMixer<MixType, precision> mixer) const {
-			IntColor result{ };
+			IntColor result{};
 			result.a = mixer.mix(a, other.a);
 			result.r = mixer.mix(r, other.r);
 			result.g = mixer.mix(g, other.g);

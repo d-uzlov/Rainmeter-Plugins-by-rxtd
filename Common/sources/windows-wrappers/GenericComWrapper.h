@@ -12,7 +12,7 @@
 #include <Unknwn.h>
 
 namespace rxtd::utils {
-	template <typename T>
+	template<typename T>
 	class GenericComWrapper : VirtualDestructorBase {
 	public:
 		using InitFunctionType = bool(T** ptr);
@@ -95,7 +95,7 @@ namespace rxtd::utils {
 		}
 
 		template<typename Interface, typename MethodType, typename... Args>
-		HRESULT typedQuery(MethodType method, Interface** interfacePtr, Args... args) {
+		HRESULT typedQuery(MethodType method, Interface** interfacePtr, Args ... args) {
 			return (ptr->*method)(__uuidof(Interface), args..., reinterpret_cast<void**>(interfacePtr));
 		}
 	};

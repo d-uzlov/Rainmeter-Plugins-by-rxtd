@@ -42,7 +42,7 @@ namespace rxtd::audio_analyzer {
 			string rawFccDescription;
 			audio_utils::FilterCascadeCreator fcc;
 
-			index targetRate{ };
+			index targetRate{};
 
 			std::set<Channel> channels;
 			HandlerPatchersInfo handlersInfo;

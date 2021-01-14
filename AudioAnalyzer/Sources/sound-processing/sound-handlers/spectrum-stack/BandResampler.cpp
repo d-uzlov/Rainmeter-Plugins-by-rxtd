@@ -27,7 +27,7 @@ SoundHandler::ParseResult BandResampler::parseParams(
 	const auto sourceId = om.get(L"source").asIString();
 	if (sourceId.empty()) {
 		cl.error(L"source is not found");
-		return { };
+		return {};
 	}
 
 	utils::Option freqListOption;
@@ -49,18 +49,18 @@ SoundHandler::ParseResult BandResampler::parseParams(
 
 		if (freqListOption.empty()) {
 			cl.error(L"description is not found");
-			return { };
+			return {};
 		}
 	} else {
 		cl.error(L"bands option is not found");
-		return { };
+		return {};
 	}
 
 	params.bandFreqs = parseFreqList(freqListOption, bandLogger);
 
 	if (params.bandFreqs.size() < 2) {
 		cl.error(L"need >= 2 frequencies but only {} found", params.bandFreqs.size());
-		return { };
+		return {};
 	}
 
 	params.minCascade = std::max(om.get(L"minCascade").asInt(0), 0);
@@ -71,7 +71,7 @@ SoundHandler::ParseResult BandResampler::parseParams(
 			L"max cascade must be >= min cascade but max={} < min={} are found",
 			params.maxCascade, params.minCascade
 		);
-		return { };
+		return {};
 	}
 
 	if (legacyNumber < 104) {
@@ -96,7 +96,7 @@ bool BandResampler::parseFreqListElement(utils::OptionList& options, std::vector
 	if (type == L"custom") {
 		if (options.size() < 2) {
 			cl.error(L"custom must have at least two frequencies specified but {} found", options.size());
-			return { };
+			return {};
 		}
 		for (index i = 1; i < options.size(); ++i) {
 			freqs.push_back(options.get(i).asFloatF());
@@ -106,25 +106,25 @@ bool BandResampler::parseFreqListElement(utils::OptionList& options, std::vector
 
 	if (type != L"linear" && type != L"log") {
 		cl.error(L"unknown type '{}'", type);
-		return { };
+		return {};
 	}
 
 	if (options.size() != 4) {
 		cl.error(L"{} must have 3 options (count, min, max)", type);
-		return { };
+		return {};
 	}
 
 	const index count = options.get(1).asInt(0);
 	if (count < 1) {
 		cl.error(L"count must be >= 1");
-		return { };
+		return {};
 	}
 
 	const auto min = options.get(2).asFloatF();
 	const auto max = options.get(3).asFloatF();
 	if (max <= min) {
 		cl.error(L"max must be > min");
-		return { };
+		return {};
 	}
 
 	if (type == L"linear") {
@@ -155,7 +155,7 @@ std::vector<float> BandResampler::parseFreqList(utils::Option freqListOption, Lo
 		auto options = boundOption.asList(L' ');
 		const auto success = parseFreqListElement(options, freqs, cl);
 		if (!success) {
-			return { };
+			return {};
 		}
 	}
 
@@ -174,7 +174,7 @@ std::vector<float> BandResampler::makeBandsFromFreqs(array_span<float> freqs, Lo
 	for (auto value : freqs) {
 		if (value <= 0) {
 			cl.error(L"frequencies must be > 0 but {} found", value);
-			return { };
+			return {};
 		}
 		if (value - lastValue < threshold) {
 			continue;
@@ -195,14 +195,14 @@ BandResampler::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalDa
 	fftSource = dynamic_cast<FftAnalyzer*>(config.sourcePtr);
 	if (fftSource == nullptr) {
 		cl.error(L"invalid source, need FftAnalyzer");
-		return { };
+		return {};
 	}
 
 	const auto cascadesCount = fftSource->getDataSize().layersCount;
 
 	if (params.minCascade > cascadesCount) {
 		cl.error(L"minCascade is more than number of cascades");
-		return { };
+		return {};
 	}
 
 	bandsCount = index(params.bandFreqs.size() - 1);
@@ -360,7 +360,7 @@ void BandResampler::computeCascadeWeights(array_span<float> result, index fftBin
 
 void BandResampler::legacy_generateBandMultipliers() {
 	legacy_bandFreqMultipliers.resize(bandsCount);
-	double multipliersSum{ };
+	double multipliersSum{};
 	for (index i = 0; i < bandsCount; ++i) {
 		legacy_bandFreqMultipliers[i] = std::log(params.bandFreqs[i + 1] - params.bandFreqs[i] + 1.0f);
 		// bandFreqMultipliers[i] = params.bandFreqs[i + 1] - params.bandFreqs[i];

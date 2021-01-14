@@ -40,8 +40,10 @@ SoundHandler::ParseResult Loudness::parseParams(
 	return result;
 }
 
-SoundHandler::ConfigurationResult Loudness::vConfigure(const ParamsContainer& _params, Logger& cl,
-                                                       ExternalData& externalData) {
+SoundHandler::ConfigurationResult Loudness::vConfigure(
+	const ParamsContainer& _params, Logger& cl,
+	ExternalData& externalData
+) {
 	params = _params.cast<Params>();
 
 	blocksCount = index(params.timeWindowMs / 1000.0 * params.updatesPerSecond);

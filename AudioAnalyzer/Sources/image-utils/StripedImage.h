@@ -12,16 +12,16 @@
 #include "GrowingVector.h"
 
 namespace rxtd::utils {
-	template <typename PIXEL_VALUE_TYPE>
+	template<typename PIXEL_VALUE_TYPE>
 	class StripedImage {
 		using PixelValueType = PIXEL_VALUE_TYPE;
 
-		GrowingVector<PixelValueType> pixelData{ };
+		GrowingVector<PixelValueType> pixelData{};
 		index width = 0;
 		index height = 0;
 
-		PixelValueType backgroundValue = { };
-		PixelValueType lastFillValue = { };
+		PixelValueType backgroundValue = {};
+		PixelValueType lastFillValue = {};
 		index sameStripsCount = 0;
 		bool stationary = false;
 		index stationaryOffset = 0;

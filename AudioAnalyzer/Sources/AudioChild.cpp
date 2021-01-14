@@ -86,7 +86,7 @@ void AudioChild::vUpdateString(string& resultStringBuffer) {
 }
 
 AudioChild::Options AudioChild::readOptions() const {
-	Options result{ };
+	Options result{};
 	const auto channelStr = rain.read(L"Channel").asIString(L"auto");
 	auto channelOpt = ChannelUtils::parse(channelStr);
 	if (!channelOpt.has_value()) {
@@ -145,7 +145,7 @@ AudioChild::Options AudioChild::readOptions() const {
 }
 
 AudioChild::Options::Legacy AudioChild::legacy_readOptions() const {
-	Options::Legacy legacy{ };
+	Options::Legacy legacy{};
 
 	if (const auto numTr = rain.read(L"NumberTransform").asIString(L"Linear");
 		numTr == L"Linear") {

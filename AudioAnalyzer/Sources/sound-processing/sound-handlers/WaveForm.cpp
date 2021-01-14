@@ -27,13 +27,13 @@ SoundHandler::ParseResult WaveForm::parseParams(
 	params.width = om.get(L"width").asInt(100);
 	if (params.width < 2) {
 		cl.error(L"width must be >= 2 but {} found", params.width);
-		return { };
+		return {};
 	}
 
 	params.height = om.get(L"height").asInt(100);
 	if (params.height < 2) {
 		cl.error(L"height must be >= 2 but {} found", params.height);
-		return { };
+		return {};
 	}
 
 	if (params.width * params.height > 1000 * 1000) {
@@ -141,7 +141,7 @@ WaveForm::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& e
 	snapshot.writeNeeded = true;
 	snapshot.empty = false;
 
-	return { 0, { } };
+	return { 0, {} };
 }
 
 void WaveForm::vProcess(ProcessContext context, ExternalData& externalData) {

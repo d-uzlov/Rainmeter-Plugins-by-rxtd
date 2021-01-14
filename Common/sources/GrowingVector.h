@@ -10,9 +10,9 @@
 #pragma once
 
 namespace rxtd::utils {
-	template <typename T>
+	template<typename T>
 	class GrowingVector {
-		std::vector<T> array{ };
+		std::vector<T> array{};
 		index offset = 0;
 		index maxSize = 0;
 
@@ -54,7 +54,7 @@ namespace rxtd::utils {
 		[[nodiscard]]
 		array_span<T> getFirst(index chunkSize) {
 			if (chunkSize > getRemainingSize()) {
-				return { };
+				return {};
 			}
 			array_span<T> result{ array.data() + offset, chunkSize };
 			return result;
@@ -63,7 +63,7 @@ namespace rxtd::utils {
 		[[nodiscard]]
 		array_view<T> getFirst(index chunkSize) const {
 			if (chunkSize > getRemainingSize()) {
-				return { };
+				return {};
 			}
 			array_span<T> result{ array.data() + offset, chunkSize };
 			return result;
@@ -71,7 +71,7 @@ namespace rxtd::utils {
 
 		array_span<T> removeFirst(index chunkSize) {
 			if (chunkSize > getRemainingSize()) {
-				return { };
+				return {};
 			}
 			array_span<T> result{ array.data() + offset, chunkSize };
 			offset += chunkSize;

@@ -13,7 +13,7 @@
 #include <Unknwn.h>
 
 namespace rxtd::utils {
-	template <typename T>
+	template<typename T>
 	class IUnknownImpl : NonMovableBase, VirtualDestructorBase, virtual public T {
 		static_assert(std::is_base_of<IUnknown, T>::value, "T must extend IUnknown");
 		std::atomic_int referenceCounter{ 1 };

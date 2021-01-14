@@ -17,7 +17,7 @@ namespace rxtd::utils {
 		template<typename Map, typename Collection>
 		static void intersectKeyCollection(Map& map, const Collection& collection) {
 			for (auto iter = map.begin();
-				iter != map.end();) {
+			     iter != map.end();) {
 				if (collection.find(iter->first) == collection.end()) {
 					iter = map.erase(iter);
 				} else {
@@ -31,7 +31,7 @@ namespace rxtd::utils {
 		template<typename Map, typename Predicate>
 		static void intersectKeysWithPredicate(Map& map, const Predicate& predicate) {
 			for (auto iter = map.begin();
-				iter != map.end();) {
+			     iter != map.end();) {
 				if (!predicate(iter->first)) {
 					iter = map.erase(iter);
 				} else {
@@ -39,12 +39,13 @@ namespace rxtd::utils {
 				}
 			}
 		}
+
 		// remove element if predicate returns true
 		// predicate must be a callable that accepts map::key_type and returns bool
 		template<typename Map, typename Predicate>
 		static void removeKeysByPredicate(Map& map, const Predicate& predicate) {
 			for (auto iter = map.begin();
-				iter != map.end();) {
+			     iter != map.end();) {
 				if (predicate(iter->first)) {
 					iter = map.erase(iter);
 				} else {

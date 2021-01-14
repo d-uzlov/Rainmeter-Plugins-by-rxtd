@@ -30,7 +30,7 @@ namespace rxtd::audio_analyzer {
 			}
 		};
 
-		Params params{ };
+		Params params{};
 		std::vector<CVT> transformersPerLayer;
 		std::vector<index> countersPerLayer;
 

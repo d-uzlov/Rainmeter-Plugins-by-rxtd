@@ -21,7 +21,7 @@ SoundHandler::ParseResult TimeResampler::parseParams(
 	const auto sourceId = om.get(L"source").asIString();
 	if (sourceId.empty()) {
 		cl.error(L"source is not found");
-		return { };
+		return {};
 	}
 
 	params.granularity = om.get(L"granularity").asFloat(1000.0 / 60.0);

@@ -25,8 +25,8 @@ void CaptureManager::disconnect() {
 	}
 
 	snapshot.state = State::eMANUALLY_DISCONNECTED;
-	audioCaptureClient = { };
-	sessionEventsWrapper = { };
+	audioCaptureClient = {};
+	sessionEventsWrapper = {};
 }
 
 CaptureManager::State CaptureManager::setSourceAndGetState(const SourceDesc& desc) {
@@ -273,7 +273,7 @@ utils::MediaDeviceWrapper CaptureManager::getDevice(const SourceDesc& desc) {
 		return enumeratorWrapper.getDeviceByID(desc.id);
 	}
 
-	return { };
+	return {};
 }
 
 string CaptureManager::makeFormatString(MyWaveFormat waveFormat) {
@@ -395,7 +395,7 @@ std::vector<utils::GenericComWrapper<IAudioSessionControl>> CaptureManager::getA
 
 	auto sessionManager = audioDeviceHandle.activateFor<IAudioSessionManager2>();
 	if (!sessionManager.isValid()) {
-		return { };
+		return {};
 	}
 
 	auto sessionEnumerator = utils::GenericComWrapper<IAudioSessionEnumerator>{
@@ -405,13 +405,13 @@ std::vector<utils::GenericComWrapper<IAudioSessionControl>> CaptureManager::getA
 		}
 	};
 	if (!sessionEnumerator.isValid()) {
-		return { };
+		return {};
 	}
 
 	int sessionCount;
 	auto res = sessionEnumerator.ref().GetCount(&sessionCount);
 	if (res != S_OK) {
-		return { };
+		return {};
 	}
 
 	for (int i = 0; i < sessionCount; ++i) {
@@ -426,7 +426,7 @@ std::vector<utils::GenericComWrapper<IAudioSessionControl>> CaptureManager::getA
 			continue;
 		}
 
-		AudioSessionState sessionState = { };
+		AudioSessionState sessionState = {};
 		res = sessionControl.ref().GetState(&sessionState);
 		if (res != S_OK) {
 			continue;

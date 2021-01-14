@@ -34,9 +34,8 @@ public:
 	const wchar_t* solveSectionVariable(int count, const wchar_t* args[]);
 
 private:
-	void(*reloadFunc)(void* data, void* rm, double* maxValue) = nullptr;
-	double(*updateFunc)(void* data) = nullptr;
+	void (*reloadFunc)(void* data, void* rm, double* maxValue) = nullptr;
+	double (*updateFunc)(void* data) = nullptr;
 	const wchar_t* (*getStringFunc)(void* data) = nullptr;
-	void(*executeBangFunc)(void* data, const wchar_t* args) = nullptr;
+	void (*executeBangFunc)(void* data, const wchar_t* args) = nullptr;
 };
-

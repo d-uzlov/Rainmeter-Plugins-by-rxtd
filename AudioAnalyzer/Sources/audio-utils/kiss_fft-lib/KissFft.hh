@@ -40,7 +40,7 @@ namespace kiss_fft {
 		return size;
 	}
 
-	template <typename ScalarType>
+	template<typename ScalarType>
 	class KissFft {
 	public:
 		using scalar_type = ScalarType;
@@ -55,8 +55,7 @@ namespace kiss_fft {
 		mutable std::vector<complex_type> _scratchBuf;
 
 	public:
-		KissFft() : KissFft(0, false) {
-		}
+		KissFft() : KissFft(0, false) { }
 
 		KissFft(const std::size_t nfft, const bool inverse): _nfft(nfft), _inverse(inverse) {
 			// fill twiddle factors
@@ -212,10 +211,12 @@ namespace kiss_fft {
 			for (std::size_t k = 1; 2 * k < N; ++k) {
 				const complex_type w = (scalar_type)0.5 * complex_type(
 					dst[k].real() + dst[N - k].real(),
-					dst[k].imag() - dst[N - k].imag());
+					dst[k].imag() - dst[N - k].imag()
+				);
 				const complex_type z = (scalar_type)0.5 * complex_type(
 					dst[k].imag() + dst[N - k].imag(),
-					-dst[k].real() + dst[N - k].real());
+					-dst[k].real() + dst[N - k].real()
+				);
 				const complex_type twiddle =
 					k % 2 == 0 ? _twiddles[k / 2] : _twiddles[k / 2] * twiddle_mul;
 				dst[k] = w + twiddle * z;

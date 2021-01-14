@@ -15,10 +15,10 @@ std::vector<SubstringViewInfo> Tokenizer::parse(sview view, wchar_t delimiter) {
 	// this method is guarantied to return non empty views
 
 	if (view.empty()) {
-		return { };
+		return {};
 	}
 
-	std::vector<SubstringViewInfo> tempList{ };
+	std::vector<SubstringViewInfo> tempList{};
 
 	tokenize(tempList, view, delimiter);
 
@@ -40,7 +40,7 @@ Tokenizer::parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wch
 	std::vector<SubstringViewInfo> description;
 	index begin = view.find_first_not_of(L" \t");
 	if (begin == index(sview::npos)) {
-		return { };
+		return {};
 	}
 
 	for (index i = begin; i < index(view.length()); ++i) {
@@ -48,7 +48,7 @@ Tokenizer::parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wch
 
 		if (symbol == optionBegin) {
 			if (state != State::eOPTION) {
-				return { };
+				return {};
 			}
 			state = State::eSWALLOW;
 
@@ -59,7 +59,7 @@ Tokenizer::parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wch
 		}
 		if (symbol == optionEnd) {
 			if (state != State::eSWALLOW) {
-				return { };
+				return {};
 			}
 			state = State::eOPTION;
 
@@ -78,7 +78,7 @@ Tokenizer::parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wch
 
 			trimSpaces(description, view);
 			result.emplace_back(std::move(description));
-			description = { };
+			description = {};
 			state = State::eSEARCH;
 			continue;
 		}
@@ -128,7 +128,11 @@ void Tokenizer::trimSpaces(std::vector<SubstringViewInfo>& list, sview string) {
 	}
 
 	list.erase(
-		std::remove_if(list.begin(), list.end(), [](SubstringViewInfo svi) { return svi.empty(); }),
+		std::remove_if(
+			list.begin(), list.end(), [](SubstringViewInfo svi) {
+				return svi.empty();
+			}
+		),
 		list.end()
 	);
 }

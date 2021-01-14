@@ -26,7 +26,7 @@ namespace rxtd::utils {
 				float red = 0.0;
 				float green = 0.0;
 				float blue = 0.0;
-			} rgb{ };
+			} rgb{};
 
 			struct {
 				float hue;
@@ -39,7 +39,7 @@ namespace rxtd::utils {
 				float cb;
 				float cr;
 			} tv;
-		} _{ };
+		} _{};
 
 		float alpha = 1.0;
 		Mode mode = Mode::eRGB;
@@ -55,7 +55,7 @@ namespace rxtd::utils {
 		}
 
 		[[nodiscard]]
-		static Color parse(sview desc, Color defaultValue = { });
+		static Color parse(sview desc, Color defaultValue = {});
 
 		[[nodiscard]]
 		Color operator*(float value) const {
@@ -99,7 +99,7 @@ namespace rxtd::utils {
 			case Mode::eHSL: return hsl2hsv().hsv2rgb();
 			case Mode::eYCBCR: return ycbcr2rgb();
 			}
-			return { };
+			return {};
 		}
 
 		[[nodiscard]]
@@ -110,7 +110,7 @@ namespace rxtd::utils {
 			case Mode::eHSL: return hsl2hsv();
 			case Mode::eYCBCR: return ycbcr2rgb().rgb2hsv();
 			}
-			return { };
+			return {};
 		}
 
 		[[nodiscard]]
@@ -121,7 +121,7 @@ namespace rxtd::utils {
 			case Mode::eHSL: return *this;
 			case Mode::eYCBCR: return ycbcr2rgb().rgb2hsv().hsv2hsl();
 			}
-			return { };
+			return {};
 		}
 
 		[[nodiscard]]
@@ -132,7 +132,7 @@ namespace rxtd::utils {
 			case Mode::eHSL: return hsl2hsv().hsv2rgb().rgb2ycbcr();
 			case Mode::eYCBCR: return *this;
 			}
-			return { };
+			return {};
 		}
 
 		[[nodiscard]]
@@ -143,7 +143,7 @@ namespace rxtd::utils {
 			case Mode::eHSL: return hsl();
 			case Mode::eYCBCR: return ycbcr();
 			}
-			return { };
+			return {};
 		}
 
 		[[nodiscard]]
@@ -152,7 +152,7 @@ namespace rxtd::utils {
 				return rgb().toIntColor();
 			}
 
-			IntColor result{ };
+			IntColor result{};
 			result.r = uint8_t(std::clamp<int>(std::lround(_.rgb.red * 255), 0, 255));
 			result.g = uint8_t(std::clamp<int>(std::lround(_.rgb.green * 255), 0, 255));
 			result.b = uint8_t(std::clamp<int>(std::lround(_.rgb.blue * 255), 0, 255));

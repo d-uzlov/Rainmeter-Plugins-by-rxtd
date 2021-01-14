@@ -10,7 +10,7 @@
 #pragma once
 
 namespace rxtd::utils {
-	template <typename T>
+	template<typename T>
 	class GenericCoTaskMemWrapper : MovableOnlyBase {
 	public:
 		using ObjectType = T;
@@ -21,7 +21,7 @@ namespace rxtd::utils {
 	public:
 		GenericCoTaskMemWrapper() = default;
 
-		template <typename InitFunction>
+		template<typename InitFunction>
 		GenericCoTaskMemWrapper(InitFunction initFunction) {
 			const bool success = initFunction(&ptr);
 			if (!success) {

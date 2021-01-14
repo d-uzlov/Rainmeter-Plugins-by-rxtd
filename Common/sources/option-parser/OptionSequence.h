@@ -35,8 +35,7 @@ namespace rxtd::utils {
 
 		public:
 			iterator(sview view, const std::vector<std::vector<SubstringViewInfo>>& list, index _index) :
-				view(view), list(list), ind(_index) {
-			}
+				view(view), list(list), ind(_index) { }
 
 			iterator& operator++() {
 				ind++;
@@ -50,7 +49,7 @@ namespace rxtd::utils {
 			[[nodiscard]]
 			OptionList operator*() const {
 				auto list_ = list[ind];
-				return { view, { }, std::move(list_) };
+				return { view, {}, std::move(list_) };
 			}
 		};
 

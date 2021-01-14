@@ -31,13 +31,13 @@ SoundHandler::ParseResult Spectrogram::parseParams(
 	const auto sourceId = om.get(L"source").asIString();
 	if (sourceId.empty()) {
 		cl.error(L"source is not found");
-		return { };
+		return {};
 	}
 
 	params.length = om.get(L"length").asInt(100);
 	if (params.length < 2) {
 		cl.error(L"length must be >= 2 but {} found", params.length);
-		return { };
+		return {};
 	}
 	if (params.length >= 1500) {
 		cl.warning(L"dangerously large length {}", params.length);
@@ -88,7 +88,7 @@ SoundHandler::ParseResult Spectrogram::parseParams(
 
 			if (value <= prevValue) {
 				cl.error(L"colors: values {} and {}: values must be increasing", prevValue, value);
-				return { };
+				return {};
 			}
 			if (value / prevValue < 1.001f && value - prevValue < 0.001f) {
 				cl.warning(L"colors: values {} and {} are too close, discarding second one", prevValue, value);
@@ -109,7 +109,7 @@ SoundHandler::ParseResult Spectrogram::parseParams(
 
 		if (params.colors.size() < 2) {
 			cl.error(L"need at least 2 colors but {} found", params.colors.size());
-			return { };
+			return {};
 		}
 	} else {
 		params.colors.resize(2);
@@ -189,7 +189,7 @@ Spectrogram::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData
 	snapshot.empty = false;
 
 
-	return { 0, { } };
+	return { 0, {} };
 }
 
 void Spectrogram::vProcess(ProcessContext context, ExternalData& externalData) {

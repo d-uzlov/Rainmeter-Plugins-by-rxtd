@@ -21,19 +21,19 @@ namespace rxtd::audio_analyzer {
 		using CVT = audio_utils::CustomizableValueTransformer;
 
 		struct Params {
-			double resolution{ };
-			index width{ };
-			index height{ };
+			double resolution{};
+			index width{};
+			index height{};
 			string folder;
-			Colors colors{ };
-			LDP lineDrawingPolicy{ };
-			index lineThickness{ };
-			bool stationary{ };
-			bool connected{ };
-			index borderSize{ };
-			double fading{ };
+			Colors colors{};
+			LDP lineDrawingPolicy{};
+			index lineThickness{};
+			bool stationary{};
+			bool connected{};
+			index borderSize{};
+			double fading{};
 			CVT transformer;
-			float silenceThreshold{ };
+			float silenceThreshold{};
 
 			// generated
 			friend bool operator==(const Params& lhs, const Params& rhs) {
@@ -58,15 +58,15 @@ namespace rxtd::audio_analyzer {
 		};
 
 		struct Snapshot {
-			index blockSize{ };
+			index blockSize{};
 
 			string prefix;
 
 			utils::Vector2D<utils::IntColor> pixels;
-			bool empty{ };
+			bool empty{};
 
-			mutable utils::ImageWriteHelper writerHelper{ };
-			mutable bool writeNeeded{ };
+			mutable utils::ImageWriteHelper writerHelper{};
+			mutable bool writeNeeded{};
 
 			mutable string filenameBuffer;
 		};
@@ -76,9 +76,9 @@ namespace rxtd::audio_analyzer {
 		audio_utils::MinMaxCounter mainCounter;
 		audio_utils::MinMaxCounter originalCounter;
 
-		double minDistinguishableValue{ };
+		double minDistinguishableValue{};
 
-		utils::WaveFormDrawer drawer{ };
+		utils::WaveFormDrawer drawer{};
 
 	public:
 		[[nodiscard]]

@@ -141,7 +141,7 @@ void PerfmonChild::vReload() {
 	ref.named = ref.useOrigName || !ref.name.empty();
 }
 
-double  PerfmonChild::vUpdate() {
+double PerfmonChild::vUpdate() {
 	if (!parent->canGetRaw() || ref.type == ReferenceType::COUNTER_FORMATTED && !parent->canGetFormatted()) {
 		return 0;
 	}

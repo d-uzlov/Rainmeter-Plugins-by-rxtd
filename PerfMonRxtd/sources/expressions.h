@@ -27,7 +27,7 @@ namespace rxtd::perfmon {
 		TERNARY,
 	};
 
-	enum class  ReferenceType : uint8_t {
+	enum class ReferenceType : uint8_t {
 		UNKNOWN,
 		COUNTER_RAW,
 		COUNTER_FORMATTED,
@@ -57,7 +57,7 @@ namespace rxtd::perfmon {
 		void simplify();
 		counter_t maxExpRef() const;
 		counter_t maxRUERef() const;
-		void processRefs(void(*handler)(Reference&));
+		void processRefs(void (*handler)(Reference&));
 	};
 
 	class ExpressionParser {
@@ -84,10 +84,11 @@ namespace rxtd::perfmon {
 			};
 
 			struct Lexeme {
-				LexemeType type { LexemeType::UNKNOWN };
+				LexemeType type{ LexemeType::UNKNOWN };
 				sview value;
 
 				Lexeme() = default;
+
 				Lexeme(LexemeType type, sview value) :
 					type(type),
 					value(value) { }
@@ -109,9 +110,9 @@ namespace rxtd::perfmon {
 			sview readNumber();
 		};
 
-		string source { };
+		string source{};
 		Lexer lexer;
-		Lexer::Lexeme next = { };
+		Lexer::Lexeme next = {};
 		ExpressionTreeNode result;
 		bool error = false;
 

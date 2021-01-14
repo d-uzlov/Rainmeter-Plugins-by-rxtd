@@ -17,8 +17,7 @@ namespace rxtd::audio_utils {
 		std::uniform_real_distribution<> dist;
 
 	public:
-		RandomGenerator() : e2(rd()), dist(-1.0, 1.0) {
-		}
+		RandomGenerator() : e2(rd()), dist(-1.0, 1.0) { }
 
 		[[nodiscard]]
 		double next() {

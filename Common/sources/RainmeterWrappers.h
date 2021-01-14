@@ -49,8 +49,8 @@ namespace rxtd::utils {
 			friend Rainmeter;
 
 			bool isSilent = false;
-			void* rm{ };
-			string prefix{ };
+			void* rm{};
+			string prefix{};
 
 		public:
 			enum class LogLevel {
@@ -65,31 +65,30 @@ namespace rxtd::utils {
 			Logger() = default;
 
 		private:
-			Logger(void* rm, string prefix) : rm(rm), prefix(std::move(prefix)) {
-			}
+			Logger(void* rm, string prefix) : rm(rm), prefix(std::move(prefix)) { }
 
 		public:
-			template <typename... Args>
+			template<typename... Args>
 			void error(const wchar_t* formatString, const Args&... args) const {
 				log(LogLevel::eERROR, formatString, args...);
 			}
 
-			template <typename... Args>
+			template<typename... Args>
 			void warning(const wchar_t* formatString, const Args&... args) const {
 				log(LogLevel::eWARNING, formatString, args...);
 			}
 
-			template <typename... Args>
+			template<typename... Args>
 			void notice(const wchar_t* formatString, const Args&... args) const {
 				log(LogLevel::eNOTICE, formatString, args...);
 			}
 
-			template <typename... Args>
+			template<typename... Args>
 			void debug(const wchar_t* formatString, const Args&... args) const {
 				log(LogLevel::eDEBUG, formatString, args...);
 			}
 
-			template <typename... Args>
+			template<typename... Args>
 			[[nodiscard]]
 			Logger context(const wchar_t* formatString, const Args&... args) const {
 				if (isSilent) {
@@ -105,13 +104,13 @@ namespace rxtd::utils {
 
 			[[nodiscard]]
 			static Logger silent() {
-				Logger result{ };
+				Logger result{};
 				result.isSilent = true;
 				return result;
 			}
 
 		private:
-			template <typename... Args>
+			template<typename... Args>
 			void log(LogLevel logLevel, const wchar_t* formatString, const Args&... args) const {
 				if (isSilent) {
 					return;
@@ -136,7 +135,7 @@ namespace rxtd::utils {
 		class Skin {
 			friend Rainmeter;
 
-			void* skin{ };
+			void* skin{};
 
 		public:
 			Skin() = default;
@@ -147,8 +146,7 @@ namespace rxtd::utils {
 			}
 
 		private:
-			explicit Skin(void* skin) : skin(skin) {
-			}
+			explicit Skin(void* skin) : skin(skin) { }
 
 			[[nodiscard]]
 			void* getRawPointer() const {
@@ -157,8 +155,8 @@ namespace rxtd::utils {
 		};
 
 	private:
-		void* rm{ };
-		Skin skin{ };
+		void* rm{};
+		Skin skin{};
 		string measureName;
 		mutable string optionNameBuffer;
 
@@ -194,7 +192,7 @@ namespace rxtd::utils {
 
 		[[nodiscard]]
 		Logger createLogger() const {
-			return { rm, { } };
+			return { rm, {} };
 		}
 
 		[[nodiscard]]

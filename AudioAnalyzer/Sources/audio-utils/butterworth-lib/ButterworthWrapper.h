@@ -30,8 +30,7 @@ namespace rxtd::audio_utils {
 		public:
 			GenericCoefCalculator(
 				CoefFuncSignature aFunc, CoefFuncSignature bFunc, ScalingFuncSignature sFunc, SizeFuncSignature sizeFunc
-			) : aFunc(aFunc), bFunc(bFunc), sFunc(sFunc), sizeFunc(sizeFunc) {
-			}
+			) : aFunc(aFunc), bFunc(bFunc), sFunc(sFunc), sizeFunc(sizeFunc) { }
 
 			[[nodiscard]]
 			index filterSize(index order) const {
@@ -52,7 +51,7 @@ namespace rxtd::audio_utils {
 			FilterParameters calcCoefDigital(index _order, double digitalCutoffLow, double digitalCutoffHigh) const {
 				const int order = int(_order);
 				if (order < 0) {
-					return { };
+					return {};
 				}
 
 				digitalCutoffLow = std::clamp(digitalCutoffLow, 0.01, 1.0 - 0.01);
@@ -81,7 +80,7 @@ namespace rxtd::audio_utils {
 			}
 
 		private:
-			template <typename T, typename... Args>
+			template<typename T, typename... Args>
 			[[nodiscard]]
 			static std::vector<double> wrapCoefs(T* (*funcPtr)(Args ...), index resultSize, Args ... args) {
 				std::vector<double> result;

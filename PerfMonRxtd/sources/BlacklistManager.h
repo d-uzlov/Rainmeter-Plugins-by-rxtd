@@ -12,7 +12,7 @@
 namespace rxtd::perfmon {
 	struct MatchTestRecord {
 		sview pattern;
-		bool matchSubstring { };
+		bool matchSubstring{};
 
 		MatchTestRecord() = default;
 		MatchTestRecord(sview pattern, bool substring);
@@ -41,7 +41,7 @@ namespace rxtd::perfmon {
 		MatchList whitelistOrig;
 
 	public:
-		void setLists( string black, string blackOrig, string white, string whiteOrig);
+		void setLists(string black, string blackOrig, string white, string whiteOrig);
 
 		bool isAllowed(sview searchName, sview originalName) const;
 	};

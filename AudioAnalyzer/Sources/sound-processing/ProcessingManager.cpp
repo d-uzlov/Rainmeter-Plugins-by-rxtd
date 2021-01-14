@@ -35,7 +35,7 @@ void ProcessingManager::setParams(
 	}
 	const index finalSampleRate = sampleRate / resamplingDivider;
 
-	auto oldChannelMap = std::exchange(channelMap, { });
+	auto oldChannelMap = std::exchange(channelMap, {});
 
 	for (auto channel : channels) {
 		auto& newChannelStruct = channelMap[channel];
@@ -100,7 +100,7 @@ void ProcessingManager::process(const ChannelMixer& mixer, clock::time_point kil
 	for (auto& [channel, channelStruct] : channelMap) {
 		auto& channelSnapshot = snapshot[channel];
 
-		SoundHandler::ProcessContext context{ };
+		SoundHandler::ProcessContext context{};
 
 		if (auto wave = mixer.getChannelPCM(channel);
 			resamplingDivider <= 1) {

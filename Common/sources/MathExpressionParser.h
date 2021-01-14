@@ -54,10 +54,11 @@ namespace rxtd::utils {
 			};
 
 			struct Lexeme {
-				LexemeType type { LexemeType::eUNKNOWN };
+				LexemeType type{ LexemeType::eUNKNOWN };
 				sview value;
 
 				Lexeme() = default;
+
 				Lexeme(LexemeType type, sview value) :
 					type(type),
 					value(value) { }
@@ -79,9 +80,9 @@ namespace rxtd::utils {
 			sview readNumber();
 		};
 
-		string source { };
+		string source{};
 		Lexer lexer;
-		Lexer::Lexeme next = { };
+		Lexer::Lexeme next = {};
 		ExpressionTreeNode result;
 		bool error = false;
 

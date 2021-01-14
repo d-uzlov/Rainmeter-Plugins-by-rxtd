@@ -32,11 +32,11 @@ namespace rxtd::perfmon::pdh {
 
 	private:
 		std::vector<ModifiedNameItem> names;
-		index buffersCount { };
+		index buffersCount{};
 		std::vector<std::vector<wchar_t>> buffers;
-		index originalNamesSize { };
+		index originalNamesSize{};
 
-		ModificationType modificationType { };
+		ModificationType modificationType{};
 
 	public:
 		const ModifiedNameItem& get(item_t index) const;
@@ -52,7 +52,7 @@ namespace rxtd::perfmon::pdh {
 
 		void resetBuffers();
 		wchar_t* getBuffer(index size);
-		
+
 		static sview copyString(sview source, wchar_t* dest);
 
 		void modifyNameProcess(const PdhSnapshot& idSnapshot);

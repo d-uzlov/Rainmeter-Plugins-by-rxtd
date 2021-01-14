@@ -28,7 +28,7 @@ namespace rxtd::audio_analyzer {
 				eDEFAULT_INPUT,
 				eDEFAULT_OUTPUT,
 				eID,
-			} type{ };
+			} type{};
 
 			string id;
 
@@ -58,7 +58,7 @@ namespace rxtd::audio_analyzer {
 			string description;
 			string id;
 			string formatString;
-			utils::MediaDeviceType type{ };
+			utils::MediaDeviceType type{};
 			MyWaveFormat format;
 			string channelsString;
 		};

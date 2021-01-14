@@ -12,7 +12,7 @@
 
 using namespace utils;
 
-OptionMap::OptionMap(sview view, std::vector<wchar_t> &&source, std::map<SubstringViewInfo, SubstringViewInfo>&& paramsInfo) :
+OptionMap::OptionMap(sview view, std::vector<wchar_t>&& source, std::map<SubstringViewInfo, SubstringViewInfo>&& paramsInfo) :
 	AbstractOption(view, std::move(source)),
 	paramsInfo(std::move(paramsInfo)) {
 	fillParams();
@@ -21,16 +21,16 @@ OptionMap::OptionMap(sview view, std::vector<wchar_t> &&source, std::map<Substri
 GhostOption OptionMap::getUntouched(sview name) const & {
 	const auto optionInfoPtr = find(name % ciView());
 	if (optionInfoPtr == nullptr) {
-		return { };
+		return {};
 	}
 
-	return GhostOption { optionInfoPtr->substringInfo.makeView(getView()) };
+	return GhostOption{ optionInfoPtr->substringInfo.makeView(getView()) };
 }
 
 Option OptionMap::getUntouched(sview name) const && {
 	const auto optionInfoPtr = find(name % ciView());
 	if (optionInfoPtr == nullptr) {
-		return { };
+		return {};
 	}
 
 	return Option{ optionInfoPtr->substringInfo.makeView(getView()) };
@@ -39,11 +39,11 @@ Option OptionMap::getUntouched(sview name) const && {
 GhostOption OptionMap::get(isview name) const & {
 	const auto optionInfoPtr = find(name);
 	if (optionInfoPtr == nullptr) {
-		return { };
+		return {};
 	}
 
 	optionInfoPtr->touched = true;
-	return GhostOption { optionInfoPtr->substringInfo.makeView(getView()) };
+	return GhostOption{ optionInfoPtr->substringInfo.makeView(getView()) };
 }
 
 bool OptionMap::has(isview name) const {

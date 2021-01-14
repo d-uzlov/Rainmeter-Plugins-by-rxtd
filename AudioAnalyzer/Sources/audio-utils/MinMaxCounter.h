@@ -12,9 +12,9 @@
 namespace rxtd::audio_utils {
 	class MinMaxCounter {
 		index blockSize = 1;
-		index counter{ };
-		float min{ };
-		float max{ };
+		index counter{};
+		float min{};
+		float max{};
 		array_view<float> wave;
 
 	public:

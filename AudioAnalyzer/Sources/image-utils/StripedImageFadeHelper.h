@@ -13,14 +13,14 @@
 
 namespace rxtd::utils {
 	class StripedImageFadeHelper {
-		Vector2D<IntColor> resultBuffer{ };
+		Vector2D<IntColor> resultBuffer{};
 
 		index borderSize = 0;
-		index pastLastStripIndex{ };
+		index pastLastStripIndex{};
 		double fading = 0.0;
 
-		IntColor background{ };
-		IntColor border{ };
+		IntColor background{};
+		IntColor border{};
 
 	public:
 		void setParams(

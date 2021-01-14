@@ -34,8 +34,7 @@ void ExpressionTreeNode::simplify() {
 	}
 
 	switch (type) {
-	case ExpressionType::SUM:
-	{
+	case ExpressionType::SUM: {
 		double value = 0;
 		for (ExpressionTreeNode& node : nodes) {
 			value += node.number;
@@ -45,8 +44,7 @@ void ExpressionTreeNode::simplify() {
 		type = ExpressionType::NUMBER;
 		return;
 	}
-	case ExpressionType::DIFF:
-	{
+	case ExpressionType::DIFF: {
 		double value = nodes[0].number;
 		for (index i = 1; i < index(nodes.size()); i++) {
 			value -= nodes[i].number;
@@ -56,15 +54,13 @@ void ExpressionTreeNode::simplify() {
 		type = ExpressionType::NUMBER;
 		return;
 	}
-	case ExpressionType::INVERSE:
-	{
+	case ExpressionType::INVERSE: {
 		number = -nodes[0].number;
 		nodes.clear();
 		type = ExpressionType::NUMBER;
 		return;
 	}
-	case ExpressionType::MULT:
-	{
+	case ExpressionType::MULT: {
 		double value = 1;
 		for (ExpressionTreeNode& node : nodes) {
 			value *= node.number;
@@ -74,8 +70,7 @@ void ExpressionTreeNode::simplify() {
 		type = ExpressionType::NUMBER;
 		return;
 	}
-	case ExpressionType::DIV:
-	{
+	case ExpressionType::DIV: {
 		double value = nodes[0].number;
 		for (index i = 1; i < index(nodes.size()); i++) {
 			const double nodeValue = nodes[i].number;
@@ -90,8 +85,7 @@ void ExpressionTreeNode::simplify() {
 		type = ExpressionType::NUMBER;
 		return;
 	}
-	case ExpressionType::POWER:
-	{
+	case ExpressionType::POWER: {
 		double value = nodes[0].number;
 		value = std::pow(value, nodes[1].number);
 		nodes.clear();
@@ -99,9 +93,10 @@ void ExpressionTreeNode::simplify() {
 		type = ExpressionType::NUMBER;
 		return;
 	}
-	default:;
+	default: ;
 	}
 }
+
 counter_t ExpressionTreeNode::maxExpRef() const {
 	counter_t max = -1;
 	if (type == ExpressionType::REF && ref.type == ReferenceType::EXPRESSION) {
@@ -126,7 +121,7 @@ counter_t ExpressionTreeNode::maxRUERef() const {
 	return max;
 }
 
-void ExpressionTreeNode::processRefs(void(*handler)(Reference&)) {
+void ExpressionTreeNode::processRefs(void (*handler)(Reference&)) {
 	if (type == ExpressionType::REF) {
 		handler(ref);
 	} else {
@@ -136,15 +131,13 @@ void ExpressionTreeNode::processRefs(void(*handler)(Reference&)) {
 	}
 }
 
-ExpressionParser::Lexer::Lexer(sview source) : source(source) {
-
-}
+ExpressionParser::Lexer::Lexer(sview source) : source(source) {}
 
 ExpressionParser::Lexer::Lexeme ExpressionParser::Lexer::next() {
 	skipSpaces();
 
 	if (position >= index(source.length())) {
-		return Lexeme(LexemeType::END, { });
+		return Lexeme(LexemeType::END, {});
 	}
 
 	if (isSymbol(source[position])) {
@@ -208,7 +201,8 @@ ExpressionParser::Lexer::Lexeme ExpressionParser::Lexer::next() {
 	return result;
 }
 
-sview ExpressionParser::Lexer::getUntil(const wchar_t stop1, const wchar_t stop2) { // todo use find first not of
+sview ExpressionParser::Lexer::getUntil(const wchar_t stop1, const wchar_t stop2) {
+	// todo use find first not of
 	const auto startPos = position;
 	index i = 0;
 	while (position + i < index(source.length())) {
@@ -259,6 +253,7 @@ sview ExpressionParser::Lexer::readWord() {
 	position += i;
 	return source.substr(startPos, i);
 }
+
 sview ExpressionParser::Lexer::readNumber() {
 	const auto startPos = position;
 	index i = 0;
@@ -288,12 +283,15 @@ void ExpressionParser::parse() {
 		error = true;
 	}
 }
+
 bool ExpressionParser::isError() const {
 	return error;
 }
+
 ExpressionTreeNode ExpressionParser::getExpression() const {
 	return result;
 }
+
 void ExpressionParser::readNext() {
 	next = lexer.next();
 	if (next.type == Lexer::LexemeType::UNKNOWN) {
@@ -498,7 +496,8 @@ Reference ExpressionParser::parseReference() {
 	const isview name = next.value % ciView();
 	if (name == L"counterRaw" || name == L"CR") {
 		ref.type = ReferenceType::COUNTER_RAW;
-	} else if (name == L"counterFormated" || name == L"CF") { // TODO typo
+	} else if (name == L"counterFormated" || name == L"CF") {
+		// TODO typo
 		ref.type = ReferenceType::COUNTER_FORMATTED;
 	} else if (name == L"expression" || name == L"E") {
 		ref.type = ReferenceType::EXPRESSION;

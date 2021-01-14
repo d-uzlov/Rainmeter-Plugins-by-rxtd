@@ -30,8 +30,7 @@ void ExpressionTreeNode::solve() {
 	}
 
 	switch (type) {
-	case ExpressionType::eSUM:
-	{
+	case ExpressionType::eSUM: {
 		double value = 0;
 		for (ExpressionTreeNode& node : nodes) {
 			value += node.number;
@@ -41,8 +40,7 @@ void ExpressionTreeNode::solve() {
 		type = ExpressionType::eNUMBER;
 		return;
 	}
-	case ExpressionType::eDIFF:
-	{
+	case ExpressionType::eDIFF: {
 		double value = nodes[0].number;
 		for (index i = 1; i < index(nodes.size()); i++) {
 			value -= nodes[i].number;
@@ -52,15 +50,13 @@ void ExpressionTreeNode::solve() {
 		type = ExpressionType::eNUMBER;
 		return;
 	}
-	case ExpressionType::eINVERSE:
-	{
+	case ExpressionType::eINVERSE: {
 		number = -nodes[0].number;
 		nodes.clear();
 		type = ExpressionType::eNUMBER;
 		return;
 	}
-	case ExpressionType::eMULT:
-	{
+	case ExpressionType::eMULT: {
 		double value = 1;
 		for (ExpressionTreeNode& node : nodes) {
 			value *= node.number;
@@ -70,8 +66,7 @@ void ExpressionTreeNode::solve() {
 		type = ExpressionType::eNUMBER;
 		return;
 	}
-	case ExpressionType::eDIV:
-	{
+	case ExpressionType::eDIV: {
 		double value = nodes[0].number;
 		for (index i = 1; i < index(nodes.size()); i++) {
 			const double nodeValue = nodes[i].number;
@@ -86,8 +81,7 @@ void ExpressionTreeNode::solve() {
 		type = ExpressionType::eNUMBER;
 		return;
 	}
-	case ExpressionType::ePOWER:
-	{
+	case ExpressionType::ePOWER: {
 		double value = nodes[0].number;
 		value = std::pow(value, nodes[1].number);
 		nodes.clear();
@@ -95,20 +89,19 @@ void ExpressionTreeNode::solve() {
 		type = ExpressionType::eNUMBER;
 		return;
 	}
-	default:;
+	default: ;
 	}
 }
 
 MathExpressionParser::Lexer::Lexer(sview source) :
 	source(source),
-	sourceLength(static_cast<index>(source.length())) {
-}
+	sourceLength(static_cast<index>(source.length())) {}
 
 MathExpressionParser::Lexer::Lexeme MathExpressionParser::Lexer::next() {
 	skipSpaces();
 
 	if (position >= sourceLength) {
-		return Lexeme(LexemeType::eEND, { });
+		return Lexeme(LexemeType::eEND, {});
 	}
 
 	if (isSymbol(source[position])) {
@@ -234,12 +227,15 @@ void MathExpressionParser::parse() {
 		error = true;
 	}
 }
+
 bool MathExpressionParser::isError() const {
 	return error;
 }
+
 ExpressionTreeNode MathExpressionParser::getExpression() const {
 	return result;
 }
+
 void MathExpressionParser::readNext() {
 	next = lexer.next();
 	if (next.type == Lexer::LexemeType::eUNKNOWN) {
@@ -431,4 +427,3 @@ index MathExpressionParser::parseInt(sview view) {
 double MathExpressionParser::parseFractional(sview view) {
 	return StringUtils::parseFractional(view);
 }
-

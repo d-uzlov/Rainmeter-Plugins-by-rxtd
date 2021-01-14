@@ -17,8 +17,7 @@ namespace rxtd {
 
 		DataWithLock() = default;
 
-		explicit DataWithLock(bool useLocking) : useLocking(useLocking) {
-		}
+		explicit DataWithLock(bool useLocking) : useLocking(useLocking) { }
 
 		std::unique_lock<std::mutex> getLock() {
 			auto lock = std::unique_lock<std::mutex>{ mutex, std::defer_lock };

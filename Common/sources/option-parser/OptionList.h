@@ -22,8 +22,7 @@ namespace rxtd::utils {
 
 		OptionList(sview view, std::vector<wchar_t>&& source, std::vector<SubstringViewInfo>&& list) :
 			AbstractOption(view, std::move(source)),
-			list(std::move(list)) {
-		}
+			list(std::move(list)) { }
 
 		// Allows you to steal inner resources.
 		[[nodiscard]]
@@ -47,7 +46,7 @@ namespace rxtd::utils {
 		[[nodiscard]]
 		GhostOption get(index ind) const & {
 			if (ind >= index(list.size())) {
-				return { };
+				return {};
 			}
 			return GhostOption{ list[ind].makeView(getView()) };
 		}
@@ -64,8 +63,7 @@ namespace rxtd::utils {
 		public:
 			ghost_iterator(const OptionList& container, index _index) :
 				container(container),
-				ind(_index) {
-			}
+				ind(_index) { }
 
 			ghost_iterator& operator++() {
 				ind++;
@@ -99,8 +97,7 @@ namespace rxtd::utils {
 		public:
 			iterator(const OptionList& container, index _index) :
 				container(container),
-				ind(_index) {
-			}
+				ind(_index) { }
 
 			iterator& operator++() {
 				ind++;

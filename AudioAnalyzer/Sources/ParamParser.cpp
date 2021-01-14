@@ -34,7 +34,7 @@ bool ParamParser::parse(index _legacyNumber, bool suppressLogger) {
 	if (!checkListUnique(processingIndices)) {
 		logger.error(L"Found repeating processings, aborting");
 		anythingChanged = true;
-		parseResult = { };
+		parseResult = {};
 	}
 
 	hch.reset();
@@ -71,7 +71,7 @@ void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldData
 
 	if (processingDescriptionOption.empty()) {
 		cl.error(L"processing description not found");
-		oldData = { };
+		oldData = {};
 		anythingChanged = true;
 		return;
 	}
@@ -81,7 +81,7 @@ void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldData
 	auto channelsList = processingMap.get(L"channels").asList(L',');
 	if (channelsList.empty()) {
 		cl.error(L"channels not found");
-		oldData.channels = { };
+		oldData.channels = {};
 		anythingChanged = true;
 		return;
 	}
@@ -98,7 +98,7 @@ void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldData
 	auto handlersOption = processingMap.get(L"handlers");
 	if (handlersOption.empty()) {
 		cl.error(L"handlers not found");
-		oldData.handlersInfo = { };
+		oldData.handlersInfo = {};
 		anythingChanged = true;
 		return;
 	}
@@ -106,7 +106,7 @@ void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldData
 	auto handlersList = handlersOption.asList(L',');
 	if (!checkListUnique(handlersList)) {
 		cl.error(L"found repeating handlers, invalidate processing");
-		oldData.handlersInfo = { };
+		oldData.handlersInfo = {};
 		anythingChanged = true;
 		return;
 	}
@@ -151,7 +151,7 @@ void ParamParser::parseFilters(const utils::OptionMap& optionMap, ProcessingData
 	auto filterLogger = cl.context(L"filter: ");
 
 	if (filterType == L"none") {
-		data.fcc = { };
+		data.fcc = {};
 		return;
 	}
 
@@ -182,7 +182,7 @@ void ParamParser::parseFilters(const utils::OptionMap& optionMap, ProcessingData
 	}
 
 	filterLogger.error(L"filter class '{}' is not supported", filterType);
-	data.fcc = { };
+	data.fcc = {};
 }
 
 void ParamParser::parseTargetRate(const utils::OptionMap& optionMap, ProcessingData& data, Logger& cl) const {

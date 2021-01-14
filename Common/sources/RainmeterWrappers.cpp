@@ -39,8 +39,7 @@ struct MessageQueue : DataWithLock {
 	std::vector<Message> buffer;
 	std::condition_variable sleepVariable;
 
-	MessageQueue() : DataWithLock(true) {
-	}
+	MessageQueue() : DataWithLock(true) { }
 };
 
 struct ThreadArguments {
@@ -158,14 +157,13 @@ public:
 		counter.fetch_add(-1);
 		if (counter.load() == 0) {
 			try {
-				Message mes{ };
+				Message mes{};
 				mes.type = MessageType::eKILL;
 				auto lock = queue.getLock();
 				queue.buffer.push_back(mes);
 				queue.sleepVariable.notify_one();
 				initialized = false;
-			} catch (...) {
-			}
+			} catch (...) { }
 		}
 	}
 
@@ -208,7 +206,7 @@ public:
 	}
 };
 
-AsyncRainmeterMessageSender asyncSender{ };
+AsyncRainmeterMessageSender asyncSender{};
 
 
 DWORD WINAPI asyncSender_run(void* param) {

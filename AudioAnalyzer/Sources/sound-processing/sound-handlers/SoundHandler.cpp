@@ -28,13 +28,13 @@ bool SoundHandler::patch(
 		newConfig.sourcePtr = hf.getHandler(sourceName);
 		if (newConfig.sourcePtr == nullptr) {
 			cl.error(L"source '{}' is not found", sourceName);
-			return { };
+			return {};
 		}
 
 		const auto dataSize = newConfig.sourcePtr->getDataSize();
 		if (dataSize.isEmpty()) {
 			cl.error(L"source '{}' doesn't produce any data", sourceName);
-			return { };
+			return {};
 		}
 	} else {
 		newConfig.sourcePtr = nullptr;
@@ -51,7 +51,7 @@ bool SoundHandler::patch(
 
 		const auto linkingResult = vConfigure(params, cl, snapshot.handlerSpecificData);
 		if (!linkingResult.success) {
-			return { };
+			return {};
 		}
 
 		_dataSize = linkingResult.dataSize;

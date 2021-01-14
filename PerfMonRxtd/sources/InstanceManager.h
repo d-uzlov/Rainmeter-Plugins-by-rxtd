@@ -43,13 +43,14 @@ namespace rxtd::perfmon {
 			eROLLUP_EXPRESSION,
 			eCOUNT,
 		};
+
 		enum class SortOrder {
 			eASCENDING,
 			eDESCENDING,
 		};
 
 	private:
-		utils::Rainmeter::Logger &log;
+		utils::Rainmeter::Logger& log;
 
 		bool keepDiscarded = false;
 		bool syncRawFormatted = true;
@@ -62,16 +63,16 @@ namespace rxtd::perfmon {
 		SortOrder sortOrder = SortOrder::eDESCENDING;
 		RollupFunction sortRollupFunction = RollupFunction::eSUM;
 
-		const pdh::PdhWrapper &pdhWrapper;
+		const pdh::PdhWrapper& pdhWrapper;
 
 		std::vector<InstanceInfo> instances;
 		std::vector<InstanceInfo> instancesRolledUp;
 		std::vector<InstanceInfo> instancesDiscarded;
 
-		const pdh::PdhSnapshot &idSnapshot;
-		const pdh::PdhSnapshot &snapshotCurrent;
-		const pdh::PdhSnapshot &snapshotPrevious;
-		const BlacklistManager &blacklistManager;
+		const pdh::PdhSnapshot& idSnapshot;
+		const pdh::PdhSnapshot& snapshotCurrent;
+		const pdh::PdhSnapshot& snapshotPrevious;
+		const BlacklistManager& blacklistManager;
 
 		pdh::NamesManager namesCurrent;
 		pdh::NamesManager namesPrevious;
@@ -145,7 +146,8 @@ namespace rxtd::perfmon {
 		const InstanceInfo* findInstanceByNameInList(
 			const Reference& ref,
 			const std::vector<InstanceInfo>& instances, std::map<std::tuple<bool, bool, sview>,
-			std::optional<const InstanceInfo*>>&cache) const;
+			                                                     std::optional<const InstanceInfo*>>& cache
+		) const;
 
 	};
 }

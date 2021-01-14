@@ -22,9 +22,9 @@ namespace rxtd::perfmon {
 			eROLLUP_EXPRESSION,
 		};
 
-		utils::Rainmeter::Logger &log;
+		utils::Rainmeter::Logger& log;
 
-		const InstanceManager &instanceManager;
+		const InstanceManager& instanceManager;
 
 		std::vector<ExpressionTreeNode> expressions;
 		std::vector<ExpressionTreeNode> rollupExpressions;
@@ -38,6 +38,7 @@ namespace rxtd::perfmon {
 
 			bool operator<(const CacheEntry& other) const;
 		};
+
 		mutable std::map<CacheEntry, std::optional<double>> totalsCache;
 
 	public:
@@ -83,16 +84,16 @@ namespace rxtd::perfmon {
 		double resolveRollupReference(const Reference& ref) const;
 
 
-		template <double (ExpressionResolver::* calculateValueFunction)(counter_t counterIndex, Indices originalIndexes) const>
+		template<double (ExpressionResolver::* calculateValueFunction)(counter_t counterIndex, Indices originalIndexes) const>
 		double calculateRollup(RollupFunction rollupType, counter_t counterIndex, const InstanceInfo& instance) const;
 
-		template <double (ExpressionResolver::* calculateValueFunction)(counter_t counterIndex, Indices originalIndexes) const>
+		template<double (ExpressionResolver::* calculateValueFunction)(counter_t counterIndex, Indices originalIndexes) const>
 		double calculateTotal(RollupFunction rollupType, counter_t counterIndex) const;
 
-		template <double(ExpressionResolver::* calculateExpressionFunction)(const ExpressionTreeNode& expression) const>
+		template<double(ExpressionResolver::* calculateExpressionFunction)(const ExpressionTreeNode& expression) const>
 		double calculateExpressionTotal(RollupFunction rollupType, const ExpressionTreeNode& expression, bool rollup) const;
 
-		template <double(ExpressionResolver::* resolveReferenceFunction)(const Reference& ref) const>
+		template<double(ExpressionResolver::* resolveReferenceFunction)(const Reference& ref) const>
 		double calculateExpression(const ExpressionTreeNode& expression) const;
 
 

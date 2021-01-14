@@ -28,7 +28,7 @@ namespace rxtd::utils {
 		};
 
 		struct Changes {
-			DisconnectionReason disconnectionReason{ };
+			DisconnectionReason disconnectionReason{};
 		};
 
 	private:
@@ -114,19 +114,19 @@ namespace rxtd::utils {
 
 			if (sessionController.isValid()) {
 				sessionController.ref().UnregisterAudioSessionNotification(this);
-				sessionController = { };
+				sessionController = {};
 			}
 
-			mainVolumeController = { };
+			mainVolumeController = {};
 			mainVolumeControllerIsValid.exchange(mainVolumeController.isValid());
 
-			channelVolumeController = { };
+			channelVolumeController = {};
 			channelVolumeControllerIsValid.exchange(mainVolumeController.isValid());
 		}
 
 		[[nodiscard]]
 		Changes takeChanges() {
-			Changes result{ };
+			Changes result{};
 			result.disconnectionReason = disconnectionReason.load();
 			return result;
 		}

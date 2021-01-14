@@ -15,7 +15,7 @@ namespace rxtd {
 	public:
 		virtual ~VirtualDestructorBase() = default;
 	};
-	
+
 	class MovableOnlyBase {
 	public:
 		MovableOnlyBase() = default;

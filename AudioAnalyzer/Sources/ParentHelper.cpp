@@ -15,8 +15,7 @@ ParentHelper::~ParentHelper() {
 	threadSafeFields.notificationClient.ref().deinit(enumeratorWrapper);
 	try {
 		stopThread();
-	} catch (...) {
-	}
+	} catch (...) { }
 }
 
 void ParentHelper::init(
@@ -32,7 +31,7 @@ void ParentHelper::init(
 
 	if (!enumeratorWrapper.isValid()) {
 		mainFields.logger.error(L"Fatal error: can't create IMMDeviceEnumerator");
-		throw std::exception{ };
+		throw std::exception{};
 	}
 
 	updateDeviceListStrings();
@@ -50,10 +49,14 @@ void ParentHelper::init(
 		constFields.useThreading = false;
 	} else if (threadingPolicy == L"separateThread") {
 		constFields.useThreading = true;
-		threadSafeFields.notificationClient.ref().setCallback([this]() { wakeThreadUp(); });
+		threadSafeFields.notificationClient.ref().setCallback(
+			[this]() {
+				wakeThreadUp();
+			}
+		);
 	} else {
 		mainFields.logger.error(L"Fatal error: Threading: unknown policy '{}'");
-		throw std::exception{ };
+		throw std::exception{};
 	}
 
 	const double warnTime = threadingMap.get(L"warnTime").asFloat(-1.0);
@@ -84,7 +87,11 @@ void ParentHelper::init(
 }
 
 void ParentHelper::setInvalid() {
-	requestFields.runGuarded([&] { requestFields.disconnect = true; });
+	requestFields.runGuarded(
+		[&] {
+			requestFields.disconnect = true;
+		}
+	);
 	snapshot.deviceIsAvailable = false;
 }
 
@@ -105,7 +112,11 @@ void ParentHelper::setParams(
 		} else {
 			threadSleepFields.stopRequest = false;
 			threadSleepFields.updateRequest = false;
-			requestFields.thread = std::thread{ [this]() { threadFunction(); } };
+			requestFields.thread = std::thread{
+				[this]() {
+					threadFunction();
+				}
+			};
 		}
 	}
 }
@@ -118,12 +129,13 @@ void ParentHelper::update() {
 
 void ParentHelper::wakeThreadUp() {
 	try {
-		threadSleepFields.runGuarded([&] {
-			threadSleepFields.updateRequest = true;
-			threadSleepFields.sleepVariable.notify_one();
-		});
-	} catch (...) {
-	}
+		threadSleepFields.runGuarded(
+			[&] {
+				threadSleepFields.updateRequest = true;
+				threadSleepFields.sleepVariable.notify_one();
+			}
+		);
+	} catch (...) { }
 }
 
 void ParentHelper::stopThread() {
@@ -131,10 +143,12 @@ void ParentHelper::stopThread() {
 		return;
 	}
 
-	threadSleepFields.runGuarded([&] {
-		threadSleepFields.stopRequest = true;
-		threadSleepFields.sleepVariable.notify_one();
-	});
+	threadSleepFields.runGuarded(
+		[&] {
+			threadSleepFields.stopRequest = true;
+			threadSleepFields.sleepVariable.notify_one();
+		}
+	);
 
 	requestFields.thread.join();
 }
@@ -188,22 +202,22 @@ void ParentHelper::pUpdate() {
 			mainFields.captureManager.disconnect();
 			mainFields.orchestrator.reset();
 
-			requestFields.settings.device = { };
-			requestFields.settings.patches = { };
-			requestFields.settings.callbacks = { };
+			requestFields.settings.device = {};
+			requestFields.settings.patches = {};
+			requestFields.settings.callbacks = {};
 			requestFields.disconnect = false;
 		} else {
 			if (requestFields.settings.device.has_value()) {
 				mainFields.disconnected = false;
-				mainFields.settings.device = std::exchange(requestFields.settings.device, { }).value();
+				mainFields.settings.device = std::exchange(requestFields.settings.device, {}).value();
 				needToUpdateDevice = true;
 			}
 			if (requestFields.settings.patches.has_value()) {
-				mainFields.settings.patches = std::exchange(requestFields.settings.patches, { }).value();
+				mainFields.settings.patches = std::exchange(requestFields.settings.patches, {}).value();
 				needToUpdateHandlers = true;
 			}
 			if (requestFields.settings.callbacks.has_value()) {
-				mainFields.callbacks = std::exchange(requestFields.settings.callbacks, { }).value();
+				mainFields.callbacks = std::exchange(requestFields.settings.callbacks, {}).value();
 			}
 		}
 	}
@@ -213,7 +227,7 @@ void ParentHelper::pUpdate() {
 	if (!mainFields.disconnected) {
 		using DDC = utils::MediaDeviceListNotificationClient::DefaultDeviceChange;
 		using ST = CaptureManager::SourceDesc::Type;
-		DDC defaultDeviceChange{ };
+		DDC defaultDeviceChange{};
 		switch (mainFields.settings.device.type) {
 		case ST::eDEFAULT_INPUT:
 			defaultDeviceChange = changes.defaultInputChange;
@@ -241,7 +255,11 @@ void ParentHelper::pUpdate() {
 			);
 			mainFields.captureManager.disconnect();
 			mainFields.orchestrator.reset();
-			snapshot.deviceInfo.runGuarded([&] { snapshot.deviceInfo._.state = mainFields.captureManager.getState(); });
+			snapshot.deviceInfo.runGuarded(
+				[&] {
+					snapshot.deviceInfo._.state = mainFields.captureManager.getState();
+				}
+			);
 			mainFields.rain.executeCommandAsync(mainFields.callbacks.onDeviceDisconnected);
 			break;
 		}
@@ -252,7 +270,11 @@ void ParentHelper::pUpdate() {
 			mainFields.logger.warning(L"Specified device has been disabled or disconnected");
 			mainFields.captureManager.disconnect();
 			needToUpdateDevice = false;
-			snapshot.deviceInfo.runGuarded([&] { snapshot.deviceInfo._.state = mainFields.captureManager.getState(); });
+			snapshot.deviceInfo.runGuarded(
+				[&] {
+					snapshot.deviceInfo._.state = mainFields.captureManager.getState();
+				}
+			);
 			mainFields.rain.executeCommandAsync(mainFields.callbacks.onDeviceDisconnected);
 		} else if (mainFields.captureManager.getState() == CaptureManager::State::eDEVICE_CONNECTION_ERROR
 			&& changes.stateChanged.count(mainFields.captureManager.getSnapshot().id) > 0) {
@@ -298,11 +320,19 @@ void ParentHelper::pUpdate() {
 		needToUpdateHandlers |= formatChanged;
 
 		snapshot.deviceIsAvailable = mainFields.captureManager.getState() == CaptureManager::State::eOK;
-		snapshot.deviceInfo.runGuarded([&] { snapshot.deviceInfo._ = mainFields.captureManager.getSnapshot(); });
+		snapshot.deviceInfo.runGuarded(
+			[&] {
+				snapshot.deviceInfo._ = mainFields.captureManager.getSnapshot();
+			}
+		);
 	}
 	if (needToUpdateHandlers) {
 		updateProcessings();
-		snapshot.data.runGuarded([&] { mainFields.orchestrator.configureSnapshot(snapshot.data._); });
+		snapshot.data.runGuarded(
+			[&] {
+				mainFields.orchestrator.configureSnapshot(snapshot.data._);
+			}
+		);
 	}
 	if (needToUpdateDevice) {
 		// callback may want to use some data from snapshot.data,
@@ -323,7 +353,11 @@ void ParentHelper::pUpdate() {
 
 	if (anyCaptured) {
 		mainFields.orchestrator.process(mainFields.captureManager.getChannelMixer());
-		snapshot.data.runGuarded([&] { mainFields.orchestrator.exchangeData(snapshot.data._); });
+		snapshot.data.runGuarded(
+			[&] {
+				mainFields.orchestrator.exchangeData(snapshot.data._);
+			}
+		);
 		mainFields.rain.executeCommandAsync(mainFields.callbacks.onUpdate);
 	}
 }
@@ -441,8 +475,8 @@ string ParentHelper::makeDeviceListString(utils::MediaDeviceType type) {
 
 		bool formatAppendSuccess = appendFormat(device);
 		if (!formatAppendSuccess) {
-			append({ });
-			append({ });
+			append({});
+			append({});
 		}
 
 		bp.append(L"\n");

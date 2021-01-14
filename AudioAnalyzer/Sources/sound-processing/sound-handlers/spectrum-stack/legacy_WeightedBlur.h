@@ -16,14 +16,14 @@
 namespace rxtd::audio_analyzer {
 	class legacy_WeightedBlur : public ResamplerProvider {
 		struct Params {
-			double radiusMultiplier{ };
+			double radiusMultiplier{};
 
-			double minRadius{ };
-			double maxRadius{ };
-			double minRadiusAdaptation{ };
-			double maxRadiusAdaptation{ };
+			double minRadius{};
+			double maxRadius{};
+			double minRadiusAdaptation{};
+			double maxRadiusAdaptation{};
 
-			double minWeight{ };
+			double minWeight{};
 
 			friend bool operator==(const Params& lhs, const Params& rhs) {
 				return lhs.radiusMultiplier == rhs.radiusMultiplier
@@ -41,9 +41,9 @@ namespace rxtd::audio_analyzer {
 
 		audio_utils::GaussianCoefficientsManager gcm;
 
-		Params params{ };
+		Params params{};
 
-		BandResampler* resamplerPtr{ };
+		BandResampler* resamplerPtr{};
 
 	public:
 		[[nodiscard]]

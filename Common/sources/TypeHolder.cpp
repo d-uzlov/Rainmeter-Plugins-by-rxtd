@@ -11,7 +11,7 @@
 
 using namespace utils;
 
-std::map<Rainmeter::Skin, std::map<istring, ParentBase*, std::less<>>> ParentBase::globalMeasuresMap{ };
+std::map<Rainmeter::Skin, std::map<istring, ParentBase*, std::less<>>> ParentBase::globalMeasuresMap{};
 
 TypeHolder::TypeHolder(Rainmeter&& _rain) : rain(std::move(_rain)) {
 	logger = rain.createLogger();
@@ -25,7 +25,7 @@ double TypeHolder::update() {
 
 	resultDouble = vUpdate();
 	if (useResultString) {
-		resultString = { };
+		resultString = {};
 		vUpdateString(resultString);
 	}
 	return resultDouble;
@@ -62,7 +62,7 @@ const wchar_t* TypeHolder::resolve(int argc, const wchar_t* argv[]) {
 		resolveVector.emplace_back(arg);
 	}
 
-	resolveString = { };
+	resolveString = {};
 	vResolve(resolveVector, resolveString);
 
 	return resolveString.c_str();
@@ -74,7 +74,7 @@ const wchar_t* TypeHolder::resolve(array_view<isview> args) {
 		return L"";
 	}
 
-	resolveString = { };
+	resolveString = {};
 	vResolve(args, resolveString);
 
 	return resolveString.c_str();

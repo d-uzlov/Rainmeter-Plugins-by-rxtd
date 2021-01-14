@@ -34,7 +34,7 @@ FilterCascadeCreator FilterCascadeParser::parse(const utils::Option& description
 	for (auto filterDescription : description.asSequence()) {
 		auto patcher = parseFilter(filterDescription, logger);
 		if (patcher == nullptr) {
-			return { };
+			return {};
 		}
 
 		result.push_back(std::move(patcher));
@@ -49,7 +49,7 @@ FilterCascadeParser::parseFilter(const utils::OptionList& description, utils::Ra
 
 	if (name.empty()) {
 		logger.error(L"filter name is not found", name);
-		return { };
+		return {};
 	}
 
 	auto cl = logger.context(L"'{}': ", name);
@@ -64,18 +64,18 @@ FilterCascadeParser::parseFilter(const utils::OptionList& description, utils::Ra
 	}
 
 	cl.error(L"unknown filter type");
-	return { };
+	return {};
 }
 
 FilterCascadeParser::FCF
 FilterCascadeParser::parseBQ(isview name, const utils::OptionMap& description, utils::Rainmeter::Logger& cl) {
 	if (description.get(L"q").empty()) {
 		cl.error(L"Q is not found", name);
-		return { };
+		return {};
 	}
 	if (description.get(L"freq").empty()) {
 		cl.error(L"freq is not found", name);
-		return { };
+		return {};
 	}
 
 	const double q = std::max<double>(description.get(L"q").asFloat(), std::numeric_limits<float>::epsilon());
@@ -104,31 +104,31 @@ FilterCascadeParser::parseBQ(isview name, const utils::OptionMap& description, u
 	} else if (name == L"bqHighShelf") {
 		if (description.get(L"gain").empty()) {
 			cl.error(L"gain is not found", name);
-			return { };
+			return {};
 		}
 
 		filterCreationFunc = BQFilterBuilder::createHighShelf;
 	} else if (name == L"bqLowShelf") {
 		if (description.get(L"gain").empty()) {
 			cl.error(L"gain is not found", name);
-			return { };
+			return {};
 		}
 
 		filterCreationFunc = BQFilterBuilder::createLowShelf;
 	} else if (name == L"bqPeak") {
 		if (description.get(L"gain").empty()) {
 			cl.error(L"gain is not found", name);
-			return { };
+			return {};
 		}
 
 		filterCreationFunc = BQFilterBuilder::createPeak;
 	} else {
 		cl.error(L"unknown filter type");
-		return { };
+		return {};
 	}
 
 	return [=](double sampleFrequency) {
-		auto filter = new BiQuadIIR{ };
+		auto filter = new BiQuadIIR{};
 		*filter = filterCreationFunc(sampleFrequency, q, centralFrequency, gain);
 		if (gain > 0.0) {
 			filter->addGainDbEnergy(-gain);
@@ -142,13 +142,13 @@ FilterCascadeParser::FCF
 FilterCascadeParser::parseBW(isview name, const utils::OptionMap& description, utils::Rainmeter::Logger& cl) {
 	if (description.get(L"order").empty()) {
 		cl.error(L"order is not found");
-		return { };
+		return {};
 	}
 
 	const index order = description.get(L"order").asInt();
 	if (order <= 0 || order > 5) {
 		cl.error(L"order must be in range [1, 5] but {} found", order);
-		return { };
+		return {};
 	}
 
 	const double cutoff = description.get(L"freq").asFloat();
@@ -165,7 +165,7 @@ FilterCascadeParser::parseBW(isview name, const utils::OptionMap& description, u
 	if (name == L"bwLowPass" || name == L"bwHighPass") {
 		if (description.get(L"freq").empty()) {
 			cl.error(L"freq is not found");
-			return { };
+			return {};
 		}
 
 		if (name == L"bwLowPass") {
@@ -183,11 +183,11 @@ FilterCascadeParser::parseBW(isview name, const utils::OptionMap& description, u
 	if (name == L"bwBandPass" || name == L"bwBandStop") {
 		if (description.get(L"freqLow").empty()) {
 			cl.error(L"freqLow is not found");
-			return { };
+			return {};
 		}
 		if (description.get(L"freqHigh").empty()) {
 			cl.error(L"freqHigh is not found");
-			return { };
+			return {};
 		}
 
 		if (name == L"bwBandPass") {
@@ -202,10 +202,10 @@ FilterCascadeParser::parseBW(isview name, const utils::OptionMap& description, u
 	}
 
 	cl.error(L"unknown filter type");
-	return { };
+	return {};
 }
 
-template <index size>
+template<index size>
 FilterCascadeParser::FCF FilterCascadeParser::createButterworthMaker(
 	index order, double forcedGain, double freq1,
 	double freq2,
@@ -221,7 +221,7 @@ FilterCascadeParser::FCF FilterCascadeParser::createButterworthMaker(
 	};
 }
 
-template <ButterworthWrapper::SizeFuncSignature sizeFunc>
+template<ButterworthWrapper::SizeFuncSignature sizeFunc>
 FilterCascadeParser::FCF FilterCascadeParser::createButterworth(
 	index order, double forcedGain, double freq1,
 	double freq2,

@@ -19,21 +19,20 @@
 
 namespace rxtd::utils {
 	class IAudioClientWrapper : public GenericComWrapper<IAudioClient> {
-		HRESULT lastResult = { };
+		HRESULT lastResult = {};
 
-		GenericCoTaskMemWrapper<WAVEFORMATEX> nativeFormat{ };
+		GenericCoTaskMemWrapper<WAVEFORMATEX> nativeFormat{};
 		WaveFormat format;
 		bool formatIsValid = false;
 
-		MediaDeviceType type{ };
-		IAudioCaptureClientWrapper::Type formatType{ };
+		MediaDeviceType type{};
+		IAudioCaptureClientWrapper::Type formatType{};
 
 	public:
 		IAudioClientWrapper() = default;
 
-		template <typename InitFunction>
-		IAudioClientWrapper(InitFunction initFunction) : GenericComWrapper(std::move(initFunction)) {
-		}
+		template<typename InitFunction>
+		IAudioClientWrapper(InitFunction initFunction) : GenericComWrapper(std::move(initFunction)) { }
 
 		IAudioCaptureClientWrapper openCapture();
 
@@ -70,7 +69,7 @@ namespace rxtd::utils {
 			return type;
 		}
 
-		template <typename Interface>
+		template<typename Interface>
 		GenericComWrapper<Interface> getInterface() {
 			static_assert(
 				std::is_base_of<IAudioClock, Interface>::value

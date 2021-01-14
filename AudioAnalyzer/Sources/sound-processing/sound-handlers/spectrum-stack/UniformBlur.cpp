@@ -22,7 +22,7 @@ SoundHandler::ParseResult UniformBlur::parseParams(
 	const auto sourceId = om.get(L"source").asIString();
 	if (sourceId.empty()) {
 		cl.error(L"source is not found");
-		return { };
+		return {};
 	}
 
 	//                                                        ?? ↓↓ looks best ?? at 0.25 ↓↓ ??

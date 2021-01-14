@@ -102,7 +102,7 @@ namespace rxtd::utils {
 		[[nodiscard]]
 		Changes takeChanges() {
 			auto lock = getLock();
-			return std::exchange(changes, { });
+			return std::exchange(changes, {});
 		}
 
 		HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvInterface) override {

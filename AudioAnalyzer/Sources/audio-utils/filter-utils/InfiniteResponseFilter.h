@@ -25,15 +25,15 @@ namespace rxtd::audio_utils {
 		std::vector<double> a;
 		std::vector<double> b;
 		std::vector<double> state;
-		double gainAmp{ };
+		double gainAmp{};
 
 	public:
 		InfiniteResponseFilter() = default;
 		InfiniteResponseFilter(std::vector<double> a, std::vector<double> b, double gainAmp);
 
 		InfiniteResponseFilter(FilterParameters params) : InfiniteResponseFilter(
-			std::move(params.a), std::move(params.b), params.gainAmp) {
-		}
+			std::move(params.a), std::move(params.b), params.gainAmp
+		) { }
 
 		// updates the state of the filter and returns filtered value
 		double next(double value) {
@@ -58,25 +58,25 @@ namespace rxtd::audio_utils {
 		double updateState(double value);
 	};
 
-	template <index order>
+	template<index order>
 	class InfiniteResponseFilterFixed : public AbstractFilter {
 		// inspired by https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.lfilter.html
 
-		std::array<double, order> a{ };
-		std::array<double, order> b{ };
-		std::array<double, order - 1> state{ };
-		double gainAmp{ };
+		std::array<double, order> a{};
+		std::array<double, order> b{};
+		std::array<double, order - 1> state{};
+		double gainAmp{};
 
 	public:
 		InfiniteResponseFilterFixed() = default;
 
 		InfiniteResponseFilterFixed(FilterParameters params) : InfiniteResponseFilterFixed(
-			std::move(params.a), std::move(params.b), params.gainAmp) {
-		}
+			std::move(params.a), std::move(params.b), params.gainAmp
+		) { }
 
 		InfiniteResponseFilterFixed(array_view<double> _a, array_view<double> _b, double gainAmp) {
 			if (_a.size() > order || _b.size() > order) {
-				throw std::exception{ };
+				throw std::exception{};
 			}
 
 			this->gainAmp = gainAmp;

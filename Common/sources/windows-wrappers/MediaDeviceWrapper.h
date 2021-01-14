@@ -27,14 +27,13 @@ namespace rxtd::utils {
 		};
 
 	private:
-		HRESULT lastResult = { };
+		HRESULT lastResult = {};
 
 	public:
 		MediaDeviceWrapper() = default;
 
-		template <typename InitFunction>
-		MediaDeviceWrapper(InitFunction initFunction) : GenericComWrapper(std::move(initFunction)) {
-		}
+		template<typename InitFunction>
+		MediaDeviceWrapper(InitFunction initFunction) : GenericComWrapper(std::move(initFunction)) { }
 
 		[[nodiscard]]
 		string readId();
@@ -50,7 +49,7 @@ namespace rxtd::utils {
 			return lastResult;
 		}
 
-		template <typename Interface>
+		template<typename Interface>
 		GenericComWrapper<Interface> activateFor() {
 			static_assert(
 				std::is_base_of<IAudioClient, Interface>::value

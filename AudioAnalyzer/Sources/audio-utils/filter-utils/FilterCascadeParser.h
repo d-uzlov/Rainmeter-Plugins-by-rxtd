@@ -27,8 +27,7 @@ namespace rxtd::audio_utils {
 		FilterCascadeCreator() = default;
 
 		FilterCascadeCreator(string source, std::vector<FilterCreationFunction> patchers) :
-			source(std::move(source)), patchers(std::move(patchers)) {
-		}
+			source(std::move(source)), patchers(std::move(patchers)) { }
 
 		friend bool operator==(const FilterCascadeCreator& lhs, const FilterCascadeCreator& rhs) {
 			return lhs.source == rhs.source;
@@ -59,7 +58,7 @@ namespace rxtd::audio_utils {
 		[[nodiscard]]
 		static FCF parseBW(isview name, const utils::OptionMap& description, utils::Rainmeter::Logger& cl);
 
-		template <index size>
+		template<index size>
 		[[nodiscard]]
 		static FCF createButterworthMaker(
 			index order,
@@ -68,7 +67,7 @@ namespace rxtd::audio_utils {
 			const ButterworthWrapper::GenericCoefCalculator& butterworthMaker
 		);
 
-		template <ButterworthWrapper::SizeFuncSignature sizeFunc>
+		template<ButterworthWrapper::SizeFuncSignature sizeFunc>
 		[[nodiscard]]
 		static FCF createButterworth(
 			index order,

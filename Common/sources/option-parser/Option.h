@@ -22,11 +22,9 @@ namespace rxtd::utils {
 	public:
 		Option() = default;
 
-		explicit Option(sview view) : AbstractOption(view, { }) {
-		}
+		explicit Option(sview view) : AbstractOption(view, {}) { }
 
-		explicit Option(isview view) : Option(view % csView()) {
-		}
+		explicit Option(isview view) : Option(view % csView()) { }
 
 		explicit Option(wchar_t* view) : Option(sview{ view }) {
 			own();
@@ -34,19 +32,19 @@ namespace rxtd::utils {
 
 		// Raw view of option.
 		[[nodiscard]]
-		sview asString(sview defaultValue = { }) const &;
+		sview asString(sview defaultValue = {}) const &;
 
 		[[nodiscard]]
-		string asString(sview defaultValue = { }) const && {
+		string asString(sview defaultValue = {}) const && {
 			return string{ asString(defaultValue) };
 		}
 
 		// Raw case-insensitive view of option.
 		[[nodiscard]]
-		isview asIString(isview defaultValue = { }) const &;
+		isview asIString(isview defaultValue = {}) const &;
 
 		[[nodiscard]]
-		istring asIString(isview defaultValue = { }) const && {
+		istring asIString(isview defaultValue = {}) const && {
 			return istring{ asIString(defaultValue) };
 		}
 
@@ -59,7 +57,7 @@ namespace rxtd::utils {
 		float asFloatF(float defaultValue = 0.0) const;
 
 		// Parse integer value, support math operations.
-		template <typename IntType = int32_t>
+		template<typename IntType = int32_t>
 		typename std::enable_if<std::is_integral<IntType>::value, IntType>::type
 		asInt(IntType defaultValue = 0) const {
 			const auto dVal = asFloat(static_cast<double>(defaultValue));
@@ -120,22 +118,19 @@ namespace rxtd::utils {
 	public:
 		GhostOption() = default;
 
-		explicit GhostOption(sview view) : Option(view) {
-		}
+		explicit GhostOption(sview view) : Option(view) { }
 
-		explicit GhostOption(isview view) : Option(view) {
-		}
+		explicit GhostOption(isview view) : Option(view) { }
 
-		explicit GhostOption(wchar_t* view) : Option(view) {
-		}
+		explicit GhostOption(wchar_t* view) : Option(view) { }
 
 		[[nodiscard]]
-		sview asString(sview defaultValue = { }) const {
+		sview asString(sview defaultValue = {}) const {
 			return Option::asString(defaultValue);
 		}
 
 		[[nodiscard]]
-		isview asIString(isview defaultValue = { }) const {
+		isview asIString(isview defaultValue = {}) const {
 			return Option::asIString(defaultValue);
 		}
 	};
@@ -148,7 +143,6 @@ namespace rxtd::utils {
 
 		OptionSeparated(Option first, Option rest) :
 			first(std::move(first)),
-			rest(std::move(rest)) {
-		}
+			rest(std::move(rest)) { }
 	};
 }

@@ -52,7 +52,7 @@ namespace rxtd::audio_analyzer {
 		Rainmeter rain;
 		bool anythingChanged = false;
 		bool unusedOptionsWarning = false;
-		index legacyNumber{ };
+		index legacyNumber{};
 
 	public:
 		void setRain(Rainmeter value) {
@@ -89,15 +89,15 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		PatchInfo createHandlerPatcher(const utils::OptionMap& optionMap, Logger& cl) const;
 
-		template <typename T>
+		template<typename T>
 		[[nodiscard]]
 		PatchInfo createPatcherT(const utils::OptionMap& om, Logger& cl) const {
-			T instance{ };
+			T instance{};
 			SoundHandler& ref = instance;
 			SoundHandler::ParseResult parseResult = ref.parseParams(om, cl, rain, legacyNumber);
 
 			if (!parseResult.valid) {
-				return { };
+				return {};
 			}
 
 			PatchInfo result;

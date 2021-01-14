@@ -18,15 +18,15 @@ FileWrapper::FileWrapper(const wchar_t* path) {
 		path,
 		0
 		| GENERIC_WRITE
-		,
+	   ,
 		0
 		| FILE_SHARE_READ
 		// | FILE_SHARE_DELETE
-		, nullptr, CREATE_ALWAYS,
+	  , nullptr, CREATE_ALWAYS,
 		0
 		// |FILE_ATTRIBUTE_NORMAL
 		// | FILE_ATTRIBUTE_TEMPORARY
-		, nullptr
+	  , nullptr
 	);
 }
 

@@ -27,12 +27,12 @@ string MediaDeviceWrapper::readId() {
 			return lastResult == S_OK;
 		}
 	};
-	return idWrapper.isValid() ? idWrapper.getPointer() : string{ };
+	return idWrapper.isValid() ? idWrapper.getPointer() : string{};
 }
 
 MediaDeviceWrapper::DeviceInfo MediaDeviceWrapper::readDeviceInfo() {
 	if (!isValid()) {
-		return { };
+		return {};
 	}
 
 	PropertyStoreWrapper props{
@@ -41,7 +41,7 @@ MediaDeviceWrapper::DeviceInfo MediaDeviceWrapper::readDeviceInfo() {
 		}
 	};
 	if (!props.isValid()) {
-		return { };
+		return {};
 	}
 
 	DeviceInfo deviceInfo;

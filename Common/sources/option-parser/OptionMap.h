@@ -16,22 +16,21 @@ namespace rxtd::utils {
 	class OptionMap : public AbstractOption<OptionMap> {
 	public:
 		struct MapOptionInfo {
-			SubstringViewInfo substringInfo{ };
+			SubstringViewInfo substringInfo{};
 			bool touched = false;
 
 			MapOptionInfo() = default;
 
-			MapOptionInfo(SubstringViewInfo substringInfo) : substringInfo(substringInfo) {
-			}
+			MapOptionInfo(SubstringViewInfo substringInfo) : substringInfo(substringInfo) { }
 		};
 
 	private:
 		// For move and copy operations.
 		// String view would require much more hustle when moved with source than SubstringViewInfo
-		std::map<SubstringViewInfo, SubstringViewInfo> paramsInfo{ };
+		std::map<SubstringViewInfo, SubstringViewInfo> paramsInfo{};
 
 		// For fast search.
-		mutable std::map<isview, MapOptionInfo> params{ };
+		mutable std::map<isview, MapOptionInfo> params{};
 
 	public:
 		OptionMap() = default;
@@ -44,7 +43,7 @@ namespace rxtd::utils {
 		// Doesn't raise the "touched" flag on the option
 		[[nodiscard]]
 		GhostOption getUntouched(sview name) const &;
-		
+
 		[[nodiscard]]
 		Option getUntouched(sview name) const &&;
 

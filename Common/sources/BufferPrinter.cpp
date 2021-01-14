@@ -13,11 +13,11 @@ using namespace utils;
 
 BufferPrinter::ReadableOutputBuffer::ReadableOutputBuffer(ReadableOutputBuffer&& other) noexcept:
 	std::basic_streambuf<wchar_t>(other),
-	buffer(std::move(other.buffer)) {
-}
+	buffer(std::move(other.buffer)) {}
 
 BufferPrinter::ReadableOutputBuffer& BufferPrinter::ReadableOutputBuffer::operator=(
-	ReadableOutputBuffer&& other) noexcept {
+	ReadableOutputBuffer&& other
+) noexcept {
 	if (this == &other)
 		return *this;
 	std::basic_streambuf<wchar_t>::operator =(other);

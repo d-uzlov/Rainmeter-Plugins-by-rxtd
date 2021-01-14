@@ -11,12 +11,14 @@
 
 using namespace utils;
 
-SubstringViewInfo SubstringViewInfo::substr(index subOffset,
-	index subLength) const {
+SubstringViewInfo SubstringViewInfo::substr(
+	index subOffset,
+	index subLength
+) const {
 	if (subOffset >= length) {
-		return { };
+		return {};
 	}
-	
+
 	const auto newOffset = offset + subOffset;
 	const auto newLength = std::min(length - subOffset, subLength);
 	return { newOffset, newLength };
@@ -34,13 +36,12 @@ bool SubstringViewInfo::operator<(const SubstringViewInfo& other) const {
 }
 
 
-
 SubstringViewInfo StringUtils::trimInfo(const wchar_t* base, SubstringViewInfo viewInfo) {
 	sview view = viewInfo.makeView(base);
 
 	const auto begin = view.find_first_not_of(L" \t");
 	if (begin == sview::npos) {
-		return { };
+		return {};
 	}
 
 	const auto end = view.find_last_not_of(L" \t"); // always valid if find_first_not_of succeeded

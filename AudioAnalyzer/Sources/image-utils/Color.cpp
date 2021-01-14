@@ -18,7 +18,7 @@ utils::Color utils::Color::parse(sview desc, Color defaultValue) {
 	}
 
 	Color result;
-	OptionList components{ };
+	OptionList components{};
 	if (StringUtils::checkStartsWith(desc, L"@")) {
 		desc.remove_prefix(1);
 		auto [attr, colorDesc] = Option{ desc }.breakFirst(L'$');
@@ -159,7 +159,7 @@ utils::Color utils::Color::hsv2rgb() const {
 
 	struct {
 		float r, g, b;
-	} tmp{ };
+	} tmp{};
 	if (chroma == 0.0) {
 		tmp = { 0.0, 0.0, 0.0 };
 	} else if (h >= 0.0 && h <= 1.0) {

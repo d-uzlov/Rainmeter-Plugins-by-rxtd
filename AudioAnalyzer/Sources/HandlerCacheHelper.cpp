@@ -53,7 +53,7 @@ HandlerCacheHelper::HandlerRawInfo HandlerCacheHelper::parseHandler(sview name, 
 
 	if (descriptionOption.empty()) {
 		cl.error(L"description is not found", name);
-		return { };
+		return {};
 	}
 
 	utils::OptionMap optionMap = descriptionOption.asMap(L'|', L' ');
@@ -88,7 +88,7 @@ PatchInfo HandlerCacheHelper::createHandlerPatcher(
 
 	if (type.empty()) {
 		cl.error(L"type is not found");
-		return { };
+		return {};
 	}
 
 	if (type == L"rms") {
@@ -159,7 +159,7 @@ PatchInfo HandlerCacheHelper::createHandlerPatcher(
 	}
 
 	cl.error(L"unknown type '{}'", type);
-	return { };
+	return {};
 }
 
 void HandlerCacheHelper::readRawDescription2(

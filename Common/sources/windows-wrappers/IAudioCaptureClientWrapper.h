@@ -23,19 +23,18 @@ namespace rxtd::utils {
 		};
 
 	private:
-		Type type{ };
-		index channelsCount{ };
+		Type type{};
+		index channelsCount{};
 
 		Vector2D<float> buffer;
 
-		HRESULT lastResult{ };
+		HRESULT lastResult{};
 
 	public:
 		IAudioCaptureClientWrapper() = default;
 
 		template<typename InitFunction>
-		IAudioCaptureClientWrapper(InitFunction initFunction) : GenericComWrapper(std::move(initFunction)) {
-		}
+		IAudioCaptureClientWrapper(InitFunction initFunction) : GenericComWrapper(std::move(initFunction)) { }
 
 		void setParams(Type _type, index _channelsCount) {
 			type = _type;

@@ -21,7 +21,7 @@ SoundHandler::ParseResult SingleValueTransformer::parseParams(
 	const auto sourceId = om.get(L"source").asIString();
 	if (sourceId.empty()) {
 		cl.error(L"source is not found");
-		return { };
+		return {};
 	}
 
 	auto transformLogger = cl.context(L"transform: ");

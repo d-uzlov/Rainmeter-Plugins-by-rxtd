@@ -25,7 +25,7 @@ namespace rxtd::audio_analyzer {
 	};
 
 	class ChannelLayout {
-		sview name = { };
+		sview name = {};
 		std::map<Channel, index> channelMap;
 		std::vector<Channel> channelOrder;
 

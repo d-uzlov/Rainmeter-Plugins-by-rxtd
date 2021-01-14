@@ -74,7 +74,7 @@ namespace rxtd::audio_utils {
 		}
 
 		// returns count of downsampled elements
-		template <index fixedFactor>
+		template<index fixedFactor>
 		index downsampleFixed(array_span<float> dest) {
 			const index size = buffer.getRemainingSize();
 			const index resultSize = std::min(size / fixedFactor, dest.size());

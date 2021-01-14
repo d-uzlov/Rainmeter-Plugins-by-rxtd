@@ -14,13 +14,13 @@
 #include "windows-wrappers/BufferPrinterExtensions.h"
 
 namespace rxtd::utils {
-	template <typename E>
+	template<typename E>
 	typename std::enable_if<std::is_enum<E>::value, sview>::type
 	getEnumName(E value) {
 		return L"<unknown enum>";
 	}
 
-	template <typename T>
+	template<typename T>
 	void writeType(std::wostream& stream, const T& t, sview options) {
 		if constexpr (std::is_enum<T>::value) {
 			if (options == L"name") {
@@ -45,7 +45,7 @@ namespace rxtd::utils {
 		stream << t;
 	}
 
-	template <>
+	template<>
 	inline void writeType(std::wostream& stream, const bool& t, sview options) {
 		if (options == L"number") {
 			stream << index(t);
@@ -54,7 +54,7 @@ namespace rxtd::utils {
 		}
 	}
 
-	template <typename T>
+	template<typename T>
 	void writeType(std::wostream& stream, const std::vector<T>& vec, sview options) {
 		stream << L'[';
 		if (!vec.empty()) {
@@ -125,23 +125,23 @@ namespace rxtd::utils {
 			skipUnlistedArgs = value;
 		}
 
-		template <typename... Args>
+		template<typename... Args>
 		void print(string formatString, const Args&... args) {
 			print(formatString.c_str(), args...);
 		}
 
-		template <typename T>
+		template<typename T>
 		void print(T arg) {
 			print(L"{}", arg);
 		}
 
-		template <typename... Args>
+		template<typename... Args>
 		void print(const wchar_t* formatString, const Args&... args) {
 			buffer.resetPointers();
 			append(formatString, args...);
 		}
 
-		template <typename... Args>
+		template<typename... Args>
 		void append(const wchar_t* formatString, const Args&... args) {
 			this->formatString = formatString;
 			writeToStream(args...);
@@ -166,18 +166,18 @@ namespace rxtd::utils {
 		}
 
 	private:
-		template <typename T, typename... Args>
+		template<typename T, typename... Args>
 		void writeToStream(const T& t, const Args&... args);
 
 		void writeToStream();
 
-		template <typename T, typename... Args>
+		template<typename T, typename... Args>
 		void writeUnlisted(const T& t, const Args&... args);
 
 		void writeUnlisted() { }
 	};
 
-	template <typename T, typename ... Args>
+	template<typename T, typename ... Args>
 	void BufferPrinter::writeToStream(const T& t, const Args&... args) {
 
 		auto begin = formatString;
@@ -251,7 +251,7 @@ namespace rxtd::utils {
 		writeToStream(args...);
 	}
 
-	template <typename T, typename ... Args>
+	template<typename T, typename ... Args>
 	void BufferPrinter::writeUnlisted(const T& t, const Args&... args) {
 		std::wostream stream = std::wostream(&buffer);
 		writeType(stream, t, {});

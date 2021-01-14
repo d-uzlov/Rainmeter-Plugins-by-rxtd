@@ -40,7 +40,7 @@ PerfmonParent::PerfmonParent(utils::Rainmeter&& _rain) : ParentBase(std::move(_r
 		return;
 	}
 
-	pdhWrapper = pdh::PdhWrapper { logger, objectName, counterTokens };
+	pdhWrapper = pdh::PdhWrapper{ logger, objectName, counterTokens };
 	if (!pdhWrapper.isValid()) {
 		setMeasureState(utils::MeasureState::eBROKEN);
 	}
@@ -60,19 +60,19 @@ void PerfmonParent::vReload() {
 	auto str = rain.readString(L"SortBy") % ciView();
 	typedef InstanceManager::SortBy SortBy;
 	SortBy sortBy;
-	if (str.empty() || str== L"None")
+	if (str.empty() || str == L"None")
 		sortBy = SortBy::eNONE;
-	else if (str==L"InstanceName")
+	else if (str == L"InstanceName")
 		sortBy = SortBy::eINSTANCE_NAME;
-	else if (str==L"RawCounter")
+	else if (str == L"RawCounter")
 		sortBy = SortBy::eRAW_COUNTER;
-	else if (str==L"FormattedCounter")
+	else if (str == L"FormattedCounter")
 		sortBy = SortBy::eFORMATTED_COUNTER;
-	else if (str==L"Expression")
+	else if (str == L"Expression")
 		sortBy = SortBy::eEXPRESSION;
-	else if (str==L"RollupExpression")
+	else if (str == L"RollupExpression")
 		sortBy = SortBy::eROLLUP_EXPRESSION;
-	else if (str==L"Count")
+	else if (str == L"Count")
 		sortBy = SortBy::eCOUNT;
 	else {
 		logger.error(L"SortBy '{}' is invalid, set to 'None'", str);
@@ -83,9 +83,9 @@ void PerfmonParent::vReload() {
 	str = rain.readString(L"SortOrder") % ciView();
 	typedef InstanceManager::SortOrder SortOrder;
 	SortOrder sortOrder;
-	if (str==L"" || str==L"Descending")
+	if (str == L"" || str == L"Descending")
 		sortOrder = SortOrder::eDESCENDING;
-	else if (str==L"Ascending")
+	else if (str == L"Ascending")
 		sortOrder = SortOrder::eASCENDING;
 	else {
 		logger.error(L"SortOrder '{}' is invalid, set to 'Descending'", str);
@@ -95,15 +95,15 @@ void PerfmonParent::vReload() {
 
 	str = rain.readString(L"SortRollupFunction") % ciView();
 	RollupFunction sortRollupFunction;
-	if (str==L"" || str==L"Sum")
+	if (str == L"" || str == L"Sum")
 		sortRollupFunction = RollupFunction::eSUM;
-	else if (str==L"Average")
+	else if (str == L"Average")
 		sortRollupFunction = RollupFunction::eAVERAGE;
-	else if (str==L"Minimum")
+	else if (str == L"Minimum")
 		sortRollupFunction = RollupFunction::eMINIMUM;
-	else if (str==L"Maximum")
+	else if (str == L"Maximum")
 		sortRollupFunction = RollupFunction::eMAXIMUM;
-	else if (str==L"Count") {
+	else if (str == L"Count") {
 		logger.warning(L"SortRollupFunction 'Count' is deprecated, SortBy set to 'Count'");
 		instanceManager.setSortBy(SortBy::eCOUNT);
 		sortRollupFunction = RollupFunction::eSUM;
@@ -136,11 +136,11 @@ void PerfmonParent::vReload() {
 	if (objectName == L"GPU Engine" || objectName == L"GPU Process Memory") {
 
 		const auto displayName = rain.readString(L"DisplayName") % ciView();
-		if (displayName==L"" || displayName==L"Original") {
+		if (displayName == L"" || displayName == L"Original") {
 			nameModificationType = NMT::NONE;
-		} else if (displayName==L"ProcessName" || displayName==L"GpuProcessName") {
+		} else if (displayName == L"ProcessName" || displayName == L"GpuProcessName") {
 			nameModificationType = NMT::GPU_PROCESS;
-		} else if (displayName==L"EngType" || displayName==L"GpuEngType") {
+		} else if (displayName == L"EngType" || displayName == L"GpuEngType") {
 			nameModificationType = NMT::GPU_ENGTYPE;
 		} else {
 			logger.error(L"Object '{}' don't support DisplayName '{}', set to 'Original'", objectName, displayName);
@@ -150,11 +150,11 @@ void PerfmonParent::vReload() {
 	} else if (objectName == L"LogicalDisk") {
 
 		const auto displayName = rain.readString(L"DisplayName") % ciView();
-		if (displayName==L"" || displayName==L"Original") {
+		if (displayName == L"" || displayName == L"Original") {
 			nameModificationType = NMT::NONE;
-		} else if (displayName==L"DriveLetter") {
+		} else if (displayName == L"DriveLetter") {
 			nameModificationType = NMT::LOGICAL_DISK_DRIVE_LETTER;
-		} else if (displayName==L"MountFolder") {
+		} else if (displayName == L"MountFolder") {
 			nameModificationType = NMT::LOGICAL_DISK_MOUNT_PATH;
 		} else {
 			logger.error(L"Object '{}' don't support DisplayName '{}', set to 'Original'", objectName, displayName);
@@ -218,7 +218,8 @@ double PerfmonParent::vUpdate() {
 		return 0;
 	}
 
-	if (needUpdate) { // fetch or reload happened
+	if (needUpdate) {
+		// fetch or reload happened
 		needUpdate = false;
 
 		expressionResolver.resetCaches();
@@ -232,34 +233,34 @@ double PerfmonParent::vUpdate() {
 }
 
 void PerfmonParent::vUpdateString(string& resultStringBuffer) {
-	switch (state) { 
-	case State::eFETCH_ERROR: 
+	switch (state) {
+	case State::eFETCH_ERROR:
 		resultStringBuffer = L"fetch error";
 		break;
 	case State::eNO_DATA:
 		resultStringBuffer = L"no data";
 		break;
 	case State::eOK:
-		resultStringBuffer = L"ok"; 
+		resultStringBuffer = L"ok";
 		break;
 	default: std::terminate();
 	}
 }
 
 void PerfmonParent::vCommand(isview bangArgs) {
-	if (bangArgs== L"Stop") {
+	if (bangArgs == L"Stop") {
 		setStopped(true);
 		return;
 	}
-	if (bangArgs==L"Resume") {
+	if (bangArgs == L"Resume") {
 		setStopped(false);
 		return;
 	}
-	if (bangArgs== L"StopResume") {
+	if (bangArgs == L"StopResume") {
 		changeStopState();
 		return;
 	}
-	if (bangArgs.substr(0, 14)== L"SetIndexOffset") {
+	if (bangArgs.substr(0, 14) == L"SetIndexOffset") {
 		auto arg = bangArgs.substr(14);
 		arg = utils::StringUtils::trim(arg);
 		if (arg[0] == L'-' || arg[0] == L'+') {
@@ -290,12 +291,15 @@ void PerfmonParent::vResolve(array_view<isview> args, string& resolveBufferStrin
 void PerfmonParent::setStopped(const bool value) {
 	stopped = value;
 }
+
 void PerfmonParent::changeStopState() {
 	stopped = !stopped;
 }
+
 void PerfmonParent::setIndexOffset(item_t value) {
 	instanceManager.setIndexOffset(value);
 }
+
 item_t PerfmonParent::getIndexOffset() const {
 	return instanceManager.getIndexOffset();
 }
@@ -315,4 +319,3 @@ bool PerfmonParent::canGetRaw() const {
 bool PerfmonParent::canGetFormatted() const {
 	return instanceManager.canGetFormatted();
 }
-

@@ -19,7 +19,7 @@ using namespace audio_utils;
 static const auto pi = std::acos(-1.0);
 
 WindowFunctionHelper::WindowCreationFunc WindowFunctionHelper::parse(sview desc, utils::Rainmeter::Logger& cl) {
-	utils::OptionList description  = utils::Option{ desc }.asSequence().begin().operator*();
+	utils::OptionList description = utils::Option{ desc }.asSequence().begin().operator*();
 	auto type = description.get(0).asIString();
 
 	if (type == L"none") {
@@ -27,26 +27,26 @@ WindowFunctionHelper::WindowCreationFunc WindowFunctionHelper::parse(sview desc,
 			return createRectangular(size);
 		};
 	}
-	
+
 	if (type == L"hann") {
 		return [](index size) {
 			return createCosineSum(size, 0.5);
 		};
 	}
-	
+
 	if (type == L"hamming") {
 		return [](index size) {
 			return createCosineSum(size, 0.53836);
 		};
 	}
-	
+
 	if (type == L"kaiser") {
 		const auto param = description.get(1).asFloat(3.0);
 		return [=](index size) {
 			return createKaiser(size, param);
 		};
 	}
-	
+
 	if (type == L"exponential") {
 		const auto param = description.get(1).asFloat(8.69);
 		return [=](index size) {
@@ -100,7 +100,7 @@ std::vector<float> WindowFunctionHelper::createKaiser(index size, double alpha) 
 
 	const double pia = pi * alpha;
 	const double inverseDenominator = 1.0 / std::cyl_bessel_i(0.0, pia);
-	
+
 	for (index i = 0; i < size; ++i) {
 		const double squaredContent = 2.0 * i / size - 1.0;
 		const double rootContent = 1.0 - squaredContent * squaredContent;
@@ -117,7 +117,7 @@ std::vector<float> WindowFunctionHelper::createExponential(index size, double ta
 
 	const double tau = size * 0.5 * 8.69 / targetDecay;
 	const double tauInverse = 1.0 / tau;
-	
+
 	for (index i = 0; i < size; ++i) {
 		const double value = std::exp(-std::abs(i - size * 0.5) * tauInverse);
 		window[i] = float(value);
@@ -131,6 +131,6 @@ std::vector<float> WindowFunctionHelper::createChebyshev(index size, double atte
 	window.resize(size);
 
 	cheby_win(window.data(), int(size), float(attenuation));
-	
+
 	return window;
 }
