@@ -445,16 +445,15 @@ string ParentHelper::makeDeviceListString(utils::MediaDeviceType type) {
 		auto format = audioClient.getFormat();
 		bp.append(L"{};", format.samplesPerSec);
 
-		auto layout = ChannelUtils::parseLayout(format.channelMask);
-		if (layout.ordered().empty()) {
+		if (format.channelLayout.ordered().empty()) {
 			bp.append(L"<unknown>;");
 		} else {
-			auto channels = layout.ordered();
+			auto channels = format.channelLayout.ordered();
 			channels.remove_suffix(1);
 			for (auto channel : channels) {
 				bp.append(L"{},", ChannelUtils::getTechnicalName(channel));
 			}
-			bp.append(L"{};", ChannelUtils::getTechnicalName(layout.ordered().back()));
+			bp.append(L"{};", ChannelUtils::getTechnicalName(format.channelLayout.ordered().back()));
 		}
 
 		return true;

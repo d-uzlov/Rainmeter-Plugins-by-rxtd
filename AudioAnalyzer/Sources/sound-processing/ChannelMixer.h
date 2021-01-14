@@ -8,7 +8,7 @@
  */
 
 #pragma once
-#include "device-management/MyWaveFormat.h"
+#include "Channel.h"
 #include "GrowingVector.h"
 #include "Vector2D.h"
 

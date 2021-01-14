@@ -109,15 +109,9 @@ CaptureManager::State CaptureManager::setSourceAndGetState(const SourceDesc& des
 
 	sessionEventsWrapper = { audioClient };
 
-	auto format = audioClient.getFormat();
 	snapshot.type = audioClient.getType();
-	snapshot.format.samplesPerSec = format.samplesPerSec;
+	snapshot.format = audioClient.getFormat();
 
-	constexpr bool forceBackSpeakers = true;
-	if (format.channelMask == KSAUDIO_SPEAKER_5POINT1_SURROUND && forceBackSpeakers) {
-		format.channelMask = KSAUDIO_SPEAKER_5POINT1;
-	}
-	snapshot.format.channelLayout = ChannelUtils::parseLayout(format.channelMask);
 	if (snapshot.format.channelLayout.ordered().empty()) {
 		logger.error(L"zero known channels are found in the current channel layout");
 		return State::eDEVICE_CONNECTION_ERROR;
@@ -276,7 +270,7 @@ utils::MediaDeviceWrapper CaptureManager::getDevice(const SourceDesc& desc) {
 	return {};
 }
 
-string CaptureManager::makeFormatString(MyWaveFormat waveFormat) {
+string CaptureManager::makeFormatString(utils::WaveFormat waveFormat) {
 	utils::BufferPrinter bp;
 
 	if (waveFormat.channelLayout.getName().empty()) {

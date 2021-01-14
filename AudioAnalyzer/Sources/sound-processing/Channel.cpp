@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 rxtd
+ * Copyright (C) 2019-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -125,7 +125,11 @@ sview getLayoutName(uint32_t bitMask) {
 	return L"";
 }
 
-ChannelLayout ChannelUtils::parseLayout(uint32_t bitMask) {
+ChannelLayout ChannelUtils::parseLayout(uint32_t bitMask, bool forbid5Point1Surround) {
+	if (bitMask == KSAUDIO_SPEAKER_5POINT1_SURROUND && forbid5Point1Surround) {
+		bitMask = KSAUDIO_SPEAKER_5POINT1;
+	}
+
 	struct {
 		uint32_t channelBit;
 		std::optional<Channel> channelOpt;

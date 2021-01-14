@@ -12,7 +12,6 @@
 #include <functional>
 
 #include "AudioSessionEventsWrapper.h"
-#include "MyWaveFormat.h"
 #include "RainmeterWrappers.h"
 #include "../ChannelMixer.h"
 #include "wasapi-wrappers/IAudioCaptureClientWrapper.h"
@@ -59,7 +58,7 @@ namespace rxtd::audio_analyzer {
 			string id;
 			string formatString;
 			utils::MediaDeviceType type{};
-			MyWaveFormat format;
+			utils::WaveFormat format;
 			string channelsString;
 		};
 
@@ -122,7 +121,7 @@ namespace rxtd::audio_analyzer {
 		utils::MediaDeviceWrapper getDevice(const SourceDesc& desc);
 
 		[[nodiscard]]
-		static string makeFormatString(MyWaveFormat waveFormat);
+		static string makeFormatString(utils::WaveFormat waveFormat);
 
 		void createExclusiveStreamListener();
 

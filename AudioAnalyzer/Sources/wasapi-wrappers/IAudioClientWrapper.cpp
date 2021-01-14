@@ -159,6 +159,8 @@ void IAudioClientWrapper::readFormat() {
 	format.channelsCount = waveFormatRaw.nChannels;
 	format.samplesPerSec = waveFormatRaw.nSamplesPerSec;
 
+	uint32_t channelMask{};
+
 	if (waveFormatRaw.wFormatTag == WAVE_FORMAT_EXTENSIBLE) {
 		const auto& formatExtensible = reinterpret_cast<const WAVEFORMATEXTENSIBLE&>(waveFormatRaw);
 
@@ -170,7 +172,7 @@ void IAudioClientWrapper::readFormat() {
 			formatIsValid = false;
 		}
 
-		format.channelMask = formatExtensible.dwChannelMask;
+		channelMask = formatExtensible.dwChannelMask;
 	} else {
 		if (waveFormatRaw.wFormatTag == WAVE_FORMAT_PCM && waveFormatRaw.wBitsPerSample == 16) {
 			formatType = IAudioCaptureClientWrapper::Type::eInt16;
@@ -181,11 +183,13 @@ void IAudioClientWrapper::readFormat() {
 		}
 
 		if (waveFormatRaw.nChannels == 1) {
-			format.channelMask = KSAUDIO_SPEAKER_MONO;
+			channelMask = KSAUDIO_SPEAKER_MONO;
 		} else if (waveFormatRaw.nChannels == 2) {
-			format.channelMask = KSAUDIO_SPEAKER_STEREO;
+			channelMask = KSAUDIO_SPEAKER_STEREO;
 		} else {
 			formatIsValid = false;
 		}
 	}
+
+	format.channelLayout = audio_analyzer::ChannelUtils::parseLayout(channelMask, true);
 }

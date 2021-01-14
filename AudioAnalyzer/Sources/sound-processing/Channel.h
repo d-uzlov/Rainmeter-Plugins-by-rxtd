@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 rxtd
+ * Copyright (C) 2019-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -74,6 +74,6 @@ namespace rxtd::audio_analyzer {
 		static sview getTechnicalNameLegacy(Channel channel);
 
 		[[nodiscard]]
-		static ChannelLayout parseLayout(uint32_t bitMask);
+		static ChannelLayout parseLayout(uint32_t bitMask, bool forbid5Point1Surround);
 	};
 }

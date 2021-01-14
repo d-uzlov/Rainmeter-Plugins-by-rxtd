@@ -60,7 +60,7 @@ namespace rxtd::utils {
 		void readFormat();
 
 		[[nodiscard]]
-		WaveFormat getFormat() const {
+		const WaveFormat& getFormat() const {
 			return format;
 		}
 
