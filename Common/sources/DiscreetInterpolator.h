@@ -3,7 +3,7 @@
 
 namespace rxtd::utils {
 	class DiscreetInterpolator {
-		LinearInterpolator li;
+		LinearInterpolator<double> li;
 
 		index valMin = 0;
 		index valMax = 1;

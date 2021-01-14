@@ -257,7 +257,7 @@ void Spectrogram::staticFinisher(const Snapshot& snapshot, const ExternCallConte
 }
 
 void Spectrogram::InputStripMaker::fillStrip(array_view<float> data, array_span<utils::IntColor> buffer) const {
-	const utils::LinearInterpolatorF interpolator{ colorLevels.front(), colorLevels.back(), 0.0, 1.0 };
+	const utils::LinearInterpolator<float> interpolator{ colorLevels.front(), colorLevels.back(), 0.0f, 1.0f };
 	const auto lowColor = colors[0].color;
 	const auto highColor = colors[1].color;
 

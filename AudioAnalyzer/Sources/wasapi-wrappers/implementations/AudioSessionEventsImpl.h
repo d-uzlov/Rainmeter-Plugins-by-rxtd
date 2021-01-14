@@ -48,15 +48,18 @@ namespace rxtd::utils {
 
 		std::atomic<DisconnectionReason> disconnectionReason{ DisconnectionReason::eNONE };
 
-		// I'm not sure, but we are changing the volume when someone else changes volume.
-		// We can potentially receive event of our own actions.
+		// I'm not sure, but we are changing the volume inside listener on volume changes
+		// We can potentially receive event of our own actions
+		// (ideally I would research now this really works and not just throw check here to be safe but that requires time which I don't have)
 		// Due to the use of a mutex deadlock can occur
+		// This atomic prevents this
+		// I can't use std::mutex#try_lock for this purpose because it can spuriously fail
 		//
 		// If events are created separately and not recursively,
 		// and there is some other listener that changes the volume
 		// to some value other than 1.0,
-		//	then, well, there will be an infinite loop, and I can do nothing with it
-		//	press F to pay respect
+		// then, well, there will be an infinite loop, and I can do nothing to prevent this
+		//    press F to pay respect
 		std::atomic<bool> recursionAtomic{ false };
 
 		std::mutex mut;
@@ -261,6 +264,77 @@ namespace rxtd::utils {
 			}
 
 			return S_OK;
+		}
+	};
+
+	// the whole and only point of this class is to
+	// automatically call AudioSessionEventsImpl#deinit
+	// reasoning:
+	//    As IUnknown implementation, AudioSessionEventsImpl must manage it's lifetime based on ref counter
+	//    GenericComWrapper will only decrement ref counter on destruction
+	//    IAudioSessionControl will still hold a reference inside itself,
+	//    so the object will not be destroyed until explicit #deinit call
+	class AudioSessionEventsWrapper : MovableOnlyBase {
+		GenericComWrapper<AudioSessionEventsImpl> impl;
+
+	public:
+		AudioSessionEventsWrapper() = default;
+
+		AudioSessionEventsWrapper(IAudioClientWrapper& client) {
+			impl = {
+				[&](auto ptr) {
+					*ptr = AudioSessionEventsImpl::create(client);
+					return true;
+				}
+			};
+		}
+
+		AudioSessionEventsWrapper(GenericComWrapper<IAudioSessionControl>&& _sessionController) {
+			impl = {
+				[&](auto ptr) {
+					*ptr = AudioSessionEventsImpl::create(std::move(_sessionController));
+					return true;
+				}
+			};
+		}
+
+		~AudioSessionEventsWrapper() {
+			destruct();
+		}
+
+		AudioSessionEventsWrapper(AudioSessionEventsWrapper&& other) noexcept {
+			destruct();
+			impl = std::move(other.impl);
+		}
+
+		AudioSessionEventsWrapper& operator=(AudioSessionEventsWrapper&& other) noexcept {
+			if (this == &other) {
+				return *this;
+			}
+
+			destruct();
+			impl = std::move(other.impl);
+
+			return *this;
+		}
+
+		[[nodiscard]]
+		bool isValid() const {
+			return impl.isValid();
+		}
+
+		AudioSessionEventsImpl::Changes grabChanges() {
+			if (!impl.isValid()) {
+				return {};
+			}
+			return impl.ref().takeChanges();
+		}
+
+		void destruct() {
+			if (impl.isValid()) {
+				impl.ref().deinit();
+			}
+			impl = {};
 		}
 	};
 }

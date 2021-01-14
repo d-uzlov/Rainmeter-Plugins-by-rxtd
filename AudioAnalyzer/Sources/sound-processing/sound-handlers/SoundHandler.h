@@ -163,7 +163,9 @@ namespace rxtd::audio_analyzer {
 			std::vector<istring> sources;
 			ExternalMethods externalMethods{};
 
-			ParseResult(bool isValid = false) {
+			ParseResult() : ParseResult(false) {}
+
+			explicit ParseResult(bool isValid) {
 				valid = isValid;
 			}
 		};
@@ -219,10 +221,10 @@ namespace rxtd::audio_analyzer {
 		Configuration _configuration{};
 
 	public:
-		template<typename _HandlerType>
+		template<typename Type>
 		[[nodiscard]]
 		static std::unique_ptr<SoundHandler> patchHandlerImpl(std::unique_ptr<SoundHandler> handlerPtr) {
-			using HandlerType = _HandlerType;
+			using HandlerType = Type;
 
 			SoundHandler* ptr = dynamic_cast<HandlerType*>(handlerPtr.get());
 			if (ptr == nullptr) {
