@@ -112,7 +112,7 @@ namespace rxtd::utils {
 
 	std::wostream& operator<<(std::wostream& stream, const Option& opt);
 
-	// same as option but doesn't allocate memory
+	// same as option but doesn't allocate memory in #asString when the object it r-value
 	// intended to be created when reading options from already allocated map/list
 	class GhostOption : public Option {
 	public:

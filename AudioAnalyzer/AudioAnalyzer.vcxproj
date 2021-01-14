@@ -222,6 +222,14 @@
     <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\legacy_WeightedBlur.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\WaveForm.h" />
     <ClInclude Include="Sources\sound-processing\ProcessingManager.h" />
+    <ClInclude Include="Sources\wasapi-wrappers\IAudioCaptureClientWrapper.h" />
+    <ClInclude Include="Sources\wasapi-wrappers\IAudioClientWrapper.h" />
+    <ClInclude Include="Sources\wasapi-wrappers\IMMDeviceEnumeratorWrapper.h" />
+    <ClInclude Include="Sources\wasapi-wrappers\implementations\AudioSessionEventsImpl.h" />
+    <ClInclude Include="Sources\wasapi-wrappers\implementations\NotificationClientImpl.h" />
+    <ClInclude Include="Sources\wasapi-wrappers\MediaDeviceType.h" />
+    <ClInclude Include="Sources\wasapi-wrappers\MediaDeviceWrapper.h" />
+    <ClInclude Include="Sources\wasapi-wrappers\WaveFormat.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Common\precompiled.cpp">
@@ -275,6 +283,10 @@
     <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\legacy_WeightedBlur.cpp" />
     <ClCompile Include="Sources\sound-processing\sound-handlers\WaveForm.cpp" />
     <ClCompile Include="Sources\sound-processing\ProcessingManager.cpp" />
+    <ClCompile Include="Sources\wasapi-wrappers\IAudioCaptureClientWrapper.cpp" />
+    <ClCompile Include="Sources\wasapi-wrappers\IAudioClientWrapper.cpp" />
+    <ClCompile Include="Sources\wasapi-wrappers\IMMDeviceEnumeratorWrapper.cpp" />
+    <ClCompile Include="Sources\wasapi-wrappers\MediaDeviceWrapper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\Common\resources\version.rc" />

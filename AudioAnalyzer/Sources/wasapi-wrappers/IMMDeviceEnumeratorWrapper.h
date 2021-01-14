@@ -9,9 +9,10 @@
 
 #pragma once
 
-#include "GenericComWrapper.h"
 #include <mmdeviceapi.h>
+
 #include "MediaDeviceWrapper.h"
+#include "winapi-wrappers/GenericComWrapper.h"
 
 namespace rxtd::utils {
 	enum class MediaDeviceType;

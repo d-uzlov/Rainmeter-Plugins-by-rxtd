@@ -8,12 +8,13 @@
  */
 
 #include "Spectrogram.h"
+
 #include <filesystem>
 
-#include "windows-wrappers/FileWrapper.h"
-#include "option-parser/OptionList.h"
 #include "LinearInterpolator.h"
 #include "MyMath.h"
+#include "option-parser/OptionList.h"
+#include "winapi-wrappers/FileWrapper.h"
 
 using namespace std::string_literals;
 

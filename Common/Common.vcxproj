@@ -163,11 +163,8 @@
     <ClCompile Include="sources\RainmeterWrappers.cpp" />
     <ClCompile Include="sources\StringUtils.cpp" />
     <ClCompile Include="sources\TypeHolder.cpp" />
-    <ClCompile Include="sources\windows-wrappers\FileWrapper.cpp" />
-    <ClCompile Include="sources\windows-wrappers\IAudioCaptureClientWrapper.cpp" />
-    <ClCompile Include="sources\windows-wrappers\IAudioClientWrapper.cpp" />
-    <ClCompile Include="sources\windows-wrappers\IMMDeviceEnumeratorWrapper.cpp" />
-    <ClCompile Include="sources\windows-wrappers\MediaDeviceWrapper.cpp" />
+    <ClCompile Include="sources\winapi-wrappers\BufferPrinterExtensions.cpp" />
+    <ClCompile Include="sources\winapi-wrappers\FileWrapper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="precompiled.h" />
@@ -193,19 +190,12 @@
     <ClInclude Include="sources\RainmeterWrappers.h" />
     <ClInclude Include="sources\StringUtils.h" />
     <ClInclude Include="sources\TypeHolder.h" />
-    <ClInclude Include="sources\windows-wrappers\FileWrapper.h" />
-    <ClInclude Include="sources\windows-wrappers\GenericComWrapper.h" />
-    <ClInclude Include="sources\windows-wrappers\GenericCoTaskMemWrapper.h" />
-    <ClInclude Include="sources\windows-wrappers\IAudioCaptureClientWrapper.h" />
-    <ClInclude Include="sources\windows-wrappers\IAudioClientWrapper.h" />
-    <ClInclude Include="sources\windows-wrappers\IMMDeviceEnumeratorWrapper.h" />
-    <ClInclude Include="sources\windows-wrappers\implementations\AudioSessionEventsImpl.h" />
-    <ClInclude Include="sources\windows-wrappers\implementations\IUnknownImpl.h" />
-    <ClInclude Include="sources\windows-wrappers\implementations\NotificationClientImpl.h" />
-    <ClInclude Include="sources\windows-wrappers\MediaDeviceType.h" />
-    <ClInclude Include="sources\windows-wrappers\MediaDeviceWrapper.h" />
-    <ClInclude Include="sources\windows-wrappers\PropertyStoreWrapper.h" />
-    <ClInclude Include="sources\windows-wrappers\WaveFormat.h" />
+    <ClInclude Include="sources\winapi-wrappers\BufferPrinterExtensions.h" />
+    <ClInclude Include="sources\winapi-wrappers\FileWrapper.h" />
+    <ClInclude Include="sources\winapi-wrappers\GenericComWrapper.h" />
+    <ClInclude Include="sources\winapi-wrappers\GenericCoTaskMemWrapper.h" />
+    <ClInclude Include="sources\winapi-wrappers\implementations\IUnknownImpl.h" />
+    <ClInclude Include="sources\winapi-wrappers\PropertyStoreWrapper.h" />
     <ClInclude Include="typedefs.h" />
     <ClInclude Include="undef.h" />
   </ItemGroup>

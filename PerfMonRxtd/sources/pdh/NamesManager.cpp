@@ -121,7 +121,7 @@ void NamesManager::modifyNameProcess(const PdhSnapshot& idSnapshot) {
 
 	wchar_t* namesBuffer = getBuffer(originalNamesSize + names.size() * 20);
 
-	utils::BufferPrinter printer { };
+	utils::BufferPrinter printer{};
 
 	const item_t namesCount(names.size());
 	for (item_t instanceIndex = 0; instanceIndex < namesCount; ++instanceIndex) {
@@ -268,4 +268,3 @@ void NamesManager::modifyNameGPUEngtype() {
 		}
 	}
 }
-

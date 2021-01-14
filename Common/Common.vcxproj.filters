@@ -9,13 +9,13 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\windows-wrappers">
-      <UniqueIdentifier>{cfe1b36f-90d4-4281-9bd6-dc9d34f62dfe}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\option-parser">
       <UniqueIdentifier>{f56a22ca-0b8d-451f-8bdb-b5ebc4f1b7d7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\windows-wrappers\implementations">
+    <Filter Include="Source Files\winapi-wrappers">
+      <UniqueIdentifier>{cfe1b36f-90d4-4281-9bd6-dc9d34f62dfe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\winapi-wrappers\implementations">
       <UniqueIdentifier>{574a5653-cea6-48c5-831f-c229edf3cce4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -32,9 +32,6 @@
     <ClCompile Include="sources\TypeHolder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sources\windows-wrappers\FileWrapper.cpp">
-      <Filter>Source Files\windows-wrappers</Filter>
-    </ClCompile>
     <ClCompile Include="sources\MathExpressionParser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -43,18 +40,6 @@
     </ClCompile>
     <ClCompile Include="sources\array_view.h">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\windows-wrappers\MediaDeviceWrapper.cpp">
-      <Filter>Source Files\windows-wrappers</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\windows-wrappers\IAudioClientWrapper.cpp">
-      <Filter>Source Files\windows-wrappers</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\windows-wrappers\IAudioCaptureClientWrapper.cpp">
-      <Filter>Source Files\windows-wrappers</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\windows-wrappers\IMMDeviceEnumeratorWrapper.cpp">
-      <Filter>Source Files\windows-wrappers</Filter>
     </ClCompile>
     <ClCompile Include="sources\option-parser\Tokenizer.cpp">
       <Filter>Source Files\option-parser</Filter>
@@ -68,8 +53,11 @@
     <ClCompile Include="sources\MyMath.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sources\windows-wrappers\BufferPrinterExtensions.cpp">
-      <Filter>Source Files\windows-wrappers</Filter>
+    <ClCompile Include="sources\winapi-wrappers\BufferPrinterExtensions.cpp">
+      <Filter>Source Files\winapi-wrappers</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\winapi-wrappers\FileWrapper.cpp">
+      <Filter>Source Files\winapi-wrappers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -84,12 +72,6 @@
     </ClInclude>
     <ClInclude Include="sources\TypeHolder.h">
       <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\windows-wrappers\FileWrapper.h">
-      <Filter>Source Files\windows-wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\windows-wrappers\GenericComWrapper.h">
-      <Filter>Source Files\windows-wrappers</Filter>
     </ClInclude>
     <ClInclude Include="sources\MathExpressionParser.h">
       <Filter>Source Files</Filter>
@@ -111,27 +93,6 @@
     </ClInclude>
     <ClInclude Include="sources\Vector2D.h">
       <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\windows-wrappers\MediaDeviceWrapper.h">
-      <Filter>Source Files\windows-wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\windows-wrappers\PropertyStoreWrapper.h">
-      <Filter>Source Files\windows-wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\windows-wrappers\IAudioClientWrapper.h">
-      <Filter>Source Files\windows-wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\windows-wrappers\IAudioCaptureClientWrapper.h">
-      <Filter>Source Files\windows-wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\windows-wrappers\WaveFormat.h">
-      <Filter>Source Files\windows-wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\windows-wrappers\MediaDeviceType.h">
-      <Filter>Source Files\windows-wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\windows-wrappers\IMMDeviceEnumeratorWrapper.h">
-      <Filter>Source Files\windows-wrappers</Filter>
     </ClInclude>
     <ClInclude Include="sources\option-parser\AbstractOption.h">
       <Filter>Source Files\option-parser</Filter>
@@ -169,26 +130,29 @@
     <ClInclude Include="sources\MapUtils.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="sources\windows-wrappers\implementations\NotificationClientImpl.h">
-      <Filter>Source Files\windows-wrappers\implementations</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\windows-wrappers\implementations\AudioSessionEventsImpl.h">
-      <Filter>Source Files\windows-wrappers\implementations</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\windows-wrappers\GenericCoTaskMemWrapper.h">
-      <Filter>Source Files\windows-wrappers</Filter>
-    </ClInclude>
     <ClInclude Include="sources\GenericBaseClasses.h">
       <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\windows-wrappers\implementations\IUnknownImpl.h">
-      <Filter>Source Files\windows-wrappers\implementations</Filter>
     </ClInclude>
     <ClInclude Include="sources\DataWithLock.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="sources\windows-wrappers\BufferPrinterExtensions.h">
-      <Filter>Source Files\windows-wrappers</Filter>
+    <ClInclude Include="sources\winapi-wrappers\implementations\IUnknownImpl.h">
+      <Filter>Source Files\winapi-wrappers\implementations</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\winapi-wrappers\BufferPrinterExtensions.h">
+      <Filter>Source Files\winapi-wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\winapi-wrappers\FileWrapper.h">
+      <Filter>Source Files\winapi-wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\winapi-wrappers\GenericComWrapper.h">
+      <Filter>Source Files\winapi-wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\winapi-wrappers\GenericCoTaskMemWrapper.h">
+      <Filter>Source Files\winapi-wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\winapi-wrappers\PropertyStoreWrapper.h">
+      <Filter>Source Files\winapi-wrappers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

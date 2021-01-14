@@ -9,16 +9,16 @@
 
 #pragma once
 
-#include "MyWaveFormat.h"
-#include "windows-wrappers/MediaDeviceWrapper.h"
-#include "RainmeterWrappers.h"
-#include "windows-wrappers/IAudioCaptureClientWrapper.h"
 #include <functional>
 
 #include "AudioSessionEventsWrapper.h"
+#include "MyWaveFormat.h"
+#include "RainmeterWrappers.h"
 #include "../ChannelMixer.h"
-#include "windows-wrappers/IMMDeviceEnumeratorWrapper.h"
-#include "windows-wrappers/implementations/AudioSessionEventsImpl.h"
+#include "wasapi-wrappers/IAudioCaptureClientWrapper.h"
+#include "wasapi-wrappers/IMMDeviceEnumeratorWrapper.h"
+#include "wasapi-wrappers/MediaDeviceWrapper.h"
+#include "wasapi-wrappers/implementations/AudioSessionEventsImpl.h"
 
 namespace rxtd::audio_analyzer {
 	class CaptureManager {

@@ -8,7 +8,7 @@
  */
 
 #include "BmpWriter.h"
-#include "windows-wrappers/FileWrapper.h"
+#include "winapi-wrappers/FileWrapper.h"
 
 using utils::IntColor;
 

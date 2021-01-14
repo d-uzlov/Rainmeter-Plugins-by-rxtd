@@ -11,9 +11,11 @@
 #include <optional>
 #include <iomanip>
 
-#include "windows-wrappers/BufferPrinterExtensions.h"
+#include "winapi-wrappers/BufferPrinterExtensions.h"
 
 namespace rxtd::utils {
+	using ::operator<<;
+
 	template<typename E>
 	typename std::enable_if<std::is_enum<E>::value, sview>::type
 	getEnumName(E value) {

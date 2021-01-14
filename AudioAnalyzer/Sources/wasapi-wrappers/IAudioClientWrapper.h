@@ -9,13 +9,13 @@
 
 #pragma once
 
-#include "GenericComWrapper.h"
+#include "winapi-wrappers/GenericComWrapper.h"
 #include <Audioclient.h>
 #include "IAudioCaptureClientWrapper.h"
 #include "WaveFormat.h"
 #include "MediaDeviceType.h"
 #include "audiopolicy.h"
-#include "GenericCoTaskMemWrapper.h"
+#include "winapi-wrappers/GenericCoTaskMemWrapper.h"
 
 namespace rxtd::utils {
 	class IAudioClientWrapper : public GenericComWrapper<IAudioClient> {

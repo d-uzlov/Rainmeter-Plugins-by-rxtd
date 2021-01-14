@@ -39,7 +39,7 @@ namespace rxtd::utils {
 
 			if constexpr (sizeof(TOut) == sizeof(long)) {
 				return static_cast<TOut>(std::lround(value));
-			} else if constexpr (sizeof(TOut) == sizeof(long)) {
+			} else if constexpr (sizeof(TOut) == sizeof(long long)) {
 				return static_cast<TOut>(std::llround(value));
 			} else {
 				static_assert(false);

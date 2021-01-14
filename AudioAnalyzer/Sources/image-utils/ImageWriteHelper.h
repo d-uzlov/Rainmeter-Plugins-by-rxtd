@@ -9,7 +9,7 @@
 
 #pragma once
 #include "BmpWriter.h"
-#include "windows-wrappers/FileWrapper.h"
+#include "winapi-wrappers/FileWrapper.h"
 
 namespace rxtd::utils {
 	class ImageWriteHelper {

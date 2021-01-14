@@ -9,8 +9,8 @@
 
 #pragma once
 
-#include "windows-wrappers/implementations/AudioSessionEventsImpl.h"
-#include "windows-wrappers/IAudioClientWrapper.h"
+#include "wasapi-wrappers/implementations/AudioSessionEventsImpl.h"
+#include "wasapi-wrappers/IAudioClientWrapper.h"
 
 namespace rxtd::audio_analyzer {
 	// the whole and only point of this class is to

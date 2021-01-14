@@ -9,12 +9,12 @@
 
 #pragma once
 
-#include <mmdeviceapi.h>
 #include <endpointvolume.h>
+#include <mmdeviceapi.h>
 #include <optional>
 
-#include "GenericComWrapper.h"
 #include "IAudioClientWrapper.h"
+#include "winapi-wrappers/GenericComWrapper.h"
 
 namespace rxtd::utils {
 	class MediaDeviceWrapper : public GenericComWrapper<IMMDevice> {

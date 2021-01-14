@@ -8,6 +8,7 @@
  */
 
 #include "IAudioCaptureClientWrapper.h"
+
 #include <type_traits>
 
 using namespace utils;

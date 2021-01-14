@@ -9,13 +9,15 @@
 
 #pragma once
 
-#include "IUnknownImpl.h"
-#include "audiopolicy.h"
-#include "../GenericComWrapper.h"
-#include "../IAudioClientWrapper.h"
-
-#include <mutex>
 #include <atomic>
+#include <mutex>
+
+#include <audiopolicy.h>
+
+#include "../IAudioClientWrapper.h"
+#include "winapi-wrappers/GenericComWrapper.h"
+#include "winapi-wrappers/implementations/IUnknownImpl.h"
+
 
 namespace rxtd::utils {
 	class AudioSessionEventsImpl : public IUnknownImpl<IAudioSessionEvents> {
@@ -49,7 +51,7 @@ namespace rxtd::utils {
 		// I'm not sure, but we are changing the volume when someone else changes volume.
 		// We can potentially receive event of our own actions.
 		// Due to the use of a mutex deadlock can occur
-		// 
+		//
 		// If events are created separately and not recursively,
 		// and there is some other listener that changes the volume
 		// to some value other than 1.0,

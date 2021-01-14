@@ -10,7 +10,7 @@
 #include "IAudioClientWrapper.h"
 
 #include "BufferPrinter.h"
-#include "GenericCoTaskMemWrapper.h"
+#include "winapi-wrappers/GenericCoTaskMemWrapper.h"
 #include "MyMath.h"
 
 using namespace utils;

@@ -9,13 +9,15 @@
 
 #pragma once
 
-#include "IUnknownImpl.h"
-#include "../IMMDeviceEnumeratorWrapper.h"
-#include <mmdeviceapi.h>
+#include <functional>
 #include <mutex>
 #include <set>
 
-#include <atomic>
+#include <mmdeviceapi.h>
+
+#include "../IMMDeviceEnumeratorWrapper.h"
+#include "winapi-wrappers/implementations/IUnknownImpl.h"
+
 
 namespace rxtd::utils {
 	class MediaDeviceListNotificationClient : public IUnknownImpl<IMMNotificationClient> {

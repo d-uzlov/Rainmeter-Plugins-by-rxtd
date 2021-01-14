@@ -44,6 +44,8 @@ namespace rxtd::utils {
 		[[nodiscard]]
 		GhostOption getUntouched(sview name) const &;
 
+		// Returns named option, search is case-insensitive.
+		// Doesn't raise the "touched" flag on the option
 		[[nodiscard]]
 		Option getUntouched(sview name) const &&;
 

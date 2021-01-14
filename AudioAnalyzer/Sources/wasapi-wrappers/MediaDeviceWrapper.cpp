@@ -7,7 +7,7 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-// this must be the first include
+// initguid.h must be the first include
 // source: https://social.msdn.microsoft.com/Forums/Windowsapps/en-US/00853e55-51dd-46bc-bceb-04c0c2e5cc06/unresolved-external-symbols?forum=mediafoundationdevelopment
 #include <initguid.h>
 
@@ -15,8 +15,8 @@
 
 #include <functiondiscoverykeys_devpkey.h>
 
-#include "GenericCoTaskMemWrapper.h"
-#include "PropertyStoreWrapper.h"
+#include "winapi-wrappers/GenericCoTaskMemWrapper.h"
+#include "winapi-wrappers/PropertyStoreWrapper.h"
 
 using namespace utils;
 

@@ -9,10 +9,10 @@
 
 #pragma once
 
-#include "GenericComWrapper.h"
 #include <Audioclient.h>
 
 #include "Vector2D.h"
+#include "winapi-wrappers/GenericComWrapper.h"
 
 namespace rxtd::utils {
 	class IAudioCaptureClientWrapper : public GenericComWrapper<IAudioCaptureClient> {
