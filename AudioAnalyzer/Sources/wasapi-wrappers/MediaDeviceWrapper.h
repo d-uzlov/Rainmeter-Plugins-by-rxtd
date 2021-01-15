@@ -36,39 +36,14 @@ namespace rxtd::utils {
 		MediaDeviceWrapper() = default;
 
 		template<typename InitFunction>
-		MediaDeviceWrapper(InitFunction initFunction) : GenericComWrapper(std::move(initFunction)) {
-			auto endpoint = GenericComWrapper<IMMEndpoint>{
-				[&](auto ptr) {
-					throwOnError(ref().QueryInterface(ptr), L"IMMDevice.QueryInterface(IMMEndpoint)");
-					return true;
-				}
-			};
-			EDataFlow flow{};
-			throwOnError(endpoint.ref().GetDataFlow(&flow), L"IMMEndpoint.GetDataFlow()");
-			switch (flow) {
-			case eRender:
-				type = MediaDeviceType::eOUTPUT;
-				break;
-			case eCapture:
-				type = MediaDeviceType::eINPUT;
-				break;
-			default: throw ComException{ -1, L"invalid EDataFlow value from IMMEndpoint.GetDataFlow()" };
-			}
-
-			GenericCoTaskMemWrapper<wchar_t> idWrapper{
-				[&](auto ptr) {
-					throwOnError(ref().GetId(ptr), L"IMMDevice.GetId()");
-					return true;
-				}
-			};
-			id = idWrapper.getPointer();
-			if (id.empty()) {
-				throw ComException{ -1, L"invalid empty value for device id from IMMDevice.GetId()" };
-			}
+		MediaDeviceWrapper(InitFunction initFunction, sview id) : GenericComWrapper(std::move(initFunction)), id(id) {
+			readType();
 		}
 
 		template<typename InitFunction>
-		MediaDeviceWrapper(InitFunction initFunction, MediaDeviceType type) : GenericComWrapper(std::move(initFunction)), type(type) { }
+		MediaDeviceWrapper(InitFunction initFunction, MediaDeviceType type) : GenericComWrapper(std::move(initFunction)), type(type) {
+			readId();
+		}
 
 		[[nodiscard]]
 		sview getId() const {
@@ -111,5 +86,38 @@ namespace rxtd::utils {
 	private:
 		[[nodiscard]]
 		static sview convertFormFactor(std::optional<EndpointFormFactor> value);
+
+		void readType() noexcept(false) {
+			auto endpoint = GenericComWrapper<IMMEndpoint>{
+				[&](auto ptr) {
+					throwOnError(ref().QueryInterface(ptr), L"IMMDevice.QueryInterface(IMMEndpoint)");
+					return true;
+				}
+			};
+			EDataFlow flow{};
+			throwOnError(endpoint.ref().GetDataFlow(&flow), L"IMMEndpoint.GetDataFlow()");
+			switch (flow) {
+			case eRender:
+				type = MediaDeviceType::eOUTPUT;
+				break;
+			case eCapture:
+				type = MediaDeviceType::eINPUT;
+				break;
+			default: throw ComException{ -1, L"invalid EDataFlow value from IMMEndpoint.GetDataFlow()" };
+			}
+		}
+
+		void readId() noexcept(false) {
+			GenericCoTaskMemWrapper<wchar_t> idWrapper{
+				[&](auto ptr) {
+					throwOnError(ref().GetId(ptr), L"IMMDevice.GetId()");
+					return true;
+				}
+			};
+			id = idWrapper.getPointer();
+			if (id.empty()) {
+				throw ComException{ -1, L"invalid empty value for device id from IMMDevice.GetId()" };
+			}
+		}
 	};
 }

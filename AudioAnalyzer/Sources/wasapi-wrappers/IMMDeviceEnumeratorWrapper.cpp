@@ -24,34 +24,33 @@ IMMDeviceEnumeratorWrapper::IMMDeviceEnumeratorWrapper() : GenericComWrapper(
 ) {}
 
 std::optional<MediaDeviceWrapper> IMMDeviceEnumeratorWrapper::getDeviceByID(const string& id) {
-	auto result = MediaDeviceWrapper{
-		[&](auto ptr) {
-			return S_OK == ref().GetDevice(id.c_str(), ptr);
-		}
-	};
-
-	if (result.isValid()) {
-		return std::move(result);
-	} else {
-		return std::nullopt;
+	try {
+		return MediaDeviceWrapper{
+			[&](auto ptr) {
+				throwOnError(ref().GetDevice(id.c_str(), ptr), {});
+				return true;
+			},
+			id
+		};
+	} catch (ComException&) {
+		return {};
 	}
 }
 
 std::optional<MediaDeviceWrapper> IMMDeviceEnumeratorWrapper::getDefaultDevice(MediaDeviceType type) {
-	auto result = MediaDeviceWrapper{
-		[&](auto ptr) {
-			return S_OK == ref().GetDefaultAudioEndpoint(
-				type == MediaDeviceType::eOUTPUT ? eRender : eCapture,
-				eConsole,
-				ptr
-			);
-		}
-	};
-
-	if (result.isValid()) {
-		return std::move(result);
-	} else {
-		return std::nullopt;
+	try {
+		return MediaDeviceWrapper{
+			[&](auto ptr) {
+				return S_OK == ref().GetDefaultAudioEndpoint(
+					type == MediaDeviceType::eOUTPUT ? eRender : eCapture,
+					eConsole,
+					ptr
+				);
+			},
+			type
+		};
+	} catch (ComException&) {
+		return {};
 	}
 }
 
@@ -83,7 +82,8 @@ std::vector<MediaDeviceWrapper> IMMDeviceEnumeratorWrapper::getCollection(
 		MediaDeviceWrapper device{
 			[&](auto ptr) {
 				return S_OK == collection.ref().Item(UINT(i), ptr);
-			}
+			},
+			type
 		};
 
 		result.push_back(std::move(device));

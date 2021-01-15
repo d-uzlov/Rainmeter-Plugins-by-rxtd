@@ -576,8 +576,13 @@ AudioParent::DeviceRequest AudioParent::readRequest() const {
 			result.type = ST::eDEFAULT_INPUT;
 		} else if (auto [type, value] = sourceOpt.breakFirst(L':');
 			type.asIString() == L"id") {
+			if (value.empty()) {
+				logHelpers.generic.log(L"device ID can not be empty");
+				return {};
+			}
+
 			result.type = ST::eID;
-			result.id = source % csView();
+			result.id = value.asString();
 		} else {
 			logHelpers.sourceTypeIsNotRecognized.log(type.asIString());
 			return {};
