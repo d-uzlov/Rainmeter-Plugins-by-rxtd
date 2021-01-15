@@ -1,5 +1,5 @@
 ﻿/* 
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -8,21 +8,18 @@
  */
 
 #pragma once
-#include "pdh/PdhWrapper.h"
-#include "pdh/NamesManager.h"
 #include "BlacklistManager.h"
 #include "enums.h"
 #include "expressions.h"
+#include "pdh/NamesManager.h"
+#include "pdh/PdhWrapper.h"
 
 namespace rxtd::perfmon {
-	using counter_t = pdh::counter_t;
-	using item_t = pdh::item_t;
-
 	class ExpressionResolver;
 
 	struct Indices {
-		item_t current;
-		item_t previous;
+		int_fast16_t current;
+		int_fast16_t previous;
 	};
 
 	struct InstanceInfo {
@@ -92,21 +89,21 @@ namespace rxtd::perfmon {
 		void setKeepDiscarded(bool value);
 		void setSyncRawFormatted(bool value);
 		void setRollup(bool value);
-		void setIndexOffset(item_t value);
+		void setIndexOffset(index value);
 		void setLimitIndexOffset(bool value);
 
-		void setSortIndex(counter_t value);
+		void setSortIndex(index value);
 		void setSortBy(SortBy value);
 		void setSortOrder(SortOrder value);
 		void setSortRollupFunction(RollupFunction value);
 
-		item_t getIndexOffset() const;
+		index getIndexOffset() const;
 		bool isRollup() const;
-		counter_t getCountersCount() const;
+		index getCountersCount() const;
 
 		const pdh::ModifiedNameItem& getNames(index index) const;
 
-		void checkIndices(counter_t counters, counter_t expressions, counter_t rollupExpressions);
+		void checkIndices(index counters, index expressions, index rollupExpressions);
 
 		void update();
 
@@ -125,13 +122,13 @@ namespace rxtd::perfmon {
 
 		void setNameModificationType(pdh::NamesManager::ModificationType value);
 
-		const InstanceInfo* findInstance(const Reference& ref, item_t sortedIndex) const;
+		const InstanceInfo* findInstance(const Reference& ref, index sortedIndex) const;
 
 		const InstanceInfo* findInstanceByName(const Reference& ref, bool useRollup) const;
 
-		double calculateRaw(counter_t counterIndex, Indices originalIndexes) const;
+		double calculateRaw(index counterIndex, Indices originalIndexes) const;
 
-		double calculateFormatted(counter_t counterIndex, Indices originalIndexes) const;
+		double calculateFormatted(index counterIndex, Indices originalIndexes) const;
 
 
 	private:
@@ -141,7 +138,7 @@ namespace rxtd::perfmon {
 
 		void buildRollupKeys();
 
-		item_t findPreviousName(sview uniqueName, item_t hint) const;
+		index findPreviousName(sview uniqueName, index hint) const;
 
 		const InstanceInfo* findInstanceByNameInList(
 			const Reference& ref,

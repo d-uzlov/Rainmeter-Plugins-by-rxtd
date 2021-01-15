@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2019 rxtd
+ * Copyright (C) 2018-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -97,8 +97,8 @@ void ExpressionTreeNode::simplify() {
 	}
 }
 
-counter_t ExpressionTreeNode::maxExpRef() const {
-	counter_t max = -1;
+index ExpressionTreeNode::maxExpRef() const {
+	index max = -1;
 	if (type == ExpressionType::REF && ref.type == ReferenceType::EXPRESSION) {
 		max = ref.counter;
 	} else {
@@ -109,8 +109,8 @@ counter_t ExpressionTreeNode::maxExpRef() const {
 	return max;
 }
 
-counter_t ExpressionTreeNode::maxRUERef() const {
-	counter_t max = -1;
+index ExpressionTreeNode::maxRUERef() const {
+	index max = -1;
 	if (type == ExpressionType::REF && ref.type == ReferenceType::ROLLUP_EXPRESSION) {
 		max = ref.counter;
 	} else {
@@ -518,7 +518,7 @@ Reference ExpressionParser::parseReference() {
 			error = true;
 			return Reference();
 		}
-		ref.counter = counter_t(utils::StringUtils::parseInt(next.value));
+		ref.counter = utils::StringUtils::parseInt(next.value);
 		readNext();
 		if (error) {
 			return Reference();

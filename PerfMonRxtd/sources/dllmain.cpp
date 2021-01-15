@@ -13,8 +13,6 @@
 #include "RainmeterAPI.h"
 #include "TypeHolder.h"
 
-#include "undef.h"
-
 PLUGIN_EXPORT void Initialize(void** data, void* rm) {
 	utils::Rainmeter rain(rm);
 

@@ -1,5 +1,5 @@
 ﻿/* 
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -9,30 +9,56 @@
 
 #pragma once
 #include <Pdh.h>
-#include "RainmeterWrappers.h"
+
 #include "PdhSnapshot.h"
+#include "RainmeterWrappers.h"
 
 namespace rxtd::perfmon::pdh {
-	using counter_t = int16_t; // because expressions?
-	using item_t = int16_t;
-
-	class PdhWrapper {
-		class QueryWrapper {
+	class PdhWrapper : MovableOnlyBase {
+		class QueryWrapper : MovableOnlyBase {
 			PDH_HQUERY handler = nullptr;
 
 		public:
 			QueryWrapper() = default;
-			~QueryWrapper();
 
-			QueryWrapper(const QueryWrapper& other) = delete;
-			QueryWrapper(QueryWrapper&& other) noexcept;
-			QueryWrapper& operator=(const QueryWrapper& other) = delete;
-			QueryWrapper& operator=(QueryWrapper&& other) noexcept;
+			~QueryWrapper() {
+				if (handler != nullptr) {
+					const PDH_STATUS pdhStatus = PdhCloseQuery(handler);
+					if (pdhStatus != ERROR_SUCCESS) {
+						// WTF
+					}
+					handler = nullptr;
+				}
+			}
 
-			PDH_HQUERY& get();
-			PDH_HQUERY* getPointer();
+			QueryWrapper(QueryWrapper&& other) noexcept : handler(other.handler) {
+				other.handler = nullptr;
+			}
 
-			bool isValid() const;
+			QueryWrapper& operator=(QueryWrapper&& other) noexcept {
+				if (this == &other)
+					return *this;
+
+				handler = other.handler;
+				other.handler = nullptr;
+
+				return *this;
+			}
+
+			[[nodiscard]]
+			PDH_HQUERY& get() {
+				return handler;
+			}
+
+			[[nodiscard]]
+			PDH_HQUERY* getPointer() {
+				return &handler;
+			}
+
+			[[nodiscard]]
+			bool isValid() const {
+				return handler != nullptr;
+			}
 		};
 
 		utils::Rainmeter::Logger log;
@@ -47,25 +73,25 @@ namespace rxtd::perfmon::pdh {
 
 	public:
 		PdhWrapper() = default;
-		~PdhWrapper() = default;
 
 		explicit PdhWrapper(utils::Rainmeter::Logger _log, const string& objectName, const utils::OptionList& counterTokens);
 
-		PdhWrapper(PdhWrapper&& other) noexcept = default;
-		PdhWrapper& operator=(PdhWrapper&& other) noexcept = default;
-
-		PdhWrapper(const PdhWrapper& other) = delete;
-		PdhWrapper& operator=(const PdhWrapper& other) = delete;
-
-		bool isValid() const;
+		[[nodiscard]]
+		bool isValid() const {
+			return query.isValid();
+		}
 
 		/**
 		 * @returns false if error occurred, true otherwise
 		 */
+		[[nodiscard]]
 		bool fetch(PdhSnapshot& snapshot, PdhSnapshot& idSnapshot);
 
-		counter_t getCountersCount() const;
+		[[nodiscard]]
+		index getCountersCount() const {
+			return counterHandlers.size();
+		}
 
-		double extractFormattedValue(counter_t counter, const PDH_RAW_COUNTER& current, const PDH_RAW_COUNTER& previous) const;
+		double extractFormattedValue(index counter, const PDH_RAW_COUNTER& current, const PDH_RAW_COUNTER& previous) const;
 	};
 }

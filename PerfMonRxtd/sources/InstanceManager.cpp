@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2019 rxtd
+ * Copyright (C) 2018-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -9,8 +9,6 @@
 
 #include "InstanceManager.h"
 #include "ExpressionResolver.h"
-
-#include "undef.h"
 
 using namespace perfmon;
 
@@ -36,7 +34,7 @@ void InstanceManager::setRollup(bool value) {
 	rollup = value;
 }
 
-void InstanceManager::setIndexOffset(item_t value) {
+void InstanceManager::setIndexOffset(index value) {
 	indexOffset = value;
 	if (limitIndexOffset && indexOffset < 0) {
 		indexOffset = 0;
@@ -50,7 +48,7 @@ void InstanceManager::setLimitIndexOffset(bool value) {
 	}
 }
 
-item_t InstanceManager::getIndexOffset() const {
+index InstanceManager::getIndexOffset() const {
 	return indexOffset;
 }
 
@@ -58,7 +56,7 @@ bool InstanceManager::isRollup() const {
 	return rollup;
 }
 
-counter_t InstanceManager::getCountersCount() const {
+index InstanceManager::getCountersCount() const {
 	return pdhWrapper.getCountersCount();
 }
 
@@ -66,7 +64,7 @@ const pdh::ModifiedNameItem& InstanceManager::getNames(index index) const {
 	return namesCurrent.get(index);
 }
 
-void InstanceManager::setSortIndex(counter_t value) {
+void InstanceManager::setSortIndex(index value) {
 	// TODO add check for maximum?
 	if (value >= 0) {
 		sortIndex = value;
@@ -93,7 +91,7 @@ void InstanceManager::setSortRollupFunction(RollupFunction value) {
 	sortRollupFunction = value;
 }
 
-void InstanceManager::checkIndices(counter_t counters, counter_t expressions, counter_t rollupExpressions) {
+void InstanceManager::checkIndices(index counters, index expressions, index rollupExpressions) {
 	if (sortBy == SortBy::eEXPRESSION) {
 		if (expressions <= 0) {
 			log.error(L"Sort by Expression requires at least 1 Expression specified. Set to None.");
@@ -114,7 +112,7 @@ void InstanceManager::checkIndices(counter_t counters, counter_t expressions, co
 		}
 	}
 
-	counter_t checkCount;
+	index checkCount;
 	switch (sortBy) {
 	case SortBy::eNONE: return;
 	case SortBy::eINSTANCE_NAME: return;
@@ -191,7 +189,7 @@ void InstanceManager::update() {
 	}
 }
 
-item_t InstanceManager::findPreviousName(sview uniqueName, item_t hint) const {
+index InstanceManager::findPreviousName(sview uniqueName, index hint) const {
 	// try to find a match for the current instance name in the previous names buffer
 	// use the unique name for this search because we need a unique match
 	// counter buffers tend to be *mostly* aligned, so we'll try to short-circuit a full search
@@ -199,17 +197,17 @@ item_t InstanceManager::findPreviousName(sview uniqueName, item_t hint) const {
 	const auto itemCountPrevious = snapshotPrevious.getItemsCount();
 
 	// try for a direct hit
-	auto previousInx = std::clamp<item_t>(hint, 0, itemCountPrevious - 1);
+	auto previousInx = std::clamp<index>(hint, 0, itemCountPrevious - 1);
 
 	if (uniqueName == namesPrevious.get(previousInx).uniqueName) {
 		return previousInx;
 	}
 
 	// try a window around currentIndex
-	constexpr item_t windowSize = 5;
+	constexpr index windowSize = 5;
 
-	const auto lowBound = std::clamp<item_t>(hint - windowSize, 0, itemCountPrevious - 1);
-	const auto highBound = std::clamp<item_t>(hint + windowSize, 0, itemCountPrevious - 1);
+	const auto lowBound = std::clamp<index>(hint - windowSize, 0, itemCountPrevious - 1);
+	const auto highBound = std::clamp<index>(hint + windowSize, 0, itemCountPrevious - 1);
 
 	for (previousInx = lowBound; previousInx <= highBound; ++previousInx) {
 		if (uniqueName == namesPrevious.get(previousInx).uniqueName) {
@@ -235,12 +233,12 @@ item_t InstanceManager::findPreviousName(sview uniqueName, item_t hint) const {
 void InstanceManager::buildInstanceKeysZero() {
 	instances.reserve(snapshotCurrent.getItemsCount());
 
-	for (item_t currentIndex = 0; currentIndex < snapshotCurrent.getItemsCount(); ++currentIndex) {
+	for (index currentIndex = 0; currentIndex < snapshotCurrent.getItemsCount(); ++currentIndex) {
 		const auto& item = namesCurrent.get(currentIndex);
 
 		InstanceInfo instanceKey;
 		instanceKey.sortName = item.searchName;
-		instanceKey.indices.current = currentIndex;
+		instanceKey.indices.current = int_fast16_t(currentIndex);
 		instanceKey.indices.previous = 0;
 
 		if (blacklistManager.isAllowed(item.searchName, item.originalName)) {
@@ -254,7 +252,7 @@ void InstanceManager::buildInstanceKeysZero() {
 void InstanceManager::buildInstanceKeys() {
 	instances.reserve(snapshotCurrent.getItemsCount());
 
-	for (item_t current = 0; current < snapshotCurrent.getItemsCount(); ++current) {
+	for (index current = 0; current < snapshotCurrent.getItemsCount(); ++current) {
 		const auto item = namesCurrent.get(current);
 
 		const auto previous = findPreviousName(item.uniqueName, current);
@@ -264,8 +262,8 @@ void InstanceManager::buildInstanceKeys() {
 
 		InstanceInfo instanceKey;
 		instanceKey.sortName = item.searchName;
-		instanceKey.indices.current = current;
-		instanceKey.indices.previous = previous;
+		instanceKey.indices.current = int_fast16_t(current);
+		instanceKey.indices.previous = int_fast16_t(previous);
 
 		if (blacklistManager.isAllowed(item.searchName, item.originalName)) {
 			instances.push_back(instanceKey);
@@ -419,14 +417,14 @@ void InstanceManager::buildRollupKeys() {
 	}
 }
 
-const InstanceInfo* InstanceManager::findInstance(const Reference& ref, item_t sortedIndex) const {
+const InstanceInfo* InstanceManager::findInstance(const Reference& ref, index sortedIndex) const {
 	if (ref.named) {
 		return findInstanceByName(ref, rollup);
 	}
 
 	const std::vector<InstanceInfo>& instances = rollup ? instancesRolledUp : this->instances;
 	sortedIndex += indexOffset;
-	if (sortedIndex < 0 || sortedIndex >= item_t(instances.size())) {
+	if (sortedIndex < 0 || sortedIndex >= index(instances.size())) {
 		return nullptr;
 	}
 
@@ -474,11 +472,11 @@ const InstanceInfo* InstanceManager::findInstanceByNameInList(
 	return itemOpt.value();
 }
 
-double InstanceManager::calculateRaw(counter_t counterIndex, Indices originalIndexes) const {
+double InstanceManager::calculateRaw(index counterIndex, Indices originalIndexes) const {
 	return double(snapshotCurrent.getItem(counterIndex, originalIndexes.current).FirstValue);
 }
 
-double InstanceManager::calculateFormatted(counter_t counterIndex, Indices originalIndexes) const {
+double InstanceManager::calculateFormatted(index counterIndex, Indices originalIndexes) const {
 	return pdhWrapper.extractFormattedValue(
 		counterIndex,
 		snapshotCurrent.getItem(counterIndex, originalIndexes.current),

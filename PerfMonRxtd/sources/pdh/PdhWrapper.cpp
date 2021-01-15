@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2019 rxtd
+ * Copyright (C) 2018-2021 rxtd
  * Copyright (C) 2018 buckb
  *
  * This Source Code Form is subject to the terms of the GNU General Public
@@ -9,56 +9,20 @@
  */
 
 #include "PdhWrapper.h"
-#include <PdhMsg.h>
-#include "option-parser/OptionList.h"
 
-#include "undef.h"
+#include <PdhMsg.h>
+
+#include "option-parser/OptionList.h"
 
 #pragma comment(lib, "pdh.lib")
 
 using namespace perfmon::pdh;
 
-PdhWrapper::QueryWrapper::~QueryWrapper() {
-	if (handler != nullptr) {
-		const PDH_STATUS pdhStatus = PdhCloseQuery(handler);
-		if (pdhStatus != ERROR_SUCCESS) {
-			// WTF
-		}
-		handler = nullptr;
-	}
-}
-
-PdhWrapper::QueryWrapper::QueryWrapper(QueryWrapper&& other) noexcept : handler(other.handler) {
-	other.handler = nullptr;
-}
-
-PdhWrapper::QueryWrapper& PdhWrapper::QueryWrapper::operator=(QueryWrapper&& other) noexcept {
-	if (this == &other)
-		return *this;
-
-	handler = other.handler;
-	other.handler = nullptr;
-
-	return *this;
-}
-
-PDH_HQUERY& PdhWrapper::QueryWrapper::get() {
-	return handler;
-}
-
-PDH_HQUERY* PdhWrapper::QueryWrapper::getPointer() {
-	return &handler;
-}
-
-bool PdhWrapper::QueryWrapper::isValid() const {
-	return handler != nullptr;
-}
-
 PdhWrapper::PdhWrapper(utils::Rainmeter::Logger _log, const string& objectName, const utils::OptionList& counterList) :
 	log(std::move(_log)) {
 	QueryWrapper query;
 
-	if (counterList.size() > std::numeric_limits<counter_t>::max()) {
+	if (counterList.size() > 30) {
 		log.error(L"too many counters"); // TODO add validity check in parent
 		return;
 	}
@@ -119,10 +83,6 @@ PdhWrapper::PdhWrapper(utils::Rainmeter::Logger _log, const string& objectName, 
 	this->query = std::move(query);
 }
 
-bool PdhWrapper::isValid() const {
-	return query.isValid();
-}
-
 bool PdhWrapper::fetch(PdhSnapshot& snapshot, PdhSnapshot& idSnapshot) {
 	idSnapshot.setCountersCount(1);
 	snapshot.setCountersCount(counterHandlers.size());
@@ -147,12 +107,8 @@ bool PdhWrapper::fetch(PdhSnapshot& snapshot, PdhSnapshot& idSnapshot) {
 			log.error(L"PdhGetRawCounterArray get dwBufferSize failed, status {error}", pdhStatus);
 			return false;
 		}
-		if (index(count) > std::numeric_limits<item_t>::max()) {
-			log.error(L"too many items");
-			return false;
-		}
 
-		idSnapshot.setBufferSize(index(bufferSize), item_t(count));
+		idSnapshot.setBufferSize(index(bufferSize), index(count));
 
 		pdhStatus = PdhGetRawCounterArrayW(idCounterHandler, &bufferSize, &count, idSnapshot.getCounterPointer(0));
 		if (pdhStatus != ERROR_SUCCESS) {
@@ -170,15 +126,11 @@ bool PdhWrapper::fetch(PdhSnapshot& snapshot, PdhSnapshot& idSnapshot) {
 		log.error(L"PdhGetRawCounterArray get dwBufferSize failed, status {error}", pdhStatus);
 		return false;
 	}
-	if (index(count) > std::numeric_limits<item_t>::max()) {
-		log.error(L"too many items");
-		return false;
-	}
 
-	snapshot.setBufferSize(index(bufferSize), item_t(count));
+	snapshot.setBufferSize(index(bufferSize), index(count));
 
 	// Retrieve counter data for all counters in the measure's counterList.
-	for (counter_t i = 0; i < counter_t(counterHandlers.size()); ++i) {
+	for (index i = 0; i < index(counterHandlers.size()); ++i) {
 		DWORD dwBufferSize2 = bufferSize;
 		pdhStatus = PdhGetRawCounterArrayW(counterHandlers[i], &dwBufferSize2, &count, snapshot.getCounterPointer(i));
 		if (pdhStatus != ERROR_SUCCESS) {
@@ -195,12 +147,8 @@ bool PdhWrapper::fetch(PdhSnapshot& snapshot, PdhSnapshot& idSnapshot) {
 	return true;
 }
 
-counter_t PdhWrapper::getCountersCount() const {
-	return counterHandlers.size();
-}
-
 double PdhWrapper::extractFormattedValue(
-	counter_t counter, const PDH_RAW_COUNTER& current,
+	index counter, const PDH_RAW_COUNTER& current,
 	const PDH_RAW_COUNTER& previous
 ) const {
 

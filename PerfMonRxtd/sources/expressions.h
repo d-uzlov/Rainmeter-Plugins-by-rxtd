@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2018-2019 rxtd
+ * Copyright (C) 2018-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -11,9 +11,6 @@
 #include "enums.h"
 
 namespace rxtd::perfmon {
-	using counter_t = int16_t; // TODO unite using declarations
-	using item_t = int16_t;
-
 	enum class ExpressionType {
 		UNKNOWN,
 		NUMBER,
@@ -38,7 +35,7 @@ namespace rxtd::perfmon {
 
 	struct Reference {
 		string name;
-		counter_t counter = 0;
+		index counter = 0;
 		RollupFunction rollupFunction = RollupFunction::eSUM;
 		ReferenceType type = ReferenceType::UNKNOWN;
 		bool discarded = false;
@@ -55,8 +52,10 @@ namespace rxtd::perfmon {
 		ExpressionType type = ExpressionType::UNKNOWN;
 
 		void simplify();
-		counter_t maxExpRef() const;
-		counter_t maxRUERef() const;
+		[[nodiscard]]
+		index maxExpRef() const;
+		[[nodiscard]]
+		index maxRUERef() const;
 		void processRefs(void (*handler)(Reference&));
 	};
 

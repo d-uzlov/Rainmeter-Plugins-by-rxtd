@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2018-2020 rxtd
+ * Copyright (C) 2018-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -15,7 +15,7 @@ namespace rxtd::perfmon {
 	class PerfmonChild : public utils::TypeHolder {
 		// options
 		Reference ref;
-		item_t instanceIndex = 0;
+		index instanceIndex = 0;
 		ResultString resultStringType = ResultString::eNUMBER;
 
 		// data

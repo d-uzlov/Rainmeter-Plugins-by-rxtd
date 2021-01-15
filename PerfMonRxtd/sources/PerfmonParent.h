@@ -1,5 +1,5 @@
 /* 
- * Copyright (C) 2018-2020 rxtd
+ * Copyright (C) 2018-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -55,12 +55,12 @@
 
 #pragma once
 
+#include "BlacklistManager.h"
+#include "ExpressionResolver.h"
 #include "expressions.h"
+#include "InstanceManager.h"
 #include "TypeHolder.h"
 #include "pdh/PdhWrapper.h"
-#include "BlacklistManager.h"
-#include "InstanceManager.h"
-#include "ExpressionResolver.h"
 
 namespace rxtd::perfmon {
 
@@ -92,12 +92,6 @@ namespace rxtd::perfmon {
 
 	public:
 		explicit PerfmonParent(utils::Rainmeter&& _rain);
-		~PerfmonParent() = default;
-		/** This class is non copyable */
-		PerfmonParent(const PerfmonParent& other) = delete;
-		PerfmonParent(PerfmonParent&& other) = delete;
-		PerfmonParent& operator=(const PerfmonParent& other) = delete;
-		PerfmonParent& operator=(PerfmonParent&& other) = delete;
 
 	protected:
 		void vReload() override;
@@ -110,22 +104,40 @@ namespace rxtd::perfmon {
 		/** Parent measure can be stopped.
 		 *  In this state it does not retrieve new information from PerfMon
 		 *  but can be reloaded to change options. */
-		void setStopped(bool value);
+		void setStopped(bool value) {
+			stopped = value;
+		}
 
-		void changeStopState();
-		void setIndexOffset(item_t value);
-		item_t getIndexOffset() const;
+		void changeStopState() {
+			stopped = !stopped;
+		}
+		void setIndexOffset(index value) {
+			instanceManager.setIndexOffset(value);
+		}
+		index getIndexOffset() const {
+			return instanceManager.getIndexOffset();
+		}
 
-		double getValue(const Reference& ref, const InstanceInfo* instance, utils::Rainmeter::Logger& logger) const;
+		double getValue(const Reference& ref, const InstanceInfo* instance, utils::Rainmeter::Logger& logger) const {
+			return expressionResolver.getValue(ref, instance, logger);
+		}
 
-		counter_t getCountersCount() const;
+		index getCountersCount() const {
+			return pdhWrapper.getCountersCount();
+		}
 
 		/** We only need one snapshot for raw values, but if sync is enabled then we'll wait for two snapshots */
-		bool canGetRaw() const;
+		bool canGetRaw() const {
+			return instanceManager.canGetRaw();
+		}
 		/** We need two complete snapshots for formatted values values */
-		bool canGetFormatted() const;
+		bool canGetFormatted() const {
+			return instanceManager.canGetFormatted();
+		}
 
-		const InstanceInfo* findInstance(const Reference& ref, item_t sortedIndex) const;
+		const InstanceInfo* findInstance(const Reference& ref, index sortedIndex) const {
+			return instanceManager.findInstance(ref, sortedIndex);
+		}
 
 		sview getInstanceName(const InstanceInfo& instance, ResultString stringType) const;
 	};

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2020 rxtd
+ * Copyright (C) 2018-2021 rxtd
  * Copyright (C) 2018 buckb
  *
  * This Source Code Form is subject to the terms of the GNU General Public
@@ -9,8 +9,6 @@
  */
 
 #include "PerfmonChild.h"
-
-#include "undef.h"
 
 using namespace perfmon;
 
@@ -41,8 +39,8 @@ void PerfmonChild::vReload() {
 		return;
 	}
 
-	instanceIndex = rain.read(L"InstanceIndex").asInt<item_t>();
-	ref.counter = rain.read(L"CounterIndex").asInt<counter_t>();
+	instanceIndex = rain.read(L"InstanceIndex").asInt();
+	ref.counter = rain.read(L"CounterIndex").asInt();
 	ref.useOrigName = rain.read(L"SearchOriginalName").asBool();
 	ref.total = rain.read(L"Total").asBool();
 	ref.discarded = rain.read(L"Discarded").asBool();

@@ -1,5 +1,5 @@
 ﻿/* 
- * Copyright (C) 2018-2020 rxtd
+ * Copyright (C) 2018-2021 rxtd
  * Copyright (C) 2018 buckb
  *
  * This Source Code Form is subject to the terms of the GNU General Public
@@ -11,11 +11,8 @@
 #include <functional>
 #include <unordered_map>
 
-#include "expressions.h"
 #include "PerfmonParent.h"
 #include "option-parser/OptionList.h"
-
-#include "undef.h"
 
 using namespace perfmon;
 
@@ -49,7 +46,7 @@ PerfmonParent::PerfmonParent(utils::Rainmeter&& _rain) : ParentBase(std::move(_r
 void PerfmonParent::vReload() {
 	needUpdate = true;
 
-	instanceManager.setSortIndex(rain.read(L"SortIndex").asInt<counter_t>());
+	instanceManager.setSortIndex(rain.read(L"SortIndex").asInt());
 	instanceManager.setSyncRawFormatted(rain.read(L"SyncRawFormatted").asBool());
 	instanceManager.setKeepDiscarded(rain.read(L"KeepDiscarded").asBool());
 
@@ -172,10 +169,6 @@ void PerfmonParent::vReload() {
 	instanceManager.setNameModificationType(nameModificationType);
 }
 
-const InstanceInfo* PerfmonParent::findInstance(const Reference& ref, item_t sortedIndex) const {
-	return instanceManager.findInstance(ref, sortedIndex);
-}
-
 sview PerfmonParent::getInstanceName(const InstanceInfo& instance, ResultString stringType) const {
 	if (stringType == ResultString::eNUMBER) {
 		return L"";
@@ -286,36 +279,4 @@ void PerfmonParent::vResolve(array_view<isview> args, string& resolveBufferStrin
 		resolveBufferString = stopped ? L"1" : L"0";
 		return;
 	}
-}
-
-void PerfmonParent::setStopped(const bool value) {
-	stopped = value;
-}
-
-void PerfmonParent::changeStopState() {
-	stopped = !stopped;
-}
-
-void PerfmonParent::setIndexOffset(item_t value) {
-	instanceManager.setIndexOffset(value);
-}
-
-item_t PerfmonParent::getIndexOffset() const {
-	return instanceManager.getIndexOffset();
-}
-
-double PerfmonParent::getValue(const Reference& ref, const InstanceInfo* instance, utils::Rainmeter::Logger& logger) const {
-	return expressionResolver.getValue(ref, instance, logger);
-}
-
-counter_t PerfmonParent::getCountersCount() const {
-	return pdhWrapper.getCountersCount();
-}
-
-bool PerfmonParent::canGetRaw() const {
-	return instanceManager.canGetRaw();
-}
-
-bool PerfmonParent::canGetFormatted() const {
-	return instanceManager.canGetFormatted();
 }

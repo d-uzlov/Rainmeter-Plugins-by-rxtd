@@ -151,7 +151,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="sources\BlacklistManager.cpp" />
-    <ClCompile Include="sources\pdh\PdhSnapshot.cpp" />
     <ClCompile Include="sources\PerfmonChild.cpp" />
     <ClCompile Include="sources\enums.h" />
     <ClCompile Include="sources\ExpressionResolver.cpp" />

@@ -1,5 +1,6 @@
 ﻿/* 
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2018-2021 rxtd
+ * Copyright (C) 2018 buckb
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -11,14 +12,11 @@
 #include <Pdh.h>
 
 namespace rxtd::perfmon::pdh {
-	using counter_t = int16_t; // because expressions?
-	using item_t = int16_t;
-
 	class PdhSnapshot {
 		std::vector<std::byte> buffer;
 		index counterBufferSize = 0;
-		item_t itemsCount = 0;
-		counter_t countersCount = 0;
+		index itemsCount = 0;
+		index countersCount = 0;
 
 	public:
 		PdhSnapshot() = default;
@@ -30,31 +28,71 @@ namespace rxtd::perfmon::pdh {
 		PdhSnapshot(const PdhSnapshot& other) = delete;
 		PdhSnapshot& operator=(const PdhSnapshot& other) = delete;
 
-		item_t getItemsCount() const;
+		[[nodiscard]]
+		auto getItemsCount() const {
+			return itemsCount;
+		}
 
-		counter_t getCountersCount() const;
+		[[nodiscard]]
+		index getCountersCount() const {
+			return countersCount;
+		}
 
-		void clear();
+		void clear() {
+			setBufferSize(0, 0);
+		}
 
-		bool isEmpty() const;
+		[[nodiscard]]
+		bool isEmpty() const {
+			return countersCount == 0 || getItemsCount() == 0;
+		}
 
-		void setCountersCount(counter_t value);
+		void setCountersCount(index value) {
+			countersCount = value;
 
-		void setBufferSize(index size, item_t items);
+			updateSize();
+		}
 
-		void updateSize();
+		void setBufferSize(index size, index items) {
+			counterBufferSize = size;
+			itemsCount = items;
 
-		PDH_RAW_COUNTER_ITEM_W* getCounterPointer(counter_t counter);
+			updateSize();
+		}
 
-		const PDH_RAW_COUNTER_ITEM_W* getCounterPointer(counter_t counter) const;
+		void updateSize() {
+			if (itemsCount < 1) {
+				return;
+			}
+			buffer.reserve(countersCount * (itemsCount - 1) * sizeof(PDH_RAW_COUNTER_ITEM_W) + counterBufferSize);
+		}
 
-		const PDH_RAW_COUNTER& getItem(counter_t counter, item_t item) const;
+		[[nodiscard]]
+		PDH_RAW_COUNTER_ITEM_W* getCounterPointer(index counter) {
+			return reinterpret_cast<PDH_RAW_COUNTER_ITEM_W*>(buffer.data()) + itemsCount * counter;
+		}
 
-		const wchar_t* getName(item_t item) const;
+		[[nodiscard]]
+		const PDH_RAW_COUNTER_ITEM_W* getCounterPointer(index counter) const {
+			return reinterpret_cast<const PDH_RAW_COUNTER_ITEM_W*>(buffer.data()) + itemsCount * counter;
+		}
+
+		[[nodiscard]]
+		const PDH_RAW_COUNTER& getItem(index counter, index item) const {
+			return getCounterPointer(counter)[item].RawValue;
+		}
+
+		[[nodiscard]]
+		const wchar_t* getName(index item) const {
+			return getCounterPointer(countersCount - 1)[item].szName;
+		}
 
 		/**
 		 * in wchar_t
 		 */
-		index getNamesSize() const;
+		[[nodiscard]]
+		index getNamesSize() const {
+			return (counterBufferSize - itemsCount * sizeof(PDH_RAW_COUNTER_ITEM_W)) / sizeof(wchar_t);
+		}
 	};
 }

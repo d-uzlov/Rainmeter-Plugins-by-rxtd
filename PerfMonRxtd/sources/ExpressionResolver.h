@@ -1,5 +1,5 @@
 ﻿/* 
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -33,7 +33,7 @@ namespace rxtd::perfmon {
 
 		struct CacheEntry {
 			TotalSource source;
-			counter_t counterIndex;
+			index counterIndex;
 			RollupFunction rollupFunction;
 
 			bool operator<(const CacheEntry& other) const;
@@ -44,9 +44,9 @@ namespace rxtd::perfmon {
 	public:
 		ExpressionResolver(utils::Rainmeter::Logger& log, const InstanceManager& instanceManager);
 
-		counter_t getExpressionsCount() const;
+		index getExpressionsCount() const;
 
-		counter_t getRollupExpressionsCount() const;
+		index getRollupExpressionsCount() const;
 
 		void resetCaches();
 
@@ -54,24 +54,24 @@ namespace rxtd::perfmon {
 
 		void setExpressions(utils::OptionList expressionsList, utils::OptionList rollupExpressionsList);
 
-		double getRaw(counter_t counterIndex, Indices originalIndexes) const;
+		double getRaw(index counterIndex, Indices originalIndexes) const;
 
-		double getFormatted(counter_t counterIndex, Indices originalIndexes) const;
+		double getFormatted(index counterIndex, Indices originalIndexes) const;
 
-		double getRawRollup(RollupFunction rollupType, counter_t counterIndex, const InstanceInfo& instance) const;
+		double getRawRollup(RollupFunction rollupType, index counterIndex, const InstanceInfo& instance) const;
 
-		double getFormattedRollup(RollupFunction rollupType, counter_t counterIndex, const InstanceInfo& instance) const;
+		double getFormattedRollup(RollupFunction rollupType, index counterIndex, const InstanceInfo& instance) const;
 
-		double getExpressionRollup(RollupFunction rollupType, counter_t expressionIndex, const InstanceInfo& instance) const;
+		double getExpressionRollup(RollupFunction rollupType, index expressionIndex, const InstanceInfo& instance) const;
 
-		double getExpression(counter_t expressionIndex, const InstanceInfo& instance) const;
+		double getExpression(index expressionIndex, const InstanceInfo& instance) const;
 
-		double getRollupExpression(counter_t expressionIndex, const InstanceInfo& instance) const;
+		double getRollupExpression(index expressionIndex, const InstanceInfo& instance) const;
 
 	private:
-		double calculateTotal(TotalSource source, counter_t counterIndex, RollupFunction rollupFunction) const;
+		double calculateTotal(TotalSource source, index counterIndex, RollupFunction rollupFunction) const;
 
-		double calculateAndCacheTotal(TotalSource source, counter_t counterIndex, RollupFunction rollupFunction) const;
+		double calculateAndCacheTotal(TotalSource source, index counterIndex, RollupFunction rollupFunction) const;
 
 		double resolveReference(const Reference& ref) const;
 
@@ -84,11 +84,11 @@ namespace rxtd::perfmon {
 		double resolveRollupReference(const Reference& ref) const;
 
 
-		template<double (ExpressionResolver::* calculateValueFunction)(counter_t counterIndex, Indices originalIndexes) const>
-		double calculateRollup(RollupFunction rollupType, counter_t counterIndex, const InstanceInfo& instance) const;
+		template<double (ExpressionResolver::* calculateValueFunction)(index counterIndex, Indices originalIndexes) const>
+		double calculateRollup(RollupFunction rollupType, index counterIndex, const InstanceInfo& instance) const;
 
-		template<double (ExpressionResolver::* calculateValueFunction)(counter_t counterIndex, Indices originalIndexes) const>
-		double calculateTotal(RollupFunction rollupType, counter_t counterIndex) const;
+		template<double (ExpressionResolver::* calculateValueFunction)(index counterIndex, Indices originalIndexes) const>
+		double calculateTotal(RollupFunction rollupType, index counterIndex) const;
 
 		template<double(ExpressionResolver::* calculateExpressionFunction)(const ExpressionTreeNode& expression) const>
 		double calculateExpressionTotal(RollupFunction rollupType, const ExpressionTreeNode& expression, bool rollup) const;
