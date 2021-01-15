@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2018-2020 rxtd
+ * Copyright (C) 2018-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -7,11 +7,10 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-
-#include "RainmeterAPI.h"
-#include "PerfMonRXTD.h"
-#include "PerfmonParent.h"
 #include "PerfmonChild.h"
+#include "PerfmonParent.h"
+#include "PerfMonRXTD.h"
+#include "RainmeterAPI.h"
 #include "TypeHolder.h"
 
 #include "undef.h"
@@ -28,8 +27,6 @@ PLUGIN_EXPORT void Initialize(void** data, void* rm) {
 		}
 		*data = new perfmon::PerfmonChild(std::move(rain));
 	}
-
-	utils::Rainmeter::printLogMessages();
 }
 
 PLUGIN_EXPORT void Reload(void* data, void*, double*) {
@@ -37,8 +34,6 @@ PLUGIN_EXPORT void Reload(void* data, void*, double*) {
 		return;
 	}
 	static_cast<utils::TypeHolder*>(data)->reload();
-
-	utils::Rainmeter::printLogMessages();
 }
 
 PLUGIN_EXPORT double Update(void* data) {
@@ -46,8 +41,6 @@ PLUGIN_EXPORT double Update(void* data) {
 		return 0.0;
 	}
 	const auto result = static_cast<utils::TypeHolder*>(data)->update();
-
-	utils::Rainmeter::printLogMessages();
 
 	return result;
 }
@@ -58,8 +51,6 @@ PLUGIN_EXPORT const wchar_t* GetString(void* data) {
 	}
 	const auto result = static_cast<utils::TypeHolder*>(data)->getString();
 
-	utils::Rainmeter::printLogMessages();
-
 	return result;
 }
 
@@ -68,8 +59,6 @@ PLUGIN_EXPORT void Finalize(void* data) {
 		return;
 	}
 	delete static_cast<utils::TypeHolder*>(data);
-
-	utils::Rainmeter::printLogMessages();
 }
 
 PLUGIN_EXPORT void ExecuteBang(void* data, const wchar_t* args) {
@@ -77,14 +66,10 @@ PLUGIN_EXPORT void ExecuteBang(void* data, const wchar_t* args) {
 		return;
 	}
 	static_cast<utils::TypeHolder*>(data)->command(args);
-
-	utils::Rainmeter::printLogMessages();
 }
 
 PLUGIN_EXPORT const wchar_t* resolve(void* data, const int argc, const wchar_t* argv[]) {
 	const auto result = static_cast<utils::TypeHolder*>(data)->resolve(argc, argv);
-
-	utils::Rainmeter::printLogMessages();
 
 	return result;
 }

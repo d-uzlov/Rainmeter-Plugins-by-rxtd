@@ -31,9 +31,7 @@ namespace rxtd::utils {
 				stream << std::underlying_type<T>::type(t);
 			}
 			return;
-		}
-
-		if constexpr (std::is_integral<T>::value) {
+		} else if constexpr (std::is_integral<T>::value) {
 			if (options == L"error") {
 				stream << L"0x";
 				stream << std::setfill(L'0') << std::setw(sizeof(T) * 2) << std::hex;
@@ -42,9 +40,9 @@ namespace rxtd::utils {
 			}
 			stream << t;
 			return;
+		} else {
+			stream << t;
 		}
-
-		stream << t;
 	}
 
 	template<>

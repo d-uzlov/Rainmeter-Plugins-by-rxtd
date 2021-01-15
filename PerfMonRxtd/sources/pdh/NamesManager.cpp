@@ -10,6 +10,7 @@
 #include "NamesManager.h"
 #include <unordered_map>
 #include "BufferPrinter.h"
+#include "StringUtils.h"
 
 #include "undef.h"
 
