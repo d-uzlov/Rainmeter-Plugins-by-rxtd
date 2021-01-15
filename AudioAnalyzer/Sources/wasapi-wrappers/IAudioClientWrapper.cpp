@@ -57,14 +57,14 @@ IAudioCaptureClientWrapper IAudioClientWrapper::openCapture(double bufferSizeSec
 			nativeFormat.getPointer(),
 			nullptr
 		),
-		L"IAudioClient.Initialize() in openCapture()"
+		L"IAudioClient.Initialize() in IAudioClientWrapper::openCapture()"
 	);
 
 	auto result = IAudioCaptureClientWrapper{
 		[&](auto ptr) {
 			throwOnError(
 				typedQuery(&IAudioClient::GetService, ptr),
-				L"IAudioClient.GetService(IAudioCaptureClient) in openCapture()"
+				L"IAudioClient.GetService(IAudioCaptureClient) in IAudioClientWrapper::openCapture()"
 			);
 			return true;
 		}
@@ -85,14 +85,14 @@ GenericComWrapper<IAudioRenderClient> IAudioClientWrapper::openRender() noexcept
 			nativeFormat.getPointer(),
 			nullptr
 		),
-		L"IAudioClient.Initialize() in openRender()"
+		L"IAudioClient.Initialize() in IAudioClientWrapper::openRender()"
 	);
 
 	auto result = GenericComWrapper<IAudioRenderClient>{
 		[&](auto ptr) {
 			throwOnError(
 				typedQuery(&IAudioClient::GetService, ptr),
-				L"IAudioClient.GetService(IAudioCaptureClient) in openRender()"
+				L"IAudioClient.GetService(IAudioCaptureClient) in IAudioClientWrapper::openRender()"
 			);
 			return true;
 		}
@@ -126,7 +126,7 @@ void IAudioClientWrapper::testExclusive() {
 				&pFundamentalPeriodInFrames,
 				&pMinPeriodInFrames,
 				&pMaxPeriodInFrames
-			), L"IAudioClient3.GetSharedModeEnginePeriod() in testExclusive()"
+			), L"IAudioClient3.GetSharedModeEnginePeriod() in IAudioClientWrapper::testExclusive()"
 		);
 
 		throwOnError(
@@ -135,7 +135,7 @@ void IAudioClientWrapper::testExclusive() {
 				pMinPeriodInFrames,
 				nativeFormat.getPointer(),
 				nullptr
-			), L"IAudioClient3.InitializeSharedAudioStream() in testExclusive()"
+			), L"IAudioClient3.InitializeSharedAudioStream() in IAudioClientWrapper::testExclusive()"
 		);
 	} else {
 		throwOnError(
@@ -146,7 +146,7 @@ void IAudioClientWrapper::testExclusive() {
 				0,
 				nativeFormat.getPointer(),
 				nullptr
-			), L"IAudioClient.Initialize() in testExclusive()"
+			), L"IAudioClient.Initialize() in IAudioClientWrapper::testExclusive()"
 		);
 	}
 }
@@ -154,10 +154,7 @@ void IAudioClientWrapper::testExclusive() {
 void IAudioClientWrapper::readFormat() {
 	nativeFormat = {
 		[&](auto ptr) {
-			auto code = ref().GetMixFormat(ptr);
-			if (code != S_OK) {
-				throw ComException{ code, L"WAVEFORMATEX.GetMixFormat() in readFormat()" };
-			}
+			throwOnError(ref().GetMixFormat(ptr), L"WAVEFORMATEX.GetMixFormat() in IAudioClientWrapper::()");
 			return true;
 		}
 	};

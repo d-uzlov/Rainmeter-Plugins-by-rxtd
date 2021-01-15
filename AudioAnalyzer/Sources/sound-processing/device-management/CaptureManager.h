@@ -72,6 +72,7 @@ namespace rxtd::audio_analyzer {
 		utils::MediaDeviceWrapper audioDeviceHandle;
 		utils::IAudioCaptureClientWrapper audioCaptureClient;
 		utils::AudioSessionEventsWrapper sessionEventsWrapper;
+		utils::GenericComWrapper<IAudioRenderClient> renderClient;
 		ChannelMixer channelMixer;
 
 		Snapshot snapshot;

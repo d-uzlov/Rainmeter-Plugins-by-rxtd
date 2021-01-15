@@ -28,6 +28,7 @@ void CaptureManager::disconnect() {
 	audioCaptureClient = {};
 	sessionEventsWrapper = {};
 	sessionEventsWrapper = {};
+	renderClient = {};
 }
 
 CaptureManager::State CaptureManager::setSourceAndGetState(const SourceDesc& desc) {
@@ -93,6 +94,7 @@ CaptureManager::State CaptureManager::setSourceAndGetState(const SourceDesc& des
 		}
 
 		audioClient.throwOnError(audioClient.ref().Start(), L"IAudioClient.Start()");
+
 	} catch (utils::FormatException&) {
 		logger.error(L"Can't read device format");
 		return State::eDEVICE_CONNECTION_ERROR;
@@ -108,6 +110,34 @@ CaptureManager::State CaptureManager::setSourceAndGetState(const SourceDesc& des
 
 		logger.error(L"Can't connect to device: error {}, caused by {}", e.getCode(), e.getSource());
 		return State::eDEVICE_CONNECTION_ERROR;
+	}
+
+	try {
+		// This fixes the issue with values not updating in periods of silence
+		// In some windows versions when no one is rendering sound IAudioCaptureClient just doesn't receive new audio frames
+		// Since this plugin doesn't implement independent clock and relies solely on audio frames to measure time
+		// this behaviour causes all values to stop updating.
+		// Open IAudioRenderClient ensures that windows always feeds everyone with empty audio frames.
+		//
+
+		auto audioClient = audioDeviceHandle.openAudioClient();
+		renderClient = audioClient.openRender();
+		audioClient.throwOnError(audioClient.ref().Start(), L"IAudioClient.Start()");
+
+	} catch (utils::FormatException&) {
+		logger.error(L"Can't create silent renderer: format error");
+		return State::eDEVICE_CONNECTION_ERROR;
+	} catch (utils::ComException& e) {
+		if (e.getCode() == AUDCLNT_E_DEVICE_IN_USE) {
+			// #createExclusiveStreamListener can change state,
+			// so I set state beforehand
+			// and return whatever #createExclusiveStreamListener has set the state to
+			snapshot.state = State::eDEVICE_IS_EXCLUSIVE;
+			createExclusiveStreamListener();
+			return snapshot.state;
+		}
+
+		logger.error(L"Can't create silent renderer: error {}, caused by {}", e.getCode(), e.getSource());
 	}
 
 	return State::eOK;
