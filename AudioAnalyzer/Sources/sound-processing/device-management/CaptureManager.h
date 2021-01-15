@@ -118,13 +118,13 @@ namespace rxtd::audio_analyzer {
 
 	private:
 		[[nodiscard]]
-		utils::MediaDeviceWrapper getDevice(const SourceDesc& desc);
+		std::optional<utils::MediaDeviceWrapper> getDevice(const SourceDesc& desc);
 
 		[[nodiscard]]
 		static string makeFormatString(utils::WaveFormat waveFormat);
 
 		void createExclusiveStreamListener();
 
-		std::vector<utils::GenericComWrapper<IAudioSessionControl>> getActiveSessions();
+		std::vector<utils::GenericComWrapper<IAudioSessionControl>> getActiveSessions() noexcept(false);
 	};
 }

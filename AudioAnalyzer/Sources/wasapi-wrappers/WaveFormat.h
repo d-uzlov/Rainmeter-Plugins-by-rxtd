@@ -27,4 +27,9 @@ namespace rxtd::utils {
 			return !(lhs == rhs);
 		}
 	};
+
+	class FormatException : public std::runtime_error {
+	public:
+		explicit FormatException() : runtime_error("format can't be parsed") {}
+	};
 }

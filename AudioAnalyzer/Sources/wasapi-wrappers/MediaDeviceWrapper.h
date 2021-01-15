@@ -15,6 +15,7 @@
 
 #include "IAudioClientWrapper.h"
 #include "winapi-wrappers/GenericComWrapper.h"
+#include "winapi-wrappers/GenericCoTaskMemWrapper.h"
 
 namespace rxtd::utils {
 	class MediaDeviceWrapper : public GenericComWrapper<IMMDevice> {
@@ -27,44 +28,82 @@ namespace rxtd::utils {
 		};
 
 	private:
-		HRESULT lastResult = {};
+		string id;
+		bool infoIsFilled = false;
+		MediaDeviceType type{};
 
 	public:
 		MediaDeviceWrapper() = default;
 
 		template<typename InitFunction>
-		MediaDeviceWrapper(InitFunction initFunction) : GenericComWrapper(std::move(initFunction)) { }
+		MediaDeviceWrapper(InitFunction initFunction) : GenericComWrapper(std::move(initFunction)) {
+			auto endpoint = GenericComWrapper<IMMEndpoint>{
+				[&](auto ptr) {
+					throwOnError(ref().QueryInterface(ptr), L"IMMDevice.QueryInterface(IMMEndpoint)");
+					return true;
+				}
+			};
+			EDataFlow flow{};
+			throwOnError(endpoint.ref().GetDataFlow(&flow), L"IMMEndpoint.GetDataFlow()");
+			switch (flow) {
+			case eRender:
+				type = MediaDeviceType::eOUTPUT;
+				break;
+			case eCapture:
+				type = MediaDeviceType::eINPUT;
+				break;
+			default: throw ComException{ -1, L"invalid EDataFlow value from IMMEndpoint.GetDataFlow()" };
+			}
+
+			GenericCoTaskMemWrapper<wchar_t> idWrapper{
+				[&](auto ptr) {
+					throwOnError(ref().GetId(ptr), L"IMMDevice.GetId()");
+					return true;
+				}
+			};
+			id = idWrapper.getPointer();
+			if (id.empty()) {
+				throw ComException{ -1, L"invalid empty value for device id from IMMDevice.GetId()" };
+			}
+		}
+
+		template<typename InitFunction>
+		MediaDeviceWrapper(InitFunction initFunction, MediaDeviceType type) : GenericComWrapper(std::move(initFunction)), type(type) { }
 
 		[[nodiscard]]
-		string readId();
+		sview getId() const {
+			return id;
+		}
 
 		[[nodiscard]]
-		DeviceInfo readDeviceInfo();
+		DeviceInfo readDeviceInfo() noexcept(false);
 
 		[[nodiscard]]
 		IAudioClientWrapper openAudioClient();
 
-		[[nodiscard]]
-		HRESULT getLastResult() const {
-			return lastResult;
-		}
-
 		template<typename Interface>
 		GenericComWrapper<Interface> activateFor() {
-			static_assert(
-				std::is_base_of<IAudioClient, Interface>::value
-				|| std::is_base_of<IAudioEndpointVolume, Interface>::value
-				|| std::is_base_of<IAudioMeterInformation, Interface>::value
-				|| std::is_base_of<IAudioSessionManager, Interface>::value
-				|| std::is_base_of<IAudioSessionManager2, Interface>::value
-				|| std::is_base_of<IDeviceTopology, Interface>::value,
-				"Interface is not supported by IMMDevice"
-			);
+			sview source;
+			if constexpr (std::is_same_v<IAudioClient, Interface>) {
+				source = L"IAudioClient.Activate(IAudioClient)";
+			} else if constexpr (std::is_same_v<IAudioEndpointVolume, Interface>) {
+				source = L"IAudioClient.Activate(IAudioEndpointVolume)";
+			} else if constexpr (std::is_same_v<IAudioMeterInformation, Interface>) {
+				source = L"IAudioClient.Activate(IAudioMeterInformation)";
+			} else if constexpr (std::is_same_v<IAudioSessionManager, Interface>) {
+				source = L"IAudioClient.Activate(IAudioSessionManager)";
+			} else if constexpr (std::is_same_v<IAudioSessionManager2, Interface>) {
+				source = L"IAudioClient.Activate(IAudioSessionManager2)";
+			} else if constexpr (std::is_same_v<IDeviceTopology, Interface>) {
+				source = L"IAudioClient.Activate(IDeviceTopology)";
+			} else {
+				static_assert(false, "Interface is not supported by IMMDevice");
+			}
 
 			return {
 				[&](auto ptr) {
-					lastResult = typedQuery(&IMMDevice::Activate, ptr, CLSCTX_INPROC_SERVER, nullptr);
-					return lastResult == S_OK;
+					throwOnError(typedQuery(&IMMDevice::Activate, ptr, CLSCTX_INPROC_SERVER, nullptr), source);
+					return true;
 				}
 			};
 		}

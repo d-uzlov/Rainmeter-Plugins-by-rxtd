@@ -19,11 +19,8 @@
 
 namespace rxtd::utils {
 	class IAudioClientWrapper : public GenericComWrapper<IAudioClient> {
-		HRESULT lastResult = {};
-
 		GenericCoTaskMemWrapper<WAVEFORMATEX> nativeFormat{};
 		WaveFormat format;
-		bool formatIsValid = false;
 
 		MediaDeviceType type{};
 		IAudioCaptureClientWrapper::Type formatType{};
@@ -32,32 +29,21 @@ namespace rxtd::utils {
 		IAudioClientWrapper() = default;
 
 		template<typename InitFunction>
-		IAudioClientWrapper(InitFunction initFunction) : GenericComWrapper(std::move(initFunction)) { }
+		IAudioClientWrapper(InitFunction initFunction, MediaDeviceType type) : GenericComWrapper(std::move(initFunction)), type(type) {
+			readFormat();
+		}
 
-		IAudioCaptureClientWrapper openCapture();
-
-		// check lastResult after this function
-		// if (lastResult == S_OK) then you can call initShared on another instance of IAudioClientWrapper
-		// if (lastResult == AUDCLNT_E_DEVICE_IN_USE) then device is in exclusive mode
-		// other errors may happen
-		// the meaning of this function is to reduce memory leaks caused by WASAPI exclusive mode
+		// This method does nothing except connecting to device
+		// If it fails by throwing ComException with error code AUDCLNT_E_DEVICE_IN_USE
+		// then device is in exclusive mode
+		// You should wait for device to exit exclusive mode to avoid memory leak
 		//
 		// the object is unusable after this function, so create separate object before calling this
-		void testExclusive();
+		void testExclusive() noexcept(false);
 
-		void initShared(double bufferSizeSec);
+		IAudioCaptureClientWrapper openCapture(double bufferSizeSec) noexcept(false);
 
-		[[nodiscard]]
-		HRESULT getLastResult() const {
-			return lastResult;
-		}
-
-		[[nodiscard]]
-		bool isFormatValid() const {
-			return formatIsValid;
-		}
-
-		void readFormat();
+		GenericComWrapper<IAudioRenderClient> openRender() noexcept(false);
 
 		[[nodiscard]]
 		const WaveFormat& getFormat() const {
@@ -65,28 +51,38 @@ namespace rxtd::utils {
 		}
 
 		[[nodiscard]]
-		auto getType() const {
+		MediaDeviceType getType() const {
 			return type;
 		}
 
 		template<typename Interface>
-		GenericComWrapper<Interface> getInterface() {
-			static_assert(
-				std::is_base_of<IAudioClock, Interface>::value
-				|| std::is_base_of<IAudioRenderClient, Interface>::value
-				|| std::is_base_of<IAudioSessionControl, Interface>::value
-				|| std::is_base_of<IAudioStreamVolume, Interface>::value
-				|| std::is_base_of<IChannelAudioVolume, Interface>::value
-				|| std::is_base_of<ISimpleAudioVolume, Interface>::value,
-				"Interface is not supported by IAudioClient"
-			);
+		GenericComWrapper<Interface> getInterface() noexcept(false) {
+			sview source;
+			if constexpr (std::is_same_v<IAudioClock, Interface>) {
+				source = L"IAudioClient.GetService(IAudioClock)";
+			} else if constexpr (std::is_same_v<IAudioRenderClient, Interface>) {
+				source = L"IAudioClient.GetService(IAudioRenderClient)";
+			} else if constexpr (std::is_same_v<IAudioSessionControl, Interface>) {
+				source = L"IAudioClient.GetService(IAudioSessionControl)";
+			} else if constexpr (std::is_same_v<IAudioStreamVolume, Interface>) {
+				source = L"IAudioClient.GetService(IAudioStreamVolume)";
+			} else if constexpr (std::is_same_v<IChannelAudioVolume, Interface>) {
+				source = L"IAudioClient.GetService(IChannelAudioVolume)";
+			} else if constexpr (std::is_same_v<ISimpleAudioVolume, Interface>) {
+				source = L"IAudioClient.GetService(ISimpleAudioVolume)";
+			} else {
+				static_assert(false, "Interface is not supported by IAudioClient");
+			}
 
 			return {
 				[&](auto ptr) {
-					lastResult = typedQuery(&IAudioClient::GetService, ptr);
-					return lastResult == S_OK;
+					throwOnError(typedQuery(&IAudioClient::GetService, ptr), source);
+					return true;
 				}
 			};
 		}
+
+	private:
+		void readFormat() noexcept(false);
 	};
 }

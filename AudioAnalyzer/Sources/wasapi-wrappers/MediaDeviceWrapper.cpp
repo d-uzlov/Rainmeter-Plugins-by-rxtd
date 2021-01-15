@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 rxtd
+ * Copyright (C) 2020-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -15,34 +15,21 @@
 
 #include <functiondiscoverykeys_devpkey.h>
 
-#include "winapi-wrappers/GenericCoTaskMemWrapper.h"
 #include "winapi-wrappers/PropertyStoreWrapper.h"
 
 using namespace utils;
 
-string MediaDeviceWrapper::readId() {
-	GenericCoTaskMemWrapper<wchar_t> idWrapper{
-		[&](auto ptr) {
-			lastResult = ref().GetId(ptr);
-			return lastResult == S_OK;
-		}
-	};
-	return idWrapper.isValid() ? idWrapper.getPointer() : string{};
-}
-
-MediaDeviceWrapper::DeviceInfo MediaDeviceWrapper::readDeviceInfo() {
+MediaDeviceWrapper::DeviceInfo MediaDeviceWrapper::readDeviceInfo() noexcept(false) {
 	if (!isValid()) {
 		return {};
 	}
 
 	PropertyStoreWrapper props{
 		[&](auto ptr) {
-			return S_OK == ref().OpenPropertyStore(STGM_READ, ptr);
+			throwOnError(ref().OpenPropertyStore(STGM_READ, ptr), L"IMMDevice.OpenPropertyStore() in MediaDeviceWrapper::readDeviceInfo()");
+			return true;
 		}
 	};
-	if (!props.isValid()) {
-		return {};
-	}
 
 	DeviceInfo deviceInfo;
 	deviceInfo.fullFriendlyName = props.readPropertyString(PKEY_Device_FriendlyName).value_or(L"");
@@ -59,9 +46,10 @@ MediaDeviceWrapper::DeviceInfo MediaDeviceWrapper::readDeviceInfo() {
 IAudioClientWrapper MediaDeviceWrapper::openAudioClient() {
 	return IAudioClientWrapper{
 		[&](auto ptr) {
-			lastResult = typedQuery(&IMMDevice::Activate, ptr, CLSCTX_INPROC_SERVER, nullptr);
-			return lastResult == S_OK;
-		}
+			throwOnError(typedQuery(&IMMDevice::Activate, ptr, CLSCTX_INPROC_SERVER, nullptr), L"IMMDevice.Activate(IAudioClient) in MediaDeviceWrapper::openAudioClient()");
+			return true;
+		},
+		type
 	};
 }
 

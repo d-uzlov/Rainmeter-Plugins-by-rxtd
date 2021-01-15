@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 rxtd
+ * Copyright (C) 2020-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -23,16 +23,22 @@ IMMDeviceEnumeratorWrapper::IMMDeviceEnumeratorWrapper() : GenericComWrapper(
 	}
 ) {}
 
-MediaDeviceWrapper IMMDeviceEnumeratorWrapper::getDeviceByID(const string& id) {
-	return MediaDeviceWrapper{
+std::optional<MediaDeviceWrapper> IMMDeviceEnumeratorWrapper::getDeviceByID(const string& id) {
+	auto result = MediaDeviceWrapper{
 		[&](auto ptr) {
 			return S_OK == ref().GetDevice(id.c_str(), ptr);
 		}
 	};
+
+	if (result.isValid()) {
+		return std::move(result);
+	} else {
+		return std::nullopt;
+	}
 }
 
-MediaDeviceWrapper IMMDeviceEnumeratorWrapper::getDefaultDevice(MediaDeviceType type) {
-	return MediaDeviceWrapper{
+std::optional<MediaDeviceWrapper> IMMDeviceEnumeratorWrapper::getDefaultDevice(MediaDeviceType type) {
+	auto result = MediaDeviceWrapper{
 		[&](auto ptr) {
 			return S_OK == ref().GetDefaultAudioEndpoint(
 				type == MediaDeviceType::eOUTPUT ? eRender : eCapture,
@@ -41,6 +47,12 @@ MediaDeviceWrapper IMMDeviceEnumeratorWrapper::getDefaultDevice(MediaDeviceType 
 			);
 		}
 	};
+
+	if (result.isValid()) {
+		return std::move(result);
+	} else {
+		return std::nullopt;
+	}
 }
 
 std::vector<MediaDeviceWrapper> IMMDeviceEnumeratorWrapper::getActiveDevices(MediaDeviceType type) {

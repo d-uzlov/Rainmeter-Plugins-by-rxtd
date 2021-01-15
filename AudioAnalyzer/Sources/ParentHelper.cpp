@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2020 rxtd
+ * Copyright (C) 2020-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -431,59 +431,57 @@ string ParentHelper::makeDeviceListString(utils::MediaDeviceType type) {
 	};
 
 	// returns success
-	auto appendFormat = [&](utils::MediaDeviceWrapper& device)-> bool {
-		auto audioClient = device.openAudioClient();
-		if (!audioClient.isValid()) {
-			return false;
-		}
+	auto appendFormat = [&](utils::MediaDeviceWrapper& device) {
+		try {
+			auto audioClient = device.openAudioClient();
 
-		audioClient.readFormat();
-		if (!audioClient.isFormatValid()) {
-			return false;
-		}
+			auto& format = audioClient.getFormat();
 
-		auto format = audioClient.getFormat();
-		bp.append(L"{};", format.samplesPerSec);
+			bp.append(L"{};", format.samplesPerSec);
 
-		if (format.channelLayout.ordered().empty()) {
-			bp.append(L"<unknown>;");
-		} else {
-			auto channels = format.channelLayout.ordered();
-			channels.remove_suffix(1);
-			for (auto channel : channels) {
-				bp.append(L"{},", ChannelUtils::getTechnicalName(channel));
+			if (format.channelLayout.ordered().empty()) {
+				append({});
+			} else {
+				auto channels = format.channelLayout.ordered();
+				channels.remove_suffix(1);
+				for (auto channel : channels) {
+					bp.append(L"{},", ChannelUtils::getTechnicalName(channel));
+				}
+				bp.append(L"{};", ChannelUtils::getTechnicalName(format.channelLayout.ordered().back()));
 			}
-			bp.append(L"{};", ChannelUtils::getTechnicalName(format.channelLayout.ordered().back()));
-		}
 
-		return true;
+			return;
+		} catch (utils::FormatException&) { } catch (utils::ComException&) { }
+
+		append({});
+		append({});
 	};
 
 	for (auto& device : collection) {
-		auto id = device.readId();
-		if (id.empty()) {
-			continue;
-		}
+		append(device.getId());
 
-		append(id);
+		try {
+			const auto deviceInfo = device.readDeviceInfo();
 
-		const auto deviceInfo = device.readDeviceInfo();
-		append(deviceInfo.name);
-		append(deviceInfo.desc);
-		append(deviceInfo.formFactor);
-
-		bool formatAppendSuccess = appendFormat(device);
-		if (!formatAppendSuccess) {
+			append(deviceInfo.name);
+			append(deviceInfo.desc);
+			append(deviceInfo.formFactor);
+		} catch (utils::ComException&) {
+			append({});
 			append({});
 			append({});
 		}
+
+		appendFormat(device);
 
 		bp.append(L"\n");
 	}
 
 	result = bp.getBufferView();
-	result.pop_back(); // removes \0
-	result.pop_back(); // removes \n
+	if (!result.empty()) {
+		result.pop_back(); // removes \0
+		result.pop_back(); // removes \n
+	}
 
 	return result;
 }
@@ -493,25 +491,24 @@ string ParentHelper::legacy_makeDeviceListString(utils::MediaDeviceType type) {
 
 	auto collection = enumeratorWrapper.getActiveDevices(type);
 	if (collection.empty()) {
-		return result;;
+		return result;
 	}
 
 	utils::BufferPrinter bp;
 	for (auto& device : collection) {
-		auto id = device.readId();
-		if (id.empty()) {
-			continue;
-		}
-
-		const auto deviceInfo = device.readDeviceInfo();
-		bp.append(L"{}", id);
-		bp.append(L" ");
-		bp.append(L"{}\n", deviceInfo.fullFriendlyName);
+		try {
+			const auto deviceInfo = device.readDeviceInfo();
+			bp.append(L"{}", device.getId());
+			bp.append(L" ");
+			bp.append(L"{}\n", deviceInfo.fullFriendlyName);
+		} catch (utils::ComException&) {}
 	}
 
 	result = bp.getBufferView();
-	result.pop_back();
-	result.pop_back();
+	if (!result.empty()) {
+		result.pop_back(); // removes \0
+		result.pop_back(); // removes \n
+	}
 
 	return result;
 }

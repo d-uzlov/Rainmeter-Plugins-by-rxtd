@@ -191,6 +191,7 @@
     <ClInclude Include="sources\StringUtils.h" />
     <ClInclude Include="sources\TypeHolder.h" />
     <ClInclude Include="sources\winapi-wrappers\BufferPrinterExtensions.h" />
+    <ClInclude Include="sources\winapi-wrappers\ComException.h" />
     <ClInclude Include="sources\winapi-wrappers\FileWrapper.h" />
     <ClInclude Include="sources\winapi-wrappers\GenericComWrapper.h" />
     <ClInclude Include="sources\winapi-wrappers\GenericCoTaskMemWrapper.h" />

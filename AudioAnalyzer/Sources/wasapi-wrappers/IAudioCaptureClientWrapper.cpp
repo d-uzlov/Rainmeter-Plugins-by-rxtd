@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 rxtd
+ * Copyright (C) 2020-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -18,14 +18,14 @@ static_assert(std::is_same<UINT32, uint32_t>::value);
 
 // static_assert(std::is_same<DWORD, uint32_t>::value); // ...
 
-void IAudioCaptureClientWrapper::readBuffer() {
+HRESULT IAudioCaptureClientWrapper::readBuffer() {
 	uint8_t* data = nullptr;
 	DWORD flags{};
 	uint32_t dataSize;
-	lastResult = ref().GetBuffer(&data, &dataSize, &flags, nullptr, nullptr);
+	HRESULT lastResult = ref().GetBuffer(&data, &dataSize, &flags, nullptr, nullptr);
 
-	if (lastResult != S_OK || dataSize == 0) {
-		return;
+	if (lastResult != S_OK) {
+		return lastResult;
 	}
 
 	const bool silent = (flags & AUDCLNT_BUFFERFLAGS_SILENT) != 0;
@@ -51,6 +51,7 @@ void IAudioCaptureClientWrapper::readBuffer() {
 	}
 
 	ref().ReleaseBuffer(dataSize);
+	return S_OK;
 }
 
 void IAudioCaptureClientWrapper::copyFloat(void* source, array_span<float> dest, index offset, index stride) {

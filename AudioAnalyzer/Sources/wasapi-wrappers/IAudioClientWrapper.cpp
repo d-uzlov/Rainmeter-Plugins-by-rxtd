@@ -10,88 +10,13 @@
 #include "IAudioClientWrapper.h"
 
 #include "BufferPrinter.h"
-#include "winapi-wrappers/GenericCoTaskMemWrapper.h"
 #include "MyMath.h"
+#include "winapi-wrappers/ComException.h"
+#include "winapi-wrappers/GenericCoTaskMemWrapper.h"
 
 using namespace utils;
 
-IAudioCaptureClientWrapper IAudioClientWrapper::openCapture() {
-	auto result = IAudioCaptureClientWrapper{
-		[&](auto ptr) {
-			lastResult = typedQuery(&IAudioClient::GetService, ptr);
-			return lastResult == S_OK;
-		}
-	};
-
-	result.setParams(formatType, format.channelsCount);
-
-	return result;
-}
-
-void IAudioClientWrapper::testExclusive() {
-	readFormat();
-	if (!formatIsValid) {
-		return;
-	}
-
-	auto client3 = utils::GenericComWrapper<IAudioClient3>{
-		[&](auto ptr) {
-			lastResult = ref().QueryInterface<IAudioClient3>(ptr);
-			return S_OK == lastResult;
-		}
-	};
-
-	if (!client3.isValid()) {
-		// Both IAudioClient#Initialize and IAudioClient3#InitializeSharedAudioStream leak commit memory
-		// but according to my tests,
-		// if provided with minimum buffer size
-		// IAudioClient3#InitializeSharedAudioStream leaks less
-		// but if IAudioClient3 is not available,
-		//	which, by the way, is probably caused by old windows version
-		// then IAudioClient#Initialize also fits the task
-		//
-		// It doesn't matter if we need AUDCLNT_STREAMFLAGS_LOOPBACK for this session
-		// exclusive streams don't allow shared connection both with and without loopback
-		lastResult = ref().Initialize(
-			AUDCLNT_SHAREMODE_SHARED,
-			0,
-			0,
-			0,
-			nativeFormat.getPointer(),
-			nullptr
-		);
-		return;
-	}
-
-	UINT32 pDefaultPeriodInFrames;
-	UINT32 pFundamentalPeriodInFrames;
-	UINT32 pMinPeriodInFrames;
-	UINT32 pMaxPeriodInFrames;
-	lastResult = client3.ref().GetSharedModeEnginePeriod(
-		nativeFormat.getPointer(),
-		&pDefaultPeriodInFrames,
-		&pFundamentalPeriodInFrames,
-		&pMinPeriodInFrames,
-		&pMaxPeriodInFrames
-	);
-	if (lastResult != S_OK) {
-		return;
-	}
-
-	lastResult = client3.ref().InitializeSharedAudioStream(
-		0,
-		pMinPeriodInFrames,
-		nativeFormat.getPointer(),
-		nullptr
-	);
-}
-
-void IAudioClientWrapper::initShared(double bufferSizeSec) {
-	readFormat();
-	if (!formatIsValid) {
-		return;
-	}
-
+IAudioCaptureClientWrapper IAudioClientWrapper::openCapture(double bufferSizeSec) {
 	// Documentation for IAudioClient::Initialize says
 	// ""
 	//	Note  In Windows 8, the first use of IAudioClient to access the audio device
@@ -118,42 +43,124 @@ void IAudioClientWrapper::initShared(double bufferSizeSec) {
 	constexpr double _100nsUnitsIn1sec = 1000'000'0;
 	const index bufferSize100nsUnits = MyMath::roundTo<index>(bufferSizeSec * _100nsUnitsIn1sec);
 
-	lastResult = ref().Initialize(
-		AUDCLNT_SHAREMODE_SHARED,
-		AUDCLNT_STREAMFLAGS_LOOPBACK,
-		bufferSize100nsUnits,
-		0,
-		nativeFormat.getPointer(),
-		nullptr
-	);
-	if (lastResult == AUDCLNT_E_WRONG_ENDPOINT_TYPE) {
-		lastResult = ref().Initialize(
+	uint32_t flags = 0;
+	if (type == MediaDeviceType::eOUTPUT) {
+		flags |= AUDCLNT_STREAMFLAGS_LOOPBACK;
+	}
+
+	throwOnError(
+		ref().Initialize(
 			AUDCLNT_SHAREMODE_SHARED,
-			0,
+			flags,
 			bufferSize100nsUnits,
 			0,
 			nativeFormat.getPointer(),
 			nullptr
+		),
+		L"IAudioClient.Initialize() in openCapture()"
+	);
+
+	auto result = IAudioCaptureClientWrapper{
+		[&](auto ptr) {
+			throwOnError(
+				typedQuery(&IAudioClient::GetService, ptr),
+				L"IAudioClient.GetService(IAudioCaptureClient) in openCapture()"
+			);
+			return true;
+		}
+	};
+
+	result.setParams(formatType, format.channelsCount);
+
+	return result;
+}
+
+GenericComWrapper<IAudioRenderClient> IAudioClientWrapper::openRender() noexcept(false) {
+	throwOnError(
+		ref().Initialize(
+			AUDCLNT_SHAREMODE_SHARED,
+			0,
+			0,
+			0,
+			nativeFormat.getPointer(),
+			nullptr
+		),
+		L"IAudioClient.Initialize() in openRender()"
+	);
+
+	auto result = GenericComWrapper<IAudioRenderClient>{
+		[&](auto ptr) {
+			throwOnError(
+				typedQuery(&IAudioClient::GetService, ptr),
+				L"IAudioClient.GetService(IAudioCaptureClient) in openRender()"
+			);
+			return true;
+		}
+	};
+
+	return result;
+}
+
+void IAudioClientWrapper::testExclusive() {
+	auto client3 = utils::GenericComWrapper<IAudioClient3>{
+		[&](auto ptr) {
+			auto code = ref().QueryInterface<IAudioClient3>(ptr);
+			return S_OK == code;
+		}
+	};
+
+	// Both IAudioClient#Initialize and IAudioClient3#InitializeSharedAudioStream leak commit memory
+	// when device is in exclusive mode (AUDCLNT_E_DEVICE_IN_USE return code)
+	// but according to my tests, [when provided with minimum buffer size]
+	// IAudioClient3#InitializeSharedAudioStream leaks less, so this is the preferable method of testing
+
+	if (client3.isValid()) {
+		UINT32 pDefaultPeriodInFrames;
+		UINT32 pFundamentalPeriodInFrames;
+		UINT32 pMinPeriodInFrames;
+		UINT32 pMaxPeriodInFrames;
+		throwOnError(
+			client3.ref().GetSharedModeEnginePeriod(
+				nativeFormat.getPointer(),
+				&pDefaultPeriodInFrames,
+				&pFundamentalPeriodInFrames,
+				&pMinPeriodInFrames,
+				&pMaxPeriodInFrames
+			), L"IAudioClient3.GetSharedModeEnginePeriod() in testExclusive()"
 		);
-		type = MediaDeviceType::eINPUT;
+
+		throwOnError(
+			client3.ref().InitializeSharedAudioStream(
+				0,
+				pMinPeriodInFrames,
+				nativeFormat.getPointer(),
+				nullptr
+			), L"IAudioClient3.InitializeSharedAudioStream() in testExclusive()"
+		);
 	} else {
-		type = MediaDeviceType::eOUTPUT;
+		throwOnError(
+			ref().Initialize(
+				AUDCLNT_SHAREMODE_SHARED,
+				0,
+				0,
+				0,
+				nativeFormat.getPointer(),
+				nullptr
+			), L"IAudioClient.Initialize() in testExclusive()"
+		);
 	}
 }
 
 void IAudioClientWrapper::readFormat() {
 	nativeFormat = {
 		[&](auto ptr) {
-			lastResult = ref().GetMixFormat(ptr);
-			return lastResult == S_OK;
+			auto code = ref().GetMixFormat(ptr);
+			if (code != S_OK) {
+				throw ComException{ code, L"WAVEFORMATEX.GetMixFormat() in readFormat()" };
+			}
+			return true;
 		}
 	};
-	if (!nativeFormat.isValid()) {
-		formatIsValid = false;
-		return;
-	}
-
-	formatIsValid = true;
 
 	auto& waveFormatRaw = *nativeFormat.getPointer();
 	format.channelsCount = waveFormatRaw.nChannels;
@@ -169,7 +176,7 @@ void IAudioClientWrapper::readFormat() {
 		} else if (formatExtensible.SubFormat == KSDATAFORMAT_SUBTYPE_IEEE_FLOAT) {
 			formatType = IAudioCaptureClientWrapper::Type::eFloat;
 		} else {
-			formatIsValid = false;
+			throw FormatException{};
 		}
 
 		channelMask = formatExtensible.dwChannelMask;
@@ -179,7 +186,7 @@ void IAudioClientWrapper::readFormat() {
 		} else if (waveFormatRaw.wFormatTag == WAVE_FORMAT_IEEE_FLOAT) {
 			formatType = IAudioCaptureClientWrapper::Type::eFloat;
 		} else {
-			formatIsValid = false;
+			throw FormatException{};
 		}
 
 		if (waveFormatRaw.nChannels == 1) {
@@ -187,7 +194,7 @@ void IAudioClientWrapper::readFormat() {
 		} else if (waveFormatRaw.nChannels == 2) {
 			channelMask = KSAUDIO_SPEAKER_STEREO;
 		} else {
-			formatIsValid = false;
+			throw FormatException{};
 		}
 	}
 

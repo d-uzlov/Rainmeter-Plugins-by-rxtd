@@ -28,8 +28,6 @@ namespace rxtd::utils {
 
 		Vector2D<float> buffer;
 
-		HRESULT lastResult{};
-
 	public:
 		IAudioCaptureClientWrapper() = default;
 
@@ -41,12 +39,7 @@ namespace rxtd::utils {
 			channelsCount = _channelsCount;
 		}
 
-		void readBuffer();
-
-		[[nodiscard]]
-		HRESULT getLastResult() const {
-			return lastResult;
-		}
+		HRESULT readBuffer();
 
 		[[nodiscard]]
 		array2d_view<float> getBuffer() const {

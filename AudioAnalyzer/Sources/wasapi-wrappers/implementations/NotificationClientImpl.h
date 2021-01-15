@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 rxtd
+ * Copyright (C) 2020-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -63,31 +63,15 @@ namespace rxtd::utils {
 			enumerator.ref().RegisterEndpointNotificationCallback(this);
 
 			for (auto& dev : enumerator.getActiveDevices(MediaDeviceType::eINPUT)) {
-				auto id = dev.readId();
-				if (id.empty()) {
-					continue;
-				}
-				activeDevices.insert(std::move(id));
+				activeDevices.insert(dev.getId() % own());
 			}
 
 			for (auto& dev : enumerator.getActiveDevices(MediaDeviceType::eOUTPUT)) {
-				auto id = dev.readId();
-				if (id.empty()) {
-					continue;
-				}
-				activeDevices.insert(std::move(id));
+				activeDevices.insert(dev.getId() % own());
 			}
 
-
-			auto defaultInput = enumerator.getDefaultDevice(MediaDeviceType::eINPUT);
-			if (defaultInput.isValid()) {
-				defaultInputId = defaultInput.readId();
-			}
-
-			auto defaultOutput = enumerator.getDefaultDevice(MediaDeviceType::eOUTPUT);
-			if (defaultOutput.isValid()) {
-				defaultOutputId = defaultOutput.readId();
-			}
+			defaultInputId = enumerator.getDefaultDevice(MediaDeviceType::eINPUT).value_or(MediaDeviceWrapper{}).getId();
+			defaultInputId = enumerator.getDefaultDevice(MediaDeviceType::eOUTPUT).value_or(MediaDeviceWrapper{}).getId();
 		}
 
 		void deinit(IMMDeviceEnumeratorWrapper& enumerator) {

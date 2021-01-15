@@ -11,6 +11,8 @@
 #include <type_traits>
 #include <Unknwn.h>
 
+#include "ComException.h"
+
 namespace rxtd::utils {
 	template<typename T>
 	class GenericComWrapper : VirtualDestructorBase {
@@ -97,6 +99,12 @@ namespace rxtd::utils {
 		template<typename Interface, typename MethodType, typename... Args>
 		HRESULT typedQuery(MethodType method, Interface** interfacePtr, Args ... args) {
 			return (ptr->*method)(__uuidof(Interface), args..., reinterpret_cast<void**>(interfacePtr));
+		}
+
+		static void throwOnError(HRESULT code, sview source) noexcept(false) {
+			if (code != S_OK) {
+				throw ComException{ code, source };
+			}
 		}
 	};
 }

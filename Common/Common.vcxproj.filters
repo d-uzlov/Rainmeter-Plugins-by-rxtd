@@ -154,6 +154,9 @@
     <ClInclude Include="sources\winapi-wrappers\PropertyStoreWrapper.h">
       <Filter>Source Files\winapi-wrappers</Filter>
     </ClInclude>
+    <ClInclude Include="sources\winapi-wrappers\ComException.h">
+      <Filter>Source Files\winapi-wrappers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="array_view.natvis" />

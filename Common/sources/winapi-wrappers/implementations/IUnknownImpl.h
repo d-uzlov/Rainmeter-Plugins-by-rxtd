@@ -14,12 +14,13 @@
 
 namespace rxtd::utils {
 	template<typename T>
-	class IUnknownImpl : NonMovableBase, VirtualDestructorBase, virtual public T {
+	class IUnknownImpl : NonMovableBase, virtual public T {
 		static_assert(std::is_base_of<IUnknown, T>::value, "T must extend IUnknown");
 		std::atomic_int referenceCounter{ 1 };
 
 	protected:
-		~IUnknownImpl() = default;
+		// can't use VirtualDestructorBase because destructor must be protected
+		virtual ~IUnknownImpl() = default;
 
 	public:
 		ULONG STDMETHODCALLTYPE AddRef() final override {
@@ -35,7 +36,7 @@ namespace rxtd::utils {
 			return newValue;
 		}
 
-		HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvInterface) override {
+		HRESULT STDMETHODCALLTYPE QueryInterface(const GUID& riid, void** ppvInterface) override {
 			if (__uuidof(IUnknown) == riid) {
 				AddRef();
 				*ppvInterface = this;

@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2020 rxtd
+ * Copyright (C) 2020-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -65,14 +65,17 @@ namespace rxtd::utils {
 		std::mutex mut;
 
 	public:
-		static AudioSessionEventsImpl* create(IAudioClientWrapper& audioClient) {
+		static AudioSessionEventsImpl* create(IAudioClientWrapper& audioClient, bool preventVolumeChange) noexcept(false) {
 			AudioSessionEventsImpl& result = *new AudioSessionEventsImpl;
-			result.preventVolumeChange = true;
+			result.preventVolumeChange = preventVolumeChange;
 
 			result.sessionController = audioClient.getInterface<IAudioSessionControl>();
 
 			if (result.sessionController.isValid()) {
-				result.sessionController.ref().RegisterAudioSessionNotification(&result);
+				result.sessionController.throwOnError(
+					result.sessionController.ref().RegisterAudioSessionNotification(&result),
+					L"IAudioSessionControl.RegisterAudioSessionNotification() in AudioSessionEventsImpl factory"
+				);
 
 				result.mainVolumeController = audioClient.getInterface<ISimpleAudioVolume>();
 				result.mainVolumeControllerIsValid.exchange(result.mainVolumeController.isValid());
@@ -84,12 +87,15 @@ namespace rxtd::utils {
 			return &result;
 		}
 
-		static AudioSessionEventsImpl* create(GenericComWrapper<IAudioSessionControl>&& _sessionController) {
+		static AudioSessionEventsImpl* create(GenericComWrapper<IAudioSessionControl>&& _sessionController, bool preventVolumeChange) noexcept(false) {
 			AudioSessionEventsImpl& result = *new AudioSessionEventsImpl;
-			result.preventVolumeChange = false;
+			result.preventVolumeChange = preventVolumeChange;
 
 			result.sessionController = std::move(_sessionController);
-			result.sessionController.ref().RegisterAudioSessionNotification(&result);
+			result.sessionController.throwOnError(
+				result.sessionController.ref().RegisterAudioSessionNotification(&result),
+				L"IAudioSessionControl.RegisterAudioSessionNotification() in AudioSessionEventsImpl factory"
+			);
 
 			return &result;
 		}
@@ -136,7 +142,7 @@ namespace rxtd::utils {
 			return result;
 		}
 
-		HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvInterface) override {
+		HRESULT STDMETHODCALLTYPE QueryInterface(const GUID& riid, void** ppvInterface) override {
 			const auto result = IUnknownImpl::QueryInterface(riid, ppvInterface);
 			if (result == S_OK) {
 				return result;
@@ -212,21 +218,21 @@ namespace rxtd::utils {
 				}
 			}
 
+			HRESULT res = S_OK;
+
 			if (otherNoneOne) {
 				volumes[channel] = 1.0f;
-				const auto result = channelVolumeController.ref().SetAllVolumes(
+				res = channelVolumeController.ref().SetAllVolumes(
 					channel, volumes, nullptr
 				);
-				if (result != S_OK) {
-					channelVolumeControllerIsValid.exchange(false);
-				}
 			} else if (volumes[channel] != 1.0f) {
-				const auto result = channelVolumeController.ref().SetChannelVolume(
+				res = channelVolumeController.ref().SetChannelVolume(
 					channel, 1.0f, nullptr
 				);
-				if (result != S_OK) {
-					channelVolumeControllerIsValid.exchange(false);
-				}
+			}
+
+			if (res != S_OK) {
+				channelVolumeControllerIsValid.exchange(false);
 			}
 
 			recursionAtomic.exchange(false);
@@ -280,19 +286,21 @@ namespace rxtd::utils {
 	public:
 		AudioSessionEventsWrapper() = default;
 
-		AudioSessionEventsWrapper(IAudioClientWrapper& client) {
+		void listenTo(IAudioClientWrapper& client, bool preventVolumeChange) {
+			destruct();
 			impl = {
 				[&](auto ptr) {
-					*ptr = AudioSessionEventsImpl::create(client);
+					*ptr = AudioSessionEventsImpl::create(client, preventVolumeChange);
 					return true;
 				}
 			};
 		}
 
-		AudioSessionEventsWrapper(GenericComWrapper<IAudioSessionControl>&& _sessionController) {
+		void listenTo(GenericComWrapper<IAudioSessionControl>&& _sessionController, bool preventVolumeChange) {
+			destruct();
 			impl = {
 				[&](auto ptr) {
-					*ptr = AudioSessionEventsImpl::create(std::move(_sessionController));
+					*ptr = AudioSessionEventsImpl::create(std::move(_sessionController), preventVolumeChange);
 					return true;
 				}
 			};
