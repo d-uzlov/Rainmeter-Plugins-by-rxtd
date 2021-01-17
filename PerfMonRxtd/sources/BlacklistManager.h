@@ -1,5 +1,5 @@
 ﻿/* 
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -15,9 +15,18 @@ namespace rxtd::perfmon {
 		bool matchSubstring{};
 
 		MatchTestRecord() = default;
-		MatchTestRecord(sview pattern, bool substring);
 
-		bool match(sview string) const;
+		MatchTestRecord(sview pattern, bool substring) :
+			pattern(pattern),
+			matchSubstring(substring) { }
+
+		[[nodiscard]]
+		bool match(sview string) const {
+			if (!matchSubstring) {
+				return pattern == string;
+			}
+			return string.find(pattern) != sview::npos;
+		}
 	};
 
 	class BlacklistManager {
@@ -30,9 +39,19 @@ namespace rxtd::perfmon {
 
 			MatchList(string sourceString, bool upperCase);
 
-			bool match(sview view) const;
+			[[nodiscard]]
+			bool match(sview view) const {
+				return std::any_of(
+					list.begin(), list.end(), [view](auto record) {
+						return record.match(view);
+					}
+				);
+			}
 
-			bool empty() const;
+			[[nodiscard]]
+			bool empty() const{
+				return list.empty();
+			}
 		};
 
 		MatchList blacklist;
@@ -41,8 +60,14 @@ namespace rxtd::perfmon {
 		MatchList whitelistOrig;
 
 	public:
-		void setLists(string black, string blackOrig, string white, string whiteOrig);
+		void setLists(string black, string blackOrig, string white, string whiteOrig) {
+			blacklist = { std::move(black), true };
+			blacklistOrig = { std::move(blackOrig), false };
+			whitelist = { std::move(white), true };
+			whitelistOrig = { std::move(whiteOrig), false };
+		}
 
+		[[nodiscard]]
 		bool isAllowed(sview searchName, sview originalName) const;
 	};
 }

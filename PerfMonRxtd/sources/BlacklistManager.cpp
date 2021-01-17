@@ -8,22 +8,12 @@
  */
 
 #include "BlacklistManager.h"
+
 #include "my-windows.h"
 #include "option-parser/Option.h"
 #include "option-parser/OptionList.h"
 
 using namespace perfmon;
-
-MatchTestRecord::MatchTestRecord(sview pattern, bool substring) :
-	pattern(pattern),
-	matchSubstring(substring) { }
-
-bool MatchTestRecord::match(sview string) const {
-	if (!matchSubstring) {
-		return pattern == string;
-	}
-	return string.find(pattern) != sview::npos;
-}
 
 BlacklistManager::MatchList::MatchList(string sourceString, bool upperCase) {
 	auto [_, optList] = utils::Option{ sourceString }.asList(L'|').consume();
@@ -50,27 +40,6 @@ BlacklistManager::MatchList::MatchList(string sourceString, bool upperCase) {
 
 		list.emplace_back(view, false);
 	}
-}
-
-bool BlacklistManager::MatchList::match(sview view) const {
-	for (auto record : list) {
-		if (record.match(view)) {
-			return true;
-		}
-	}
-
-	return false;
-}
-
-bool BlacklistManager::MatchList::empty() const {
-	return list.empty();
-}
-
-void BlacklistManager::setLists(string black, string blackOrig, string white, string whiteOrig) {
-	blacklist = { std::move(black), true };
-	blacklistOrig = { std::move(blackOrig), false };
-	whitelist = { std::move(white), true };
-	whitelistOrig = { std::move(whiteOrig), false };
 }
 
 bool BlacklistManager::isAllowed(sview searchName, sview originalName) const {
