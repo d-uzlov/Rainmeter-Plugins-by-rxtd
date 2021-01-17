@@ -429,9 +429,9 @@ double ExpressionResolver::calculateCountTotal(const RollupFunction rollupFuncti
 double ExpressionResolver::calculateRollupCountTotal(const RollupFunction rollupFunction) const {
 	switch (rollupFunction) {
 	case RollupFunction::eSUM: return static_cast<double>(instanceManager.getRollupInstances().size());
-	case RollupFunction::eAVERAGE: return static_cast<double>(instanceManager.getInstances().size()) / instanceManager
-	                                                                                                   .getRollupInstances()
-	                                                                                                   .size();
+	case RollupFunction::eAVERAGE:
+		return static_cast<double>(instanceManager.getInstances().size())
+			/ double(instanceManager.getRollupInstances().size());
 	case RollupFunction::eMINIMUM: {
 		index min = std::numeric_limits<index>::max();
 		for (const auto& item : instanceManager.getRollupInstances()) {
@@ -586,7 +586,7 @@ double ExpressionResolver::calculateRollup(RollupFunction rollupType, index coun
 
 template<double (ExpressionResolver::* calculateValueFunction)(index counterIndex, Indices originalIndexes) const>
 double ExpressionResolver::calculateTotal(RollupFunction rollupType, index counterIndex) const {
-	auto& vectorInstanceKeys = instanceManager.getInstances();
+	auto vectorInstanceKeys = instanceManager.getInstances();
 
 	switch (rollupType) {
 	case RollupFunction::eSUM:
@@ -632,7 +632,7 @@ double ExpressionResolver::calculateExpressionTotal(
 	const RollupFunction rollupType,
 	const ExpressionTreeNode& expression, bool rollup
 ) const {
-	auto& vectorInstanceKeys = rollup ? instanceManager.getRollupInstances() : instanceManager.getInstances();
+	auto vectorInstanceKeys = rollup ? instanceManager.getRollupInstances() : instanceManager.getInstances();
 
 	switch (rollupType) {
 	case RollupFunction::eSUM:

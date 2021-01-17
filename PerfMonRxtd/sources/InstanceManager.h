@@ -24,7 +24,7 @@ namespace rxtd::perfmon {
 
 	struct InstanceInfo {
 		sview sortName;
-		double sortValue;
+		double sortValue = 0.0;
 		Indices indices;
 		std::vector<Indices> vectorIndices;
 	};
@@ -46,21 +46,25 @@ namespace rxtd::perfmon {
 			eDESCENDING,
 		};
 
+		struct Options {
+			bool keepDiscarded = false;
+			bool syncRawFormatted = true;
+			bool rollup = false;
+			bool limitIndexOffset = false;
+
+			SortBy sortBy = SortBy::eNONE;
+			index sortIndex = 0;
+			SortOrder sortOrder = SortOrder::eDESCENDING;
+			RollupFunction sortRollupFunction = RollupFunction::eSUM;
+		};
+
 	private:
 		utils::Rainmeter::Logger& log;
 
-		bool keepDiscarded = false;
-		bool syncRawFormatted = true;
-		bool rollup = false;
-		index indexOffset = 0;
-		bool limitIndexOffset = false;
-
-		SortBy sortBy = SortBy::eNONE;
-		index sortIndex = 0;
-		SortOrder sortOrder = SortOrder::eDESCENDING;
-		RollupFunction sortRollupFunction = RollupFunction::eSUM;
-
 		const pdh::PdhWrapper& pdhWrapper;
+
+		Options options;
+		index indexOffset = 0;
 
 		std::vector<InstanceInfo> instances;
 		std::vector<InstanceInfo> instancesRolledUp;
@@ -86,18 +90,31 @@ namespace rxtd::perfmon {
 			const BlacklistManager& blacklistManager
 		);
 
-		void setKeepDiscarded(bool value);
-		void setSyncRawFormatted(bool value);
-		void setRollup(bool value);
-		void setIndexOffset(index value);
-		void setLimitIndexOffset(bool value);
+		void setOptions(Options value) {
+			options = value;
 
-		void setSortIndex(index value);
-		void setSortBy(SortBy value);
-		void setSortOrder(SortOrder value);
-		void setSortRollupFunction(RollupFunction value);
+			if (options.limitIndexOffset && indexOffset < 0) {
+				indexOffset = 0;
+			}
 
-		index getIndexOffset() const;
+			// TODO add check for maximum?
+			if (options.sortIndex < 0) {
+				log.error(L"SortIndex must be >= 0, but {} found, set to 0", value.sortIndex);
+				options.sortIndex = 0;
+			}
+		}
+
+		void setIndexOffset(index value, bool relative) {
+			if (relative) {
+				indexOffset += value;
+			} else {
+				indexOffset = value;
+			}
+			if (options.limitIndexOffset && indexOffset < 0) {
+				indexOffset = 0;
+			}
+		}
+
 		bool isRollup() const;
 		index getCountersCount() const;
 
@@ -109,16 +126,27 @@ namespace rxtd::perfmon {
 
 		void sort(const ExpressionResolver& expressionResolver);
 
-		const std::vector<InstanceInfo>& getInstances() const;
+		array_view<InstanceInfo> getInstances() const {
+			return instances;
+		}
 
-		const std::vector<InstanceInfo>& getDiscarded() const;
+		array_view<InstanceInfo> getDiscarded() const {
+			return instancesDiscarded;
+		}
 
-		const std::vector<InstanceInfo>& getRollupInstances() const;
+		array_view<InstanceInfo> getRollupInstances() const {
+			return instancesRolledUp;
+		}
 
 		/** We only need one snapshot for raw values, but if sync is enabled then we'll wait for two snapshots */
-		bool canGetRaw() const;
+		bool canGetRaw() const {
+			return !snapshotCurrent.isEmpty() && (!options.syncRawFormatted || !snapshotPrevious.isEmpty());
+		}
+
 		/** We need two complete snapshots for formatted values values */
-		bool canGetFormatted() const;
+		bool canGetFormatted() const {
+			return !snapshotCurrent.isEmpty() && !snapshotPrevious.isEmpty();
+		}
 
 		void setNameModificationType(pdh::NamesManager::ModificationType value);
 

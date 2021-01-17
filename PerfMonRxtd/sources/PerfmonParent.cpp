@@ -20,7 +20,7 @@ PerfmonParent::PerfmonParent(utils::Rainmeter&& _rain) : ParentBase(std::move(_r
 	setUseResultString(true);
 
 	objectName = rain.read(L"ObjectName").asString();
-	instanceManager.setIndexOffset(rain.read(L"InstanceIndexOffset").asInt());
+	instanceManager.setIndexOffset(rain.read(L"InstanceIndexOffset").asInt(), false);
 
 
 	if (objectName.empty()) {
@@ -50,13 +50,12 @@ PerfmonParent::PerfmonParent(utils::Rainmeter&& _rain) : ParentBase(std::move(_r
 void PerfmonParent::vReload() {
 	needUpdate = true;
 
-	instanceManager.setSortIndex(rain.read(L"SortIndex").asInt());
-	instanceManager.setSyncRawFormatted(rain.read(L"SyncRawFormatted").asBool());
-	instanceManager.setKeepDiscarded(rain.read(L"KeepDiscarded").asBool());
-
-	instanceManager.setRollup(rain.read(L"Rollup").asBool());
-	instanceManager.setLimitIndexOffset(rain.read(L"LimitIndexOffset").asBool());
-
+	InstanceManager::Options imo;
+	imo.sortIndex = rain.read(L"SortIndex").asInt();
+	imo.syncRawFormatted = rain.read(L"SyncRawFormatted").asBool();
+	imo.keepDiscarded = rain.read(L"KeepDiscarded").asBool();
+	imo.rollup = rain.read(L"Rollup").asBool();
+	imo.limitIndexOffset = rain.read(L"LimitIndexOffset").asBool();
 
 	auto str = rain.read(L"SortBy").asIString(L"None");
 	typedef InstanceManager::SortBy SortBy;
@@ -79,7 +78,7 @@ void PerfmonParent::vReload() {
 		logger.error(L"SortBy '{}' is invalid, set to 'None'", str);
 		sortBy = SortBy::eNONE;
 	}
-	instanceManager.setSortBy(sortBy);
+	imo.sortBy = sortBy;
 
 	str = rain.read(L"SortOrder").asIString(L"Descending");
 	typedef InstanceManager::SortOrder SortOrder;
@@ -92,14 +91,14 @@ void PerfmonParent::vReload() {
 		logger.error(L"SortOrder '{}' is invalid, set to 'Descending'", str);
 		sortOrder = SortOrder::eDESCENDING;
 	}
-	instanceManager.setSortOrder(sortOrder);
+	imo.sortOrder = sortOrder;
 
 
 	RollupFunction sortRollupFunction;
 	auto rollupFunctionStr = rain.read(L"SortRollupFunction").asIString(L"Sum");
 	if (rollupFunctionStr == L"Count") {
 		logger.warning(L"SortRollupFunction 'Count' is deprecated, SortBy set to 'Count'");
-		instanceManager.setSortBy(SortBy::eCOUNT);
+		imo.sortBy = SortBy::eCOUNT;
 		sortRollupFunction = RollupFunction::eSUM;
 	} else {
 		auto typeOpt = parseRollupFunction(rollupFunctionStr);
@@ -110,7 +109,7 @@ void PerfmonParent::vReload() {
 			sortRollupFunction = RollupFunction::eSUM;
 		}
 	}
-	instanceManager.setSortRollupFunction(sortRollupFunction);
+	imo.sortRollupFunction = sortRollupFunction;
 
 	blacklistManager.setLists(
 		rain.read(L"Blacklist").asString(),
@@ -168,6 +167,7 @@ void PerfmonParent::vReload() {
 		nameModificationType = NMT::NONE;
 	}
 
+	instanceManager.setOptions(imo);
 	instanceManager.setNameModificationType(nameModificationType);
 }
 
@@ -259,11 +259,7 @@ void PerfmonParent::vCommand(isview bangArgs) {
 	if (name.asIString() == L"SetIndexOffset") {
 		const index offset = value.asInt();
 		const auto firstSymbol = value.asString()[0];
-		if (firstSymbol == L'-' || firstSymbol == L'+') {
-			instanceManager.setIndexOffset(instanceManager.getIndexOffset() + offset);
-		} else {
-			instanceManager.setIndexOffset(offset);
-		}
+		instanceManager.setIndexOffset(offset, firstSymbol == L'-' || firstSymbol == L'+');
 	}
 }
 
