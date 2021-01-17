@@ -101,42 +101,17 @@ namespace rxtd::perfmon {
 		void vResolve(array_view<isview> args, string& resolveBufferString) override;
 
 	public:
-		/** Parent measure can be stopped.
-		 *  In this state it does not retrieve new information from PerfMon
-		 *  but can be reloaded to change options. */
-		void setStopped(bool value) {
-			stopped = value;
-		}
+		std::pair<double, sview> getValues(const Reference& ref, index sortedIndex, ResultString stringType, utils::Rainmeter::Logger& logger) const {
+			if (!instanceManager.canGetRaw() || ref.type == ReferenceType::COUNTER_FORMATTED && !instanceManager.canGetFormatted()) {
+				return { 0, ref.total ? L"Total" : L"" };
+			}
 
-		void changeStopState() {
-			stopped = !stopped;
-		}
-		void setIndexOffset(index value) {
-			instanceManager.setIndexOffset(value);
-		}
-		index getIndexOffset() const {
-			return instanceManager.getIndexOffset();
-		}
-
-		double getValue(const Reference& ref, const InstanceInfo* instance, utils::Rainmeter::Logger& logger) const {
-			return expressionResolver.getValue(ref, instance, logger);
-		}
-
-		index getCountersCount() const {
-			return pdhWrapper.getCountersCount();
-		}
-
-		/** We only need one snapshot for raw values, but if sync is enabled then we'll wait for two snapshots */
-		bool canGetRaw() const {
-			return instanceManager.canGetRaw();
-		}
-		/** We need two complete snapshots for formatted values values */
-		bool canGetFormatted() const {
-			return instanceManager.canGetFormatted();
-		}
-
-		const InstanceInfo* findInstance(const Reference& ref, index sortedIndex) const {
-			return instanceManager.findInstance(ref, sortedIndex);
+			if (ref.total) {
+				return { expressionResolver.getValue(ref, nullptr, logger), L"Total" };
+			} else {
+				auto instance = instanceManager.findInstance(ref, sortedIndex);
+				return { expressionResolver.getValue(ref, instance, logger), getInstanceName(*instance, stringType) };
+			}
 		}
 
 		sview getInstanceName(const InstanceInfo& instance, ResultString stringType) const;

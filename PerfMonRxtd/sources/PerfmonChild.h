@@ -13,14 +13,12 @@
 
 namespace rxtd::perfmon {
 	class PerfmonChild : public utils::TypeHolder {
-		// options
 		Reference ref;
 		index instanceIndex = 0;
 		ResultString resultStringType = ResultString::eNUMBER;
 
-		// data
 		const PerfmonParent* parent = nullptr;
-		const InstanceInfo* instance = nullptr;
+		sview stringValue;
 
 	public:
 		explicit PerfmonChild(utils::Rainmeter&& _rain);

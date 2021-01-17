@@ -8,6 +8,7 @@
  */
 
 #pragma once
+#include <optional>
 
 namespace rxtd::perfmon {
 	enum class RollupFunction {
@@ -17,6 +18,21 @@ namespace rxtd::perfmon {
 		eMAXIMUM,
 		eFIRST,
 	};
+
+	inline std::optional<RollupFunction> parseRollupFunction(isview name) {
+		if (name == L"Sum") {
+			return RollupFunction::eSUM;
+		} else if (name == L"Average") {
+			return RollupFunction::eAVERAGE;
+		} else if (name == L"Minimum") {
+			return RollupFunction::eMINIMUM;
+		} else if (name == L"Maximum") {
+			return RollupFunction::eMAXIMUM;
+		} else if (name == L"First") {
+			return RollupFunction::eFIRST;
+		}
+		return {};
+	}
 
 	enum class ResultString {
 		eNUMBER,

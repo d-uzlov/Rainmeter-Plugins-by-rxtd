@@ -19,7 +19,7 @@ using namespace perfmon;
 PerfmonParent::PerfmonParent(utils::Rainmeter&& _rain) : ParentBase(std::move(_rain)) {
 	setUseResultString(true);
 
-	objectName = rain.readString(L"ObjectName");
+	objectName = rain.read(L"ObjectName").asString();
 	instanceManager.setIndexOffset(rain.read(L"InstanceIndexOffset").asInt());
 
 
@@ -34,6 +34,10 @@ PerfmonParent::PerfmonParent(utils::Rainmeter&& _rain) : ParentBase(std::move(_r
 	if (counterTokens.empty()) {
 		logger.error(L"CounterList must have at least one entry");
 		setMeasureState(utils::MeasureState::eBROKEN);
+		return;
+	}
+	if (counterTokens.size() > 30) {
+		logger.error(L"too many counters");
 		return;
 	}
 
@@ -54,10 +58,10 @@ void PerfmonParent::vReload() {
 	instanceManager.setLimitIndexOffset(rain.read(L"LimitIndexOffset").asBool());
 
 
-	auto str = rain.readString(L"SortBy") % ciView();
+	auto str = rain.read(L"SortBy").asIString(L"None");
 	typedef InstanceManager::SortBy SortBy;
 	SortBy sortBy;
-	if (str.empty() || str == L"None")
+	if (str == L"None")
 		sortBy = SortBy::eNONE;
 	else if (str == L"InstanceName")
 		sortBy = SortBy::eINSTANCE_NAME;
@@ -77,10 +81,10 @@ void PerfmonParent::vReload() {
 	}
 	instanceManager.setSortBy(sortBy);
 
-	str = rain.readString(L"SortOrder") % ciView();
+	str = rain.read(L"SortOrder").asIString(L"Descending");
 	typedef InstanceManager::SortOrder SortOrder;
 	SortOrder sortOrder;
-	if (str == L"" || str == L"Descending")
+	if (str == L"Descending")
 		sortOrder = SortOrder::eDESCENDING;
 	else if (str == L"Ascending")
 		sortOrder = SortOrder::eASCENDING;
@@ -90,31 +94,29 @@ void PerfmonParent::vReload() {
 	}
 	instanceManager.setSortOrder(sortOrder);
 
-	str = rain.readString(L"SortRollupFunction") % ciView();
+
 	RollupFunction sortRollupFunction;
-	if (str == L"" || str == L"Sum")
-		sortRollupFunction = RollupFunction::eSUM;
-	else if (str == L"Average")
-		sortRollupFunction = RollupFunction::eAVERAGE;
-	else if (str == L"Minimum")
-		sortRollupFunction = RollupFunction::eMINIMUM;
-	else if (str == L"Maximum")
-		sortRollupFunction = RollupFunction::eMAXIMUM;
-	else if (str == L"Count") {
+	auto rollupFunctionStr = rain.read(L"SortRollupFunction").asIString(L"Sum");
+	if (rollupFunctionStr == L"Count") {
 		logger.warning(L"SortRollupFunction 'Count' is deprecated, SortBy set to 'Count'");
 		instanceManager.setSortBy(SortBy::eCOUNT);
 		sortRollupFunction = RollupFunction::eSUM;
 	} else {
-		logger.error(L"SortRollupFunction '{}' is invalid, set to 'Sum'", str);
-		sortRollupFunction = RollupFunction::eSUM;
+		auto typeOpt = parseRollupFunction(rollupFunctionStr);
+		if (typeOpt.has_value()) {
+			sortRollupFunction = typeOpt.value();
+		} else {
+			logger.error(L"SortRollupFunction '{}' is invalid, set to 'Sum'", str);
+			sortRollupFunction = RollupFunction::eSUM;
+		}
 	}
 	instanceManager.setSortRollupFunction(sortRollupFunction);
 
 	blacklistManager.setLists(
-		rain.readString(L"Blacklist") % own(),
-		rain.readString(L"BlacklistOrig") % own(),
-		rain.readString(L"Whitelist") % own(),
-		rain.readString(L"WhitelistOrig") % own()
+		rain.read(L"Blacklist").asString(),
+		rain.read(L"BlacklistOrig").asString(),
+		rain.read(L"Whitelist").asString(),
+		rain.read(L"WhitelistOrig").asString()
 	);
 
 	const auto expressionTokens = rain.read(L"ExpressionList").asList(L'|');
@@ -132,8 +134,8 @@ void PerfmonParent::vReload() {
 	NMT nameModificationType;
 	if (objectName == L"GPU Engine" || objectName == L"GPU Process Memory") {
 
-		const auto displayName = rain.readString(L"DisplayName") % ciView();
-		if (displayName == L"" || displayName == L"Original") {
+		const auto displayName = rain.read(L"DisplayName").asIString(L"Original");
+		if (displayName == L"Original") {
 			nameModificationType = NMT::NONE;
 		} else if (displayName == L"ProcessName" || displayName == L"GpuProcessName") {
 			nameModificationType = NMT::GPU_PROCESS;
@@ -146,8 +148,8 @@ void PerfmonParent::vReload() {
 
 	} else if (objectName == L"LogicalDisk") {
 
-		const auto displayName = rain.readString(L"DisplayName") % ciView();
-		if (displayName == L"" || displayName == L"Original") {
+		const auto displayName = rain.read(L"DisplayName").asIString(L"Original");
+		if (displayName == L"Original") {
 			nameModificationType = NMT::NONE;
 		} else if (displayName == L"DriveLetter") {
 			nameModificationType = NMT::LOGICAL_DISK_DRIVE_LETTER;
@@ -206,7 +208,7 @@ double PerfmonParent::vUpdate() {
 		needUpdate = true;
 	}
 
-	if (!canGetRaw()) {
+	if (!instanceManager.canGetRaw()) {
 		state = State::eNO_DATA;
 		return 0;
 	}
@@ -242,26 +244,25 @@ void PerfmonParent::vUpdateString(string& resultStringBuffer) {
 
 void PerfmonParent::vCommand(isview bangArgs) {
 	if (bangArgs == L"Stop") {
-		setStopped(true);
+		stopped = true;
 		return;
 	}
 	if (bangArgs == L"Resume") {
-		setStopped(false);
+		stopped = false;
 		return;
 	}
 	if (bangArgs == L"StopResume") {
-		changeStopState();
+		stopped = !stopped;
 		return;
 	}
-	if (bangArgs.substr(0, 14) == L"SetIndexOffset") {
-		auto arg = bangArgs.substr(14);
-		arg = utils::StringUtils::trim(arg);
-		if (arg[0] == L'-' || arg[0] == L'+') {
-			const auto offset = getIndexOffset() + utils::StringUtils::parseInt(arg % csView());
-			setIndexOffset(offset);
+	auto [name, value] = utils::Option{ bangArgs }.breakFirst(L' ');
+	if (name.asIString() == L"SetIndexOffset") {
+		const index offset = value.asInt();
+		const auto firstSymbol = value.asString()[0];
+		if (firstSymbol == L'-' || firstSymbol == L'+') {
+			instanceManager.setIndexOffset(instanceManager.getIndexOffset() + offset);
 		} else {
-			const auto offset = utils::StringUtils::parseInt(arg % csView());
-			setIndexOffset(offset);
+			instanceManager.setIndexOffset(offset);
 		}
 	}
 }
