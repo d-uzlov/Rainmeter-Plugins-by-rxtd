@@ -21,7 +21,7 @@ PerfmonParent::PerfmonParent(utils::Rainmeter&& _rain) : ParentBase(std::move(_r
 
 	bool success = pdhWrapper.init(logger);
 	if (!success) {
-		throw std::runtime_error{""};
+		throw std::runtime_error{ "" };
 	}
 
 	instanceManager.setIndexOffset(rain.read(L"InstanceIndexOffset").asInt(), false);
@@ -47,12 +47,6 @@ void PerfmonParent::vReload() {
 	}
 	if (counterNames.size() > 30) {
 		logger.error(L"too many counters");
-		return;
-	}
-
-	bool success = pdhWrapper.setCounters(objectName, counterNames);
-	if (!success) {
-		setInvalid();
 		return;
 	}
 
@@ -138,6 +132,7 @@ void PerfmonParent::vReload() {
 
 	typedef pdh::NamesManager::ModificationType NMT;
 	NMT nameModificationType;
+	bool needToFetchProcessIds = false;
 	if (objectName == L"GPU Engine" || objectName == L"GPU Process Memory") {
 
 		const auto displayName = rain.read(L"DisplayName").asIString(L"Original");
@@ -145,6 +140,7 @@ void PerfmonParent::vReload() {
 			nameModificationType = NMT::NONE;
 		} else if (displayName == L"ProcessName" || displayName == L"GpuProcessName") {
 			nameModificationType = NMT::GPU_PROCESS;
+			needToFetchProcessIds = true;
 		} else if (displayName == L"EngType" || displayName == L"GpuEngType") {
 			nameModificationType = NMT::GPU_ENGTYPE;
 		} else {
@@ -172,6 +168,12 @@ void PerfmonParent::vReload() {
 		nameModificationType = NMT::THREAD;
 	} else {
 		nameModificationType = NMT::NONE;
+	}
+
+	bool success = pdhWrapper.setCounters(objectName, counterNames, needToFetchProcessIds);
+	if (!success) {
+		setInvalid();
+		return;
 	}
 
 	instanceManager.setOptions(imo);
@@ -211,14 +213,12 @@ double PerfmonParent::vUpdate() {
 	if (!stopped) {
 		const bool success = pdhWrapper.fetch();
 		if (!success) {
-			snapshotCurrent.clear();
-			snapshotPrevious.clear();
+			instanceManager.clear();
 			state = State::eFETCH_ERROR;
 			return 0;
 		}
 
-		std::swap(snapshotCurrent, snapshotPrevious);
-		snapshotCurrent = pdhWrapper.exchangeSnapshot(std::move(snapshotCurrent));
+		instanceManager.swapSnapshot(pdhWrapper.getMainSnapshot(), pdhWrapper.getProcessIdsSnapshot());
 
 		needUpdate = true;
 	}
@@ -284,7 +284,7 @@ void PerfmonParent::vResolve(array_view<isview> args, string& resolveBufferStrin
 	}
 
 	if (args[0] == L"fetch size") {
-		resolveBufferString = std::to_wstring(snapshotCurrent.getItemsCount());
+		resolveBufferString = std::to_wstring(instanceManager.getItemsCount());
 		return;
 	}
 	if (args[0] == L"is stopped") {

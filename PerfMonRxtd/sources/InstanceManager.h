@@ -70,8 +70,9 @@ namespace rxtd::perfmon {
 		std::vector<InstanceInfo> instancesRolledUp;
 		std::vector<InstanceInfo> instancesDiscarded;
 
-		const pdh::PdhSnapshot& snapshotCurrent;
-		const pdh::PdhSnapshot& snapshotPrevious;
+		pdh::PdhSnapshot snapshotCurrent;
+		pdh::PdhSnapshot snapshotPrevious;
+		pdh::PdhSnapshot processIdsSnapshot;
 		const BlacklistManager& blacklistManager;
 
 		std::vector<pdh::UniqueInstanceId> idsPrevious;
@@ -79,14 +80,14 @@ namespace rxtd::perfmon {
 		pdh::NamesManager namesManager;
 
 		// (use orig name, partial match, name) -> instanceInfo
-		mutable std::map<std::tuple<bool, bool, sview>, std::optional<const InstanceInfo*>> nameCache;
-		mutable decltype(nameCache) nameCacheRollup;
-		mutable decltype(nameCache) nameCacheDiscarded;
+		using CacheType = std::map<std::tuple<bool, bool, sview>, std::optional<const InstanceInfo*>>;
+		mutable CacheType nameCache;
+		mutable CacheType nameCacheRollup;
+		mutable CacheType nameCacheDiscarded;
 
 	public:
 		InstanceManager(
 			utils::Rainmeter::Logger& log, const pdh::PdhWrapper& phWrapper,
-			const pdh::PdhSnapshot& snapshotCurrent, const pdh::PdhSnapshot& snapshotPrevious,
 			const BlacklistManager& blacklistManager
 		);
 
@@ -169,6 +170,21 @@ namespace rxtd::perfmon {
 
 		double calculateFormatted(index counterIndex, Indices originalIndexes) const;
 
+		[[nodiscard]]
+		index getItemsCount() const {
+			return snapshotCurrent.getItemsCount();
+		}
+
+		void swapSnapshot(pdh::PdhSnapshot& snapshot, pdh::PdhSnapshot& idsSnapshot) {
+			std::swap(snapshotCurrent, snapshotPrevious);
+			std::swap(snapshotCurrent, snapshot);
+			std::swap(processIdsSnapshot, idsSnapshot);
+		}
+
+		void clear() {
+			snapshotCurrent.clear();
+			snapshotPrevious.clear();
+		}
 
 	private:
 		void buildInstanceKeysZero();

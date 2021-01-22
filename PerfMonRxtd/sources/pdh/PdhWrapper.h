@@ -72,7 +72,10 @@ namespace rxtd::perfmon::pdh {
 		bool needFetchExtraIDs = false;
 
 		std::vector<PDH_HCOUNTER> counterHandlers;
-		PdhSnapshot snapshot;
+		PdhSnapshot mainSnapshot;
+
+		PDH_HCOUNTER processIdCounter = nullptr;
+		PdhSnapshot processIdSnapshot;
 
 	public:
 		[[nodiscard]]
@@ -81,7 +84,7 @@ namespace rxtd::perfmon::pdh {
 
 		// returns true on success, false on error
 		[[nodiscard]]
-		bool setCounters(sview objectName, const utils::OptionList& counterList);
+		bool setCounters(sview objectName, const utils::OptionList& counterList, bool gpuExtraIds);
 
 	private:
 		[[nodiscard]]
@@ -90,8 +93,13 @@ namespace rxtd::perfmon::pdh {
 
 	public:
 		[[nodiscard]]
-		PdhSnapshot exchangeSnapshot(PdhSnapshot&& snap) {
-			return std::exchange(snapshot, std::move(snap));
+		PdhSnapshot& getMainSnapshot() {
+			return mainSnapshot;
+		}
+
+		[[nodiscard]]
+		PdhSnapshot& getProcessIdsSnapshot() {
+			return processIdSnapshot;
 		}
 
 		// returns true on success, false on error
@@ -100,5 +108,8 @@ namespace rxtd::perfmon::pdh {
 
 		[[nodiscard]]
 		double extractFormattedValue(index counter, const PDH_RAW_COUNTER& current, const PDH_RAW_COUNTER& previous) const;
+
+	private:
+		bool fetchSnapshot(array_span<PDH_HCOUNTER> counters, PdhSnapshot& snapshot);
 	};
 }

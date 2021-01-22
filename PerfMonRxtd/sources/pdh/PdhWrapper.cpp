@@ -29,7 +29,9 @@ bool PdhWrapper::init(utils::Rainmeter::Logger logger) {
 	return true;
 }
 
-bool PdhWrapper::setCounters(sview objectName, const utils::OptionList& counterList) {
+bool PdhWrapper::setCounters(sview objectName, const utils::OptionList& counterList, bool gpuExtraIds) {
+	needFetchExtraIDs = gpuExtraIds;
+
 	counterHandlers.reserve(counterList.size());
 	for (auto counterOption : counterList) {
 		try {
@@ -52,27 +54,30 @@ bool PdhWrapper::setCounters(sview objectName, const utils::OptionList& counterL
 	}
 
 	// add a counter to retrieve Process or Thread IDs
-	if (objectName == L"Process" || objectName == L"GPU Engine" || objectName == L"GPU Process Memory") {
+	if (objectName == L"Process") {
 		try {
-			auto counterHandle = addCounter(L"Process", L"ID Process");
+			auto counterHandle = addCounter(objectName, L"ID Process");
 			counterHandlers.emplace_back(counterHandle);
 		} catch (PdhException& e) {
 			log.error(L"Can't add 'Process/ID Process' counter to query: code {f:pdh}", e.getCode());
 			return false;
 		}
-		needFetchExtraIDs = true;
 	} else if (objectName == L"Thread") {
 		try {
-			auto counterHandle = addCounter(L"Thread", L"ID Thread");
+			auto counterHandle = addCounter(objectName, L"ID Thread");
 			counterHandlers.emplace_back(counterHandle);
 		} catch (PdhException& e) {
 			log.error(L"Can't add 'Thread/ID Thread' counter to query: code {f:pdh}", e.getCode());
 			return false;
 		}
-		needFetchExtraIDs = true;
-	} else {
-		needFetchExtraIDs = false;
-	}
+	} else if ((objectName == L"GPU Engine" || objectName == L"GPU Process Memory") && needFetchExtraIDs) {
+		try {
+			processIdCounter = addCounter(L"Process", L"ID Process");
+		} catch (PdhException& e) {
+			log.error(L"Can't add 'Process/ID Process' counter to query: code {f:pdh}", e.getCode());
+			return false;
+		}
+	} else { }
 
 	return true;
 }
@@ -99,37 +104,21 @@ PDH_HCOUNTER PdhWrapper::addCounter(sview objectName, sview counterName) {
 }
 
 bool PdhWrapper::fetch() {
-	snapshot.setCountersCount(counterHandlers.size());
+	mainSnapshot.setCountersCount(counterHandlers.size());
 
 	PDH_STATUS code = PdhCollectQueryData(query.handle);
-	if (code != ERROR_SUCCESS) {
+	if (code != PDH_STATUS(ERROR_SUCCESS)) {
 		log.error(L"PdhCollectQueryData failed, status {}", code);
 		return false;
 	}
 
-	DWORD bufferSize = 0;
-	DWORD count = 0;
-	// call to PdhGetRawCounterArrayW with bufferSize==0 should return with PDH_MORE_DATA and bufferSize and count set to appropriate value
-	// Since all counters are from one object, they all have the same amount of the same items
-	// so buffer size should also be the same for all counters
-	code = PdhGetRawCounterArrayW(counterHandlers[0], &bufferSize, &count, nullptr);
-	if (code != PDH_MORE_DATA) {
-		log.error(L"PdhGetRawCounterArray(size=0) failed, status {f:pdh}", code);
+	bool success = fetchSnapshot(counterHandlers, mainSnapshot);
+	if (!success) {
 		return false;
 	}
-
-	snapshot.setBufferSize(bufferSize, count);
-
-	// Retrieve counter data for all counters in the measure's counterList.
-	for (index i = 0; i < index(counterHandlers.size()); ++i) {
-		DWORD dwBufferSize2 = bufferSize;
-		code = PdhGetRawCounterArrayW(counterHandlers[i], &dwBufferSize2, &count, snapshot.getCounterPointer(i));
-		if (code != ERROR_SUCCESS) {
-			log.error(L"PdhGetRawCounterArray failed, status {f:pdh}", code);
-			return false;
-		}
-		if (dwBufferSize2 != bufferSize) {
-			log.error(L"unexpected buffer size change");
+	if (needFetchExtraIDs) {
+		success = fetchSnapshot({ &processIdCounter, 1 }, processIdSnapshot);
+		if (!success) {
 			return false;
 		}
 	}
@@ -148,14 +137,13 @@ double PdhWrapper::extractFormattedValue(
 	// decreases between the two query calls.
 
 	PDH_FMT_COUNTERVALUE formattedValue;
-	const PDH_STATUS pdhStatus =
-		PdhCalculateCounterFromRawValue(
-			counterHandlers[counter],
-			PDH_FMT_DOUBLE | PDH_FMT_NOCAP100,
-			const_cast<PDH_RAW_COUNTER*>(&current),
-			const_cast<PDH_RAW_COUNTER*>(&previous),
-			&formattedValue
-		);
+	const PDH_STATUS pdhStatus = PdhCalculateCounterFromRawValue(
+		counterHandlers[counter],
+		PDH_FMT_DOUBLE | PDH_FMT_NOCAP100,
+		const_cast<PDH_RAW_COUNTER*>(&current),
+		const_cast<PDH_RAW_COUNTER*>(&previous),
+		&formattedValue
+	);
 
 	if (pdhStatus == ERROR_SUCCESS) {
 		return formattedValue.doubleValue;
@@ -168,4 +156,37 @@ double PdhWrapper::extractFormattedValue(
 
 	// something strange, TODO handle this
 	return 0.0;
+}
+
+bool PdhWrapper::fetchSnapshot(array_span<PDH_HCOUNTER> counters, PdhSnapshot& snapshot) {
+	snapshot.setCountersCount(counters.size());
+
+	DWORD bufferSize = 0;
+	DWORD count = 0;
+	// call to PdhGetRawCounterArrayW with bufferSize==0 should return with PDH_MORE_DATA and bufferSize and count set to appropriate value
+	// Since all counters in this function are from one object, they all have the same amount of the same items
+	// so buffer size should also be the same for all counters
+	PDH_STATUS code = PdhGetRawCounterArrayW(counters[0], &bufferSize, &count, nullptr);
+	if (code != PDH_STATUS(PDH_MORE_DATA)) {
+		log.error(L"PdhGetRawCounterArray(size=0) failed, status {f:pdh}", code);
+		return false;
+	}
+
+	snapshot.setBufferSize(bufferSize, count);
+
+	// Retrieve counter data for all counters in the measure's counterList.
+	for (index i = 0; i < index(counters.size()); ++i) {
+		DWORD dwBufferSize2 = bufferSize;
+		code = PdhGetRawCounterArrayW(counters[i], &dwBufferSize2, &count, snapshot.getCounterPointer(i));
+		if (code != PDH_STATUS(ERROR_SUCCESS)) {
+			log.error(L"PdhGetRawCounterArray failed, status {f:pdh}", code);
+			return false;
+		}
+		if (dwBufferSize2 != bufferSize) {
+			log.error(L"unexpected buffer size change");
+			return false;
+		}
+	}
+
+	return true;
 }

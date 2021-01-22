@@ -18,17 +18,13 @@ using namespace perfmon::pdh;
 
 using namespace std::string_view_literals;
 
-void NamesManager::createModifiedNames(const PdhSnapshot& snapshot, array_span<UniqueInstanceId> ids) {
-	resetBuffers();
-
-	originalNamesSize = snapshot.getNamesSize();
+void NamesManager::createModifiedNames(const PdhSnapshot& snapshot, const PdhSnapshot& processIdSnapshot, array_span<UniqueInstanceId> ids) {
 	names.resize(snapshot.getItemsCount());
 
-	copyOriginalNames(snapshot);
+	fillOriginalNames(snapshot);
 
 	switch (modificationType) {
 	case ModificationType::NONE:
-		createIdsBasedOnName(ids);
 		break;
 	case ModificationType::PROCESS:
 		modifyNameProcess(snapshot, ids);
@@ -38,70 +34,55 @@ void NamesManager::createModifiedNames(const PdhSnapshot& snapshot, array_span<U
 		break;
 	case ModificationType::LOGICAL_DISK_DRIVE_LETTER:
 		modifyNameLogicalDiskDriveLetter();
-		createIdsBasedOnName(ids);
 		break;
 	case ModificationType::LOGICAL_DISK_MOUNT_PATH:
 		modifyNameLogicalDiskMountPath();
-		createIdsBasedOnName(ids);
 		break;
 	case ModificationType::GPU_PROCESS:
-		modifyNameGPUProcessName(snapshot);
-		createIdsBasedOnName(ids);
+		modifyNameGPUProcessName(processIdSnapshot);
 		break;
 	case ModificationType::GPU_ENGTYPE:
 		modifyNameGPUEngtype();
+		break;
+	}
+
+	switch (modificationType) {
+	case ModificationType::PROCESS: [[fallthrough]];
+	case ModificationType::THREAD: break;
+
+	case ModificationType::NONE: [[fallthrough]];
+	case ModificationType::LOGICAL_DISK_DRIVE_LETTER: [[fallthrough]];
+	case ModificationType::LOGICAL_DISK_MOUNT_PATH: [[fallthrough]];
+	case ModificationType::GPU_PROCESS: [[fallthrough]];
+	case ModificationType::GPU_ENGTYPE:
 		createIdsBasedOnName(ids);
 		break;
 	}
 
-	generateSearchNames();
+	generateSearchNames(snapshot.getNamesSize());
 }
 
-void NamesManager::copyOriginalNames(const PdhSnapshot& snapshot) {
-	wchar_t* namesBuffer = getBuffer(originalNamesSize);
-
+void NamesManager::fillOriginalNames(const PdhSnapshot& snapshot) {
 	for (index instanceIndex = 0; instanceIndex < snapshot.getItemsCount(); ++instanceIndex) {
-		const wchar_t* namePtr = snapshot.getName(instanceIndex);
-		ModifiedNameItem& item = names[instanceIndex];
-
-		sview name = copyString(namePtr, namesBuffer);
-		namesBuffer += name.length();
-
-		item.originalName = name;
-		item.displayName = name;
+		const sview name = snapshot.getName(instanceIndex);
+		names[instanceIndex].originalName = name;
+		names[instanceIndex].displayName = name;
 	}
 }
 
-void NamesManager::generateSearchNames() {
-	wchar_t* namesBuffer = getBuffer(originalNamesSize);
+void NamesManager::generateSearchNames(index originalNamesSize) {
+	buffer.resize(originalNamesSize);
+	wchar_t* namesBuffer = buffer.data();
+	wchar_t* namesBuffer0 = namesBuffer;
 
 	for (auto& item : names) {
 		sview name = copyString(item.displayName, namesBuffer);
-		namesBuffer[name.length()] = L'\0';
-		CharUpperW(namesBuffer);
-
-		// don't need +1 here because string_view doesn't need null-termination
 		namesBuffer += name.length();
 
 		item.searchName = name;
 	}
-}
 
-void NamesManager::resetBuffers() {
-	buffersCount = 0;
-}
-
-wchar_t* NamesManager::getBuffer(index size) {
-	const auto nextBufferIndex = buffersCount;
-	buffersCount++;
-
-	if (nextBufferIndex >= index(buffers.size())) {
-		buffers.emplace_back();
-	}
-
-	auto& buffer = buffers[nextBufferIndex];
-	buffer.reserve(size);
-	return buffer.data();
+	CharUpperBuffW(namesBuffer0, int32_t(namesBuffer - namesBuffer0));
 }
 
 sview NamesManager::copyString(sview source, wchar_t* dest) {
@@ -115,8 +96,13 @@ void NamesManager::modifyNameProcess(const PdhSnapshot& snapshot, array_span<Uni
 		ModifiedNameItem& item = names[instanceIndex];
 
 		const auto pid = snapshot.getItem(snapshot.getCountersCount() - 1, instanceIndex).FirstValue;
-		ids[instanceIndex].id1 = static_cast<int32_t>(pid);
-		ids[instanceIndex].id2 = 0;
+		if (pid <= 0) {
+			ids[instanceIndex].id1 = 0;
+			ids[instanceIndex].id2 = -getIdFromName(item.originalName);
+		} else {
+			ids[instanceIndex].id1 = static_cast<int32_t>(pid);
+			ids[instanceIndex].id2 = 0;
+		}
 	}
 }
 
@@ -190,16 +176,11 @@ void NamesManager::modifyNameLogicalDiskMountPath() {
 void NamesManager::modifyNameGPUProcessName(const PdhSnapshot& idSnapshot) {
 	// display name is process name (found by PID)
 
-	wchar_t* processNamesBuffer = getBuffer(idSnapshot.getNamesSize());
-
 	std::unordered_map<long long, sview> pidToName;
 	pidToName.reserve(idSnapshot.getItemsCount());
 	for (index instanceIndex = 0; instanceIndex < index(idSnapshot.getItemsCount()); ++instanceIndex) {
-		sview name = copyString(idSnapshot.getName(instanceIndex), processNamesBuffer);
-		processNamesBuffer += name.length();
-
 		const auto pid = idSnapshot.getItem(0, instanceIndex).FirstValue;
-		pidToName[pid] = name;
+		pidToName[pid] = idSnapshot.getName(instanceIndex);
 	}
 
 	for (auto& item : names) {

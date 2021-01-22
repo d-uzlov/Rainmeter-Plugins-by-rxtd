@@ -49,9 +49,7 @@ namespace rxtd::perfmon::pdh {
 		index lastId = 0;
 
 		std::vector<ModifiedNameItem> names;
-		index buffersCount{};
-		std::vector<std::vector<wchar_t>> buffers;
-		index originalNamesSize{};
+		std::vector<wchar_t> buffer;
 
 		ModificationType modificationType{};
 
@@ -64,16 +62,12 @@ namespace rxtd::perfmon::pdh {
 			modificationType = value;
 		}
 
-		void createModifiedNames(const PdhSnapshot& snapshot, array_span<UniqueInstanceId> ids);
+		void createModifiedNames(const PdhSnapshot& snapshot, const PdhSnapshot& processIdSnapshot, array_span<UniqueInstanceId> ids);
 
 	private:
-		void copyOriginalNames(const PdhSnapshot& snapshot);
+		void fillOriginalNames(const PdhSnapshot& snapshot);
 
-		void generateSearchNames();
-
-		void resetBuffers();
-
-		wchar_t* getBuffer(index size);
+		void generateSearchNames(index originalNamesSize);
 
 		static sview copyString(sview source, wchar_t* dest);
 

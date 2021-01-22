@@ -15,13 +15,10 @@ using namespace perfmon;
 InstanceManager::InstanceManager(
 	utils::Rainmeter::Logger& log,
 	const pdh::PdhWrapper& phWrapper,
-	const pdh::PdhSnapshot& snapshotCurrent, const pdh::PdhSnapshot& snapshotPrevious,
 	const BlacklistManager& blacklistManager
 ) :
 	log(log),
 	pdhWrapper(phWrapper),
-	snapshotCurrent(snapshotCurrent),
-	snapshotPrevious(snapshotPrevious),
 	blacklistManager(blacklistManager) { }
 
 void InstanceManager::checkIndices(index counters, index expressions, index rollupExpressions) {
@@ -87,7 +84,7 @@ void InstanceManager::update() {
 
 	std::swap(idsCurrent, idsPrevious);
 	idsCurrent.resize(snapshotCurrent.getItemsCount());
-	namesManager.createModifiedNames(snapshotCurrent, idsCurrent);
+	namesManager.createModifiedNames(snapshotCurrent, processIdsSnapshot, idsCurrent);
 
 	if (snapshotPrevious.isEmpty()) {
 		buildInstanceKeysZero();
@@ -104,7 +101,7 @@ index InstanceManager::findPreviousName(pdh::UniqueInstanceId uniqueId, index hi
 	// use the unique name for this search because we need a unique match
 	// counter buffers tend to be *mostly* aligned, so we'll try to short-circuit a full search
 
-	const auto itemCountPrevious = snapshotPrevious.getItemsCount();
+	const auto itemCountPrevious = idsPrevious.size();
 
 	// try for a direct hit
 	auto previousInx = std::clamp<index>(hint, 0, itemCountPrevious - 1);
