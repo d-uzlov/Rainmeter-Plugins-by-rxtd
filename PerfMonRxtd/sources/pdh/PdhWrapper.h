@@ -85,6 +85,7 @@ namespace rxtd::perfmon::pdh {
 
 	private:
 		[[nodiscard]]
+		// throws PdhException on any error
 		PDH_HCOUNTER addCounter(sview objectName, sview counterName);
 
 	public:

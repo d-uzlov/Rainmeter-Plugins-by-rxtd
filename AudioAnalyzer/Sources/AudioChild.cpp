@@ -16,20 +16,17 @@ AudioChild::AudioChild(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rain)) 
 	const auto parentName = rain.read(L"Parent").asIString();
 	if (parentName.empty()) {
 		logger.error(L"Parent must be specified");
-		setMeasureState(utils::MeasureState::eBROKEN);
-		return;
+		throw std::runtime_error{ "" };
 	}
 	parent = utils::ParentBase::find<AudioParent>(rain.getSkin(), parentName);
 
 	if (parent == nullptr) {
 		logger.error(L"Parent '{}' doesn't exist", parentName);
-		setMeasureState(utils::MeasureState::eBROKEN);
-		return;
+		throw std::runtime_error{ "" };
 	}
 
-	if (parent->getState() == utils::MeasureState::eBROKEN) {
-		setMeasureState(utils::MeasureState::eBROKEN);
-		return;
+	if (!parent->isValid()) {
+		throw std::runtime_error{ "" };
 	}
 
 	legacyNumber = parent->getLegacyNumber();
@@ -42,11 +39,6 @@ AudioChild::AudioChild(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rain)) 
 }
 
 void AudioChild::vReload() {
-	if (parent->getState() == utils::MeasureState::eTEMP_BROKEN) {
-		setMeasureState(utils::MeasureState::eTEMP_BROKEN);
-		return;
-	}
-
 	auto newOptions = readOptions();
 	if (newOptions == options) {
 		return;
@@ -59,7 +51,7 @@ void AudioChild::vReload() {
 		const auto success = parent->isHandlerShouldExist(options.procName, options.channel, options.handlerName);
 		if (!success) {
 			logger.error(L"Measure is invalid, see parent measure log message for reason");
-			setMeasureState(utils::MeasureState::eTEMP_BROKEN);
+			setInvalid();
 		}
 	}
 }

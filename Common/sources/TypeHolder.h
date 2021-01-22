@@ -12,12 +12,6 @@
 #include "RainmeterWrappers.h"
 
 namespace rxtd::utils {
-	enum class MeasureState {
-		eWORKING,
-		eTEMP_BROKEN,
-		eBROKEN
-	};
-
 	class TypeHolder : NonMovableBase, VirtualDestructorBase {
 	protected:
 		using Rainmeter = Rainmeter;
@@ -28,7 +22,7 @@ namespace rxtd::utils {
 
 	private:
 		Rainmeter::InstanceKeeper instanceKeeper;
-		MeasureState measureState = MeasureState::eWORKING;
+		bool objectIsValid = true;
 
 		double resultDouble = 0.0;
 		string resultString{};
@@ -47,11 +41,13 @@ namespace rxtd::utils {
 		const wchar_t* resolve(int argc, const wchar_t* argv[]);
 		const wchar_t* resolve(array_view<isview> args);
 
-		MeasureState getState() const {
-			return measureState;
+		bool isValid() const {
+			return objectIsValid;
 		}
 
 	protected:
+		// all functions in derived classes are allowed to throw std::runtime_error
+
 		virtual void vReload() = 0;
 		virtual double vUpdate() = 0;
 
@@ -63,8 +59,8 @@ namespace rxtd::utils {
 
 		virtual void vResolve(array_view<isview> args, string& resolveBufferString) { }
 
-		void setMeasureState(MeasureState value) {
-			measureState = value;
+		void setInvalid() {
+			objectIsValid = false;
 		}
 
 		void setUseResultString(bool value) {

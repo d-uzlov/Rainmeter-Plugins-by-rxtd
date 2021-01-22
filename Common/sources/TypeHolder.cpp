@@ -19,39 +19,40 @@ TypeHolder::TypeHolder(Rainmeter&& _rain) : rain(std::move(_rain)) {
 }
 
 double TypeHolder::update() {
-	if (measureState != MeasureState::eWORKING) {
+	if (!objectIsValid) {
 		return 0.0;
 	}
 
-	resultDouble = vUpdate();
+	try {
+		resultDouble = vUpdate();
+	} catch (std::runtime_error&) {}
 	if (useResultString) {
 		resultString = {};
-		vUpdateString(resultString);
+		try {
+			vUpdateString(resultString);
+		} catch (std::runtime_error&) {}
 	}
 	return resultDouble;
 }
 
 void TypeHolder::reload() {
-	if (measureState == MeasureState::eBROKEN) {
-		// skip reload only if the measure is unrecoverable
-		return;
-	}
-
-	measureState = MeasureState::eWORKING;
+	objectIsValid = true;
 	vReload();
 }
 
 void TypeHolder::command(const wchar_t* bangArgs) {
-	if (measureState != MeasureState::eWORKING) {
+	if (!objectIsValid) {
 		logger.warning(L"Skipping bang on a broken measure");
 		return;
 	}
 
-	vCommand(bangArgs);
+	try {
+		vCommand(bangArgs);
+	} catch (std::runtime_error&) {}
 }
 
 const wchar_t* TypeHolder::resolve(int argc, const wchar_t* argv[]) {
-	if (measureState != MeasureState::eWORKING) {
+	if (!objectIsValid) {
 		logger.warning(L"Skipping resolve on a broken measure");
 		return L"";
 	}
@@ -63,25 +64,31 @@ const wchar_t* TypeHolder::resolve(int argc, const wchar_t* argv[]) {
 	}
 
 	resolveString = {};
-	vResolve(resolveVector, resolveString);
+
+	try {
+		vResolve(resolveVector, resolveString);
+	} catch (std::runtime_error&) {}
 
 	return resolveString.c_str();
 }
 
 const wchar_t* TypeHolder::resolve(array_view<isview> args) {
-	if (measureState != MeasureState::eWORKING) {
+	if (!objectIsValid) {
 		logger.warning(L"Skipping resolve on a broken measure");
 		return L"";
 	}
 
 	resolveString = {};
-	vResolve(args, resolveString);
+
+	try {
+		vResolve(args, resolveString);
+	} catch (std::runtime_error&) {}
 
 	return resolveString.c_str();
 }
 
 const wchar_t* TypeHolder::getString() const {
-	if (measureState != MeasureState::eWORKING) {
+	if (!objectIsValid) {
 		return L"broken";
 	}
 

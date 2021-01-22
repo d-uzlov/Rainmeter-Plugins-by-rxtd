@@ -87,8 +87,7 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 		break;
 	default:
 		logger.error(L"Fatal error: unknown MagicNumber {}", legacyNumber);
-		setMeasureState(utils::MeasureState::eBROKEN);
-		return;
+		throw std::runtime_error{""};
 	}
 
 	if (legacyNumber < 104) {
@@ -103,8 +102,7 @@ AudioParent::AudioParent(utils::Rainmeter&& _rain) :
 			logger.warning(L"Threading: unused options: {}", untouchedOptions);
 		}
 	} catch (std::exception&) {
-		setMeasureState(utils::MeasureState::eBROKEN);
-		return;
+		throw std::runtime_error{ "" };
 	}
 
 	paramParser.setRainmeter(rain);

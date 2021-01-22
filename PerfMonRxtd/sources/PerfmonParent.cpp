@@ -21,8 +21,7 @@ PerfmonParent::PerfmonParent(utils::Rainmeter&& _rain) : ParentBase(std::move(_r
 
 	bool success = pdhWrapper.init(logger);
 	if (!success) {
-		setMeasureState(utils::MeasureState::eBROKEN);
-		return;
+		throw std::runtime_error{""};
 	}
 
 	instanceManager.setIndexOffset(rain.read(L"InstanceIndexOffset").asInt(), false);
@@ -35,7 +34,7 @@ void PerfmonParent::vReload() {
 
 	if (objectName.empty()) {
 		logger.error(L"ObjectName must be specified");
-		setMeasureState(utils::MeasureState::eTEMP_BROKEN);
+		setInvalid();
 		return;
 	}
 
@@ -43,7 +42,7 @@ void PerfmonParent::vReload() {
 
 	if (counterNames.empty()) {
 		logger.error(L"CounterList must have at least one entry");
-		setMeasureState(utils::MeasureState::eTEMP_BROKEN);
+		setInvalid();
 		return;
 	}
 	if (counterNames.size() > 30) {
@@ -53,7 +52,7 @@ void PerfmonParent::vReload() {
 
 	bool success = pdhWrapper.setCounters(objectName, counterNames);
 	if (!success) {
-		setMeasureState(utils::MeasureState::eTEMP_BROKEN);
+		setInvalid();
 		return;
 	}
 

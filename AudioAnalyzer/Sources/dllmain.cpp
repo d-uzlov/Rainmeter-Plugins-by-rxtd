@@ -23,10 +23,14 @@ PLUGIN_EXPORT void Initialize(void** data, void* rm) {
 	utils::Rainmeter rain(rm);
 
 	const auto typeString = rain.read(L"Type").asIString();
-	if (typeString == L"Parent") {
-		*data = new audio_analyzer::AudioParent(std::move(rain));
-	} else {
-		*data = new audio_analyzer::AudioChild(std::move(rain));
+	try {
+		if (typeString == L"Parent") {
+			*data = new audio_analyzer::AudioParent(std::move(rain));
+		} else {
+			*data = new audio_analyzer::AudioChild(std::move(rain));
+		}
+	} catch (std::runtime_error&) {
+		*data = nullptr;
 	}
 }
 
@@ -47,7 +51,7 @@ PLUGIN_EXPORT double Update(void* data) {
 
 PLUGIN_EXPORT const wchar_t* GetString(void* data) {
 	if (data == nullptr) {
-		return nullptr;
+		return L"";
 	}
 	const auto result = static_cast<utils::TypeHolder*>(data)->getString();
 	return result;

@@ -16,29 +16,17 @@ PerfmonChild::PerfmonChild(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rai
 	auto parentName = rain.read(L"Parent").asIString();
 	if (parentName.empty()) {
 		logger.error(L"Parent must be specified");
-		setMeasureState(utils::MeasureState::eBROKEN);
-		return;
+		throw std::runtime_error{ "" };
 	}
 	parent = utils::ParentBase::find<PerfmonParent>(rain.getSkin(), parentName);
 
 	if (parent == nullptr) {
-		logger.error(L"Parent '{}' doesn't exist", parentName);
-		setMeasureState(utils::MeasureState::eBROKEN);
-		return;
-	}
-
-	if (parent->getState() == utils::MeasureState::eBROKEN) {
-		setMeasureState(utils::MeasureState::eBROKEN);
-		return;
+		logger.error(L"Parent '{}' is not found", parentName);
+		throw std::runtime_error{ "" };
 	}
 }
 
 void PerfmonChild::vReload() {
-	if (parent->getState() == utils::MeasureState::eTEMP_BROKEN) {
-		setMeasureState(utils::MeasureState::eTEMP_BROKEN);
-		return;
-	}
-
 	instanceIndex = rain.read(L"InstanceIndex").asInt();
 	ref.counter = rain.read(L"CounterIndex").asInt();
 	ref.useOrigName = rain.read(L"SearchOriginalName").asBool();
@@ -85,7 +73,7 @@ void PerfmonChild::vReload() {
 		ref.type = ReferenceType::ROLLUP_EXPRESSION;
 	} else {
 		logger.error(L"Type '{}' is invalid for child measure", type);
-		setMeasureState(utils::MeasureState::eTEMP_BROKEN);
+		setInvalid();
 		return;
 	}
 

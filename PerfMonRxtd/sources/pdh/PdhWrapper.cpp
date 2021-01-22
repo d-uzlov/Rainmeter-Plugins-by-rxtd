@@ -30,7 +30,6 @@ bool PdhWrapper::init(utils::Rainmeter::Logger logger) {
 }
 
 bool PdhWrapper::setCounters(sview objectName, const utils::OptionList& counterList) {
-
 	counterHandlers.reserve(counterList.size());
 	for (auto counterOption : counterList) {
 		try {
@@ -41,14 +40,15 @@ bool PdhWrapper::setCounters(sview objectName, const utils::OptionList& counterL
 			case PDH_CSTATUS_NO_OBJECT:
 				log.error(L"ObjectName '{}' does not exist", objectName);
 				break;
+			case PDH_CSTATUS_BAD_COUNTERNAME: [[fallthrough]];
 			case PDH_CSTATUS_NO_COUNTER:
-				log.error(L"Counter '{}' does not exist", counterOption.asString());
+				log.error(L"Counter '{}/{}' does not exist", objectName, counterOption.asString());
 				break;
 			default:
 				log.error(L"Unknown error with counter {}: code {}, caused by {}", counterOption.asString(), e.getCode(), e.getCause());
 				break;
 			}
-			throw;
+			return false;
 		}
 	}
 
