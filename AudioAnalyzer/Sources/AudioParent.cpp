@@ -613,7 +613,7 @@ void AudioParent::resolveProp(
 	auto lock = data.getLock();
 
 	// "not found" errors below are not logged because we have already checked everything above,
-	// and if we still don't find requested info then it is caused by either delay in updating second thread
+	// and if we still don't find requested info then it is caused either by delay in updating second thread
 	// or by device not having requested channel
 
 	SoundHandler::ExternalData* handlerExternalData = nullptr;

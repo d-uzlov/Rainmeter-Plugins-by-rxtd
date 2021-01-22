@@ -47,6 +47,9 @@
     <ClCompile Include="sources\dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="sources\pdh\PdhFormat.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sources\expressions.h">
@@ -80,6 +83,7 @@
       <Filter>Resource Files</Filter>
     </ClInclude>
     <ClInclude Include="sources\pdh\PdhSnapshot.h" />
+    <ClInclude Include="sources\pdh\PdhFormat.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\Common\resources\version.rc">

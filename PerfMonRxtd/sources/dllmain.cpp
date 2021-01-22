@@ -12,8 +12,13 @@
 #include "PerfMonRXTD.h"
 #include "RainmeterAPI.h"
 #include "TypeHolder.h"
+#include "pdh/PdhFormat.h"
+#include "winapi-wrappers/BufferPrinterExtensions.h"
 
 PLUGIN_EXPORT void Initialize(void** data, void* rm) {
+	utils::registerFormattingFunction(L"f:pdh", perfmon::pdh::formatPdhCode);
+	utils::registerFormattingFunction(L"f:win", utils::formatWinApiCode);
+
 	utils::Rainmeter rain(rm);
 
 	const auto typeString = rain.read(L"Type").asIString();

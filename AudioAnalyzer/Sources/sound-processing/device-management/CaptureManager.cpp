@@ -90,7 +90,7 @@ CaptureManager::State CaptureManager::setSourceAndGetState(const SourceDesc& des
 		try {
 			sessionEventsWrapper.listenTo(audioClient, true);
 		} catch (utils::ComException& e) {
-			logger.error(L"Can't create session listener: error {}, caused by {}", e.getCode(), e.getSource());
+			logger.error(L"Can't create session listener: error {f:win}, caused by {}", e.getCode(), e.getSource());
 		}
 
 		audioClient.throwOnError(audioClient.ref().Start(), L"IAudioClient.Start()");
@@ -108,7 +108,7 @@ CaptureManager::State CaptureManager::setSourceAndGetState(const SourceDesc& des
 			return snapshot.state;
 		}
 
-		logger.error(L"Can't connect to device: error {}, caused by {}", e.getCode(), e.getSource());
+		logger.error(L"Can't connect to device: error {f:win}, caused by {}", e.getCode(), e.getSource());
 		return State::eDEVICE_CONNECTION_ERROR;
 	}
 
@@ -137,7 +137,7 @@ CaptureManager::State CaptureManager::setSourceAndGetState(const SourceDesc& des
 			return snapshot.state;
 		}
 
-		logger.error(L"Can't create silent renderer: error {}, caused by {}", e.getCode(), e.getSource());
+		logger.error(L"Can't create silent renderer: error {f:win}, caused by {}", e.getCode(), e.getSource());
 	}
 
 	return State::eOK;
@@ -303,7 +303,7 @@ void CaptureManager::createExclusiveStreamListener() {
 
 		session = std::move(activeSessions.front());
 	} catch (utils::ComException& e) {
-		logger.error(L"Can't get session list: error {}, caused by {}", e.getCode(), e.getSource());
+		logger.error(L"Can't get session list: error {f:win}, caused by {}", e.getCode(), e.getSource());
 		return;
 	}
 
@@ -330,7 +330,7 @@ void CaptureManager::createExclusiveStreamListener() {
 		try {
 			sessionEventsWrapper.listenTo(std::move(session), false);
 		} catch (utils::ComException& e) {
-			logger.error(L"Can't create session listener for exclusive state monitoring: error {}, caused by {}", e.getCode(), e.getSource());
+			logger.error(L"Can't create session listener for exclusive state monitoring: error {f:win}, caused by {}", e.getCode(), e.getSource());
 		}
 
 

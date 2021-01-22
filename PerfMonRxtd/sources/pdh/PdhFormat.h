@@ -1,4 +1,4 @@
-/*
+﻿/* 
  * Copyright (C) 2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
@@ -8,9 +8,8 @@
  */
 
 #pragma once
-
 #include <optional>
 
-namespace rxtd::utils {
-	std::optional<sview> formatWinApiCode(index code);
+namespace rxtd::perfmon::pdh {
+	std::optional<sview> formatPdhCode(index code);
 }
