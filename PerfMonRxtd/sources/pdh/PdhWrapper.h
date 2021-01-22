@@ -14,50 +14,54 @@
 #include "RainmeterWrappers.h"
 
 namespace rxtd::perfmon::pdh {
-	class PdhWrapper : MovableOnlyBase {
-		class QueryWrapper : MovableOnlyBase {
-			PDH_HQUERY handler = nullptr;
+	class PdhException : std::runtime_error {
+		PDH_STATUS code;
+		sview cause;
+	public:
+		explicit PdhException(PDH_STATUS code, sview cause) : runtime_error("PDH call failed"), code(code), cause(cause) {}
 
-		public:
+		[[nodiscard]]
+		auto getCode() const {
+			return code;
+		}
+
+		[[nodiscard]]
+		auto getCause() const {
+			return cause;
+		}
+	};
+
+	class PdhWrapper : MovableOnlyBase {
+		struct QueryWrapper : MovableOnlyBase {
+			PDH_HQUERY handle = nullptr;
+
 			QueryWrapper() = default;
 
 			~QueryWrapper() {
-				if (handler != nullptr) {
-					const PDH_STATUS pdhStatus = PdhCloseQuery(handler);
-					if (pdhStatus != ERROR_SUCCESS) {
-						// WTF
-					}
-					handler = nullptr;
-				}
+				release();
 			}
 
-			QueryWrapper(QueryWrapper&& other) noexcept : handler(other.handler) {
-				other.handler = nullptr;
+			QueryWrapper(QueryWrapper&& other) noexcept {
+				release();
+				handle = other.handle;
+				other.handle = nullptr;
 			}
 
 			QueryWrapper& operator=(QueryWrapper&& other) noexcept {
 				if (this == &other)
 					return *this;
 
-				handler = other.handler;
-				other.handler = nullptr;
-
+				release();
+				handle = other.handle;
+				other.handle = nullptr;
 				return *this;
 			}
 
-			[[nodiscard]]
-			PDH_HQUERY& get() {
-				return handler;
-			}
-
-			[[nodiscard]]
-			PDH_HQUERY* getPointer() {
-				return &handler;
-			}
-
-			[[nodiscard]]
-			bool isValid() const {
-				return handler != nullptr;
+			void release() {
+				if (handle != nullptr) {
+					PdhCloseQuery(handle);
+					handle = nullptr;
+				}
 			}
 		};
 
@@ -68,30 +72,32 @@ namespace rxtd::perfmon::pdh {
 		bool needFetchExtraIDs = false;
 
 		std::vector<PDH_HCOUNTER> counterHandlers;
-
-		PDH_HCOUNTER idCounterHandler = nullptr;
+		PdhSnapshot snapshot;
 
 	public:
-		PdhWrapper() = default;
-
-		explicit PdhWrapper(utils::Rainmeter::Logger _log, const string& objectName, const utils::OptionList& counterTokens);
-
 		[[nodiscard]]
-		bool isValid() const {
-			return query.isValid();
+		// returns true on success, false on error
+		bool init(utils::Rainmeter::Logger logger);
+
+		// returns true on success, false on error
+		[[nodiscard]]
+		bool setCounters(sview objectName, const utils::OptionList& counterList);
+
+	private:
+		[[nodiscard]]
+		PDH_HCOUNTER addCounter(sview objectName, sview counterName);
+
+	public:
+		[[nodiscard]]
+		PdhSnapshot exchangeSnapshot(PdhSnapshot&& snap) {
+			return std::exchange(snapshot, std::move(snap));
 		}
 
-		/**
-		 * @returns false if error occurred, true otherwise
-		 */
+		// returns true on success, false on error
 		[[nodiscard]]
-		bool fetch(PdhSnapshot& snapshot, PdhSnapshot& idSnapshot);
+		bool fetch();
 
 		[[nodiscard]]
-		index getCountersCount() const {
-			return counterHandlers.size();
-		}
-
 		double extractFormattedValue(index counter, const PDH_RAW_COUNTER& current, const PDH_RAW_COUNTER& previous) const;
 	};
 }

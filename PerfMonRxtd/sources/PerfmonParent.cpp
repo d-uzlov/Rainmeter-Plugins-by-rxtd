@@ -19,36 +19,44 @@ using namespace perfmon;
 PerfmonParent::PerfmonParent(utils::Rainmeter&& _rain) : ParentBase(std::move(_rain)) {
 	setUseResultString(true);
 
-	objectName = rain.read(L"ObjectName").asString();
+	bool success = pdhWrapper.init(logger);
+	if (!success) {
+		setMeasureState(utils::MeasureState::eBROKEN);
+		return;
+	}
+
 	instanceManager.setIndexOffset(rain.read(L"InstanceIndexOffset").asInt(), false);
-
-
-	if (objectName.empty()) {
-		logger.error(L"ObjectName must be specified");
-		setMeasureState(utils::MeasureState::eBROKEN);
-		return;
-	}
-
-	auto counterTokens = rain.read(L"CounterList").asList(L'|');
-
-	if (counterTokens.empty()) {
-		logger.error(L"CounterList must have at least one entry");
-		setMeasureState(utils::MeasureState::eBROKEN);
-		return;
-	}
-	if (counterTokens.size() > 30) {
-		logger.error(L"too many counters");
-		return;
-	}
-
-	pdhWrapper = pdh::PdhWrapper{ logger, objectName, counterTokens };
-	if (!pdhWrapper.isValid()) {
-		setMeasureState(utils::MeasureState::eBROKEN);
-	}
 }
 
 void PerfmonParent::vReload() {
 	needUpdate = true;
+
+	objectName = rain.read(L"ObjectName").asString();
+
+	if (objectName.empty()) {
+		logger.error(L"ObjectName must be specified");
+		setMeasureState(utils::MeasureState::eTEMP_BROKEN);
+		return;
+	}
+
+	auto counterNames = rain.read(L"CounterList").asList(L'|');
+
+	if (counterNames.empty()) {
+		logger.error(L"CounterList must have at least one entry");
+		setMeasureState(utils::MeasureState::eTEMP_BROKEN);
+		return;
+	}
+	if (counterNames.size() > 30) {
+		logger.error(L"too many counters");
+		return;
+	}
+
+	bool success = pdhWrapper.setCounters(objectName, counterNames);
+	if (!success) {
+		setMeasureState(utils::MeasureState::eTEMP_BROKEN);
+		return;
+	}
+
 
 	InstanceManager::Options imo;
 	imo.sortIndex = rain.read(L"SortIndex").asInt();
@@ -123,7 +131,7 @@ void PerfmonParent::vReload() {
 	expressionResolver.setExpressions(expressionTokens, rollupExpressionTokens);
 
 	instanceManager.checkIndices(
-		pdhWrapper.getCountersCount(),
+		counterNames.size(),
 		expressionResolver.getExpressionsCount(),
 		expressionResolver.getRollupExpressionsCount()
 	);
@@ -195,15 +203,16 @@ sview PerfmonParent::getInstanceName(const InstanceInfo& instance, ResultString 
 double PerfmonParent::vUpdate() {
 
 	if (!stopped) {
-		std::swap(snapshotCurrent, snapshotPrevious);
-
-		const bool success = pdhWrapper.fetch(snapshotCurrent, idSnapshot);
+		const bool success = pdhWrapper.fetch();
 		if (!success) {
 			snapshotCurrent.clear();
 			snapshotPrevious.clear();
 			state = State::eFETCH_ERROR;
 			return 0;
 		}
+
+		std::swap(snapshotCurrent, snapshotPrevious);
+		snapshotCurrent = pdhWrapper.exchangeSnapshot(std::move(snapshotCurrent));
 
 		needUpdate = true;
 	}

@@ -18,22 +18,68 @@
 
 using namespace perfmon::pdh;
 
-PdhWrapper::PdhWrapper(utils::Rainmeter::Logger _log, const string& objectName, const utils::OptionList& counterList) :
-	log(std::move(_log)) {
-	QueryWrapper query;
+bool PdhWrapper::init(utils::Rainmeter::Logger logger) {
+	log = std::move(logger);
 
-	if (counterList.size() > 30) {
-		log.error(L"too many counters"); // TODO add validity check in parent
-		return;
+	PDH_STATUS code = PdhOpenQueryW(nullptr, 0, &query.handle);
+	if (code != ERROR_SUCCESS) {
+		log.error(L"PdhOpenQueryW() failed with code {}", code);
+		return false;
+	}
+	return true;
+}
+
+bool PdhWrapper::setCounters(sview objectName, const utils::OptionList& counterList) {
+
+	counterHandlers.reserve(counterList.size());
+	for (auto counterOption : counterList) {
+		try {
+			auto counterHandle = addCounter(objectName, counterOption.asString());
+			counterHandlers.emplace_back(counterHandle);
+		} catch (PdhException& e) {
+			switch (index(e.getCode())) {
+			case PDH_CSTATUS_NO_OBJECT:
+				log.error(L"ObjectName '{}' does not exist", objectName);
+				break;
+			case PDH_CSTATUS_NO_COUNTER:
+				log.error(L"Counter '{}' does not exist", counterOption.asString());
+				break;
+			default:
+				log.error(L"Unknown error with counter {}: code {}, caused by {}", counterOption.asString(), e.getCode(), e.getCause());
+				break;
+			}
+			throw;
+		}
 	}
 
-	PDH_STATUS pdhStatus = PdhOpenQueryW(nullptr, 0, query.getPointer());
-	if (pdhStatus != ERROR_SUCCESS) {
-		log.error(L"PdhOpenQuery failed, status {error}", pdhStatus);
-		return;
+	// add a counter to retrieve Process or Thread IDs
+	if (objectName == L"Process" || objectName == L"GPU Engine" || objectName == L"GPU Process Memory") {
+		try {
+			auto counterHandle = addCounter(L"Process", L"ID Process");
+			counterHandlers.emplace_back(counterHandle);
+		} catch (PdhException& e) {
+			log.error(L"Can't add 'Process/ID Process' counter to query: code {}", e.getCode());
+			return false;
+		}
+		needFetchExtraIDs = true;
+	} else if (objectName == L"Thread") {
+		try {
+			auto counterHandle = addCounter(L"Thread", L"ID Thread");
+			counterHandlers.emplace_back(counterHandle);
+		} catch (PdhException& e) {
+			log.error(L"Can't add 'Thread/ID Thread' counter to query: code {}", e.getCode());
+			return false;
+		}
+		needFetchExtraIDs = true;
+	} else {
+		needFetchExtraIDs = false;
 	}
 
-	// add counters for our objectName and counterNames to the query
+	return true;
+}
+
+PDH_HCOUNTER PdhWrapper::addCounter(sview objectName, sview counterName) {
+
 	// counterPath examples:
 	//   counterPath = L"\\Processor(_Total)\\% Processor Time"
 	//   counterPath = L"\\Physical Disk(*)\\Disk Read Bytes/Sec" (wildcard gets all instances of counterName)
@@ -42,106 +88,51 @@ PdhWrapper::PdhWrapper(utils::Rainmeter::Logger _log, const string& objectName, 
 	//   counterPath = L"\\System(*)\Processes" returns a single instance with an instance name of "*"
 	//   counterPath = L"\\System\Processes"    returns a single instance with an instance name of ""
 
-	counterHandlers.resize(counterList.size());
-	string counterPath;
-	for (index counter = 0; counter < index(counterHandlers.size()); ++counter) {
-		counterPath = L"\\" + objectName + L"(*)" + L"\\" + string{ counterList.get(counter).asString() };
-		pdhStatus = PdhAddEnglishCounterW(query.get(), counterPath.c_str(), 0, &counterHandlers[counter]);
-		if (pdhStatus != ERROR_SUCCESS) {
-			if (pdhStatus == PDH_CSTATUS_NO_OBJECT) {
-				log.error(L"ObjectName '{}' does not exist", objectName);
-			} else if (pdhStatus == PDH_CSTATUS_NO_COUNTER) {
-				log.error(L"Counter '{}' does not exist", counterList.get(counter).asString());
-			} else {
-				log.error(L"PdhAddEnglishCounter failed, path='{}' status {error}", counterPath, pdhStatus);
-			}
+	utils::BufferPrinter bp;
+	bp.print(L"\\{}(*)\\{}", objectName, counterName);
 
-			return;
-		}
+	PDH_HCOUNTER counterHandle{};
+	auto code = PdhAddEnglishCounterW(query.handle, bp.getBufferPtr(), 0, &counterHandle);
+	if (code != ERROR_SUCCESS) {
+		throw PdhException{ code, L"PdhAddEnglishCounterW() in QueryWrapper.addCounter()" };
 	}
-
-	// add a counter to retrieve Process or Thread IDs
-
-	string idsCounterPath;
-	if (objectName == L"Process" || objectName == L"GPU Engine" || objectName == L"GPU Process Memory") {
-		idsCounterPath = L"\\Process(*)\\ID Process";
-		needFetchExtraIDs = true;
-	} else if (objectName == L"Thread") {
-		idsCounterPath = L"\\Thread(*)\\ID Thread";
-		needFetchExtraIDs = true;
-	} else {
-		needFetchExtraIDs = false;
-	}
-	if (needFetchExtraIDs) {
-		pdhStatus = PdhAddEnglishCounterW(query.get(), idsCounterPath.c_str(), 0, &idCounterHandler);
-		if (pdhStatus != ERROR_SUCCESS) {
-			log.error(L"PdhAddEnglishCounter failed, path='{}' status {error}", idsCounterPath, pdhStatus);
-			return;
-		}
-	}
-
-	this->query = std::move(query);
+	return counterHandle;
 }
 
-bool PdhWrapper::fetch(PdhSnapshot& snapshot, PdhSnapshot& idSnapshot) {
-	idSnapshot.setCountersCount(1);
+bool PdhWrapper::fetch() {
 	snapshot.setCountersCount(counterHandlers.size());
 
-	// the Pdh calls made below should not fail
-	// if they do, perhaps the problem is transient and will clear itself before the next update
-	// if we simply keep buffered data as-is and continue returning old values, the measure will look "stuck"
-	// instead, we'll free all buffers and let data collection start over
-
-	PDH_STATUS pdhStatus = PdhCollectQueryData(query.get());
-	if (pdhStatus != ERROR_SUCCESS) {
-		log.error(L"PdhCollectQueryData failed, status {error}", pdhStatus);
+	PDH_STATUS code = PdhCollectQueryData(query.handle);
+	if (code != ERROR_SUCCESS) {
+		log.error(L"PdhCollectQueryData failed, status {}", code);
 		return false;
-	}
-
-	// retrieve counter data for Process or Thread IDs
-	if (needFetchExtraIDs) {
-		DWORD bufferSize = 0;
-		DWORD count = 0;
-		pdhStatus = PdhGetRawCounterArrayW(idCounterHandler, &bufferSize, &count, nullptr);
-		if (pdhStatus != PDH_MORE_DATA) {
-			log.error(L"PdhGetRawCounterArray get dwBufferSize failed, status {error}", pdhStatus);
-			return false;
-		}
-
-		idSnapshot.setBufferSize(index(bufferSize), index(count));
-
-		pdhStatus = PdhGetRawCounterArrayW(idCounterHandler, &bufferSize, &count, idSnapshot.getCounterPointer(0));
-		if (pdhStatus != ERROR_SUCCESS) {
-			log.error(L"PdhGetRawCounterArray failed, status {error}", pdhStatus);
-			return false;
-		}
 	}
 
 	DWORD bufferSize = 0;
 	DWORD count = 0;
-	// All counters have the same amount of elements with the same name so they need buffers of the same size
-	// and we don't need to query buffer size every time.
-	pdhStatus = PdhGetRawCounterArrayW(counterHandlers[0], &bufferSize, &count, nullptr);
-	if (pdhStatus != PDH_MORE_DATA) {
-		log.error(L"PdhGetRawCounterArray get dwBufferSize failed, status {error}", pdhStatus);
+	// call to PdhGetRawCounterArrayW with bufferSize==0 should return with PDH_MORE_DATA and bufferSize and count set to appropriate value
+	// Since all counters are from one object, they all have the same amount of the same items
+	// so buffer size should also be the same for all counters
+	code = PdhGetRawCounterArrayW(counterHandlers[0], &bufferSize, &count, nullptr);
+	if (code != PDH_MORE_DATA) {
+		log.error(L"PdhGetRawCounterArray(size=0) failed, status {error}", code);
 		return false;
 	}
 
-	snapshot.setBufferSize(index(bufferSize), index(count));
+	snapshot.setBufferSize(bufferSize, count);
 
 	// Retrieve counter data for all counters in the measure's counterList.
 	for (index i = 0; i < index(counterHandlers.size()); ++i) {
 		DWORD dwBufferSize2 = bufferSize;
-		pdhStatus = PdhGetRawCounterArrayW(counterHandlers[i], &dwBufferSize2, &count, snapshot.getCounterPointer(i));
-		if (pdhStatus != ERROR_SUCCESS) {
-			log.error(L"PdhGetRawCounterArray failed, status {error}", pdhStatus);
+		code = PdhGetRawCounterArrayW(counterHandlers[i], &dwBufferSize2, &count, snapshot.getCounterPointer(i));
+		if (code != ERROR_SUCCESS) {
+			log.error(L"PdhGetRawCounterArray failed, status {error}", code);
 			return false;
 		}
 		if (dwBufferSize2 != bufferSize) {
 			log.error(L"unexpected buffer size change");
 			return false;
 		}
-
 	}
 
 	return true;

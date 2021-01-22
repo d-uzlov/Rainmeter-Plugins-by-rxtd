@@ -47,7 +47,7 @@ namespace rxtd::perfmon::pdh {
 			modificationType = value;
 		}
 
-		void createModifiedNames(const PdhSnapshot& snapshot, const PdhSnapshot& idSnapshot);
+		void createModifiedNames(const PdhSnapshot& snapshot);
 
 	private:
 		void copyOriginalNames(const PdhSnapshot& snapshot);
@@ -60,9 +60,9 @@ namespace rxtd::perfmon::pdh {
 
 		static sview copyString(sview source, wchar_t* dest);
 
-		void modifyNameProcess(const PdhSnapshot& idSnapshot);
+		void modifyNameProcess(const PdhSnapshot& snapshot);
 
-		void modifyNameThread(const PdhSnapshot& idSnapshot);
+		void modifyNameThread(const PdhSnapshot& snapshot);
 
 		void modifyNameLogicalDiskDriveLetter();
 

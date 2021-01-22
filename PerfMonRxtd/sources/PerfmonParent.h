@@ -80,13 +80,12 @@ namespace rxtd::perfmon {
 
 		pdh::PdhWrapper pdhWrapper;
 
-		pdh::PdhSnapshot idSnapshot;
 		pdh::PdhSnapshot snapshotCurrent;
 		pdh::PdhSnapshot snapshotPrevious;
 
 		BlacklistManager blacklistManager;
 
-		InstanceManager instanceManager{ logger, pdhWrapper, idSnapshot, snapshotCurrent, snapshotPrevious, blacklistManager };
+		InstanceManager instanceManager{ logger, pdhWrapper, snapshotCurrent, snapshotPrevious, blacklistManager };
 
 		ExpressionResolver expressionResolver{ logger, instanceManager };
 

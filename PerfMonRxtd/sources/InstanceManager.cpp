@@ -15,13 +15,11 @@ using namespace perfmon;
 InstanceManager::InstanceManager(
 	utils::Rainmeter::Logger& log,
 	const pdh::PdhWrapper& phWrapper,
-	const pdh::PdhSnapshot& idSnapshot,
 	const pdh::PdhSnapshot& snapshotCurrent, const pdh::PdhSnapshot& snapshotPrevious,
 	const BlacklistManager& blacklistManager
 ) :
 	log(log),
 	pdhWrapper(phWrapper),
-	idSnapshot(idSnapshot),
 	snapshotCurrent(snapshotCurrent),
 	snapshotPrevious(snapshotPrevious),
 	blacklistManager(blacklistManager) { }
@@ -31,7 +29,7 @@ bool InstanceManager::isRollup() const {
 }
 
 index InstanceManager::getCountersCount() const {
-	return pdhWrapper.getCountersCount();
+	return snapshotCurrent.getCountersCount();
 }
 
 const pdh::ModifiedNameItem& InstanceManager::getNames(index index) const {
@@ -39,14 +37,25 @@ const pdh::ModifiedNameItem& InstanceManager::getNames(index index) const {
 }
 
 void InstanceManager::checkIndices(index counters, index expressions, index rollupExpressions) {
-	if (options.sortBy == SortBy::eEXPRESSION) {
+	index checkCount = 0;
+
+	switch (options.sortBy) {
+	case SortBy::eNONE: return;
+	case SortBy::eINSTANCE_NAME: return;
+	case SortBy::eRAW_COUNTER: [[fallthrough]];
+	case SortBy::eFORMATTED_COUNTER:
+		checkCount = counters;
+		break;
+	case SortBy::eEXPRESSION: {
 		if (expressions <= 0) {
 			log.error(L"Sort by Expression requires at least 1 Expression specified. Set to None.");
 			options.sortBy = SortBy::eNONE;
 			return;
 		}
+		checkCount = expressions;
+		break;
 	}
-	if (options.sortBy == SortBy::eROLLUP_EXPRESSION) {
+	case SortBy::eROLLUP_EXPRESSION: {
 		if (!rollupExpressions) {
 			log.error(L"RollupExpressions can't be used for sort if rollup is disabled. Set to None.");
 			options.sortBy = SortBy::eNONE;
@@ -57,30 +66,16 @@ void InstanceManager::checkIndices(index counters, index expressions, index roll
 			options.sortBy = SortBy::eNONE;
 			return;
 		}
-	}
-
-	index checkCount;
-	switch (options.sortBy) {
-	case SortBy::eNONE: return;
-	case SortBy::eINSTANCE_NAME: return;
-	case SortBy::eRAW_COUNTER: [[fallthrough]];
-	case SortBy::eFORMATTED_COUNTER:
-		checkCount = counters;
-		break;
-	case SortBy::eEXPRESSION:
-		checkCount = expressions;
-		break;
-	case SortBy::eROLLUP_EXPRESSION:
 		checkCount = rollupExpressions;
 		break;
+	}
 	case SortBy::eCOUNT: return;
-	default: std::terminate();
 	}
 
-	if (options.sortIndex < checkCount) {
+	if (options.sortIndex >= 0 && options.sortIndex < checkCount) {
 		return;
 	}
-	log.error(L"SortIndex must be in [0; {}], but {} found. Set to 0.", expressions, options.sortIndex);
+	log.error(L"SortIndex {} is out of bounds (must be in [0; {}]). Set to 0.", expressions, options.sortIndex);
 	options.sortIndex = 0;
 	return;
 }
@@ -104,7 +99,7 @@ void InstanceManager::update() {
 	}
 
 	std::swap(namesCurrent, namesPrevious);
-	namesCurrent.createModifiedNames(snapshotCurrent, idSnapshot);
+	namesCurrent.createModifiedNames(snapshotCurrent);
 
 	if (snapshotPrevious.isEmpty()) {
 		buildInstanceKeysZero();

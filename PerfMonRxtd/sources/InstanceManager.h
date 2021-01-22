@@ -70,7 +70,6 @@ namespace rxtd::perfmon {
 		std::vector<InstanceInfo> instancesRolledUp;
 		std::vector<InstanceInfo> instancesDiscarded;
 
-		const pdh::PdhSnapshot& idSnapshot;
 		const pdh::PdhSnapshot& snapshotCurrent;
 		const pdh::PdhSnapshot& snapshotPrevious;
 		const BlacklistManager& blacklistManager;
@@ -85,7 +84,7 @@ namespace rxtd::perfmon {
 
 	public:
 		InstanceManager(
-			utils::Rainmeter::Logger& log, const pdh::PdhWrapper& phWrapper, const pdh::PdhSnapshot& idSnapshot,
+			utils::Rainmeter::Logger& log, const pdh::PdhWrapper& phWrapper,
 			const pdh::PdhSnapshot& snapshotCurrent, const pdh::PdhSnapshot& snapshotPrevious,
 			const BlacklistManager& blacklistManager
 		);

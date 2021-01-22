@@ -18,7 +18,7 @@ using namespace perfmon::pdh;
 
 using namespace std::string_view_literals;
 
-void NamesManager::createModifiedNames(const PdhSnapshot& snapshot, const PdhSnapshot& idSnapshot) {
+void NamesManager::createModifiedNames(const PdhSnapshot& snapshot) {
 	resetBuffers();
 
 	originalNamesSize = snapshot.getNamesSize();
@@ -30,10 +30,10 @@ void NamesManager::createModifiedNames(const PdhSnapshot& snapshot, const PdhSna
 	case ModificationType::NONE:
 		break;
 	case ModificationType::PROCESS:
-		modifyNameProcess(idSnapshot);
+		modifyNameProcess(snapshot);
 		break;
 	case ModificationType::THREAD:
-		modifyNameThread(idSnapshot);
+		modifyNameThread(snapshot);
 		break;
 	case ModificationType::LOGICAL_DISK_DRIVE_LETTER:
 		modifyNameLogicalDiskDriveLetter();
@@ -42,7 +42,7 @@ void NamesManager::createModifiedNames(const PdhSnapshot& snapshot, const PdhSna
 		modifyNameLogicalDiskMountPath();
 		break;
 	case ModificationType::GPU_PROCESS:
-		modifyNameGPUProcessName(idSnapshot);
+		modifyNameGPUProcessName(snapshot);
 		break;
 	case ModificationType::GPU_ENGTYPE:
 		modifyNameGPUEngtype();
@@ -107,7 +107,7 @@ sview NamesManager::copyString(sview source, wchar_t* dest) {
 	return { dest, source.length() };
 }
 
-void NamesManager::modifyNameProcess(const PdhSnapshot& idSnapshot) {
+void NamesManager::modifyNameProcess(const PdhSnapshot& snapshot) {
 	// process name is name of the process file, which is not unique
 	// set unique name to <name>#<pid>
 	// assume that string representation of pid is no more than 20 symbols
@@ -120,7 +120,7 @@ void NamesManager::modifyNameProcess(const PdhSnapshot& idSnapshot) {
 	for (index instanceIndex = 0; instanceIndex < namesCount; ++instanceIndex) {
 		ModifiedNameItem& item = names[instanceIndex];
 
-		const long long pid = idSnapshot.getItem(0, instanceIndex).FirstValue;
+		const long long pid = snapshot.getItem(snapshot.getCountersCount() - 1, instanceIndex).FirstValue;
 
 		auto nameCopy = copyString(item.originalName, namesBuffer);
 		namesBuffer += nameCopy.length();
@@ -138,7 +138,7 @@ void NamesManager::modifyNameProcess(const PdhSnapshot& idSnapshot) {
 	}
 }
 
-void NamesManager::modifyNameThread(const PdhSnapshot& idSnapshot) {
+void NamesManager::modifyNameThread(const PdhSnapshot& snapshot) {
 	// instance names are "<processName>/<threadIndex>"
 	// process names are not unique
 	// thread indices enumerate threads inside one process, starting from 0
@@ -159,7 +159,7 @@ void NamesManager::modifyNameThread(const PdhSnapshot& idSnapshot) {
 	for (index instanceIndex = 0; instanceIndex < namesCount; ++instanceIndex) {
 		ModifiedNameItem& item = names[instanceIndex];
 
-		const long long tid = idSnapshot.getItem(0, instanceIndex).FirstValue;
+		const long long tid = snapshot.getItem(snapshot.getCountersCount() - 1, instanceIndex).FirstValue;
 
 		sview nameCopy = copyString(item.originalName, namesBuffer);
 		if (tid != 0) {
