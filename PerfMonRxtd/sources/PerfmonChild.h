@@ -18,7 +18,7 @@ namespace rxtd::perfmon {
 		ResultString resultStringType = ResultString::eNUMBER;
 
 		const PerfmonParent* parent = nullptr;
-		sview stringValue;
+		string stringValue;
 
 	public:
 		explicit PerfmonChild(utils::Rainmeter&& _rain);

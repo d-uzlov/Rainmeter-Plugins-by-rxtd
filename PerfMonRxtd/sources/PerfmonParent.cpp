@@ -178,24 +178,31 @@ void PerfmonParent::vReload() {
 	instanceManager.setNameModificationType(nameModificationType);
 }
 
-sview PerfmonParent::getInstanceName(const InstanceInfo& instance, ResultString stringType) const {
+void PerfmonParent::getInstanceName(const InstanceInfo& instance, ResultString stringType, string& str) const {
 	if (stringType == ResultString::eNUMBER) {
-		return L"";
+		return;
 	}
 	const auto& item = instanceManager.getNames(instance.indices.current);
 	if (instanceManager.isRollup()) {
-		return item.displayName;
+		str = item.displayName;
+		return;
 	}
 	switch (stringType) {
 	case ResultString::eORIGINAL_NAME:
-		return item.originalName;
-	case ResultString::eUNIQUE_NAME:
-		return item.uniqueName;
+		str = item.originalName;
+		return;
+	case ResultString::eUNIQUE_NAME: {
+		auto ids = instanceManager.getIds(instance.indices.current);
+		str = std::to_wstring(ids.id1);
+		str += std::to_wstring(ids.id2);
+		return;
+	}
 	case ResultString::eDISPLAY_NAME:
-		return item.displayName;
-	default:
-		logger.error(L"unexpected result string type {}", stringType);
-		return L"";
+		str = item.displayName;
+		return;
+	case ResultString::eNUMBER:
+		// just to shut up clang diagnostic
+		return;
 	}
 }
 

@@ -18,7 +18,7 @@ using namespace perfmon::pdh;
 
 using namespace std::string_view_literals;
 
-void NamesManager::createModifiedNames(const PdhSnapshot& snapshot) {
+void NamesManager::createModifiedNames(const PdhSnapshot& snapshot, array_span<UniqueInstanceId> ids) {
 	resetBuffers();
 
 	originalNamesSize = snapshot.getNamesSize();
@@ -28,26 +28,29 @@ void NamesManager::createModifiedNames(const PdhSnapshot& snapshot) {
 
 	switch (modificationType) {
 	case ModificationType::NONE:
+		createIdsBasedOnName(ids);
 		break;
 	case ModificationType::PROCESS:
-		modifyNameProcess(snapshot);
+		modifyNameProcess(snapshot, ids);
 		break;
 	case ModificationType::THREAD:
-		modifyNameThread(snapshot);
+		modifyNameThread(snapshot, ids);
 		break;
 	case ModificationType::LOGICAL_DISK_DRIVE_LETTER:
 		modifyNameLogicalDiskDriveLetter();
+		createIdsBasedOnName(ids);
 		break;
 	case ModificationType::LOGICAL_DISK_MOUNT_PATH:
 		modifyNameLogicalDiskMountPath();
+		createIdsBasedOnName(ids);
 		break;
 	case ModificationType::GPU_PROCESS:
 		modifyNameGPUProcessName(snapshot);
+		createIdsBasedOnName(ids);
 		break;
 	case ModificationType::GPU_ENGTYPE:
 		modifyNameGPUEngtype();
-		break;
-	default:
+		createIdsBasedOnName(ids);
 		break;
 	}
 
@@ -65,7 +68,6 @@ void NamesManager::copyOriginalNames(const PdhSnapshot& snapshot) {
 		namesBuffer += name.length();
 
 		item.originalName = name;
-		item.uniqueName = name;
 		item.displayName = name;
 	}
 }
@@ -107,84 +109,49 @@ sview NamesManager::copyString(sview source, wchar_t* dest) {
 	return { dest, source.length() };
 }
 
-void NamesManager::modifyNameProcess(const PdhSnapshot& snapshot) {
-	// process name is name of the process file, which is not unique
-	// set unique name to <name>#<pid>
-	// assume that string representation of pid is no more than 20 symbols
-
-	wchar_t* namesBuffer = getBuffer(originalNamesSize + names.size() * 20);
-
-	utils::BufferPrinter printer{};
-
+void NamesManager::modifyNameProcess(const PdhSnapshot& snapshot, array_span<UniqueInstanceId> ids) {
 	const index namesCount(names.size());
 	for (index instanceIndex = 0; instanceIndex < namesCount; ++instanceIndex) {
 		ModifiedNameItem& item = names[instanceIndex];
 
-		const long long pid = snapshot.getItem(snapshot.getCountersCount() - 1, instanceIndex).FirstValue;
-
-		auto nameCopy = copyString(item.originalName, namesBuffer);
-		namesBuffer += nameCopy.length();
-		namesBuffer[0] = L'#';
-		namesBuffer++;
-
-		const auto length = swprintf(namesBuffer, 20, L"%llu", pid);
-		if (length < 0) {
-			namesBuffer += 20;
-		} else {
-			namesBuffer += length;
-		}
-
-		item.uniqueName = { nameCopy.data(), nameCopy.length() + 1 + length };
+		const auto pid = snapshot.getItem(snapshot.getCountersCount() - 1, instanceIndex).FirstValue;
+		ids[instanceIndex].id1 = static_cast<int32_t>(pid);
+		ids[instanceIndex].id2 = 0;
 	}
 }
 
-void NamesManager::modifyNameThread(const PdhSnapshot& snapshot) {
+void NamesManager::modifyNameThread(const PdhSnapshot& snapshot, array_span<UniqueInstanceId> ids) {
 	// instance names are "<processName>/<threadIndex>"
 	// process names are not unique
 	// thread indices enumerate threads inside one process, starting from 0
 
-	// unique name: <processName>#<tid>
-	// exception is Idle/n: all threads have tid 0, so keep /n for this tid
-	// _Total/_Total also has tid 0, no problems with this
+	// some threads have invalid thread ID: tid==0
+	// "some" are usually _Total and Idle
+	// for these threads I use -getIdFromName value which is unique throughout NamesManager instance
+	// and since I have yet to see a negative thread ID these shouldn't overlap with valid IDs
 
 	// display name: <processName>
 	// _Total/_Total -> _Total
 	// Idle/n -> Idle
 
-	// assume that string representation of tid is no more than 20 symbols
-
-	wchar_t* namesBuffer = getBuffer(originalNamesSize + names.size() * 20);
-
-	const index namesCount(names.size());
-	for (index instanceIndex = 0; instanceIndex < namesCount; ++instanceIndex) {
+	for (index instanceIndex = 0; instanceIndex < index(names.size()); ++instanceIndex) {
 		ModifiedNameItem& item = names[instanceIndex];
 
-		const long long tid = snapshot.getItem(snapshot.getCountersCount() - 1, instanceIndex).FirstValue;
-
-		sview nameCopy = copyString(item.originalName, namesBuffer);
-		if (tid != 0) {
-			nameCopy = nameCopy.substr(0, nameCopy.find_last_of(L'/'));
-		}
-		namesBuffer += nameCopy.length();
-
-		namesBuffer[0] = L'#';
-		namesBuffer++;
-
-		const auto length = swprintf(namesBuffer, 20, L"%llu", tid);
-		if (length < 0) {
-			namesBuffer += 20;
+		const auto tid = snapshot.getItem(snapshot.getCountersCount() - 1, instanceIndex).FirstValue;
+		if (tid <= 0) {
+			ids[instanceIndex].id1 = 0;
+			ids[instanceIndex].id2 = -getIdFromName(item.originalName);
 		} else {
-			namesBuffer += length;
+			ids[instanceIndex].id1 = static_cast<int32_t>(tid);
+			ids[instanceIndex].id2 = 0;
 		}
-
-		item.uniqueName = { nameCopy.data(), nameCopy.length() + 1 + length };
 
 		item.displayName = item.originalName.substr(0, item.originalName.find_last_of(L'/'));
 	}
 }
 
 void NamesManager::modifyNameLogicalDiskDriveLetter() {
-	// keep folder in mount path: "C:\path\mount" -> "C:"
+	// keep only letter in mount path: "C:\path\mount" -> "C:"
 	// volumes that are not mounted: "HardDiskVolume#123" -> "HardDiskVolume"
 
 	for (auto& item : names) {
@@ -225,9 +192,9 @@ void NamesManager::modifyNameGPUProcessName(const PdhSnapshot& idSnapshot) {
 
 	wchar_t* processNamesBuffer = getBuffer(idSnapshot.getNamesSize());
 
-	std::unordered_map<long long, sview> pidToName(idSnapshot.getItemsCount());
-	const index namesCount(idSnapshot.getItemsCount());
-	for (index instanceIndex = 0; instanceIndex < namesCount; ++instanceIndex) {
+	std::unordered_map<long long, sview> pidToName;
+	pidToName.reserve(idSnapshot.getItemsCount());
+	for (index instanceIndex = 0; instanceIndex < index(idSnapshot.getItemsCount()); ++instanceIndex) {
 		sview name = copyString(idSnapshot.getName(instanceIndex), processNamesBuffer);
 		processNamesBuffer += name.length();
 
@@ -260,4 +227,23 @@ void NamesManager::modifyNameGPUEngtype() {
 			item.displayName = item.originalName.substr(suffixStartPlace);
 		}
 	}
+}
+
+void NamesManager::createIdsBasedOnName(array_span<UniqueInstanceId> ids) {
+	for (index i = 0; i < index(names.size()); ++i) {
+		ids[i].id1 = getIdFromName(names[i].originalName);
+		ids[i].id2 = 0;
+	}
+}
+
+int32_t NamesManager::getIdFromName(sview name) {
+	auto iter = name2id.find(name);
+	if (iter != name2id.end()) {
+		return static_cast<int32_t>(iter->second);
+	}
+
+	auto pair = name2id.insert({ string{ name }, 0 });
+	lastId++;
+	pair.first->second = lastId;
+	return static_cast<int32_t>(pair.first->second);
 }

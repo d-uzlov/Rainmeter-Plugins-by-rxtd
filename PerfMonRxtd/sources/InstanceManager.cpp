@@ -24,18 +24,6 @@ InstanceManager::InstanceManager(
 	snapshotPrevious(snapshotPrevious),
 	blacklistManager(blacklistManager) { }
 
-bool InstanceManager::isRollup() const {
-	return options.rollup;
-}
-
-index InstanceManager::getCountersCount() const {
-	return snapshotCurrent.getCountersCount();
-}
-
-const pdh::ModifiedNameItem& InstanceManager::getNames(index index) const {
-	return namesCurrent.get(index);
-}
-
 void InstanceManager::checkIndices(index counters, index expressions, index rollupExpressions) {
 	index checkCount = 0;
 
@@ -81,8 +69,7 @@ void InstanceManager::checkIndices(index counters, index expressions, index roll
 }
 
 void InstanceManager::setNameModificationType(pdh::NamesManager::ModificationType value) {
-	namesCurrent.setModificationType(value);
-	namesPrevious.setModificationType(value);
+	namesManager.setModificationType(value);
 }
 
 void InstanceManager::update() {
@@ -98,8 +85,9 @@ void InstanceManager::update() {
 		return;
 	}
 
-	std::swap(namesCurrent, namesPrevious);
-	namesCurrent.createModifiedNames(snapshotCurrent);
+	std::swap(idsCurrent, idsPrevious);
+	idsCurrent.resize(snapshotCurrent.getItemsCount());
+	namesManager.createModifiedNames(snapshotCurrent, idsCurrent);
 
 	if (snapshotPrevious.isEmpty()) {
 		buildInstanceKeysZero();
@@ -111,7 +99,7 @@ void InstanceManager::update() {
 	}
 }
 
-index InstanceManager::findPreviousName(sview uniqueName, index hint) const {
+index InstanceManager::findPreviousName(pdh::UniqueInstanceId uniqueId, index hint) const {
 	// try to find a match for the current instance name in the previous names buffer
 	// use the unique name for this search because we need a unique match
 	// counter buffers tend to be *mostly* aligned, so we'll try to short-circuit a full search
@@ -121,7 +109,7 @@ index InstanceManager::findPreviousName(sview uniqueName, index hint) const {
 	// try for a direct hit
 	auto previousInx = std::clamp<index>(hint, 0, itemCountPrevious - 1);
 
-	if (uniqueName == namesPrevious.get(previousInx).uniqueName) {
+	if (uniqueId == idsPrevious[previousInx]) {
 		return previousInx;
 	}
 
@@ -132,19 +120,19 @@ index InstanceManager::findPreviousName(sview uniqueName, index hint) const {
 	const auto highBound = std::clamp<index>(hint + windowSize, 0, itemCountPrevious - 1);
 
 	for (previousInx = lowBound; previousInx <= highBound; ++previousInx) {
-		if (uniqueName == namesPrevious.get(previousInx).uniqueName) {
+		if (uniqueId == idsPrevious[previousInx]) {
 			return previousInx;
 		}
 	}
 
 	// no luck, search the entire array
 	for (previousInx = lowBound - 1; previousInx >= 0; previousInx--) {
-		if (uniqueName == namesPrevious.get(previousInx).uniqueName) {
+		if (uniqueId == idsPrevious[previousInx]) {
 			return previousInx;
 		}
 	}
 	for (previousInx = highBound; previousInx < itemCountPrevious; ++previousInx) {
-		if (uniqueName == namesPrevious.get(previousInx).uniqueName) {
+		if (uniqueId == idsPrevious[previousInx]) {
 			return previousInx;
 		}
 	}
@@ -156,7 +144,7 @@ void InstanceManager::buildInstanceKeysZero() {
 	instances.reserve(snapshotCurrent.getItemsCount());
 
 	for (index currentIndex = 0; currentIndex < snapshotCurrent.getItemsCount(); ++currentIndex) {
-		const auto& item = namesCurrent.get(currentIndex);
+		const auto& item = namesManager.get(currentIndex);
 
 		InstanceInfo instanceKey;
 		instanceKey.sortName = item.searchName;
@@ -175,9 +163,9 @@ void InstanceManager::buildInstanceKeys() {
 	instances.reserve(snapshotCurrent.getItemsCount());
 
 	for (index current = 0; current < snapshotCurrent.getItemsCount(); ++current) {
-		const auto item = namesCurrent.get(current);
+		const auto item = namesManager.get(current);
 
-		const auto previous = findPreviousName(item.uniqueName, current);
+		const auto previous = findPreviousName(idsCurrent[current], current);
 		if (previous < 0) {
 			continue; // formatted values require previous item
 		}
@@ -375,7 +363,7 @@ const InstanceInfo* InstanceManager::findInstanceByNameInList(
 	MatchTestRecord testRecord{ ref.name, ref.namePartialMatch };
 	if (ref.useOrigName) {
 		for (const auto& item : instances) {
-			if (testRecord.match(namesCurrent.get(item.indices.current).originalName)) {
+			if (testRecord.match(namesManager.get(item.indices.current).originalName)) {
 				itemOpt = &item;
 				return itemOpt.value();
 			}

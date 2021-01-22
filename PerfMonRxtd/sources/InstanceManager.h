@@ -74,8 +74,9 @@ namespace rxtd::perfmon {
 		const pdh::PdhSnapshot& snapshotPrevious;
 		const BlacklistManager& blacklistManager;
 
-		pdh::NamesManager namesCurrent;
-		pdh::NamesManager namesPrevious;
+		std::vector<pdh::UniqueInstanceId> idsPrevious;
+		std::vector<pdh::UniqueInstanceId> idsCurrent;
+		pdh::NamesManager namesManager;
 
 		// (use orig name, partial match, name) -> instanceInfo
 		mutable std::map<std::tuple<bool, bool, sview>, std::optional<const InstanceInfo*>> nameCache;
@@ -114,10 +115,21 @@ namespace rxtd::perfmon {
 			}
 		}
 
-		bool isRollup() const;
-		index getCountersCount() const;
+		bool isRollup() const {
+			return options.rollup;
+		}
 
-		const pdh::ModifiedNameItem& getNames(index index) const;
+		index getCountersCount() const {
+			return snapshotCurrent.getCountersCount();
+		}
+
+		const pdh::ModifiedNameItem& getNames(index ind) const {
+			return namesManager.get(ind);
+		}
+
+		const pdh::UniqueInstanceId& getIds(index ind) const {
+			return idsCurrent[ind];
+		}
 
 		void checkIndices(index counters, index expressions, index rollupExpressions);
 
@@ -165,7 +177,7 @@ namespace rxtd::perfmon {
 
 		void buildRollupKeys();
 
-		index findPreviousName(sview uniqueName, index hint) const;
+		index findPreviousName(pdh::UniqueInstanceId uniqueId, index hint) const;
 
 		const InstanceInfo* findInstanceByNameInList(
 			const Reference& ref,

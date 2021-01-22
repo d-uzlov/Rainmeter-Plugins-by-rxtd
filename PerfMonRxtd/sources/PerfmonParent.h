@@ -100,19 +100,29 @@ namespace rxtd::perfmon {
 		void vResolve(array_view<isview> args, string& resolveBufferString) override;
 
 	public:
-		std::pair<double, sview> getValues(const Reference& ref, index sortedIndex, ResultString stringType, utils::Rainmeter::Logger& logger) const {
+		double getValues(
+			const Reference& ref,
+			index sortedIndex,
+			ResultString stringType,
+			utils::Rainmeter::Logger& logger,
+			string& str
+		) const {
 			if (!instanceManager.canGetRaw() || ref.type == ReferenceType::COUNTER_FORMATTED && !instanceManager.canGetFormatted()) {
-				return { 0, ref.total ? L"Total" : L"" };
+				str = ref.total ? L"Total" : L"";
+				return 0.0;
 			}
 
 			if (ref.total) {
-				return { expressionResolver.getValue(ref, nullptr, logger), L"Total" };
+				str = L"Total";
+				return expressionResolver.getValue(ref, nullptr, logger);
 			} else {
 				auto instance = instanceManager.findInstance(ref, sortedIndex);
-				return { expressionResolver.getValue(ref, instance, logger), getInstanceName(*instance, stringType) };
+				str.clear();
+				getInstanceName(*instance, stringType, str);
+				return expressionResolver.getValue(ref, instance, logger);
 			}
 		}
 
-		sview getInstanceName(const InstanceInfo& instance, ResultString stringType) const;
+		void getInstanceName(const InstanceInfo& instance, ResultString stringType, string& str) const;
 	};
 }

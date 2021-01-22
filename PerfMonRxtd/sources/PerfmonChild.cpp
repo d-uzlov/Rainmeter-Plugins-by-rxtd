@@ -123,9 +123,7 @@ void PerfmonChild::vReload() {
 }
 
 double PerfmonChild::vUpdate() {
-	auto [numVal, stringVal] = parent->getValues(ref, instanceIndex, resultStringType, logger);
-	stringValue = stringVal;
-	return numVal;
+	return parent->getValues(ref, instanceIndex, resultStringType, logger, stringValue);
 }
 
 void PerfmonChild::vUpdateString(string& resultStringBuffer) {

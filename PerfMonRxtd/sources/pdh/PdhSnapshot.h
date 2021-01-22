@@ -12,22 +12,13 @@
 #include <Pdh.h>
 
 namespace rxtd::perfmon::pdh {
-	class PdhSnapshot {
+	class PdhSnapshot : MovableOnlyBase {
 		std::vector<std::byte> buffer;
 		index counterBufferSize = 0;
 		index itemsCount = 0;
 		index countersCount = 0;
 
 	public:
-		PdhSnapshot() = default;
-		~PdhSnapshot() = default;
-
-		PdhSnapshot(PdhSnapshot&& other) noexcept = default;
-		PdhSnapshot& operator=(PdhSnapshot&& other) noexcept = default;
-
-		PdhSnapshot(const PdhSnapshot& other) = delete;
-		PdhSnapshot& operator=(const PdhSnapshot& other) = delete;
-
 		[[nodiscard]]
 		auto getItemsCount() const {
 			return itemsCount;
