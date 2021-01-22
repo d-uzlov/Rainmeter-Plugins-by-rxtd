@@ -17,11 +17,17 @@
 #include <string_view>
 #include <cwctype>
 #include <utility>
+#include <optional>
 
 #include "array_view.h"
 #include "typedefs.h"
 #include "CaseInsensitiveString.h"
 #include "GenericBaseClasses.h"
+
+template<typename T>
+std::optional<T> parseEnum(isview) {
+	static_assert(false);
+}
 
 #ifndef NOMINMAX
 #define NOMINMAX

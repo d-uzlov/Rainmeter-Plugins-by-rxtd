@@ -12,14 +12,8 @@
 
 using namespace perfmon;
 
-InstanceManager::InstanceManager(
-	utils::Rainmeter::Logger& log,
-	const pdh::PdhWrapper& phWrapper,
-	const BlacklistManager& blacklistManager
-) :
-	log(log),
-	pdhWrapper(phWrapper),
-	blacklistManager(blacklistManager) { }
+InstanceManager::InstanceManager(utils::Rainmeter::Logger& log, const pdh::PdhWrapper& phWrapper) :
+	log(log), pdhWrapper(phWrapper) { }
 
 void InstanceManager::checkIndices(index counters, index expressions, index rollupExpressions) {
 	index checkCount = 0;
@@ -348,10 +342,7 @@ const InstanceInfo* InstanceManager::findInstanceByName(const Reference& ref, bo
 	}
 }
 
-const InstanceInfo* InstanceManager::findInstanceByNameInList(
-	const Reference& ref, const std::vector<InstanceInfo>& instances,
-	std::map<std::tuple<bool, bool, sview>, std::optional<const InstanceInfo*>>& cache
-) const {
+const InstanceInfo* InstanceManager::findInstanceByNameInList(const Reference& ref, array_view<InstanceInfo> instances, CacheType& cache) const {
 	auto& itemOpt = cache[{ ref.useOrigName, ref.namePartialMatch, ref.name }];
 	if (itemOpt.has_value()) {
 		return itemOpt.value(); // already cached

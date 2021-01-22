@@ -93,6 +93,8 @@
 //         Changed: remove instances count from parent string value
 //         Added: section variable "fetch size" and "is stopped" to parent
 //         Fixed: ObjectName=Process was broken
+//
+//  read git commits for further changes history
 //         
 //
 

@@ -57,7 +57,7 @@ void PerfmonChild::vReload() {
 	} else if (type == L"GetCount")
 		ref.type = ReferenceType::COUNT;
 	else if (type == L"GetInstanceName") {
-		logger.warning(L"Type 'GetInstanceName' is deprecated, set to 'GetCount' with Total=0 and ResultString not Number");
+		logger.warning(L"Type 'GetInstanceName' is deprecated, set to 'GetCount' with Total=0");
 		ref.type = ReferenceType::COUNT;
 		ref.total = false;
 		ref.rollupFunction = RollupFunction::eFIRST;
@@ -83,7 +83,7 @@ void PerfmonChild::vReload() {
 			logger.warning(L"RollupFunction 'Count' is deprecated, measure type set to 'GetCount'");
 			ref.type = ReferenceType::COUNT;
 		} else {
-			auto typeOpt = parseRollupFunction(rollupFunctionStr);
+			auto typeOpt = parseEnum<RollupFunction>(rollupFunctionStr);
 			if (typeOpt.has_value()) {
 				ref.rollupFunction = typeOpt.value();
 			} else {
@@ -93,31 +93,29 @@ void PerfmonChild::vReload() {
 		}
 	}
 
-	const auto resultStringStr = rain.read(L"ResultString").asIString(L"Number");
-	if (!forceUseName && resultStringStr == L"Number") {
+	const auto resultStringStr = rain.read(L"ResultString").asIString(forceUseName ? L"DisplayName" : L"Number");
+	if (resultStringStr == L"Number") {
 		resultStringType = ResultString::eNUMBER;
-		setUseResultString(false);
-	} else if (resultStringStr == L"OriginalName" || resultStringStr == L"OriginalInstanceName") {
+	} else if (resultStringStr == L"OriginalInstanceName") {
 		resultStringType = ResultString::eORIGINAL_NAME;
-		setUseResultString(true);
-	} else if (resultStringStr == L"UniqueName" || resultStringStr == L"UniqueInstanceName") {
+	} else if (resultStringStr == L"UniqueInstanceName") {
 		resultStringType = ResultString::eUNIQUE_NAME;
-		setUseResultString(true);
-	} else if (resultStringStr == L"DisplayName" || resultStringStr == L"DisplayInstanceName") {
+	} else if (resultStringStr == L"DisplayInstanceName") {
 		resultStringType = ResultString::eDISPLAY_NAME;
-		setUseResultString(true);
 	} else if (resultStringStr == L"RollupInstanceName") {
 		logger.warning(L"ResultString 'RollupInstanceName' is deprecated, set to 'DisplayName'");
 		resultStringType = ResultString::eDISPLAY_NAME;
-		setUseResultString(true);
-	} else if (forceUseName) {
-		resultStringType = ResultString::eDISPLAY_NAME;
-		setUseResultString(true);
 	} else {
-		logger.error(L"ResultString '{}' is invalid, set to 'Number'", resultStringStr);
-		resultStringType = ResultString::eNUMBER;
-		setUseResultString(false);
+		auto typeOpt = parseEnum<ResultString>(resultStringStr);
+		if (typeOpt.has_value()) {
+			resultStringType = typeOpt.value();
+		} else {
+			logger.error(L"ResultString '{}' is invalid, set to 'Number'", resultStringStr);
+			resultStringType = ResultString::eNUMBER;
+		}
 	}
+
+	setUseResultString(resultStringType != ResultString::eNUMBER);
 
 	ref.named = ref.useOrigName || !ref.name.empty();
 }

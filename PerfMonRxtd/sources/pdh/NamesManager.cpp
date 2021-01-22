@@ -11,7 +11,6 @@
 
 #include <unordered_map>
 
-#include "BufferPrinter.h"
 #include "StringUtils.h"
 
 using namespace perfmon::pdh;
@@ -22,6 +21,8 @@ void NamesManager::createModifiedNames(const PdhSnapshot& snapshot, const PdhSna
 	names.resize(snapshot.getItemsCount());
 
 	fillOriginalNames(snapshot);
+
+	namesSize = snapshot.getNamesSize();
 
 	switch (modificationType) {
 	case ModificationType::NONE:
@@ -59,7 +60,7 @@ void NamesManager::createModifiedNames(const PdhSnapshot& snapshot, const PdhSna
 		break;
 	}
 
-	generateSearchNames(snapshot.getNamesSize());
+	generateSearchNames();
 }
 
 void NamesManager::fillOriginalNames(const PdhSnapshot& snapshot) {
@@ -70,10 +71,9 @@ void NamesManager::fillOriginalNames(const PdhSnapshot& snapshot) {
 	}
 }
 
-void NamesManager::generateSearchNames(index originalNamesSize) {
-	buffer.resize(originalNamesSize);
+void NamesManager::generateSearchNames() {
+	buffer.resize(namesSize);
 	wchar_t* namesBuffer = buffer.data();
-	wchar_t* namesBuffer0 = namesBuffer;
 
 	for (auto& item : names) {
 		sview name = copyString(item.displayName, namesBuffer);
@@ -82,7 +82,7 @@ void NamesManager::generateSearchNames(index originalNamesSize) {
 		item.searchName = name;
 	}
 
-	CharUpperBuffW(namesBuffer0, int32_t(namesBuffer - namesBuffer0));
+	CharUpperBuffW(buffer.data(), int32_t(namesBuffer - buffer.data()));
 }
 
 sview NamesManager::copyString(sview source, wchar_t* dest) {
@@ -176,6 +176,8 @@ void NamesManager::modifyNameLogicalDiskMountPath() {
 void NamesManager::modifyNameGPUProcessName(const PdhSnapshot& idSnapshot) {
 	// display name is process name (found by PID)
 
+	namesSize = 0;
+
 	std::unordered_map<long long, sview> pidToName;
 	pidToName.reserve(idSnapshot.getItemsCount());
 	for (index instanceIndex = 0; instanceIndex < index(idSnapshot.getItemsCount()); ++instanceIndex) {
@@ -196,6 +198,7 @@ void NamesManager::modifyNameGPUProcessName(const PdhSnapshot& idSnapshot) {
 		}
 
 		item.displayName = iter->second;
+		namesSize += item.displayName.size();
 	}
 }
 

@@ -8,7 +8,6 @@
  */
 
 #pragma once
-#include <optional>
 
 namespace rxtd::perfmon {
 	enum class RollupFunction {
@@ -19,25 +18,42 @@ namespace rxtd::perfmon {
 		eFIRST,
 	};
 
-	inline std::optional<RollupFunction> parseRollupFunction(isview name) {
-		if (name == L"Sum") {
-			return RollupFunction::eSUM;
-		} else if (name == L"Average") {
-			return RollupFunction::eAVERAGE;
-		} else if (name == L"Minimum") {
-			return RollupFunction::eMINIMUM;
-		} else if (name == L"Maximum") {
-			return RollupFunction::eMAXIMUM;
-		} else if (name == L"First") {
-			return RollupFunction::eFIRST;
-		}
-		return {};
-	}
-
 	enum class ResultString {
 		eNUMBER,
 		eORIGINAL_NAME,
 		eUNIQUE_NAME,
 		eDISPLAY_NAME,
 	};
+}
+
+template<>
+inline std::optional<perfmon::RollupFunction> parseEnum<perfmon::RollupFunction>(isview name) {
+	using RF = perfmon::RollupFunction;
+	if (name == L"Sum") {
+		return RF::eSUM;
+	} else if (name == L"Average") {
+		return RF::eAVERAGE;
+	} else if (name == L"Minimum") {
+		return RF::eMINIMUM;
+	} else if (name == L"Maximum") {
+		return RF::eMAXIMUM;
+	} else if (name == L"First") {
+		return RF::eFIRST;
+	}
+	return {};
+}
+
+template<>
+inline std::optional<perfmon::ResultString> parseEnum<perfmon::ResultString>(isview name) {
+	using RS = perfmon::ResultString;
+	if (name == L"Number") {
+		return RS::eNUMBER;
+	} else if (name == L"OriginalName") {
+		return RS::eORIGINAL_NAME;
+	} else if (name == L"UniqueName") {
+		return RS::eUNIQUE_NAME;
+	} else if (name == L"DisplayName") {
+		return RS::eDISPLAY_NAME;
+	}
+	return {};
 }

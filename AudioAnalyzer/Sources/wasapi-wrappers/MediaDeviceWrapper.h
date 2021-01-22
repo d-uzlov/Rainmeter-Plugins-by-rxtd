@@ -11,7 +11,6 @@
 
 #include <endpointvolume.h>
 #include <mmdeviceapi.h>
-#include <optional>
 
 #include "IAudioClientWrapper.h"
 #include "winapi-wrappers/GenericComWrapper.h"

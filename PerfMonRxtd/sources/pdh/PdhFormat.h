@@ -8,7 +8,6 @@
  */
 
 #pragma once
-#include <optional>
 
 namespace rxtd::perfmon::pdh {
 	std::optional<sview> formatPdhCode(index code);

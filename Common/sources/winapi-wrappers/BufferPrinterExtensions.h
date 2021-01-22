@@ -9,8 +9,6 @@
 
 #pragma once
 
-#include <optional>
-
 namespace rxtd::utils {
 	std::optional<sview> formatWinApiCode(index code);
 }

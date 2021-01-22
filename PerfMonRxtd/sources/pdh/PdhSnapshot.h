@@ -55,7 +55,7 @@ namespace rxtd::perfmon::pdh {
 			if (itemsCount < 1) {
 				return;
 			}
-			buffer.reserve(countersCount * (itemsCount - 1) * sizeof(PDH_RAW_COUNTER_ITEM_W) + counterBufferSize);
+			buffer.resize(countersCount * (itemsCount - 1) * sizeof(PDH_RAW_COUNTER_ITEM_W) + counterBufferSize);
 		}
 
 		[[nodiscard]]

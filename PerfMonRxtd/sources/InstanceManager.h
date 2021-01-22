@@ -56,6 +56,11 @@ namespace rxtd::perfmon {
 			index sortIndex = 0;
 			SortOrder sortOrder = SortOrder::eDESCENDING;
 			RollupFunction sortRollupFunction = RollupFunction::eSUM;
+
+			string blacklist;
+			string blacklistOrig;
+			string whitelist;
+			string whitelistOrig;
 		};
 
 	private:
@@ -73,7 +78,7 @@ namespace rxtd::perfmon {
 		pdh::PdhSnapshot snapshotCurrent;
 		pdh::PdhSnapshot snapshotPrevious;
 		pdh::PdhSnapshot processIdsSnapshot;
-		const BlacklistManager& blacklistManager;
+		BlacklistManager blacklistManager;
 
 		std::vector<pdh::UniqueInstanceId> idsPrevious;
 		std::vector<pdh::UniqueInstanceId> idsCurrent;
@@ -86,10 +91,7 @@ namespace rxtd::perfmon {
 		mutable CacheType nameCacheDiscarded;
 
 	public:
-		InstanceManager(
-			utils::Rainmeter::Logger& log, const pdh::PdhWrapper& phWrapper,
-			const BlacklistManager& blacklistManager
-		);
+		InstanceManager(utils::Rainmeter::Logger& log, const pdh::PdhWrapper& phWrapper);
 
 		void setOptions(Options value) {
 			options = value;
@@ -103,6 +105,8 @@ namespace rxtd::perfmon {
 				log.error(L"SortIndex must be >= 0, but {} found, set to 0", value.sortIndex);
 				options.sortIndex = 0;
 			}
+
+			blacklistManager.setLists(value.blacklist, value.blacklistOrig, value.whitelist, value.whitelistOrig);
 		}
 
 		void setIndexOffset(index value, bool relative) {
@@ -195,11 +199,39 @@ namespace rxtd::perfmon {
 
 		index findPreviousName(pdh::UniqueInstanceId uniqueId, index hint) const;
 
-		const InstanceInfo* findInstanceByNameInList(
-			const Reference& ref,
-			const std::vector<InstanceInfo>& instances, std::map<std::tuple<bool, bool, sview>,
-			                                                     std::optional<const InstanceInfo*>>& cache
-		) const;
+		const InstanceInfo* findInstanceByNameInList(const Reference& ref, array_view<InstanceInfo> instances, CacheType& cache) const;
 
 	};
+}
+
+template<>
+inline std::optional<perfmon::InstanceManager::SortBy> parseEnum<perfmon::InstanceManager::SortBy>(isview name) {
+	using SortBy = perfmon::InstanceManager::SortBy;
+	if (name == L"None")
+		return SortBy::eNONE;
+	else if (name == L"InstanceName")
+		return SortBy::eINSTANCE_NAME;
+	else if (name == L"RawCounter")
+		return SortBy::eRAW_COUNTER;
+	else if (name == L"FormattedCounter")
+		return SortBy::eFORMATTED_COUNTER;
+	else if (name == L"Expression")
+		return SortBy::eEXPRESSION;
+	else if (name == L"RollupExpression")
+		return SortBy::eROLLUP_EXPRESSION;
+	else if (name == L"Count")
+		return SortBy::eCOUNT;
+
+	return {};
+}
+
+template<>
+inline std::optional<perfmon::InstanceManager::SortOrder> parseEnum<perfmon::InstanceManager::SortOrder>(isview name) {
+	using SortOrder = perfmon::InstanceManager::SortOrder;
+	if (name == L"Descending")
+		return SortOrder::eDESCENDING;
+	else if (name == L"Ascending")
+		return SortOrder::eASCENDING;
+
+	return {};
 }

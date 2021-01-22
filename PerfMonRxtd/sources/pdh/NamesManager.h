@@ -53,6 +53,8 @@ namespace rxtd::perfmon::pdh {
 
 		ModificationType modificationType{};
 
+		index namesSize = 0;
+
 	public:
 		const ModifiedNameItem& get(index ind) const {
 			return names[ind];
@@ -67,7 +69,7 @@ namespace rxtd::perfmon::pdh {
 	private:
 		void fillOriginalNames(const PdhSnapshot& snapshot);
 
-		void generateSearchNames(index originalNamesSize);
+		void generateSearchNames();
 
 		static sview copyString(sview source, wchar_t* dest);
 

@@ -8,7 +8,6 @@
  */
 
 #pragma once
-#include <optional>
 
 namespace rxtd::audio_analyzer {
 	enum class Channel {

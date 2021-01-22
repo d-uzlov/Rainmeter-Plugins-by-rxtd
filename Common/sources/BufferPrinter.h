@@ -8,7 +8,6 @@
  */
 
 #pragma once
-#include <optional>
 #include <iomanip>
 
 #include "StringUtils.h"

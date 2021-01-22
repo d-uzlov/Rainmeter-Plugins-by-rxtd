@@ -9,7 +9,6 @@
 
 #pragma once
 
-#include <optional>
 #include "GenericComWrapper.h"
 #include "propsys.h"
 

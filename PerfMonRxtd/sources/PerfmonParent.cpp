@@ -59,65 +59,44 @@ void PerfmonParent::vReload() {
 	imo.limitIndexOffset = rain.read(L"LimitIndexOffset").asBool();
 
 	auto str = rain.read(L"SortBy").asIString(L"None");
-	typedef InstanceManager::SortBy SortBy;
-	SortBy sortBy;
-	if (str == L"None")
-		sortBy = SortBy::eNONE;
-	else if (str == L"InstanceName")
-		sortBy = SortBy::eINSTANCE_NAME;
-	else if (str == L"RawCounter")
-		sortBy = SortBy::eRAW_COUNTER;
-	else if (str == L"FormattedCounter")
-		sortBy = SortBy::eFORMATTED_COUNTER;
-	else if (str == L"Expression")
-		sortBy = SortBy::eEXPRESSION;
-	else if (str == L"RollupExpression")
-		sortBy = SortBy::eROLLUP_EXPRESSION;
-	else if (str == L"Count")
-		sortBy = SortBy::eCOUNT;
-	else {
+	using SortBy = InstanceManager::SortBy;
+	auto sortByOpt = parseEnum<SortBy>(str);
+	if (sortByOpt.has_value()) {
+		imo.sortBy = sortByOpt.value();
+	} else {
 		logger.error(L"SortBy '{}' is invalid, set to 'None'", str);
-		sortBy = SortBy::eNONE;
+		imo.sortBy = SortBy::eNONE;
 	}
-	imo.sortBy = sortBy;
 
 	str = rain.read(L"SortOrder").asIString(L"Descending");
-	typedef InstanceManager::SortOrder SortOrder;
-	SortOrder sortOrder;
-	if (str == L"Descending")
-		sortOrder = SortOrder::eDESCENDING;
-	else if (str == L"Ascending")
-		sortOrder = SortOrder::eASCENDING;
-	else {
+	auto sortOrderOpt = parseEnum<InstanceManager::SortOrder>(str);
+	if (sortOrderOpt.has_value()) {
+		imo.sortOrder = sortOrderOpt.value();
+	} else {
 		logger.error(L"SortOrder '{}' is invalid, set to 'Descending'", str);
-		sortOrder = SortOrder::eDESCENDING;
+		imo.sortOrder = InstanceManager::SortOrder::eDESCENDING;
 	}
-	imo.sortOrder = sortOrder;
 
 
-	RollupFunction sortRollupFunction;
 	auto rollupFunctionStr = rain.read(L"SortRollupFunction").asIString(L"Sum");
 	if (rollupFunctionStr == L"Count") {
 		logger.warning(L"SortRollupFunction 'Count' is deprecated, SortBy set to 'Count'");
 		imo.sortBy = SortBy::eCOUNT;
-		sortRollupFunction = RollupFunction::eSUM;
+		imo.sortRollupFunction = RollupFunction::eSUM;
 	} else {
-		auto typeOpt = parseRollupFunction(rollupFunctionStr);
+		auto typeOpt = parseEnum<RollupFunction>(rollupFunctionStr);
 		if (typeOpt.has_value()) {
-			sortRollupFunction = typeOpt.value();
+			imo.sortRollupFunction = typeOpt.value();
 		} else {
 			logger.error(L"SortRollupFunction '{}' is invalid, set to 'Sum'", str);
-			sortRollupFunction = RollupFunction::eSUM;
+			imo.sortRollupFunction = RollupFunction::eSUM;
 		}
 	}
-	imo.sortRollupFunction = sortRollupFunction;
 
-	blacklistManager.setLists(
-		rain.read(L"Blacklist").asString(),
-		rain.read(L"BlacklistOrig").asString(),
-		rain.read(L"Whitelist").asString(),
-		rain.read(L"WhitelistOrig").asString()
-	);
+	imo.blacklist = rain.read(L"Blacklist").asString();
+	imo.blacklistOrig = rain.read(L"BlacklistOrig").asString();
+	imo.whitelist = rain.read(L"Whitelist").asString();
+	imo.whitelistOrig = rain.read(L"WhitelistOrig").asString();
 
 	const auto expressionTokens = rain.read(L"ExpressionList").asList(L'|');
 	const auto rollupExpressionTokens = rain.read(L"RollupExpressionList").asList(L'|');
@@ -130,7 +109,7 @@ void PerfmonParent::vReload() {
 	);
 
 
-	typedef pdh::NamesManager::ModificationType NMT;
+	using NMT = pdh::NamesManager::ModificationType;
 	NMT nameModificationType;
 	bool needToFetchProcessIds = false;
 	if (objectName == L"GPU Engine" || objectName == L"GPU Process Memory") {

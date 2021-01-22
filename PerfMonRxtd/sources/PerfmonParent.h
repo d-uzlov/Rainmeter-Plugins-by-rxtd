@@ -55,7 +55,6 @@
 
 #pragma once
 
-#include "BlacklistManager.h"
 #include "ExpressionResolver.h"
 #include "expressions.h"
 #include "InstanceManager.h"
@@ -80,9 +79,7 @@ namespace rxtd::perfmon {
 
 		pdh::PdhWrapper pdhWrapper;
 
-		BlacklistManager blacklistManager;
-
-		InstanceManager instanceManager{ logger, pdhWrapper, blacklistManager };
+		InstanceManager instanceManager{ logger, pdhWrapper };
 
 		ExpressionResolver expressionResolver{ logger, instanceManager };
 
