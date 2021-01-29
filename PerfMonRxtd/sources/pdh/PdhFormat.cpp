@@ -9,11 +9,13 @@
 
 #include "PdhFormat.h"
 
+#include <iomanip>
+
 // there are some strange errors without #include <Pdh.h>
 #include <Pdh.h>
 #include <PdhMsg.h>
 
-std::optional<sview> perfmon::pdh::formatPdhCode(index code) {
+static std::optional<sview> formatPdhCode(index code) {
 	switch (uint32_t(code)) {
 	case uint32_t(PDH_CSTATUS_VALID_DATA): return L"PDH_CSTATUS_VALID_DATA";
 	case uint32_t(PDH_CSTATUS_NEW_DATA): return L"PDH_CSTATUS_NEW_DATA";
@@ -102,5 +104,16 @@ std::optional<sview> perfmon::pdh::formatPdhCode(index code) {
 	case uint32_t(PDH_SQL_ALTER_DETAIL_FAILED): return L"PDH_SQL_ALTER_DETAIL_FAILED";
 	case uint32_t(PDH_QUERY_PERF_DATA_TIMEOUT): return L"PDH_QUERY_PERF_DATA_TIMEOUT";
 	default: return {};
+	}
+}
+
+void perfmon::pdh::writeType(std::wostream& stream, const PdhReturnCode& code, sview options) {
+	auto viewOpt = formatPdhCode(code.code);
+	if (viewOpt.has_value()) {
+		stream << viewOpt.value();
+	} else {
+		stream << L"0x";
+		stream << std::setfill(L'0') << std::setw(sizeof(code.code) * 2) << std::hex;
+		stream << code.code;
 	}
 }

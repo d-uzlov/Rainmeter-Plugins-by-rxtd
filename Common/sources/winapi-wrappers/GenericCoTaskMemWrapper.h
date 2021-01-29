@@ -9,7 +9,7 @@
 
 #pragma once
 
-namespace rxtd::utils {
+namespace rxtd::common::winapi_wrappers {
 	template<typename T>
 	class GenericCoTaskMemWrapper : MovableOnlyBase {
 	public:

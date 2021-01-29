@@ -16,8 +16,8 @@
 #include "winapi-wrappers/GenericComWrapper.h"
 #include "winapi-wrappers/GenericCoTaskMemWrapper.h"
 
-namespace rxtd::utils {
-	class MediaDeviceWrapper : public GenericComWrapper<IMMDevice> {
+namespace rxtd::audio_analyzer::wasapi_wrappers {
+	class MediaDeviceWrapper : public common::winapi_wrappers::GenericComWrapper<IMMDevice> {
 	public:
 		struct DeviceInfo {
 			string name;
@@ -107,7 +107,7 @@ namespace rxtd::utils {
 		}
 
 		void readId() noexcept(false) {
-			GenericCoTaskMemWrapper<wchar_t> idWrapper{
+			common::winapi_wrappers::GenericCoTaskMemWrapper<wchar_t> idWrapper{
 				[&](auto ptr) {
 					throwOnError(ref().GetId(ptr), L"IMMDevice.GetId()");
 					return true;

@@ -17,14 +17,14 @@
 
 #include "winapi-wrappers/PropertyStoreWrapper.h"
 
-using namespace utils;
+using namespace ::rxtd::audio_analyzer::wasapi_wrappers;
 
 MediaDeviceWrapper::DeviceInfo MediaDeviceWrapper::readDeviceInfo() noexcept(false) {
 	if (!isValid()) {
 		return {};
 	}
 
-	PropertyStoreWrapper props{
+	common::winapi_wrappers::PropertyStoreWrapper props{
 		[&](auto ptr) {
 			throwOnError(ref().OpenPropertyStore(STGM_READ, ptr), L"IMMDevice.OpenPropertyStore() in MediaDeviceWrapper::readDeviceInfo()");
 			return true;

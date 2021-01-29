@@ -13,10 +13,11 @@
 
 #include "ComException.h"
 
-namespace rxtd::utils {
+namespace rxtd::common::winapi_wrappers {
 	template<typename T>
 	class GenericComWrapper : VirtualDestructorBase {
 	public:
+		using ComException = ComException;
 		using InitFunctionType = bool(T** ptr);
 		using ObjectType = T;
 		static_assert(std::is_base_of<IUnknown, T>::value, "T must extend IUnknown");

@@ -11,24 +11,6 @@
 
 using namespace ::rxtd::common::buffer_printer;
 
-static std::map<sview, FormattingFunctionType> formattingFunctions;
-
-void ::rxtd::common::buffer_printer::registerFormattingFunction(sview name, FormattingFunctionType function) {
-	if (!utils::StringUtils::checkStartsWith(name, L"f:")) {
-		throw std::runtime_error{"registerFormattingFunction: name does not start with 'f:'"};
-	}
-
-	formattingFunctions[name] = function;
-}
-
-FormattingFunctionType rxtd::common::buffer_printer::findFormattingFunction(sview name) {
-	auto iter = formattingFunctions.find(name);
-	if (iter == formattingFunctions.end()) {
-		return nullptr;
-	}
-	return iter->second;
-}
-
 BufferPrinter::ReadableOutputBuffer::ReadableOutputBuffer(ReadableOutputBuffer&& other) noexcept:
 	std::basic_streambuf<wchar_t>(other),
 	buffer(std::move(other.buffer)) {}

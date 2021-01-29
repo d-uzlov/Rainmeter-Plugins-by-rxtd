@@ -268,7 +268,7 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 		}
 
 		if (deviceProperty == L"type") {
-			resolveBufferString = di.type == utils::MediaDeviceType::eINPUT ? L"input" : L"output";
+			resolveBufferString = di.type == wasapi_wrappers::MediaDeviceType::eINPUT ? L"input" : L"output";
 		} else if (deviceProperty == L"name") {
 			resolveBufferString = di.name;
 		} else if (deviceProperty == L"description") {
@@ -305,7 +305,7 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 		auto listsLock = snapshot.deviceLists.getLock();
 		auto diLock = snapshot.deviceInfo.getLock();
 		resolveBufferString =
-			snapshot.deviceInfo._.type == utils::MediaDeviceType::eINPUT
+			snapshot.deviceInfo._.type == wasapi_wrappers::MediaDeviceType::eINPUT
 			? snapshot.deviceLists.input
 			: snapshot.deviceLists.output;
 		return;

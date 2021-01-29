@@ -17,9 +17,9 @@
 #include "audiopolicy.h"
 #include "winapi-wrappers/GenericCoTaskMemWrapper.h"
 
-namespace rxtd::utils {
-	class IAudioClientWrapper : public GenericComWrapper<IAudioClient> {
-		GenericCoTaskMemWrapper<WAVEFORMATEX> nativeFormat{};
+namespace rxtd::audio_analyzer::wasapi_wrappers {
+	class IAudioClientWrapper : public common::winapi_wrappers::GenericComWrapper<IAudioClient> {
+		common::winapi_wrappers::GenericCoTaskMemWrapper<WAVEFORMATEX> nativeFormat{};
 		WaveFormat format;
 
 		MediaDeviceType type{};

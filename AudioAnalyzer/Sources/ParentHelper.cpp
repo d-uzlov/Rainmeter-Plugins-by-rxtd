@@ -38,7 +38,7 @@ void ParentHelper::init(
 
 	threadSafeFields.notificationClient = {
 		[](auto ptr) {
-			*ptr = utils::MediaDeviceListNotificationClient::create();
+			*ptr = wasapi_wrappers::MediaDeviceListNotificationClient::create();
 			return true;
 		}
 	};
@@ -225,7 +225,7 @@ void ParentHelper::pUpdate() {
 	const auto changes = threadSafeFields.notificationClient.ref().takeChanges();
 
 	if (!mainFields.disconnected) {
-		using DDC = utils::MediaDeviceListNotificationClient::DefaultDeviceChange;
+		using DDC = wasapi_wrappers::MediaDeviceListNotificationClient::DefaultDeviceChange;
 		using ST = CaptureManager::SourceDesc::Type;
 		DDC defaultDeviceChange{};
 		switch (mainFields.settings.device.type) {
@@ -385,11 +385,11 @@ bool ParentHelper::updateDeviceListStrings() {
 	string input;
 	string output;
 	if (constFields.legacyNumber < 104) {
-		input = legacy_makeDeviceListString(utils::MediaDeviceType::eINPUT);
-		output = legacy_makeDeviceListString(utils::MediaDeviceType::eOUTPUT);
+		input = legacy_makeDeviceListString(MediaDeviceType::eINPUT);
+		output = legacy_makeDeviceListString(MediaDeviceType::eOUTPUT);
 	} else {
-		input = makeDeviceListString(utils::MediaDeviceType::eINPUT);
-		output = makeDeviceListString(utils::MediaDeviceType::eOUTPUT);
+		input = makeDeviceListString(MediaDeviceType::eINPUT);
+		output = makeDeviceListString(MediaDeviceType::eOUTPUT);
 	}
 
 	auto lock = snapshot.deviceLists.getLock();
@@ -410,7 +410,7 @@ bool ParentHelper::updateDeviceListStrings() {
 	return anyChanged;
 }
 
-string ParentHelper::makeDeviceListString(utils::MediaDeviceType type) {
+string ParentHelper::makeDeviceListString(MediaDeviceType type) {
 	string result;
 
 	auto collection = enumeratorWrapper.getActiveDevices(type);
@@ -431,7 +431,7 @@ string ParentHelper::makeDeviceListString(utils::MediaDeviceType type) {
 	};
 
 	// returns success
-	auto appendFormat = [&](utils::MediaDeviceWrapper& device) {
+	auto appendFormat = [&](wasapi_wrappers::MediaDeviceWrapper& device) {
 		try {
 			auto audioClient = device.openAudioClient();
 
@@ -451,7 +451,7 @@ string ParentHelper::makeDeviceListString(utils::MediaDeviceType type) {
 			}
 
 			return;
-		} catch (utils::FormatException&) { } catch (utils::ComException&) { }
+		} catch (wasapi_wrappers::FormatException&) { } catch (common::winapi_wrappers::ComException&) { }
 
 		append({});
 		append({});
@@ -466,7 +466,7 @@ string ParentHelper::makeDeviceListString(utils::MediaDeviceType type) {
 			append(deviceInfo.name);
 			append(deviceInfo.desc);
 			append(deviceInfo.formFactor);
-		} catch (utils::ComException&) {
+		} catch (common::winapi_wrappers::ComException&) {
 			append({});
 			append({});
 			append({});
@@ -486,7 +486,7 @@ string ParentHelper::makeDeviceListString(utils::MediaDeviceType type) {
 	return result;
 }
 
-string ParentHelper::legacy_makeDeviceListString(utils::MediaDeviceType type) {
+string ParentHelper::legacy_makeDeviceListString(MediaDeviceType type) {
 	string result;
 
 	auto collection = enumeratorWrapper.getActiveDevices(type);
@@ -501,7 +501,7 @@ string ParentHelper::legacy_makeDeviceListString(utils::MediaDeviceType type) {
 			bp.append(L"{}", device.getId());
 			bp.append(L" ");
 			bp.append(L"{}\n", deviceInfo.fullFriendlyName);
-		} catch (utils::ComException&) {}
+		} catch (common::winapi_wrappers::ComException&) {}
 	}
 
 	result = bp.getBufferView();

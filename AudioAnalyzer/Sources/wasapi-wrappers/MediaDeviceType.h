@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 rxtd
+ * Copyright (C) 2020-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -9,7 +9,7 @@
 
 #pragma once
 
-namespace rxtd::utils {
+namespace rxtd::audio_analyzer::wasapi_wrappers {
 	enum class MediaDeviceType {
 		eINPUT,
 		eOUTPUT,

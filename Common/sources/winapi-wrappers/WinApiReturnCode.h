@@ -9,6 +9,14 @@
 
 #pragma once
 
-namespace rxtd::utils {
-	std::optional<sview> formatWinApiCode(index code);
+namespace rxtd::common::winapi_wrappers {
+	struct WinApiReturnCode {
+		index code = 0;
+
+		WinApiReturnCode() = default;
+
+		explicit WinApiReturnCode(index code) : code(code) {}
+	};
+
+	void writeType(std::wostream& stream, const WinApiReturnCode& code, sview options);
 }

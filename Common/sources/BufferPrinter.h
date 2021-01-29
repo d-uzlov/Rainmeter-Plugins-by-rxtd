@@ -10,22 +10,11 @@
 #pragma once
 #include <iomanip>
 
-#include "StringUtils.h"
-
 namespace rxtd::common::buffer_printer {
 	using ::operator<<;
 
-	using FormattingFunctionType = std::optional<sview>(*)(index);
-	// adds a dynamically resolved function that will be called by writeType<integer>()
-	// when writeType:options match :name
-	// :name must start with symbol 'f:'
-	// :name must have static lifetime
-	void registerFormattingFunction(sview name, FormattingFunctionType function);
-	FormattingFunctionType findFormattingFunction(sview name);
-
 	template<typename E>
-	typename std::enable_if<std::is_enum<E>::value, sview>::type
-	getEnumName(E value) {
+	sview getEnumName(E value) {
 		return L"<unknown enum>";
 	}
 
@@ -43,20 +32,6 @@ namespace rxtd::common::buffer_printer {
 				stream << L"0x";
 				stream << std::setfill(L'0') << std::setw(sizeof(T) * 2) << std::hex;
 				stream << t;
-				return;
-			}
-			if (utils::StringUtils::checkStartsWith(options, L"f:")) {
-				auto fun = findFormattingFunction(options);
-				if (fun == nullptr) {
-					writeType(stream, t, L"hex");
-					return;
-				}
-				auto valueOpt = fun(t);
-				if (valueOpt.has_value()) {
-					stream << valueOpt.value();
-				} else {
-					writeType(stream, t, L"hex");
-				}
 				return;
 			}
 			stream << t;

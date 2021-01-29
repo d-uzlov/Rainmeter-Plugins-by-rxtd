@@ -21,6 +21,7 @@ namespace rxtd::audio_analyzer {
 	public:
 		using Rainmeter = ::rxtd::common::rainmeter::Rainmeter;
 		using Logger = ::rxtd::common::rainmeter::Logger;
+		using MediaDeviceType = wasapi_wrappers::MediaDeviceType;
 
 		struct SnapshotStruct {
 			struct LockableData : DataWithLock {
@@ -65,7 +66,7 @@ namespace rxtd::audio_analyzer {
 		};
 
 	private:
-		utils::IMMDeviceEnumeratorWrapper enumeratorWrapper;
+		wasapi_wrappers::IMMDeviceEnumeratorWrapper enumeratorWrapper;
 
 		struct {
 			index legacyNumber{};
@@ -74,7 +75,7 @@ namespace rxtd::audio_analyzer {
 		} constFields;
 
 		struct {
-			utils::GenericComWrapper<utils::MediaDeviceListNotificationClient> notificationClient;
+			common::winapi_wrappers::GenericComWrapper<wasapi_wrappers::MediaDeviceListNotificationClient> notificationClient;
 		} threadSafeFields;
 
 		struct ThreadSleepFields : DataWithLock {
@@ -151,7 +152,7 @@ namespace rxtd::audio_analyzer {
 		void updateProcessings();
 		bool updateDeviceListStrings();
 
-		string makeDeviceListString(utils::MediaDeviceType type);
-		string legacy_makeDeviceListString(utils::MediaDeviceType type);
+		string makeDeviceListString(MediaDeviceType type);
+		string legacy_makeDeviceListString(MediaDeviceType type);
 	};
 }

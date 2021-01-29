@@ -14,10 +14,10 @@
 #include "MediaDeviceWrapper.h"
 #include "winapi-wrappers/GenericComWrapper.h"
 
-namespace rxtd::utils {
+namespace rxtd::audio_analyzer::wasapi_wrappers {
 	enum class MediaDeviceType;
 
-	class IMMDeviceEnumeratorWrapper : public GenericComWrapper<IMMDeviceEnumerator> {
+	class IMMDeviceEnumeratorWrapper : public common::winapi_wrappers::GenericComWrapper<IMMDeviceEnumerator> {
 	public:
 		IMMDeviceEnumeratorWrapper();
 

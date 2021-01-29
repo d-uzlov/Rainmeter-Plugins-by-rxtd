@@ -10,5 +10,11 @@
 #pragma once
 
 namespace rxtd::perfmon::pdh {
-	std::optional<sview> formatPdhCode(index code);
+	struct PdhReturnCode {
+		index code;
+
+		explicit PdhReturnCode(index code) : code(code) {}
+	};
+
+	void writeType(std::wostream& stream, const PdhReturnCode& code, sview options);
 }

@@ -27,6 +27,7 @@ namespace rxtd::common::rainmeter {
 		string prefix{};
 		bool isSilent = false;
 
+		// Duplicates enum in RainmeterAPI.h because I don't want to include this file
 		enum class LogLevel {
 			eERROR = 1,
 			eWARNING = 2,

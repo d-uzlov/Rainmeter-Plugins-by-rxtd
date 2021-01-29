@@ -22,7 +22,10 @@
 namespace rxtd::audio_analyzer {
 	class CaptureManager {
 	public:
-		using Logger = ::rxtd::common::rainmeter::Logger;
+		using Logger = common::rainmeter::Logger;
+
+		template<typename T>
+		using GenericComWrapper = common::winapi_wrappers::GenericComWrapper<T>;
 		
 		struct SourceDesc {
 			enum class Type {
@@ -59,8 +62,8 @@ namespace rxtd::audio_analyzer {
 			string description;
 			string id;
 			string formatString;
-			utils::MediaDeviceType type{};
-			utils::WaveFormat format;
+			wasapi_wrappers::MediaDeviceType type{};
+			wasapi_wrappers::WaveFormat format;
 			string channelsString;
 		};
 
@@ -69,12 +72,12 @@ namespace rxtd::audio_analyzer {
 		index legacyNumber = 0;
 		double bufferSizeSec = 0.0;
 
-		utils::IMMDeviceEnumeratorWrapper enumeratorWrapper;
+		wasapi_wrappers::IMMDeviceEnumeratorWrapper enumeratorWrapper;
 
-		utils::MediaDeviceWrapper audioDeviceHandle;
-		utils::IAudioCaptureClientWrapper audioCaptureClient;
-		utils::AudioSessionEventsWrapper sessionEventsWrapper;
-		utils::GenericComWrapper<IAudioRenderClient> renderClient;
+		wasapi_wrappers::MediaDeviceWrapper audioDeviceHandle;
+		wasapi_wrappers::IAudioCaptureClientWrapper audioCaptureClient;
+		wasapi_wrappers::AudioSessionEventsWrapper sessionEventsWrapper;
+		GenericComWrapper<IAudioRenderClient> renderClient;
 		ChannelMixer channelMixer;
 
 		Snapshot snapshot;
@@ -121,13 +124,13 @@ namespace rxtd::audio_analyzer {
 
 	private:
 		[[nodiscard]]
-		std::optional<utils::MediaDeviceWrapper> getDevice(const SourceDesc& desc);
+		std::optional<wasapi_wrappers::MediaDeviceWrapper> getDevice(const SourceDesc& desc);
 
 		[[nodiscard]]
-		static string makeFormatString(utils::WaveFormat waveFormat);
+		static string makeFormatString(wasapi_wrappers::WaveFormat waveFormat);
 
 		void createExclusiveStreamListener();
 
-		std::vector<utils::GenericComWrapper<IAudioSessionControl>> getActiveSessions() noexcept(false);
+		std::vector<GenericComWrapper<IAudioSessionControl>> getActiveSessions() noexcept(false);
 	};
 }

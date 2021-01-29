@@ -15,25 +15,25 @@
 namespace rxtd::common::rainmeter {
 	//
 	// This class acts as a proxy for Rainmeter API functions RmLog and RmExecute
-	// Unlike all other functions in Rainmeter API, these functions are allowed to be called concurrently.
-	// These functions are blocking. They only return when the action they need to do is done.
 	// 
-	// Moreover, they block on the same mutex as the main thread. This unfortunate side effect can cause a deadlock.
-	//
 	// Since Rainmeter plugins are dynamically loaded and unloaded, after a Rainmeter Skin is unloaded all of the plugins it used are unloaded,
 	// and if it was the last skin using this plugin then memory of the plugin will be freed.
 	// If there were background threads running then these threads will be running in freed memory, so the program will crash.
 	// Therefore, the plugin must wait for its background threads to finish before the plugin is unloaded.
 	// Plugins are notified before unloading by function Finalize() (see dllmain.cpp), which is called by the main thread.
 	//
-	// If background thread was blocked on RmLog or RmExecute call, and main thread is in the Finalize() waiting for background thread, then deadlock happens.
-	// This class uses WinAPI functions to delay dll unloading.
+	// Functions RmLog and RmExecute are allowed to be called concurrently, however they are blocking.
+	// Moreover, they block on the same mutex as the main thread. This unfortunate side effect can cause a deadlock.
 	//
+	// If background thread was blocked on RmLog or RmExecute call, and main thread is in the Finalize() waiting for background thread, then deadlock happens.
+	// #sendLog and #sendCommand are not blocking, so they can't cause deadlock.
+	//
+	// This class uses WinAPI functions to delay dll unloading.
 	// As far as I'm aware, this is only possible by using Windows threads API,
-	// which is inconvenient and non-portable, so I encapsulated it in this class, so I never ever have to look at it again.
+	// which is inconvenient and non-portable, so I encapsulated its usage in this class, so I never ever have to look at it again.
 	//
 	// See generic issue explanation:
-	//	https://devblogs.microsoft.com/oldnewthing/20131105-00/?p=2733#:~:text=FreeLibrary(g_hinstSelf) .-,The FreeLibrary function frees your DLL.,no further code is executed.
+	//	https://devblogs.microsoft.com/oldnewthing/20131105-00/?p=2733
 	// See my issue "ticket" that doesn't have any answer from Rainmeter devs at the moment of writing this comment:
 	//	https://forum.rainmeter.net/viewtopic.php?f=14&t=35948&p=182576
 	// See InstanceKeeper.cpp for details of implementation

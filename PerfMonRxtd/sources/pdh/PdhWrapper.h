@@ -10,13 +10,15 @@
 #pragma once
 #include <Pdh.h>
 
+
+#include "PdhFormat.h"
 #include "PdhSnapshot.h"
 #include "option-parser/OptionList.h"
 #include "rainmeter/Logger.h"
 
 namespace rxtd::perfmon::pdh {
 	class PdhException : std::runtime_error {
-		PDH_STATUS code;
+		PdhReturnCode code;
 		sview cause;
 	public:
 		explicit PdhException(PDH_STATUS code, sview cause) : runtime_error("PDH call failed"), code(code), cause(cause) {}

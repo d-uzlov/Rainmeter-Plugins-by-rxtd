@@ -19,9 +19,12 @@
 #include "winapi-wrappers/implementations/IUnknownImpl.h"
 
 
-namespace rxtd::utils {
-	class AudioSessionEventsImpl : public IUnknownImpl<IAudioSessionEvents> {
+namespace rxtd::audio_analyzer::wasapi_wrappers {
+	class AudioSessionEventsImpl : public common::winapi_wrappers::IUnknownImpl<IAudioSessionEvents> {
 	public:
+		template<typename T>
+		using GenericComWrapper = common::winapi_wrappers::GenericComWrapper<T>;
+
 		enum class DisconnectionReason {
 			eNONE,
 			eUNAVAILABLE,
@@ -281,6 +284,9 @@ namespace rxtd::utils {
 	//    IAudioSessionControl will still hold a reference inside itself,
 	//    so the object will not be destroyed until explicit #deinit call
 	class AudioSessionEventsWrapper : MovableOnlyBase {
+		template<typename T>
+		using GenericComWrapper = common::winapi_wrappers::GenericComWrapper<T>;
+
 		GenericComWrapper<AudioSessionEventsImpl> impl;
 
 	public:

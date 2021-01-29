@@ -18,9 +18,8 @@
 #include "../IMMDeviceEnumeratorWrapper.h"
 #include "winapi-wrappers/implementations/IUnknownImpl.h"
 
-
-namespace rxtd::utils {
-	class MediaDeviceListNotificationClient : public IUnknownImpl<IMMNotificationClient> {
+namespace rxtd::audio_analyzer::wasapi_wrappers {
+	class MediaDeviceListNotificationClient : public common::winapi_wrappers::IUnknownImpl<IMMNotificationClient> {
 	public:
 		enum class DefaultDeviceChange {
 			eNONE,

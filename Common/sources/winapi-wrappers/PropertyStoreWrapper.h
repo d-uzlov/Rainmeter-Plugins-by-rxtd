@@ -12,7 +12,7 @@
 #include "GenericComWrapper.h"
 #include "propsys.h"
 
-namespace rxtd::utils {
+namespace rxtd::common::winapi_wrappers {
 	class PropertyStoreWrapper : public GenericComWrapper<IPropertyStore> {
 	public:
 		template<typename InitFunction>

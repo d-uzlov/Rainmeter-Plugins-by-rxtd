@@ -12,7 +12,7 @@
 #include <atomic>
 #include <Unknwn.h>
 
-namespace rxtd::utils {
+namespace rxtd::common::winapi_wrappers {
 	template<typename T>
 	class IUnknownImpl : NonMovableBase, virtual public T {
 		static_assert(std::is_base_of<IUnknown, T>::value, "T must extend IUnknown");

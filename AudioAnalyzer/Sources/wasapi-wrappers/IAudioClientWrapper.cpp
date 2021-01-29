@@ -14,7 +14,7 @@
 #include "winapi-wrappers/ComException.h"
 #include "winapi-wrappers/GenericCoTaskMemWrapper.h"
 
-using namespace utils;
+using namespace ::rxtd::audio_analyzer::wasapi_wrappers;
 
 IAudioCaptureClientWrapper IAudioClientWrapper::openCapture(double bufferSizeSec) {
 	// Documentation for IAudioClient::Initialize says
@@ -41,7 +41,7 @@ IAudioCaptureClientWrapper IAudioClientWrapper::openCapture(double bufferSizeSec
 	// So I don't do anything to specifically call this function from STA
 
 	constexpr double _100nsUnitsIn1sec = 1000'000'0;
-	const index bufferSize100nsUnits = MyMath::roundTo<index>(bufferSizeSec * _100nsUnitsIn1sec);
+	const index bufferSize100nsUnits = utils::MyMath::roundTo<index>(bufferSizeSec * _100nsUnitsIn1sec);
 
 	uint32_t flags = 0;
 	if (type == MediaDeviceType::eOUTPUT) {
@@ -75,7 +75,7 @@ IAudioCaptureClientWrapper IAudioClientWrapper::openCapture(double bufferSizeSec
 	return result;
 }
 
-GenericComWrapper<IAudioRenderClient> IAudioClientWrapper::openRender() noexcept(false) {
+common::winapi_wrappers::GenericComWrapper<IAudioRenderClient> IAudioClientWrapper::openRender() noexcept(false) {
 	throwOnError(
 		ref().Initialize(
 			AUDCLNT_SHAREMODE_SHARED,
@@ -102,7 +102,7 @@ GenericComWrapper<IAudioRenderClient> IAudioClientWrapper::openRender() noexcept
 }
 
 void IAudioClientWrapper::testExclusive() {
-	auto client3 = utils::GenericComWrapper<IAudioClient3>{
+	auto client3 = GenericComWrapper<IAudioClient3>{
 		[&](auto ptr) {
 			auto code = ref().QueryInterface<IAudioClient3>(ptr);
 			return S_OK == code;

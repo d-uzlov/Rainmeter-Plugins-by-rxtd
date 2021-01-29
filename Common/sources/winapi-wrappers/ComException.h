@@ -9,20 +9,20 @@
 
 #pragma once
 
-#include <winerror.h>
+#include "WinApiReturnCode.h"
 
-namespace rxtd::utils {
+namespace rxtd::common::winapi_wrappers {
 	class ComException : public std::runtime_error {
-		HRESULT code;
+		WinApiReturnCode code;
 		sview source;
 
 	public:
-		ComException(HRESULT code, sview source) :
+		ComException(index code, sview source) :
 			std::runtime_error("WinAPI COM call failed"),
 			code(code), source(source) { }
 
 		[[nodiscard]]
-		HRESULT getCode() const {
+		WinApiReturnCode getCode() const {
 			return code;
 		}
 

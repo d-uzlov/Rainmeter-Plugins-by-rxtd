@@ -10,7 +10,7 @@
 #pragma once
 #include "sound-processing/Channel.h"
 
-namespace rxtd::utils {
+namespace rxtd::audio_analyzer::wasapi_wrappers {
 	struct WaveFormat {
 		index samplesPerSec = 0;
 		index channelsCount = 0;

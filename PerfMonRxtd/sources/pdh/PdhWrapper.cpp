@@ -23,7 +23,7 @@ bool PdhWrapper::init(Logger logger) {
 
 	PDH_STATUS code = PdhOpenQueryW(nullptr, 0, &query.handle);
 	if (code != ERROR_SUCCESS) {
-		log.error(L"PdhOpenQueryW() failed with code {f:pdh}", code);
+		log.error(L"PdhOpenQueryW() failed with code {}", PdhReturnCode(code));
 		return false;
 	}
 	return true;
@@ -38,7 +38,7 @@ bool PdhWrapper::setCounters(sview objectName, const utils::OptionList& counterL
 			auto counterHandle = addCounter(objectName, counterOption.asString());
 			counterHandlers.emplace_back(counterHandle);
 		} catch (PdhException& e) {
-			switch (uint32_t(e.getCode())) {
+			switch (uint32_t(e.getCode().code)) {
 			case uint32_t(PDH_CSTATUS_NO_OBJECT):
 				log.error(L"ObjectName '{}' does not exist", objectName);
 				break;
@@ -46,7 +46,7 @@ bool PdhWrapper::setCounters(sview objectName, const utils::OptionList& counterL
 				log.error(L"Counter '{}/{}' does not exist", objectName, counterOption.asString());
 				break;
 			default:
-				log.error(L"Unknown error with counter '{}/{}': code {f:pdh}, caused by {}", objectName, counterOption.asString(), e.getCode(), e.getCause());
+				log.error(L"Unknown error with counter '{}/{}': code {}, caused by {}", objectName, counterOption.asString(), e.getCode(), e.getCause());
 				break;
 			}
 			return false;
@@ -59,7 +59,7 @@ bool PdhWrapper::setCounters(sview objectName, const utils::OptionList& counterL
 			auto counterHandle = addCounter(objectName, L"ID Process");
 			counterHandlers.emplace_back(counterHandle);
 		} catch (PdhException& e) {
-			log.error(L"Can't add 'Process/ID Process' counter to query: code {f:pdh}", e.getCode());
+			log.error(L"Can't add 'Process/ID Process' counter to query: code {}", e.getCode());
 			return false;
 		}
 	} else if (objectName == L"Thread") {
@@ -67,14 +67,14 @@ bool PdhWrapper::setCounters(sview objectName, const utils::OptionList& counterL
 			auto counterHandle = addCounter(objectName, L"ID Thread");
 			counterHandlers.emplace_back(counterHandle);
 		} catch (PdhException& e) {
-			log.error(L"Can't add 'Thread/ID Thread' counter to query: code {f:pdh}", e.getCode());
+			log.error(L"Can't add 'Thread/ID Thread' counter to query: code {}", e.getCode());
 			return false;
 		}
 	} else if ((objectName == L"GPU Engine" || objectName == L"GPU Process Memory") && needFetchExtraIDs) {
 		try {
 			processIdCounter = addCounter(L"Process", L"ID Process");
 		} catch (PdhException& e) {
-			log.error(L"Can't add 'Process/ID Process' counter to query: code {f:pdh}", e.getCode());
+			log.error(L"Can't add 'Process/ID Process' counter to query: code {}", e.getCode());
 			return false;
 		}
 	} else { }
@@ -168,7 +168,7 @@ bool PdhWrapper::fetchSnapshot(array_span<PDH_HCOUNTER> counters, PdhSnapshot& s
 	// so buffer size should also be the same for all counters
 	PDH_STATUS code = PdhGetRawCounterArrayW(counters[0], &bufferSize, &count, nullptr);
 	if (code != PDH_STATUS(PDH_MORE_DATA)) {
-		log.error(L"PdhGetRawCounterArray(size=0) failed, status {f:pdh}", code);
+		log.error(L"PdhGetRawCounterArray(size=0) failed, status {}", PdhReturnCode(code));
 		return false;
 	}
 
@@ -179,7 +179,7 @@ bool PdhWrapper::fetchSnapshot(array_span<PDH_HCOUNTER> counters, PdhSnapshot& s
 		DWORD dwBufferSize2 = bufferSize;
 		code = PdhGetRawCounterArrayW(counters[i], &dwBufferSize2, &count, snapshot.getCounterPointer(i));
 		if (code != PDH_STATUS(ERROR_SUCCESS)) {
-			log.error(L"PdhGetRawCounterArray failed, status {f:pdh}", code);
+			log.error(L"PdhGetRawCounterArray failed, status {}", PdhReturnCode(code));
 			return false;
 		}
 		if (dwBufferSize2 != bufferSize) {

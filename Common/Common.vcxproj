@@ -164,7 +164,7 @@
     <ClCompile Include="sources\rainmeter\Rainmeter.cpp" />
     <ClCompile Include="sources\StringUtils.cpp" />
     <ClCompile Include="sources\TypeHolder.cpp" />
-    <ClCompile Include="sources\winapi-wrappers\BufferPrinterExtensions.cpp" />
+    <ClCompile Include="sources\winapi-wrappers\WinApiReturnCode.cpp" />
     <ClCompile Include="sources\winapi-wrappers\FileWrapper.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -195,13 +195,13 @@
     <ClInclude Include="sources\my-windows.h" />
     <ClInclude Include="sources\StringUtils.h" />
     <ClInclude Include="sources\TypeHolder.h" />
-    <ClInclude Include="sources\winapi-wrappers\BufferPrinterExtensions.h" />
     <ClInclude Include="sources\winapi-wrappers\ComException.h" />
     <ClInclude Include="sources\winapi-wrappers\FileWrapper.h" />
     <ClInclude Include="sources\winapi-wrappers\GenericComWrapper.h" />
     <ClInclude Include="sources\winapi-wrappers\GenericCoTaskMemWrapper.h" />
     <ClInclude Include="sources\winapi-wrappers\implementations\IUnknownImpl.h" />
     <ClInclude Include="sources\winapi-wrappers\PropertyStoreWrapper.h" />
+    <ClInclude Include="sources\winapi-wrappers\WinApiReturnCode.h" />
     <ClInclude Include="typedefs.h" />
     <ClInclude Include="undef.h" />
   </ItemGroup>

@@ -14,8 +14,8 @@
 #include "Vector2D.h"
 #include "winapi-wrappers/GenericComWrapper.h"
 
-namespace rxtd::utils {
-	class IAudioCaptureClientWrapper : public GenericComWrapper<IAudioCaptureClient> {
+namespace rxtd::audio_analyzer::wasapi_wrappers {
+	class IAudioCaptureClientWrapper : public common::winapi_wrappers::GenericComWrapper<IAudioCaptureClient> {
 	public:
 		enum class Type {
 			eInt16,
@@ -26,7 +26,7 @@ namespace rxtd::utils {
 		Type type{};
 		index channelsCount{};
 
-		Vector2D<float> buffer;
+		utils::Vector2D<float> buffer;
 
 	public:
 		IAudioCaptureClientWrapper() = default;
@@ -42,7 +42,7 @@ namespace rxtd::utils {
 		HRESULT readBuffer();
 
 		[[nodiscard]]
-		array2d_view<float> getBuffer() const {
+		utils::array2d_view<float> getBuffer() const {
 			return buffer;
 		}
 

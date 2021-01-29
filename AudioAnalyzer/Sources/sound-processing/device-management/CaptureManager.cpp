@@ -11,6 +11,8 @@
 
 using namespace audio_analyzer;
 
+using ComException = ::rxtd::common::winapi_wrappers::ComException;
+
 void CaptureManager::setBufferSizeInSec(double value) {
 	bufferSizeSec = std::clamp(value, 0.0, 1.0);
 }
@@ -89,17 +91,17 @@ CaptureManager::State CaptureManager::setSourceAndGetState(const SourceDesc& des
 
 		try {
 			sessionEventsWrapper.listenTo(audioClient, true);
-		} catch (utils::ComException& e) {
-			logger.error(L"Can't create session listener: error {f:win}, caused by {}", e.getCode(), e.getSource());
+		} catch (ComException& e) {
+			logger.error(L"Can't create session listener: error {}, caused by {}", e.getCode(), e.getSource());
 		}
 
 		audioClient.throwOnError(audioClient.ref().Start(), L"IAudioClient.Start()");
 
-	} catch (utils::FormatException&) {
+	} catch (wasapi_wrappers::FormatException&) {
 		logger.error(L"Can't read device format");
 		return State::eDEVICE_CONNECTION_ERROR;
-	} catch (utils::ComException& e) {
-		if (e.getCode() == AUDCLNT_E_DEVICE_IN_USE) {
+	} catch (ComException& e) {
+		if (e.getCode().code == AUDCLNT_E_DEVICE_IN_USE) {
 			// #createExclusiveStreamListener can change state,
 			// so I set state beforehand
 			// and return whatever #createExclusiveStreamListener has set the state to
@@ -108,7 +110,7 @@ CaptureManager::State CaptureManager::setSourceAndGetState(const SourceDesc& des
 			return snapshot.state;
 		}
 
-		logger.error(L"Can't connect to device: error {f:win}, caused by {}", e.getCode(), e.getSource());
+		logger.error(L"Can't connect to device: error {}, caused by {}", e.getCode(), e.getSource());
 		return State::eDEVICE_CONNECTION_ERROR;
 	}
 
@@ -124,11 +126,11 @@ CaptureManager::State CaptureManager::setSourceAndGetState(const SourceDesc& des
 		renderClient = audioClient.openRender();
 		audioClient.throwOnError(audioClient.ref().Start(), L"IAudioClient.Start()");
 
-	} catch (utils::FormatException&) {
+	} catch (wasapi_wrappers::FormatException&) {
 		logger.error(L"Can't create silent renderer: format error");
 		return State::eDEVICE_CONNECTION_ERROR;
-	} catch (utils::ComException& e) {
-		if (e.getCode() == AUDCLNT_E_DEVICE_IN_USE) {
+	} catch (ComException& e) {
+		if (e.getCode().code == AUDCLNT_E_DEVICE_IN_USE) {
 			// #createExclusiveStreamListener can change state,
 			// so I set state beforehand
 			// and return whatever #createExclusiveStreamListener has set the state to
@@ -137,7 +139,7 @@ CaptureManager::State CaptureManager::setSourceAndGetState(const SourceDesc& des
 			return snapshot.state;
 		}
 
-		logger.error(L"Can't create silent renderer: error {f:win}, caused by {}", e.getCode(), e.getSource());
+		logger.error(L"Can't create silent renderer: error {}, caused by {}", e.getCode(), e.getSource());
 	}
 
 	return State::eOK;
@@ -171,7 +173,7 @@ bool CaptureManager::capture() {
 
 		const auto changes = sessionEventsWrapper.grabChanges();
 		switch (changes.disconnectionReason) {
-			using DR = utils::AudioSessionEventsImpl::DisconnectionReason;
+			using DR = wasapi_wrappers::AudioSessionEventsImpl::DisconnectionReason;
 		case DR::eNONE:
 			break;
 		case DR::eUNAVAILABLE:
@@ -197,7 +199,7 @@ bool CaptureManager::capture() {
 void CaptureManager::tryToRecoverFromExclusive() {
 	const auto changes = sessionEventsWrapper.grabChanges();
 	switch (changes.disconnectionReason) {
-		using DR = utils::AudioSessionEventsImpl::DisconnectionReason;
+		using DR = wasapi_wrappers::AudioSessionEventsImpl::DisconnectionReason;
 	case DR::eNONE:
 		break;
 	case DR::eUNAVAILABLE:
@@ -224,7 +226,7 @@ void CaptureManager::tryToRecoverFromExclusive() {
 			return;
 		}
 
-		utils::GenericComWrapper<IAudioSessionControl2> c2{
+		GenericComWrapper<IAudioSessionControl2> c2{
 			[&](auto ptr) {
 				auto res = activeSessions[0].ref().QueryInterface<IAudioSessionControl2>(ptr);
 				return res == S_OK;
@@ -250,15 +252,15 @@ void CaptureManager::tryToRecoverFromExclusive() {
 
 		// process id changed, so previous exclusive stream must have been closed by now
 		snapshot.state = State::eRECONNECT_NEEDED;
-	} catch (utils::ComException&) { }
+	} catch (ComException&) { }
 }
 
-std::optional<utils::MediaDeviceWrapper> CaptureManager::getDevice(const SourceDesc& desc) {
+std::optional<wasapi_wrappers::MediaDeviceWrapper> CaptureManager::getDevice(const SourceDesc& desc) {
 	switch (desc.type) {
 	case SourceDesc::Type::eDEFAULT_INPUT:
-		return enumeratorWrapper.getDefaultDevice(utils::MediaDeviceType::eINPUT);
+		return enumeratorWrapper.getDefaultDevice(wasapi_wrappers::MediaDeviceType::eINPUT);
 	case SourceDesc::Type::eDEFAULT_OUTPUT:
-		return enumeratorWrapper.getDefaultDevice(utils::MediaDeviceType::eOUTPUT);
+		return enumeratorWrapper.getDefaultDevice(wasapi_wrappers::MediaDeviceType::eOUTPUT);
 	case SourceDesc::Type::eID:
 		return enumeratorWrapper.getDeviceByID(desc.id);
 	}
@@ -266,7 +268,7 @@ std::optional<utils::MediaDeviceWrapper> CaptureManager::getDevice(const SourceD
 	return {};
 }
 
-string CaptureManager::makeFormatString(utils::WaveFormat waveFormat) {
+string CaptureManager::makeFormatString(wasapi_wrappers::WaveFormat waveFormat) {
 	common::buffer_printer::BufferPrinter bp;
 
 	if (waveFormat.channelLayout.getName().empty()) {
@@ -283,7 +285,7 @@ string CaptureManager::makeFormatString(utils::WaveFormat waveFormat) {
 void CaptureManager::createExclusiveStreamListener() {
 	sessionEventsWrapper.destruct();
 
-	utils::GenericComWrapper<IAudioSessionControl> session;
+	GenericComWrapper<IAudioSessionControl> session;
 	try {
 		auto activeSessions = getActiveSessions();
 
@@ -302,8 +304,8 @@ void CaptureManager::createExclusiveStreamListener() {
 		}
 
 		session = std::move(activeSessions.front());
-	} catch (utils::ComException& e) {
-		logger.error(L"Can't get session list: error {f:win}, caused by {}", e.getCode(), e.getSource());
+	} catch (ComException& e) {
+		logger.error(L"Can't get session list: error {}, caused by {}", e.getCode(), e.getSource());
 		return;
 	}
 
@@ -315,11 +317,11 @@ void CaptureManager::createExclusiveStreamListener() {
 	try {
 		auto throwOnError = [](HRESULT code) {
 			if (code != S_OK) {
-				throw utils::ComException{ code, {} };
+				throw ComException{ code, {} };
 			}
 		};
 
-		utils::GenericComWrapper<IAudioSessionControl2> c2{
+		GenericComWrapper<IAudioSessionControl2> c2{
 			[&](auto ptr) {
 				throwOnError(session.ref().QueryInterface(ptr));
 				return true;
@@ -329,8 +331,8 @@ void CaptureManager::createExclusiveStreamListener() {
 
 		try {
 			sessionEventsWrapper.listenTo(std::move(session), false);
-		} catch (utils::ComException& e) {
-			logger.error(L"Can't create session listener for exclusive state monitoring: error {f:win}, caused by {}", e.getCode(), e.getSource());
+		} catch (ComException& e) {
+			logger.error(L"Can't create session listener for exclusive state monitoring: error {}, caused by {}", e.getCode(), e.getSource());
 		}
 
 
@@ -357,7 +359,7 @@ void CaptureManager::createExclusiveStreamListener() {
 				processExe = processNameBuffer;
 			}
 		}
-	} catch (utils::ComException&) { }
+	} catch (ComException&) { }
 
 	common::buffer_printer::BufferPrinter bp;
 
@@ -385,12 +387,12 @@ void CaptureManager::createExclusiveStreamListener() {
 	logger.notice(L"{}", bp.getBufferView());
 }
 
-std::vector<utils::GenericComWrapper<IAudioSessionControl>> CaptureManager::getActiveSessions() noexcept(false) {
-	std::vector<utils::GenericComWrapper<IAudioSessionControl>> result;
+std::vector<common::winapi_wrappers::GenericComWrapper<IAudioSessionControl>> CaptureManager::getActiveSessions() noexcept(false) {
+	std::vector<GenericComWrapper<IAudioSessionControl>> result;
 
 	auto sessionManager = audioDeviceHandle.activateFor<IAudioSessionManager2>();
 
-	auto sessionEnumerator = utils::GenericComWrapper<IAudioSessionEnumerator>{
+	auto sessionEnumerator = GenericComWrapper<IAudioSessionEnumerator>{
 		[&](auto ptr) {
 			auto res = sessionManager.ref().GetSessionEnumerator(ptr);
 			return res == S_OK;
@@ -407,7 +409,7 @@ std::vector<utils::GenericComWrapper<IAudioSessionControl>> CaptureManager::getA
 	}
 
 	for (int i = 0; i < sessionCount; ++i) {
-		auto sessionControl = utils::GenericComWrapper<IAudioSessionControl>{
+		auto sessionControl = GenericComWrapper<IAudioSessionControl>{
 			[&](auto ptr) {
 				res = sessionEnumerator.ref().GetSession(i, ptr);
 				return res == S_OK;

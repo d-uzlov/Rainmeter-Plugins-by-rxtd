@@ -7,11 +7,15 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include "BufferPrinterExtensions.h"
+#include "WinApiReturnCode.h"
+
+#include <iomanip>
 
 #include "Audioclient.h"
 
-std::optional<sview> utils::formatWinApiCode(index value) {
+using namespace ::rxtd::common::winapi_wrappers;
+
+static std::optional<sview> formatWinApiCode(index value) {
 	switch (uint32_t(value)) {
 	case uint32_t(E_POINTER): return L"E_POINTER";
 	case uint32_t(E_OUTOFMEMORY): return L"E_OUTOFMEMORY";
@@ -56,5 +60,16 @@ std::optional<sview> utils::formatWinApiCode(index value) {
 	case uint32_t(AUDCLNT_E_HEADTRACKING_UNSUPPORTED): return L"AUDCLNT_E_HEADTRACKING_UNSUPPORTED";
 
 	default: return {};
+	}
+}
+
+void rxtd::common::winapi_wrappers::writeType(std::wostream& stream, const WinApiReturnCode& code, sview options) {
+	auto viewOpt = formatWinApiCode(code.code);
+	if (viewOpt.has_value()) {
+		stream << viewOpt.value();
+	} else {
+		stream << L"0x";
+		stream << std::setfill(L'0') << std::setw(sizeof(code.code) * 2) << std::hex;
+		stream << code.code;
 	}
 }

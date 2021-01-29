@@ -21,10 +21,10 @@
 // 
 // Global std::atomic<int32_t> counter keeps count of all instances of InstanceKeeper
 // When there were 0 instances and an instance was created, InstanceKeeper#initThread() is called
-//		It created a WinAPI thread that sleeps on global MessageQueue queue
+//		It creates a WinAPI thread that sleeps on global MessageQueue queue
 //		This thread holds a handle to dll, which doesn't let the dll be unloaded from memory
-// When someone pushes a message to queue, that thread reads and executes the message
-// When global counter was not 0 and not it zero, it means that all of the instances of InstanceKeeper is destroyed
+// When someone pushes a message into queue, that thread reads and executes the message
+// When global counter reaches zero, it means that all of the instances of InstanceKeeper are destroyed
 // so we can kill the thread.
 // When thread receives kill message, it calls FreeLibraryAndExitThread, thus library can now be unloaded from memory.
 //
@@ -63,24 +63,18 @@ DWORD WINAPI asyncRun(void* param) {
 		while (true) {
 			{
 				auto lock = queue.getLock();
+				while (queue.buffer.empty()) {
+					queue.sleepVariable.wait(lock);
+				}
 				std::swap(localQueueBuffer, queue.buffer);
 			}
 
-			if (!localQueueBuffer.empty()) {
-				for (auto& mes : localQueueBuffer) {
-					if (mes.action != nullptr) {
-						mes.action(mes);
-					}
-				}
-				localQueueBuffer.clear();
-			}
-
-			{
-				auto lock = queue.getLock();
-				if (queue.buffer.empty()) {
-					queue.sleepVariable.wait(lock);
+			for (auto& mes : localQueueBuffer) {
+				if (mes.action != nullptr) {
+					mes.action(mes);
 				}
 			}
+			localQueueBuffer.clear();
 		}
 	} catch (...) {}
 

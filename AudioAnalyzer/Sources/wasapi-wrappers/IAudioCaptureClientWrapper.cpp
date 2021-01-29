@@ -11,7 +11,7 @@
 
 #include <type_traits>
 
-using namespace utils;
+using namespace ::rxtd::audio_analyzer::wasapi_wrappers;
 
 static_assert(std::is_same<BYTE, uint8_t>::value);
 static_assert(std::is_same<UINT32, uint32_t>::value);
