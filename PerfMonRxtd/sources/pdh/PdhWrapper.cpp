@@ -18,7 +18,7 @@
 
 using namespace perfmon::pdh;
 
-bool PdhWrapper::init(utils::Rainmeter::Logger logger) {
+bool PdhWrapper::init(Logger logger) {
 	log = std::move(logger);
 
 	PDH_STATUS code = PdhOpenQueryW(nullptr, 0, &query.handle);
@@ -92,7 +92,7 @@ PDH_HCOUNTER PdhWrapper::addCounter(sview objectName, sview counterName) {
 	//   counterPath = L"\\System(*)\Processes" returns a single instance with an instance name of "*"
 	//   counterPath = L"\\System\Processes"    returns a single instance with an instance name of ""
 
-	utils::BufferPrinter bp;
+	common::buffer_printer::BufferPrinter bp;
 	bp.print(L"\\{}(*)\\{}", objectName, counterName);
 
 	PDH_HCOUNTER counterHandle{};

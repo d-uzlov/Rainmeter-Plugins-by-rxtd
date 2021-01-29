@@ -14,7 +14,8 @@
 
 namespace rxtd::perfmon {
 	class ExpressionResolver {
-	private:
+		using Logger = ::rxtd::common::rainmeter::Logger;
+		
 		enum class TotalSource {
 			eRAW_COUNTER,
 			eFORMATTED_COUNTER,
@@ -22,7 +23,7 @@ namespace rxtd::perfmon {
 			eROLLUP_EXPRESSION,
 		};
 
-		utils::Rainmeter::Logger& log;
+		Logger log;
 
 		const InstanceManager& instanceManager;
 
@@ -42,7 +43,7 @@ namespace rxtd::perfmon {
 		mutable std::map<CacheEntry, std::optional<double>> totalsCache;
 
 	public:
-		ExpressionResolver(utils::Rainmeter::Logger& log, const InstanceManager& instanceManager);
+		ExpressionResolver(Logger log, const InstanceManager& instanceManager);
 
 		index getExpressionsCount() const;
 
@@ -50,7 +51,7 @@ namespace rxtd::perfmon {
 
 		void resetCaches();
 
-		double getValue(const Reference& ref, const InstanceInfo* instance, utils::Rainmeter::Logger& logger) const;
+		double getValue(const Reference& ref, const InstanceInfo* instance, Logger& logger) const;
 
 		void setExpressions(utils::OptionList expressionsList, utils::OptionList rollupExpressionsList);
 

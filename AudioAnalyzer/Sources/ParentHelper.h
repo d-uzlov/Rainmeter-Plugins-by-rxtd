@@ -10,7 +10,7 @@
 #pragma once
 
 #include "DataWithLock.h"
-#include "RainmeterWrappers.h"
+#include "rainmeter/Rainmeter.h"
 #include "sound-processing/ProcessingManager.h"
 #include "sound-processing/device-management/CaptureManager.h"
 #include "sound-processing/ProcessingOrchestrator.h"
@@ -19,6 +19,9 @@
 namespace rxtd::audio_analyzer {
 	class ParentHelper : MovableOnlyBase {
 	public:
+		using Rainmeter = ::rxtd::common::rainmeter::Rainmeter;
+		using Logger = ::rxtd::common::rainmeter::Logger;
+
 		struct SnapshotStruct {
 			struct LockableData : DataWithLock {
 				ProcessingOrchestrator::Snapshot _;
@@ -81,8 +84,8 @@ namespace rxtd::audio_analyzer {
 		} threadSleepFields;
 
 		struct MainFields {
-			utils::Rainmeter rain;
-			utils::Rainmeter::Logger logger;
+			Rainmeter rain;
+			Logger logger;
 			CaptureManager captureManager;
 			ProcessingOrchestrator orchestrator;
 
@@ -114,8 +117,8 @@ namespace rxtd::audio_analyzer {
 
 		// throws std::exception on fatal error
 		void init(
-			utils::Rainmeter _rain,
-			utils::Rainmeter::Logger _logger,
+			Rainmeter _rain,
+			Logger _logger,
 			const utils::OptionMap& threadingMap,
 			index _legacyNumber
 		);

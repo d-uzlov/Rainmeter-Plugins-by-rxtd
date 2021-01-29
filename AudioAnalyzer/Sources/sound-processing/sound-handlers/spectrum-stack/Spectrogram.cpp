@@ -298,7 +298,7 @@ void Spectrogram::InputStripMaker::fillStripMulticolor(
 bool Spectrogram::getProp(
 	const Snapshot& snapshot,
 	isview prop,
-	utils::BufferPrinter& printer,
+	BufferPrinter& printer,
 	const ExternCallContext& context
 ) {
 	if (prop == L"file") {

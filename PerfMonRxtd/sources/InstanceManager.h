@@ -31,6 +31,8 @@ namespace rxtd::perfmon {
 
 	class InstanceManager {
 	public:
+		using Logger = ::rxtd::common::rainmeter::Logger;
+		
 		enum class SortBy {
 			eNONE,
 			eINSTANCE_NAME,
@@ -64,7 +66,7 @@ namespace rxtd::perfmon {
 		};
 
 	private:
-		utils::Rainmeter::Logger& log;
+		Logger log;
 
 		const pdh::PdhWrapper& pdhWrapper;
 
@@ -91,7 +93,7 @@ namespace rxtd::perfmon {
 		mutable CacheType nameCacheDiscarded;
 
 	public:
-		InstanceManager(utils::Rainmeter::Logger& log, const pdh::PdhWrapper& phWrapper);
+		InstanceManager(Logger log, const pdh::PdhWrapper& phWrapper);
 
 		void setOptions(Options value) {
 			options = value;

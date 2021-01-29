@@ -9,12 +9,15 @@
 
 #pragma once
 #include <array>
-#include "RainmeterWrappers.h"
+#include "rainmeter/Logger.h"
 #include "LinearInterpolator.h"
+#include "option-parser/OptionList.h"
 
 namespace rxtd::audio_utils {
 	class CustomizableValueTransformer {
 	public:
+		using Logger = ::rxtd::common::rainmeter::Logger;
+
 		enum class TransformType {
 			eDB,
 			eMAP,
@@ -72,11 +75,11 @@ namespace rxtd::audio_utils {
 		void applyToArray(array_view<float> source, array_span<float> dest);
 
 		[[nodiscard]]
-		static CustomizableValueTransformer parse(sview transformDescription, utils::Rainmeter::Logger& cl);
+		static CustomizableValueTransformer parse(sview transformDescription, Logger& cl);
 
 	private:
 		[[nodiscard]]
 		static std::optional<TransformationInfo>
-		parseTransformation(utils::OptionList list, utils::Rainmeter::Logger& cl);
+		parseTransformation(utils::OptionList list, Logger& cl);
 	};
 }

@@ -8,23 +8,24 @@
  */
 
 #pragma once
-#include "RainmeterWrappers.h"
+#include "rainmeter/Logger.h"
 
 namespace rxtd::audio_analyzer {
 	template<typename... CacheTypes>
 	class LogErrorHelper {
 	public:
+		using Logger = ::rxtd::common::rainmeter::Logger;
 		using KeyType = std::tuple<CacheTypes...>;
-		using LogFunctionType = void(*)(utils::Rainmeter::Logger& logger, CacheTypes ... args);
+		using LogFunctionType = void(*)(Logger& logger, CacheTypes ... args);
 
 	private:
-		mutable utils::Rainmeter::Logger logger;
+		mutable Logger logger;
 		LogFunctionType fun = nullptr;
 
 		mutable std::map<KeyType, bool> cache;
 
 	public:
-		void setLogger(utils::Rainmeter::Logger value) {
+		void setLogger(Logger value) {
 			logger = std::move(value);
 		}
 
@@ -51,12 +52,13 @@ namespace rxtd::audio_analyzer {
 	};
 
 	class NoArgLogErrorHelper {
-		mutable utils::Rainmeter::Logger logger;
+		using Logger = ::rxtd::common::rainmeter::Logger;
+		mutable Logger logger;
 
 		mutable std::map<string, bool> cache;
 
 	public:
-		void setLogger(utils::Rainmeter::Logger value) {
+		void setLogger(Logger value) {
 			logger = std::move(value);
 		}
 

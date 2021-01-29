@@ -11,10 +11,10 @@
 #include "StringUtils.h"
 
 LocalPluginLoader::LocalPluginLoader(void* rm) {
-	rain = utils::Rainmeter{ rm };
+	rain = common::rainmeter::Rainmeter{ rm };
 	logger = rain.createLogger();
 
-	string pluginPath = rain.readPath(L"PluginPath") % own();
+	string pluginPath = rain.transformPathToAbsolute(rain.read(L"PluginPath").asString()) % own();
 	if (pluginPath.empty()) {
 		logger.error(L"Plugin path must be specified");
 		return;

@@ -20,7 +20,7 @@ bool ParamParser::parse(index _legacyNumber, bool suppressLogger) {
 	anythingChanged = false;
 	legacyNumber = _legacyNumber;
 
-	auto logger = suppressLogger ? Logger::silent() : rain.createLogger();
+	auto logger = suppressLogger ? Logger::getSilent() : rain.createLogger();
 
 	auto defaultTargetRate = rain.read(L"TargetRate").asInt(44100);
 	if (defaultTargetRate < 0) {

@@ -12,7 +12,7 @@
 #include <functional>
 
 #include "AudioSessionEventsWrapper.h"
-#include "RainmeterWrappers.h"
+#include "rainmeter/Logger.h"
 #include "../ChannelMixer.h"
 #include "wasapi-wrappers/IAudioCaptureClientWrapper.h"
 #include "wasapi-wrappers/IMMDeviceEnumeratorWrapper.h"
@@ -22,6 +22,8 @@
 namespace rxtd::audio_analyzer {
 	class CaptureManager {
 	public:
+		using Logger = ::rxtd::common::rainmeter::Logger;
+		
 		struct SourceDesc {
 			enum class Type {
 				eDEFAULT_INPUT,
@@ -63,7 +65,7 @@ namespace rxtd::audio_analyzer {
 		};
 
 	private:
-		utils::Rainmeter::Logger logger;
+		Logger logger;
 		index legacyNumber = 0;
 		double bufferSizeSec = 0.0;
 
@@ -80,7 +82,7 @@ namespace rxtd::audio_analyzer {
 		index lastExclusiveProcessId = -1;
 
 	public:
-		void setLogger(utils::Rainmeter::Logger value) {
+		void setLogger(Logger value) {
 			logger = std::move(value);
 		}
 

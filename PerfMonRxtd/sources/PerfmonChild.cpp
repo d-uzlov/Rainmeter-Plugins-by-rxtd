@@ -12,7 +12,7 @@
 
 using namespace perfmon;
 
-PerfmonChild::PerfmonChild(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rain)) {
+PerfmonChild::PerfmonChild(Rainmeter&& _rain) : TypeHolder(std::move(_rain)) {
 	auto parentName = rain.read(L"Parent").asIString();
 	if (parentName.empty()) {
 		logger.error(L"Parent must be specified");

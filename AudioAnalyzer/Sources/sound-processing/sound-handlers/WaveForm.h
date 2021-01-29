@@ -104,7 +104,7 @@ namespace rxtd::audio_analyzer {
 		static bool getProp(
 			const Snapshot& snapshot,
 			isview prop,
-			utils::BufferPrinter& printer,
+			BufferPrinter& printer,
 			const ExternCallContext& context
 		);
 	};

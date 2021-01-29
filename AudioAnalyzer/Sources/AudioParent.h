@@ -36,7 +36,7 @@ namespace rxtd::audio_analyzer {
 			LogErrorHelper<istring> handlerDoesNotHaveProps;
 			LogErrorHelper<istring, istring> propNotFound;
 
-			void setLogger(utils::Rainmeter::Logger logger) {
+			void setLogger(Logger logger) {
 				generic.setLogger(logger);
 				sourceTypeIsNotRecognized.setLogger(logger);
 				unknownCommand.setLogger(logger);
@@ -91,7 +91,7 @@ namespace rxtd::audio_analyzer {
 		CleanersMap cleanersMap;
 
 	public:
-		explicit AudioParent(utils::Rainmeter&& rain);
+		explicit AudioParent(Rainmeter&& rain);
 
 	protected:
 		void vReload() override;

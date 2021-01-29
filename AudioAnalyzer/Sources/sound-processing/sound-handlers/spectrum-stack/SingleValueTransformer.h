@@ -9,7 +9,6 @@
 
 #pragma once
 #include "../SoundHandler.h"
-#include "RainmeterWrappers.h"
 #include "../../../audio-utils/CustomizableValueTransformer.h"
 #include "ResamplerProvider.h"
 

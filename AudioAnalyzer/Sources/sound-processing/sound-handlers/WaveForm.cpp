@@ -85,7 +85,7 @@ SoundHandler::ParseResult WaveForm::parseParams(
 
 	if (legacyNumber < 104) {
 		const auto gain = om.get(L"gain").asFloat(1.0);
-		utils::BufferPrinter printer;
+		BufferPrinter printer;
 		printer.print(L"map[from 0 : 1, to 0 : {}]", gain);
 		params.transformer = CVT::parse(printer.getBufferView(), cl);
 	} else {
@@ -203,7 +203,7 @@ void WaveForm::staticFinisher(const Snapshot& snapshot, const ExternCallContext&
 bool WaveForm::getProp(
 	const Snapshot& snapshot,
 	isview prop,
-	utils::BufferPrinter& printer,
+	BufferPrinter& printer,
 	const ExternCallContext& context
 ) {
 	if (prop == L"file") {

@@ -12,15 +12,16 @@
 #include <functional>
 
 #include "HandlerCacheHelper.h"
-#include "RainmeterWrappers.h"
+#include "rainmeter/Logger.h"
+#include "rainmeter/Rainmeter.h"
 #include "sound-processing/Channel.h"
 #include "sound-processing/sound-handlers/SoundHandler.h"
 #include "audio-utils/filter-utils/FilterCascadeParser.h"
 
 namespace rxtd::audio_analyzer {
 	class ParamParser {
-		using Logger = utils::Rainmeter::Logger;
-		using Rainmeter = utils::Rainmeter;
+		using Logger = ::rxtd::common::rainmeter::Logger;
+		using Rainmeter = ::rxtd::common::rainmeter::Rainmeter;
 
 	public:
 		struct HandlerPatchersInfo {

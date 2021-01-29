@@ -11,8 +11,9 @@
 #include <functional>
 #include "AbstractFilter.h"
 #include "FilterCascade.h"
-#include "RainmeterWrappers.h"
+#include "rainmeter/Logger.h"
 #include "../butterworth-lib/ButterworthWrapper.h"
+#include "option-parser/Option.h"
 
 namespace rxtd::audio_utils {
 	class FilterCascadeCreator {
@@ -43,20 +44,21 @@ namespace rxtd::audio_utils {
 
 	class FilterCascadeParser {
 	public:
+		using Logger = ::rxtd::common::rainmeter::Logger;
 		using FCF = FilterCascadeCreator::FilterCreationFunction;
 
 		[[nodiscard]]
-		static FilterCascadeCreator parse(const utils::Option& description, utils::Rainmeter::Logger& logger);
+		static FilterCascadeCreator parse(const utils::Option& description, Logger& logger);
 
 	private:
 		[[nodiscard]]
-		static FCF parseFilter(const utils::OptionList& description, utils::Rainmeter::Logger& logger);
+		static FCF parseFilter(const utils::OptionList& description, Logger& logger);
 
 		[[nodiscard]]
-		static FCF parseBQ(isview name, const utils::OptionMap& description, utils::Rainmeter::Logger& cl);
+		static FCF parseBQ(isview name, const utils::OptionMap& description, Logger& cl);
 
 		[[nodiscard]]
-		static FCF parseBW(isview name, const utils::OptionMap& description, utils::Rainmeter::Logger& cl);
+		static FCF parseBW(isview name, const utils::OptionMap& description, Logger& cl);
 
 		template<index size>
 		[[nodiscard]]

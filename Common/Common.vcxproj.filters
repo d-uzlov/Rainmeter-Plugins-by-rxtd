@@ -18,12 +18,12 @@
     <Filter Include="Source Files\winapi-wrappers\implementations">
       <UniqueIdentifier>{574a5653-cea6-48c5-831f-c229edf3cce4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\rainmeter">
+      <UniqueIdentifier>{3bc16923-f776-413a-816b-d9a0ad095f0a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\BufferPrinter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\RainmeterWrappers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="sources\StringUtils.cpp">
@@ -59,12 +59,15 @@
     <ClCompile Include="sources\winapi-wrappers\FileWrapper.cpp">
       <Filter>Source Files\winapi-wrappers</Filter>
     </ClCompile>
+    <ClCompile Include="sources\rainmeter\Rainmeter.cpp">
+      <Filter>Source Files\rainmeter</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rainmeter\InstanceKeeper.cpp">
+      <Filter>Source Files\rainmeter</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sources\BufferPrinter.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\RainmeterWrappers.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="sources\StringUtils.h">
@@ -156,6 +159,21 @@
     </ClInclude>
     <ClInclude Include="sources\winapi-wrappers\ComException.h">
       <Filter>Source Files\winapi-wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rainmeter\Logger.h">
+      <Filter>Source Files\rainmeter</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rainmeter\Rainmeter.h">
+      <Filter>Source Files\rainmeter</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rainmeter\DataHandle.h">
+      <Filter>Source Files\rainmeter</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rainmeter\SkinHandle.h">
+      <Filter>Source Files\rainmeter</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rainmeter\InstanceKeeper.h">
+      <Filter>Source Files\rainmeter</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

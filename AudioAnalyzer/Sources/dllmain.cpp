@@ -14,16 +14,16 @@
 #include "TypeHolder.h"
 #include "AudioParent.h"
 #include "AudioChild.h"
-#include "RainmeterWrappers.h"
+#include "rainmeter/Rainmeter.h"
 #include "winapi-wrappers/BufferPrinterExtensions.h"
 
 static_assert(std::is_same<WCHAR, wchar_t>::value);
 static_assert(std::is_same<LPCWSTR, const wchar_t*>::value);
 
 PLUGIN_EXPORT void Initialize(void** data, void* rm) {
-	utils::registerFormattingFunction(L"f:win", utils::formatWinApiCode);
+	::rxtd::common::buffer_printer::registerFormattingFunction(L"f:win", utils::formatWinApiCode);
 
-	utils::Rainmeter rain(rm);
+	::rxtd::common::rainmeter::Rainmeter rain(rm);
 
 	const auto typeString = rain.read(L"Type").asIString();
 	try {

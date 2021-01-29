@@ -84,7 +84,7 @@ namespace rxtd::perfmon {
 		ExpressionResolver expressionResolver{ logger, instanceManager };
 
 	public:
-		explicit PerfmonParent(utils::Rainmeter&& _rain);
+		explicit PerfmonParent(Rainmeter&& _rain);
 
 	protected:
 		void vReload() override;
@@ -98,7 +98,7 @@ namespace rxtd::perfmon {
 			const Reference& ref,
 			index sortedIndex,
 			ResultString stringType,
-			utils::Rainmeter::Logger& logger,
+			Logger& logger,
 			string& str
 		) const {
 			if (!instanceManager.canGetRaw() || ref.type == ReferenceType::COUNTER_FORMATTED && !instanceManager.canGetFormatted()) {

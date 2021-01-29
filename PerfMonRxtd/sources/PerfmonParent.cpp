@@ -16,7 +16,7 @@
 
 using namespace perfmon;
 
-PerfmonParent::PerfmonParent(utils::Rainmeter&& _rain) : ParentBase(std::move(_rain)) {
+PerfmonParent::PerfmonParent(Rainmeter&& _rain) : ParentBase(std::move(_rain)) {
 	setUseResultString(true);
 
 	bool success = pdhWrapper.init(logger);

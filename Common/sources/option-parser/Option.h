@@ -26,7 +26,7 @@ namespace rxtd::utils {
 
 		explicit Option(isview view) : Option(view % csView()) { }
 
-		explicit Option(wchar_t* view) : Option(sview{ view }) {
+		explicit Option(const wchar_t* view) : Option(sview{ view }) {
 			own();
 		}
 

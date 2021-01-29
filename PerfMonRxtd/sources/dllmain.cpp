@@ -16,10 +16,10 @@
 #include "winapi-wrappers/BufferPrinterExtensions.h"
 
 PLUGIN_EXPORT void Initialize(void** data, void* rm) {
-	utils::registerFormattingFunction(L"f:pdh", perfmon::pdh::formatPdhCode);
-	utils::registerFormattingFunction(L"f:win", utils::formatWinApiCode);
+	::rxtd::common::buffer_printer::registerFormattingFunction(L"f:pdh", perfmon::pdh::formatPdhCode);
+	::rxtd::common::buffer_printer::registerFormattingFunction(L"f:win", utils::formatWinApiCode);
 
-	utils::Rainmeter rain(rm);
+	::rxtd::common::rainmeter::Rainmeter rain(rm);
 
 	const auto typeString = rain.read(L"Type").asIString();
 	try {

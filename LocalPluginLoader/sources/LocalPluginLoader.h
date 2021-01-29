@@ -10,12 +10,11 @@
 #pragma once
 
 #include <my-windows.h>
-#include "RainmeterWrappers.h"
+#include "rainmeter/Rainmeter.h"
 
-class LocalPluginLoader {
-	utils::Rainmeter::InstanceKeeper instanceKeeper;
-	utils::Rainmeter rain;
-	utils::Rainmeter::Logger logger;
+class LocalPluginLoader : NonMovableBase {
+	common::rainmeter::Rainmeter rain;
+	common::rainmeter::Logger logger;
 	HMODULE hLib = {};
 	void* pluginData = nullptr;
 
@@ -27,12 +26,7 @@ class LocalPluginLoader {
 public:
 	LocalPluginLoader(void* rm);
 	~LocalPluginLoader();
-
-	LocalPluginLoader(const LocalPluginLoader& other) = delete;
-	LocalPluginLoader(LocalPluginLoader&& other) noexcept = delete;
-	LocalPluginLoader& operator=(const LocalPluginLoader& other) = delete;
-	LocalPluginLoader& operator=(LocalPluginLoader&& other) noexcept = delete;
-
+	
 	void reload(double* maxValue, void* rm) const;
 	double update() const;
 	const wchar_t* getStringValue() const;

@@ -13,7 +13,7 @@
 
 using namespace audio_analyzer;
 
-AudioParent::AudioParent(utils::Rainmeter&& _rain) :
+AudioParent::AudioParent(Rainmeter&& _rain) :
 	ParentBase(std::move(_rain)) {
 	setUseResultString(false);
 	logHelpers.setLogger(logger);
@@ -375,9 +375,10 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 
 			const auto ind = map.get(L"index").asInt(0);
 
+			common::buffer_printer::BufferPrinter bp;
 			const auto value = getValue(procName, handlerName, channelOpt.value(), ind);
-			logger.printer.print(value);
-			resolveBufferString = logger.printer.getBufferView();
+			bp.print(value);
+			resolveBufferString = bp.getBufferView();
 			return;
 		}
 		if (optionName == L"handlerInfo") {
@@ -664,13 +665,14 @@ void AudioParent::resolveProp(
 
 	context.filePrefix = filePrefix;
 
-	const bool found = propGetter(*handlerExternalData, propName, logger.printer, context);
+	common::buffer_printer::BufferPrinter bp;
+	const bool found = propGetter(*handlerExternalData, propName, bp, context);
 	if (!found) {
 		logHelpers.propNotFound.log(handlerInfo->type, propName);
 		return;
 	}
 
-	resolveBufferString = logger.printer.getBufferView();
+	resolveBufferString = bp.getBufferView();
 }
 
 AudioParent::ProcessingCleanersMap AudioParent::createCleanersFor(const ParamParser::ProcessingData& pd) const {
@@ -686,7 +688,7 @@ AudioParent::ProcessingCleanersMap AudioParent::createCleanersFor(const ParamPar
 
 		auto handlerPtr = patchInfo.fun({});
 
-		auto cl = logger.silent();
+		auto cl = logger.getSilent();
 		ProcessingManager::HandlerFinderImpl hf{ tempChannelMap };
 		SoundHandler::Snapshot handlerSpecificData;
 		const bool success = handlerPtr->patch(

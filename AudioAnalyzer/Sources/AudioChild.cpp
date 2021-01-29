@@ -12,7 +12,7 @@
 
 using namespace audio_analyzer;
 
-AudioChild::AudioChild(utils::Rainmeter&& _rain) : TypeHolder(std::move(_rain)) {
+AudioChild::AudioChild(Rainmeter&& _rain) : TypeHolder(std::move(_rain)) {
 	const auto parentName = rain.read(L"Parent").asIString();
 	if (parentName.empty()) {
 		logger.error(L"Parent must be specified");

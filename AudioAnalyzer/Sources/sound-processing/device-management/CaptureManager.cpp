@@ -267,7 +267,7 @@ std::optional<utils::MediaDeviceWrapper> CaptureManager::getDevice(const SourceD
 }
 
 string CaptureManager::makeFormatString(utils::WaveFormat waveFormat) {
-	utils::BufferPrinter bp;
+	common::buffer_printer::BufferPrinter bp;
 
 	if (waveFormat.channelLayout.getName().empty()) {
 		bp.append(L"{} channels", waveFormat.channelLayout.ordered().size());
@@ -359,7 +359,7 @@ void CaptureManager::createExclusiveStreamListener() {
 		}
 	} catch (utils::ComException&) { }
 
-	utils::BufferPrinter bp;
+	common::buffer_printer::BufferPrinter bp;
 
 	bp.append(
 		L"Device '{} ({})' is in exclusive mode, owner exe is ",

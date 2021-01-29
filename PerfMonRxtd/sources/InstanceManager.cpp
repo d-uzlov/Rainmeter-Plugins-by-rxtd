@@ -12,8 +12,8 @@
 
 using namespace perfmon;
 
-InstanceManager::InstanceManager(utils::Rainmeter::Logger& log, const pdh::PdhWrapper& phWrapper) :
-	log(log), pdhWrapper(phWrapper) { }
+InstanceManager::InstanceManager(Logger log, const pdh::PdhWrapper& phWrapper) :
+	log(std::move(log)), pdhWrapper(phWrapper) { }
 
 void InstanceManager::checkIndices(index counters, index expressions, index rollupExpressions) {
 	index checkCount = 0;

@@ -160,7 +160,8 @@
     <ClCompile Include="sources\option-parser\Option.cpp" />
     <ClCompile Include="sources\option-parser\OptionMap.cpp" />
     <ClCompile Include="sources\option-parser\Tokenizer.cpp" />
-    <ClCompile Include="sources\RainmeterWrappers.cpp" />
+    <ClCompile Include="sources\rainmeter\InstanceKeeper.cpp" />
+    <ClCompile Include="sources\rainmeter\Rainmeter.cpp" />
     <ClCompile Include="sources\StringUtils.cpp" />
     <ClCompile Include="sources\TypeHolder.cpp" />
     <ClCompile Include="sources\winapi-wrappers\BufferPrinterExtensions.cpp" />
@@ -183,11 +184,15 @@
     <ClInclude Include="sources\option-parser\OptionMap.h" />
     <ClInclude Include="sources\option-parser\OptionSequence.h" />
     <ClInclude Include="sources\option-parser\Tokenizer.h" />
+    <ClInclude Include="sources\rainmeter\InstanceKeeper.h" />
+    <ClInclude Include="sources\rainmeter\Logger.h" />
+    <ClInclude Include="sources\rainmeter\Rainmeter.h" />
+    <ClInclude Include="sources\rainmeter\DataHandle.h" />
+    <ClInclude Include="sources\rainmeter\SkinHandle.h" />
     <ClInclude Include="sources\Vector2D.h" />
     <ClInclude Include="sources\MyMath.h" />
     <ClInclude Include="sources\MathExpressionParser.h" />
     <ClInclude Include="sources\my-windows.h" />
-    <ClInclude Include="sources\RainmeterWrappers.h" />
     <ClInclude Include="sources\StringUtils.h" />
     <ClInclude Include="sources\TypeHolder.h" />
     <ClInclude Include="sources\winapi-wrappers\BufferPrinterExtensions.h" />

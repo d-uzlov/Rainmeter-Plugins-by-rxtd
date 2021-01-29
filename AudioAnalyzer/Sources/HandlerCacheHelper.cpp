@@ -143,7 +143,7 @@ PatchInfo HandlerCacheHelper::createHandlerPatcher(
 			cl.warning(L"handler LogarithmicValueMapper is deprecated");
 		}
 
-		utils::BufferPrinter bp;
+		common::buffer_printer::BufferPrinter bp;
 		bp.append(L"type ValueTransformer");
 		bp.append(L"| source {}", optionMap.get(L"source").asString());
 		const double sensitivity = std::clamp<double>(

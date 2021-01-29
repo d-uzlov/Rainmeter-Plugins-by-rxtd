@@ -19,8 +19,8 @@ ParentHelper::~ParentHelper() {
 }
 
 void ParentHelper::init(
-	utils::Rainmeter _rain,
-	utils::Rainmeter::Logger _logger,
+	Rainmeter _rain,
+	Logger _logger,
 	const utils::OptionMap& threadingMap,
 	index _legacyNumber
 ) {
@@ -418,7 +418,7 @@ string ParentHelper::makeDeviceListString(utils::MediaDeviceType type) {
 		return result;
 	}
 
-	utils::BufferPrinter bp;
+	common::buffer_printer::BufferPrinter bp;
 	auto append = [&](sview str, bool semicolon = true) {
 		if (str.empty()) {
 			bp.append(L"<unknown>");
@@ -494,7 +494,7 @@ string ParentHelper::legacy_makeDeviceListString(utils::MediaDeviceType type) {
 		return result;
 	}
 
-	utils::BufferPrinter bp;
+	common::buffer_printer::BufferPrinter bp;
 	for (auto& device : collection) {
 		try {
 			const auto deviceInfo = device.readDeviceInfo();

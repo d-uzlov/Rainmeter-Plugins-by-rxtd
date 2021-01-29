@@ -9,7 +9,6 @@
 
 #pragma once
 #include "../SoundHandler.h"
-#include "RainmeterWrappers.h"
 #include "../../../audio-utils/FFT.h"
 #include "../../../audio-utils/FftCascade.h"
 #include "../../../audio-utils/WindowFunctionHelper.h"
@@ -114,7 +113,7 @@ namespace rxtd::audio_analyzer {
 		static bool getProp(
 			const Snapshot& snapshot,
 			isview prop,
-			utils::BufferPrinter& printer,
+			BufferPrinter& printer,
 			const ExternCallContext& context
 		);
 

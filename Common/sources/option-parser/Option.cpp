@@ -14,7 +14,7 @@
 #include "OptionMap.h"
 #include "OptionList.h"
 #include "OptionSequence.h"
-#include "RainmeterWrappers.h"
+#include "rainmeter/Logger.h"
 
 using namespace utils;
 
@@ -122,9 +122,9 @@ double Option::parseNumber(sview source) {
 	parser.parse();
 
 	if (parser.isError()) {
-		BufferPrinter printer;
+		common::buffer_printer::BufferPrinter printer;
 		printer.print(L"can't parse '{}' as a number", source);
-		Rainmeter::sourcelessLog(printer.getBufferPtr());
+		common::rainmeter::Logger::sourcelessLog(printer.getBufferPtr());
 		return 0;
 	}
 

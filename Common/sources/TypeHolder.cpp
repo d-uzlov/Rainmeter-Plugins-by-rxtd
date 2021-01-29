@@ -11,11 +11,10 @@
 
 using namespace utils;
 
-std::map<Rainmeter::Skin, std::map<istring, ParentBase*, std::less<>>> ParentBase::globalMeasuresMap{};
+std::map<common::rainmeter::SkinHandle, std::map<istring, ParentBase*, std::less<>>> ParentBase::globalMeasuresMap{};
 
 TypeHolder::TypeHolder(Rainmeter&& _rain) : rain(std::move(_rain)) {
 	logger = rain.createLogger();
-	instanceKeeper = rain.getInstanceKeeper();
 }
 
 double TypeHolder::update() {
@@ -117,7 +116,7 @@ ParentBase::~ParentBase() {
 	}
 }
 
-ParentBase* ParentBase::findParent(Rainmeter::Skin skin, isview measureName) {
+ParentBase* ParentBase::findParent(SkinHandle skin, isview measureName) {
 	const auto skinIter = globalMeasuresMap.find(skin);
 	if (skinIter == globalMeasuresMap.end()) {
 		return nullptr;

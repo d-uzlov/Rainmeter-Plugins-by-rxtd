@@ -11,7 +11,8 @@
 #include <Pdh.h>
 
 #include "PdhSnapshot.h"
-#include "RainmeterWrappers.h"
+#include "option-parser/OptionList.h"
+#include "rainmeter/Logger.h"
 
 namespace rxtd::perfmon::pdh {
 	class PdhException : std::runtime_error {
@@ -32,6 +33,8 @@ namespace rxtd::perfmon::pdh {
 	};
 
 	class PdhWrapper : MovableOnlyBase {
+		using Logger = ::rxtd::common::rainmeter::Logger;
+		
 		struct QueryWrapper : MovableOnlyBase {
 			PDH_HQUERY handle = nullptr;
 
@@ -65,7 +68,7 @@ namespace rxtd::perfmon::pdh {
 			}
 		};
 
-		utils::Rainmeter::Logger log;
+		Logger log;
 
 		QueryWrapper query;
 
@@ -80,7 +83,7 @@ namespace rxtd::perfmon::pdh {
 	public:
 		[[nodiscard]]
 		// returns true on success, false on error
-		bool init(utils::Rainmeter::Logger logger);
+		bool init(Logger logger);
 
 		// returns true on success, false on error
 		[[nodiscard]]

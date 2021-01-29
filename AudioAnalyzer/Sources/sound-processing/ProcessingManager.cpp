@@ -14,7 +14,7 @@
 using namespace audio_analyzer;
 
 void ProcessingManager::setParams(
-	utils::Rainmeter::Logger logger,
+	Logger logger,
 	const ParamParser::ProcessingData& pd,
 	index legacyNumber,
 	index sampleRate, ChannelLayout layout,

@@ -10,7 +10,10 @@
 #include "Color.h"
 #include "option-parser/Option.h"
 #include "option-parser/OptionList.h"
-#include "RainmeterWrappers.h"
+#include "rainmeter/Logger.h"
+
+using Logger = ::rxtd::common::rainmeter::Logger;
+using BufferPrinter = ::rxtd::common::buffer_printer::BufferPrinter;
 
 utils::Color utils::Color::parse(sview desc, Color defaultValue) {
 	if (desc.empty()) {
@@ -27,7 +30,7 @@ utils::Color utils::Color::parse(sview desc, Color defaultValue) {
 		if (colorDesc.empty()) {
 			BufferPrinter bp;
 			bp.print(L"annotated color without color components: '{}'", desc);
-			Rainmeter::sourcelessLog(bp.getBufferPtr());
+			Logger::sourcelessLog(bp.getBufferPtr());
 			return defaultValue;
 		}
 
@@ -47,7 +50,7 @@ utils::Color utils::Color::parse(sview desc, Color defaultValue) {
 				if (colorDesc.asString().size() != 6 && colorDesc.asString().size() != 8) {
 					BufferPrinter bp;
 					bp.print(L"can't parse '{}' as HEX color, need 6 or 8 digits", colorDesc);
-					Rainmeter::sourcelessLog(bp.getBufferPtr());
+					Logger::sourcelessLog(bp.getBufferPtr());
 					return defaultValue;
 				}
 
@@ -74,13 +77,13 @@ utils::Color utils::Color::parse(sview desc, Color defaultValue) {
 	if (count < 3) {
 		BufferPrinter bp;
 		bp.print(L"can't parse '{}' as color: not enough color components: {}, but need 3 or 4", desc, count);
-		Rainmeter::sourcelessLog(bp.getBufferPtr());
+		Logger::sourcelessLog(bp.getBufferPtr());
 		return defaultValue;
 	}
 	if (count > 4) {
 		BufferPrinter bp;
 		bp.print(L"can't parse '{}' as color: too many color components: {}, but need 3 or 4", desc, count);
-		Rainmeter::sourcelessLog(bp.getBufferPtr());
+		Logger::sourcelessLog(bp.getBufferPtr());
 		return defaultValue;
 	}
 

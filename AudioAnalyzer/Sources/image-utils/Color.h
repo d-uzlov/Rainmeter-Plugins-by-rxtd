@@ -26,7 +26,7 @@ namespace rxtd::utils {
 				float red = 0.0;
 				float green = 0.0;
 				float blue = 0.0;
-			} rgb{};
+			} rgb;
 
 			struct {
 				float hue;

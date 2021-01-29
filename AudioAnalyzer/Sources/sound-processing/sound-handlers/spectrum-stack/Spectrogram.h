@@ -10,7 +10,6 @@
 #pragma once
 #include "../SoundHandler.h"
 #include "image-utils/Color.h"
-#include "RainmeterWrappers.h"
 #include "audio-utils/MinMaxCounter.h"
 #include "image-utils/StripedImage.h"
 #include "image-utils/ImageWriteHelper.h"
@@ -181,7 +180,7 @@ namespace rxtd::audio_analyzer {
 		static bool getProp(
 			const Snapshot& snapshot,
 			isview prop,
-			utils::BufferPrinter& printer,
+			BufferPrinter& printer,
 			const ExternCallContext& context
 		);
 	};

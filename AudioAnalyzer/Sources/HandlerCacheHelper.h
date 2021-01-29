@@ -8,7 +8,8 @@
  */
 
 #pragma once
-#include "RainmeterWrappers.h"
+#include "rainmeter/Logger.h"
+#include "rainmeter/Rainmeter.h"
 #include "sound-processing/sound-handlers/SoundHandler.h"
 
 namespace rxtd::audio_analyzer {
@@ -39,8 +40,8 @@ namespace rxtd::audio_analyzer {
 	};
 
 	class HandlerCacheHelper {
-		using Logger = utils::Rainmeter::Logger;
-		using Rainmeter = utils::Rainmeter;
+		using Logger = ::rxtd::common::rainmeter::Logger;
+		using Rainmeter = ::rxtd::common::rainmeter::Rainmeter;
 
 		struct HandlerRawInfo {
 			bool updated = false;

@@ -18,6 +18,7 @@
 namespace rxtd::audio_analyzer {
 	class ProcessingManager {
 	public:
+		using Logger = ::rxtd::common::rainmeter::Logger;
 		using ChannelSnapshot = std::map<istring, SoundHandler::Snapshot, std::less<>>;
 		using Snapshot = std::map<Channel, ChannelSnapshot, std::less<>>;
 
@@ -54,7 +55,7 @@ namespace rxtd::audio_analyzer {
 
 	public:
 		void setParams(
-			utils::Rainmeter::Logger logger,
+			Logger logger,
 			const ParamParser::ProcessingData& pd,
 			index _legacyNumber,
 			index sampleRate, ChannelLayout layout,

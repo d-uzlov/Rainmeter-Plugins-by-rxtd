@@ -16,8 +16,9 @@
 #include "MyMath.h"
 
 using namespace audio_utils;
+using CVT = CustomizableValueTransformer;
 
-double CustomizableValueTransformer::apply(double value) {
+double CVT::apply(double value) {
 	for (auto& transform : transforms) {
 		switch (transform.type) {
 		case TransformType::eDB: {
@@ -39,7 +40,7 @@ double CustomizableValueTransformer::apply(double value) {
 	return value;
 }
 
-void CustomizableValueTransformer::applyToArray(array_view<float> source, array_span<float> dest) {
+void CVT::applyToArray(array_view<float> source, array_span<float> dest) {
 	const auto logCoef = float(std::log10(2)); // == log(2) / log(10)
 
 	for (auto& transform : transforms) {
@@ -103,8 +104,7 @@ void CustomizableValueTransformer::applyToArray(array_view<float> source, array_
 	}
 }
 
-CustomizableValueTransformer
-CustomizableValueTransformer::parse(sview transformDescription, utils::Rainmeter::Logger& cl) {
+CVT CVT::parse(sview transformDescription, Logger& cl) {
 	std::vector<TransformationInfo> transforms;
 
 	for (auto list : utils::Option{ transformDescription }.asSequence()) {
@@ -119,10 +119,7 @@ CustomizableValueTransformer::parse(sview transformDescription, utils::Rainmeter
 	return CustomizableValueTransformer{ transforms };
 }
 
-std::optional<CustomizableValueTransformer::TransformationInfo> CustomizableValueTransformer::parseTransformation(
-	utils::OptionList list,
-	utils::Rainmeter::Logger& cl
-) {
+std::optional<CVT::TransformationInfo> CVT::parseTransformation(utils::OptionList list, Logger& cl) {
 	const auto transformName = list.get(0).asIString();
 	TransformationInfo tr{};
 

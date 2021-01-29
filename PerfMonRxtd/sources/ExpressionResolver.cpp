@@ -18,8 +18,8 @@ bool ExpressionResolver::CacheEntry::operator<(const CacheEntry& other) const {
 		&& rollupFunction < other.rollupFunction;
 }
 
-ExpressionResolver::ExpressionResolver(utils::Rainmeter::Logger& log, const InstanceManager& instanceManager) :
-	log(log),
+ExpressionResolver::ExpressionResolver(Logger log, const InstanceManager& instanceManager) :
+	log(std::move(log)),
 	instanceManager(instanceManager) { }
 
 index ExpressionResolver::getExpressionsCount() const {
@@ -34,7 +34,7 @@ void ExpressionResolver::resetCaches() {
 	totalsCache.clear();
 }
 
-double ExpressionResolver::getValue(const Reference& ref, const InstanceInfo* instance, utils::Rainmeter::Logger& logger) const {
+double ExpressionResolver::getValue(const Reference& ref, const InstanceInfo* instance, Logger& logger) const {
 	const auto rollup = instanceManager.isRollup();
 
 	switch (ref.type) {

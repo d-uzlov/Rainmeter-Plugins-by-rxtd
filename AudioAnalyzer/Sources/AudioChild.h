@@ -67,7 +67,7 @@ namespace rxtd::audio_analyzer {
 		index legacyNumber;
 
 	public:
-		explicit AudioChild(utils::Rainmeter&& _rain);
+		explicit AudioChild(Rainmeter&& _rain);
 
 	protected:
 		void vReload() override;

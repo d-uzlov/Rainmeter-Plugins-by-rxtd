@@ -12,7 +12,7 @@
 
 #include "StringUtils.h"
 
-namespace rxtd::utils {
+namespace rxtd::common::buffer_printer {
 	using ::operator<<;
 
 	using FormattingFunctionType = std::optional<sview>(*)(index);
@@ -45,7 +45,7 @@ namespace rxtd::utils {
 				stream << t;
 				return;
 			}
-			if (StringUtils::checkStartsWith(options, L"f:")) {
+			if (utils::StringUtils::checkStartsWith(options, L"f:")) {
 				auto fun = findFormattingFunction(options);
 				if (fun == nullptr) {
 					writeType(stream, t, L"hex");

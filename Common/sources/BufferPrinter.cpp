@@ -9,19 +9,19 @@
 
 #include "BufferPrinter.h"
 
-using namespace utils;
+using namespace ::rxtd::common::buffer_printer;
 
 static std::map<sview, FormattingFunctionType> formattingFunctions;
 
-void utils::registerFormattingFunction(sview name, FormattingFunctionType function) {
-	if (!StringUtils::checkStartsWith(name, L"f:")) {
+void ::rxtd::common::buffer_printer::registerFormattingFunction(sview name, FormattingFunctionType function) {
+	if (!utils::StringUtils::checkStartsWith(name, L"f:")) {
 		throw std::runtime_error{"registerFormattingFunction: name does not start with 'f:'"};
 	}
 
 	formattingFunctions[name] = function;
 }
 
-FormattingFunctionType utils::findFormattingFunction(sview name) {
+FormattingFunctionType rxtd::common::buffer_printer::findFormattingFunction(sview name) {
 	auto iter = formattingFunctions.find(name);
 	if (iter == formattingFunctions.end()) {
 		return nullptr;

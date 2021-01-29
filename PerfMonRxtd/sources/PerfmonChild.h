@@ -21,7 +21,7 @@ namespace rxtd::perfmon {
 		string stringValue;
 
 	public:
-		explicit PerfmonChild(utils::Rainmeter&& _rain);
+		explicit PerfmonChild(Rainmeter&& _rain);
 
 	protected:
 		void vReload() override;

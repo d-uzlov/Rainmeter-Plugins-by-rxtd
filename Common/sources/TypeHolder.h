@@ -9,19 +9,18 @@
 
 #pragma once
 
-#include "RainmeterWrappers.h"
+#include "rainmeter/Rainmeter.h"
 
 namespace rxtd::utils {
 	class TypeHolder : NonMovableBase, VirtualDestructorBase {
 	protected:
-		using Rainmeter = Rainmeter;
-		using Logger = Rainmeter::Logger;
+		using Rainmeter = common::rainmeter::Rainmeter;
+		using Logger = common::rainmeter::Logger;
 
 		Rainmeter rain;
 		Logger logger;
 
 	private:
-		Rainmeter::InstanceKeeper instanceKeeper;
 		bool objectIsValid = true;
 
 		double resultDouble = 0.0;
@@ -69,9 +68,10 @@ namespace rxtd::utils {
 	};
 
 	class ParentBase : public TypeHolder {
+		using SkinHandle = ::rxtd::common::rainmeter::SkinHandle;
 		using ParentMeasureName = istring;
 		using SkinMap = std::map<ParentMeasureName, ParentBase*, std::less<>>;
-		static std::map<Rainmeter::Skin, SkinMap> globalMeasuresMap;
+		static std::map<SkinHandle, SkinMap> globalMeasuresMap;
 
 	public:
 		explicit ParentBase(Rainmeter&& _rain);
@@ -80,7 +80,7 @@ namespace rxtd::utils {
 
 		template<typename T>
 		[[nodiscard]]
-		static T* find(Rainmeter::Skin skin, isview measureName) {
+		static T* find(SkinHandle skin, isview measureName) {
 			static_assert(std::is_base_of<ParentBase, T>::value, "only parent measures can be searched for");
 
 			return dynamic_cast<T*>(findParent(skin, measureName));
@@ -88,6 +88,6 @@ namespace rxtd::utils {
 
 	private:
 		[[nodiscard]]
-		static ParentBase* findParent(Rainmeter::Skin skin, isview measureName);
+		static ParentBase* findParent(SkinHandle skin, isview measureName);
 	};
 }

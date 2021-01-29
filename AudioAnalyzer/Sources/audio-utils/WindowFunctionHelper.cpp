@@ -9,7 +9,6 @@
 
 #include "WindowFunctionHelper.h"
 
-#include "RainmeterWrappers.h"
 #include "option-parser/OptionList.h"
 #include "option-parser/OptionSequence.h"
 #include "cheby_win-lib/cheby_win.h"
@@ -18,7 +17,7 @@ using namespace audio_utils;
 
 static const auto pi = std::acos(-1.0);
 
-WindowFunctionHelper::WindowCreationFunc WindowFunctionHelper::parse(sview desc, utils::Rainmeter::Logger& cl) {
+WindowFunctionHelper::WindowCreationFunc WindowFunctionHelper::parse(sview desc, Logger& cl) {
 	utils::OptionList description = utils::Option{ desc }.asSequence().begin().operator*();
 	auto type = description.get(0).asIString();
 

@@ -13,13 +13,14 @@
 namespace rxtd::audio_analyzer {
 	class ProcessingOrchestrator {
 	public:
+		using Logger = ::rxtd::common::rainmeter::Logger;
 		using Snapshot = std::map<istring, ProcessingManager::Snapshot, std::less<>>;
 
 	private:
 		double warnTimeMs = 33.0;
 		double killTimeoutMs = 33.0;
 
-		utils::Rainmeter::Logger logger;
+		Logger logger;
 
 		std::map<istring, ProcessingManager, std::less<>> saMap;
 		Snapshot snapshot;
@@ -27,7 +28,7 @@ namespace rxtd::audio_analyzer {
 		bool valid = false;
 
 	public:
-		void setLogger(utils::Rainmeter::Logger value) {
+		void setLogger(Logger value) {
 			logger = std::move(value);
 		}
 
