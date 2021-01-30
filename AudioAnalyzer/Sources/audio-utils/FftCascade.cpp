@@ -98,14 +98,14 @@ void FftCascade::resampleResult() {
 		values.resize(newValuesSize);
 
 		for (index i = newValuesSize - 1; i >= 1; i--) {
-			const index oldIndex = inter.toValueD(i);
+			const index oldIndex = inter.toValue(i);
 			values[i] = values[oldIndex];
 		}
 	}
 
 	if (index(values.size()) > newValuesSize) {
 		for (index i = 1; i < newValuesSize; i++) {
-			const index oldIndex = inter.toValueD(i);
+			const index oldIndex = inter.toValue(i);
 			values[i] = values[oldIndex];
 		}
 

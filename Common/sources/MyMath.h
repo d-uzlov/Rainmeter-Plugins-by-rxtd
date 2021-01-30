@@ -12,23 +12,31 @@
 #include <cmath>
 
 namespace rxtd::utils {
+	//
+	// Utility class with small math snippets
+	//
 	class MyMath {
 	public:
 		static const double pi;
 
-		// return approximately a**b
+		// bit twiddling.
+		// returns approximately a**b
 		[[nodiscard]]
 		static double fastPow(double a, double b);
 
+		// bit twiddling
 		[[nodiscard]]
 		static float fastLog2(float val);
 
+		// bit twiddling
 		[[nodiscard]]
 		static float fastSqrt(float value);
 
+		// A unified way to convert decibels to absolute values,
 		[[nodiscard]]
 		static float db2amplitude(float value);
 
+		// A unified way to convert decibels to absolute values,
 		[[nodiscard]]
 		static double db2amplitude(double value);
 

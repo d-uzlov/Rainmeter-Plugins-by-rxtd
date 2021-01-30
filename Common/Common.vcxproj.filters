@@ -23,9 +23,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="sources\BufferPrinter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="sources\StringUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -174,6 +171,9 @@
     </ClInclude>
     <ClInclude Include="sources\winapi-wrappers\WinApiReturnCode.h">
       <Filter>Source Files\winapi-wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\ReadableStreamBuffer.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

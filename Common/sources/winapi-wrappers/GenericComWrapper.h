@@ -14,6 +14,10 @@
 #include "ComException.h"
 
 namespace rxtd::common::winapi_wrappers {
+	//
+	// Wrapper over IUnknown derived class
+	// Mostly exists for RAII
+	//
 	template<typename T>
 	class GenericComWrapper : VirtualDestructorBase {
 	public:
@@ -52,7 +56,7 @@ namespace rxtd::common::winapi_wrappers {
 			other.ptr = nullptr;
 
 			return *this;
-		};
+		}
 
 		GenericComWrapper(const GenericComWrapper& other) {
 			ptr = other.ptr;

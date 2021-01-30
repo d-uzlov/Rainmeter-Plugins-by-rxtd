@@ -10,6 +10,10 @@
 #pragma once
 
 namespace rxtd::common::winapi_wrappers {
+	//
+	// Strongly typed WinAPI error code, that allows print functions to format error codes properly.
+	// Standard error type is typedef of int, which is indistinguishable from int itself in function overload resolution.
+	//
 	struct WinApiReturnCode {
 		index code = 0;
 

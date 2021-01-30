@@ -7,8 +7,7 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#ifndef COPY_MOVE_BASE_CLASSES_H
-#define COPY_MOVE_BASE_CLASSES_H
+#pragma once
 
 namespace rxtd {
 	class VirtualDestructorBase {
@@ -38,5 +37,3 @@ namespace rxtd {
 		NonMovableBase& operator=(const NonMovableBase& other) = delete;
 	};
 }
-
-#endif

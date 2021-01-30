@@ -116,7 +116,7 @@ namespace rxtd::audio_analyzer {
 	public:
 		~ParentHelper();
 
-		// throws std::exception on fatal error
+		// throws std::runtime_error on fatal error
 		void init(
 			Rainmeter _rain,
 			Logger _logger,

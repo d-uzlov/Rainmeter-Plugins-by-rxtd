@@ -9,6 +9,11 @@
 
 #pragma once
 
+//
+// Old bundle of classes that were repurposed from a specialized AST parser,
+// thus the parsing result is a math tree which must be solved to get result.
+// TODO: rewrite
+//
 namespace rxtd::utils {
 	enum class ExpressionType {
 		eUNKNOWN,
@@ -19,7 +24,6 @@ namespace rxtd::utils {
 		eMULT,
 		eDIV,
 		ePOWER,
-		eTERNARY,
 	};
 
 	struct ExpressionTreeNode {

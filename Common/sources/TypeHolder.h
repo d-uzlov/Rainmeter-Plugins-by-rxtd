@@ -12,6 +12,15 @@
 #include "rainmeter/Rainmeter.h"
 
 namespace rxtd::utils {
+	//
+	// Convenient parent class for all Rainmeter Measure=Plugin classes.
+	// Implements all the needed functions,
+	// provides a convenient way for derived classes to get called.
+	//
+	// See rainmeter plugin API documentations
+	// for information on when and why functions are called and what they should do.
+	//	https://docs.rainmeter.net/developers/plugin/plugin-anatomy/
+	//
 	class TypeHolder : NonMovableBase, VirtualDestructorBase {
 	protected:
 		using Rainmeter = common::rainmeter::Rainmeter;
@@ -58,10 +67,13 @@ namespace rxtd::utils {
 
 		virtual void vResolve(array_view<isview> args, string& resolveBufferString) { }
 
+		// Sets object state to invalid until next reload
 		void setInvalid() {
 			objectIsValid = false;
 		}
 
+		// When false, number is used as a string value.
+		// See Rainmeter documentation for details.
 		void setUseResultString(bool value) {
 			useResultString = value;
 		}

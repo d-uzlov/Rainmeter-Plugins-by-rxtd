@@ -10,6 +10,11 @@
 #pragma once
 
 namespace rxtd::utils {
+	//
+	// Kinda useless class that provides RAII for Win32 file API
+	// Was created to use windows-specific file options.
+	// TODO: remove
+	//
 	class FileWrapper : NonMovableBase {
 		void* fileHandle{};
 

@@ -10,6 +10,10 @@
 #pragma once
 
 namespace rxtd::common::winapi_wrappers {
+	//
+	// Wrapper over objects that need to be freed with CoTaskMemFree.
+	// Exists for RAII
+	//
 	template<typename T>
 	class GenericCoTaskMemWrapper : MovableOnlyBase {
 	public:

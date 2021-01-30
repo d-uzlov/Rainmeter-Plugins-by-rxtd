@@ -10,6 +10,14 @@
 #pragma once
 #include <iomanip>
 
+#include "ReadableStreamBuffer.h"
+
+//
+// I created BufferPrinter class long time ago as an exercise for variadic templates.
+// It doesn't have any real advantages compared to the famous fmt library, for example
+// but it works, I don't really need more functions then BufferPrinter supports,
+// so I don't see any reason to get rid of it.
+//
 namespace rxtd::common::buffer_printer {
 	using ::operator<<;
 
@@ -67,52 +75,31 @@ namespace rxtd::common::buffer_printer {
 		stream << L']';
 	}
 
-	/**
-	 * Type-safe analogue of printf.
-	 * Use format string and a list of arguments.
-	 *
-	 * Format string format: "smth1{options}smth2{}smth3"
-	 *		smth1, smth2, smth3	— will be printed as is
-	 *		{options}			— first argument will be written using "options" as argument to writeType function
-	 *		{}					— second argument will be written using "" as argument to writeType function
-	 *
-	 * By default writeType function calls operator<< on object. Specialize template to change this for your class.
-	 * writeType is specialized for few cases:
-	 *	1. Integral types:
-	 *		"error"		— print zero-padded value with "0x" prefix
-	 *		""			— print number as is
-	 *	2. Enums:
-	 *		"name"		— use user-provided function "sview getEnumName(Enum value)"
-	 *		""			— cast enum to number
-	 *	3. Bool:
-	 *		"number"	— cast bool to int
-	 *		""			— print "true" or "false"
-	 */
+	//
+	// Type-safe analogue of printf.
+	// Use format string and a list of arguments.
+	//
+	// For example:
+	//    print("Hello, {}!", "world") will print "Hello, world!"
+	//    print("0xff == {hex} is {}", 200, 0xff == 200) will print "0xff == 0xc8 is false"
+	//
+	// Format string format: "smth1{options}smth2{}smth3"
+	//		smth1, smth2, smth3	— will be printed as is
+	//		{options}			— first argument will be written using "options" as argument to writeType function
+	//		{}					— second argument will be written using "" as argument to writeType function
+	//
+	// By default writeType function calls operator<< on object. Specialize template to change this for your class.
+	// Signature: void writeType(std::wostream&, const Type&, sview options)
+	//
+	// writeType is specialized for few cases:
+	//	• Integral types: use "{hex}" to print number in hexadecimal with "0x" prefix
+	//	• Enums: use "{name}" to call function getEnumName(EnumType), which must be provided by user.
+	//		Default getEnumName always returns "<unknown enum>".
+	//	• Bool: use "{number}" to print as 0 or 1. Default behaviour is printing "true" or "false"
+	//	• std::vector: not options, prints [value1, value2] using operator<<(std::owstream) on vector type
+	//
 	class BufferPrinter {
-		class ReadableOutputBuffer : public std::basic_streambuf<wchar_t> {
-			std::vector<char_type> buffer;
-
-		public:
-			ReadableOutputBuffer() = default;
-			~ReadableOutputBuffer() = default;
-
-			// these constructors must be implemented explicitly because std::basic_streambuf is not movable,
-			// so no default functions can be generated
-			ReadableOutputBuffer(ReadableOutputBuffer&& other) noexcept;
-			ReadableOutputBuffer& operator=(ReadableOutputBuffer&& other) noexcept;
-
-			ReadableOutputBuffer(const ReadableOutputBuffer& other) = default;
-			ReadableOutputBuffer& operator=(const ReadableOutputBuffer& other) = default;
-
-			sview getBuffer();
-			void resetPointers();
-			void appendEOL();
-
-		protected:
-			int_type overflow(int_type c) override;
-		};
-
-		ReadableOutputBuffer buffer;
+		ReadableStreamBuffer buffer;
 		const wchar_t* formatString = nullptr;
 		bool skipUnlistedArgs = true;
 
@@ -162,96 +149,92 @@ namespace rxtd::common::buffer_printer {
 		}
 
 	private:
+		// I'm not proud of this function but it works, so I just don't touch it
 		template<typename T, typename... Args>
-		void writeToStream(const T& t, const Args&... args);
+		void writeToStream(const T& t, const Args&... args) {
+			auto begin = formatString;
+			std::optional<sview> option;
 
-		void writeToStream();
+			std::wostream stream = std::wostream(&buffer);
 
-		template<typename T, typename... Args>
-		void writeUnlisted(const T& t, const Args&... args);
-
-		void writeUnlisted() { }
-	};
-
-	template<typename T, typename ... Args>
-	void BufferPrinter::writeToStream(const T& t, const Args&... args) {
-
-		auto begin = formatString;
-		std::optional<sview> option;
-
-		std::wostream stream = std::wostream(&buffer);
-
-		auto current = formatString[0];
-		while (true) {
-			current = formatString[0];
-
-			if (current == L'\0') {
-				stream << begin;
-
-				if (!skipUnlistedArgs) {
-					writeUnlisted(t, args...);
-				}
-				return;
-			}
-
-			if (current != L'{') {
-				formatString++;
-				continue;
-			}
-
-			// current == L'{'
-			stream << sview(begin, formatString - begin);
-
-			formatString++;
-			begin = formatString;
-			auto end = begin;
 			while (true) {
-				current = formatString[0];
+				auto current = formatString[0];
 
 				if (current == L'\0') {
-					stream << L'{';
 					stream << begin;
 
-					if (!skipUnlistedArgs) {
-						writeUnlisted(t, args...);
-					}
+					writeUnlisted(t, args...);
 					return;
 				}
 
-				if (current == L'}') {
-					end = formatString;
+				if (current != L'{') {
 					formatString++;
+					continue;
+				}
+
+				// current == L'{'
+				stream << sview(begin, formatString - begin);
+
+				formatString++;
+				begin = formatString;
+				auto end = begin;
+				while (true) {
+					current = formatString[0];
+
+					if (current == L'\0') {
+						stream << L'{';
+						stream << begin;
+
+						writeUnlisted(t, args...);
+						return;
+					}
+
+					if (current == L'}') {
+						end = formatString;
+						formatString++;
+						break;
+					}
+					formatString++;
+				}
+
+				const auto view = sview(begin, end - begin);
+
+				if (view == L"!") {
+					stream << L'{';
+				} else {
+					option = view;
 					break;
 				}
+
 				formatString++;
 			}
 
-			const auto view = sview(begin, end - begin);
-
-			if (view == L"!") {
-				stream << L'{';
-			} else {
-				option = view;
-				break;
+			if (!option.has_value()) {
+				return;
 			}
 
-			formatString++;
+			writeType(stream, t, option.value());
+
+			writeToStream(args...);
 		}
 
-		if (!option.has_value()) {
-			return;
+		void writeToStream() {
+			std::wostream stream = std::wostream(&buffer);
+			stream << formatString;
 		}
 
-		writeType(stream, t, option.value());
+		template<typename T, typename... Args>
+		void writeUnlisted(const T& t, const Args&... args) {
+			if (skipUnlistedArgs) {
+				return;
+			}
 
-		writeToStream(args...);
-	}
+			std::wostream stream = std::wostream(&buffer);
+			writeType(stream, t, {});
 
-	template<typename T, typename ... Args>
-	void BufferPrinter::writeUnlisted(const T& t, const Args&... args) {
-		std::wostream stream = std::wostream(&buffer);
-		writeType(stream, t, {});
+			writeUnlisted(args...);
+		}
 
-		writeUnlisted(args...);
-	}
+		void writeUnlisted() { }
+	};
 }

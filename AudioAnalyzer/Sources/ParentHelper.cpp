@@ -31,7 +31,7 @@ void ParentHelper::init(
 
 	if (!enumeratorWrapper.isValid()) {
 		mainFields.logger.error(L"Fatal error: can't create IMMDeviceEnumerator");
-		throw std::exception{};
+		throw std::runtime_error{""};
 	}
 
 	updateDeviceListStrings();
@@ -56,7 +56,7 @@ void ParentHelper::init(
 		);
 	} else {
 		mainFields.logger.error(L"Fatal error: Threading: unknown policy '{}'");
-		throw std::exception{};
+		throw std::runtime_error{""};
 	}
 
 	const double warnTime = threadingMap.get(L"warnTime").asFloat(-1.0);

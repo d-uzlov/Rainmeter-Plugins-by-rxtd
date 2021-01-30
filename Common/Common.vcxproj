@@ -154,7 +154,6 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="sources\array_view.h" />
-    <ClCompile Include="sources\BufferPrinter.cpp" />
     <ClCompile Include="sources\MyMath.cpp" />
     <ClCompile Include="sources\MathExpressionParser.cpp" />
     <ClCompile Include="sources\option-parser\Option.cpp" />
@@ -189,6 +188,7 @@
     <ClInclude Include="sources\rainmeter\Rainmeter.h" />
     <ClInclude Include="sources\rainmeter\DataHandle.h" />
     <ClInclude Include="sources\rainmeter\SkinHandle.h" />
+    <ClInclude Include="sources\ReadableStreamBuffer.h" />
     <ClInclude Include="sources\Vector2D.h" />
     <ClInclude Include="sources\MyMath.h" />
     <ClInclude Include="sources\MathExpressionParser.h" />

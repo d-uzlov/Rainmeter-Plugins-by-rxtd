@@ -10,6 +10,9 @@
 #pragma once
 
 namespace rxtd::utils {
+	//
+	// Basically a ring buffer with dynamic size
+	//
 	template<typename T>
 	class GrowingVector {
 		std::vector<T> array{};
@@ -20,6 +23,7 @@ namespace rxtd::utils {
 		// Set the size after which buffer will be automatically compacted
 		// Setting this value to 0 disables this behaviour
 		// Default value is 0
+		// Alternatively you can call #reset()
 		void setMaxSize(index value) {
 			maxSize = value;
 			array.reserve(maxSize);

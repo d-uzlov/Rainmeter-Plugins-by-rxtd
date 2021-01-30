@@ -10,6 +10,10 @@
 #pragma once
 
 namespace rxtd::perfmon::pdh {
+	//
+	// Strongly typed PDH error code, that allows print functions to format error codes properly.
+	// Standard error type is typedef of int, which is indistinguishable from int itself in function overload resolution.
+	//
 	struct PdhReturnCode {
 		index code;
 

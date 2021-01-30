@@ -13,6 +13,13 @@
 #include <Unknwn.h>
 
 namespace rxtd::common::winapi_wrappers {
+	//
+	// Base class for classes that implement some COM interface.
+	//
+	// IUnknown must free its resources on the last call to #Release().
+	// The classic solution is to call "delete this;".
+	// Derived classes must make sure that they are created with operator new.
+	//
 	template<typename T>
 	class IUnknownImpl : NonMovableBase, virtual public T {
 		static_assert(std::is_base_of<IUnknown, T>::value, "T must extend IUnknown");

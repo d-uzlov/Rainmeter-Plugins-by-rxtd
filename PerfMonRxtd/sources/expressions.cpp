@@ -496,8 +496,7 @@ Reference ExpressionParser::parseReference() {
 	const isview name = next.value % ciView();
 	if (name == L"counterRaw" || name == L"CR") {
 		ref.type = ReferenceType::COUNTER_RAW;
-	} else if (name == L"counterFormated" || name == L"CF") {
-		// TODO typo
+	} else if (name == L"counterFormated" || name == L"counterFormatted" || name == L"CF") {
 		ref.type = ReferenceType::COUNTER_FORMATTED;
 	} else if (name == L"expression" || name == L"E") {
 		ref.type = ReferenceType::EXPRESSION;

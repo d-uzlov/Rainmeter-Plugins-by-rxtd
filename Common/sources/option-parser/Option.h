@@ -17,7 +17,7 @@ namespace rxtd::utils {
 	class OptionSequence;
 	struct OptionSeparated;
 
-	// Class, that allows you to parse options.
+	// Class, that allows you to parse strings as some options.
 	class Option : public AbstractOption<Option> {
 	public:
 		Option() = default;
@@ -30,19 +30,23 @@ namespace rxtd::utils {
 			own();
 		}
 
-		// Raw view of option.
+		// Raw view of the option.
 		[[nodiscard]]
 		sview asString(sview defaultValue = {}) const &;
 
+		// Raw view of the option.
+		// Separate case for r-value, makes sure that result won't become invalid after object destruction.
 		[[nodiscard]]
 		string asString(sview defaultValue = {}) const && {
 			return string{ asString(defaultValue) };
 		}
 
-		// Raw case-insensitive view of option.
+		// Raw case-insensitive view of the option.
 		[[nodiscard]]
 		isview asIString(isview defaultValue = {}) const &;
 
+		// Raw case-insensitive view of the option.
+		// Separate case for r-value, makes sure that result won't become invalid after object destruction.
 		[[nodiscard]]
 		istring asIString(isview defaultValue = {}) const && {
 			return istring{ asIString(defaultValue) };

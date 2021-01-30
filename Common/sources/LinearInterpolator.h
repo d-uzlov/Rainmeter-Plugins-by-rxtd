@@ -10,12 +10,17 @@
 #pragma once
 
 namespace rxtd::utils {
+	//
+	// Neat little class to avoid writing linear interpolation by hand again and again.
+	// It is definitely inferior to std::lerp in terms of edge cases
+	// but it is probably faster on all other cases and std::lerp is only C++20
+	//
 	template<typename T = double>
 	class LinearInterpolator {
-		double valMin = 0;
-		double linMin = 0;
-		double alpha = 1;
-		double reverseAlpha = 1;
+		T valMin = 0;
+		T linMin = 0;
+		T alpha = 1;
+		T reverseAlpha = 1;
 
 	public:
 		LinearInterpolator() = default;

@@ -19,7 +19,7 @@ void WaveFormDrawer::setImageParams(index width, index height, bool stationary) 
 	}
 
 	interpolator = { -1.0, 1.0, 0, height - 1 };
-	const index centerLineIndex = interpolator.toValueD(0.0);
+	const index centerLineIndex = interpolator.toValue(0.0);
 
 	minMaxBuffer.setParams(width, 1, { centerLineIndex, centerLineIndex }, stationary);
 	resultBuffer.setBufferSize(width);
@@ -33,7 +33,7 @@ void WaveFormDrawer::setImageParams(index width, index height, bool stationary) 
 }
 
 void WaveFormDrawer::fillSilence() {
-	const index centerLineIndex = interpolator.toValueD(0.0);
+	const index centerLineIndex = interpolator.toValue(0.0);
 	const MinMax mm{ centerLineIndex, centerLineIndex };
 	minMaxBuffer.pushEmptyStrip(mm);
 }
@@ -44,8 +44,8 @@ void WaveFormDrawer::fillStrip(double min, double max) {
 	min = std::min(min, max);
 	max = std::max(min, max);
 
-	auto minPixel = interpolator.toValueD(min);
-	auto maxPixel = interpolator.toValueD(max);
+	auto minPixel = interpolator.toValue(min);
+	auto maxPixel = interpolator.toValue(max);
 
 	if (connected) {
 		minPixel = std::min(minPixel, prev.maxPixel);
@@ -60,7 +60,7 @@ void WaveFormDrawer::fillStrip(double min, double max) {
 }
 
 void WaveFormDrawer::inflate() {
-	const index centerLineIndex = interpolator.toValueD(0.0);
+	const index centerLineIndex = interpolator.toValue(0.0);
 	const index lowLineBound = centerLineIndex - (lineThickness - 1) / 2;
 	const index highLineBound = centerLineIndex + (lineThickness) / 2;
 

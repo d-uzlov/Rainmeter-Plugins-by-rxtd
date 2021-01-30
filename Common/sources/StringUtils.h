@@ -13,8 +13,11 @@
 namespace rxtd::utils {
 	using namespace std::string_view_literals;
 
-	// This class allows you to seamlessly replace source of a string view.
-	// Very helpful when you have an array of string views that you don't want to update on source change.
+	//
+	// Class that can be used instead of string_view when the string is likely to be moved,
+	// so all the views would point into incorrect chunk of memory.
+	// SubstringViewInfo allows to create string view from given source, in the time when this exact copy of the source is valid.
+	//
 	class SubstringViewInfo {
 		index offset{};
 		index length{};
