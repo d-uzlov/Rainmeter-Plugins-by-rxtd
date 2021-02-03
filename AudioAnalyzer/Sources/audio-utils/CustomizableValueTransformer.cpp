@@ -9,9 +9,9 @@
 
 #include "CustomizableValueTransformer.h"
 
-#include "option-parser/OptionList.h"
-#include "option-parser/OptionSequence.h"
-#include "option-parser/OptionMap.h"
+#include "option-parsing/OptionList.h"
+#include "option-parsing/OptionSequence.h"
+#include "option-parsing/OptionMap.h"
 
 #include "MyMath.h"
 
@@ -133,31 +133,32 @@ std::optional<CVT::TransformationInfo> CVT::parseTransformation(utils::OptionLis
 	} else if (transformName == L"map") {
 		tr.type = TransformType::eMAP;
 
-		float linMin;
-		float linMax;
-		if (params.has(L"from")) {
-			auto range = params.get(L"from").asList(L':');
-			if (range.size() != 2) {
-				cl.error(L"need 2 params for source range but {} found", range.size());
-				return {};
-			}
-			linMin = range.get(0).asFloatF();
-			linMax = range.get(1).asFloatF();
-
-			if (std::abs(linMin - linMax) < std::numeric_limits<float>::epsilon()) {
-				cl.error(L"source range is too small: {} and {}", linMin, linMax);
-				return {};
-			}
-		} else {
+		auto sourceRangeOpt = params.get(L"from");
+		if (sourceRangeOpt.empty()) {
 			cl.error(L"source range is not found");
+			return {};
+		}
+
+		auto sourceRange = sourceRangeOpt.asList(L':');
+		if (sourceRange.size() != 2) {
+			cl.error(L"need 2 params for source range but {} found", sourceRange.size());
+			return {};
+		}
+
+		float linMin = sourceRange.get(0).asFloatF();
+		float linMax = sourceRange.get(1).asFloatF();
+
+		if (std::abs(linMin - linMax) < std::numeric_limits<float>::epsilon()) {
+			cl.error(L"source range is too small: {} and {}", linMin, linMax);
 			return {};
 		}
 
 		float valMin = 0.0;
 		float valMax = 1.0;
 
-		if (params.has(L"to")) {
-			auto range = params.get(L"to").asList(L':');
+		if (auto destRange = params.get(L"to");
+			!destRange.empty()) {
+			auto range = destRange.asList(L':');
 			if (range.size() != 2) {
 				cl.error(L"need 2 params for target range but {} found", range.size());
 				return std::nullopt;

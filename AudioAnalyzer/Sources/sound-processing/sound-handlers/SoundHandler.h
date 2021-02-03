@@ -32,7 +32,7 @@
 #include "BufferPrinter.h"
 #include "rainmeter/Rainmeter.h"
 #include "Vector2D.h"
-#include "option-parser/OptionMap.h"
+#include "option-parsing/OptionMap.h"
 
 namespace rxtd::audio_analyzer {
 	class SoundHandler;

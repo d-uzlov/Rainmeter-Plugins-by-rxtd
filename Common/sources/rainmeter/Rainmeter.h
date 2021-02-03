@@ -12,7 +12,7 @@
 #include "SkinHandle.h"
 #include "InstanceKeeper.h"
 #include "Logger.h"
-#include "option-parser/Option.h"
+#include "option-parsing/Option.h"
 
 namespace rxtd::common::rainmeter {
 	class Rainmeter {

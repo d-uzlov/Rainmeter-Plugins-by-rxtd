@@ -11,7 +11,7 @@
 #include <array>
 #include "rainmeter/Logger.h"
 #include "LinearInterpolator.h"
-#include "option-parser/OptionList.h"
+#include "option-parsing/OptionList.h"
 
 namespace rxtd::audio_utils {
 	class CustomizableValueTransformer {

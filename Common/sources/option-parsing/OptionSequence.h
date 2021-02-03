@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2020 rxtd
+ * Copyright (C) 2020-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -9,32 +9,40 @@
 
 #pragma once
 #include "StringUtils.h"
-#include "AbstractOption.h"
+#include "OptionBase.h"
 #include "OptionList.h"
 #include "Tokenizer.h"
 
 namespace rxtd::utils {
-	class OptionSequence : public AbstractOption<OptionSequence> {
+	class OptionSequence : public OptionBase<OptionSequence> {
 		std::vector<std::vector<SubstringViewInfo>> list;
 
 	public:
 		OptionSequence() = default;
 
 		OptionSequence(
-			sview view, std::vector<wchar_t>&& source,
+			sview view,
 			wchar_t optionBegin, wchar_t optionEnd,
 			wchar_t optionDelimiter
-		) : AbstractOption(view, std::move(source)) {
+		) : OptionBase(view) {
+			list = Tokenizer::parseSequence(getView(), optionBegin, optionEnd, optionDelimiter);
+		}
+
+		OptionSequence(
+			std::vector<wchar_t>&& source,
+			wchar_t optionBegin, wchar_t optionEnd,
+			wchar_t optionDelimiter
+		) : OptionBase(std::move(source)) {
 			list = Tokenizer::parseSequence(getView(), optionBegin, optionEnd, optionDelimiter);
 		}
 
 		class iterator {
 			sview view;
-			const std::vector<std::vector<SubstringViewInfo>>& list;
+			array_view<std::vector<SubstringViewInfo>> list;
 			index ind;
 
 		public:
-			iterator(sview view, const std::vector<std::vector<SubstringViewInfo>>& list, index _index) :
+			iterator(sview view, array_view<std::vector<SubstringViewInfo>> list, index _index) :
 				view(view), list(list), ind(_index) { }
 
 			iterator& operator++() {
@@ -43,13 +51,13 @@ namespace rxtd::utils {
 			}
 
 			bool operator !=(const iterator& other) const {
-				return &list != &other.list || ind != other.ind;
+				return list.data() != other.list.data() || ind != other.ind;
 			}
 
 			[[nodiscard]]
 			OptionList operator*() const {
 				auto list_ = list[ind];
-				return { view, {}, std::move(list_) };
+				return { view, std::move(list_) };
 			}
 		};
 

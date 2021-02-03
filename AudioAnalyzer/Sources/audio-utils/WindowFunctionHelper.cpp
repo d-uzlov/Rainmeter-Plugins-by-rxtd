@@ -9,8 +9,8 @@
 
 #include "WindowFunctionHelper.h"
 
-#include "option-parser/OptionList.h"
-#include "option-parser/OptionSequence.h"
+#include "option-parsing/OptionList.h"
+#include "option-parsing/OptionSequence.h"
 #include "cheby_win-lib/cheby_win.h"
 
 using namespace audio_utils;

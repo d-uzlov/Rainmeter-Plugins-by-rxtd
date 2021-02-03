@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2019 rxtd
+ * Copyright (C) 2019-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -9,20 +9,21 @@
 
 #pragma once
 #include "StringUtils.h"
-#include "AbstractOption.h"
+#include "OptionBase.h"
 #include "Option.h"
 
 namespace rxtd::utils {
-	// List of string.
-	class OptionList : public AbstractOption<OptionList> {
+	class OptionList : public OptionBase<OptionList> {
 		std::vector<SubstringViewInfo> list;
 
 	public:
 		OptionList() = default;
 
-		OptionList(sview view, std::vector<wchar_t>&& source, std::vector<SubstringViewInfo>&& list) :
-			AbstractOption(view, std::move(source)),
-			list(std::move(list)) { }
+		OptionList(sview view, std::vector<SubstringViewInfo>&& list) :
+			OptionBase(view), list(std::move(list)) { }
+
+		OptionList(std::vector<wchar_t>&& source, std::vector<SubstringViewInfo>&& list) :
+			OptionBase(std::move(source)), list(std::move(list)) { }
 
 		// Allows you to steal inner resources.
 		[[nodiscard]]
@@ -42,7 +43,7 @@ namespace rxtd::utils {
 			return list.empty();
 		}
 
-		// Parseable view of Nth option.
+		// Returns Nth element
 		[[nodiscard]]
 		GhostOption get(index ind) const & {
 			if (ind >= index(list.size())) {
@@ -51,45 +52,13 @@ namespace rxtd::utils {
 			return GhostOption{ list[ind].makeView(getView()) };
 		}
 
+		// Returns Nth element
 		[[nodiscard]]
 		Option get(index ind) const && {
 			return get(ind);
 		}
 
-		class ghost_iterator {
-			const OptionList& container;
-			index ind;
-
-		public:
-			ghost_iterator(const OptionList& container, index _index) :
-				container(container),
-				ind(_index) { }
-
-			ghost_iterator& operator++() {
-				ind++;
-				return *this;
-			}
-
-			bool operator !=(const ghost_iterator& other) const {
-				return &container != &other.container || ind != other.ind;
-			}
-
-			[[nodiscard]]
-			GhostOption operator*() const {
-				return container.get(ind);
-			}
-		};
-
-		[[nodiscard]]
-		ghost_iterator begin() const & {
-			return { *this, 0 };
-		}
-
-		[[nodiscard]]
-		ghost_iterator end() const & {
-			return { *this, size() };
-		}
-
+		template<typename T>
 		class iterator {
 			const OptionList& container;
 			index ind;
@@ -109,18 +78,28 @@ namespace rxtd::utils {
 			}
 
 			[[nodiscard]]
-			Option operator*() const {
+			T operator*() const {
 				return container.get(ind);
 			}
 		};
 
 		[[nodiscard]]
-		iterator begin() const && {
+		iterator<GhostOption> begin() const & {
 			return { *this, 0 };
 		}
 
 		[[nodiscard]]
-		iterator end() const && {
+		iterator<GhostOption> end() const & {
+			return { *this, size() };
+		}
+
+		[[nodiscard]]
+		iterator<Option> begin() const && {
+			return { *this, 0 };
+		}
+
+		[[nodiscard]]
+		iterator<Option> end() const && {
 			return { *this, size() };
 		}
 	};

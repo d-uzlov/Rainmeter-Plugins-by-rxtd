@@ -13,7 +13,7 @@
 
 #include "LinearInterpolator.h"
 #include "MyMath.h"
-#include "option-parser/OptionList.h"
+#include "option-parsing/OptionList.h"
 #include "winapi-wrappers/FileWrapper.h"
 
 using namespace std::string_literals;

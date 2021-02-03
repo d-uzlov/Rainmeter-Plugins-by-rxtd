@@ -8,8 +8,8 @@
  */
 
 #include "Color.h"
-#include "option-parser/Option.h"
-#include "option-parser/OptionList.h"
+#include "option-parsing/Option.h"
+#include "option-parsing/OptionList.h"
 #include "rainmeter/Logger.h"
 
 using Logger = ::rxtd::common::rainmeter::Logger;

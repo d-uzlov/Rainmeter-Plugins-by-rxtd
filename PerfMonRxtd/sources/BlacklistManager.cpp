@@ -10,8 +10,8 @@
 #include "BlacklistManager.h"
 
 #include "my-windows.h"
-#include "option-parser/Option.h"
-#include "option-parser/OptionList.h"
+#include "option-parsing/Option.h"
+#include "option-parsing/OptionList.h"
 
 using namespace perfmon;
 

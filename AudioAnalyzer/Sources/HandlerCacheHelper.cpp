@@ -24,7 +24,7 @@
 #include "sound-processing/sound-handlers/spectrum-stack/legacy_WeightedBlur.h"
 #include "sound-processing/sound-handlers/spectrum-stack/legacy_FiniteTimeFilter.h"
 
-#include "option-parser/OptionMap.h"
+#include "option-parsing/OptionMap.h"
 
 using namespace std::string_literals;
 
@@ -168,7 +168,7 @@ void HandlerCacheHelper::readRawDescription2(
 	string& rawDescription2
 ) const {
 	if (type == L"BandResampler") {
-		auto freqListIndex = optionMap.getUntouched(L"freqList").asString();
+		auto freqListIndex = optionMap.get(L"freqList").asString();
 		if (!freqListIndex.empty()) {
 			auto freqListOptionName = L"FreqList-"s += freqListIndex;
 			auto freqListOption = rain.read(freqListOptionName);

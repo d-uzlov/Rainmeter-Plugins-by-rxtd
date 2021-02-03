@@ -13,7 +13,7 @@
 #include "FilterCascade.h"
 #include "rainmeter/Logger.h"
 #include "../butterworth-lib/ButterworthWrapper.h"
-#include "option-parser/Option.h"
+#include "option-parsing/Option.h"
 
 namespace rxtd::audio_utils {
 	class FilterCascadeCreator {

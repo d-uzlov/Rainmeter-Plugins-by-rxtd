@@ -8,7 +8,7 @@
  */
 
 #include "AudioChild.h"
-#include "option-parser/OptionList.h"
+#include "option-parsing/OptionList.h"
 
 using namespace audio_analyzer;
 

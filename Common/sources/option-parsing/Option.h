@@ -8,21 +8,19 @@
  */
 
 #pragma once
-#include "StringUtils.h"
-#include "AbstractOption.h"
+#include "OptionBase.h"
 
 namespace rxtd::utils {
 	class OptionList;
 	class OptionMap;
 	class OptionSequence;
-	struct OptionSeparated;
 
 	// Class, that allows you to parse strings as some options.
-	class Option : public AbstractOption<Option> {
+	class Option : public OptionBase<Option> {
 	public:
 		Option() = default;
 
-		explicit Option(sview view) : AbstractOption(view, {}) { }
+		explicit Option(sview view) : OptionBase(view) { }
 
 		explicit Option(isview view) : Option(view % csView()) { }
 
@@ -58,7 +56,9 @@ namespace rxtd::utils {
 
 		// Parse float, support math operations.
 		[[nodiscard]]
-		float asFloatF(float defaultValue = 0.0) const;
+		float asFloatF(float defaultValue = 0.0) const {
+			return float(asFloat(double(defaultValue)));
+		}
 
 		// Parse integer value, support math operations.
 		template<typename IntType = int32_t>
@@ -76,7 +76,7 @@ namespace rxtd::utils {
 		bool asBool(bool defaultValue = false) const;
 
 		[[nodiscard]]
-		OptionSeparated breakFirst(wchar_t separator) const;
+		std::pair<Option, Option> breakFirst(wchar_t separator) const;
 
 		[[nodiscard]]
 		OptionMap asMap(wchar_t optionDelimiter, wchar_t nameDelimiter) const &;
@@ -105,13 +105,6 @@ namespace rxtd::utils {
 	private:
 		[[nodiscard]]
 		static double parseNumber(sview source);
-
-		[[nodiscard]]
-		static std::map<SubstringViewInfo, SubstringViewInfo> parseMapParams(
-			sview source,
-			wchar_t optionDelimiter,
-			wchar_t nameDelimiter
-		);
 	};
 
 	std::wostream& operator<<(std::wostream& stream, const Option& opt);
@@ -137,16 +130,5 @@ namespace rxtd::utils {
 		isview asIString(isview defaultValue = {}) const {
 			return Option::asIString(defaultValue);
 		}
-	};
-
-	struct OptionSeparated {
-		Option first;
-		Option rest;
-
-		OptionSeparated() = default;
-
-		OptionSeparated(Option first, Option rest) :
-			first(std::move(first)),
-			rest(std::move(rest)) { }
 	};
 }

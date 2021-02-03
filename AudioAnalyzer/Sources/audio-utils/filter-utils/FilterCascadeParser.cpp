@@ -11,8 +11,8 @@
 #include "InfiniteResponseFilter.h"
 #include "BiQuadIIR.h"
 #include "BQFilterBuilder.h"
-#include "option-parser/OptionMap.h"
-#include "option-parser/OptionSequence.h"
+#include "option-parsing/OptionMap.h"
+#include "option-parsing/OptionSequence.h"
 #include "../butterworth-lib/ButterworthWrapper.h"
 
 using namespace audio_utils;

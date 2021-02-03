@@ -13,7 +13,7 @@
 
 #include "PdhFormat.h"
 #include "PdhSnapshot.h"
-#include "option-parser/OptionList.h"
+#include "option-parsing/OptionList.h"
 #include "rainmeter/Logger.h"
 
 namespace rxtd::perfmon::pdh {

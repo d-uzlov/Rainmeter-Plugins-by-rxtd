@@ -22,9 +22,11 @@ Rainmeter::Rainmeter(void* rm) :
 }
 
 utils::Option Rainmeter::read(sview optionName, bool replaceVariables) const {
-	return utils::Option{
+	auto result = utils::Option{
 		RmReadString(dataHandle.getRawHandle(), makeNullTerminated(optionName), L"", replaceVariables)
-	}.own();
+	};
+	result.own();
+	return result;
 }
 
 sview Rainmeter::replaceVariables(sview string) const {

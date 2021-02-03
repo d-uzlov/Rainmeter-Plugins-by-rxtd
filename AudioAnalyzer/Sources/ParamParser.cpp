@@ -9,8 +9,8 @@
 
 #include "ParamParser.h"
 
-#include "option-parser/OptionMap.h"
-#include "option-parser/OptionList.h"
+#include "option-parsing/OptionMap.h"
+#include "option-parsing/OptionList.h"
 
 using namespace std::string_literals;
 
