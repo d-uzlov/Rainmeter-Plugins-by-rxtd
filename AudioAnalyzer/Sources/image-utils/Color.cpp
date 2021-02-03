@@ -12,10 +12,12 @@
 #include "option-parsing/OptionList.h"
 #include "rainmeter/Logger.h"
 
+using namespace ::rxtd::utils;
+using namespace ::rxtd::common::options;
 using Logger = ::rxtd::common::rainmeter::Logger;
 using BufferPrinter = ::rxtd::common::buffer_printer::BufferPrinter;
 
-utils::Color utils::Color::parse(sview desc, Color defaultValue) {
+Color Color::parse(sview desc, Color defaultValue) {
 	if (desc.empty()) {
 		return defaultValue;
 	}
@@ -95,7 +97,7 @@ utils::Color utils::Color::parse(sview desc, Color defaultValue) {
 	return result;
 }
 
-utils::Color utils::Color::rgb2hsv() const {
+Color Color::rgb2hsv() const {
 	const float xMax = std::max(std::max(_.rgb.red, _.rgb.green), _.rgb.blue);
 	const float xMin = std::min(std::min(_.rgb.red, _.rgb.green), _.rgb.blue);
 
@@ -117,7 +119,7 @@ utils::Color utils::Color::rgb2hsv() const {
 	return { hue, sat, val, alpha, Mode::eHSV };
 }
 
-utils::Color utils::Color::hsv2hsl() const {
+Color Color::hsv2hsl() const {
 	Color result;
 	result.mode = Mode::eHSL;
 	result.alpha = alpha;
@@ -135,7 +137,7 @@ utils::Color utils::Color::hsv2hsl() const {
 	return result;
 }
 
-utils::Color utils::Color::hsl2hsv() const {
+Color Color::hsl2hsv() const {
 	Color result;
 	result.mode = Mode::eHSV;
 	result.alpha = alpha;
@@ -153,7 +155,7 @@ utils::Color utils::Color::hsl2hsv() const {
 	return result;
 }
 
-utils::Color utils::Color::hsv2rgb() const {
+Color Color::hsv2rgb() const {
 	const float chroma = _.hsv.val * _.hsv.sat;
 	float fractionalPart;
 	const float h = std::modff(_.hsv.hue * (1.0f / 60.0f) * (1.0f / 6.0f), &fractionalPart) * 6.0f;
@@ -189,7 +191,7 @@ utils::Color utils::Color::hsv2rgb() const {
 	};
 }
 
-utils::Color utils::Color::rgb2ycbcr() const {
+Color Color::rgb2ycbcr() const {
 	const float kr = 0.299f;
 	const float kg = 0.587f;
 	const float kb = 0.114f;
@@ -208,7 +210,7 @@ utils::Color utils::Color::rgb2ycbcr() const {
 	return result;
 }
 
-utils::Color utils::Color::ycbcr2rgb() const {
+Color Color::ycbcr2rgb() const {
 	const float kr = 0.299f;
 	const float kg = 0.587f;
 	const float kb = 0.114f;

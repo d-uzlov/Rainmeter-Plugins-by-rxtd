@@ -9,7 +9,7 @@
 
 #pragma once
 
-namespace rxtd::utils {
+namespace rxtd::common::options {
 	template<typename T>
 	class OptionBase {
 		// There can be two states of this object:

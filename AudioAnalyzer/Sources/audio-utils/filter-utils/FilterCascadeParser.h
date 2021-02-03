@@ -19,7 +19,7 @@ namespace rxtd::audio_utils {
 	class FilterCascadeCreator {
 	public:
 		using FilterCreationFunction = std::function<std::unique_ptr<AbstractFilter>(double sampleFrequency)>;
-
+		
 	private:
 		string source;
 		std::vector<FilterCreationFunction> patchers;
@@ -44,21 +44,25 @@ namespace rxtd::audio_utils {
 
 	class FilterCascadeParser {
 	public:
-		using Logger = ::rxtd::common::rainmeter::Logger;
 		using FCF = FilterCascadeCreator::FilterCreationFunction;
+		
+		using Logger = ::rxtd::common::rainmeter::Logger;
+		using Option = ::rxtd::common::options::Option;
+		using OptionList = ::rxtd::common::options::OptionList;
+		using OptionMap = ::rxtd::common::options::OptionMap;
 
 		[[nodiscard]]
-		static FilterCascadeCreator parse(const utils::Option& description, Logger& logger);
+		static FilterCascadeCreator parse(const Option& description, Logger& logger);
 
 	private:
 		[[nodiscard]]
-		static FCF parseFilter(const utils::OptionList& description, Logger& logger);
+		static FCF parseFilter(const OptionList& description, Logger& logger);
 
 		[[nodiscard]]
-		static FCF parseBQ(isview name, const utils::OptionMap& description, Logger& cl);
+		static FCF parseBQ(isview name, const OptionMap& description, Logger& cl);
 
 		[[nodiscard]]
-		static FCF parseBW(isview name, const utils::OptionMap& description, Logger& cl);
+		static FCF parseBW(isview name, const OptionMap& description, Logger& cl);
 
 		template<index size>
 		[[nodiscard]]

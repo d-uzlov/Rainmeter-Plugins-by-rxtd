@@ -30,7 +30,7 @@ SoundHandler::ParseResult BandResampler::parseParams(
 		return {};
 	}
 
-	utils::Option freqListOption;
+	Option freqListOption;
 	Logger bandLogger;
 	if (!om.get(L"bands").empty()) {
 		freqListOption = om.get(L"bands");
@@ -90,7 +90,7 @@ SoundHandler::ParseResult BandResampler::parseParams(
 	return result;
 }
 
-bool BandResampler::parseFreqListElement(utils::OptionList& options, std::vector<float>& freqs, Logger& cl) {
+bool BandResampler::parseFreqListElement(OptionList& options, std::vector<float>& freqs, Logger& cl) {
 	auto type = options.get(0).asIString();
 
 	if (type == L"custom") {
@@ -148,7 +148,7 @@ bool BandResampler::parseFreqListElement(utils::OptionList& options, std::vector
 	return true;
 }
 
-std::vector<float> BandResampler::parseFreqList(utils::Option freqListOption, Logger& cl) {
+std::vector<float> BandResampler::parseFreqList(Option freqListOption, Logger& cl) {
 	std::vector<float> freqs;
 
 	for (auto boundOption : freqListOption.asList(L'|')) {

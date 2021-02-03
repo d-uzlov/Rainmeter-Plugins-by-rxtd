@@ -91,7 +91,7 @@ AudioParent::AudioParent(Rainmeter&& _rain) :
 	}
 
 	if (legacyNumber < 104) {
-		logger.warning(L"Measure operated in legacy mode. If you are a skin author, consider modernizing it.");
+		logger.warning(L"Measure operates in legacy mode. If you are a skin author, consider modernizing it.");
 	}
 
 	try {
@@ -328,7 +328,7 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 			return;
 		}
 
-		auto map = utils::Option{ args[1] }.asMap(L'|', L' ');
+		auto map = common::options::Option{ args[1] }.asMap(L'|', L' ');
 
 		auto procName = map.get(L"proc").asIString();
 		const auto channelName = map.get(L"channel").asIString();

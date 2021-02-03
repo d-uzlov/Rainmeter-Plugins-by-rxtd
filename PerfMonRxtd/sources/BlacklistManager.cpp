@@ -16,7 +16,7 @@
 using namespace perfmon;
 
 BlacklistManager::MatchList::MatchList(string sourceString, bool upperCase) {
-	auto [_, optList] = utils::Option{ sourceString }.asList(L'|').consume();
+	auto [_, optList] = common::options::Option{ sourceString }.asList(L'|').consume();
 
 	source = std::move(sourceString);
 	if (upperCase) {

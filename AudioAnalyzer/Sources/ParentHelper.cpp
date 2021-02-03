@@ -21,7 +21,7 @@ ParentHelper::~ParentHelper() {
 void ParentHelper::init(
 	Rainmeter _rain,
 	Logger _logger,
-	const utils::OptionMap& threadingMap,
+	const OptionMap& threadingMap,
 	index _legacyNumber
 ) {
 	mainFields.rain = std::move(_rain);

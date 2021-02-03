@@ -11,7 +11,11 @@
 #include "OptionBase.h"
 #include "Option.h"
 
-namespace rxtd::utils {
+namespace rxtd::common::options {
+	//
+	// Parses its contents in the form:
+	// <name><nameDelimiter><value> <optionDelimiter> <name><nameDelimiter><value> <optionDelimiter> ...
+	//
 	class OptionMap : public OptionBase<OptionMap> {
 	public:
 		struct MapOptionInfo {

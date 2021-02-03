@@ -15,7 +15,8 @@
 
 #include "MyMath.h"
 
-using namespace audio_utils;
+using namespace ::rxtd::audio_utils;
+using namespace ::rxtd::common::options;
 using CVT = CustomizableValueTransformer;
 
 double CVT::apply(double value) {
@@ -107,7 +108,8 @@ void CVT::applyToArray(array_view<float> source, array_span<float> dest) {
 CVT CVT::parse(sview transformDescription, Logger& cl) {
 	std::vector<TransformationInfo> transforms;
 
-	for (auto list : utils::Option{ transformDescription }.asSequence()) {
+
+	for (auto list : Option{ transformDescription }.asSequence()) {
 		auto logger = cl.context(L"{}: ", list.get(0).asString());
 		auto transformOpt = parseTransformation(list, logger);
 		if (!transformOpt.has_value()) {
@@ -119,11 +121,11 @@ CVT CVT::parse(sview transformDescription, Logger& cl) {
 	return CustomizableValueTransformer{ transforms };
 }
 
-std::optional<CVT::TransformationInfo> CVT::parseTransformation(utils::OptionList list, Logger& cl) {
+std::optional<CVT::TransformationInfo> CVT::parseTransformation(OptionList list, Logger& cl) {
 	const auto transformName = list.get(0).asIString();
 	TransformationInfo tr{};
 
-	utils::OptionMap params;
+	OptionMap params;
 	if (list.size() >= 2) {
 		params = list.get(1).asMap(L',', L' ');
 	}

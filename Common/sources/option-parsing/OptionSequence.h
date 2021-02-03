@@ -13,8 +13,14 @@
 #include "OptionList.h"
 #include "Tokenizer.h"
 
-namespace rxtd::utils {
+namespace rxtd::common::options {
+	//
+	// Parses its contents in the form:
+	// <name> <optionBegin> <value> <optionDelimiter> <value> <optionDelimiter> ... <optionEnd> ...
+	//
 	class OptionSequence : public OptionBase<OptionSequence> {
+		using SubstringViewInfo = utils::SubstringViewInfo;
+		
 		std::vector<std::vector<SubstringViewInfo>> list;
 
 	public:

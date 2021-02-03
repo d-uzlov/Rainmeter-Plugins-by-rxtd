@@ -9,7 +9,8 @@
 
 #include "Tokenizer.h"
 
-using namespace utils;
+using namespace common::options;
+using SubstringViewInfo = utils::SubstringViewInfo;
 
 std::vector<SubstringViewInfo> Tokenizer::parse(sview view, wchar_t delimiter) {
 	// this method is guarantied to return non empty views
@@ -124,7 +125,7 @@ void Tokenizer::tokenize(std::vector<SubstringViewInfo>& list, sview string, wch
 
 void Tokenizer::trimSpaces(std::vector<SubstringViewInfo>& list, sview string) {
 	for (auto& view : list) {
-		view = StringUtils::trimInfo(string, view);
+		view = utils::StringUtils::trimInfo(string, view);
 	}
 
 	list.erase(

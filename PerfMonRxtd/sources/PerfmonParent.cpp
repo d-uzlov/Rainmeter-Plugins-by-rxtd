@@ -249,7 +249,7 @@ void PerfmonParent::vCommand(isview bangArgs) {
 		stopped = !stopped;
 		return;
 	}
-	auto [name, value] = utils::Option{ bangArgs }.breakFirst(L' ');
+	auto [name, value] = common::options::Option{ bangArgs }.breakFirst(L' ');
 	if (name.asIString() == L"SetIndexOffset") {
 		const index offset = value.asInt();
 		const auto firstSymbol = value.asString()[0];

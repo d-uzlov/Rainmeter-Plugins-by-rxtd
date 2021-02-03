@@ -16,7 +16,8 @@
 #include "OptionSequence.h"
 #include "rainmeter/Logger.h"
 
-using namespace utils;
+using namespace common::options;
+using StringUtils = utils::StringUtils;
 
 sview Option::asString(sview defaultValue) const & {
 	sview view = getView();
@@ -58,7 +59,7 @@ bool Option::asBool(bool defaultValue) const {
 	return asFloat() != 0.0;
 }
 
-std::pair<Option, Option> Option::breakFirst(wchar_t separator) const {
+std::pair<Option, Option> Option::breakFirst(wchar_t separator) const & {
 	sview view = getView();
 
 	const auto delimiterPlace = view.find_first_of(separator);
@@ -69,6 +70,15 @@ std::pair<Option, Option> Option::breakFirst(wchar_t separator) const {
 	auto first = Option{ StringUtils::trim(sview(view.data(), delimiterPlace)) };
 	auto rest = Option{ StringUtils::trim(sview(view.data() + delimiterPlace + 1, view.size() - delimiterPlace - 1)) };
 	return { first, rest };
+}
+
+std::pair<Option, Option> Option::breakFirst(wchar_t separator) && {
+	auto result = breakFirst(separator);
+	if (isOwningSource()) {
+		result.first.own();
+		result.second.own();
+	}
+	return result;
 }
 
 OptionMap Option::asMap(wchar_t optionDelimiter, wchar_t nameDelimiter) const & {
@@ -115,7 +125,7 @@ OptionSequence Option::asSequence(
 }
 
 double Option::parseNumber(sview source) {
-	MathExpressionParser parser(source);
+	utils::MathExpressionParser parser(source);
 
 	parser.parse();
 
@@ -129,14 +139,14 @@ double Option::parseNumber(sview source) {
 	auto exp = parser.getExpression();
 	exp.solve();
 
-	if (exp.type != ExpressionType::eNUMBER) {
+	if (exp.type != utils::ExpressionType::eNUMBER) {
 		return 0;
 	}
 
 	return exp.number;
 }
 
-std::wostream& utils::operator<<(std::wostream& stream, const Option& opt) {
+std::wostream& rxtd::common::options::operator<<(std::wostream& stream, const Option& opt) {
 	stream << opt.asString();
 	return stream;
 }

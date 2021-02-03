@@ -56,7 +56,7 @@ HandlerCacheHelper::HandlerRawInfo HandlerCacheHelper::parseHandler(sview name, 
 		return {};
 	}
 
-	utils::OptionMap optionMap = descriptionOption.asMap(L'|', L' ');
+	OptionMap optionMap = descriptionOption.asMap(L'|', L' ');
 	string rawDescription2;
 	readRawDescription2(optionMap.get(L"type").asIString(), optionMap, rawDescription2);
 
@@ -81,7 +81,7 @@ HandlerCacheHelper::HandlerRawInfo HandlerCacheHelper::parseHandler(sview name, 
 }
 
 PatchInfo HandlerCacheHelper::createHandlerPatcher(
-	const utils::OptionMap& optionMap,
+	const OptionMap& optionMap,
 	Logger& cl
 ) const {
 	const auto type = optionMap.get(L"type").asIString();
@@ -154,7 +154,7 @@ PatchInfo HandlerCacheHelper::createHandlerPatcher(
 		const double offset = optionMap.get(L"offset").asFloatF(0.0);
 
 		bp.append(L"| transform db map[from -{} : 0, to {} : {}]", sensitivity * 0.5, offset, 1.0 + offset);
-		auto optionMapLocal = utils::Option{ bp.getBufferView() }.asMap(L'|', L' ');
+		auto optionMapLocal = common::options::Option{ bp.getBufferView() }.asMap(L'|', L' ');
 		return createPatcherT<SingleValueTransformer>(optionMapLocal, cl);
 	}
 
@@ -164,7 +164,7 @@ PatchInfo HandlerCacheHelper::createHandlerPatcher(
 
 void HandlerCacheHelper::readRawDescription2(
 	isview type,
-	const utils::OptionMap& optionMap,
+	const OptionMap& optionMap,
 	string& rawDescription2
 ) const {
 	if (type == L"BandResampler") {

@@ -29,7 +29,7 @@ bool PdhWrapper::init(Logger logger) {
 	return true;
 }
 
-bool PdhWrapper::setCounters(sview objectName, const utils::OptionList& counterList, bool gpuExtraIds) {
+bool PdhWrapper::setCounters(sview objectName, const OptionList& counterList, bool gpuExtraIds) {
 	needFetchExtraIDs = gpuExtraIds;
 
 	counterHandlers.reserve(counterList.size());

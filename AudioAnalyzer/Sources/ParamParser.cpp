@@ -135,7 +135,7 @@ void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldData
 	}
 }
 
-void ParamParser::parseFilters(const utils::OptionMap& optionMap, ProcessingData& data, Logger& cl) const {
+void ParamParser::parseFilters(const OptionMap& optionMap, ProcessingData& data, Logger& cl) const {
 	const auto filterDescription = optionMap.get(L"filter");
 
 	if (filterDescription.asString() == data.rawFccDescription) {
@@ -157,7 +157,7 @@ void ParamParser::parseFilters(const utils::OptionMap& optionMap, ProcessingData
 
 	if (filterType == L"like-a") {
 		data.fcc = audio_utils::FilterCascadeParser::parse(
-			utils::Option{
+			common::options::Option{
 				L"bqHighPass[q 0.3, freq 200, forcedGain 3.58]  " // spaces in the ends of the strings are necessary
 				L"bwLowPass[order 5, freq 10000] "
 			}, filterLogger
@@ -167,7 +167,7 @@ void ParamParser::parseFilters(const utils::OptionMap& optionMap, ProcessingData
 
 	if (filterType == L"like-d") {
 		data.fcc = audio_utils::FilterCascadeParser::parse(
-			utils::Option{
+			common::options::Option{
 				L"bqHighPass[q 0.3, freq 200, forcedGain 3.65]  " // spaces in the ends of the strings are necessary
 				L"bqPeak[q 1.0, freq 6000, gain 5.28] "
 				L"bwLowPass[order 5, freq 10000] "
@@ -185,7 +185,7 @@ void ParamParser::parseFilters(const utils::OptionMap& optionMap, ProcessingData
 	data.fcc = {};
 }
 
-void ParamParser::parseTargetRate(const utils::OptionMap& optionMap, ProcessingData& data, Logger& cl) const {
+void ParamParser::parseTargetRate(const OptionMap& optionMap, ProcessingData& data, Logger& cl) const {
 	const auto targetRate = optionMap.get(L"targetRate").asInt(defaultTargetRate);
 	if (targetRate == data.targetRate) {
 		return;
@@ -195,7 +195,7 @@ void ParamParser::parseTargetRate(const utils::OptionMap& optionMap, ProcessingD
 	data.targetRate = targetRate;
 }
 
-bool ParamParser::checkListUnique(const utils::OptionList& list) {
+bool ParamParser::checkListUnique(const OptionList& list) {
 	std::set<isview> set;
 	for (auto option : list) {
 		auto view = option.asIString();
@@ -207,7 +207,7 @@ bool ParamParser::checkListUnique(const utils::OptionList& list) {
 	return true;
 }
 
-std::set<Channel> ParamParser::parseChannels(const utils::OptionList& channelsStringList, Logger& logger) const {
+std::set<Channel> ParamParser::parseChannels(const OptionList& channelsStringList, Logger& logger) const {
 	std::set<Channel> set;
 
 	for (auto channelOption : channelsStringList) {
@@ -223,7 +223,7 @@ std::set<Channel> ParamParser::parseChannels(const utils::OptionList& channelsSt
 }
 
 ParamParser::HandlerPatchersInfo
-ParamParser::parseHandlers(const utils::OptionList& names) {
+ParamParser::parseHandlers(const OptionList& names) {
 	HandlerPatchersInfo result;
 
 	for (auto nameOption : names) {

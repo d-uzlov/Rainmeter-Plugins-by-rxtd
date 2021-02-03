@@ -15,6 +15,7 @@
 namespace rxtd::perfmon {
 	class ExpressionResolver {
 		using Logger = ::rxtd::common::rainmeter::Logger;
+		using OptionList = ::rxtd::common::options::OptionList;
 		
 		enum class TotalSource {
 			eRAW_COUNTER,
@@ -53,7 +54,7 @@ namespace rxtd::perfmon {
 
 		double getValue(const Reference& ref, const InstanceInfo* instance, Logger& logger) const;
 
-		void setExpressions(utils::OptionList expressionsList, utils::OptionList rollupExpressionsList);
+		void setExpressions(OptionList expressionsList, OptionList rollupExpressionsList);
 
 		double getRaw(index counterIndex, Indices originalIndexes) const;
 

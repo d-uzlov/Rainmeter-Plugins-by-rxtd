@@ -36,6 +36,7 @@ namespace rxtd::perfmon::pdh {
 
 	class PdhWrapper : MovableOnlyBase {
 		using Logger = ::rxtd::common::rainmeter::Logger;
+		using OptionList = ::rxtd::common::options::OptionList;
 		
 		struct QueryWrapper : MovableOnlyBase {
 			PDH_HQUERY handle = nullptr;
@@ -89,7 +90,7 @@ namespace rxtd::perfmon::pdh {
 
 		// returns true on success, false on error
 		[[nodiscard]]
-		bool setCounters(sview objectName, const utils::OptionList& counterList, bool gpuExtraIds);
+		bool setCounters(sview objectName, const OptionList& counterList, bool gpuExtraIds);
 
 	private:
 		[[nodiscard]]

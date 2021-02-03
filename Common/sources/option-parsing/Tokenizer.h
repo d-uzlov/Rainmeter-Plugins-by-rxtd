@@ -10,9 +10,11 @@
 #pragma once
 #include "StringUtils.h"
 
-namespace rxtd::utils {
+namespace rxtd::common::options {
 	class Tokenizer {
 	public:
+		using SubstringViewInfo = utils::SubstringViewInfo;
+		
 		[[nodiscard]]
 		static std::vector<SubstringViewInfo> parse(sview view, wchar_t delimiter);
 		[[nodiscard]]

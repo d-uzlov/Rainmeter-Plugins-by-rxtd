@@ -30,7 +30,7 @@ namespace rxtd::common::rainmeter {
 
 		// Read named option from description linked to "void* rm" pointer from ctor
 		[[nodiscard]]
-		utils::Option read(sview optionName, bool replaceVariables = true) const;
+		options::Option read(sview optionName, bool replaceVariables = true) const;
 
 		// Replaces Rainmeter variables with its values
 		// See https://docs.rainmeter.net/developers/plugin/cpp/api/#ReplaceVariables

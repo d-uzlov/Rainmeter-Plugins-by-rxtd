@@ -11,7 +11,7 @@
 #include "StringUtils.h"
 #include "Tokenizer.h"
 
-using namespace utils;
+using namespace common::options;
 
 OptionMap::OptionMap(sview view, wchar_t optionDelimiter, wchar_t nameDelimiter) :
 	OptionBase(view), optionDelimiter(optionDelimiter), nameDelimiter(nameDelimiter) {
@@ -63,12 +63,12 @@ void OptionMap::parseParams() {
 			continue;
 		}
 
-		auto name = StringUtils::trimInfo(source, viewInfo.substr(0, delimiterPlace));
+		auto name = utils::StringUtils::trimInfo(source, viewInfo.substr(0, delimiterPlace));
 		if (name.empty()) {
 			continue;
 		}
 
-		auto value = StringUtils::trimInfo(source, viewInfo.substr(delimiterPlace + 1));
+		auto value = utils::StringUtils::trimInfo(source, viewInfo.substr(delimiterPlace + 1));
 
 		params[name.makeView(source) % ciView()] = { value.makeView(source) };
 	}

@@ -22,6 +22,8 @@ namespace rxtd::audio_analyzer {
 	class ParamParser {
 		using Logger = ::rxtd::common::rainmeter::Logger;
 		using Rainmeter = ::rxtd::common::rainmeter::Rainmeter;
+		using OptionMap = ::rxtd::common::options::OptionMap;
+		using OptionList = ::rxtd::common::options::OptionList;
 
 	public:
 		struct HandlerPatchersInfo {
@@ -99,18 +101,18 @@ namespace rxtd::audio_analyzer {
 		}
 
 	private:
-		void parseFilters(const utils::OptionMap& optionMap, ProcessingData& data, Logger& cl) const;
-		void parseTargetRate(const utils::OptionMap& optionMap, ProcessingData& data, Logger& cl) const;
+		void parseFilters(const OptionMap& optionMap, ProcessingData& data, Logger& cl) const;
+		void parseTargetRate(const OptionMap& optionMap, ProcessingData& data, Logger& cl) const;
 
 		[[nodiscard]]
-		static bool checkListUnique(const utils::OptionList& list);
+		static bool checkListUnique(const OptionList& list);
 
 		void parseProcessing(sview name, Logger cl, ProcessingData& oldData);
 
 		[[nodiscard]]
-		std::set<Channel> parseChannels(const utils::OptionList& channelsStringList, Logger& logger) const;
+		std::set<Channel> parseChannels(const OptionList& channelsStringList, Logger& logger) const;
 
 		[[nodiscard]]
-		HandlerPatchersInfo parseHandlers(const utils::OptionList& indices);
+		HandlerPatchersInfo parseHandlers(const OptionList& indices);
 	};
 }

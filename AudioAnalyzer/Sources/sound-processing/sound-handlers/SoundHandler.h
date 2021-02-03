@@ -47,7 +47,9 @@ namespace rxtd::audio_analyzer {
 
 	class SoundHandler : VirtualDestructorBase {
 	public:
-		using OptionMap = utils::OptionMap;
+		using Option = ::rxtd::common::options::Option;
+		using OptionMap = ::rxtd::common::options::OptionMap;
+		using OptionList = ::rxtd::common::options::OptionList;
 		using Rainmeter = ::rxtd::common::rainmeter::Rainmeter;
 		using Logger = ::rxtd::common::rainmeter::Logger;
 		using clock = std::chrono::high_resolution_clock;

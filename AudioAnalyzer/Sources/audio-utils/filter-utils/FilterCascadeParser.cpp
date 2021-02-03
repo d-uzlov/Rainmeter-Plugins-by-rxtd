@@ -27,7 +27,7 @@ FilterCascade FilterCascadeCreator::getInstance(double samplingFrequency) const 
 	return fc;
 }
 
-FilterCascadeCreator FilterCascadeParser::parse(const utils::Option& description, Logger& logger) {
+FilterCascadeCreator FilterCascadeParser::parse(const Option& description, Logger& logger) {
 	std::vector<FCF> result;
 
 	for (auto filterDescription : description.asSequence()) {
@@ -43,7 +43,7 @@ FilterCascadeCreator FilterCascadeParser::parse(const utils::Option& description
 }
 
 FilterCascadeParser::FCF
-FilterCascadeParser::parseFilter(const utils::OptionList& description, Logger& logger) {
+FilterCascadeParser::parseFilter(const OptionList& description, Logger& logger) {
 	auto name = description.get(0).asIString();
 
 	if (name.empty()) {
@@ -67,7 +67,7 @@ FilterCascadeParser::parseFilter(const utils::OptionList& description, Logger& l
 }
 
 FilterCascadeParser::FCF
-FilterCascadeParser::parseBQ(isview name, const utils::OptionMap& description, Logger& cl) {
+FilterCascadeParser::parseBQ(isview name, const OptionMap& description, Logger& cl) {
 	if (description.get(L"q").empty()) {
 		cl.error(L"Q is not found", name);
 		return {};
@@ -138,7 +138,7 @@ FilterCascadeParser::parseBQ(isview name, const utils::OptionMap& description, L
 }
 
 FilterCascadeParser::FCF
-FilterCascadeParser::parseBW(isview name, const utils::OptionMap& description, Logger& cl) {
+FilterCascadeParser::parseBW(isview name, const OptionMap& description, Logger& cl) {
 	if (description.get(L"order").empty()) {
 		cl.error(L"order is not found");
 		return {};

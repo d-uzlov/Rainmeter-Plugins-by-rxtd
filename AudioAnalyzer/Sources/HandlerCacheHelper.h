@@ -42,6 +42,7 @@ namespace rxtd::audio_analyzer {
 	class HandlerCacheHelper {
 		using Logger = ::rxtd::common::rainmeter::Logger;
 		using Rainmeter = ::rxtd::common::rainmeter::Rainmeter;
+		using OptionMap = ::rxtd::common::options::OptionMap;
 
 		struct HandlerRawInfo {
 			bool updated = false;
@@ -88,11 +89,11 @@ namespace rxtd::audio_analyzer {
 		HandlerRawInfo parseHandler(sview name, HandlerRawInfo handler);
 
 		[[nodiscard]]
-		PatchInfo createHandlerPatcher(const utils::OptionMap& optionMap, Logger& cl) const;
+		PatchInfo createHandlerPatcher(const OptionMap& optionMap, Logger& cl) const;
 
 		template<typename T>
 		[[nodiscard]]
-		PatchInfo createPatcherT(const utils::OptionMap& om, Logger& cl) const {
+		PatchInfo createPatcherT(const OptionMap& om, Logger& cl) const {
 			T instance{};
 			SoundHandler& ref = instance;
 			SoundHandler::ParseResult parseResult = ref.parseParams(om, cl, rain, legacyNumber);
@@ -109,6 +110,6 @@ namespace rxtd::audio_analyzer {
 			return result;
 		}
 
-		void readRawDescription2(isview type, const utils::OptionMap& optionMap, string& rawDescription2) const;
+		void readRawDescription2(isview type, const OptionMap& optionMap, string& rawDescription2) const;
 	};
 }

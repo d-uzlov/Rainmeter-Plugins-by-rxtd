@@ -11,6 +11,7 @@
 #include "enums.h"
 
 namespace rxtd::perfmon {
+	// todo rewrite everything here
 	enum class ExpressionType {
 		UNKNOWN,
 		NUMBER,

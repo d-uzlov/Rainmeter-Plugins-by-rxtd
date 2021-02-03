@@ -17,6 +17,7 @@ namespace rxtd::audio_utils {
 	class CustomizableValueTransformer {
 	public:
 		using Logger = ::rxtd::common::rainmeter::Logger;
+		using OptionList = ::rxtd::common::options::OptionList;
 
 		enum class TransformType {
 			eDB,
@@ -80,6 +81,6 @@ namespace rxtd::audio_utils {
 	private:
 		[[nodiscard]]
 		static std::optional<TransformationInfo>
-		parseTransformation(utils::OptionList list, Logger& cl);
+		parseTransformation(OptionList list, Logger& cl);
 	};
 }

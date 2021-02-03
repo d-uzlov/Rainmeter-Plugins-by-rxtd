@@ -10,12 +10,15 @@
 #pragma once
 #include "OptionBase.h"
 
-namespace rxtd::utils {
+namespace rxtd::common::options {
 	class OptionList;
 	class OptionMap;
 	class OptionSequence;
 
-	// Class, that allows you to parse strings as some options.
+	// 
+	// Class Option allows easy parsing of relatively complex input parameters.
+	// See documentation of respective classes to learn about syntax for OptionMap, OptionList, OptionSequence
+	//
 	class Option : public OptionBase<Option> {
 	public:
 		Option() = default;
@@ -24,9 +27,7 @@ namespace rxtd::utils {
 
 		explicit Option(isview view) : Option(view % csView()) { }
 
-		explicit Option(const wchar_t* view) : Option(sview{ view }) {
-			own();
-		}
+		explicit Option(const wchar_t* view) : Option(sview{ view }) {}
 
 		// Raw view of the option.
 		[[nodiscard]]
@@ -62,8 +63,9 @@ namespace rxtd::utils {
 
 		// Parse integer value, support math operations.
 		template<typename IntType = int32_t>
-		typename std::enable_if<std::is_integral<IntType>::value, IntType>::type
-		asInt(IntType defaultValue = 0) const {
+		IntType asInt(IntType defaultValue = 0) const {
+			static_assert(std::is_integral<IntType>::value);
+
 			const auto dVal = asFloat(static_cast<double>(defaultValue));
 			if (dVal > static_cast<double>(std::numeric_limits<IntType>::max()) ||
 				dVal < static_cast<double>(std::numeric_limits<IntType>::lowest())) {
@@ -75,22 +77,35 @@ namespace rxtd::utils {
 		[[nodiscard]]
 		bool asBool(bool defaultValue = false) const;
 
+		// Returns a pair of options,
+		// where first Option contains content before first inclusion of separator
+		// and second Option contains everything after first inclusion of separator
 		[[nodiscard]]
-		std::pair<Option, Option> breakFirst(wchar_t separator) const;
+		std::pair<Option, Option> breakFirst(wchar_t separator) const &;
+
+		// See #breakFirst() const &
+		// Separate case for r-value, makes sure that result won't become invalid after object destruction.
+		[[nodiscard]]
+		std::pair<Option, Option> breakFirst(wchar_t separator) &&;
 
 		[[nodiscard]]
 		OptionMap asMap(wchar_t optionDelimiter, wchar_t nameDelimiter) const &;
+
 		[[nodiscard]]
 		OptionMap asMap(wchar_t optionDelimiter, wchar_t nameDelimiter) &&;
+
 		[[nodiscard]]
 		OptionList asList(wchar_t delimiter) const &;
+
 		[[nodiscard]]
 		OptionList asList(wchar_t delimiter) &&;
+
 		[[nodiscard]]
 		OptionSequence asSequence(
 			wchar_t optionBegin = L'[', wchar_t optionEnd = L']',
 			wchar_t optionDelimiter = L' '
 		) const &;
+
 		[[nodiscard]]
 		OptionSequence asSequence(
 			wchar_t optionBegin = L'[', wchar_t optionEnd = L']',
@@ -109,8 +124,8 @@ namespace rxtd::utils {
 
 	std::wostream& operator<<(std::wostream& stream, const Option& opt);
 
-	// same as option but doesn't allocate memory in #asString when the object it r-value
-	// intended to be created when reading options from already allocated map/list
+	// Same as Option but doesn't allocate memory when the object it an r-value.
+	// Intended to be created when reading options from already allocated map/list.
 	class GhostOption : public Option {
 	public:
 		GhostOption() = default;

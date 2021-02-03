@@ -12,8 +12,14 @@
 #include "OptionBase.h"
 #include "Option.h"
 
-namespace rxtd::utils {
+namespace rxtd::common::options {
+	//
+	// Parses its contents in the form:
+	// <value> <delimiter> <value> <delimiter> ...
+	//
 	class OptionList : public OptionBase<OptionList> {
+		using SubstringViewInfo = utils::SubstringViewInfo;
+		
 		std::vector<SubstringViewInfo> list;
 
 	public:

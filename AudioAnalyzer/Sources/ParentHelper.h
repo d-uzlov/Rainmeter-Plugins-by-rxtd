@@ -21,6 +21,7 @@ namespace rxtd::audio_analyzer {
 	public:
 		using Rainmeter = ::rxtd::common::rainmeter::Rainmeter;
 		using Logger = ::rxtd::common::rainmeter::Logger;
+		using OptionMap = ::rxtd::common::options::OptionMap;
 		using MediaDeviceType = wasapi_wrappers::MediaDeviceType;
 
 		struct SnapshotStruct {
@@ -120,7 +121,7 @@ namespace rxtd::audio_analyzer {
 		void init(
 			Rainmeter _rain,
 			Logger _logger,
-			const utils::OptionMap& threadingMap,
+			const OptionMap& threadingMap,
 			index _legacyNumber
 		);
 

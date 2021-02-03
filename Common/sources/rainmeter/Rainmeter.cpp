@@ -21,8 +21,8 @@ Rainmeter::Rainmeter(void* rm) :
 	measureName = RmGetMeasureName(rm);
 }
 
-utils::Option Rainmeter::read(sview optionName, bool replaceVariables) const {
-	auto result = utils::Option{
+common::options::Option Rainmeter::read(sview optionName, bool replaceVariables) const {
+	auto result = options::Option{
 		RmReadString(dataHandle.getRawHandle(), makeNullTerminated(optionName), L"", replaceVariables)
 	};
 	result.own();
