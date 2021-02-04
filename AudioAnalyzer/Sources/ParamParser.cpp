@@ -16,9 +16,9 @@ using namespace std::string_literals;
 
 using namespace audio_analyzer;
 
-bool ParamParser::parse(index _legacyNumber, bool suppressLogger) {
+bool ParamParser::parse(Version _version, bool suppressLogger) {
 	anythingChanged = false;
-	legacyNumber = _legacyNumber;
+	version = _version;
 
 	auto logger = suppressLogger ? Logger::getSilent() : rain.createLogger();
 
@@ -39,7 +39,7 @@ bool ParamParser::parse(index _legacyNumber, bool suppressLogger) {
 
 	hch.reset();
 	hch.setUnusedOptionsWarning(unusedOptionsWarning);
-	hch.setLegacyNumber(legacyNumber);
+	hch.setVersion(version);
 
 	ProcessingsInfoMap result;
 	for (const auto& nameOption : processingIndices) {
@@ -232,7 +232,7 @@ ParamParser::parseHandlers(const OptionList& names) {
 		auto handler = hch.getHandler(name);
 
 		if (handler == nullptr) {
-			if (legacyNumber < 104) {
+			if (version < Version::eVERSION2) {
 				continue;
 			} else {
 				return result;

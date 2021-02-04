@@ -20,7 +20,7 @@ void ProcessingOrchestrator::reset() {
 
 void ProcessingOrchestrator::patch(
 	const ParamParser::ProcessingsInfoMap& patches,
-	index legacyNumber,
+	Version version,
 	index samplesPerSec, ChannelLayout channelLayout
 ) {
 	utils::MapUtils::intersectKeyCollection(saMap, patches);
@@ -31,7 +31,7 @@ void ProcessingOrchestrator::patch(
 		sa.setParams(
 			logger.context(L"Proc '{}': ", name),
 			data,
-			legacyNumber, samplesPerSec, channelLayout,
+			version, samplesPerSec, channelLayout,
 			snapshot[name]
 		);
 	}
@@ -44,7 +44,7 @@ void ProcessingOrchestrator::configureSnapshot(Snapshot& snap) const {
 }
 
 void ProcessingOrchestrator::process(const ChannelMixer& channelMixer) {
-	using clock = SoundHandler::clock;
+	using clock = SoundHandlerBase::clock;
 	using namespace std::chrono_literals;
 
 	const auto processBeginTime = clock::now();

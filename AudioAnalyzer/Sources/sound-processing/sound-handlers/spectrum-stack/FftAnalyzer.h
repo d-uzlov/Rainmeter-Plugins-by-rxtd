@@ -8,13 +8,13 @@
  */
 
 #pragma once
-#include "../SoundHandler.h"
+#include "../SoundHandlerBase.h"
 #include "../../../audio-utils/FFT.h"
 #include "../../../audio-utils/FftCascade.h"
 #include "../../../audio-utils/WindowFunctionHelper.h"
 
 namespace rxtd::audio_analyzer {
-	class FftAnalyzer : public SoundHandler {
+	class FftAnalyzer : public SoundHandlerBase {
 		using WCF = audio_utils::WindowFunctionHelper::WindowCreationFunc;
 
 		enum class SizeBy {
@@ -94,7 +94,7 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		ParseResult parseParams(
 			const OptionMap& om, Logger& cl, const Rainmeter& rain,
-			index legacyNumber
+			Version version
 		) const override;
 
 	protected:

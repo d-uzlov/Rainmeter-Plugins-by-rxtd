@@ -22,9 +22,9 @@ using namespace audio_analyzer;
 
 using utils::Color;
 
-SoundHandler::ParseResult Spectrogram::parseParams(
+SoundHandlerBase::ParseResult Spectrogram::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
-	index legacyNumber
+	Version version
 ) const {
 	ParseResult result{ true };
 	auto& params = result.params.clear<Params>();
@@ -137,7 +137,7 @@ SoundHandler::ParseResult Spectrogram::parseParams(
 	return result;
 }
 
-SoundHandler::ConfigurationResult
+SoundHandlerBase::ConfigurationResult
 Spectrogram::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
 	params = _params.cast<Params>();
 
@@ -178,7 +178,7 @@ Spectrogram::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData
 	auto& snapshot = externalData.clear<Snapshot>();
 
 	snapshot.prefix = params.folder;
-	if (config.legacyNumber < 104) {
+	if (config.version < Version::eVERSION2) {
 		snapshot.prefix += L"spectrogram-";
 	}
 
@@ -249,7 +249,7 @@ void Spectrogram::staticFinisher(const Snapshot& snapshot, const ExternCallConte
 	}
 
 	snapshot.filenameBuffer = snapshot.prefix;
-	snapshot.filenameBuffer += context.legacyNumber < 104 ? context.channelName : context.filePrefix;
+	snapshot.filenameBuffer += context.version < Version::eVERSION2 ? context.channelName : context.filePrefix;
 	snapshot.filenameBuffer += L".bmp";
 
 	snapshot.writerHelper.write(snapshot.pixels, snapshot.empty, snapshot.filenameBuffer);
@@ -303,7 +303,7 @@ bool Spectrogram::getProp(
 ) {
 	if (prop == L"file") {
 		snapshot.filenameBuffer = snapshot.prefix;
-		snapshot.filenameBuffer += context.legacyNumber < 104 ? context.channelName : context.filePrefix;
+		snapshot.filenameBuffer += context.version < Version::eVERSION2 ? context.channelName : context.filePrefix;
 		snapshot.filenameBuffer += L".bmp";
 
 		printer.print(snapshot.filenameBuffer);

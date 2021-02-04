@@ -8,7 +8,7 @@
  */
 
 #pragma once
-#include "../SoundHandler.h"
+#include "../SoundHandlerBase.h"
 #include "image-utils/Color.h"
 #include "audio-utils/MinMaxCounter.h"
 #include "image-utils/StripedImage.h"
@@ -16,7 +16,7 @@
 #include "image-utils/StripedImageFadeHelper.h"
 
 namespace rxtd::audio_analyzer {
-	class Spectrogram : public SoundHandler {
+	class Spectrogram : public SoundHandlerBase {
 		struct ColorDescription {
 			float widthInverted{};
 			utils::Color color;
@@ -164,7 +164,7 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		ParseResult parseParams(
 			const OptionMap& om, Logger& cl, const Rainmeter& rain,
-			index legacyNumber
+			Version version
 		) const override;
 
 	protected:

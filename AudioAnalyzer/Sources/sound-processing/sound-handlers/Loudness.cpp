@@ -13,9 +13,9 @@
 
 using namespace audio_analyzer;
 
-SoundHandler::ParseResult Loudness::parseParams(
+SoundHandlerBase::ParseResult Loudness::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
-	index legacyNumber
+	Version version
 ) const {
 	ParseResult result{ true };
 	auto& params = result.params.clear<Params>();
@@ -40,7 +40,7 @@ SoundHandler::ParseResult Loudness::parseParams(
 	return result;
 }
 
-SoundHandler::ConfigurationResult Loudness::vConfigure(
+SoundHandlerBase::ConfigurationResult Loudness::vConfigure(
 	const ParamsContainer& _params, Logger& cl,
 	ExternalData& externalData
 ) {

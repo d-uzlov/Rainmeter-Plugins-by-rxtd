@@ -8,14 +8,14 @@
  */
 
 #pragma once
-#include "SoundHandler.h"
+#include "SoundHandlerBase.h"
 #include "image-utils/WaveFormDrawer.h"
 #include "image-utils/ImageWriteHelper.h"
 #include "../../audio-utils/CustomizableValueTransformer.h"
 #include "audio-utils/MinMaxCounter.h"
 
 namespace rxtd::audio_analyzer {
-	class WaveForm : public SoundHandler {
+	class WaveForm : public SoundHandlerBase {
 		using LDP = utils::WaveFormDrawer::LineDrawingPolicy;
 		using Colors = utils::WaveFormDrawer::Colors;
 		using CVT = audio_utils::CustomizableValueTransformer;
@@ -89,7 +89,7 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		ParseResult parseParams(
 			const OptionMap& om, Logger& cl, const Rainmeter& rain,
-			index legacyNumber
+			Version version
 		) const override;
 
 	protected:

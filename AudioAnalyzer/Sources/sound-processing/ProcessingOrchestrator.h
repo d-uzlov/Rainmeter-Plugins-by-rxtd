@@ -49,7 +49,7 @@ namespace rxtd::audio_analyzer {
 
 		void patch(
 			const ParamParser::ProcessingsInfoMap& patches,
-			index legacyNumber,
+			Version version,
 			index samplesPerSec, ChannelLayout channelLayout
 		);
 		void configureSnapshot(Snapshot& snap) const;

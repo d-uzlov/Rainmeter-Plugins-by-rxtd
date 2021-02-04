@@ -8,11 +8,11 @@
  */
 
 #pragma once
-#include "SoundHandler.h"
+#include "SoundHandlerBase.h"
 #include "../../audio-utils/CustomizableValueTransformer.h"
 
 namespace rxtd::audio_analyzer {
-	class Loudness : public SoundHandler {
+	class Loudness : public SoundHandlerBase {
 		using CVT = audio_utils::CustomizableValueTransformer;
 
 		struct Params {
@@ -63,7 +63,7 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		ParseResult parseParams(
 			const OptionMap& om, Logger& cl, const Rainmeter& rain,
-			index legacyNumber
+			Version version
 		) const override;
 
 	protected:

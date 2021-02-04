@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2019-2020 rxtd
+ * Copyright (C) 2019-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -13,96 +13,60 @@
 
 using namespace audio_analyzer;
 
+void AudioParent::LogHelpers::setLogger(Logger logger) {
+	generic.setLogger(logger);
+	sourceTypeIsNotRecognized.setLogger(logger);
+	unknownCommand.setLogger(logger);
+	currentDeviceUnknownProp.setLogger(logger);
+	unknownSectionVariable.setLogger(logger);
+	legacy_invalidPort.setLogger(logger);
+	processingNotFound.setLogger(logger);
+	channelNotRecognized.setLogger(logger);
+	noProcessingHaveHandler.setLogger(logger);
+	processingDoesNotHaveHandler.setLogger(logger);
+	processingDoesNotHaveChannel.setLogger(logger);
+	handlerDoesNotHaveProps.setLogger(logger);
+	propNotFound.setLogger(logger);
+}
+
+void AudioParent::LogHelpers::reset() {
+	// helpers that are commented don't need to be reset
+	// because it doesn't make sense to repeat their messages after measure is reloaded
+
+	// generic.reset();
+	// sourceTypeIsNotRecognized.reset();
+	// unknownCommand.reset();
+	// currentDeviceUnknownProp.reset();
+	// unknownSectionVariable.reset();
+	// legacy_invalidPort.reset();
+
+	processingNotFound.reset();
+	channelNotRecognized.reset();
+	noProcessingHaveHandler.reset();
+	processingDoesNotHaveHandler.reset();
+	processingDoesNotHaveChannel.reset();
+	// handlerDoesNotHaveProps.reset();
+	// propNotFound.reset();
+}
+
 AudioParent::AudioParent(Rainmeter&& _rain) :
 	ParentBase(std::move(_rain)) {
 	setUseResultString(false);
-	logHelpers.setLogger(logger);
+	initLogHelpers();
+	
+	// will throw std::runtime_error on invalid MagicNumber value,
+	// std::runtime_error is allowed to be thrown from constructor
+	version = Version::parseVersion(rain.read(L"MagicNumber").asInt(0));
 
-	logHelpers.sourceTypeIsNotRecognized.setLogFunction(
-		[](Logger& logger, istring type) {
-			logger.error(L"Source type '{}' is not recognized", type);
-		}
-	);
-	logHelpers.unknownCommand.setLogFunction(
-		[](Logger& logger, istring command) {
-			logger.error(L"unknown command '{}'", command);
-		}
-	);
-	logHelpers.currentDeviceUnknownProp.setLogFunction(
-		[](Logger& logger, istring deviceProperty) {
-			logger.error(L"unknown device property '{}'", deviceProperty);
-		}
-	);
-	logHelpers.unknownSectionVariable.setLogFunction(
-		[](Logger& logger, istring optionName) {
-			logger.error(L"unknown section variable '{}'", optionName);
-		}
-	);
-	logHelpers.legacy_invalidPort.setLogFunction(
-		[](Logger& logger, istring port) {
-			logger.error(L"Invalid Port '{}', must be one of: Output, Input. Set to Output.", port);
-		}
-	);
-
-	logHelpers.processingNotFound.setLogFunction(
-		[](Logger& logger, istring procName) {
-			logger.error(L"Processing doesn't exist: {}", procName);
-		}
-	);
-	logHelpers.channelNotRecognized.setLogFunction(
-		[](Logger& logger, istring channelName) {
-			logger.error(L"Channel is not recognized: {}", channelName);
-		}
-	);
-	logHelpers.noProcessingHaveHandler.setLogFunction(
-		[](Logger& logger, istring channelName) {
-			logger.error(L"No processing have handler '{}'", channelName);
-		}
-	);
-	logHelpers.processingDoesNotHaveHandler.setLogFunction(
-		[](Logger& logger, istring procName, istring handlerName) {
-			logger.error(L"Processing '{}' doesn't have handler '{}'", procName, handlerName);
-		}
-	);
-	logHelpers.processingDoesNotHaveChannel.setLogFunction(
-		[](Logger& logger, istring procName, istring channelName) {
-			logger.error(L"Processing '{}' doesn't have channel '{}'", procName, channelName);
-		}
-	);
-	logHelpers.handlerDoesNotHaveProps.setLogFunction(
-		[](Logger& logger, istring type) {
-			logger.error(L"handler type '{}' doesn't have any props", type);
-		}
-	);
-	logHelpers.propNotFound.setLogFunction(
-		[](Logger& logger, istring type, istring propName) {
-			logger.error(L"Handler type '{}' doesn't have info '{}'", type, propName);
-		}
-	);
-
-	legacyNumber = rain.read(L"MagicNumber").asInt(0);
-	switch (legacyNumber) {
-	case 0:
-	case 104:
-		break;
-	default:
-		logger.error(L"Fatal error: unknown MagicNumber {}", legacyNumber);
-		throw std::runtime_error{""};
-	}
-
-	if (legacyNumber < 104) {
+	if (version < Version::eVERSION2) {
 		logger.warning(L"Measure operates in legacy mode. If you are a skin author, consider modernizing it.");
 	}
 
-	try {
-		const auto threadingParams = rain.read(L"threading").asMap(L'|', L' ');
-		helper.init(rain, logger, threadingParams, legacyNumber);
-		const auto untouchedOptions = threadingParams.getListOfUntouched();
-		if (!untouchedOptions.empty()) {
-			logger.warning(L"Threading: unused options: {}", untouchedOptions);
-		}
-	} catch (std::exception&) {
-		throw std::runtime_error{ "" };
+	const auto threadingParams = rain.read(L"threading").asMap(L'|', L' ');
+	helper.init(rain, logger, threadingParams, version);
+	const auto untouchedOptions = threadingParams.getListOfUntouched();
+	if (!untouchedOptions.empty()) {
+		logger.warning(L"Threading: unused options: {}", untouchedOptions);
 	}
 
 	paramParser.setRainmeter(rain);
@@ -117,7 +81,7 @@ void AudioParent::vReload() {
 		return;
 	}
 
-	const bool paramsChanged = paramParser.parse(legacyNumber, false);
+	const bool paramsChanged = paramParser.parse(version, false);
 
 	if (paramsChanged) {
 		updateCleaners();
@@ -505,6 +469,95 @@ isview AudioParent::findProcessingFor(isview handlerName) const {
 	return {};
 }
 
+void AudioParent::initLogHelpers() {
+	logHelpers.setLogger(logger);
+
+	logHelpers.sourceTypeIsNotRecognized.setLogFunction(
+		[](Logger& logger, istring type) {
+			logger.error(L"Source type '{}' is not recognized", type);
+		}
+	);
+	logHelpers.unknownCommand.setLogFunction(
+		[](Logger& logger, istring command) {
+			logger.error(L"unknown command '{}'", command);
+		}
+	);
+	logHelpers.currentDeviceUnknownProp.setLogFunction(
+		[](Logger& logger, istring deviceProperty) {
+			logger.error(L"unknown device property '{}'", deviceProperty);
+		}
+	);
+	logHelpers.unknownSectionVariable.setLogFunction(
+		[](Logger& logger, istring optionName) {
+			logger.error(L"unknown section variable '{}'", optionName);
+		}
+	);
+	logHelpers.legacy_invalidPort.setLogFunction(
+		[](Logger& logger, istring port) {
+			logger.error(L"Invalid Port '{}', must be one of: Output, Input. Set to Output.", port);
+		}
+	);
+
+	logHelpers.processingNotFound.setLogFunction(
+		[](Logger& logger, istring procName) {
+			logger.error(L"Processing doesn't exist: {}", procName);
+		}
+	);
+	logHelpers.channelNotRecognized.setLogFunction(
+		[](Logger& logger, istring channelName) {
+			logger.error(L"Channel is not recognized: {}", channelName);
+		}
+	);
+	logHelpers.noProcessingHaveHandler.setLogFunction(
+		[](Logger& logger, istring channelName) {
+			logger.error(L"No processing have handler '{}'", channelName);
+		}
+	);
+	logHelpers.processingDoesNotHaveHandler.setLogFunction(
+		[](Logger& logger, istring procName, istring handlerName) {
+			logger.error(L"Processing '{}' doesn't have handler '{}'", procName, handlerName);
+		}
+	);
+	logHelpers.processingDoesNotHaveChannel.setLogFunction(
+		[](Logger& logger, istring procName, istring channelName) {
+			logger.error(L"Processing '{}' doesn't have channel '{}'", procName, channelName);
+		}
+	);
+	logHelpers.handlerDoesNotHaveProps.setLogFunction(
+		[](Logger& logger, istring type) {
+			logger.error(L"handler type '{}' doesn't have any props", type);
+		}
+	);
+	logHelpers.propNotFound.setLogFunction(
+		[](Logger& logger, istring type, istring propName) {
+			logger.error(L"Handler type '{}' doesn't have info '{}'", type, propName);
+		}
+	);
+}
+
+void AudioParent::runFinisher(
+	SoundHandlerBase::ExternalMethods::FinishMethodType finisher, const SoundHandlerBase::ExternalData& handlerData, isview procName, Channel channel, isview handlerName
+) const {
+	SoundHandlerBase::ExternCallContext context;
+	context.version = version;
+
+	context.channelName =
+		version < Version::eVERSION2
+		? ChannelUtils::getTechnicalNameLegacy(channel)
+		: ChannelUtils::getTechnicalName(channel);
+
+	string filePrefix;
+	filePrefix += procName % csView();
+	filePrefix += L'-';
+	filePrefix += handlerName % csView();
+	filePrefix += L'-';
+	filePrefix += context.channelName;
+
+	context.filePrefix = filePrefix;
+
+	finisher(handlerData, context);
+}
+
 void AudioParent::updateCleaners() {
 	for (auto& [processingName, pd] : paramParser.getParseResult()) {
 		auto newCleaners = createCleanersFor(pd);
@@ -540,7 +593,7 @@ AudioParent::DeviceRequest AudioParent::readRequest() const {
 	CaptureManager::SourceDesc result;
 
 	using ST = CaptureManager::SourceDesc::Type;
-	if (legacyNumber < 104) {
+	if (version < Version::eVERSION2) {
 		if (auto legacyID = rain.read(L"DeviceID").asString();
 			!legacyID.empty()) {
 			result.type = ST::eID;
@@ -617,7 +670,7 @@ void AudioParent::resolveProp(
 	// and if we still don't find requested info then it is caused either by delay in updating second thread
 	// or by device not having requested channel
 
-	SoundHandler::ExternalData* handlerExternalData = nullptr;
+	SoundHandlerBase::ExternalData* handlerExternalData = nullptr;
 
 	if (auto procIter = data._.find(procName);
 		procIter != data._.end()) {
@@ -648,11 +701,11 @@ void AudioParent::resolveProp(
 	}
 
 
-	SoundHandler::ExternCallContext context;
-	context.legacyNumber = legacyNumber;
+	SoundHandlerBase::ExternCallContext context;
+	context.version = version;
 
 	context.channelName =
-		legacyNumber < 104
+		version < Version::eVERSION2
 		? ChannelUtils::getTechnicalNameLegacy(channel)
 		: ChannelUtils::getTechnicalName(channel);
 
@@ -678,7 +731,7 @@ void AudioParent::resolveProp(
 AudioParent::ProcessingCleanersMap AudioParent::createCleanersFor(const ParamParser::ProcessingData& pd) const {
 	std::set<Channel> channels = pd.channels;
 
-	using HandlerMap = std::map<istring, std::unique_ptr<SoundHandler>, std::less<>>;
+	using HandlerMap = std::map<istring, std::unique_ptr<SoundHandlerBase>, std::less<>>;
 
 	ProcessingManager::ChannelSnapshot tempSnapshot;
 	HandlerMap tempChannelMap;
@@ -690,10 +743,10 @@ AudioParent::ProcessingCleanersMap AudioParent::createCleanersFor(const ParamPar
 
 		auto cl = logger.getSilent();
 		ProcessingManager::HandlerFinderImpl hf{ tempChannelMap };
-		SoundHandler::Snapshot handlerSpecificData;
+		SoundHandlerBase::Snapshot handlerSpecificData;
 		const bool success = handlerPtr->patch(
 			patchInfo.params, patchInfo.sources,
-			48000, legacyNumber,
+			48000, version,
 			hf, cl,
 			handlerSpecificData
 		);

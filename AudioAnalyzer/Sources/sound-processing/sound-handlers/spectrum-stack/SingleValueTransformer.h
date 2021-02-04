@@ -8,7 +8,7 @@
  */
 
 #pragma once
-#include "../SoundHandler.h"
+#include "../SoundHandlerBase.h"
 #include "../../../audio-utils/CustomizableValueTransformer.h"
 #include "ResamplerProvider.h"
 
@@ -42,7 +42,7 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		ParseResult parseParams(
 			const OptionMap& om, Logger& cl, const Rainmeter& rain,
-			index legacyNumber
+			Version version
 		) const override;
 
 	protected:

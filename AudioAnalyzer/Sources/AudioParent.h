@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2019-2020 rxtd
+ * Copyright (C) 2019-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -17,10 +17,16 @@ namespace rxtd::audio_analyzer {
 	class AudioParent : public utils::ParentBase {
 		using DeviceRequest = std::optional<CaptureManager::SourceDesc>;
 
-		index legacyNumber{};
-		ParamParser paramParser;
+		struct CleanerData {
+			SoundHandlerBase::ExternalData data;
+			SoundHandlerBase::ExternalMethods::FinishMethodType finisher = nullptr;
+		};
 
-		struct {
+		// handlerName → handlerData for cleanup
+		using ProcessingCleanersMap = std::map<istring, CleanerData, std::less<>>;
+		using CleanersMap = std::map<istring, ProcessingCleanersMap, std::less<>>;
+
+		struct LogHelpers {
 			NoArgLogErrorHelper generic;
 			LogErrorHelper<istring> sourceTypeIsNotRecognized;
 			LogErrorHelper<istring> unknownCommand;
@@ -36,55 +42,17 @@ namespace rxtd::audio_analyzer {
 			LogErrorHelper<istring> handlerDoesNotHaveProps;
 			LogErrorHelper<istring, istring> propNotFound;
 
-			void setLogger(Logger logger) {
-				generic.setLogger(logger);
-				sourceTypeIsNotRecognized.setLogger(logger);
-				unknownCommand.setLogger(logger);
-				currentDeviceUnknownProp.setLogger(logger);
-				unknownSectionVariable.setLogger(logger);
-				legacy_invalidPort.setLogger(logger);
-				processingNotFound.setLogger(logger);
-				channelNotRecognized.setLogger(logger);
-				noProcessingHaveHandler.setLogger(logger);
-				processingDoesNotHaveHandler.setLogger(logger);
-				processingDoesNotHaveChannel.setLogger(logger);
-				handlerDoesNotHaveProps.setLogger(logger);
-				propNotFound.setLogger(logger);
-			}
+			void setLogger(Logger logger);
 
-			void reset() {
-				// helpers that are commented don't need to be reset
-				// because it doesn't make sense to repeat their messages after measure is reloaded
-
-				// generic.reset();
-				// sourceTypeIsNotRecognized.reset();
-				// unknownCommand.reset();
-				// currentDeviceUnknownProp.reset();
-				// unknownSectionVariable.reset();
-				// legacy_invalidPort.reset();
-
-				processingNotFound.reset();
-				channelNotRecognized.reset();
-				noProcessingHaveHandler.reset();
-				processingDoesNotHaveHandler.reset();
-				processingDoesNotHaveChannel.reset();
-				// handlerDoesNotHaveProps.reset();
-				// propNotFound.reset();
-			}
+			void reset();
 		} logHelpers;
+
+		Version version{};
+		ParamParser paramParser;
 
 		DeviceRequest requestedSource;
 		ParentHelper::Callbacks callbacks;
 		ParentHelper helper;
-
-		struct CleanerData {
-			SoundHandler::ExternalData data;
-			SoundHandler::ExternalMethods::FinishMethodType finisher = nullptr;
-		};
-
-		// handlerName → handlerData for cleanup
-		using ProcessingCleanersMap = std::map<istring, CleanerData, std::less<>>;
-		using CleanersMap = std::map<istring, ProcessingCleanersMap, std::less<>>;
 
 		bool cleanersExecuted = false;
 
@@ -103,8 +71,8 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		double getValue(isview proc, isview id, Channel channel, index ind);
 
-		index getLegacyNumber() const {
-			return paramParser.getLegacyNumber();
+		Version getVersion() const {
+			return version;
 		}
 
 		bool isHandlerShouldExist(isview procName, Channel channel, isview handlerName) const;
@@ -112,30 +80,13 @@ namespace rxtd::audio_analyzer {
 		isview findProcessingFor(isview handlerName) const;
 
 	private:
+		void initLogHelpers();
+		
 		void runFinisher(
-			SoundHandler::ExternalMethods::FinishMethodType finisher,
-			const SoundHandler::ExternalData& handlerData,
+			SoundHandlerBase::ExternalMethods::FinishMethodType finisher,
+			const SoundHandlerBase::ExternalData& handlerData,
 			isview procName, Channel channel, isview handlerName
-		) const {
-			SoundHandler::ExternCallContext context;
-			context.legacyNumber = legacyNumber;
-
-			context.channelName =
-				legacyNumber < 104
-				? ChannelUtils::getTechnicalNameLegacy(channel)
-				: ChannelUtils::getTechnicalName(channel);
-
-			string filePrefix;
-			filePrefix += procName % csView();
-			filePrefix += L'-';
-			filePrefix += handlerName % csView();
-			filePrefix += L'-';
-			filePrefix += context.channelName;
-
-			context.filePrefix = filePrefix;
-
-			finisher(handlerData, context);
-		}
+		) const;
 
 		void updateCleaners();
 		DeviceRequest readRequest() const;

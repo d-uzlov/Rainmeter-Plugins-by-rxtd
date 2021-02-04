@@ -11,9 +11,9 @@
 
 using namespace audio_analyzer;
 
-SoundHandler::ParseResult SingleValueTransformer::parseParams(
+SoundHandlerBase::ParseResult SingleValueTransformer::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
-	index legacyNumber
+	Version version
 ) const {
 	ParseResult result{ true };
 	auto& params = result.params.clear<Params>();
@@ -31,7 +31,7 @@ SoundHandler::ParseResult SingleValueTransformer::parseParams(
 	return result;
 }
 
-SoundHandler::ConfigurationResult
+SoundHandlerBase::ConfigurationResult
 SingleValueTransformer::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
 	params = _params.cast<Params>();
 

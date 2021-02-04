@@ -11,9 +11,9 @@
 
 using namespace audio_analyzer;
 
-SoundHandler::ParseResult BlockHandler::parseParams(
+SoundHandlerBase::ParseResult BlockHandler::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
-	index legacyNumber
+	Version version
 ) const {
 	ParseResult result{ true };
 	auto& params = result.params.clear<Params>();
@@ -31,7 +31,7 @@ SoundHandler::ParseResult BlockHandler::parseParams(
 		params.updateInterval = 1.0 / updateRate;
 	}
 
-	const double defaultAttack = legacyNumber < 104 ? 100.0 : 0.0;
+	const double defaultAttack = version < Version::eVERSION2 ? 100.0 : 0.0;
 	params.attackTime = std::max(om.get(L"attack").asFloat(defaultAttack), 0.0);
 	params.decayTime = std::max(om.get(L"decay").asFloat(params.attackTime), 0.0);
 	params.attackTime *= 0.001;
@@ -44,7 +44,7 @@ SoundHandler::ParseResult BlockHandler::parseParams(
 	return result;
 }
 
-SoundHandler::ConfigurationResult
+SoundHandlerBase::ConfigurationResult
 BlockHandler::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
 	params = _params.cast<Params>();
 

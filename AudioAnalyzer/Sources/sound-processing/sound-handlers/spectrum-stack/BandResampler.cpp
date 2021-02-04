@@ -17,9 +17,9 @@ using namespace std::string_literals;
 
 using namespace audio_analyzer;
 
-SoundHandler::ParseResult BandResampler::parseParams(
+SoundHandlerBase::ParseResult BandResampler::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
-	index legacyNumber
+	Version version
 ) const {
 	ParseResult result{ true };
 	auto& params = result.params.clear<Params>();
@@ -74,7 +74,7 @@ SoundHandler::ParseResult BandResampler::parseParams(
 		return {};
 	}
 
-	if (legacyNumber < 104) {
+	if (version < Version::eVERSION2) {
 		params.includeDC = om.get(L"includeDC").asBool(true);
 		params.legacy_proportionalValues = om.get(L"proportionalValues").asBool(true);
 	} else {
@@ -82,7 +82,7 @@ SoundHandler::ParseResult BandResampler::parseParams(
 		params.legacy_proportionalValues = false;
 	}
 
-	const bool defaultCubicResampling = !(legacyNumber < 104);
+	const bool defaultCubicResampling = !(version < Version::eVERSION2);
 	params.useCubicResampling = om.get(L"cubicInterpolation").asBool(defaultCubicResampling);
 
 	result.externalMethods.getProp = wrapExternalMethod<Snapshot, &getProp>();
@@ -187,7 +187,7 @@ std::vector<float> BandResampler::makeBandsFromFreqs(array_span<float> freqs, Lo
 	return result;
 }
 
-SoundHandler::ConfigurationResult
+SoundHandlerBase::ConfigurationResult
 BandResampler::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
 	params = _params.cast<Params>();
 

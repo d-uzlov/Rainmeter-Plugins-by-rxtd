@@ -13,9 +13,9 @@
 
 using namespace audio_analyzer;
 
-SoundHandler::ParseResult BandCascadeTransformer::parseParams(
+SoundHandlerBase::ParseResult BandCascadeTransformer::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
-	index legacyNumber
+	Version version
 ) const {
 	ParseResult result{ true };
 	auto& params = result.params.clear<Params>();
@@ -34,7 +34,7 @@ SoundHandler::ParseResult BandCascadeTransformer::parseParams(
 	params.targetWeight = om.get(L"targetWeight").asFloat(2.5);
 	params.targetWeight = std::max(params.targetWeight, params.minWeight);
 
-	if (legacyNumber < 104) {
+	if (version < Version::eVERSION2) {
 		auto zeroLevel = om.get(L"zeroLevelMultiplier").asFloat(1.0);
 		zeroLevel = std::max(zeroLevel, 0.0);
 		zeroLevel = zeroLevel * 0.66 * epsilon;
@@ -64,7 +64,7 @@ SoundHandler::ParseResult BandCascadeTransformer::parseParams(
 	return result;
 }
 
-SoundHandler::ConfigurationResult
+SoundHandlerBase::ConfigurationResult
 BandCascadeTransformer::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
 	params = _params.cast<Params>();
 

@@ -8,12 +8,12 @@
  */
 
 #pragma once
-#include "../SoundHandler.h"
+#include "../SoundHandlerBase.h"
 
 namespace rxtd::audio_analyzer {
 	class BandResampler;
 
-	class ResamplerProvider : public SoundHandler {
+	class ResamplerProvider : public SoundHandlerBase {
 	public:
 		virtual ~ResamplerProvider() = default;
 

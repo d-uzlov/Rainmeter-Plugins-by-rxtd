@@ -126,20 +126,20 @@ PatchInfo HandlerCacheHelper::createHandlerPatcher(
 	}
 
 	if (type == L"WeightedBlur") {
-		if (!(legacyNumber < 104)) {
+		if (!(version < Version::eVERSION2)) {
 			cl.warning(L"handler WeightedBlur is deprecated");
 		}
 		return createPatcherT<legacy_WeightedBlur>(optionMap, cl);
 	}
 	if (type == L"FiniteTimeFilter") {
-		if (!(legacyNumber < 104)) {
+		if (!(version < Version::eVERSION2)) {
 			cl.warning(L"handler FiniteTimeFilter is deprecated");
 		}
 		return createPatcherT<legacy_FiniteTimeFilter>(optionMap, cl);
 	}
 
 	if (type == L"LogarithmicValueMapper") {
-		if (!(legacyNumber < 104)) {
+		if (!(version < Version::eVERSION2)) {
 			cl.warning(L"handler LogarithmicValueMapper is deprecated");
 		}
 

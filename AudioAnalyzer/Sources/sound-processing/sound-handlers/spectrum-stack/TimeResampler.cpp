@@ -11,9 +11,9 @@
 
 using namespace audio_analyzer;
 
-SoundHandler::ParseResult TimeResampler::parseParams(
+SoundHandlerBase::ParseResult TimeResampler::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
-	index legacyNumber
+	Version version
 ) const {
 	ParseResult result{ true };
 	auto& params = result.params.clear<Params>();
@@ -44,7 +44,7 @@ SoundHandler::ParseResult TimeResampler::parseParams(
 	return result;
 }
 
-SoundHandler::ConfigurationResult
+SoundHandlerBase::ConfigurationResult
 TimeResampler::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
 	params = _params.cast<Params>();
 

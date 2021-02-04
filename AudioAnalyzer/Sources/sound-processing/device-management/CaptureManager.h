@@ -14,6 +14,7 @@
 #include "AudioSessionEventsWrapper.h"
 #include "rainmeter/Logger.h"
 #include "../ChannelMixer.h"
+#include "../../Version.h"
 #include "wasapi-wrappers/IAudioCaptureClientWrapper.h"
 #include "wasapi-wrappers/IMMDeviceEnumeratorWrapper.h"
 #include "wasapi-wrappers/MediaDeviceWrapper.h"
@@ -26,7 +27,7 @@ namespace rxtd::audio_analyzer {
 
 		template<typename T>
 		using GenericComWrapper = common::winapi_wrappers::GenericComWrapper<T>;
-		
+
 		struct SourceDesc {
 			enum class Type {
 				eDEFAULT_INPUT,
@@ -69,7 +70,7 @@ namespace rxtd::audio_analyzer {
 
 	private:
 		Logger logger;
-		index legacyNumber = 0;
+		Version version{};
 		double bufferSizeSec = 0.0;
 
 		wasapi_wrappers::IMMDeviceEnumeratorWrapper enumeratorWrapper;
@@ -89,8 +90,8 @@ namespace rxtd::audio_analyzer {
 			logger = std::move(value);
 		}
 
-		void setLegacyNumber(index value) {
-			legacyNumber = value;
+		void setVersion(Version value) {
+			version = value;
 		}
 
 		void setBufferSizeInSec(double value);

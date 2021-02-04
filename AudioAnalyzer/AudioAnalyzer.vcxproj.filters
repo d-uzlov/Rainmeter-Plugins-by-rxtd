@@ -74,9 +74,6 @@
     <ClInclude Include="Sources\sound-processing\sound-handlers\Loudness.h">
       <Filter>Source Files\sound-processing\sound-handlers</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\sound-handlers\SoundHandler.h">
-      <Filter>Source Files\sound-processing\sound-handlers</Filter>
-    </ClInclude>
     <ClInclude Include="Sources\sound-processing\sound-handlers\WaveForm.h">
       <Filter>Source Files\sound-processing\sound-handlers</Filter>
     </ClInclude>
@@ -230,6 +227,12 @@
     <ClInclude Include="Sources\wasapi-wrappers\implementations\NotificationClientImpl.h">
       <Filter>Source Files\wasapi-wrappers\implementations</Filter>
     </ClInclude>
+    <ClInclude Include="Sources\Version.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\sound-processing\sound-handlers\SoundHandlerBase.h">
+      <Filter>Source Files\sound-processing\sound-handlers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sources\AudioChild.cpp">
@@ -316,9 +319,6 @@
     <ClCompile Include="Sources\audio-utils\FFT.cpp">
       <Filter>Source Files\audio-utils</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\sound-processing\sound-handlers\SoundHandler.cpp">
-      <Filter>Source Files\sound-processing\sound-handlers</Filter>
-    </ClCompile>
     <ClCompile Include="Sources\audio-utils\GaussianCoefficientsManager.cpp">
       <Filter>Source Files\audio-utils</Filter>
     </ClCompile>
@@ -375,6 +375,9 @@
     </ClCompile>
     <ClCompile Include="Sources\wasapi-wrappers\MediaDeviceWrapper.cpp">
       <Filter>Source Files\wasapi-wrappers</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\sound-processing\sound-handlers\SoundHandlerBase.cpp">
+      <Filter>Source Files\sound-processing\sound-handlers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

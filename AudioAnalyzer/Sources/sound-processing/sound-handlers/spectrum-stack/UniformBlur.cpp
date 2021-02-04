@@ -12,9 +12,9 @@
 
 using namespace audio_analyzer;
 
-SoundHandler::ParseResult UniformBlur::parseParams(
+SoundHandlerBase::ParseResult UniformBlur::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
-	index legacyNumber
+	Version version
 ) const {
 	ParseResult result{ true };
 	auto& params = result.params.clear<Params>();
@@ -33,7 +33,7 @@ SoundHandler::ParseResult UniformBlur::parseParams(
 	return result;
 }
 
-SoundHandler::ConfigurationResult
+SoundHandlerBase::ConfigurationResult
 UniformBlur::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
 	params = _params.cast<Params>();
 

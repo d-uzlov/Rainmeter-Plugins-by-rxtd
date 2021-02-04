@@ -17,9 +17,9 @@ using utils::Color;
 
 using namespace audio_analyzer;
 
-SoundHandler::ParseResult WaveForm::parseParams(
+SoundHandlerBase::ParseResult WaveForm::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
-	index legacyNumber
+	Version version
 ) const {
 	ParseResult result{ true };
 	auto& params = result.params.clear<Params>();
@@ -83,7 +83,7 @@ SoundHandler::ParseResult WaveForm::parseParams(
 	params.silenceThreshold = om.get(L"silenceThreshold").asFloatF(-70);
 	params.silenceThreshold = utils::MyMath::db2amplitude(params.silenceThreshold);
 
-	if (legacyNumber < 104) {
+	if (version < Version::eVERSION2) {
 		const auto gain = om.get(L"gain").asFloat(1.0);
 		BufferPrinter printer;
 		printer.print(L"map[from 0 : 1, to 0 : {}]", gain);
@@ -98,7 +98,7 @@ SoundHandler::ParseResult WaveForm::parseParams(
 	return result;
 }
 
-SoundHandler::ConfigurationResult
+SoundHandlerBase::ConfigurationResult
 WaveForm::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
 	params = _params.cast<Params>();
 
@@ -127,7 +127,7 @@ WaveForm::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& e
 	auto& snapshot = externalData.clear<Snapshot>();
 
 	snapshot.prefix = params.folder;
-	if (config.legacyNumber < 104) {
+	if (config.version < Version::eVERSION2) {
 		snapshot.prefix += L"wave-";
 	}
 
@@ -193,7 +193,7 @@ void WaveForm::staticFinisher(const Snapshot& snapshot, const ExternCallContext&
 	}
 
 	snapshot.filenameBuffer = snapshot.prefix;
-	snapshot.filenameBuffer += context.legacyNumber < 104 ? context.channelName : context.filePrefix;
+	snapshot.filenameBuffer += context.version < Version::eVERSION2 ? context.channelName : context.filePrefix;
 	snapshot.filenameBuffer += L".bmp";
 
 	snapshot.writerHelper.write(snapshot.pixels, snapshot.empty, snapshot.filenameBuffer);
@@ -208,7 +208,7 @@ bool WaveForm::getProp(
 ) {
 	if (prop == L"file") {
 		snapshot.filenameBuffer = snapshot.prefix;
-		snapshot.filenameBuffer += context.legacyNumber < 104 ? context.channelName : context.filePrefix;
+		snapshot.filenameBuffer += context.version < Version::eVERSION2 ? context.channelName : context.filePrefix;
 		snapshot.filenameBuffer += L".bmp";
 
 		printer.print(snapshot.filenameBuffer);

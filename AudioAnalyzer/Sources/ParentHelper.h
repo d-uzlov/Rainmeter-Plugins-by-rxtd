@@ -70,7 +70,7 @@ namespace rxtd::audio_analyzer {
 		wasapi_wrappers::IMMDeviceEnumeratorWrapper enumeratorWrapper;
 
 		struct {
-			index legacyNumber{};
+			Version version{};
 			bool useThreading = false;
 			double updateTime{};
 		} constFields;
@@ -122,7 +122,7 @@ namespace rxtd::audio_analyzer {
 			Rainmeter _rain,
 			Logger _logger,
 			const OptionMap& threadingMap,
-			index _legacyNumber
+			Version version
 		);
 
 		void setInvalid();

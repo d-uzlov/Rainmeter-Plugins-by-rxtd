@@ -16,7 +16,7 @@ using namespace audio_analyzer;
 void ProcessingManager::setParams(
 	Logger logger,
 	const ParamParser::ProcessingData& pd,
-	index legacyNumber,
+	Version version,
 	index sampleRate, ChannelLayout layout,
 	Snapshot& snapshot
 ) {
@@ -56,7 +56,7 @@ void ProcessingManager::setParams(
 			HandlerFinderImpl hf{ channelDataNew };
 			const bool success = handlerPtr->patch(
 				patchInfo.params, patchInfo.sources,
-				finalSampleRate, legacyNumber,
+				finalSampleRate, version,
 				hf, cl,
 				snapshot[channel][handlerName]
 			);
@@ -74,7 +74,7 @@ void ProcessingManager::setParams(
 		if (handlerIsValid) {
 			order.push_back(handlerName);
 		} else {
-			if (legacyNumber < 104) {
+			if (version < Version::eVERSION2) {
 				continue;
 			}
 
@@ -100,7 +100,7 @@ void ProcessingManager::process(const ChannelMixer& mixer, clock::time_point kil
 	for (auto& [channel, channelStruct] : channelMap) {
 		auto& channelSnapshot = snapshot[channel];
 
-		SoundHandler::ProcessContext context{};
+		SoundHandlerBase::ProcessContext context{};
 
 		if (auto wave = mixer.getChannelPCM(channel);
 			resamplingDivider <= 1) {

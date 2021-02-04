@@ -64,7 +64,7 @@ namespace rxtd::audio_analyzer {
 
 		AudioParent* parent = nullptr;
 
-		index legacyNumber;
+		Version version;
 
 	public:
 		explicit AudioChild(Rainmeter&& _rain);

@@ -7,14 +7,14 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include "SoundHandler.h"
+#include "SoundHandlerBase.h"
 #include "StringUtils.h"
 
 using namespace audio_analyzer;
 
-bool SoundHandler::patch(
+bool SoundHandlerBase::patch(
 	const ParamsContainer& params, const std::vector<istring>& sources,
-	index sampleRate, index legacyNumber,
+	index sampleRate, Version version,
 	HandlerFinder& hf, Logger& cl,
 	Snapshot& snapshot
 ) {
@@ -40,7 +40,7 @@ bool SoundHandler::patch(
 		newConfig.sourcePtr = nullptr;
 	}
 	newConfig.sampleRate = sampleRate;
-	newConfig.legacyNumber = legacyNumber;
+	newConfig.version = version;
 
 	if (_configuration != newConfig
 		|| newConfig.sourcePtr != nullptr && newConfig.sourcePtr->_anyChanges
@@ -72,7 +72,7 @@ bool SoundHandler::patch(
 	return true;
 }
 
-index SoundHandler::legacy_parseIndexProp(
+index SoundHandlerBase::legacy_parseIndexProp(
 	const isview& request, const isview& propName,
 	index minBound, index endBound
 ) {

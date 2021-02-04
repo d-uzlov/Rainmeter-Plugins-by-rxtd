@@ -29,8 +29,8 @@ AudioChild::AudioChild(Rainmeter&& _rain) : TypeHolder(std::move(_rain)) {
 		throw std::runtime_error{ "" };
 	}
 
-	legacyNumber = parent->getLegacyNumber();
-	if (!(legacyNumber < 104)) {
+	version = parent->getVersion();
+	if (!(version < Version::eVERSION2)) {
 		auto type = rain.read(L"Type").asIString();
 		if (type != L"Child") {
 			rain.createLogger().warning(L"Unknown type '{}', defaulting to Child is deprecated", type);
@@ -62,7 +62,7 @@ double AudioChild::vUpdate() {
 	}
 
 	double result;
-	if (legacyNumber < 104) {
+	if (version < Version::eVERSION2) {
 		result = legacy_update();
 	} else {
 		result = parent->getValue(options.procName, options.handlerName, options.channel, options.valueIndex);
@@ -129,7 +129,7 @@ AudioChild::Options AudioChild::readOptions() const {
 		logger.error(L"Invalid StringValue '{}', set to Number.", stringValueStr);
 	}
 
-	if (legacyNumber < 104) {
+	if (version < Version::eVERSION2) {
 		result.legacy = legacy_readOptions();
 	}
 

@@ -14,14 +14,14 @@
 
 using namespace audio_analyzer;
 
-SoundHandler::ParseResult FftAnalyzer::parseParams(
+SoundHandlerBase::ParseResult FftAnalyzer::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
-	index legacyNumber
+	Version version
 ) const {
 	ParseResult result{ true };
 	auto& params = result.params.clear<Params>();
 
-	if (legacyNumber < 104) {
+	if (version < Version::eVERSION2) {
 		params.legacy_attackTime = std::max(om.get(L"attack").asFloat(100), 0.0);
 		params.legacy_decayTime = std::max(om.get(L"decay").asFloat(params.legacy_attackTime), 0.0);
 
@@ -32,7 +32,7 @@ SoundHandler::ParseResult FftAnalyzer::parseParams(
 		params.legacy_decayTime = 0.0;
 	}
 
-	if (legacyNumber < 104) {
+	if (version < Version::eVERSION2) {
 		if (const auto sizeBy = om.get(L"sizeBy").asIString(L"binWidth");
 			sizeBy == L"binWidth") {
 			params.binWidth = om.get(L"binWidth").asFloat(100.0);
@@ -97,7 +97,7 @@ SoundHandler::ParseResult FftAnalyzer::parseParams(
 	params.randomTest = std::abs(om.get(L"testRandom").asFloat(0.0));
 	params.randomDuration = std::abs(om.get(L"randomDuration").asFloat(1000.0)) * 0.001;
 
-	if (legacyNumber < 104) {
+	if (version < Version::eVERSION2) {
 		params.legacy_correctZero = om.get(L"correctZero").asBool(true);
 		params.legacyAmplification = true;
 	} else {
@@ -112,7 +112,7 @@ SoundHandler::ParseResult FftAnalyzer::parseParams(
 	return result;
 }
 
-SoundHandler::ConfigurationResult
+SoundHandlerBase::ConfigurationResult
 FftAnalyzer::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
 	params = _params.cast<Params>();
 

@@ -11,9 +11,9 @@
 
 using namespace audio_analyzer;
 
-SoundHandler::ParseResult legacy_FiniteTimeFilter::parseParams(
+SoundHandlerBase::ParseResult legacy_FiniteTimeFilter::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
-	index legacyNumber
+	Version version
 ) const {
 	ParseResult result{ true };
 	auto& params = result.params.clear<Params>();
@@ -48,7 +48,7 @@ SoundHandler::ParseResult legacy_FiniteTimeFilter::parseParams(
 	return result;
 }
 
-SoundHandler::ConfigurationResult
+SoundHandlerBase::ConfigurationResult
 legacy_FiniteTimeFilter::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
 	params = _params.cast<Params>();
 

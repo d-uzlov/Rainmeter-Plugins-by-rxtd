@@ -22,12 +22,12 @@ void ParentHelper::init(
 	Rainmeter _rain,
 	Logger _logger,
 	const OptionMap& threadingMap,
-	index _legacyNumber
+	Version version
 ) {
 	mainFields.rain = std::move(_rain);
 	mainFields.logger = std::move(_logger);
 
-	constFields.legacyNumber = _legacyNumber;
+	constFields.version = version;
 
 	if (!enumeratorWrapper.isValid()) {
 		mainFields.logger.error(L"Fatal error: can't create IMMDeviceEnumerator");
@@ -78,7 +78,7 @@ void ParentHelper::init(
 	}
 
 	mainFields.captureManager.setLogger(mainFields.logger);
-	mainFields.captureManager.setLegacyNumber(constFields.legacyNumber);
+	mainFields.captureManager.setVersion(constFields.version);
 	mainFields.captureManager.setBufferSizeInSec(bufferSize);
 
 	requestFields.useLocking = constFields.useThreading;
@@ -375,7 +375,7 @@ bool ParentHelper::reconnectToDevice() {
 
 void ParentHelper::updateProcessings() {
 	mainFields.orchestrator.patch(
-		mainFields.settings.patches, constFields.legacyNumber,
+		mainFields.settings.patches, constFields.version,
 		mainFields.captureManager.getSnapshot().format.samplesPerSec,
 		mainFields.captureManager.getSnapshot().format.channelLayout
 	);
@@ -384,7 +384,7 @@ void ParentHelper::updateProcessings() {
 bool ParentHelper::updateDeviceListStrings() {
 	string input;
 	string output;
-	if (constFields.legacyNumber < 104) {
+	if (constFields.version < Version::eVERSION2) {
 		input = legacy_makeDeviceListString(MediaDeviceType::eINPUT);
 		output = legacy_makeDeviceListString(MediaDeviceType::eOUTPUT);
 	} else {

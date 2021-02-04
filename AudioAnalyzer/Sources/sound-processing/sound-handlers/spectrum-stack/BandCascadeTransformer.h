@@ -8,11 +8,11 @@
  */
 
 #pragma once
-#include "../SoundHandler.h"
+#include "../SoundHandlerBase.h"
 #include "BandResampler.h"
 
 namespace rxtd::audio_analyzer {
-	class BandCascadeTransformer : public SoundHandler {
+	class BandCascadeTransformer : public SoundHandlerBase {
 		enum class MixFunction {
 			AVERAGE,
 			PRODUCT,
@@ -59,7 +59,7 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		ParseResult parseParams(
 			const OptionMap& om, Logger& cl, const Rainmeter& rain,
-			index legacyNumber
+			Version version
 		) const override;
 
 	protected:

@@ -8,12 +8,12 @@
  */
 
 #pragma once
-#include "SoundHandler.h"
+#include "SoundHandlerBase.h"
 #include "../../audio-utils/CustomizableValueTransformer.h"
 #include "audio-utils/filter-utils/LogarithmicIRF.h"
 
 namespace rxtd::audio_analyzer {
-	class BlockHandler : public SoundHandler {
+	class BlockHandler : public SoundHandlerBase {
 		using CVT = audio_utils::CustomizableValueTransformer;
 
 		struct Params {
@@ -56,7 +56,7 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		ParseResult parseParams(
 			const OptionMap& om, Logger& cl, const Rainmeter& rain,
-			index legacyNumber
+			Version version
 		) const override;
 
 	protected:

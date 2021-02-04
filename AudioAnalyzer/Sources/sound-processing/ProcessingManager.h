@@ -19,12 +19,12 @@ namespace rxtd::audio_analyzer {
 	class ProcessingManager {
 	public:
 		using Logger = ::rxtd::common::rainmeter::Logger;
-		using ChannelSnapshot = std::map<istring, SoundHandler::Snapshot, std::less<>>;
+		using ChannelSnapshot = std::map<istring, SoundHandlerBase::Snapshot, std::less<>>;
 		using Snapshot = std::map<Channel, ChannelSnapshot, std::less<>>;
 
-		using clock = SoundHandler::clock;
+		using clock = SoundHandlerBase::clock;
 
-		using HandlerMap = std::map<istring, std::unique_ptr<SoundHandler>, std::less<>>;
+		using HandlerMap = std::map<istring, std::unique_ptr<SoundHandlerBase>, std::less<>>;
 
 		struct ChannelStruct {
 			HandlerMap handlerMap;
@@ -40,7 +40,7 @@ namespace rxtd::audio_analyzer {
 			explicit HandlerFinderImpl(const HandlerMap& channelData) : channelData(channelData) { }
 
 			[[nodiscard]]
-			SoundHandler* getHandler(isview id) const override {
+			SoundHandlerBase* getHandler(isview id) const override {
 				const auto iter = channelData.find(id);
 				return iter == channelData.end() ? nullptr : iter->second.get();
 			}
@@ -57,7 +57,7 @@ namespace rxtd::audio_analyzer {
 		void setParams(
 			Logger logger,
 			const ParamParser::ProcessingData& pd,
-			index _legacyNumber,
+			Version version,
 			index sampleRate, ChannelLayout layout,
 			Snapshot& snapshot
 		);
