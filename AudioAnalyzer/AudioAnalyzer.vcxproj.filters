@@ -389,6 +389,6 @@
     <Natvis Include="..\Common\array_view.natvis" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="readme.txt" />
+    <None Include="README.md" />
   </ItemGroup>
 </Project>

@@ -300,7 +300,7 @@
     <Natvis Include="..\Common\array_view.natvis" />
   </ItemGroup>
   <ItemGroup>
-    <Text Include="readme.txt" />
+    <None Include="README.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

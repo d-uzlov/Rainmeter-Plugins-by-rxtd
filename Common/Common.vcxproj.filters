@@ -179,4 +179,7 @@
   <ItemGroup>
     <Natvis Include="array_view.natvis" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" />
+  </ItemGroup>
 </Project>
