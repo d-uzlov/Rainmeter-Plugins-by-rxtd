@@ -1,5 +1,7 @@
 # AudioAnalyzer plugin
 
+## Overview
+
 AudioAnalyzer is a plugin for [rainmeter application](https://www.rainmeter.net).
 
 It provides access to information extracted from "real-time" audio data for rainmeters skins.
@@ -13,7 +15,7 @@ Usage examples can be found [near documentation](https://github.com/d-uzlov/Rain
 
 Main discussion can be found in the [plugin's Rainmeter forum thread](https://forum.rainmeter.net/viewtopic.php?f=18&t=29226).
 
-Because of unrefined documentation release of the last version of this plugin hasn't been announced officially yet, so the link above contains outdated information about plugin.
+Release of the last version of this plugin hasn't been announced officially yet because of unrefined documentation, so the link above contains outdated information about plugin.
 Documentation improvement is in progress, so hopefully this won't be the case soon.
 
 ## Download

@@ -1,5 +1,7 @@
 # LocalPluginLoader plugin
 
+## Overview
+
 LocalPluginLoader is a plugin for [rainmeter application](https://www.rainmeter.net).
 
 LocalPluginLoader allows rainmeter skins to load plugins not only from the
@@ -28,5 +30,5 @@ so you can also use any other folder on your PC.
 
 ## Download
 
-This plugin doesn't have any official releases.
+This plugin is not intended to be distributed so is doesn't have any official releases.
 If you want to use this, you will have to compile it yourself.
