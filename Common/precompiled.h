@@ -18,6 +18,9 @@
 #include <cwctype>
 #include <utility>
 #include <optional>
+#include <any>
+#include <variant>
+#include <set>
 
 #include "array_view.h"
 #include "typedefs.h"

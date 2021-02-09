@@ -21,6 +21,9 @@
     <Filter Include="Source Files\option-parsing">
       <UniqueIdentifier>{f56a22ca-0b8d-451f-8bdb-b5ebc4f1b7d7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\expressions">
+      <UniqueIdentifier>{7a12fe6b-6e12-47e3-9070-733b1ddbcec2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\StringUtils.cpp">
@@ -61,6 +64,18 @@
     </ClCompile>
     <ClCompile Include="sources\option-parsing\Tokenizer.cpp">
       <Filter>Source Files\option-parsing</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\expressions\Lexer.cpp">
+      <Filter>Source Files\expressions</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\expressions\ASTParser.cpp">
+      <Filter>Source Files\expressions</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\expressions\ASTSolver.cpp">
+      <Filter>Source Files\expressions</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\expressions\GrammarBuilder.cpp">
+      <Filter>Source Files\expressions</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -175,11 +190,32 @@
     <ClInclude Include="sources\option-parsing\Tokenizer.h">
       <Filter>Source Files\option-parsing</Filter>
     </ClInclude>
+    <ClInclude Include="sources\expressions\Lexer.h">
+      <Filter>Source Files\expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\expressions\ASTParser.h">
+      <Filter>Source Files\expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\expressions\SyntaxTree.h">
+      <Filter>Source Files\expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\expressions\ASTSolver.h">
+      <Filter>Source Files\expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\expressions\GrammarBuilder.h">
+      <Filter>Source Files\expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\expressions\GrammarDescription.h">
+      <Filter>Source Files\expressions</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="array_view.natvis" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
+    <None Include="sources\expressions\README.md">
+      <Filter>Source Files\expressions</Filter>
+    </None>
   </ItemGroup>
 </Project>

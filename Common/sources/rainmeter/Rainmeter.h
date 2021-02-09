@@ -47,7 +47,7 @@ namespace rxtd::common::rainmeter {
 		}
 
 		// Executed Rainmeter command
-		// Unlike raw Rainmeter API, this function doesn't block until the commend has finished
+		// Unlike raw Rainmeter API, this function doesn't block until the command has finished
 		void executeCommandAsync(sview command, SkinHandle skin);
 
 		[[nodiscard]]
