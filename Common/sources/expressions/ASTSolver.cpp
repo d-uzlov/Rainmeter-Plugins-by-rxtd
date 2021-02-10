@@ -21,7 +21,16 @@ template<class... Ts>
 overloaded(Ts ...) -> overloaded<Ts...>;
 
 
-void ASTSolver::checkTernaryOperator(const ast_nodes::SyntaxTree& tree) {
+ASTSolver::ASTSolver() {
+	tree.allocateNumber(0.0);
+	values.resize(tree.getNodes().size());
+}
+
+ASTSolver::ASTSolver(ast_nodes::SyntaxTree&& tree): tree(std::move(tree)) {
+	values.resize(tree.getNodes().size());
+}
+
+void ASTSolver::checkTernaryOperator() {
 	auto nodes = tree.getNodes();
 
 	std::set<index> qMarkPlaces;
@@ -48,43 +57,111 @@ void ASTSolver::checkTernaryOperator(const ast_nodes::SyntaxTree& tree) {
 	}
 }
 
-std::variant<double, ast_nodes::SyntaxTree> ASTSolver::optimize(const ast_nodes::SyntaxTree& oldTree, ValueProvider* valueProvider) {
-	ASTSolver solver{ oldTree };
+void ASTSolver::optimize(ValueProvider* valueProvider) {
+	collapseNodes(valueProvider);
 
-	auto valueOpt = solver.trySolve(valueProvider);
+	ast_nodes::SyntaxTree oldTree = std::exchange(tree, {});
+	(void)copySubTree(oldTree.getRootIndex(), oldTree.getNodes());
 
-	if (valueOpt.has_value()) {
-		return valueOpt.value();
-	}
-
-	solver.copySubTree(oldTree.getRootIndex());
-
-	return std::move(solver.newTree);
+	tree.setSource(std::move(oldTree).consumeSource());
 }
 
-std::optional<double> ASTSolver::trySolve(ValueProvider* valueProvider) {
-	nodesEvaluated.clear();
-	nodesEvaluated.resize(oldNodes.size());
+double ASTSolver::solve(ValueProvider* valueProvider) const {
+	using ast_nodes::NumberNode;
+	using Data = OperatorInfo::Data;
 
-	for (index i = 0; i < oldNodes.size(); i++) {
-		const auto& genericNode = oldNodes[i];
+	auto nodes = tree.getNodes();
 
+	values.clear();
+	values.resize(nodes.size());
+
+	for (index i = 0; i < nodes.size(); i++) {
+		auto& genericNode = nodes[i];
 		std::visit(
 			overloaded{
-				[&](const ast_nodes::NumberNode& node) { nodesEvaluated[i] = Data{ node.value }; },
+				[&](const auto&) { throw Exception{ L"Unexpected node type" }; },
+				[&](const NumberNode& node) { values[i] = node.value; },
 				[&](const ast_nodes::PrefixOperatorNode& node) {
-					if (nodesEvaluated[node.child].has_value()) {
-						nodesEvaluated[i] = node.function(nodesEvaluated[node.child].value(), {});
+					auto child = values[node.child];
+					if (!child.has_value()) throw Exception{ L"Expression is not a constant" };
+					values[i] = node.function(Data{ child.value() }, {}).value;
+				},
+				[&](const ast_nodes::PostfixOperatorNode& node) {
+					auto child = values[node.child];
+					if (!child.has_value()) throw Exception{ L"Expression is not a constant" };
+					values[i] = node.function(Data{ child.value() }, {}).value;
+				},
+				[&](const ast_nodes::BinaryOperatorNode& node) {
+					auto left = values[node.left];
+					auto right = values[node.right];
+					if (!left.has_value() || !right.has_value()) throw Exception{ L"Expression is not a constant" };
+					values[i] = node.function(Data{ left.value() }, Data{ right.value() }).value;
+				},
+				[&](const ast_nodes::CustomTerminalNode& node) {
+					if (valueProvider == nullptr) throw Exception{ L"Expression is not a constant" };
+
+					auto valueOpt = valueProvider->solveCustom(node.value);
+					if (!valueOpt.has_value()) throw Exception{ L"Expression is not a constant" };
+					values[i] = valueOpt.value();
+				},
+				[&](const ast_nodes::WordNode& node) {
+					if (valueProvider == nullptr) throw Exception{ L"Expression is not a constant" };
+
+					auto valueOpt = valueProvider->solveWord(node.word);
+					if (!valueOpt.has_value()) throw Exception{ L"Expression is not a constant" };
+					values[i] = valueOpt.value();
+				},
+				[&](const ast_nodes::FunctionNode& node) {
+					if (valueProvider == nullptr) throw Exception{ L"Expression is not a constant" };
+
+					std::vector<double> args;
+
+					for (auto childIndex : node.children) {
+						auto child = values[childIndex];
+						if (child.has_value()) throw Exception{ L"Expression is not a constant" };
+						args.push_back(child.value());
+					}
+
+					auto valueOpt = valueProvider->solveFunction(node.word, args);
+					if (!valueOpt.has_value()) throw Exception{ L"Expression is not a constant" };
+					args[i] = valueOpt.value();
+				}
+			}, genericNode.value
+		);
+	}
+
+	return values.back().value();
+}
+
+void ASTSolver::collapseNodes(ValueProvider* valueProvider) {
+	using ast_nodes::NumberNode;
+	using Data = OperatorInfo::Data;
+
+	auto nodes = tree.getNodes();
+	for (auto& genericNode : nodes) {
+		std::visit(
+			overloaded{
+				[&](const auto&) {
+					throw Exception{ L"Unexpected node type" };
+				},
+				[&](const NumberNode& node) { /* do nothing */ },
+				[&](const ast_nodes::PrefixOperatorNode& node) {
+					auto childPtr = std::get_if<NumberNode>(&nodes[node.child].value);
+					if (childPtr != nullptr) {
+						genericNode = NumberNode{ node.function(Data{ childPtr->value }, {}).value };
 					}
 				},
 				[&](const ast_nodes::PostfixOperatorNode& node) {
-					if (nodesEvaluated[node.child].has_value()) {
-						nodesEvaluated[i] = node.function(nodesEvaluated[node.child].value(), {});
+					auto childPtr = std::get_if<NumberNode>(&nodes[node.child].value);
+					if (childPtr != nullptr) {
+						genericNode = NumberNode{ node.function(Data{ childPtr->value }, {}).value };
 					}
 				},
 				[&](const ast_nodes::BinaryOperatorNode& node) {
-					if (nodesEvaluated[node.left].has_value() && nodesEvaluated[node.right].has_value()) {
-						nodesEvaluated[i] = node.function(nodesEvaluated[node.left].value(), nodesEvaluated[node.right].value());
+					auto leftPtr = std::get_if<NumberNode>(&nodes[node.left].value);
+					auto rightPtr = std::get_if<NumberNode>(&nodes[node.right].value);
+					if (leftPtr != nullptr && rightPtr != nullptr) {
+						genericNode = NumberNode{ node.function(Data{ leftPtr->value }, Data{ rightPtr->value }).value };
 					}
 				},
 				[&](const ast_nodes::CustomTerminalNode& node) {
@@ -94,7 +171,7 @@ std::optional<double> ASTSolver::trySolve(ValueProvider* valueProvider) {
 
 					auto valueOpt = valueProvider->solveCustom(node.value);
 					if (valueOpt.has_value()) {
-						nodesEvaluated[i] = Data{ valueOpt.value() };
+						genericNode = NumberNode{ valueOpt.value() };
 					}
 				},
 				[&](const ast_nodes::WordNode& node) {
@@ -104,7 +181,7 @@ std::optional<double> ASTSolver::trySolve(ValueProvider* valueProvider) {
 
 					auto valueOpt = valueProvider->solveWord(node.word);
 					if (valueOpt.has_value()) {
-						nodesEvaluated[i] = Data{ valueOpt.value() };
+						genericNode = NumberNode{ valueOpt.value() };
 					}
 				},
 				[&](const ast_nodes::FunctionNode& node) {
@@ -116,8 +193,9 @@ std::optional<double> ASTSolver::trySolve(ValueProvider* valueProvider) {
 					std::vector<double> values;
 
 					for (auto child : node.children) {
-						if (nodesEvaluated[child].has_value()) {
-							values.push_back(nodesEvaluated[child].value().value);
+						auto childPtr = std::get_if<NumberNode>(&nodes[child].value);
+						if (childPtr != nullptr) {
+							values.push_back(childPtr->value);
 						} else {
 							allEvaluated = false;
 							break;
@@ -127,22 +205,18 @@ std::optional<double> ASTSolver::trySolve(ValueProvider* valueProvider) {
 					if (allEvaluated) {
 						auto valueOpt = valueProvider->solveFunction(node.word, values);
 						if (valueOpt.has_value()) {
-							nodesEvaluated[i] = Data{ valueOpt.value() };
+							genericNode = NumberNode{ valueOpt.value() };
 						}
 					}
 				}
 			}, genericNode.value
 		);
 	}
-
-	if (nodesEvaluated.back().has_value()) {
-		return nodesEvaluated.back().value().value;
-	} else {
-		return {};
-	}
 }
 
-ast_nodes::IndexType ASTSolver::copySubTree(ast_nodes::IndexType oldNodeIndex) {
+ast_nodes::IndexType ASTSolver::copySubTree(ast_nodes::IndexType oldNodeIndex, array_view<ast_nodes::GenericNode> oldNodes) {
+	using ast_nodes::NumberNode;
+
 	auto genericNode = oldNodes[oldNodeIndex];
 
 	ast_nodes::IndexType result{};
@@ -152,48 +226,38 @@ ast_nodes::IndexType ASTSolver::copySubTree(ast_nodes::IndexType oldNodeIndex) {
 			[&](const auto&) {
 				throw Exception{ L"Unexpected node type" };
 			},
+			[&](const NumberNode& node) {
+				result = tree.allocateNumber(node.value);
+			},
 			[&](const ast_nodes::PrefixOperatorNode& node) {
-				const auto child = nodesEvaluated[node.child].has_value()
-				                   ? newTree.allocateNumber(nodesEvaluated[node.child].value().value)
-				                   : copySubTree(node.child);
-
-				result = newTree.allocatePrefix(node.operatorValue, node.function, child);
+				auto childPtr = std::get_if<NumberNode>(&oldNodes[node.child].value);
+				const auto child = copySubTree(node.child, oldNodes);
+				result = tree.allocatePrefix(node.operatorValue, node.function, child);
 			},
 			[&](const ast_nodes::PostfixOperatorNode& node) {
-				const auto child = nodesEvaluated[node.child].has_value()
-				                   ? newTree.allocateNumber(nodesEvaluated[node.child].value().value)
-				                   : copySubTree(node.child);
-
-				result = newTree.allocatePostfix(node.operatorValue, node.function, child);
+				const auto child = copySubTree(node.child, oldNodes);
+				result = tree.allocatePostfix(node.operatorValue, node.function, child);
 			},
 			[&](const ast_nodes::BinaryOperatorNode& node) {
-				const auto left = nodesEvaluated[node.left].has_value()
-				                  ? newTree.allocateNumber(nodesEvaluated[node.left].value().value)
-				                  : copySubTree(node.left);
-
-				const auto right = nodesEvaluated[node.right].has_value()
-				                   ? newTree.allocateNumber(nodesEvaluated[node.right].value().value)
-				                   : copySubTree(node.right);
-
-				result = newTree.allocateBinary(node.operatorValue, node.function, left, right);
+				const auto left = copySubTree(node.left, oldNodes);
+				const auto right = copySubTree(node.right, oldNodes);
+				result = tree.allocateBinary(node.operatorValue, node.function, left, right);
 			},
 			[&](const ast_nodes::CustomTerminalNode& node) {
-				result = newTree.allocateCustom(node.value);
+				result = tree.allocateCustom(node.value);
 			},
 			[&](const ast_nodes::WordNode& node) {
-				result = newTree.allocateWord(node.word);
+				result = tree.allocateWord(node.word);
 			},
 			[&](const ast_nodes::FunctionNode& node) {
 				std::vector<ast_nodes::IndexType> children;
 
 				for (auto oldChild : node.children) {
-					auto child = nodesEvaluated[oldChild].has_value()
-					             ? newTree.allocateNumber(nodesEvaluated[oldChild].value().value)
-					             : copySubTree(oldChild);
+					const auto child = copySubTree(oldChild, oldNodes);
 					children.emplace_back(child);
 				}
 
-				result = newTree.allocateFunction(node.word, std::move(children));
+				result = tree.allocateFunction(node.word, std::move(children));
 			}
 		}, genericNode.value
 	);

@@ -107,6 +107,8 @@ namespace rxtd::common::expressions {
 		/// <returns>Lexeme that contain info about new token.</returns>
 		Lexeme readNext(array_view<sview> additionalSymbols = {});
 
+		Lexeme readUntil(sview symbols);
+
 	private:
 		std::optional<Lexeme> tryParseSymbols(array_view<sview> symbols);
 

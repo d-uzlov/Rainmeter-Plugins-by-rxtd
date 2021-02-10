@@ -60,6 +60,20 @@ Lexer::Lexeme Lexer::readNext(array_view<sview> additionalSymbols) {
 	throw Exception{ position };
 }
 
+Lexer::Lexeme Lexer::readUntil(sview symbols) {
+	const auto symPosition = source.substr(position).find_first_of(symbols);
+
+	if (symPosition == sview::npos) {
+		const auto result = source.substr(position);
+		position = sourceLength;
+		return Lexeme{ Type::eWORD, result };
+	}
+
+	const auto result = source.substr(position, symPosition);
+	position += symPosition;
+	return Lexeme{ Type::eWORD, result };
+}
+
 std::optional<Lexer::Lexeme> Lexer::tryParseSymbols(array_view<sview> symbols) {
 	for (sview op : symbols) {
 		const bool found = utils::StringUtils::checkStartsWith(source.substr(position), op);

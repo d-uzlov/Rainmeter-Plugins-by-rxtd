@@ -217,7 +217,7 @@ public:
 	}
 };
 
-static ParserKeeper parserKeeper{};
+static ParserKeeper parserKeeper{};  // NOLINT(clang-diagnostic-exit-time-destructors)
 
 double Option::parseNumber(sview source) {
 	auto& parser = parserKeeper.getParser(std::this_thread::get_id());
@@ -225,18 +225,8 @@ double Option::parseNumber(sview source) {
 	try {
 		parser.parse(source);
 
-		expressions::ASTSolver solver{ parser.getTree() };
-		auto valueOpt = solver.trySolve(nullptr);
-		if (valueOpt.has_value()) {
-			return valueOpt.value();
-		}
-
-		// should never happen
-		// because grammar used by Options only supports constant expressions
-		// so trySolve() should always evaluate it successfully
-		buffer_printer::BufferPrinter printer;
-		printer.print(L"can't parse '{}' as a number: reason is unknown", source);
-		rainmeter::Logger::sourcelessLog(printer.getBufferPtr());
+		expressions::ASTSolver solver{ parser.takeTree() };
+		return solver.solve(nullptr);
 	} catch (expressions::ASTSolver::Exception& e) {
 		buffer_printer::BufferPrinter printer;
 		printer.print(L"can't parse '{}' as a number: {}", source, e.getMessage());

@@ -15,12 +15,13 @@ namespace rxtd::common::expressions {
 	class ASTSolver {
 		using Data = OperatorInfo::Data;
 
-		std::vector<std::optional<Data>> nodesEvaluated;
-		array_view<ast_nodes::GenericNode> oldNodes;
-		ast_nodes::SyntaxTree newTree;
+		ast_nodes::SyntaxTree tree;
+		mutable std::vector<std::optional<double>> values;
 
 	public:
-		ASTSolver(const ast_nodes::SyntaxTree& tree) : oldNodes(tree.getNodes()) {}
+		ASTSolver();
+
+		ASTSolver(ast_nodes::SyntaxTree&& tree);
 
 		class Exception : public std::runtime_error {
 			sview message;
@@ -69,36 +70,50 @@ namespace rxtd::common::expressions {
 		/// <summary>
 		/// Throws ASTSolver::Exception when '?' and ':' don't match
 		/// </summary>
-		static void checkTernaryOperator(const ast_nodes::SyntaxTree& tree);
+		void checkTernaryOperator();
+
+		[[nodiscard]]
+		const ast_nodes::SyntaxTree& peekTree() const {
+			return tree;
+		}
 
 		/// <summary>
 		/// Collapses all the constant subtrees into numbers.
-		/// If the whole tree is constant, returns the number it has evaluated to.
-		/// Else makes new SyntaxTree that consists of nodes
-		/// that are either numbers or non-constant subtrees.
 		///
 		/// This function can throw ASTSolver::Exception when old tree is invalid.
 		/// This function can pass ASTSolver::ValueProvider::Exception from ValueProvider.
 		/// </summary>
-		/// <param name="tree">Old syntax tree, that needs to be optimized.</param>
+		void optimize(ValueProvider* valueProvider);
+
+		/// <summary>
+		/// Calculates result of expression.
+		/// If the expression is not a constant, throws exception.
+		///
+		/// This function can throw ASTSolver::Exception when old tree is invalid.
+		/// This function can pass ASTSolver::ValueProvider::Exception from ValueProvider.
+		/// </summary>
+		/// <returns>
+		/// Result of the expression.
+		/// </returns>
 		[[nodiscard]]
-		static std::variant<double, ast_nodes::SyntaxTree>
-		optimize(const ast_nodes::SyntaxTree& oldTree, ValueProvider* valueProvider);
+		double solve(ValueProvider* valueProvider) const;
 
 		/// <summary>
 		/// Calculates values for all constant nodes
+		///
+		/// This function can throw ASTSolver::Exception when old tree is invalid.
+		/// This function can pass ASTSolver::ValueProvider::Exception from ValueProvider.
 		/// </summary>
-		/// <returns>
-		/// If the whole tree is constant, returns the number it has evaluated to.
-		/// Otherwise returns empty object.
-		/// </returns>
-		std::optional<double> trySolve(ValueProvider* valueProvider);
+		void collapseNodes(ValueProvider* valueProvider);
 
 	private:
 		/// <summary>
-		/// Recursively copy alive part of the tree, descending from oldNodeIndex.
+		/// Recursively copy alive part of the tree (presented by @code oldNodes), descending from oldNodeIndex.
 		/// </summary>
-		/// <returns>Index of new node in the newTree</returns>
-		ast_nodes::IndexType copySubTree(ast_nodes::IndexType oldNodeIndex);
+		/// <param name="oldNodeIndex">Index of the root node of the subtree</param>
+		/// <param name="oldNodes">Nodes of the old syntax tree</param>
+		/// <returns>Index of new node in the tree</returns>
+		[[nodiscard]]
+		ast_nodes::IndexType copySubTree(ast_nodes::IndexType oldNodeIndex, array_view<ast_nodes::GenericNode> oldNodes);
 	};
 }

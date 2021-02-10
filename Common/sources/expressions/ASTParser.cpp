@@ -49,8 +49,9 @@ void ASTParser::setGrammar(const GrammarDescription& grammarDescription, bool al
 
 void ASTParser::parse(sview source) {
 	tree.clear();
+	tree.setSource(source);
 
-	lexer.setSource(source);
+	lexer.setSource(tree.getSource());
 	skipToken();
 
 	parseBinaryOrPostfix(0);

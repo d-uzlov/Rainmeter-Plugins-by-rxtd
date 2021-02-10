@@ -14,7 +14,7 @@ Although result wasn't state of the art, it was good enough for the project's pu
 &nbsp;
 &nbsp;
 
-Then in the prosecc of creating convenient way to parse complex options for AudioAnalyzer
+Then in the process of creating convenient way to parse complex options for AudioAnalyzer
 expression parsing was repurposed as a pure math calculator,
 without any dynamic resolution of values.
 

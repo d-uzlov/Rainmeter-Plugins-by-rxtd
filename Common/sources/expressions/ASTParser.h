@@ -104,6 +104,11 @@ namespace rxtd::common::expressions {
 			return tree;
 		}
 
+		[[nodiscard]]
+		ast_nodes::SyntaxTree takeTree() {
+			return std::exchange(tree, {});
+		}
+
 	protected:
 		/// <summary>
 		/// 
@@ -141,9 +146,15 @@ namespace rxtd::common::expressions {
 
 		/// <summary>
 		/// Reads next token from lexer.
+		///
+		/// See Lexer descriptions for information about @code additionalSymbols
 		/// </summary>
-		void skipToken() {
-			next = lexer.readNext();
+		void skipToken(array_view<sview> additionalSymbols = {}) {
+			next = lexer.readNext(additionalSymbols);
+		}
+
+		void readUntil(sview symbols) {
+			next = lexer.readUntil(symbols);
 		}
 
 		[[noreturn]]
