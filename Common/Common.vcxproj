@@ -159,7 +159,6 @@
     <ClCompile Include="sources\expressions\GrammarBuilder.cpp" />
     <ClCompile Include="sources\expressions\Lexer.cpp" />
     <ClCompile Include="sources\MyMath.cpp" />
-    <ClCompile Include="sources\MathExpressionParser.cpp" />
     <ClCompile Include="sources\option-parsing\Option.cpp" />
     <ClCompile Include="sources\option-parsing\OptionMap.cpp" />
     <ClCompile Include="sources\option-parsing\Tokenizer.cpp" />
@@ -201,7 +200,6 @@
     <ClInclude Include="sources\ReadableStreamBuffer.h" />
     <ClInclude Include="sources\Vector2D.h" />
     <ClInclude Include="sources\MyMath.h" />
-    <ClInclude Include="sources\MathExpressionParser.h" />
     <ClInclude Include="sources\my-windows.h" />
     <ClInclude Include="sources\StringUtils.h" />
     <ClInclude Include="sources\TypeHolder.h" />

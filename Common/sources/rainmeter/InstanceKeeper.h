@@ -92,6 +92,5 @@ namespace rxtd::common::rainmeter {
 
 		void initThread(void* rm);
 		static void sendMessage(Message message);
-		void sendKill();
 	};
 }

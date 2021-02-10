@@ -19,9 +19,9 @@ namespace rxtd::common::expressions {
 		array_view<ast_nodes::GenericNode> oldNodes;
 		ast_nodes::SyntaxTree newTree;
 
-		ASTSolver(array_view<ast_nodes::GenericNode> oldNodes) : oldNodes(oldNodes) {}
-
 	public:
+		ASTSolver(const ast_nodes::SyntaxTree& tree) : oldNodes(tree.getNodes()) {}
+
 		class Exception : public std::runtime_error {
 			sview message;
 		public:
@@ -85,12 +85,16 @@ namespace rxtd::common::expressions {
 		static std::variant<double, ast_nodes::SyntaxTree>
 		optimize(const ast_nodes::SyntaxTree& oldTree, ValueProvider* valueProvider);
 
-	private:
 		/// <summary>
 		/// Calculates values for all constant nodes
 		/// </summary>
-		void trySolve(ValueProvider* valueProvider);
+		/// <returns>
+		/// If the whole tree is constant, returns the number it has evaluated to.
+		/// Otherwise returns empty object.
+		/// </returns>
+		std::optional<double> trySolve(ValueProvider* valueProvider);
 
+	private:
 		/// <summary>
 		/// Recursively copy alive part of the tree, descending from oldNodeIndex.
 		/// </summary>

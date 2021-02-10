@@ -49,14 +49,12 @@ void ASTSolver::checkTernaryOperator(const ast_nodes::SyntaxTree& tree) {
 }
 
 std::variant<double, ast_nodes::SyntaxTree> ASTSolver::optimize(const ast_nodes::SyntaxTree& oldTree, ValueProvider* valueProvider) {
-	ASTSolver solver{ oldTree.getNodes() };
+	ASTSolver solver{ oldTree };
 
-	solver.trySolve(valueProvider);
+	auto valueOpt = solver.trySolve(valueProvider);
 
-	auto root = solver.nodesEvaluated.back();
-
-	if (root.has_value()) {
-		return root.value().value;
+	if (valueOpt.has_value()) {
+		return valueOpt.value();
 	}
 
 	solver.copySubTree(oldTree.getRootIndex());
@@ -64,7 +62,7 @@ std::variant<double, ast_nodes::SyntaxTree> ASTSolver::optimize(const ast_nodes:
 	return std::move(solver.newTree);
 }
 
-void ASTSolver::trySolve(ValueProvider* valueProvider) {
+std::optional<double> ASTSolver::trySolve(ValueProvider* valueProvider) {
 	nodesEvaluated.clear();
 	nodesEvaluated.resize(oldNodes.size());
 
@@ -137,6 +135,11 @@ void ASTSolver::trySolve(ValueProvider* valueProvider) {
 		);
 	}
 
+	if (nodesEvaluated.back().has_value()) {
+		return nodesEvaluated.back().value().value;
+	} else {
+		return {};
+	}
 }
 
 ast_nodes::IndexType ASTSolver::copySubTree(ast_nodes::IndexType oldNodeIndex) {

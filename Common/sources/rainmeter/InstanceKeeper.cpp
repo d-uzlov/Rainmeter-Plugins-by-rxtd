@@ -38,6 +38,7 @@ using Message = InstanceKeeper::Message;
 struct MessageQueue : DataWithLock {
 	std::vector<Message> buffer;
 	std::condition_variable sleepVariable;
+	bool threadShouldBeRunning = false;
 
 	MessageQueue() : DataWithLock(true) { }
 };
@@ -105,16 +106,38 @@ void InstanceKeeper::sendCommand(SkinHandle skin, string command) {
 }
 
 void InstanceKeeper::incrementCounter(void* data) {
-	if (counter == 0) {
+	auto prev = counter.fetch_add(1);
+	if (prev == 0) {
+		auto lock = queue.getLock();
+
+		if (queue.threadShouldBeRunning) {
+			return;
+		}
+		queue.threadShouldBeRunning = true;
+
 		initThread(data);
 	}
-	counter.fetch_add(1);
 }
 
 void InstanceKeeper::decrementCounter() {
-	counter.fetch_add(-1);
-	if (counter == 0) {
-		sendKill();
+	auto prev = counter.fetch_add(-1);
+	if (prev == 1) {
+		try {
+			auto lock = queue.getLock();
+
+			if (!queue.threadShouldBeRunning) {
+				return;
+			}
+
+			Message mes{};
+			mes.action = [](const Message& mes) {
+				throw std::runtime_error{ "stop thread" };
+			};
+			queue.buffer.push_back(std::move(mes));
+			queue.sleepVariable.notify_one();
+
+			queue.threadShouldBeRunning = false;
+		} catch (...) {}
 	}
 }
 
@@ -207,12 +230,4 @@ void InstanceKeeper::sendMessage(Message message) {
 		queue.buffer.push_back(std::move(message));
 		queue.sleepVariable.notify_one();
 	} catch (...) {}
-}
-
-void InstanceKeeper::sendKill() {
-	Message mes{};
-	mes.action = [](const Message& mes) {
-		throw std::runtime_error{ "stop thread" };
-	};
-	sendMessage(mes);
 }

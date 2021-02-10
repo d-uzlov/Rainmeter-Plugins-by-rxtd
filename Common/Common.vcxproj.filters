@@ -32,9 +32,6 @@
     <ClCompile Include="sources\TypeHolder.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sources\MathExpressionParser.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="precompiled.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -86,9 +83,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="sources\TypeHolder.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\MathExpressionParser.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="sources\my-windows.h">

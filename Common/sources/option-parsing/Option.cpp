@@ -8,12 +8,18 @@
  */
 
 #include "Option.h"
-#include "MathExpressionParser.h"
-#include "Tokenizer.h"
 
-#include "OptionMap.h"
+#include <mutex>
+#include <thread>
+
+#include "DataWithLock.h"
 #include "OptionList.h"
+#include "OptionMap.h"
 #include "OptionSequence.h"
+#include "Tokenizer.h"
+#include "expressions/ASTParser.h"
+#include "expressions/ASTSolver.h"
+#include "expressions/GrammarBuilder.h"
 #include "rainmeter/Logger.h"
 
 using namespace common::options;
@@ -124,26 +130,128 @@ OptionSequence Option::asSequence(
 	}
 }
 
+//
+// ASTParser initialization is expensive.
+// It involves defining grammar with a lot of memory allocation and computing
+// and initializing inner structures with a lot of memory allocations and computing.
+//
+// It doesn't make much sense to create a parser for each Option instance:
+//		There are a lot of options, that doesn't even need number parsing.
+//		Maybe it would be better to initialize parser only when needed,
+//		but that's still expensive, considering that most options would only be used once.
+//
+// It doesn't make much sense to create a parser for each Option#parseNumber() call.
+//
+// It doesn't make sense to keep parsers in other classes with longer lifetime, like OptionMap:
+//		Options is an independent class, it can be created from string.
+//
+// It would make a lot of sense to make parser a thread_local variable.
+// Unfortunately, in DLLs thread local variables are not destructed on dll unload.
+// But they are initialized again and again on every DLL load, which crates memory leak.
+// Maybe this behaviour depends on compiler or system,
+// but using thread_local is not a reliable solution.
+//
+// Global objects, unlike thead_local, are destroyed on dll unload.
+//
+// It's possible to use pointers as a thread_local value,
+// and let global variables handle memory management,
+// and since pointers are plain objects that don't need to be destructed,
+// it would prevent memory leak.
+// But then the pointer itself would leak memory from thread local storage,
+// albeit only 8 bytes per thread per DLL load.
+//
+//
+// I believe that ASTParser initialization is expensive enough
+// to justify locking a mutex and std::this_thread::get_id()
+// on each call to Option#parseNumber().
+//
+class ParserKeeper {
+	struct ParserMap : public DataWithLock {
+		std::map<std::thread::id, std::unique_ptr<common::expressions::ASTParser>> m;
+	};
+
+	ParserMap mapWithLock;
+
+public:
+	common::expressions::ASTParser& getParser(std::thread::id id) {
+		common::expressions::ASTParser* parserPtr = mapWithLock.runGuarded(
+			[&]() {
+				auto& parserOpt = mapWithLock.m[id];
+				if (parserOpt == nullptr) {
+					parserOpt = std::make_unique<common::expressions::ASTParser>();
+
+					initParser(*parserOpt);
+				}
+
+				return parserOpt.get();
+			}
+		);
+
+		return *parserPtr;
+	}
+
+	static void initParser(common::expressions::ASTParser& parser) {
+		common::expressions::GrammarBuilder builder;
+		using Data = common::expressions::OperatorInfo::Data;
+
+		// Previously Option could only parse: +, -, *, /, ^
+		// So let's limit it to these operators
+
+		builder.pushBinary(L"+", [](Data d1, Data d2) { return Data{ d1.value + d2.value }; });
+		builder.pushBinary(L"-", [](Data d1, Data d2) { return Data{ d1.value - d2.value }; });
+
+		builder.increasePrecedence();
+		builder.pushBinary(L"*", [](Data d1, Data d2) { return Data{ d1.value * d2.value }; });
+		builder.pushBinary(L"/", [](Data d1, Data d2) { return Data{ (d1.value == 0.0 ? 0.0 : d1.value / d2.value) }; });
+
+		builder.increasePrecedence();
+		builder.pushPrefix(L"+", [](Data d1, Data d2) { return d1; });
+		builder.pushPrefix(L"-", [](Data d1, Data d2) { return Data{ -d1.value }; });
+
+		builder.increasePrecedence();
+		builder.pushBinary(L"^", [](Data d1, Data d2) { return Data{ std::pow(d1.value, d2.value) }; }, false);
+
+		builder.pushGrouping(L"(", L")", L",");
+
+		parser.setGrammar(std::move(builder).takeResult(), false);
+	}
+};
+
+static ParserKeeper parserKeeper{};
+
 double Option::parseNumber(sview source) {
-	utils::MathExpressionParser parser(source);
+	auto& parser = parserKeeper.getParser(std::this_thread::get_id());
 
-	parser.parse();
+	try {
+		parser.parse(source);
 
-	if (parser.isError()) {
-		common::buffer_printer::BufferPrinter printer;
-		printer.print(L"can't parse '{}' as a number", source);
-		common::rainmeter::Logger::sourcelessLog(printer.getBufferPtr());
-		return 0;
+		expressions::ASTSolver solver{ parser.getTree() };
+		auto valueOpt = solver.trySolve(nullptr);
+		if (valueOpt.has_value()) {
+			return valueOpt.value();
+		}
+
+		// should never happen
+		// because grammar used by Options only supports constant expressions
+		// so trySolve() should always evaluate it successfully
+		buffer_printer::BufferPrinter printer;
+		printer.print(L"can't parse '{}' as a number: reason is unknown", source);
+		rainmeter::Logger::sourcelessLog(printer.getBufferPtr());
+	} catch (expressions::ASTSolver::Exception& e) {
+		buffer_printer::BufferPrinter printer;
+		printer.print(L"can't parse '{}' as a number: {}", source, e.getMessage());
+		rainmeter::Logger::sourcelessLog(printer.getBufferPtr());
+	} catch (expressions::Lexer::Exception& e) {
+		buffer_printer::BufferPrinter printer;
+		printer.print(L"can't parse '{}' as a number: unknown token here: '{}'", source, source.substr(e.getPosition()));
+		rainmeter::Logger::sourcelessLog(printer.getBufferPtr());
+	} catch (expressions::ASTParser::Exception& e) {
+		buffer_printer::BufferPrinter printer;
+		printer.print(L"can't parse '{}' as a number: {}, at position: '{}'", source, e.getReason(), source.substr(e.getPosition()));
+		rainmeter::Logger::sourcelessLog(printer.getBufferPtr());
 	}
 
-	auto exp = parser.getExpression();
-	exp.solve();
-
-	if (exp.type != utils::ExpressionType::eNUMBER) {
-		return 0;
-	}
-
-	return exp.number;
+	return 0;
 }
 
 std::wostream& rxtd::common::options::operator<<(std::wostream& stream, const Option& opt) {

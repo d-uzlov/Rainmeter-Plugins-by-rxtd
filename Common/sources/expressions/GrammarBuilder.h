@@ -72,6 +72,11 @@ namespace rxtd::common::expressions {
 			return grammar;
 		}
 
+		[[nodiscard]]
+		GrammarDescription takeResult() && {
+			return std::exchange(grammar, {});
+		}
+
 	private:
 		void push(sview opValue, OperatorInfo::Type type, OperatorInfo::OperatorFunction func, bool leftToRightAssociativity);
 	};
