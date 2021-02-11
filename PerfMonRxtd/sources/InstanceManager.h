@@ -10,7 +10,7 @@
 #pragma once
 #include "BlacklistManager.h"
 #include "enums.h"
-#include "expressions.h"
+#include "Reference.h"
 #include "pdh/NamesManager.h"
 #include "pdh/PdhWrapper.h"
 

@@ -155,7 +155,7 @@
     <ClCompile Include="sources\PerfmonChild.cpp" />
     <ClCompile Include="sources\enums.h" />
     <ClCompile Include="sources\ExpressionResolver.cpp" />
-    <ClCompile Include="sources\expressions.cpp" />
+    <ClCompile Include="sources\ExpressionParser.cpp" />
     <ClCompile Include="sources\InstanceManager.cpp" />
     <ClCompile Include="sources\PerfmonParent.cpp" />
     <ClCompile Include="sources\pdh\PdhWrapper.cpp" />
@@ -165,16 +165,18 @@
   <ItemGroup>
     <ClInclude Include="local-version.h" />
     <ClInclude Include="sources\BlacklistManager.h" />
+    <ClInclude Include="sources\pdh\my-pdh.h" />
     <ClInclude Include="sources\pdh\PdhFormat.h" />
     <ClInclude Include="sources\pdh\PdhSnapshot.h" />
     <ClInclude Include="sources\PerfmonChild.h" />
     <ClInclude Include="sources\ExpressionResolver.h" />
-    <ClInclude Include="sources\expressions.h" />
+    <ClInclude Include="sources\ExpressionParser.h" />
     <ClInclude Include="sources\InstanceManager.h" />
     <ClInclude Include="sources\PerfmonParent.h" />
     <ClInclude Include="sources\pdh\PdhWrapper.h" />
     <ClInclude Include="sources\pdh\NamesManager.h" />
     <ClInclude Include="sources\PerfMonRXTD.h" />
+    <ClInclude Include="sources\Reference.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.vcxproj">

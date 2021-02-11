@@ -208,8 +208,12 @@ void InstanceManager::sort(const ExpressionResolver& expressionResolver) {
 	switch (options.sortBy) {
 	case SortBy::eRAW_COUNTER: {
 		if (options.rollup) {
+			Reference ref;
+			ref.type = Reference::Type::COUNTER_RAW;
+			ref.counter = options.sortIndex;
+			ref.rollupFunction = options.sortRollupFunction;
 			for (auto& instance : instances) {
-				instance.sortValue = expressionResolver.getRawRollup(options.sortRollupFunction, options.sortIndex, instance);
+				instance.sortValue = expressionResolver.getValue(ref, &instance, log);
 			}
 		} else {
 			for (auto& instance : instances) {
@@ -226,8 +230,12 @@ void InstanceManager::sort(const ExpressionResolver& expressionResolver) {
 			return;
 		}
 		if (options.rollup) {
+			Reference ref;
+			ref.type = Reference::Type::COUNTER_FORMATTED;
+			ref.counter = options.sortIndex;
+			ref.rollupFunction = options.sortRollupFunction;
 			for (auto& instance : instances) {
-				instance.sortValue = expressionResolver.getFormattedRollup(options.sortRollupFunction, options.sortIndex, instance);
+				instance.sortValue = expressionResolver.getValue(ref, &instance, log);
 			}
 		} else {
 			for (auto& instance : instances) {
@@ -237,14 +245,17 @@ void InstanceManager::sort(const ExpressionResolver& expressionResolver) {
 		break;
 	}
 	case SortBy::eEXPRESSION: {
+		Reference ref;
+		ref.type = Reference::Type::EXPRESSION;
+		ref.counter = options.sortIndex;
+		ref.rollupFunction = options.sortRollupFunction;
 		if (options.rollup) {
 			for (auto& instance : instances) {
-				instance.sortValue = expressionResolver.
-					getExpressionRollup(options.sortRollupFunction, options.sortIndex, instance);
+				instance.sortValue = expressionResolver.getValue(ref, &instance, log);
 			}
 		} else {
 			for (auto& instance : instances) {
-				instance.sortValue = expressionResolver.getExpression(options.sortIndex, instance);
+				instance.sortValue = expressionResolver.getValue(ref, &instance, log);
 			}
 		}
 		break;
@@ -254,8 +265,12 @@ void InstanceManager::sort(const ExpressionResolver& expressionResolver) {
 			log.error(L"Resolving RollupExpression without rollup");
 			return;
 		}
+
+		Reference ref;
+		ref.type = Reference::Type::EXPRESSION;
+		ref.counter = options.sortIndex;
 		for (auto& instance : instances) {
-			instance.sortValue = expressionResolver.getRollupExpression(options.sortIndex, instance);
+			instance.sortValue = expressionResolver.getValue(ref, &instance, log);
 		}
 		break;
 	}

@@ -56,7 +56,6 @@
 #pragma once
 
 #include "ExpressionResolver.h"
-#include "expressions.h"
 #include "InstanceManager.h"
 #include "TypeHolder.h"
 #include "pdh/PdhWrapper.h"
@@ -101,7 +100,7 @@ namespace rxtd::perfmon {
 			Logger& logger,
 			string& str
 		) const {
-			if (!instanceManager.canGetRaw() || ref.type == ReferenceType::COUNTER_FORMATTED && !instanceManager.canGetFormatted()) {
+			if (!instanceManager.canGetRaw() || ref.type == Reference::Type::COUNTER_FORMATTED && !instanceManager.canGetFormatted()) {
 				str = ref.total ? L"Total" : L"";
 				return 0.0;
 			}

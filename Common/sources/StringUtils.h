@@ -209,9 +209,11 @@ namespace rxtd::utils {
 			index begin,
 			index count = string::npos
 		) {
-			const index endRemoveStart = begin + count;
-			if (endRemoveStart <= index(str.length())) {
-				str.erase(endRemoveStart);
+			if (count != string::npos) {
+				const index endRemoveStart = begin + count;
+				if (endRemoveStart <= index(str.length())) {
+					str.erase(endRemoveStart);
+				}
 			}
 			if (begin > 0) {
 				str.erase(0, begin);

@@ -8,6 +8,10 @@
  */
 
 #include "ExpressionResolver.h"
+
+
+#include "expressions/ASTSolver.h"
+#include "expressions/GrammarBuilder.h"
 #include "option-parsing/OptionList.h"
 
 using namespace perfmon;
@@ -20,7 +24,32 @@ bool ExpressionResolver::CacheEntry::operator<(const CacheEntry& other) const {
 
 ExpressionResolver::ExpressionResolver(Logger log, const InstanceManager& instanceManager) :
 	log(std::move(log)),
-	instanceManager(instanceManager) { }
+	instanceManager(instanceManager) {
+
+	common::expressions::GrammarBuilder builder;
+	using Data = common::expressions::OperatorInfo::Data;
+
+	// Previously expressions could only parse: +, -, *, /, ^
+	// So let's limit it to these operators
+
+	builder.pushBinary(L"+", [](Data d1, Data d2) { return Data{ d1.value + d2.value }; });
+	builder.pushBinary(L"-", [](Data d1, Data d2) { return Data{ d1.value - d2.value }; });
+
+	builder.increasePrecedence();
+	builder.pushBinary(L"*", [](Data d1, Data d2) { return Data{ d1.value * d2.value }; });
+	builder.pushBinary(L"/", [](Data d1, Data d2) { return Data{ (d1.value == 0.0 ? 0.0 : d1.value / d2.value) }; });
+
+	builder.increasePrecedence();
+	builder.pushPrefix(L"+", [](Data d1, Data d2) { return d1; });
+	builder.pushPrefix(L"-", [](Data d1, Data d2) { return Data{ -d1.value }; });
+
+	builder.increasePrecedence();
+	builder.pushBinary(L"^", [](Data d1, Data d2) { return Data{ std::pow(d1.value, d2.value) }; }, false);
+
+	builder.pushGrouping(L"(", L")", L",");
+
+	parser.setGrammar(std::move(builder).takeResult(), false);
+}
 
 index ExpressionResolver::getExpressionsCount() const {
 	return index(expressions.size());
@@ -34,101 +63,105 @@ void ExpressionResolver::resetCaches() {
 	totalsCache.clear();
 }
 
-double ExpressionResolver::getValue(const Reference& ref, const InstanceInfo* instance, Logger& logger) const {
-	const auto rollup = instanceManager.isRollup();
+ExpressionResolver::ASTSolver ExpressionResolver::parseExpressionTree(sview expressionString, sview loggerName, index loggerIndex) {
+	using common::expressions::ASTSolver;
 
-	switch (ref.type) {
-	case ReferenceType::COUNT:
-		if (ref.total) {
-			if (rollup) {
-				return calculateRollupCountTotal(ref.rollupFunction);
-			} else {
-				return calculateCountTotal(ref.rollupFunction);
-			}
-		} else {
-			if (instance == nullptr) {
-				return 0.0;
-			}
-			if (rollup) {
-				return static_cast<double>(instance->vectorIndices.size() + 1);
-			} else {
-				return 1.0;
-			}
-		}
+	try {
+		parser.parse(expressionString);
 
-	case ReferenceType::COUNTER_RAW:
-		if (!indexIsInBounds(ref.counter, 0, instanceManager.getCountersCount() - 1)) {
-			logger.error(L"Trying to get a non-existing counter {}", ref.counter);
-			return 0.0;
-		}
-		if (ref.total) {
-			return calculateAndCacheTotal(TotalSource::eRAW_COUNTER, ref.counter, ref.rollupFunction);
-		}
-		if (instance == nullptr) {
-			return 0.0;
-		}
-		if (rollup) {
-			return calculateRollup<&ExpressionResolver::getRaw>(ref.rollupFunction, ref.counter, *instance);
-		}
-		return getRaw(ref.counter, instance->indices);
+		ASTSolver solver{ parser.takeTree() };
+		solver.optimize(nullptr);
 
-	case ReferenceType::COUNTER_FORMATTED:
-		if (!indexIsInBounds(ref.counter, 0, instanceManager.getCountersCount() - 1)) {
-			logger.error(L"Trying to get a non-existing counter {}", ref.counter);
-			return 0.0;
-		}
-		if (ref.total) {
-			return calculateAndCacheTotal(TotalSource::eFORMATTED_COUNTER, ref.counter, ref.rollupFunction);
-		}
-		if (instance == nullptr) {
-			return 0.0;
-		}
-		if (rollup) {
-			return calculateRollup<&ExpressionResolver::getFormatted>(ref.rollupFunction, ref.counter, *instance);
-		}
-		return getFormatted(ref.counter, instance->indices);
+		return solver;
+	} catch (common::expressions::Lexer::Exception& e) {
+		log.error(
+			L"{} {} can't be parsed: unknown token here: '{}'",
+			loggerName, loggerIndex, expressionString.substr(e.getPosition())
+		);
+	} catch (common::expressions::ASTParser::Exception& e) {
+		log.error(
+			L"{} {} can't be parsed: {}, at position: '{}'",
+			loggerName, loggerIndex, e.getReason(), expressionString.substr(e.getPosition())
+		);
+	}
 
-	case ReferenceType::EXPRESSION:
-		if (!indexIsInBounds(ref.counter, 0, index(expressions.size()))) {
-			logger.error(L"Trying to get a non-existing expression {}", ref.counter);
-			return 0.0;
-		}
-		if (ref.total) {
-			return calculateAndCacheTotal(TotalSource::eEXPRESSION, ref.counter, ref.rollupFunction);
-		}
-		if (instance == nullptr) {
-			return 0.0;
-		}
-		expressionCurrentItem = instance;
-		if (rollup) {
-			return calculateExpressionRollup(expressions[ref.counter], ref.rollupFunction);
-		}
-		return calculateExpression<&ExpressionResolver::resolveReference>(expressions[ref.counter]);
+	return {};
+}
 
-	case ReferenceType::ROLLUP_EXPRESSION:
-		if (!indexIsInBounds(ref.counter, 0, index(rollupExpressions.size()) - 1)) {
-			logger.error(L"Trying to get a non-existing expression {}", ref.counter);
-			return 0.0;
-		}
-		if (ref.total) {
-			return calculateAndCacheTotal(TotalSource::eROLLUP_EXPRESSION, ref.counter, ref.rollupFunction);
-		}
-		if (rollup) {
-			if (instance == nullptr) {
-				return 0.0;
-			}
-			expressionCurrentItem = instance;
-			return calculateExpression<&ExpressionResolver::resolveRollupReference>(rollupExpressions[ref.counter]);
-		}
-		logger.error(L"RollupExpression can't be evaluated without rollup");
-		return 0.0;
+void ExpressionResolver::parseExpressions(std::vector<ASTSolver>& vector, OptionList list, sview loggerName) {
+	vector.resize(list.size());
+	for (index i = 0; i < index(list.size()); ++i) {
+		vector[i] = parseExpressionTree(list.get(i).asString(), loggerName, i);
+	}
+}
 
-	case ReferenceType::UNKNOWN:
-		return 0.0;
+void ExpressionResolver::checkExpressionIndices() {
+	for (index i = 0; i < index(expressions.size()); ++i) {
+		try {
+			using CustomNode = common::expressions::ast_nodes::CustomTerminalNode;
 
-	default:
-		logger.error(L"unexpected refType in getValue(): {}", ref.type);
-		return 0.0;
+			expressions[i].peekTree().visitNodes(
+				[&](const auto& node) {
+					using Type = std::decay<decltype(node)>;
+					if constexpr (std::is_same<Type, CustomNode>::value) {
+						CustomNode& n = node;
+						auto& ref = *std::any_cast<Reference>(&n.value);
+
+						if (ref.type == Reference::Type::EXPRESSION && ref.counter >= i) {
+							log.error(L"Expression {}: invalid reference to Expression {}", i, ref.counter);
+							throw std::runtime_error{ "" };
+						}
+
+						if (ref.type == Reference::Type::ROLLUP_EXPRESSION) {
+							log.error(L"Expression {}: invalid reference to RollupExpressions", i);
+							throw std::runtime_error{ "" };
+						}
+
+						if (ref.type == Reference::Type::EXPRESSION || ref.type == Reference::Type::ROLLUP_EXPRESSION) {
+							if (!ref.useOrigName) {
+								CharUpperW(&ref.name[0]);
+							}
+						}
+					}
+				}
+			);
+		} catch (std::runtime_error&) {
+			expressions[i] = {};
+		}
+	}
+
+	for (index i = 0; i < index(rollupExpressions.size()); ++i) {
+		try {
+			using CustomNode = common::expressions::ast_nodes::CustomTerminalNode;
+
+			rollupExpressions[i].peekTree().visitNodes(
+				[&](const auto& node) {
+					using Type = std::decay<decltype(node)>;
+					if constexpr (std::is_same<Type, CustomNode>::value) {
+						CustomNode& n = node;
+						auto& ref = *std::any_cast<Reference>(&n.value);
+
+						if (ref.type == Reference::Type::EXPRESSION && ref.counter >= index(expressions.size())) {
+							log.error(L"RollupExpression {}: invalid reference: Expression {} doesn't exist", i, ref.counter);
+							throw std::runtime_error{ "" };
+						}
+
+						if (ref.type == Reference::Type::ROLLUP_EXPRESSION && ref.counter >= i) {
+							log.error(L"RollupExpression {} can't reference RollupExpression {}", i, ref.counter);
+							throw std::runtime_error{ "" };
+						}
+
+						if (ref.type == Reference::Type::EXPRESSION || ref.type == Reference::Type::ROLLUP_EXPRESSION) {
+							if (!ref.useOrigName) {
+								CharUpperW(&ref.name[0]);
+							}
+						}
+					}
+				}
+			);
+		} catch (std::runtime_error&) {
+			rollupExpressions[i] = {};
+		}
 	}
 }
 
@@ -137,94 +170,76 @@ void ExpressionResolver::setExpressions(
 	OptionList rollupExpressionsList
 ) {
 	// TODO check count of expressions
-	expressions.resize(expressionsList.size());
-	for (index i = 0; i < expressionsList.size(); ++i) {
-		ExpressionParser parser(expressionsList.get(i).asString());
-		parser.parse();
-		if (parser.isError()) {
-			log.error(L"Expression {} can't be parsed", i);
-			ExpressionTreeNode node;
-			node.type = ExpressionType::NUMBER;
-			node.number = 0;
-			expressions[i] = node;
-			continue;
-		}
-		ExpressionTreeNode expression = parser.getExpression();
-		expression.simplify();
 
-		const auto maxRef = expression.maxExpRef();
-		if (maxRef >= i) {
-			log.error(L"Expression {} can't reference Expression {}", i, maxRef);
-			ExpressionTreeNode node;
-			node.type = ExpressionType::NUMBER;
-			node.number = 0;
-			expressions[i] = node;
-			continue;
-		}
+	parseExpressions(expressions, expressionsList, L"Expression");
+	parseExpressions(rollupExpressions, rollupExpressionsList, L"RollupExpression");
 
-		const auto maxRURef = expression.maxExpRef();
-		if (maxRURef >= 0) {
-			log.error(L"Expressions can't reference RollupExpressions");
-			ExpressionTreeNode node;
-			node.type = ExpressionType::NUMBER;
-			node.number = 0;
-			expressions[i] = node;
-			continue;
-		}
+	checkExpressionIndices();
+}
 
-		expression.processRefs(
-			[](Reference& ref) {
-				if (!ref.useOrigName) {
-					CharUpperW(&ref.name[0]);
-				}
+double ExpressionResolver::getValue(const Reference& ref, const InstanceInfo* instancePtr, Logger& logger) const {
+	const auto rollup = instanceManager.isRollup();
+
+	if (ref.total) {
+		switch (ref.type) {
+		case Reference::Type::COUNTER_RAW: return calculateAndCacheTotal(TotalSource::eRAW_COUNTER, ref.counter, ref.rollupFunction);
+		case Reference::Type::COUNTER_FORMATTED: return calculateAndCacheTotal(TotalSource::eFORMATTED_COUNTER, ref.counter, ref.rollupFunction);
+		case Reference::Type::EXPRESSION: return calculateAndCacheTotal(TotalSource::eEXPRESSION, ref.counter, ref.rollupFunction);
+		case Reference::Type::ROLLUP_EXPRESSION: return calculateAndCacheTotal(TotalSource::eROLLUP_EXPRESSION, ref.counter, ref.rollupFunction);
+		case Reference::Type::COUNT: {
+			if (rollup) {
+				return calculateRollupCountTotal(ref.rollupFunction);
+			} else {
+				return calculateCountTotal(ref.rollupFunction);
 			}
-		);
-		expressions[i] = expression;
+		}
+		}
+		return 0.0;
 	}
 
-	rollupExpressions.resize(rollupExpressionsList.size());
-	for (index i = 0; i < rollupExpressionsList.size(); ++i) {
-		ExpressionParser parser(rollupExpressionsList.get(i).asString());
-		parser.parse();
-		if (parser.isError()) {
-			log.error(L"RollupExpression {} can't be parsed", i);
-			ExpressionTreeNode node;
-			node.type = ExpressionType::NUMBER;
-			node.number = 0;
-			expressions[i] = node;
-			continue;
-		}
-		ExpressionTreeNode expression = parser.getExpression();
-		expression.simplify();
-
-		const auto maxRef = expression.maxExpRef();
-		if (maxRef >= index(expressions.size())) {
-			log.error(L"Expression {} doesn't exist", i);
-			ExpressionTreeNode node;
-			node.type = ExpressionType::NUMBER;
-			node.number = 0;
-			expressions[i] = node;
-			continue;
-		}
-
-		const auto maxRURef = expression.maxRUERef();
-		if (maxRURef >= i) {
-			log.error(L"RollupExpression {} can't reference RollupExpression {}", i, maxRef);
-			ExpressionTreeNode node;
-			node.type = ExpressionType::NUMBER;
-			node.number = 0;
-			expressions[i] = node;
-			continue;
-		}
-		expression.processRefs(
-			[](Reference& ref) {
-				if (!ref.useOrigName) {
-					CharUpperW(&ref.name[0]);
-				}
-			}
-		);
-		rollupExpressions[i] = expression;
+	if (instancePtr == nullptr) {
+		return 0.0;
 	}
+	auto& instance = *instancePtr;
+
+	// only needed for EXPRESSION and ROLLUP_EXPRESSION
+	expressionCurrentItem = instancePtr;
+
+	if (rollup) {
+		switch (ref.type) {
+		case Reference::Type::COUNTER_RAW:
+			return doRollup(
+				ref.rollupFunction, instance.indices, instance.vectorIndices, [&](Indices item) {
+					return getRaw(ref.counter, item);
+				}
+			);
+		case Reference::Type::COUNTER_FORMATTED:
+			return doRollup(
+				ref.rollupFunction, instance.indices, instance.vectorIndices, [&](Indices item) {
+					return getFormatted(ref.counter, item);
+				}
+			);
+		case Reference::Type::EXPRESSION: return calculateExpressionRollup(expressions[ref.counter], ref.rollupFunction);
+		case Reference::Type::ROLLUP_EXPRESSION: return calculateExpression < &ExpressionResolver::resolveRollupReference > (rollupExpressions[ref.counter]);
+		case Reference::Type::COUNT: return static_cast<double>(instancePtr->vectorIndices.size() + 1);
+		}
+	} else {
+		switch (ref.type) {
+		case Reference::Type::COUNTER_RAW: return getRaw(ref.counter, instancePtr->indices);
+		case Reference::Type::COUNTER_FORMATTED: return getFormatted(ref.counter, instancePtr->indices);
+		case Reference::Type::EXPRESSION: return calculateExpression < &ExpressionResolver::resolveReference > (expressions[ref.counter]);
+		case Reference::Type::ROLLUP_EXPRESSION: return 0.0; // todo throw
+		case Reference::Type::COUNT: return 1.0;
+		}
+	}
+
+	// todo
+	// if (!indexIsInBounds(ref.counter, 0, instanceManager.getCountersCount() - 1)) {
+	// 	logger.error(L"Trying to get a non-existing counter {}", ref.counter);
+	// 	return 0.0;
+	// }
+
+	return 0.0;
 }
 
 double ExpressionResolver::getRaw(index counterIndex, Indices originalIndexes) const {
@@ -233,41 +248,6 @@ double ExpressionResolver::getRaw(index counterIndex, Indices originalIndexes) c
 
 double ExpressionResolver::getFormatted(index counterIndex, Indices originalIndexes) const {
 	return instanceManager.calculateFormatted(counterIndex, originalIndexes);
-}
-
-double ExpressionResolver::getRawRollup(
-	RollupFunction rollupType, index counterIndex,
-	const InstanceInfo& instance
-) const {
-	return calculateRollup<&ExpressionResolver::getRaw>(rollupType, counterIndex, instance);
-}
-
-double ExpressionResolver::getFormattedRollup(
-	RollupFunction rollupType, index counterIndex,
-	const InstanceInfo& instance
-) const {
-	return calculateRollup<&ExpressionResolver::getFormatted>(rollupType, counterIndex, instance);
-}
-
-double ExpressionResolver::getExpressionRollup(
-	RollupFunction rollupType, index expressionIndex,
-	const InstanceInfo& instance
-) const {
-	expressionCurrentItem = &instance;
-	return calculateExpressionRollup(expressions[expressionIndex], rollupType);
-}
-
-double ExpressionResolver::getExpression(index expressionIndex, const InstanceInfo& instance) const {
-	expressionCurrentItem = &instance;
-	return calculateExpression<&ExpressionResolver::resolveReference>(expressions[expressionIndex]);
-}
-
-double ExpressionResolver::getRollupExpression(
-	index expressionIndex,
-	const InstanceInfo& instance
-) const {
-	expressionCurrentItem = &instance;
-	return calculateExpression<&ExpressionResolver::resolveRollupReference>(rollupExpressions[expressionIndex]);
 }
 
 double ExpressionResolver::calculateTotal(const TotalSource source, index counterIndex, const RollupFunction rollupFunction) const {
@@ -280,10 +260,8 @@ double ExpressionResolver::calculateTotal(const TotalSource source, index counte
 			ExpressionResolver::resolveReference>>(rollupFunction, expressions[counterIndex], false);
 	case TotalSource::eROLLUP_EXPRESSION: return calculateExpressionTotal<&ExpressionResolver::calculateExpression<&
 			ExpressionResolver::resolveRollupReference>>(rollupFunction, expressions[counterIndex], true);
-	default:
-		log.error(L"unexpected TotalSource {}", source);
-		return 0.0;
 	}
+	return 0.0;
 }
 
 double ExpressionResolver::calculateAndCacheTotal(TotalSource source, index counterIndex, RollupFunction rollupFunction) const {
@@ -299,66 +277,54 @@ double ExpressionResolver::calculateAndCacheTotal(TotalSource source, index coun
 }
 
 double ExpressionResolver::resolveReference(const Reference& ref) const {
-	if (ref.type == ReferenceType::UNKNOWN) {
-		log.error(L"unknown reference being solved");
+	using Type = Reference::Type;
+
+	if (ref.type == Type::COUNTER_FORMATTED && !instanceManager.canGetFormatted()) {
 		return 0.0;
 	}
-	if (ref.type == ReferenceType::COUNT) {
-		if (ref.total) {
-			return calculateCountTotal(ref.rollupFunction);
+
+	if (ref.total) {
+		switch (ref.type) {
+		case Type::COUNTER_RAW: return calculateAndCacheTotal(TotalSource::eRAW_COUNTER, ref.counter, ref.rollupFunction);
+		case Type::COUNTER_FORMATTED: return calculateAndCacheTotal(TotalSource::eFORMATTED_COUNTER, ref.counter, ref.rollupFunction);
+		case Type::EXPRESSION: return calculateAndCacheTotal(TotalSource::eEXPRESSION, ref.counter, ref.rollupFunction);
+		case Type::ROLLUP_EXPRESSION: break; // todo
+		case Type::COUNT: return calculateCountTotal(ref.rollupFunction);
 		}
-		if (!ref.named) {
-			return 1;
-		}
-		return instanceManager.findInstanceByName(ref, false) != nullptr;
 	}
-	if (ref.type == ReferenceType::COUNTER_RAW || ref.type == ReferenceType::COUNTER_FORMATTED) {
-		if (ref.type == ReferenceType::COUNTER_FORMATTED && !instanceManager.canGetFormatted()) {
-			return 0.0;
-		}
-		if (ref.total) {
-			if (ref.type == ReferenceType::COUNTER_RAW) {
-				return calculateAndCacheTotal(TotalSource::eRAW_COUNTER, ref.counter, ref.rollupFunction);
-			} else {
-				return calculateAndCacheTotal(TotalSource::eFORMATTED_COUNTER, ref.counter, ref.rollupFunction);
-			}
-		}
-		if (!ref.named) {
-			if (ref.type == ReferenceType::COUNTER_RAW) {
-				return static_cast<double>(getRaw(ref.counter, expressionCurrentItem->indices));
-			} else {
-				return getFormatted(ref.counter, expressionCurrentItem->indices);
-			}
-		}
+
+	if (ref.named) {
 		const auto instance = instanceManager.findInstanceByName(ref, false);
 		if (instance == nullptr) {
 			return 0.0;
 		}
-		if (ref.type == ReferenceType::COUNTER_RAW) {
-			return static_cast<double>(getRaw(ref.counter, instance->indices));
-		} else {
-			return getFormatted(ref.counter, instance->indices);
+
+		switch (ref.type) {
+		case Type::COUNTER_RAW: return static_cast<double>(getRaw(ref.counter, instance->indices));
+		case Type::COUNTER_FORMATTED: return getFormatted(ref.counter, instance->indices);
+		case Type::EXPRESSION: {
+			const InstanceInfo* const savedInstance = expressionCurrentItem;
+			expressionCurrentItem = instance;
+			const double res = calculateExpression < &ExpressionResolver::resolveReference > (expressions[ref.counter]);
+			expressionCurrentItem = savedInstance;
+			return res;
+		}
+		case Type::ROLLUP_EXPRESSION: break; // todo
+		case Type::COUNT: return 1.0;
 		}
 	}
-	if (ref.type == ReferenceType::EXPRESSION) {
-		if (ref.total) {
-			return calculateAndCacheTotal(TotalSource::eEXPRESSION, ref.counter, ref.rollupFunction);
-		}
-		if (!ref.named) {
-			return calculateExpression<&ExpressionResolver::resolveReference>(expressions[ref.counter]);
-		}
-		const auto instance = instanceManager.findInstanceByName(ref, false);
-		if (instance == nullptr) {
-			return 0.0;
-		}
-		const InstanceInfo* const savedInstance = expressionCurrentItem;
-		expressionCurrentItem = instance;
-		const double res = calculateExpression<&ExpressionResolver::resolveReference>(expressions[ref.counter]);
-		expressionCurrentItem = savedInstance;
-		return res;
+
+
+	switch (ref.type) {
+	case Type::COUNTER_RAW: return static_cast<double>(getRaw(ref.counter, expressionCurrentItem->indices));
+	case Type::COUNTER_FORMATTED: return getFormatted(ref.counter, expressionCurrentItem->indices);
+	case Type::EXPRESSION: return calculateExpression < &ExpressionResolver::resolveReference > (expressions[ref.counter]);
+	case Type::ROLLUP_EXPRESSION: break; // todo
+	case Type::COUNT: return 1.0;
 	}
+
 	log.error(L"unexpected reference type in resolveReference(): {}", ref.type);
-	return 0.0;
+	return 0.0; // todo throw
 }
 
 double ExpressionResolver::calculateExpressionRollup(
@@ -366,49 +332,18 @@ double ExpressionResolver::calculateExpressionRollup(
 	const RollupFunction rollupFunction
 ) const {
 	const InstanceInfo& instance = *expressionCurrentItem;
-	InstanceInfo tmp; // we only need InstanceKeyItem::originalIndexes member to solve usual expressions 
+	InstanceInfo tmp;
+	// we only need InstanceKeyItem::originalIndexes member to solve usual expressions 
 	// but let's use whole InstanceKeyItem
 	expressionCurrentItem = &tmp;
-	tmp.indices = instance.indices;
-	double value = calculateExpression<&ExpressionResolver::resolveReference>(expression);
 
-	switch (rollupFunction) {
-	case RollupFunction::eSUM: {
-		for (const auto& item : instance.vectorIndices) {
+	const auto value = doRollup(
+		rollupFunction, instance.indices, instance.vectorIndices, [&](Indices item) {
 			tmp.indices = item;
-			value += calculateExpression<&ExpressionResolver::resolveReference>(expression);
+			return calculateExpression < &ExpressionResolver::resolveReference > (expression);
 		}
-		break;
-	}
-	case RollupFunction::eAVERAGE: {
-		for (const auto& item : instance.vectorIndices) {
-			tmp.indices = item;
-			value += calculateExpression<&ExpressionResolver::resolveReference>(expression);
-		}
-		value /= (instance.vectorIndices.size() + 1);
-		break;
-	}
-	case RollupFunction::eMINIMUM: {
-		for (const auto& indexes : instance.vectorIndices) {
-			tmp.indices = indexes;
-			value = std::min(value, calculateExpression<&ExpressionResolver::resolveReference>(expression));
-		}
-		break;
-	}
-	case RollupFunction::eMAXIMUM: {
-		for (const auto& indexes : instance.vectorIndices) {
-			tmp.indices = indexes;
-			value = std::max(value, calculateExpression<&ExpressionResolver::resolveReference>(expression));
-		}
-		break;
-	}
-	case RollupFunction::eFIRST:
-		break;
-	default:
-		log.error(L"unknown expression type: {}", expression.type);
-		value = 0.0;
-		break;
-	}
+	);
+
 	expressionCurrentItem = &instance;
 	return value;
 }
@@ -420,10 +355,8 @@ double ExpressionResolver::calculateCountTotal(const RollupFunction rollupFuncti
 	case RollupFunction::eMINIMUM:
 	case RollupFunction::eMAXIMUM:
 	case RollupFunction::eFIRST: return 1.0;
-	default:
-		log.error(L"unknown rollup function: {}", rollupFunction);
-		return 0.0;
 	}
+	return 0.0;
 }
 
 double ExpressionResolver::calculateRollupCountTotal(const RollupFunction rollupFunction) const {
@@ -436,7 +369,7 @@ double ExpressionResolver::calculateRollupCountTotal(const RollupFunction rollup
 		index min = std::numeric_limits<index>::max();
 		for (const auto& item : instanceManager.getRollupInstances()) {
 			index val = index(item.vectorIndices.size()) + 1;
-			min = min < val ? min : val;
+			min = std::min(min, val);
 		}
 		return static_cast<double>(min);
 	}
@@ -444,7 +377,7 @@ double ExpressionResolver::calculateRollupCountTotal(const RollupFunction rollup
 		index max = 0;
 		for (const auto& item : instanceManager.getRollupInstances()) {
 			index val = index(item.vectorIndices.size()) + 1;
-			max = max > val ? max : val;
+			max = std::max(max, val);
 		}
 		return static_cast<double>(max);
 	}
@@ -453,178 +386,99 @@ double ExpressionResolver::calculateRollupCountTotal(const RollupFunction rollup
 			return static_cast<double>(instanceManager.getRollupInstances()[0].vectorIndices.size() + 1);
 		}
 		return 0.0;
-	default:
-		log.error(L"unknown rollup function: {}", rollupFunction);
-		return 0.0;
 	}
+
+	return 0.0;
 }
 
 double ExpressionResolver::resolveRollupReference(const Reference& ref) const {
-	if (ref.type == ReferenceType::UNKNOWN) {
-		log.error(L"unknown reference being solved");
+	if (ref.type == Reference::Type::COUNTER_FORMATTED && !instanceManager.canGetFormatted()) {
 		return 0.0;
 	}
-	if (ref.type == ReferenceType::COUNT) {
-		if (ref.total) {
-			return calculateRollupCountTotal(ref.rollupFunction);
+
+	if (ref.total) {
+		switch (ref.type) {
+		case Reference::Type::COUNTER_RAW: return calculateAndCacheTotal(TotalSource::eRAW_COUNTER, ref.counter, ref.rollupFunction);
+		case Reference::Type::COUNTER_FORMATTED: return calculateAndCacheTotal(TotalSource::eFORMATTED_COUNTER, ref.counter, ref.rollupFunction);
+		case Reference::Type::EXPRESSION: return calculateAndCacheTotal(TotalSource::eEXPRESSION, ref.counter, ref.rollupFunction);
+		case Reference::Type::ROLLUP_EXPRESSION: return calculateAndCacheTotal(TotalSource::eROLLUP_EXPRESSION, ref.counter, ref.rollupFunction);
+		case Reference::Type::COUNT: return calculateRollupCountTotal(ref.rollupFunction);
 		}
-		if (!ref.named) {
-			return static_cast<double>(expressionCurrentItem->vectorIndices.size() + 1);
-		}
-		const auto instance = instanceManager.findInstanceByName(ref, true);
-		return instance == nullptr ? 0 : static_cast<double>(instance->vectorIndices.size() + 1);
+		return 0.0;
 	}
-	if (ref.type == ReferenceType::COUNTER_RAW || ref.type == ReferenceType::COUNTER_FORMATTED) {
-		if (ref.type == ReferenceType::COUNTER_FORMATTED && !instanceManager.canGetFormatted()) {
-			return 0.0;
+
+	if (!ref.named) {
+		auto& instance = *expressionCurrentItem;
+		switch (ref.type) {
+		case Reference::Type::COUNTER_RAW:
+			return doRollup(
+				ref.rollupFunction, instance.indices, instance.vectorIndices, [&](Indices item) {
+					return getRaw(ref.counter, item);
+				}
+			);
+		case Reference::Type::COUNTER_FORMATTED:
+			return doRollup(
+				ref.rollupFunction, instance.indices, instance.vectorIndices, [&](Indices item) {
+					return getFormatted(ref.counter, item);
+				}
+			);
+		case Reference::Type::EXPRESSION: return calculateExpressionRollup(expressions[ref.counter], ref.rollupFunction);
+		case Reference::Type::ROLLUP_EXPRESSION: return calculateExpression < &ExpressionResolver::resolveRollupReference > (rollupExpressions[ref.counter]);
+		case Reference::Type::COUNT: return static_cast<double>(expressionCurrentItem->vectorIndices.size() + 1);
 		}
-		if (ref.total) {
-			if (ref.type == ReferenceType::COUNTER_RAW) {
-				return calculateAndCacheTotal(TotalSource::eRAW_COUNTER, ref.counter, ref.rollupFunction);
-			} else {
-				return calculateAndCacheTotal(TotalSource::eFORMATTED_COUNTER, ref.counter, ref.rollupFunction);
-			}
-		}
-		if (!ref.named) {
-			if (ref.type == ReferenceType::COUNTER_RAW) {
-				return calculateRollup<&ExpressionResolver::getRaw>(
-					ref.rollupFunction, ref.counter,
-					*expressionCurrentItem
-				);
-			} else {
-				return calculateRollup<&ExpressionResolver::getFormatted>(
-					ref.rollupFunction, ref.counter, *expressionCurrentItem
-				);
-			}
-		}
-		const auto instance = instanceManager.findInstanceByName(ref, true);
-		if (instance == nullptr) {
-			return 0.0;
-		}
-		if (ref.type == ReferenceType::COUNTER_RAW) {
-			return calculateRollup<&ExpressionResolver::getRaw>(ref.rollupFunction, ref.counter, *instance);
-		} else {
-			return calculateRollup<&ExpressionResolver::getFormatted>(ref.rollupFunction, ref.counter, *instance);
-		}
+		return 0.0;
 	}
-	if (ref.type == ReferenceType::EXPRESSION || ref.type == ReferenceType::ROLLUP_EXPRESSION) {
-		if (ref.total) {
-			if (ref.type == ReferenceType::EXPRESSION) {
-				return calculateAndCacheTotal(TotalSource::eEXPRESSION, ref.counter, ref.rollupFunction);
-			} else {
-				return calculateAndCacheTotal(TotalSource::eROLLUP_EXPRESSION, ref.counter, ref.rollupFunction);
+
+	const auto instancePtr = instanceManager.findInstanceByName(ref, true);
+	if (instancePtr == nullptr) {
+		return 0.0;
+	}
+
+	auto& instance = *instancePtr;
+
+	switch (ref.type) {
+	case Reference::Type::COUNTER_RAW:
+		return doRollup(
+			ref.rollupFunction, instance.indices, instance.vectorIndices, [&](Indices item) {
+				return getRaw(ref.counter, item);
 			}
-		}
-		if (!ref.named) {
-			if (ref.type == ReferenceType::EXPRESSION) {
-				return calculateExpressionRollup(expressions[ref.counter], ref.rollupFunction);
-			} else {
-				return calculateExpression<&ExpressionResolver::resolveRollupReference>(rollupExpressions[ref.counter]);
+		);
+	case Reference::Type::COUNTER_FORMATTED:
+		return doRollup(
+			ref.rollupFunction, instance.indices, instance.vectorIndices, [&](Indices item) {
+				return getFormatted(ref.counter, item);
 			}
-		}
-		const auto instance = instanceManager.findInstanceByName(ref, true);
-		if (instance == nullptr) {
-			return 0.0;
-		}
+		);
+	case Reference::Type::EXPRESSION: {
 		const InstanceInfo* const savedInstance = expressionCurrentItem;
-		expressionCurrentItem = instance;
-		double res;
-		if (ref.type == ReferenceType::EXPRESSION) {
-			res = calculateExpressionRollup(expressions[ref.counter], ref.rollupFunction);
-		} else {
-			res = calculateExpression<&ExpressionResolver::resolveRollupReference>(rollupExpressions[ref.counter]);
-		}
+		expressionCurrentItem = instancePtr;
+		double res = calculateExpressionRollup(expressions[ref.counter], ref.rollupFunction);
 		expressionCurrentItem = savedInstance;
 		return res;
+	}
+	case Reference::Type::ROLLUP_EXPRESSION: {
+		const InstanceInfo* const savedInstance = expressionCurrentItem;
+		expressionCurrentItem = instancePtr;
+		double res = calculateExpression < &ExpressionResolver::resolveRollupReference > (rollupExpressions[ref.counter]);
+		expressionCurrentItem = savedInstance;
+		return res;
+	}
+	case Reference::Type::COUNT: return double(instancePtr->vectorIndices.size() + 1);
 	}
 
 	log.error(L"unexpected reference type in resolveReference(): {}", ref.type);
 	return 0.0;
 }
 
-template<double(ExpressionResolver::* calculateValueFunction)(index counterIndex, Indices originalIndexes) const>
-double ExpressionResolver::calculateRollup(RollupFunction rollupType, index counterIndex, const InstanceInfo& instance) const {
-	const double firstValue = (this->*calculateValueFunction)(counterIndex, instance.indices);
-	const auto& indexes = instance.vectorIndices;
-
-	switch (rollupType) {
-	case RollupFunction::eSUM:
-	case RollupFunction::eAVERAGE: {
-		auto sum = firstValue;
-		for (const auto& item : indexes) {
-			sum += (this->*calculateValueFunction)(counterIndex, item);
-		}
-		if (rollupType == RollupFunction::eSUM) {
-			return static_cast<double>(sum);
-		}
-		if (indexes.empty()) {
-			return 0.0;
-		}
-		return static_cast<double>(sum) / (indexes.size() + 1);
-	}
-	case RollupFunction::eMINIMUM: {
-		auto min = firstValue;
-		for (const auto& item : indexes) {
-			min = std::min(min, (this->*calculateValueFunction)(counterIndex, item));
-		}
-		return static_cast<double>(min);
-	}
-	case RollupFunction::eMAXIMUM: {
-		auto max = firstValue;
-		for (const auto& item : indexes) {
-			max = std::max(max, (this->*calculateValueFunction)(counterIndex, item));
-		}
-		return static_cast<double>(max);
-	}
-	case RollupFunction::eFIRST:
-		return static_cast<double>(firstValue);
-	default:
-		log.error(L"unexpected rollupType {}", rollupType);
-		return 0;
-	}
-}
-
 template<double (ExpressionResolver::* calculateValueFunction)(index counterIndex, Indices originalIndexes) const>
 double ExpressionResolver::calculateTotal(RollupFunction rollupType, index counterIndex) const {
 	auto vectorInstanceKeys = instanceManager.getInstances();
 
-	switch (rollupType) {
-	case RollupFunction::eSUM:
-	case RollupFunction::eAVERAGE: {
-		if (vectorInstanceKeys.empty()) {
-			return 0.0;
+	return doTotal(
+		rollupType, vectorInstanceKeys, [&](InstanceInfo item) {
+			return (this->*calculateValueFunction)(counterIndex, item.indices);
 		}
-		double sum{};
-		for (const auto& item : vectorInstanceKeys) {
-			sum += (this->*calculateValueFunction)(counterIndex, item.indices);
-		}
-		if (rollupType == RollupFunction::eSUM) {
-			return sum;
-		}
-		return sum / vectorInstanceKeys.size();
-	}
-	case RollupFunction::eMINIMUM: {
-		double min = std::numeric_limits<double>::max();
-		for (const auto& item : vectorInstanceKeys) {
-			min = std::min(min, (this->*calculateValueFunction)(counterIndex, item.indices));
-		}
-		return min;
-	}
-	case RollupFunction::eMAXIMUM: {
-		double max = -std::numeric_limits<double>::max();
-		for (const auto& item : vectorInstanceKeys) {
-			max = std::max(max, (this->*calculateValueFunction)(counterIndex, item.indices));
-		}
-		return max;
-	}
-	case RollupFunction::eFIRST:
-		return vectorInstanceKeys.empty()
-		       ? 0.0
-		       : (this->*calculateValueFunction)(counterIndex, vectorInstanceKeys[0].indices);
-	default:
-		log.error(L"unexpected rollupType {}", rollupType);
-		return 0;
-	}
+	);
 }
 
 template<double(ExpressionResolver::* calculateExpressionFunction)(const ExpressionTreeNode& expression) const>
@@ -634,103 +488,18 @@ double ExpressionResolver::calculateExpressionTotal(
 ) const {
 	auto vectorInstanceKeys = rollup ? instanceManager.getRollupInstances() : instanceManager.getInstances();
 
-	switch (rollupType) {
-	case RollupFunction::eSUM:
-	case RollupFunction::eAVERAGE: {
-		double sum = 0.0;
-		for (const auto& item : vectorInstanceKeys) {
+	return doTotal(
+		rollupType, vectorInstanceKeys, [&](InstanceInfo item) {
 			expressionCurrentItem = &item;
-			sum += (this->*calculateExpressionFunction)(expression);
+			return (this->*calculateExpressionFunction)(expression);
 		}
-		if (rollupType == RollupFunction::eAVERAGE) {
-			if (vectorInstanceKeys.empty()) {
-				return 0.0;
-			}
-			return sum / vectorInstanceKeys.size();
-		}
-		return sum;
-	}
-	case RollupFunction::eMINIMUM: {
-		double min = std::numeric_limits<double>::max();
-		for (const auto& item : vectorInstanceKeys) {
-			expressionCurrentItem = &item;
-			min = std::min(min, (this->*calculateExpressionFunction)(expression));
-		}
-		return min;
-	}
-	case RollupFunction::eMAXIMUM: {
-		double max = -std::numeric_limits<double>::max();
-		for (const auto& item : vectorInstanceKeys) {
-			expressionCurrentItem = &item;
-			max = std::max(max, (this->*calculateExpressionFunction)(expression));
-		}
-		return max;
-	}
-	case RollupFunction::eFIRST:
-		if (vectorInstanceKeys.empty()) {
-			return 0.0;
-		}
-		expressionCurrentItem = &vectorInstanceKeys[0];
-		return (this->*calculateExpressionFunction)(expression);
-	default:
-		log.error(L"unexpected rollupType {}", rollupType);
-		return 0;
-	}
+	);
 }
 
-template<double(ExpressionResolver::* resolveReferenceFunction)(const Reference& ref) const>
-double ExpressionResolver::calculateExpression(const ExpressionTreeNode& expression) const {
-	switch (expression.type) {
-	case ExpressionType::UNKNOWN:
-		log.error(L"unknown expression being solved");
-		return 0.0;
-	case ExpressionType::NUMBER: return expression.number;
-	case ExpressionType::SUM: {
-		double value = 0;
-		for (const ExpressionTreeNode& node : expression.nodes) {
-			value += calculateExpression<resolveReferenceFunction>(node);
-		}
-		return value;
-	}
-	case ExpressionType::DIFF: {
-		double value = calculateExpression<resolveReferenceFunction>(expression.nodes[0]);
-		for (index i = 1; i < index(expression.nodes.size()); i++) {
-			value -= calculateExpression<resolveReferenceFunction>(expression.nodes[i]);
-		}
-		return value;
-	}
-	case ExpressionType::INVERSE:
-		return -calculateExpression<resolveReferenceFunction>(expression.nodes[0]);
-	case ExpressionType::MULT: {
-		double value = 1;
-		for (const ExpressionTreeNode& node : expression.nodes) {
-			value *= calculateExpression<resolveReferenceFunction>(node);
-		}
-		return value;
-	}
-	case ExpressionType::DIV: {
-		double value = calculateExpression<resolveReferenceFunction>(expression.nodes[0]);
-		for (index i = 1; i < index(expression.nodes.size()); i++) {
-			const double denominator = calculateExpression<resolveReferenceFunction>(expression.nodes[i]);
-			if (denominator == 0) {
-				value = 0;
-				break;
-			}
-			value /= denominator;
-		}
-		return value;
-	}
-	case ExpressionType::POWER:
-		return std::pow(
-			calculateExpression<resolveReferenceFunction>(expression.nodes[0]),
-			calculateExpression<resolveReferenceFunction>(expression.nodes[1])
-		);
-	case ExpressionType::REF:
-		return (this->*resolveReferenceFunction)(expression.ref);
-	default:
-		log.error(L"unknown expression type: {}", expression.type);
-		return 0.0;
-	}
+double ExpressionResolver::solveExpression(index expressionIndex) const {
+	ReferenceResolver referenceResolver{ *this, expressionCurrentItem, log };
+
+	return expressions[expressionIndex].solve(&referenceResolver);
 }
 
 bool ExpressionResolver::indexIsInBounds(index ind, index min, index max) {

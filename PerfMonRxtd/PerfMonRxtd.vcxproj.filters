@@ -29,9 +29,6 @@
     <ClCompile Include="sources\ExpressionResolver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sources\expressions.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="sources\InstanceManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -50,11 +47,11 @@
     <ClCompile Include="sources\pdh\PdhFormat.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="sources\ExpressionParser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="sources\expressions.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="sources\PerfMonRXTD.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -84,6 +81,11 @@
     </ClInclude>
     <ClInclude Include="sources\pdh\PdhSnapshot.h" />
     <ClInclude Include="sources\pdh\PdhFormat.h" />
+    <ClInclude Include="sources\ExpressionParser.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\Reference.h" />
+    <ClInclude Include="sources\pdh\my-pdh.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\Common\resources\version.rc">

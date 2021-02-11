@@ -9,14 +9,33 @@
 
 #pragma once
 #include <unordered_map>
+
+#include "ExpressionParser.h"
 #include "InstanceManager.h"
-#include "expressions.h"
+#include "Reference.h"
+#include "expressions/ASTSolver.h"
 
 namespace rxtd::perfmon {
 	class ExpressionResolver {
 		using Logger = ::rxtd::common::rainmeter::Logger;
 		using OptionList = ::rxtd::common::options::OptionList;
-		
+		using ASTSolver = common::expressions::ASTSolver;
+
+		class ReferenceResolver : public common::expressions::ASTSolver::ValueProvider {
+			const ExpressionResolver& expressionResolver;
+			const InstanceInfo* instanceInfo = nullptr;
+			Logger logger;
+
+		public:
+			ReferenceResolver(const ExpressionResolver& expressionResolver, const InstanceInfo* instanceInfo, Logger logger) :
+				expressionResolver(expressionResolver), instanceInfo(instanceInfo), logger(std::move(logger)) {}
+
+			std::optional<double> solveCustom(const std::any& value) override {
+				auto& ref = *std::any_cast<Reference>(&value);
+				return expressionResolver.getValue(ref, instanceInfo, logger);
+			}
+		};
+
 		enum class TotalSource {
 			eRAW_COUNTER,
 			eFORMATTED_COUNTER,
@@ -28,10 +47,13 @@ namespace rxtd::perfmon {
 
 		const InstanceManager& instanceManager;
 
-		std::vector<ExpressionTreeNode> expressions;
-		std::vector<ExpressionTreeNode> rollupExpressions;
+		ExpressionParser parser;
+
+		std::vector<ASTSolver> expressions;
+		std::vector<ASTSolver> rollupExpressions;
 
 		mutable const InstanceInfo* expressionCurrentItem = nullptr;
+
 
 		struct CacheEntry {
 			TotalSource source;
@@ -52,25 +74,23 @@ namespace rxtd::perfmon {
 
 		void resetCaches();
 
-		double getValue(const Reference& ref, const InstanceInfo* instance, Logger& logger) const;
+	private:
+		ASTSolver parseExpressionTree(sview expressionString, sview loggerName, index loggerIndex);
 
+		void parseExpressions(std::vector<ASTSolver>& vector, OptionList list, sview loggerName);
+
+		void checkExpressionIndices();
+
+	public:
 		void setExpressions(OptionList expressionsList, OptionList rollupExpressionsList);
 
+		double getValue(const Reference& ref, const InstanceInfo* instancePtr, Logger& logger) const;
+
+	private:
 		double getRaw(index counterIndex, Indices originalIndexes) const;
 
 		double getFormatted(index counterIndex, Indices originalIndexes) const;
 
-		double getRawRollup(RollupFunction rollupType, index counterIndex, const InstanceInfo& instance) const;
-
-		double getFormattedRollup(RollupFunction rollupType, index counterIndex, const InstanceInfo& instance) const;
-
-		double getExpressionRollup(RollupFunction rollupType, index expressionIndex, const InstanceInfo& instance) const;
-
-		double getExpression(index expressionIndex, const InstanceInfo& instance) const;
-
-		double getRollupExpression(index expressionIndex, const InstanceInfo& instance) const;
-
-	private:
 		double calculateTotal(TotalSource source, index counterIndex, RollupFunction rollupFunction) const;
 
 		double calculateAndCacheTotal(TotalSource source, index counterIndex, RollupFunction rollupFunction) const;
@@ -85,20 +105,106 @@ namespace rxtd::perfmon {
 
 		double resolveRollupReference(const Reference& ref) const;
 
-
-		template<double (ExpressionResolver::* calculateValueFunction)(index counterIndex, Indices originalIndexes) const>
-		double calculateRollup(RollupFunction rollupType, index counterIndex, const InstanceInfo& instance) const;
-
 		template<double (ExpressionResolver::* calculateValueFunction)(index counterIndex, Indices originalIndexes) const>
 		double calculateTotal(RollupFunction rollupType, index counterIndex) const;
 
 		template<double(ExpressionResolver::* calculateExpressionFunction)(const ExpressionTreeNode& expression) const>
 		double calculateExpressionTotal(RollupFunction rollupType, const ExpressionTreeNode& expression, bool rollup) const;
 
-		template<double(ExpressionResolver::* resolveReferenceFunction)(const Reference& ref) const>
-		double calculateExpression(const ExpressionTreeNode& expression) const;
+		double ExpressionResolver::solveExpression(index expressionIndex) const;
 
 
 		static bool indexIsInBounds(index ind, index min, index max);
+
+		template<typename Callable>
+		double doRollup(
+			RollupFunction rollupFunction,
+			Indices initial,
+			array_view<Indices> indices,
+			Callable callable
+		) const {
+			double value = callable(initial);
+
+			switch (rollupFunction) {
+			case RollupFunction::eSUM: {
+				for (auto item : indices) {
+					value += callable(item);
+				}
+				break;
+			}
+			case RollupFunction::eAVERAGE: {
+				for (auto item : indices) {
+					value += callable(item);
+				}
+				value /= double(indices.size() + 1);
+				break;
+			}
+			case RollupFunction::eMINIMUM: {
+				for (auto item : indices) {
+					value = std::min(value, callable(item));
+				}
+				break;
+			}
+			case RollupFunction::eMAXIMUM: {
+				for (auto item : indices) {
+					value = std::max(value, callable(item));
+				}
+				break;
+			}
+			case RollupFunction::eFIRST:
+				break;
+			}
+
+			return value;
+		}
+
+		template<typename Callable>
+		double doTotal(
+			RollupFunction rollupFunction,
+			array_view<InstanceInfo> instances,
+			Callable callable
+		) const {
+			double value = 0.0;
+
+			switch (rollupFunction) {
+			case RollupFunction::eSUM: {
+				for (auto item : instances) {
+					value += callable(item);
+				}
+				break;
+			}
+			case RollupFunction::eAVERAGE: {
+				if (instances.empty()) {
+					break;
+				}
+				for (auto item : instances) {
+					value += callable(item);
+				}
+				value /= double(instances.size());
+				break;
+			}
+			case RollupFunction::eMINIMUM: {
+				value = std::numeric_limits<double>::max();
+				for (auto item : instances) {
+					value = std::min(value, callable(item));
+				}
+				break;
+			}
+			case RollupFunction::eMAXIMUM: {
+				value = std::numeric_limits<double>::min();
+				for (auto item : instances) {
+					value = std::max(value, callable(item));
+				}
+				break;
+			}
+			case RollupFunction::eFIRST:
+				if (!instances.empty()) {
+					value = callable(instances[0]);
+				}
+				break;
+			}
+
+			return value;
+		}
 	};
 }
