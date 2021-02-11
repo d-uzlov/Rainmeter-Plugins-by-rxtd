@@ -9,7 +9,8 @@
  */
 
 #pragma once
-#include <Pdh.h>
+
+#include "my-pdh.h"
 
 namespace rxtd::perfmon::pdh {
 	class PdhSnapshot : MovableOnlyBase {

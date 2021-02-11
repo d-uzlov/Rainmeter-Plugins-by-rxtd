@@ -8,8 +8,8 @@
  */
 
 #pragma once
-#include <Pdh.h>
 
+#include "my-pdh.h"
 
 #include "PdhFormat.h"
 #include "PdhSnapshot.h"
