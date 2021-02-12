@@ -14,7 +14,10 @@ namespace rxtd::perfmon {
 	class ExpressionParser : public common::expressions::ASTParser {
 		using IndexType = common::expressions::ast_nodes::IndexType;
 		using Lexer = common::expressions::Lexer;
-	
+
+	public:
+		ExpressionParser();
+
 	protected:
 		std::optional<IndexType> parseCustom() override;
 	};

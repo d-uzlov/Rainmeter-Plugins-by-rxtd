@@ -151,25 +151,30 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="sources\BlacklistManager.cpp" />
+    <ClCompile Include="sources\expression-solving\ExpressionSolver.cpp" />
+    <ClCompile Include="sources\expression-solving\RollupExpressionResolver.cpp" />
     <ClCompile Include="sources\pdh\PdhFormat.cpp" />
     <ClCompile Include="sources\PerfmonChild.cpp" />
     <ClCompile Include="sources\enums.h" />
-    <ClCompile Include="sources\ExpressionResolver.cpp" />
     <ClCompile Include="sources\ExpressionParser.cpp" />
     <ClCompile Include="sources\InstanceManager.cpp" />
     <ClCompile Include="sources\PerfmonParent.cpp" />
     <ClCompile Include="sources\pdh\PdhWrapper.cpp" />
     <ClCompile Include="sources\pdh\NamesManager.cpp" />
     <ClCompile Include="sources\dllmain.cpp" />
+    <ClCompile Include="sources\RollupExpressionResolver.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="local-version.h" />
     <ClInclude Include="sources\BlacklistManager.h" />
+    <ClInclude Include="sources\expression-solving\ExpressionSolver.h" />
+    <ClInclude Include="sources\expression-solving\RollupExpressionResolver.h" />
+    <ClInclude Include="sources\expression-solving\CacheHelper.h" />
+    <ClInclude Include="sources\expression-solving\TotalUtilities.h" />
     <ClInclude Include="sources\pdh\my-pdh.h" />
     <ClInclude Include="sources\pdh\PdhFormat.h" />
     <ClInclude Include="sources\pdh\PdhSnapshot.h" />
     <ClInclude Include="sources\PerfmonChild.h" />
-    <ClInclude Include="sources\ExpressionResolver.h" />
     <ClInclude Include="sources\ExpressionParser.h" />
     <ClInclude Include="sources\InstanceManager.h" />
     <ClInclude Include="sources\PerfmonParent.h" />
@@ -177,6 +182,7 @@
     <ClInclude Include="sources\pdh\NamesManager.h" />
     <ClInclude Include="sources\PerfMonRXTD.h" />
     <ClInclude Include="sources\Reference.h" />
+    <ClInclude Include="sources\RollupExpressionResolver.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.vcxproj">

@@ -174,7 +174,7 @@ void InstanceManager::buildInstanceKeys() {
 	}
 }
 
-void InstanceManager::sort(const ExpressionResolver& expressionResolver) {
+void InstanceManager::sort(const ExpressionSolver& expressionResolver) {
 	std::vector<InstanceInfo>& instances = options.rollup ? instancesRolledUp : this->instances;
 	if (options.sortBy == SortBy::eNONE || instances.empty()) {
 		return;
@@ -389,6 +389,10 @@ double InstanceManager::calculateRaw(index counterIndex, Indices originalIndexes
 }
 
 double InstanceManager::calculateFormatted(index counterIndex, Indices originalIndexes) const {
+	if (!canGetFormatted()) {
+		return 0.0;
+	}
+
 	return pdhWrapper.extractFormattedValue(
 		counterIndex,
 		snapshotCurrent.getItem(counterIndex, originalIndexes.current),

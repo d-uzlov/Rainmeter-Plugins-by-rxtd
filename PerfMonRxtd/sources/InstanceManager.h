@@ -15,7 +15,7 @@
 #include "pdh/PdhWrapper.h"
 
 namespace rxtd::perfmon {
-	class ExpressionResolver;
+	class ExpressionSolver;
 
 	struct Indices {
 		int_fast16_t current;
@@ -32,7 +32,7 @@ namespace rxtd::perfmon {
 	class InstanceManager {
 	public:
 		using Logger = ::rxtd::common::rainmeter::Logger;
-		
+
 		enum class SortBy {
 			eNONE,
 			eINSTANCE_NAME,
@@ -142,7 +142,7 @@ namespace rxtd::perfmon {
 
 		void update();
 
-		void sort(const ExpressionResolver& expressionResolver);
+		void sort(const ExpressionSolver& expressionResolver);
 
 		array_view<InstanceInfo> getInstances() const {
 			return instances;

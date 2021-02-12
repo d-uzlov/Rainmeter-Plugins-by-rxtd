@@ -12,6 +12,9 @@
     <Filter Include="Source Files\pdh">
       <UniqueIdentifier>{fba27903-4a29-4a16-a3e7-4918b581df75}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\expression-solving">
+      <UniqueIdentifier>{eca1d183-f1f1-497d-bd5a-83182e162a33}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\enums.h">
@@ -25,9 +28,6 @@
     </ClCompile>
     <ClCompile Include="sources\pdh\PdhWrapper.cpp">
       <Filter>Source Files\pdh</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\ExpressionResolver.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="sources\InstanceManager.cpp">
       <Filter>Source Files</Filter>
@@ -50,6 +50,15 @@
     <ClCompile Include="sources\ExpressionParser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="sources\RollupExpressionResolver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\expression-solving\RollupExpressionResolver.cpp">
+      <Filter>Source Files\expression-solving</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\expression-solving\ExpressionSolver.cpp">
+      <Filter>Source Files\expression-solving</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sources\PerfMonRXTD.h">
@@ -63,9 +72,6 @@
     </ClInclude>
     <ClInclude Include="sources\pdh\PdhWrapper.h">
       <Filter>Source Files\pdh</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\ExpressionResolver.h">
-      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="sources\InstanceManager.h">
       <Filter>Source Files</Filter>
@@ -86,6 +92,19 @@
     </ClInclude>
     <ClInclude Include="sources\Reference.h" />
     <ClInclude Include="sources\pdh\my-pdh.h" />
+    <ClInclude Include="sources\RollupExpressionResolver.h" />
+    <ClInclude Include="sources\expression-solving\RollupExpressionResolver.h">
+      <Filter>Source Files\expression-solving</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\expression-solving\CacheHelper.h">
+      <Filter>Source Files\expression-solving</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\expression-solving\ExpressionSolver.h">
+      <Filter>Source Files\expression-solving</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\expression-solving\TotalUtilities.h">
+      <Filter>Source Files\expression-solving</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\Common\resources\version.rc">

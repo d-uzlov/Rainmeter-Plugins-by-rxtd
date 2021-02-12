@@ -211,7 +211,7 @@ double PerfmonParent::vUpdate() {
 		// fetch or reload happened
 		needUpdate = false;
 
-		expressionResolver.resetCaches();
+		expressionResolver.resetCache();
 
 		instanceManager.update();
 		instanceManager.sort(expressionResolver);
