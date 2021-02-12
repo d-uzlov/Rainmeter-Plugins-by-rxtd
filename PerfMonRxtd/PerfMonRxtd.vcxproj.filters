@@ -44,9 +44,6 @@
     <ClCompile Include="sources\dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sources\pdh\PdhFormat.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="sources\ExpressionParser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -55,6 +52,9 @@
     </ClCompile>
     <ClCompile Include="sources\expression-solving\RollupExpressionResolver.cpp">
       <Filter>Source Files\expression-solving</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\pdh\PdhFormat.cpp">
+      <Filter>Source Files\pdh</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -82,14 +82,9 @@
     <ClInclude Include="local-version.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="sources\pdh\PdhSnapshot.h" />
-    <ClInclude Include="sources\pdh\PdhFormat.h" />
     <ClInclude Include="sources\ExpressionParser.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="sources\Reference.h" />
-    <ClInclude Include="sources\pdh\my-pdh.h" />
-    <ClInclude Include="sources\RollupExpressionResolver.h" />
     <ClInclude Include="sources\expression-solving\CacheHelper.h">
       <Filter>Source Files\expression-solving</Filter>
     </ClInclude>
@@ -101,6 +96,18 @@
     </ClInclude>
     <ClInclude Include="sources\expression-solving\RollupExpressionResolver.h">
       <Filter>Source Files\expression-solving</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\pdh\my-pdh.h">
+      <Filter>Source Files\pdh</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\pdh\PdhFormat.h">
+      <Filter>Source Files\pdh</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\pdh\PdhSnapshot.h">
+      <Filter>Source Files\pdh</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\Reference.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

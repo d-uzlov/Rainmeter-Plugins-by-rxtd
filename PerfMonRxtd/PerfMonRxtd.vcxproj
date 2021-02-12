@@ -181,7 +181,6 @@
     <ClInclude Include="sources\pdh\NamesManager.h" />
     <ClInclude Include="sources\PerfMonRXTD.h" />
     <ClInclude Include="sources\Reference.h" />
-    <ClInclude Include="sources\RollupExpressionResolver.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.vcxproj">
