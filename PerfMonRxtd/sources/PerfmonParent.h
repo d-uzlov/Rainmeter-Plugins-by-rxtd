@@ -56,6 +56,7 @@
 #pragma once
 
 #include "expression-solving/ExpressionSolver.h"
+#include "expression-solving/RollupExpressionResolver.h"
 #include "InstanceManager.h"
 #include "TypeHolder.h"
 #include "pdh/PdhWrapper.h"
@@ -81,6 +82,7 @@ namespace rxtd::perfmon {
 		InstanceManager instanceManager{ logger, pdhWrapper };
 
 		ExpressionSolver expressionResolver{ logger, instanceManager };
+		RollupExpressionResolver rollupExpressionSolver{ logger, instanceManager, expressionResolver };
 
 	public:
 		explicit PerfmonParent(Rainmeter&& _rain);
@@ -97,25 +99,9 @@ namespace rxtd::perfmon {
 			const Reference& ref,
 			index sortedIndex,
 			ResultString stringType,
-			Logger& logger,
 			string& str
-		) const {
-			if (!instanceManager.canGetRaw() || ref.type == Reference::Type::COUNTER_FORMATTED && !instanceManager.canGetFormatted()) {
-				str = ref.total ? L"Total" : L"";
-				return 0.0;
-			}
+		) const;
 
-			if (ref.total) {
-				str = L"Total";
-				return expressionResolver.getValue(ref, nullptr, logger);
-			} else {
-				auto instance = instanceManager.findInstance(ref, sortedIndex);
-				str.clear();
-				getInstanceName(*instance, stringType, str);
-				return expressionResolver.getValue(ref, instance, logger);
-			}
-		}
-
-		void getInstanceName(const InstanceInfo& instance, ResultString stringType, string& str) const;
+		void getInstanceName(Indices indices, ResultString stringType, string& str) const;
 	};
 }

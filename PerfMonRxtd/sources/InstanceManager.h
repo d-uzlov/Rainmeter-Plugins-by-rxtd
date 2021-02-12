@@ -15,18 +15,29 @@
 #include "pdh/PdhWrapper.h"
 
 namespace rxtd::perfmon {
-	class ExpressionSolver;
-
 	struct Indices {
-		int_fast16_t current;
-		int_fast16_t previous;
+		int_fast16_t current{};
+		int_fast16_t previous{};
 	};
 
 	struct InstanceInfo {
 		sview sortName;
 		double sortValue = 0.0;
 		Indices indices;
-		std::vector<Indices> vectorIndices;
+
+		Indices getFirst() const {
+			return indices;
+		}
+	};
+
+	struct RollupInstanceInfo {
+		std::vector<Indices> indices;
+		sview sortName;
+		double sortValue = 0.0;
+
+		Indices getFirst() const {
+			return indices.front();
+		}
 	};
 
 	class InstanceManager {
@@ -74,7 +85,7 @@ namespace rxtd::perfmon {
 		index indexOffset = 0;
 
 		std::vector<InstanceInfo> instances;
-		std::vector<InstanceInfo> instancesRolledUp;
+		std::vector<RollupInstanceInfo> instancesRolledUp;
 		std::vector<InstanceInfo> instancesDiscarded;
 
 		pdh::PdhSnapshot snapshotCurrent;
@@ -86,11 +97,31 @@ namespace rxtd::perfmon {
 		std::vector<pdh::UniqueInstanceId> idsCurrent;
 		pdh::NamesManager namesManager;
 
-		// (use orig name, partial match, name) -> instanceInfo
-		using CacheType = std::map<std::tuple<bool, bool, sview>, std::optional<const InstanceInfo*>>;
-		mutable CacheType nameCache;
-		mutable CacheType nameCacheRollup;
-		mutable CacheType nameCacheDiscarded;
+		struct CacheKey {
+			sview name;
+			bool partialMatch;
+			bool useOriginalName;
+
+			friend bool operator<(const CacheKey& lhs, const CacheKey& rhs) {
+				return lhs.name < rhs.name
+					&& lhs.partialMatch < rhs.partialMatch
+					&& lhs.useOriginalName < rhs.useOriginalName;
+			}
+		};
+
+		struct Caches {
+			std::map<CacheKey, std::optional<const InstanceInfo*>> simple;
+			std::map<CacheKey, std::optional<const RollupInstanceInfo*>> rollup;
+			std::map<CacheKey, std::optional<const InstanceInfo*>> discarded;
+
+			void reset() {
+				simple.clear();
+				rollup.clear();
+				discarded.clear();
+			}
+		};
+
+		mutable Caches nameCaches;
 
 	public:
 		InstanceManager(Logger log, const pdh::PdhWrapper& phWrapper);
@@ -142,7 +173,97 @@ namespace rxtd::perfmon {
 
 		void update();
 
-		void sort(const ExpressionSolver& expressionResolver);
+		template<typename Solver, typename InstanceInfo>
+		void sort(const Solver& expressionResolver, array_span<InstanceInfo> instances) {
+			if (options.sortBy == SortBy::eNONE || instances.empty()) {
+				return;
+			}
+
+			if (options.sortBy == SortBy::eINSTANCE_NAME) {
+				switch (options.sortOrder) {
+				case SortOrder::eASCENDING:
+					std::sort(
+						instances.begin(), instances.end(),
+						[](const InstanceInfo& lhs, const InstanceInfo& rhs) {
+							return lhs.sortName > rhs.sortName;
+						}
+					);
+					break;
+				case SortOrder::eDESCENDING:
+					std::sort(
+						instances.begin(), instances.end(),
+						[](const InstanceInfo& lhs, const InstanceInfo& rhs) {
+							return lhs.sortName < rhs.sortName;
+						}
+					);
+					break;
+				default:
+					log.error(L"unexpected sortOrder {}", options.sortOrder);
+					break;
+				}
+				return;
+			}
+
+			Reference ref;
+			ref.counter = options.sortIndex;
+			ref.rollupFunction = options.sortRollupFunction;
+
+			switch (options.sortBy) {
+			case SortBy::eNONE: return;
+			case SortBy::eINSTANCE_NAME: return;
+			case SortBy::eRAW_COUNTER:
+				ref.type = Reference::Type::COUNTER_RAW;
+				break;
+			case SortBy::eFORMATTED_COUNTER:
+				ref.type = Reference::Type::COUNTER_FORMATTED;
+				break;
+			case SortBy::eEXPRESSION:
+				ref.type = Reference::Type::EXPRESSION;
+				break;
+			case SortBy::eROLLUP_EXPRESSION:
+				ref.type = Reference::Type::ROLLUP_EXPRESSION;
+				break;
+			case SortBy::eCOUNT:
+				ref.type = Reference::Type::COUNT;
+				break;
+			}
+
+			for (auto& instance : instances) {
+				instance.sortValue = expressionResolver.resolveReference(ref, instance.indices);
+			}
+
+			switch (options.sortOrder) {
+			case SortOrder::eASCENDING:
+				std::sort(
+					instances.begin(), instances.end(), [](const InstanceInfo& lhs, const InstanceInfo& rhs) {
+						return lhs.sortValue < rhs.sortValue;
+					}
+				);
+				break;
+			case SortOrder::eDESCENDING:
+				std::sort(
+					instances.begin(), instances.end(), [](const InstanceInfo& lhs, const InstanceInfo& rhs) {
+						return lhs.sortValue > rhs.sortValue;
+					}
+				);
+				break;
+			default:
+				log.error(L"unexpected sortOrder {}", options.sortOrder);
+				break;
+			}
+		}
+
+		array_span<InstanceInfo> getInstances() {
+			return instances;
+		}
+
+		array_span<InstanceInfo> getDiscarded() {
+			return instancesDiscarded;
+		}
+
+		array_span<RollupInstanceInfo> getRollupInstances() {
+			return instancesRolledUp;
+		}
 
 		array_view<InstanceInfo> getInstances() const {
 			return instances;
@@ -152,7 +273,7 @@ namespace rxtd::perfmon {
 			return instancesDiscarded;
 		}
 
-		array_view<InstanceInfo> getRollupInstances() const {
+		array_view<RollupInstanceInfo> getRollupInstances() const {
 			return instancesRolledUp;
 		}
 
@@ -168,9 +289,13 @@ namespace rxtd::perfmon {
 
 		void setNameModificationType(pdh::NamesManager::ModificationType value);
 
-		const InstanceInfo* findInstance(const Reference& ref, index sortedIndex) const;
+		const InstanceInfo* findSimpleInstance(const Reference& ref, index sortedIndex) const;
 
-		const InstanceInfo* findInstanceByName(const Reference& ref, bool useRollup) const;
+		const RollupInstanceInfo* findRollupInstance(const Reference& ref, index sortedIndex) const;
+
+		const InstanceInfo* findSimpleInstanceByName(const Reference& ref) const;
+
+		const RollupInstanceInfo* findRollupInstanceByName(const Reference& ref) const;
 
 		double calculateRaw(index counterIndex, Indices originalIndexes) const;
 
@@ -201,8 +326,33 @@ namespace rxtd::perfmon {
 
 		index findPreviousName(pdh::UniqueInstanceId uniqueId, index hint) const;
 
-		const InstanceInfo* findInstanceByNameInList(const Reference& ref, array_view<InstanceInfo> instances, CacheType& cache) const;
+		template<typename InstanceType, typename CacheType>
+		const InstanceType* findInstanceByNameInList(const Reference& ref, array_view<InstanceType> instances, CacheType& cache) const {
+			auto& itemOpt = cache[{ ref.name, ref.namePartialMatch, ref.useOrigName }];
+			if (itemOpt.has_value()) {
+				return itemOpt.value(); // already cached
+			}
 
+			MatchTestRecord testRecord{ ref.name, ref.namePartialMatch };
+			if (ref.useOrigName) {
+				for (const auto& item : instances) {
+					if (testRecord.match(namesManager.get(item.getFirst().current).originalName)) {
+						itemOpt = &item;
+						return itemOpt.value();
+					}
+				}
+			} else {
+				for (const auto& item : instances) {
+					if (testRecord.match(item.sortName)) {
+						itemOpt = &item;
+						return itemOpt.value();
+					}
+				}
+			}
+
+			itemOpt = nullptr;
+			return itemOpt.value();
+		}
 	};
 }
 

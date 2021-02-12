@@ -10,58 +10,63 @@
 #pragma once
 #include "CacheHelper.h"
 #include "enums.h"
-#include "InstanceManager.h"
 
 namespace rxtd::perfmon {
 	class TotalUtilities {
 	public:
-		template<typename CacheKey, typename CacheValue, typename Callable>
-		static double getTotal(CacheHelper<CacheKey, CacheValue>& cache, array_view<InstanceInfo> instances, RollupFunction rollupFunction, Callable callable) {
-			auto computeFunction = [&]() {
-				double value = 0.0;
+		template<typename CacheKey, typename InstanceStruct, typename Callable>
+		static double getTotal(CacheHelper<CacheKey, double>& cache, array_view<InstanceStruct> instances, index counterIndex, RollupFunction rollupFunction, Callable callable) {
+			return cache.getOrCompute(
+				{ counterIndex, rollupFunction },
+				[=]() {
+					return calculateTotal(instances, rollupFunction, callable);
+				}
+			);
+		}
 
-				switch (rollupFunction) {
-				case RollupFunction::eSUM: {
-					for (auto item : instances) {
-						value += callable(item.indices);
-					}
-					break;
-				}
-				case RollupFunction::eAVERAGE: {
-					if (instances.empty()) {
-						break;
-					}
-					for (auto item : instances) {
-						value += callable(item.indices);
-					}
-					value /= double(instances.size());
-					break;
-				}
-				case RollupFunction::eMINIMUM: {
-					value = std::numeric_limits<double>::max();
-					for (auto item : instances) {
-						value = std::min(value, callable(item.indices));
-					}
-					break;
-				}
-				case RollupFunction::eMAXIMUM: {
-					value = std::numeric_limits<double>::min();
-					for (auto item : instances) {
-						value = std::max(value, callable(item.indices));
-					}
-					break;
-				}
-				case RollupFunction::eFIRST:
-					if (!instances.empty()) {
-						value = callable(instances[0].indices);
-					}
-					break;
-				}
+		template<typename InstanceStruct, typename Callable>
+		static double calculateTotal(array_view<InstanceStruct> instances, RollupFunction rollupFunction, Callable callable) {
+			double value = 0.0;
 
-				return value;
-			};
+			switch (rollupFunction) {
+			case RollupFunction::eSUM: {
+				for (const auto& item : instances) {
+					value += callable(item);
+				}
+				break;
+			}
+			case RollupFunction::eAVERAGE: {
+				if (instances.empty()) {
+					break;
+				}
+				for (const auto& item : instances) {
+					value += callable(item);
+				}
+				value /= double(instances.size());
+				break;
+			}
+			case RollupFunction::eMINIMUM: {
+				value = std::numeric_limits<double>::max();
+				for (const auto& item : instances) {
+					value = std::min(value, callable(item));
+				}
+				break;
+			}
+			case RollupFunction::eMAXIMUM: {
+				value = std::numeric_limits<double>::min();
+				for (const auto& item : instances) {
+					value = std::max(value, callable(item));
+				}
+				break;
+			}
+			case RollupFunction::eFIRST:
+				if (!instances.empty()) {
+					value = callable(instances[0]);
+				}
+				break;
+			}
 
-			return cache.getOrCompute({ counterIndex, rollupFunction }, computeFunction);
+			return value;
 		}
 	};
 }

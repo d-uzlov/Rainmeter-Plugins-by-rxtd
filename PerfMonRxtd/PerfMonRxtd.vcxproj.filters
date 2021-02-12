@@ -50,13 +50,10 @@
     <ClCompile Include="sources\ExpressionParser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sources\RollupExpressionResolver.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\expression-solving\RollupExpressionResolver.cpp">
+    <ClCompile Include="sources\expression-solving\ExpressionSolver.cpp">
       <Filter>Source Files\expression-solving</Filter>
     </ClCompile>
-    <ClCompile Include="sources\expression-solving\ExpressionSolver.cpp">
+    <ClCompile Include="sources\expression-solving\RollupExpressionResolver.cpp">
       <Filter>Source Files\expression-solving</Filter>
     </ClCompile>
   </ItemGroup>
@@ -93,9 +90,6 @@
     <ClInclude Include="sources\Reference.h" />
     <ClInclude Include="sources\pdh\my-pdh.h" />
     <ClInclude Include="sources\RollupExpressionResolver.h" />
-    <ClInclude Include="sources\expression-solving\RollupExpressionResolver.h">
-      <Filter>Source Files\expression-solving</Filter>
-    </ClInclude>
     <ClInclude Include="sources\expression-solving\CacheHelper.h">
       <Filter>Source Files\expression-solving</Filter>
     </ClInclude>
@@ -103,6 +97,9 @@
       <Filter>Source Files\expression-solving</Filter>
     </ClInclude>
     <ClInclude Include="sources\expression-solving\TotalUtilities.h">
+      <Filter>Source Files\expression-solving</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\expression-solving\RollupExpressionResolver.h">
       <Filter>Source Files\expression-solving</Filter>
     </ClInclude>
   </ItemGroup>

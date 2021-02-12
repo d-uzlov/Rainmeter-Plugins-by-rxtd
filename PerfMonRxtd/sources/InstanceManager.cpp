@@ -8,7 +8,8 @@
  */
 
 #include "InstanceManager.h"
-#include "ExpressionResolver.h"
+#include "expression-solving/ExpressionSolver.h"
+#include "expression-solving/RollupExpressionResolver.h"
 
 using namespace perfmon;
 
@@ -68,9 +69,7 @@ void InstanceManager::update() {
 	instancesRolledUp.clear();
 	instancesDiscarded.clear();
 
-	nameCache.clear();
-	nameCacheRollup.clear();
-	nameCacheDiscarded.clear();
+	nameCaches.reset();
 
 	if (snapshotCurrent.isEmpty()) {
 		return;
@@ -91,8 +90,7 @@ void InstanceManager::update() {
 }
 
 index InstanceManager::findPreviousName(pdh::UniqueInstanceId uniqueId, index hint) const {
-	// try to find a match for the current instance name in the previous names buffer
-	// use the unique name for this search because we need a unique match
+	// try to find a match for the current instance name in the previous buffer
 	// counter buffers tend to be *mostly* aligned, so we'll try to short-circuit a full search
 
 	const auto itemCountPrevious = idsPrevious.size();
@@ -174,170 +172,26 @@ void InstanceManager::buildInstanceKeys() {
 	}
 }
 
-void InstanceManager::sort(const ExpressionSolver& expressionResolver) {
-	std::vector<InstanceInfo>& instances = options.rollup ? instancesRolledUp : this->instances;
-	if (options.sortBy == SortBy::eNONE || instances.empty()) {
-		return;
-	}
-
-	if (options.sortBy == SortBy::eINSTANCE_NAME) {
-		switch (options.sortOrder) {
-		case SortOrder::eASCENDING:
-			std::sort(
-				instances.begin(), instances.end(),
-				[](const InstanceInfo& lhs, const InstanceInfo& rhs) {
-					return lhs.sortName > rhs.sortName;
-				}
-			);
-			break;
-		case SortOrder::eDESCENDING:
-			std::sort(
-				instances.begin(), instances.end(),
-				[](const InstanceInfo& lhs, const InstanceInfo& rhs) {
-					return lhs.sortName < rhs.sortName;
-				}
-			);
-			break;
-		default:
-			log.error(L"unexpected sortOrder {}", options.sortOrder);
-			break;
-		}
-		return;
-	}
-
-	switch (options.sortBy) {
-	case SortBy::eRAW_COUNTER: {
-		if (options.rollup) {
-			Reference ref;
-			ref.type = Reference::Type::COUNTER_RAW;
-			ref.counter = options.sortIndex;
-			ref.rollupFunction = options.sortRollupFunction;
-			for (auto& instance : instances) {
-				instance.sortValue = expressionResolver.getValue(ref, &instance, log);
-			}
-		} else {
-			for (auto& instance : instances) {
-				instance.sortValue = calculateRaw(options.sortIndex, instance.indices);
-			}
-		}
-		break;
-	}
-	case SortBy::eFORMATTED_COUNTER: {
-		if (!canGetFormatted()) {
-			for (auto& instance : instances) {
-				instance.sortValue = 0.0;
-			}
-			return;
-		}
-		if (options.rollup) {
-			Reference ref;
-			ref.type = Reference::Type::COUNTER_FORMATTED;
-			ref.counter = options.sortIndex;
-			ref.rollupFunction = options.sortRollupFunction;
-			for (auto& instance : instances) {
-				instance.sortValue = expressionResolver.getValue(ref, &instance, log);
-			}
-		} else {
-			for (auto& instance : instances) {
-				instance.sortValue = calculateFormatted(options.sortIndex, instance.indices);
-			}
-		}
-		break;
-	}
-	case SortBy::eEXPRESSION: {
-		Reference ref;
-		ref.type = Reference::Type::EXPRESSION;
-		ref.counter = options.sortIndex;
-		ref.rollupFunction = options.sortRollupFunction;
-		if (options.rollup) {
-			for (auto& instance : instances) {
-				instance.sortValue = expressionResolver.getValue(ref, &instance, log);
-			}
-		} else {
-			for (auto& instance : instances) {
-				instance.sortValue = expressionResolver.getValue(ref, &instance, log);
-			}
-		}
-		break;
-	}
-	case SortBy::eROLLUP_EXPRESSION: {
-		if (!options.rollup) {
-			log.error(L"Resolving RollupExpression without rollup");
-			return;
-		}
-
-		Reference ref;
-		ref.type = Reference::Type::EXPRESSION;
-		ref.counter = options.sortIndex;
-		for (auto& instance : instances) {
-			instance.sortValue = expressionResolver.getValue(ref, &instance, log);
-		}
-		break;
-	}
-	case SortBy::eCOUNT: {
-		if (!options.rollup) {
-			return;
-		}
-		for (auto& instance : instances) {
-			instance.sortValue = static_cast<double>(instance.vectorIndices.size() + 1);
-		}
-		break;
-	}
-	default:
-		log.error(L"unexpected sortBy {}", options.sortBy);
-		return;
-	}
-
-	switch (options.sortOrder) {
-	case SortOrder::eASCENDING:
-		std::sort(
-			instances.begin(), instances.end(), [](const InstanceInfo& lhs, const InstanceInfo& rhs) {
-				return lhs.sortValue < rhs.sortValue;
-			}
-		);
-		break;
-	case SortOrder::eDESCENDING:
-		std::sort(
-			instances.begin(), instances.end(), [](const InstanceInfo& lhs, const InstanceInfo& rhs) {
-				return lhs.sortValue > rhs.sortValue;
-			}
-		);
-		break;
-	default:
-		log.error(L"unexpected sortOrder {}", options.sortOrder);
-		break;
-	}
-}
-
 void InstanceManager::buildRollupKeys() {
-	std::unordered_map<sview, InstanceInfo> mapRollupKeys;
+	std::unordered_map<sview, RollupInstanceInfo> mapRollupKeys;
 	mapRollupKeys.reserve(instances.size());
 
 	for (const auto& instance : instances) {
 		auto& item = mapRollupKeys[instance.sortName];
-		// in this function I use .sortValue to count indices in InstanceInfo
-		if (item.sortValue == 0.0) {
-			item.indices = instance.indices;
-		} else {
-			item.vectorIndices.push_back(instance.indices);
-		}
-		item.sortValue += 1.0;
+		item.indices.push_back(instance.indices);
 	}
 
 	instancesRolledUp.reserve(mapRollupKeys.size());
 	for (auto& [key, value] : mapRollupKeys) {
-		if (value.sortValue != 0.0) {
-			instancesRolledUp.emplace_back(std::move(value));
-		}
+		instancesRolledUp.emplace_back(std::move(value));
 	}
 }
 
-const InstanceInfo* InstanceManager::findInstance(const Reference& ref, index sortedIndex) const {
+const InstanceInfo* InstanceManager::findSimpleInstance(const Reference& ref, index sortedIndex) const {
 	if (ref.named) {
-		return findInstanceByName(ref, options.rollup);
+		return findSimpleInstanceByName(ref);
 	}
 
-	const std::vector<InstanceInfo>& instances = options.rollup ? instancesRolledUp : this->instances;
 	sortedIndex += indexOffset;
 	if (sortedIndex < 0 || sortedIndex >= index(instances.size())) {
 		return nullptr;
@@ -346,42 +200,28 @@ const InstanceInfo* InstanceManager::findInstance(const Reference& ref, index so
 	return &instances[sortedIndex];
 }
 
-const InstanceInfo* InstanceManager::findInstanceByName(const Reference& ref, bool useRollup) const {
-	if (ref.discarded) {
-		return findInstanceByNameInList(ref, instancesDiscarded, nameCacheDiscarded);
+const RollupInstanceInfo* InstanceManager::findRollupInstance(const Reference& ref, index sortedIndex) const {
+	if (ref.named) {
+		return findRollupInstanceByName(ref);
 	}
-	if (useRollup) {
-		return findInstanceByNameInList(ref, instancesRolledUp, nameCacheRollup);
-	} else {
-		return findInstanceByNameInList(ref, instances, nameCache);
+
+	sortedIndex += indexOffset;
+	if (sortedIndex < 0 || sortedIndex >= index(instances.size())) {
+		return nullptr;
 	}
+
+	return &instancesRolledUp[sortedIndex];
 }
 
-const InstanceInfo* InstanceManager::findInstanceByNameInList(const Reference& ref, array_view<InstanceInfo> instances, CacheType& cache) const {
-	auto& itemOpt = cache[{ ref.useOrigName, ref.namePartialMatch, ref.name }];
-	if (itemOpt.has_value()) {
-		return itemOpt.value(); // already cached
+const InstanceInfo* InstanceManager::findSimpleInstanceByName(const Reference& ref) const {
+	if (ref.discarded) {
+		return findInstanceByNameInList(ref, array_view<InstanceInfo>{ instancesDiscarded }, nameCaches.discarded);
 	}
+	return findInstanceByNameInList(ref, array_view<InstanceInfo>{ instances }, nameCaches.simple);
+}
 
-	MatchTestRecord testRecord{ ref.name, ref.namePartialMatch };
-	if (ref.useOrigName) {
-		for (const auto& item : instances) {
-			if (testRecord.match(namesManager.get(item.indices.current).originalName)) {
-				itemOpt = &item;
-				return itemOpt.value();
-			}
-		}
-	} else {
-		for (const auto& item : instances) {
-			if (testRecord.match(item.sortName)) {
-				itemOpt = &item;
-				return itemOpt.value();
-			}
-		}
-	}
-
-	itemOpt = nullptr;
-	return itemOpt.value();
+const RollupInstanceInfo* InstanceManager::findRollupInstanceByName(const Reference& ref) const {
+	return findInstanceByNameInList(ref, array_view<RollupInstanceInfo>{ instancesRolledUp }, nameCaches.rollup);
 }
 
 double InstanceManager::calculateRaw(index counterIndex, Indices originalIndexes) const {

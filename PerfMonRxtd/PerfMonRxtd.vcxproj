@@ -162,7 +162,6 @@
     <ClCompile Include="sources\pdh\PdhWrapper.cpp" />
     <ClCompile Include="sources\pdh\NamesManager.cpp" />
     <ClCompile Include="sources\dllmain.cpp" />
-    <ClCompile Include="sources\RollupExpressionResolver.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="local-version.h" />

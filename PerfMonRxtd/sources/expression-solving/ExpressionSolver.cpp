@@ -106,16 +106,16 @@ double ExpressionSolver::resolveReference(const Reference& ref, Indices indices)
 	if (ref.total) {
 		switch (ref.type) {
 		case Type::COUNTER_RAW: return TotalUtilities::getTotal(
-				totalCaches.raw, instanceManager.getInstances(), ref.rollupFunction,
-				[&](Indices ind) { return getRaw(ref.counter, ind); }
+				totalCaches.raw, instanceManager.getInstances(), ref.counter, ref.rollupFunction,
+				[&](InstanceInfo info) { return instanceManager.calculateRaw(ref.counter, info.indices); }
 			);
 		case Type::COUNTER_FORMATTED: return TotalUtilities::getTotal(
-				totalCaches.raw, instanceManager.getInstances(), ref.rollupFunction,
-				[&](Indices ind) { return getFormatted(ref.counter, ind); }
+				totalCaches.raw, instanceManager.getInstances(), ref.counter, ref.rollupFunction,
+				[&](InstanceInfo info) { return instanceManager.calculateFormatted(ref.counter, info.indices); }
 			);
 		case Type::EXPRESSION: return TotalUtilities::getTotal(
-				totalCaches.raw, instanceManager.getInstances(), ref.rollupFunction,
-				[&](Indices ind) { return solveExpression(ref.counter, ind); }
+				totalCaches.raw, instanceManager.getInstances(), ref.counter, ref.rollupFunction,
+				[&](InstanceInfo info) { return solveExpression(ref.counter, info.indices); }
 			);
 		case Type::ROLLUP_EXPRESSION: return 0.0; // todo throw
 		case Type::COUNT: return ref.rollupFunction == RollupFunction::eSUM ? static_cast<double>(instanceManager.getInstances().size()) : 1.0;
@@ -123,7 +123,7 @@ double ExpressionSolver::resolveReference(const Reference& ref, Indices indices)
 	}
 
 	if (ref.named) {
-		const auto instancePtr = instanceManager.findInstanceByName(ref, false);
+		const auto instancePtr = instanceManager.findSimpleInstanceByName(ref);
 		if (instancePtr == nullptr) {
 			return 0.0;
 		}
@@ -131,8 +131,8 @@ double ExpressionSolver::resolveReference(const Reference& ref, Indices indices)
 	}
 
 	switch (ref.type) {
-	case Type::COUNTER_RAW: return getRaw(ref.counter, indices);
-	case Type::COUNTER_FORMATTED: return getFormatted(ref.counter, indices);
+	case Type::COUNTER_RAW: return instanceManager.calculateRaw(ref.counter, indices);
+	case Type::COUNTER_FORMATTED: return instanceManager.calculateFormatted(ref.counter, indices);
 	case Type::EXPRESSION: return solveExpression(ref.counter, indices);
 	case Type::ROLLUP_EXPRESSION: return 0.0; // todo throw
 	case Type::COUNT: return 1.0;

@@ -45,17 +45,17 @@ namespace rxtd::perfmon {
 
 		std::vector<ASTSolver> expressions;
 
-		struct CacheEntry {
+		struct CacheKey {
 			index counterIndex;
 			RollupFunction rollupFunction;
 
-			bool operator<(const CacheEntry& other) const {
+			bool operator<(const CacheKey& other) const {
 				return counterIndex < other.counterIndex
 					&& rollupFunction < other.rollupFunction;
 			}
 		};
 
-		using Cache = CacheHelper<CacheEntry, double>;
+		using Cache = CacheHelper<CacheKey, double>;
 
 		struct TotalCaches {
 			Cache raw;
@@ -87,22 +87,6 @@ namespace rxtd::perfmon {
 		void setExpressions(OptionList expressionsList);
 
 		double resolveReference(const Reference& ref, Indices indices) const;
-
-		double solveExpression(index expressionIndex, Indices indices) {
-			Reference ref;
-			ref.type = Reference::Type::EXPRESSION;
-			ref.counter = expressionIndex;
-			return resolveReference(ref, indices);
-		}
-
-	private:
-		double getRaw(index counterIndex, Indices originalIndexes) const {
-			return instanceManager.calculateRaw(counterIndex, originalIndexes);
-		}
-
-		double getFormatted(index counterIndex, Indices originalIndexes) const {
-			return instanceManager.calculateFormatted(counterIndex, originalIndexes);
-		}
 
 		double solveExpression(index expressionIndex, Indices indices) const;
 	};

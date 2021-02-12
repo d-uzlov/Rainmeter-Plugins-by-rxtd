@@ -50,27 +50,27 @@ void PerfmonChild::vReload() {
 	const auto type = rain.read(L"Type").asIString();
 	if (type == L"GetInstanceCount") {
 		logger.warning(L"Type 'GetInstanceCount' is deprecated, set to 'GetCount' with Total=1 and RollupFunction=Sum");
-		ref.type = ReferenceType::COUNT;
+		ref.type = Reference::Type::COUNT;
 		ref.total = true;
 		ref.rollupFunction = RollupFunction::eSUM;
 		needReadRollupFunction = false;
 	} else if (type == L"GetCount")
-		ref.type = ReferenceType::COUNT;
+		ref.type = Reference::Type::COUNT;
 	else if (type == L"GetInstanceName") {
 		logger.warning(L"Type 'GetInstanceName' is deprecated, set to 'GetCount' with Total=0");
-		ref.type = ReferenceType::COUNT;
+		ref.type = Reference::Type::COUNT;
 		ref.total = false;
 		ref.rollupFunction = RollupFunction::eFIRST;
 		resultStringType = ResultString::eDISPLAY_NAME;
 		forceUseName = true;
 	} else if (type == L"GetRawCounter") {
-		ref.type = ReferenceType::COUNTER_RAW;
+		ref.type = Reference::Type::COUNTER_RAW;
 	} else if (type == L"GetFormattedCounter") {
-		ref.type = ReferenceType::COUNTER_FORMATTED;
+		ref.type = Reference::Type::COUNTER_FORMATTED;
 	} else if (type == L"GetExpression") {
-		ref.type = ReferenceType::EXPRESSION;
+		ref.type = Reference::Type::EXPRESSION;
 	} else if (type == L"GetRollupExpression") {
-		ref.type = ReferenceType::ROLLUP_EXPRESSION;
+		ref.type = Reference::Type::ROLLUP_EXPRESSION;
 	} else {
 		logger.error(L"Type '{}' is invalid for child measure", type);
 		setInvalid();
@@ -81,7 +81,7 @@ void PerfmonChild::vReload() {
 		auto rollupFunctionStr = rain.read(L"RollupFunction").asIString(L"Sum");
 		if (rollupFunctionStr == L"Count") {
 			logger.warning(L"RollupFunction 'Count' is deprecated, measure type set to 'GetCount'");
-			ref.type = ReferenceType::COUNT;
+			ref.type = Reference::Type::COUNT;
 		} else {
 			auto typeOpt = parseEnum<RollupFunction>(rollupFunctionStr);
 			if (typeOpt.has_value()) {
@@ -121,7 +121,7 @@ void PerfmonChild::vReload() {
 }
 
 double PerfmonChild::vUpdate() {
-	return parent->getValues(ref, instanceIndex, resultStringType, logger, stringValue);
+	return parent->getValues(ref, instanceIndex, resultStringType, stringValue);
 }
 
 void PerfmonChild::vUpdateString(string& resultStringBuffer) {

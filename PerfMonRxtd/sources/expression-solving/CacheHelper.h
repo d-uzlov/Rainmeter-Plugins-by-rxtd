@@ -27,7 +27,7 @@ namespace rxtd::perfmon {
 			auto& valueOpt = values[key];
 			
 			if (!valueOpt.has_value()) {
-				valueOpt = callable(key);
+				valueOpt = callable();
 			}
 			
 			return valueOpt.value();

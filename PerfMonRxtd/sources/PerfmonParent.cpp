@@ -99,13 +99,15 @@ void PerfmonParent::vReload() {
 	imo.whitelistOrig = rain.read(L"WhitelistOrig").asString();
 
 	const auto expressionTokens = rain.read(L"ExpressionList").asList(L'|');
+	expressionResolver.setExpressions(expressionTokens);
+
 	const auto rollupExpressionTokens = rain.read(L"RollupExpressionList").asList(L'|');
-	expressionResolver.setExpressions(expressionTokens, rollupExpressionTokens);
+	rollupExpressionSolver.setExpressions(rollupExpressionTokens);
 
 	instanceManager.checkIndices(
 		counterNames.size(),
 		expressionResolver.getExpressionsCount(),
-		expressionResolver.getRollupExpressionsCount()
+		rollupExpressionSolver.getExpressionsCount()
 	);
 
 
@@ -159,11 +161,11 @@ void PerfmonParent::vReload() {
 	instanceManager.setNameModificationType(nameModificationType);
 }
 
-void PerfmonParent::getInstanceName(const InstanceInfo& instance, ResultString stringType, string& str) const {
+void PerfmonParent::getInstanceName(Indices indices, ResultString stringType, string& str) const {
 	if (stringType == ResultString::eNUMBER) {
 		return;
 	}
-	const auto& item = instanceManager.getNames(instance.indices.current);
+	const auto& item = instanceManager.getNames(indices.current);
 	if (instanceManager.isRollup()) {
 		str = item.displayName;
 		return;
@@ -173,7 +175,7 @@ void PerfmonParent::getInstanceName(const InstanceInfo& instance, ResultString s
 		str = item.originalName;
 		return;
 	case ResultString::eUNIQUE_NAME: {
-		auto ids = instanceManager.getIds(instance.indices.current);
+		auto ids = instanceManager.getIds(indices.current);
 		str = std::to_wstring(ids.id1);
 		str += std::to_wstring(ids.id2);
 		return;
@@ -214,7 +216,11 @@ double PerfmonParent::vUpdate() {
 		expressionResolver.resetCache();
 
 		instanceManager.update();
-		instanceManager.sort(expressionResolver);
+		if (instanceManager.isRollup()) {
+			instanceManager.sort(rollupExpressionSolver, instanceManager.getRollupInstances());
+		} else {
+			instanceManager.sort(expressionResolver, instanceManager.getInstances());
+		}
 	}
 
 	state = State::eOK;
@@ -269,5 +275,33 @@ void PerfmonParent::vResolve(array_view<isview> args, string& resolveBufferStrin
 	if (args[0] == L"is stopped") {
 		resolveBufferString = stopped ? L"1" : L"0";
 		return;
+	}
+}
+
+double PerfmonParent::getValues(const Reference& ref, index sortedIndex, ResultString stringType, string& str) const {
+	if (!instanceManager.canGetRaw() || ref.type == Reference::Type::COUNTER_FORMATTED && !instanceManager.canGetFormatted()) {
+		str = ref.total ? L"Total" : L"";
+		return 0.0;
+	}
+
+	if (ref.total) {
+		str = L"Total";
+		if (instanceManager.isRollup()) {
+			return rollupExpressionSolver.resolveReference(ref, {});
+		} else {
+			return expressionResolver.resolveReference(ref, {});
+		}
+	} else {
+		if (instanceManager.isRollup()) {
+			auto instance = instanceManager.findRollupInstance(ref, sortedIndex);
+			str.clear();
+			getInstanceName(instance->indices.front(), stringType, str);
+			return rollupExpressionSolver.resolveReference(ref, instance->indices);
+		} else {
+			auto instance = instanceManager.findSimpleInstance(ref, sortedIndex);
+			str.clear();
+			getInstanceName(instance->indices, stringType, str);
+			return expressionResolver.resolveReference(ref, instance->indices);
+		}
 	}
 }

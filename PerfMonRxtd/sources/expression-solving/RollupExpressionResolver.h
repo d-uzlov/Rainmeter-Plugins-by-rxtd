@@ -13,6 +13,7 @@
 
 #include "CacheHelper.h"
 #include "ExpressionParser.h"
+#include "ExpressionSolver.h"
 #include "InstanceManager.h"
 #include "Reference.h"
 #include "expressions/ASTSolver.h"
@@ -25,15 +26,15 @@ namespace rxtd::perfmon {
 
 		class ReferenceResolver : public common::expressions::ASTSolver::ValueProvider {
 			const RollupExpressionResolver& expressionResolver;
-			const InstanceInfo& instanceInfo;
+			array_view<Indices> indices;
 
 		public:
-			ReferenceResolver(const RollupExpressionResolver& expressionResolver, const InstanceInfo& instanceInfo) :
-				expressionResolver(expressionResolver), instanceInfo(instanceInfo) {}
+			ReferenceResolver(const RollupExpressionResolver& expressionResolver, array_view<Indices> indices) :
+				expressionResolver(expressionResolver), indices(indices) {}
 
 			std::optional<double> solveCustom(const std::any& value) override {
 				auto& ref = *std::any_cast<Reference>(&value);
-				return expressionResolver.resolveReference(ref, instanceInfo);
+				return expressionResolver.resolveReference(ref, indices);
 			}
 		};
 
@@ -46,17 +47,17 @@ namespace rxtd::perfmon {
 
 		std::vector<ASTSolver> expressions;
 
-		struct CacheEntry {
+		struct CacheKey {
 			index counterIndex;
 			RollupFunction rollupFunction;
 
-			bool operator<(const CacheEntry& other) const {
+			bool operator<(const CacheKey& other) const {
 				return counterIndex < other.counterIndex
 					&& rollupFunction < other.rollupFunction;
 			}
 		};
 
-		using Cache = CacheHelper<CacheEntry, double>;
+		using Cache = CacheHelper<CacheKey, double>;
 
 		struct TotalCaches {
 			Cache raw;
@@ -91,59 +92,13 @@ namespace rxtd::perfmon {
 	public:
 		void setExpressions(OptionList expressionsList);
 
-		double calculateExpressionRollup(index expressionIndex, RollupFunction rollupFunction, const InstanceInfo& instance) const;
+		double calculateExpressionRollup(index expressionIndex, RollupFunction rollupFunction, array_view<Indices> indices) const;
 
-		double resolveReference(const Reference& ref, const InstanceInfo& instanceInfo) const;
+		double resolveReference(const Reference& ref, array_view<Indices> indices) const;
 
 	private:
-		double getRaw(index counterIndex, Indices originalIndexes) const;
-
-		double getFormatted(index counterIndex, Indices originalIndexes) const;
-		
 		double calculateRollupCountTotal(RollupFunction rollupFunction) const;
 
-		double solveExpression(index expressionIndex, const InstanceInfo& instanceInfo) const;
-		
-		template<typename Callable>
-		double doRollup(
-			RollupFunction rollupFunction,
-			Indices initial,
-			array_view<Indices> indices,
-			Callable callable
-		) const {
-			double value = callable(initial);
-
-			switch (rollupFunction) {
-			case RollupFunction::eSUM: {
-				for (auto item : indices) {
-					value += callable(item);
-				}
-				break;
-			}
-			case RollupFunction::eAVERAGE: {
-				for (auto item : indices) {
-					value += callable(item);
-				}
-				value /= double(indices.size() + 1);
-				break;
-			}
-			case RollupFunction::eMINIMUM: {
-				for (auto item : indices) {
-					value = std::min(value, callable(item));
-				}
-				break;
-			}
-			case RollupFunction::eMAXIMUM: {
-				for (auto item : indices) {
-					value = std::max(value, callable(item));
-				}
-				break;
-			}
-			case RollupFunction::eFIRST:
-				break;
-			}
-
-			return value;
-		}
+		double solveExpression(index expressionIndex, array_view<Indices> indices) const;
 	};
 }
