@@ -65,16 +65,16 @@ bool Option::asBool(bool defaultValue) const {
 	return asFloat() != 0.0;
 }
 
-std::pair<Option, Option> Option::breakFirst(wchar_t separator) const & {
+std::pair<GhostOption, GhostOption> Option::breakFirst(wchar_t separator) const & {
 	sview view = getView();
 
 	const auto delimiterPlace = view.find_first_of(separator);
 	if (delimiterPlace == sview::npos) {
-		return { *this, {} };
+		return { GhostOption{ view }, {} };
 	}
 
-	auto first = Option{ StringUtils::trim(sview(view.data(), delimiterPlace)) };
-	auto rest = Option{ StringUtils::trim(sview(view.data() + delimiterPlace + 1, view.size() - delimiterPlace - 1)) };
+	auto first = GhostOption{ StringUtils::trim(sview(view.data(), delimiterPlace)) };
+	auto rest = GhostOption{ StringUtils::trim(sview(view.data() + delimiterPlace + 1, view.size() - delimiterPlace - 1)) };
 	return { first, rest };
 }
 
@@ -217,7 +217,7 @@ public:
 	}
 };
 
-static ParserKeeper parserKeeper{};  // NOLINT(clang-diagnostic-exit-time-destructors)
+static ParserKeeper parserKeeper{}; // NOLINT(clang-diagnostic-exit-time-destructors)
 
 double Option::parseNumber(sview source) {
 	auto& parser = parserKeeper.getParser(std::this_thread::get_id());

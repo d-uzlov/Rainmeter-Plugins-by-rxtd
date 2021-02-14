@@ -17,10 +17,10 @@ namespace rxtd::common::options {
 	// Parses its contents in the form:
 	// <value> <delimiter> <value> <delimiter> ...
 	//
-	class OptionList : public OptionBase<OptionList> {
+	class OptionList : public OptionBase {
 		using SubstringViewInfo = utils::SubstringViewInfo;
-		
-		std::vector<SubstringViewInfo> list;
+
+		std::vector<SubstringViewInfo> list{};
 
 	public:
 		OptionList() = default;
@@ -28,7 +28,7 @@ namespace rxtd::common::options {
 		OptionList(sview view, std::vector<SubstringViewInfo>&& list) :
 			OptionBase(view), list(std::move(list)) { }
 
-		OptionList(std::vector<wchar_t>&& source, std::vector<SubstringViewInfo>&& list) :
+		OptionList(SourceType&& source, std::vector<SubstringViewInfo>&& list) :
 			OptionBase(std::move(source)), list(std::move(list)) { }
 
 		// Allows you to steal inner resources.

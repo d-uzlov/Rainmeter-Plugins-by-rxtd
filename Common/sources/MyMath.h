@@ -33,12 +33,11 @@ namespace rxtd::utils {
 		static float fastSqrt(float value);
 
 		// A unified way to convert decibels to absolute values,
+		template<typename Float>
 		[[nodiscard]]
-		static float db2amplitude(float value);
-
-		// A unified way to convert decibels to absolute values,
-		[[nodiscard]]
-		static double db2amplitude(double value);
+		static Float db2amplitude(Float value) {
+			return std::pow(Float(10.0), value / Float(10.0));
+		}
 
 		template<typename TOut, typename TIn>
 		[[nodiscard]]
@@ -57,18 +56,8 @@ namespace rxtd::utils {
 
 		template<typename TOut, typename TIn>
 		[[nodiscard]]
-		static TOut roundToVar(TIn value, TOut) {
-			static_assert(std::is_integral<TOut>::value);
-			static_assert(sizeof(TOut) == sizeof(long) || sizeof(TOut) == sizeof(long long));
-
-			if constexpr (sizeof(TOut) == sizeof(long)) {
-				return static_cast<TOut>(std::lround(value));
-			} else if constexpr (sizeof(TOut) == sizeof(long long)) {
-				return static_cast<TOut>(std::llround(value));
-			} else {
-				return {};
-			}
+		static TOut roundToVar(TIn value, TOut dummy = {}) {
+			return roundTo<TOut>(value);
 		}
-
 	};
 }

@@ -11,6 +11,7 @@
 #include "OptionBase.h"
 
 namespace rxtd::common::options {
+	class GhostOption;
 	class OptionList;
 	class OptionMap;
 	class OptionSequence;
@@ -19,7 +20,7 @@ namespace rxtd::common::options {
 	// Class Option allows easy parsing of relatively complex input parameters.
 	// See documentation of respective classes to learn about syntax for OptionMap, OptionList, OptionSequence
 	//
-	class Option : public OptionBase<Option> {
+	class Option : public OptionBase {
 	public:
 		Option() = default;
 
@@ -81,7 +82,7 @@ namespace rxtd::common::options {
 		// where first Option contains content before first inclusion of separator
 		// and second Option contains everything after first inclusion of separator
 		[[nodiscard]]
-		std::pair<Option, Option> breakFirst(wchar_t separator) const &;
+		std::pair<GhostOption, GhostOption> breakFirst(wchar_t separator) const &;
 
 		// See #breakFirst() const &
 		// Separate case for r-value, makes sure that result won't become invalid after object destruction.

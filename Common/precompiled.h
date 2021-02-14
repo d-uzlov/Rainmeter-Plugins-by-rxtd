@@ -22,14 +22,21 @@
 #include <variant>
 #include <set>
 
+namespace rxtd {
+	using index = ptrdiff_t;
+	using string = std::wstring;
+	using sview = std::wstring_view;
+}
+
+using namespace rxtd;
+
 #include "array_view.h"
-#include "typedefs.h"
 #include "CaseInsensitiveString.h"
 #include "GenericBaseClasses.h"
 
 template<typename T>
 std::optional<T> parseEnum(isview) {
-	static_assert(false);
+	static_assert(false, "Template specialization of parseEnum() must be created by user.");
 }
 
 #ifndef NOMINMAX

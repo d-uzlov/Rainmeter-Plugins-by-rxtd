@@ -10,8 +10,11 @@
 #pragma once
 
 namespace rxtd::common::options {
-	template<typename T>
 	class OptionBase {
+	protected:
+		using SourceType = std::vector<wchar_t>;
+
+	private:
 		// There can be two states of this object:
 		// 1. Owning source. Then field source is filled and field view points to it.
 		// 2. Non-owning. Then field source is empty, and field view point to some user-managed memory.
@@ -20,28 +23,26 @@ namespace rxtd::common::options {
 
 		// source is a vector and not a string,
 		// because small string optimization kills string views on move
-		std::vector<wchar_t> source;
+		SourceType source{};
 
 	protected:
 		explicit OptionBase() = default;
 
-		OptionBase(sview view) : view(view) { }
+		OptionBase(sview view) : view(view) {}
 
-		OptionBase(std::vector<wchar_t>&& source) : source(std::move(source)) {
+		OptionBase(SourceType&& source) : source(std::move(source)) {
 			view = makeView();
 		}
 
 	public:
-		T& own() {
-			static_assert(std::is_base_of<OptionBase<T>, T>::value, "Descendants of OptionBase must use itself as a template parameter.");
-
-			if (!isOwningSource()) {
-				source.resize(view.size());
-				std::copy(view.begin(), view.end(), source.begin());
-				view = makeView();
+		void own() {
+			if (isOwningSource()) {
+				return;
 			}
 
-			return static_cast<T&>(*this);
+			source.resize(view.size());
+			std::copy(view.begin(), view.end(), source.begin());
+			view = makeView();
 		}
 
 		[[nodiscard]]
@@ -56,7 +57,7 @@ namespace rxtd::common::options {
 		}
 
 		[[nodiscard]]
-		std::vector<wchar_t>&& consumeSource() && {
+		SourceType consumeSource() && {
 			return std::move(source);
 		}
 
@@ -65,6 +66,5 @@ namespace rxtd::common::options {
 		sview makeView() const {
 			return sview{ source.data(), source.size() };
 		}
-
 	};
 }

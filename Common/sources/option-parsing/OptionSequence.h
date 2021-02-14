@@ -18,7 +18,7 @@ namespace rxtd::common::options {
 	// Parses its contents in the form:
 	// <name> <optionBegin> <value> <optionDelimiter> <value> <optionDelimiter> ... <optionEnd> ...
 	//
-	class OptionSequence : public OptionBase<OptionSequence> {
+	class OptionSequence : public OptionBase {
 		using SubstringViewInfo = utils::SubstringViewInfo;
 		
 		std::vector<std::vector<SubstringViewInfo>> list;
@@ -35,7 +35,7 @@ namespace rxtd::common::options {
 		}
 
 		OptionSequence(
-			std::vector<wchar_t>&& source,
+			SourceType&& source,
 			wchar_t optionBegin, wchar_t optionEnd,
 			wchar_t optionDelimiter
 		) : OptionBase(std::move(source)) {

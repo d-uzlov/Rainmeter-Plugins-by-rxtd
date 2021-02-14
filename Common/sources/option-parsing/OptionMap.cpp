@@ -18,7 +18,7 @@ OptionMap::OptionMap(sview view, wchar_t optionDelimiter, wchar_t nameDelimiter)
 	parseParams();
 }
 
-OptionMap::OptionMap(std::vector<wchar_t>&& source, wchar_t optionDelimiter, wchar_t nameDelimiter) :
+OptionMap::OptionMap(SourceType&& source, wchar_t optionDelimiter, wchar_t nameDelimiter) :
 	OptionBase(std::move(source)), optionDelimiter(optionDelimiter), nameDelimiter(nameDelimiter) {
 	parseParams();
 }

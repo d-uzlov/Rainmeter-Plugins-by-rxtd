@@ -16,7 +16,7 @@ namespace rxtd::common::options {
 	// Parses its contents in the form:
 	// <name><nameDelimiter><value> <optionDelimiter> <name><nameDelimiter><value> <optionDelimiter> ...
 	//
-	class OptionMap : public OptionBase<OptionMap> {
+	class OptionMap : public OptionBase {
 	public:
 		struct MapOptionInfo {
 			sview view{};
@@ -36,7 +36,7 @@ namespace rxtd::common::options {
 	public:
 		OptionMap() = default;
 		OptionMap(sview view, wchar_t optionDelimiter, wchar_t nameDelimiter);
-		OptionMap(std::vector<wchar_t>&& source, wchar_t optionDelimiter, wchar_t nameDelimiter);
+		OptionMap(SourceType&& source, wchar_t optionDelimiter, wchar_t nameDelimiter);
 
 		[[nodiscard]]
 		GhostOption get(isview name) const &;

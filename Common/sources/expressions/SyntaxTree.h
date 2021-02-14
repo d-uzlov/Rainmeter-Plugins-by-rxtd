@@ -16,8 +16,8 @@ namespace rxtd::common::expressions::ast_nodes {
 	using IndexType = int32_t;
 
 	struct OperatorNodeBase {
-		sview operatorValue;
-		OperatorInfo::OperatorFunction function = nullptr;
+		sview operatorValue{};
+		OperatorInfo::OperatorFunction function{};
 
 		OperatorNodeBase() = default;
 
@@ -25,7 +25,7 @@ namespace rxtd::common::expressions::ast_nodes {
 	};
 
 	struct NumberNode {
-		double value;
+		double value{};
 
 		NumberNode() = default;
 
@@ -33,8 +33,8 @@ namespace rxtd::common::expressions::ast_nodes {
 	};
 
 	struct BinaryOperatorNode : public OperatorNodeBase {
-		IndexType left = 0;
-		IndexType right = 0;
+		IndexType left{};
+		IndexType right{};
 
 		BinaryOperatorNode() = default;
 
@@ -44,7 +44,7 @@ namespace rxtd::common::expressions::ast_nodes {
 	};
 
 	struct PrefixOperatorNode : public OperatorNodeBase {
-		IndexType child = 0;
+		IndexType child{};
 
 		PrefixOperatorNode() = default;
 
@@ -53,7 +53,7 @@ namespace rxtd::common::expressions::ast_nodes {
 	};
 
 	struct PostfixOperatorNode : public OperatorNodeBase {
-		IndexType child = 0;
+		IndexType child{};
 
 		PostfixOperatorNode() = default;
 
@@ -62,7 +62,7 @@ namespace rxtd::common::expressions::ast_nodes {
 	};
 
 	struct WordNode {
-		sview word;
+		sview word{};
 
 		WordNode() = default;
 
@@ -70,8 +70,8 @@ namespace rxtd::common::expressions::ast_nodes {
 	};
 
 	struct FunctionNode {
-		sview word;
-		std::vector<IndexType> children;
+		sview word{};
+		std::vector<IndexType> children{};
 
 		FunctionNode() = default;
 
@@ -79,7 +79,7 @@ namespace rxtd::common::expressions::ast_nodes {
 	};
 
 	struct CustomTerminalNode {
-		std::any value;
+		std::any value{};
 
 		CustomTerminalNode() = default;
 
