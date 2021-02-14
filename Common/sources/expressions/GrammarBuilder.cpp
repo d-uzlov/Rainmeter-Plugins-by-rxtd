@@ -11,7 +11,33 @@
 
 using namespace common::expressions;
 
-void GrammarBuilder::pushBinary(sview opValue, OperatorInfo::OperatorFunction func, bool leftToRightAssociativity) {
+GrammarDescription GrammarBuilder::makeSimpleMath() {
+	GrammarBuilder builder;
+	using Data = GrammarDescription::NodeData;
+
+	// Previously Option could only parse: +, -, *, /, ^
+	// So let's limit it to these operators
+
+	builder.pushBinary(L"+", [](Data d1, Data d2) { return Data{ d1.getValue() + d2.getValue() }; });
+	builder.pushBinary(L"-", [](Data d1, Data d2) { return Data{ (d1.getValue() - d2.getValue()) }; });
+
+	builder.increasePrecedence();
+	builder.pushBinary(L"*", [](Data d1, Data d2) { return Data{ (d1.getValue() * d2.getValue()) }; });
+	builder.pushBinary(L"/", [](Data d1, Data d2) { return Data{ ((d1.getValue() == 0.0 ? 0.0 : d1.getValue() / d2.getValue())) }; });
+
+	builder.increasePrecedence();
+	builder.pushPrefix(L"+", [](Data d1, Data d2) { return d1; });
+	builder.pushPrefix(L"-", [](Data d1, Data d2) { return Data{ (-d1.getValue()) }; });
+
+	builder.increasePrecedence();
+	builder.pushBinary(L"^", [](Data d1, Data d2) { return Data{ (std::pow(d1.getValue(), d2.getValue())) }; }, false);
+
+	builder.pushGrouping(L"(", L")", L",");
+
+	return std::move(builder).takeResult();
+}
+
+void GrammarBuilder::pushBinary(sview opValue, SolveFunction solveFunc, bool leftToRightAssociativity) {
 	if (auto [iter, inserted] = binaryOperators.insert(opValue);
 		!inserted) {
 		throw OperatorRepeatException{ opValue };
@@ -21,10 +47,10 @@ void GrammarBuilder::pushBinary(sview opValue, OperatorInfo::OperatorFunction fu
 		throw OperatorRepeatException{ opValue };
 	}
 
-	push(opValue, OperatorInfo::Type::eBINARY, func, leftToRightAssociativity);
+	push(opValue, OperatorInfo::Type::eBINARY, solveFunc, leftToRightAssociativity);
 }
 
-void GrammarBuilder::pushPrefix(sview opValue, OperatorInfo::OperatorFunction func, bool leftToRightAssociativity) {
+void GrammarBuilder::pushPrefix(sview opValue, SolveFunction solveFunc, bool leftToRightAssociativity) {
 	if (auto [iter, inserted] = prefixOperators.insert(opValue);
 		!inserted) {
 		throw OperatorRepeatException{ opValue };
@@ -34,10 +60,10 @@ void GrammarBuilder::pushPrefix(sview opValue, OperatorInfo::OperatorFunction fu
 		throw OperatorRepeatException{ opValue };
 	}
 
-	push(opValue, OperatorInfo::Type::ePREFIX, func, leftToRightAssociativity);
+	push(opValue, OperatorInfo::Type::ePREFIX, solveFunc, leftToRightAssociativity);
 }
 
-void GrammarBuilder::pushPostfix(sview opValue, OperatorInfo::OperatorFunction func, bool leftToRightAssociativity) {
+void GrammarBuilder::pushPostfix(sview opValue, SolveFunction solveFunc, bool leftToRightAssociativity) {
 	if (auto [iter, inserted] = postfixOperators.insert(opValue);
 		!inserted) {
 		throw OperatorRepeatException{ opValue };
@@ -47,7 +73,7 @@ void GrammarBuilder::pushPostfix(sview opValue, OperatorInfo::OperatorFunction f
 		throw OperatorRepeatException{ opValue };
 	}
 
-	push(opValue, OperatorInfo::Type::ePOSTFIX, func, leftToRightAssociativity);
+	push(opValue, OperatorInfo::Type::ePOSTFIX, solveFunc, leftToRightAssociativity);
 }
 
 void GrammarBuilder::pushGrouping(sview first, sview second, sview separator) {
@@ -75,7 +101,7 @@ void GrammarBuilder::pushGrouping(sview first, sview second, sview separator) {
 	grammar.groupingOperators.emplace_back(first, second, separator);
 }
 
-void GrammarBuilder::push(sview opValue, OperatorInfo::Type type, OperatorInfo::OperatorFunction func, bool leftToRightAssociativity) {
+void GrammarBuilder::push(sview opValue, OperatorInfo::Type type, SolveFunction solveFunc, bool leftToRightAssociativity) {
 	const PrecedenceType rightPrecedence = leftToRightAssociativity ? currentPrecedence + 1 : currentPrecedence;
 
 	PrecedenceType nextPrecedence;
@@ -85,7 +111,7 @@ void GrammarBuilder::push(sview opValue, OperatorInfo::Type type, OperatorInfo::
 		nextPrecedence = currentPrecedence - 1;
 	}
 
-	auto value = OperatorInfo{ opValue, type, currentPrecedence, rightPrecedence, nextPrecedence, func };
+	auto value = OperatorInfo{ { opValue, solveFunc }, type, currentPrecedence, rightPrecedence, nextPrecedence };
 
 	grammar.operators.emplace_back(value);
 }

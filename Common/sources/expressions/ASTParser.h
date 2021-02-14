@@ -26,6 +26,8 @@ namespace rxtd::common::expressions {
 	/// </summary>
 	class ASTParser {
 	public:
+		using OperatorInfo = GrammarDescription::OperatorInfo;
+		using GroupingOperatorInfo = GrammarDescription::GroupingOperatorInfo;
 		using IndexType = ast_nodes::IndexType;
 
 		class Exception : public std::runtime_error {
@@ -72,7 +74,7 @@ namespace rxtd::common::expressions {
 
 	protected:
 		Lexer::Lexeme next;
-		ast_nodes::SyntaxTree tree;
+		SyntaxTree tree;
 
 	public:
 		ASTParser() = default;
@@ -100,12 +102,12 @@ namespace rxtd::common::expressions {
 		void parse(sview source);
 
 		[[nodiscard]]
-		const ast_nodes::SyntaxTree& getTree() const {
+		const SyntaxTree& getTree() const {
 			return tree;
 		}
 
 		[[nodiscard]]
-		ast_nodes::SyntaxTree takeTree() {
+		SyntaxTree takeTree() {
 			return std::exchange(tree, {});
 		}
 

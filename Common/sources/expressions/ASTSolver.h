@@ -13,15 +13,17 @@
 
 namespace rxtd::common::expressions {
 	class ASTSolver {
-		using Data = OperatorInfo::Data;
+	public:
+		using NodeData = GrammarDescription::NodeData;
 
-		ast_nodes::SyntaxTree tree;
-		mutable std::vector<std::optional<double>> values;
+	private:
+		SyntaxTree tree;
+		mutable std::vector<std::optional<NodeData>> values;
 
 	public:
 		ASTSolver();
 
-		ASTSolver(ast_nodes::SyntaxTree&& tree);
+		ASTSolver(SyntaxTree&& tree);
 
 		class Exception : public std::runtime_error {
 			sview message;
@@ -36,10 +38,13 @@ namespace rxtd::common::expressions {
 
 		/// <summary>
 		/// Solver for dynamic values.
+		/// When value is not known, implementation must return std::nullopt.
 		/// Implementation is allowed to throw ASTSolver::ValueProvider::Exception from all functions.
 		/// </summary>
 		class ValueProvider {
 		public:
+			using NodeData = NodeData;
+
 			class Exception : public ASTSolver::Exception {
 				sview cause;
 
@@ -54,26 +59,28 @@ namespace rxtd::common::expressions {
 
 			virtual ~ValueProvider() = default;
 
-			virtual std::optional<double> solveFunction(sview word, array_view<double> values) {
+			virtual std::optional<NodeData> solveFunction(sview word, array_view<NodeData> values) {
 				return {};
 			}
 
-			virtual std::optional<double> solveWord(sview word) {
+			virtual std::optional<NodeData> solveWord(sview word) {
 				return {};
 			}
 
-			virtual std::optional<double> solveCustom(const std::any& value) {
+			virtual std::optional<NodeData> solveCustom(const std::any& value) {
 				return {};
 			}
 		};
 
 		/// <summary>
-		/// Throws ASTSolver::Exception when '?' and ':' don't match
+		/// Checks if all ternary operator values match each other.
+		/// For the main ternaty operator ?: use part1=L"?" and part2=L":"
+		/// Throws ASTSolver::Exception when operators don't match
 		/// </summary>
-		void checkTernaryOperator();
+		void checkTernaryOperator(sview part1 = L"?", sview part2 = L":");
 
 		[[nodiscard]]
-		const ast_nodes::SyntaxTree& peekTree() const {
+		const SyntaxTree& peekTree() const {
 			return tree;
 		}
 
@@ -104,7 +111,7 @@ namespace rxtd::common::expressions {
 		/// This function can throw ASTSolver::Exception when old tree is invalid.
 		/// This function can pass ASTSolver::ValueProvider::Exception from ValueProvider.
 		/// </summary>
-		void collapseNodes(ValueProvider* valueProvider);
+		void collapseNodes(ValueProvider& valueProvider);
 
 	private:
 		/// <summary>
@@ -112,8 +119,9 @@ namespace rxtd::common::expressions {
 		/// </summary>
 		/// <param name="oldNodeIndex">Index of the root node of the subtree</param>
 		/// <param name="oldNodes">Nodes of the old syntax tree</param>
+		/// <param name="valueProvider"></param>
 		/// <returns>Index of new node in the tree</returns>
 		[[nodiscard]]
-		ast_nodes::IndexType copySubTree(ast_nodes::IndexType oldNodeIndex, array_view<ast_nodes::GenericNode> oldNodes);
+		ast_nodes::IndexType copySubTree(ast_nodes::IndexType oldNodeIndex, array_span<GenericNode> oldNodes, ValueProvider& valueProvider);
 	};
 }

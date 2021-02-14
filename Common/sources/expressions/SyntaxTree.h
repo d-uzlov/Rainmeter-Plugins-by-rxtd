@@ -9,106 +9,13 @@
 
 #pragma once
 
+#include "OperatorNodes.h"
+#include "GenericNode.h"
 
-#include "GrammarDescription.h"
-
-namespace rxtd::common::expressions::ast_nodes {
-	using IndexType = int32_t;
-
-	struct OperatorNodeBase {
-		sview operatorValue{};
-		OperatorInfo::OperatorFunction function{};
-
-		OperatorNodeBase() = default;
-
-		OperatorNodeBase(sview operatorValue, OperatorInfo::OperatorFunction function) : operatorValue(operatorValue), function(function) {}
-	};
-
-	struct NumberNode {
-		double value{};
-
-		NumberNode() = default;
-
-		explicit NumberNode(double value) : value(value) {}
-	};
-
-	struct BinaryOperatorNode : public OperatorNodeBase {
-		IndexType left{};
-		IndexType right{};
-
-		BinaryOperatorNode() = default;
-
-		BinaryOperatorNode(sview operatorValue, OperatorInfo::OperatorFunction function, IndexType left, IndexType right) :
-			OperatorNodeBase(operatorValue, function),
-			left(left), right(right) {}
-	};
-
-	struct PrefixOperatorNode : public OperatorNodeBase {
-		IndexType child{};
-
-		PrefixOperatorNode() = default;
-
-		PrefixOperatorNode(sview operatorValue, OperatorInfo::OperatorFunction function, IndexType child) :
-			OperatorNodeBase(operatorValue, function), child(child) {}
-	};
-
-	struct PostfixOperatorNode : public OperatorNodeBase {
-		IndexType child{};
-
-		PostfixOperatorNode() = default;
-
-		PostfixOperatorNode(sview operatorValue, OperatorInfo::OperatorFunction function, IndexType child) :
-			OperatorNodeBase(operatorValue, function), child(child) {}
-	};
-
-	struct WordNode {
-		sview word{};
-
-		WordNode() = default;
-
-		WordNode(sview word) : word(word) {}
-	};
-
-	struct FunctionNode {
-		sview word{};
-		std::vector<IndexType> children{};
-
-		FunctionNode() = default;
-
-		FunctionNode(sview word, std::vector<IndexType> children) : word(word), children(std::move(children)) {}
-	};
-
-	struct CustomTerminalNode {
-		std::any value{};
-
-		CustomTerminalNode() = default;
-
-		CustomTerminalNode(std::any value) : value(std::move(value)) {}
-	};
-
-	struct GenericNode {
-		std::variant<
-			NumberNode,
-			BinaryOperatorNode,
-			PrefixOperatorNode,
-			PostfixOperatorNode,
-			WordNode,
-			FunctionNode,
-			CustomTerminalNode
-		> value{};
-
-		GenericNode() = default;
-
-		template<typename T>
-		GenericNode(T t) : value(std::move(t)) { }
-
-		template<typename Visitor>
-		auto visit(Visitor visitor) const {
-			return std::visit(visitor, value);
-		}
-	};
-
+namespace rxtd::common::expressions {
 	class SyntaxTree {
+		using IndexType = ast_nodes::IndexType;
+
 		// This must be a vector and not a string
 		// because small string optimization
 		// kills string_views on the move.
@@ -160,38 +67,9 @@ namespace rxtd::common::expressions::ast_nodes {
 			}
 		}
 
-		IndexType allocateNumber(double value) {
-			nodes.emplace_back(NumberNode{ value });
-			return IndexType(nodes.size()) - 1;
-		}
-
-		IndexType allocatePrefix(sview operatorValue, OperatorInfo::OperatorFunction function, IndexType node) {
-			nodes.emplace_back(PrefixOperatorNode{ operatorValue, function, node });
-			return IndexType(nodes.size()) - 1;
-		}
-
-		IndexType allocatePostfix(sview operatorValue, OperatorInfo::OperatorFunction function, IndexType node) {
-			nodes.emplace_back(PostfixOperatorNode{ operatorValue, function, node });
-			return IndexType(nodes.size()) - 1;
-		}
-
-		IndexType allocateBinary(sview operatorValue, OperatorInfo::OperatorFunction function, IndexType left, IndexType right) {
-			nodes.emplace_back(BinaryOperatorNode{ operatorValue, function, left, right });
-			return IndexType(nodes.size()) - 1;
-		}
-
-		IndexType allocateFunction(sview word, std::vector<IndexType> children) {
-			nodes.emplace_back(FunctionNode{ word, std::move(children) });
-			return IndexType(nodes.size()) - 1;
-		}
-
-		IndexType allocateCustom(std::any value) {
-			nodes.emplace_back(CustomTerminalNode{ std::move(value) });
-			return IndexType(nodes.size()) - 1;
-		}
-
-		IndexType allocateWord(sview value) {
-			nodes.emplace_back(WordNode{ value });
+		template<typename NodeType, typename ... Args>
+		IndexType allocateNode(Args ... args) {
+			nodes.push_back(NodeType{ std::move(args)... });
 			return IndexType(nodes.size()) - 1;
 		}
 	};

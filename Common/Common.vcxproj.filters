@@ -199,6 +199,12 @@
     <ClInclude Include="sources\expressions\GrammarDescription.h">
       <Filter>Source Files\expressions</Filter>
     </ClInclude>
+    <ClInclude Include="sources\expressions\OperatorNodes.h">
+      <Filter>Source Files\expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\expressions\GenericNode.h">
+      <Filter>Source Files\expressions</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="array_view.natvis" />

@@ -11,7 +11,7 @@
 
 using namespace utils;
 
-std::map<common::rainmeter::SkinHandle, std::map<istring, ParentBase*, std::less<>>> ParentBase::globalMeasuresMap{};
+std::map<common::rainmeter::SkinHandle, std::map<istring, ParentBase*, std::less<>>> ParentBase::globalMeasuresMap{}; // NOLINT(clang-diagnostic-exit-time-destructors)
 
 TypeHolder::TypeHolder(Rainmeter&& _rain) : rain(std::move(_rain)) {
 	logger = rain.createLogger();
@@ -24,19 +24,30 @@ double TypeHolder::update() {
 
 	try {
 		resultDouble = vUpdate();
-	} catch (std::runtime_error&) {}
+	} catch (std::runtime_error&) {
+		logger.error(L"Measure '{}' unexpectedly stopped update", rain.getMeasureName());
+		setInvalid();
+	}
 	if (useResultString) {
 		resultString = {};
 		try {
 			vUpdateString(resultString);
-		} catch (std::runtime_error&) {}
+		} catch (std::runtime_error&) {
+			logger.error(L"Measure '{}' unexpectedly stopped string update", rain.getMeasureName());
+			setInvalid();
+		}
 	}
 	return resultDouble;
 }
 
 void TypeHolder::reload() {
 	objectIsValid = true;
-	vReload();
+	try {
+		vReload();
+	} catch (std::runtime_error&) {
+		logger.error(L"Measure '{}' unexpectedly stopped reload", rain.getMeasureName());
+		setInvalid();
+	}
 }
 
 void TypeHolder::command(const wchar_t* bangArgs) {
@@ -47,7 +58,10 @@ void TypeHolder::command(const wchar_t* bangArgs) {
 
 	try {
 		vCommand(bangArgs);
-	} catch (std::runtime_error&) {}
+	} catch (std::runtime_error&) {
+		logger.error(L"Measure '{}' unexpectedly stopped command", rain.getMeasureName());
+		setInvalid();
+	}
 }
 
 const wchar_t* TypeHolder::resolve(int argc, const wchar_t* argv[]) {
@@ -62,13 +76,7 @@ const wchar_t* TypeHolder::resolve(int argc, const wchar_t* argv[]) {
 		resolveVector.emplace_back(arg);
 	}
 
-	resolveString = {};
-
-	try {
-		vResolve(resolveVector, resolveString);
-	} catch (std::runtime_error&) {}
-
-	return resolveString.c_str();
+	return resolve(resolveVector);
 }
 
 const wchar_t* TypeHolder::resolve(array_view<isview> args) {
@@ -81,7 +89,10 @@ const wchar_t* TypeHolder::resolve(array_view<isview> args) {
 
 	try {
 		vResolve(args, resolveString);
-	} catch (std::runtime_error&) {}
+	} catch (std::runtime_error&) {
+		logger.error(L"Measure '{}' unexpectedly stopped section variable resolve", rain.getMeasureName());
+		setInvalid();
+	}
 
 	return resolveString.c_str();
 }

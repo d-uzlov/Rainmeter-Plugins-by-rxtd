@@ -31,9 +31,9 @@ namespace rxtd::perfmon {
 			ReferenceResolver(const ExpressionSolver& expressionResolver, Indices indices) :
 				expressionResolver(expressionResolver), indices(indices) {}
 
-			std::optional<double> solveCustom(const std::any& value) override {
+			std::optional<NodeData> solveCustom(const std::any& value) override {
 				auto& ref = *std::any_cast<Reference>(&value);
-				return expressionResolver.resolveReference(ref, indices);
+				return NodeData{ expressionResolver.resolveReference(ref, indices) };
 			}
 		};
 

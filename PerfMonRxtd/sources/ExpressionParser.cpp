@@ -16,29 +16,7 @@
 using namespace perfmon;
 
 ExpressionParser::ExpressionParser() {
-	common::expressions::GrammarBuilder builder;
-	using Data = common::expressions::OperatorInfo::Data;
-
-	// Previously expressions could only parse: +, -, *, /, ^
-	// So let's limit it to these operators
-
-	builder.pushBinary(L"+", [](Data d1, Data d2) { return Data{ d1.value + d2.value }; });
-	builder.pushBinary(L"-", [](Data d1, Data d2) { return Data{ d1.value - d2.value }; });
-
-	builder.increasePrecedence();
-	builder.pushBinary(L"*", [](Data d1, Data d2) { return Data{ d1.value * d2.value }; });
-	builder.pushBinary(L"/", [](Data d1, Data d2) { return Data{ (d1.value == 0.0 ? 0.0 : d1.value / d2.value) }; });
-
-	builder.increasePrecedence();
-	builder.pushPrefix(L"+", [](Data d1, Data d2) { return d1; });
-	builder.pushPrefix(L"-", [](Data d1, Data d2) { return Data{ -d1.value }; });
-
-	builder.increasePrecedence();
-	builder.pushBinary(L"^", [](Data d1, Data d2) { return Data{ std::pow(d1.value, d2.value) }; }, false);
-
-	builder.pushGrouping(L"(", L")", L",");
-
-	setGrammar(std::move(builder).takeResult(), false);
+	setGrammar(common::expressions::GrammarBuilder::makeSimpleMath(), false);
 }
 
 std::optional<ExpressionParser::IndexType> ExpressionParser::parseCustom() {
@@ -131,5 +109,5 @@ std::optional<ExpressionParser::IndexType> ExpressionParser::parseCustom() {
 		}
 		skipToken();
 	}
-	return tree.allocateCustom(ref);
+	return tree.allocateNode<common::expressions::ast_nodes::CustomTerminalNode>(std::move(ref));
 }

@@ -173,14 +173,14 @@ class ParserKeeper {
 	ParserMap mapWithLock;
 
 public:
-	common::expressions::ASTParser& getParser(std::thread::id id) {
+	common::expressions::ASTParser& getParser(std::thread::id id = std::this_thread::get_id()) {
 		common::expressions::ASTParser* parserPtr = mapWithLock.runGuarded(
 			[&]() {
 				auto& parserOpt = mapWithLock.m[id];
 				if (parserOpt == nullptr) {
 					parserOpt = std::make_unique<common::expressions::ASTParser>();
 
-					initParser(*parserOpt);
+					parserOpt->setGrammar(common::expressions::GrammarBuilder::makeSimpleMath(), false);
 				}
 
 				return parserOpt.get();
@@ -189,38 +189,12 @@ public:
 
 		return *parserPtr;
 	}
-
-	static void initParser(common::expressions::ASTParser& parser) {
-		common::expressions::GrammarBuilder builder;
-		using Data = common::expressions::OperatorInfo::Data;
-
-		// Previously Option could only parse: +, -, *, /, ^
-		// So let's limit it to these operators
-
-		builder.pushBinary(L"+", [](Data d1, Data d2) { return Data{ d1.value + d2.value }; });
-		builder.pushBinary(L"-", [](Data d1, Data d2) { return Data{ d1.value - d2.value }; });
-
-		builder.increasePrecedence();
-		builder.pushBinary(L"*", [](Data d1, Data d2) { return Data{ d1.value * d2.value }; });
-		builder.pushBinary(L"/", [](Data d1, Data d2) { return Data{ (d1.value == 0.0 ? 0.0 : d1.value / d2.value) }; });
-
-		builder.increasePrecedence();
-		builder.pushPrefix(L"+", [](Data d1, Data d2) { return d1; });
-		builder.pushPrefix(L"-", [](Data d1, Data d2) { return Data{ -d1.value }; });
-
-		builder.increasePrecedence();
-		builder.pushBinary(L"^", [](Data d1, Data d2) { return Data{ std::pow(d1.value, d2.value) }; }, false);
-
-		builder.pushGrouping(L"(", L")", L",");
-
-		parser.setGrammar(std::move(builder).takeResult(), false);
-	}
 };
 
 static ParserKeeper parserKeeper{}; // NOLINT(clang-diagnostic-exit-time-destructors)
 
 double Option::parseNumber(sview source) {
-	auto& parser = parserKeeper.getParser(std::this_thread::get_id());
+	auto& parser = parserKeeper.getParser();
 
 	try {
 		parser.parse(source);

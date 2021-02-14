@@ -15,11 +15,12 @@ namespace rxtd::common::expressions {
 	/// <summary>
 	/// GrammarBuilder is a helper class for ASTParser class.
 	/// It provides easy grammar creation.
-	/// Higher precedence number correspond to higher precedence.
 	/// </summary>
 	class GrammarBuilder {
 	public:
+		using OperatorInfo = GrammarDescription::OperatorInfo;
 		using PrecedenceType = OperatorInfo::PrecedenceType;
+		using SolveFunction = GrammarDescription::MainOperatorInfo::SolveFunction;
 
 		class OperatorRepeatException : std::runtime_error {
 			sview reason;
@@ -44,7 +45,12 @@ namespace rxtd::common::expressions {
 
 	public:
 		/// <summary>
-		/// Increase precedence by 1.
+		/// Makes a simple grammar with unary +, -, binary +, -, *, /, ^
+		/// </summary>
+		static GrammarDescription makeSimpleMath();
+
+		/// <summary>
+		/// Increase precedence lever by 1.
 		/// </summary>
 		void increasePrecedence() {
 			setPrecedence(currentPrecedence + 1);
@@ -59,11 +65,11 @@ namespace rxtd::common::expressions {
 			currentPrecedence = value;
 		}
 
-		void pushBinary(sview opValue, OperatorInfo::OperatorFunction func, bool leftToRightAssociativity = true);
+		void pushBinary(sview opValue, SolveFunction solveFunc, bool leftToRightAssociativity = true);
 
-		void pushPrefix(sview opValue, OperatorInfo::OperatorFunction func, bool leftToRightAssociativity = true);
+		void pushPrefix(sview opValue, SolveFunction solveFunc, bool leftToRightAssociativity = true);
 
-		void pushPostfix(sview opValue, OperatorInfo::OperatorFunction func, bool leftToRightAssociativity = true);
+		void pushPostfix(sview opValue, SolveFunction solveFunc, bool leftToRightAssociativity = true);
 
 		void pushGrouping(sview first, sview second, sview separator);
 
@@ -78,6 +84,6 @@ namespace rxtd::common::expressions {
 		}
 
 	private:
-		void push(sview opValue, OperatorInfo::Type type, OperatorInfo::OperatorFunction func, bool leftToRightAssociativity);
+		void push(sview opValue, OperatorInfo::Type type, SolveFunction func, bool leftToRightAssociativity);
 	};
 }

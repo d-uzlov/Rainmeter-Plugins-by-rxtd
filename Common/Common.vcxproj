@@ -176,9 +176,11 @@
     <ClInclude Include="sources\DataWithLock.h" />
     <ClInclude Include="sources\expressions\ASTParser.h" />
     <ClInclude Include="sources\expressions\ASTSolver.h" />
+    <ClInclude Include="sources\expressions\GenericNode.h" />
     <ClInclude Include="sources\expressions\GrammarBuilder.h" />
     <ClInclude Include="sources\expressions\GrammarDescription.h" />
     <ClInclude Include="sources\expressions\Lexer.h" />
+    <ClInclude Include="sources\expressions\OperatorNodes.h" />
     <ClInclude Include="sources\expressions\SyntaxTree.h" />
     <ClInclude Include="sources\GenericBaseClasses.h" />
     <ClInclude Include="sources\DiscreetInterpolator.h" />

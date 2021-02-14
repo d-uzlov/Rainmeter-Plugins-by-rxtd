@@ -10,112 +10,123 @@
 #pragma once
 
 namespace rxtd::common::expressions {
-	class OperatorInfo {
-	public:
-		using PrecedenceType = int8_t;
-
-		enum class Type : int8_t {
-			ePREFIX,
-			eBINARY,
-			ePOSTFIX,
-		};
-
-		struct Data {
+	struct GrammarDescription {
+		class NodeData {
 			double value = 0.0;
 
-			Data() = default;
+		public:
+			NodeData() = default;
 
-			explicit Data(double value) : value(value) {}
+			NodeData(double value) : value(value) { }
 
-			void setTernaryFail() {
-				value = std::numeric_limits<double>::quiet_NaN();
+			[[nodiscard]]
+			auto getValue() const {
+				return value;
 			}
 
 			[[nodiscard]]
 			bool isTernaryFail() const {
 				return std::isnan(value);
 			}
+
+			static NodeData makeTernaryFail() {
+				NodeData result;
+				result.value = std::numeric_limits<double>::quiet_NaN();
+				return result;
+			}
 		};
 
-		using OperatorFunction = Data(*)(Data, Data);
+		struct MainOperatorInfo {
+			using SolveFunction = NodeData(*)(NodeData, NodeData);
 
-		class FunctionException : public std::runtime_error {
+			sview operatorValue{};
+			SolveFunction solveFunction{};
+
+			MainOperatorInfo() = default;
+
+			MainOperatorInfo(
+				sview operatorValue,
+				SolveFunction solveFunction
+			) : operatorValue(operatorValue), solveFunction(solveFunction) {}
+		};
+
+		class OperatorInfo {
 		public:
-			explicit FunctionException() : runtime_error("") {}
-		};
+			using PrecedenceType = int8_t;
 
-		class DataTypeMismatchException : public FunctionException {
+			enum class Type : int8_t {
+				ePREFIX,
+				eBINARY,
+				ePOSTFIX,
+			};
+
+			class FunctionException : public std::runtime_error {
+			public:
+				explicit FunctionException() : runtime_error("") {}
+			};
+
+			class DataTypeMismatchException : public FunctionException {
+			public:
+				explicit DataTypeMismatchException() = default;
+			};
+
+		private:
+			MainOperatorInfo mainInfo;
+			Type type{};
+			PrecedenceType precedence = 0;
+			PrecedenceType rightPrecedence = 0;
+			PrecedenceType nextPrecedence = 0;
+
 		public:
-			explicit DataTypeMismatchException() = default;
+			OperatorInfo() = default;
+
+			OperatorInfo(
+				MainOperatorInfo mainInfo,
+				Type type,
+				PrecedenceType precedence, PrecedenceType rightPrecedence, PrecedenceType nextPrecedence
+			) :
+				mainInfo(mainInfo),
+				type(type),
+				precedence(precedence), rightPrecedence(rightPrecedence), nextPrecedence(nextPrecedence) {}
+
+			[[nodiscard]]
+			auto getMainInfo() const {
+				return mainInfo;
+			}
+
+			[[nodiscard]]
+			auto getType() const {
+				return type;
+			}
+
+			[[nodiscard]]
+			auto getMainPrecedence() const {
+				return precedence;
+			}
+
+			[[nodiscard]]
+			auto getRightPrecedence() const {
+				return rightPrecedence;
+			}
+
+			[[nodiscard]]
+			auto getNextPrecedence() const {
+				return nextPrecedence;
+			}
 		};
 
-	private:
-		sview value;
-		OperatorFunction function = nullptr;
-		Type type = Type::eBINARY;
-		PrecedenceType precedence = 0;
-		PrecedenceType rightPrecedence = 0;
-		PrecedenceType nextPrecedence = 0;
+		struct GroupingOperatorInfo {
+			sview begin;
+			sview end;
+			sview separator;
 
-	public:
-		OperatorInfo() = default;
+			GroupingOperatorInfo() = default;
 
-		OperatorInfo(
-			sview value,
-			Type type,
-			PrecedenceType precedence, PrecedenceType rightPrecedence, PrecedenceType nextPrecedence,
-			OperatorFunction function
-		):
-			value(value),
-			function(function),
-			type(type),
-			precedence(precedence),
-			rightPrecedence(rightPrecedence),
-			nextPrecedence(nextPrecedence) {}
+			GroupingOperatorInfo(const sview& begin, const sview& end, const sview& separator) :
+				begin(begin), end(end), separator(separator) {}
+		};
 
-		[[nodiscard]]
-		auto getValue() const {
-			return value;
-		}
 
-		[[nodiscard]]
-		auto getType() const {
-			return type;
-		}
-
-		[[nodiscard]]
-		auto getMainPrecedence() const {
-			return precedence;
-		}
-
-		[[nodiscard]]
-		auto getRightPrecedence() const {
-			return rightPrecedence;
-		}
-
-		[[nodiscard]]
-		auto getNextPrecedence() const {
-			return nextPrecedence;
-		}
-
-		[[nodiscard]]
-		auto getFunction() const {
-			return function;
-		}
-	};
-
-	struct GroupingOperatorInfo {
-		sview begin;
-		sview end;
-		sview separator;
-
-		GroupingOperatorInfo() = default;
-
-		GroupingOperatorInfo(const sview& begin, const sview& end, const sview& separator) :
-			begin(begin), end(end), separator(separator) {}
-	};
-
-	struct GrammarDescription {
 		/// <summary>
 		/// Field operators contains unary prefix, unary postfix and binary operators
 		/// For example: '+', '<=', '^'

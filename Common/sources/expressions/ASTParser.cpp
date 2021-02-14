@@ -24,7 +24,7 @@ void ASTParser::setGrammar(const GrammarDescription& grammarDescription, bool al
 		} else {
 			opsInfoNonPrefix.emplace_back(info);
 		}
-		operatorSymbolsSet.insert(info.getValue());
+		operatorSymbolsSet.insert(info.getMainInfo().operatorValue);
 	}
 
 	groupingOperators = grammarDescription.groupingOperators;
@@ -85,12 +85,12 @@ ast_nodes::IndexType ASTParser::parseBinaryOrPostfix(index minAllowedPrecedence)
 		case OperatorInfo::Type::eBINARY: {
 			skipToken();
 			auto const rightNode = parseBinaryOrPostfix(info.getRightPrecedence());
-			node = tree.allocateBinary(info.getValue(), info.getFunction(), node, rightNode);
+			node = tree.allocateNode<ast_nodes::BinaryOperatorNode>(info.getMainInfo(), node, rightNode);
 			break;
 		}
 		case OperatorInfo::Type::ePOSTFIX: {
 			skipToken();
-			node = tree.allocatePostfix(info.getValue(), info.getFunction(), node);
+			node = tree.allocateNode<ast_nodes::PostfixOperatorNode>(info.getMainInfo(), node);
 			break;
 		}
 		case OperatorInfo::Type::ePREFIX: {
@@ -108,7 +108,8 @@ ast_nodes::IndexType ASTParser::parsePrefixOrTerminalOrGroup() {
 		throwException(L"Unexpected end of expression");
 	}
 	case Lexer::Type::eNUMBER: {
-		auto const result = tree.allocateNumber(utils::StringUtils::parseFloat(next.value));
+		const double number = utils::StringUtils::parseFloat(next.value);
+		auto const result = tree.allocateNode<ast_nodes::ConstantNode>(number);
 		skipToken();
 		return result;
 	}
@@ -139,7 +140,7 @@ ast_nodes::IndexType ASTParser::parsePrefixOrTerminalOrGroup() {
 		}
 
 		skipToken();
-		return tree.allocatePrefix(info.getValue(), info.getFunction(), parseBinaryOrPostfix(info.getMainPrecedence()));
+		return tree.allocateNode<ast_nodes::PrefixOperatorNode>(info.getMainInfo(), parseBinaryOrPostfix(info.getMainPrecedence()));
 	}
 	case Lexer::Type::eWORD: {
 		auto word = next.value;
@@ -162,7 +163,7 @@ ast_nodes::IndexType ASTParser::parsePrefixOrTerminalOrGroup() {
 			if (next.value == groupOpt->end) {
 				skipToken();
 
-				return tree.allocateFunction(word, {});
+				return tree.allocateNode<ast_nodes::FunctionNode>(word);
 			}
 
 			std::vector<ast_nodes::IndexType> children;
@@ -183,16 +184,16 @@ ast_nodes::IndexType ASTParser::parsePrefixOrTerminalOrGroup() {
 
 			skipToken();
 
-			return tree.allocateFunction(word, std::move(children));
+			return tree.allocateNode<ast_nodes::FunctionNode>(word, std::move(children));
 		} else {
-			return tree.allocateWord(word);
+			return tree.allocateNode<ast_nodes::WordNode>(word);
 		}
 	}
 	}
 	throwException(L"Unexpected token type");
 }
 
-OperatorInfo ASTParser::parseOperator(sview value, bool prefixFirst) const {
+ASTParser::OperatorInfo ASTParser::parseOperator(sview value, bool prefixFirst) const {
 	auto firstList = opsInfoNonPrefix;
 	auto secondList = opsInfoPrefix;
 	if (prefixFirst) {
@@ -202,7 +203,7 @@ OperatorInfo ASTParser::parseOperator(sview value, bool prefixFirst) const {
 
 	auto iter = std::find_if(
 		firstList.begin(), firstList.end(), [=](OperatorInfo info) {
-			return value == info.getValue();
+			return value == info.getMainInfo().operatorValue;
 		}
 	);
 
@@ -213,7 +214,7 @@ OperatorInfo ASTParser::parseOperator(sview value, bool prefixFirst) const {
 
 	iter = std::find_if(
 		secondList.begin(), secondList.end(), [=](OperatorInfo info) {
-			return value == info.getValue();
+			return value == info.getMainInfo().operatorValue;
 		}
 	);
 
@@ -224,7 +225,7 @@ OperatorInfo ASTParser::parseOperator(sview value, bool prefixFirst) const {
 	throwException(L"Expected operator but something else was found");
 }
 
-std::optional<GroupingOperatorInfo> ASTParser::tryParseGroupingOperator(sview value) const {
+std::optional<ASTParser::GroupingOperatorInfo> ASTParser::tryParseGroupingOperator(sview value) const {
 	for (auto pair : groupingOperators) {
 		if (pair.begin == value || pair.end == value || pair.separator == value) {
 			return pair;
