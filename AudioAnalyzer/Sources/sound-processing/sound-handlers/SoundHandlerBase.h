@@ -57,6 +57,17 @@ namespace rxtd::audio_analyzer {
 		static_assert(clock::is_steady);
 		using BufferPrinter = ::rxtd::common::buffer_printer::BufferPrinter;
 
+		class TooManyValuesException : public std::runtime_error {
+			string sourceName;
+		public:
+			explicit TooManyValuesException(string sourceName) : runtime_error(""), sourceName(std::move(sourceName)) {}
+
+			[[nodiscard]]
+			sview getSourceName() const {
+				return sourceName;
+			}
+		};
+
 		struct DataSize {
 			index valuesCount{};
 			index layersCount{};
@@ -215,6 +226,7 @@ namespace rxtd::audio_analyzer {
 			std::vector<index> offsets;
 		};
 
+		string handlerName;
 		bool _anyChanges = false;
 		DataSize _dataSize;
 		mutable bool _layersAreValid = false;
@@ -246,6 +258,7 @@ namespace rxtd::audio_analyzer {
 		// returns true on success, false on invalid handler
 		[[nodiscard]]
 		bool patch(
+			string name,
 			const ParamsContainer& params, const std::vector<istring>& sources,
 			index sampleRate, Version version,
 			HandlerFinder& hf, Logger& cl,
@@ -357,6 +370,13 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		array_span<float> pushLayer(index layer) {
 			const index offset = index(_buffer.size());
+
+			// Prevent handlers from producing too much data
+			// see: https://github.com/d-uzlov/Rainmeter-Plugins-by-rxtd/issues/4
+			if (offset + _dataSize.valuesCount > 1'000'000) {
+				throw TooManyValuesException{ handlerName };
+			}
+
 			_buffer.resize(offset + _dataSize.valuesCount);
 			_layersAreValid = false;
 

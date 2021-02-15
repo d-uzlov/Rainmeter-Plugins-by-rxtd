@@ -20,6 +20,8 @@ void ProcessingManager::setParams(
 	index sampleRate, ChannelLayout layout,
 	Snapshot& snapshot
 ) {
+	this->logger = logger;
+
 	std::set<Channel> channels;
 	for (const auto channel : pd.channels) {
 		if (channel == Channel::eAUTO || layout.contains(channel)) {
@@ -55,6 +57,7 @@ void ProcessingManager::setParams(
 			auto cl = logger.context(L"handler '{}': ", handlerName);
 			HandlerFinderImpl hf{ channelDataNew };
 			const bool success = handlerPtr->patch(
+				handlerName % csView() % own(),
 				patchInfo.params, patchInfo.sources,
 				finalSampleRate, version,
 				hf, cl,
@@ -97,30 +100,36 @@ void ProcessingManager::setParams(
 }
 
 void ProcessingManager::process(const ChannelMixer& mixer, clock::time_point killTime, Snapshot& snapshot) {
-	for (auto& [channel, channelStruct] : channelMap) {
-		auto& channelSnapshot = snapshot[channel];
+	try {
+		for (auto& [channel, channelStruct] : channelMap) {
+			auto& channelSnapshot = snapshot[channel];
 
-		SoundHandlerBase::ProcessContext context{};
+			SoundHandlerBase::ProcessContext context{};
 
-		if (auto wave = mixer.getChannelPCM(channel);
-			resamplingDivider <= 1) {
-			context.originalWave = wave;
-		} else {
-			const index nextBufferSize = channelStruct.downsampleHelper.pushData(wave);
-			downsampledBuffer.resize(nextBufferSize);
-			channelStruct.downsampleHelper.downsample(downsampledBuffer);
-			context.originalWave = downsampledBuffer;
+			if (auto wave = mixer.getChannelPCM(channel);
+				resamplingDivider <= 1) {
+				context.originalWave = wave;
+			} else {
+				const index nextBufferSize = channelStruct.downsampleHelper.pushData(wave);
+				downsampledBuffer.resize(nextBufferSize);
+				channelStruct.downsampleHelper.downsample(downsampledBuffer);
+				context.originalWave = downsampledBuffer;
+			}
+			context.originalWave.transferToVector(filteredBuffer);
+
+			channelStruct.filter.applyInPlace(filteredBuffer);
+
+			context.wave = filteredBuffer;
+			context.killTime = killTime;
+
+			for (auto& handlerName : order) {
+				auto& handler = *channelStruct.handlerMap[handlerName];
+				handler.process(context, channelSnapshot[handlerName]);
+			}
 		}
-		context.originalWave.transferToVector(filteredBuffer);
-
-		channelStruct.filter.applyInPlace(filteredBuffer);
-
-		context.wave = filteredBuffer;
-		context.killTime = killTime;
-
-		for (auto& handlerName : order) {
-			auto& handler = *channelStruct.handlerMap[handlerName];
-			handler.process(context, channelSnapshot[handlerName]);
-		}
+	} catch (SoundHandlerBase::TooManyValuesException& e) {
+		logger.error(L"{}: memory usage exceeded limit. Check your settings", e.getSourceName());
+		logger.error(L"processing stopped");
+		channelMap.clear();
 	}
 }

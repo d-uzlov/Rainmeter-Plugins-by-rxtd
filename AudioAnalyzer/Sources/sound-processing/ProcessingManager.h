@@ -47,6 +47,7 @@ namespace rxtd::audio_analyzer {
 		};
 
 	private:
+		Logger logger;
 		std::vector<istring> order;
 		std::map<Channel, ChannelStruct> channelMap;
 		index resamplingDivider{};

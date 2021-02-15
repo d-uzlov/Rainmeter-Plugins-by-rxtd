@@ -13,6 +13,7 @@
 using namespace audio_analyzer;
 
 bool SoundHandlerBase::patch(
+	string name,
 	const ParamsContainer& params, const std::vector<istring>& sources,
 	index sampleRate, Version version,
 	HandlerFinder& hf, Logger& cl,
@@ -21,6 +22,8 @@ bool SoundHandlerBase::patch(
 	if (sources.size() > 1) {
 		throw std::exception{ "no support for multiple sources yet" }; // todo
 	}
+
+	handlerName = std::move(name);
 
 	Configuration newConfig;
 	if (!sources.empty()) {

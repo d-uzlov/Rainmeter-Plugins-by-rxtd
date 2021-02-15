@@ -745,6 +745,7 @@ AudioParent::ProcessingCleanersMap AudioParent::createCleanersFor(const ParamPar
 		ProcessingManager::HandlerFinderImpl hf{ tempChannelMap };
 		SoundHandlerBase::Snapshot handlerSpecificData;
 		const bool success = handlerPtr->patch(
+			handlerName % csView() % own(),
 			patchInfo.params, patchInfo.sources,
 			48000, version,
 			hf, cl,
