@@ -14,6 +14,7 @@
 namespace rxtd::perfmon {
 	class PerfmonChild : public utils::TypeHolder {
 		Reference ref;
+		string instanceName;
 		index instanceIndex = 0;
 		ResultString resultStringType = ResultString::eNUMBER;
 

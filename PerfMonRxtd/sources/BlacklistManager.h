@@ -8,31 +8,13 @@
  */
 
 #pragma once
+#include "MatchPattern.h"
 
 namespace rxtd::perfmon {
-	struct MatchTestRecord {
-		sview pattern;
-		bool matchSubstring{};
-
-		MatchTestRecord() = default;
-
-		MatchTestRecord(sview pattern, bool substring) :
-			pattern(pattern),
-			matchSubstring(substring) { }
-
-		[[nodiscard]]
-		bool match(sview string) const {
-			if (!matchSubstring) {
-				return pattern == string;
-			}
-			return string.find(pattern) != sview::npos;
-		}
-	};
-
 	class BlacklistManager {
 		class MatchList {
 			string source;
-			std::vector<MatchTestRecord> list;
+			std::vector<MatchPattern> list;
 
 		public:
 			MatchList() = default;

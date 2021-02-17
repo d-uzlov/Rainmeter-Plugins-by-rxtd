@@ -148,7 +148,7 @@ double RollupExpressionResolver::resolveReference(const Reference& ref, array_vi
 		return 0.0;
 	}
 
-	if (ref.named) {
+	if (!ref.namePattern.isEmpty()) {
 		if (ref.discarded) {
 			const auto instancePtr = instanceManager.findSimpleInstanceByName(ref);
 			if (instancePtr == nullptr) {

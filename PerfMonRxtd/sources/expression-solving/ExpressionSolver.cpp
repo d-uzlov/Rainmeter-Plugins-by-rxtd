@@ -122,7 +122,7 @@ double ExpressionSolver::resolveReference(const Reference& ref, Indices indices)
 		}
 	}
 
-	if (ref.named) {
+	if (!ref.namePattern.isEmpty()) {
 		const auto instancePtr = instanceManager.findSimpleInstanceByName(ref);
 		if (instancePtr == nullptr) {
 			return 0.0;

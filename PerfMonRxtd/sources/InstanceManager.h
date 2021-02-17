@@ -100,13 +100,11 @@ namespace rxtd::perfmon {
 		pdh::NamesManager namesManager;
 
 		struct CacheKey {
-			sview name;
-			bool partialMatch;
+			MatchPattern pattern;
 			bool useOriginalName;
 
 			friend bool operator<(const CacheKey& lhs, const CacheKey& rhs) {
-				return lhs.name < rhs.name
-					&& lhs.partialMatch < rhs.partialMatch
+				return lhs.pattern < rhs.pattern
 					&& lhs.useOriginalName < rhs.useOriginalName;
 			}
 		};
@@ -330,22 +328,21 @@ namespace rxtd::perfmon {
 
 		template<typename InstanceType, typename CacheType>
 		const InstanceType* findInstanceByNameInList(const Reference& ref, array_view<InstanceType> instances, CacheType& cache) const {
-			auto& itemOpt = cache[{ ref.name, ref.namePartialMatch, ref.useOrigName }];
+			auto& itemOpt = cache[{ ref.namePattern, ref.useOrigName }];
 			if (itemOpt.has_value()) {
 				return itemOpt.value(); // already cached
 			}
 
-			MatchTestRecord testRecord{ ref.name, ref.namePartialMatch };
 			if (ref.useOrigName) {
 				for (const auto& item : instances) {
-					if (testRecord.match(namesManager.get(item.getFirst().current).originalName)) {
+					if (ref.namePattern.match(namesManager.get(item.getFirst().current).originalName)) {
 						itemOpt = &item;
 						return itemOpt.value();
 					}
 				}
 			} else {
 				for (const auto& item : instances) {
-					if (testRecord.match(item.sortName)) {
+					if (ref.namePattern.match(item.sortName)) {
 						itemOpt = &item;
 						return itemOpt.value();
 					}

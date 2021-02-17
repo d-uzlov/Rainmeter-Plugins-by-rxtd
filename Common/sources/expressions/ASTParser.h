@@ -155,7 +155,7 @@ namespace rxtd::common::expressions {
 			next = lexer.readNext(additionalSymbols);
 		}
 
-		void readUntil(sview symbols) {
+		void readUntilAnyOf(sview symbols) {
 			next = lexer.readUntil(symbols);
 		}
 

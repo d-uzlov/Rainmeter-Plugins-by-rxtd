@@ -109,6 +109,9 @@
     <ClInclude Include="sources\Reference.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="sources\MatchPattern.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\Common\resources\version.rc">

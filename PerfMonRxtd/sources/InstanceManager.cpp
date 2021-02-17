@@ -188,7 +188,7 @@ void InstanceManager::buildRollupKeys() {
 }
 
 const InstanceInfo* InstanceManager::findSimpleInstance(const Reference& ref, index sortedIndex) const {
-	if (ref.named) {
+	if (!ref.namePattern.isEmpty()) {
 		return findSimpleInstanceByName(ref);
 	}
 
@@ -201,7 +201,7 @@ const InstanceInfo* InstanceManager::findSimpleInstance(const Reference& ref, in
 }
 
 const RollupInstanceInfo* InstanceManager::findRollupInstance(const Reference& ref, index sortedIndex) const {
-	if (ref.named) {
+	if (!ref.namePattern.isEmpty()) {
 		return findRollupInstanceByName(ref);
 	}
 

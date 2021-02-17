@@ -9,6 +9,8 @@
 
 #include "ExpressionParser.h"
 
+
+#include "MatchPattern.h"
 #include "Reference.h"
 #include "StringUtils.h"
 #include "expressions/GrammarBuilder.h"
@@ -21,7 +23,7 @@ ExpressionParser::ExpressionParser() {
 
 std::optional<ExpressionParser::IndexType> ExpressionParser::parseCustom() {
 	using Type = Reference::Type;
-	
+
 	Reference ref;
 	const isview name = next.value % ciView();
 	if (name == L"counterRaw" || name == L"CR") {
@@ -53,17 +55,17 @@ std::optional<ExpressionParser::IndexType> ExpressionParser::parseCustom() {
 		ref.counter = utils::StringUtils::parseInt(next.value);
 		skipToken(additionalSymbols);
 	}
+
 	if (next.value == L"[") {
-		readUntil(L"#]");
-		ref.name = next.value;
-		ref.named = !ref.name.empty();
-		if (ref.named) {
-			if (ref.name[0] == L'\\') {
-				auto indexOfFirstNonFlag = ref.name.find_first_of(L" \t");
+		readUntilAnyOf(L"#]");
+		sview description = next.value;
+		if (!description.empty()) {
+			if (description.front() == L'\\') {
+				auto indexOfFirstNonFlag = description.find_first_of(L" \t");
 				if (indexOfFirstNonFlag == std::string::npos) {
-					indexOfFirstNonFlag = ref.name.length();
+					indexOfFirstNonFlag = description.length();
 				}
-				const isview flags = (ref.name % ciView()).substr(1, indexOfFirstNonFlag - 1);
+				const isview flags = description.substr(1, indexOfFirstNonFlag - 1) % ciView();
 
 				if (flags.find(L'D') != std::string::npos) {
 					ref.discarded = true;
@@ -74,23 +76,23 @@ std::optional<ExpressionParser::IndexType> ExpressionParser::parseCustom() {
 				if (flags.find(L'T') != std::string::npos) {
 					ref.total = true;
 				}
-				utils::StringUtils::substringInplace(ref.name, indexOfFirstNonFlag);
+
+				description.remove_prefix(indexOfFirstNonFlag);
 			}
 
-			utils::StringUtils::trimInplace(ref.name);
+			description = utils::StringUtils::trim(description);
 
-			const auto len = ref.name.size();
-			if (len >= 2 && ref.name[0] == L'*' && ref.name[len - 1] == L'*') {
-				ref.name = ref.name.substr(1, len - 2);
-				ref.namePartialMatch = true;
-			}
+			ref.namePattern = MatchPattern{ description };
 		}
-		skipToken(additionalSymbols);
+
+		sview closingBracket = L"]";
+		skipToken(array_view<sview>{ &closingBracket, 1 });
 		if (next.type != Lexer::Type::eSYMBOL || next.value != L"]") {
 			throwException(L"Expected ']' but something else was found");
 		}
 		skipToken();
 	}
+
 	if (next.type == Lexer::Type::eWORD) {
 		const isview suffix = next.value % ciView();
 		if (suffix == L"SUM" || suffix == L"S") {
@@ -109,5 +111,6 @@ std::optional<ExpressionParser::IndexType> ExpressionParser::parseCustom() {
 		}
 		skipToken();
 	}
-	return tree.allocateNode<common::expressions::ast_nodes::CustomTerminalNode>(std::move(ref));
+
+	return tree.allocateNode<common::expressions::ast_nodes::CustomTerminalNode>(ref);
 }

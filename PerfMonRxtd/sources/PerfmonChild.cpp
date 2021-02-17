@@ -33,17 +33,12 @@ void PerfmonChild::vReload() {
 	ref.total = rain.read(L"Total").asBool();
 	ref.discarded = rain.read(L"Discarded").asBool();
 
-	ref.name = rain.read(L"InstanceName").asString();
+
+	instanceName = rain.read(L"InstanceName").asString();
 	if (!ref.useOrigName) {
-		CharUpperW(&ref.name[0]);
+		CharUpperW(instanceName.data());
 	}
-	const auto len = ref.name.size(); // TODO unite match record creation
-	if (len >= 2 && ref.name.front() == L'*' && ref.name.back() == L'*') {
-		utils::StringUtils::substringInplace(ref.name, 1, len - 2);
-		ref.namePartialMatch = true;
-	} else {
-		ref.namePartialMatch = false;
-	}
+	ref.namePattern = MatchPattern{ instanceName };
 
 	bool needReadRollupFunction = true;
 	bool forceUseName = false;
@@ -116,8 +111,6 @@ void PerfmonChild::vReload() {
 	}
 
 	setUseResultString(resultStringType != ResultString::eNUMBER);
-
-	ref.named = ref.useOrigName || !ref.name.empty();
 }
 
 double PerfmonChild::vUpdate() {

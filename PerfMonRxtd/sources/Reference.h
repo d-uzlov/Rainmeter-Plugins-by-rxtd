@@ -21,13 +21,11 @@ namespace rxtd::perfmon {
 			COUNT,
 		};
 
-		string name;
+		MatchPattern namePattern;
 		index counter = 0;
 		RollupFunction rollupFunction{};
 		Type type{};
 		bool discarded = false;
-		bool named = false;
-		bool namePartialMatch = false;
 		bool useOrigName = false;
 		bool total = false;
 	};

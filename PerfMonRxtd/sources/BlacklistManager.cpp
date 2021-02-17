@@ -10,35 +10,22 @@
 #include "BlacklistManager.h"
 
 #include "my-windows.h"
-#include "option-parsing/Option.h"
-#include "option-parsing/OptionList.h"
+#include "option-parsing/Tokenizer.h"
 
 using namespace rxtd::perfmon;
 
 BlacklistManager::MatchList::MatchList(string sourceString, bool upperCase) {
-	auto [_, optList] = common::options::Option{ sourceString }.asList(L'|').consume();
-
 	source = std::move(sourceString);
 	if (upperCase) {
 		CharUpperW(source.data());
 	}
 
-	list.reserve(optList.size());
+	auto tokens = common::options::Tokenizer::parse(source, L'|');
 
-	for (auto viewInfo : optList) {
-		auto view = viewInfo.makeView(source);
+	list.reserve(tokens.size());
 
-		if (view.length() < 3) {
-			list.emplace_back(view, false);
-			continue;
-		}
-
-		if (view.front() == L'*' && view.back() == L'*') {
-			list.emplace_back(view.substr(1, view.length() - 2), true);
-			continue;
-		}
-
-		list.emplace_back(view, false);
+	for (auto viewInfo : tokens) {
+		list.emplace_back(viewInfo.makeView(source));
 	}
 }
 
