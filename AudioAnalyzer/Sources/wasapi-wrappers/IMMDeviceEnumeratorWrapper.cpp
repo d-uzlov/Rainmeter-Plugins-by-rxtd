@@ -9,7 +9,7 @@
 
 #include "IMMDeviceEnumeratorWrapper.h"
 
-using namespace ::rxtd::audio_analyzer::wasapi_wrappers;
+using namespace rxtd::audio_analyzer::wasapi_wrappers;
 
 IMMDeviceEnumeratorWrapper::IMMDeviceEnumeratorWrapper() : GenericComWrapper(
 	[](auto ptr) {

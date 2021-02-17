@@ -11,7 +11,7 @@
 #include "my-windows.h"
 #include <filesystem>
 
-using namespace utils;
+using namespace rxtd::utils;
 
 FileWrapper::FileWrapper(const wchar_t* path) {
 	fileHandle = CreateFileW(
@@ -55,7 +55,7 @@ void FileWrapper::write(const void* data, index count) {
 	}
 }
 
-string FileWrapper::getAbsolutePath(string folder, sview currentPath) {
+rxtd::string FileWrapper::getAbsolutePath(string folder, sview currentPath) {
 	std::filesystem::path path{ folder };
 	if (!path.is_absolute()) {
 		string f = std::move(folder);

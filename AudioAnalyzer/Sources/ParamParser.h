@@ -20,10 +20,10 @@
 
 namespace rxtd::audio_analyzer {
 	class ParamParser {
-		using Logger = ::rxtd::common::rainmeter::Logger;
-		using Rainmeter = ::rxtd::common::rainmeter::Rainmeter;
-		using OptionMap = ::rxtd::common::options::OptionMap;
-		using OptionList = ::rxtd::common::options::OptionList;
+		using Logger = common::rainmeter::Logger;
+		using Rainmeter = common::rainmeter::Rainmeter;
+		using OptionMap = common::options::OptionMap;
+		using OptionList = common::options::OptionList;
 
 	public:
 		struct HandlerPatchersInfo {

@@ -11,7 +11,7 @@
 
 #include "MapUtils.h"
 
-using namespace audio_analyzer;
+using namespace rxtd::audio_analyzer;
 
 void ProcessingManager::setParams(
 	Logger logger,

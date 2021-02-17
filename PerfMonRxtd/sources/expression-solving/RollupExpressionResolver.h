@@ -20,8 +20,8 @@
 
 namespace rxtd::perfmon {
 	class RollupExpressionResolver {
-		using Logger = ::rxtd::common::rainmeter::Logger;
-		using OptionList = ::rxtd::common::options::OptionList;
+		using Logger = common::rainmeter::Logger;
+		using OptionList = common::options::OptionList;
 		using ASTSolver = common::expressions::ASTSolver;
 
 		class ReferenceResolver : public common::expressions::ASTSolver::ValueProvider {

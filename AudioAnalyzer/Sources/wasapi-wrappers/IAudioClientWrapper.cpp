@@ -9,12 +9,11 @@
 
 #include "IAudioClientWrapper.h"
 
-#include "BufferPrinter.h"
 #include "MyMath.h"
 #include "winapi-wrappers/ComException.h"
 #include "winapi-wrappers/GenericCoTaskMemWrapper.h"
 
-using namespace ::rxtd::audio_analyzer::wasapi_wrappers;
+using namespace rxtd::audio_analyzer::wasapi_wrappers;
 
 IAudioCaptureClientWrapper IAudioClientWrapper::openCapture(double bufferSizeSec) {
 	// Documentation for IAudioClient::Initialize says
@@ -75,7 +74,7 @@ IAudioCaptureClientWrapper IAudioClientWrapper::openCapture(double bufferSizeSec
 	return result;
 }
 
-common::winapi_wrappers::GenericComWrapper<IAudioRenderClient> IAudioClientWrapper::openRender() noexcept(false) {
+rxtd::common::winapi_wrappers::GenericComWrapper<IAudioRenderClient> IAudioClientWrapper::openRender() noexcept(false) {
 	throwOnError(
 		ref().Initialize(
 			AUDCLNT_SHAREMODE_SHARED,

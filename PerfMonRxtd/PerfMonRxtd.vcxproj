@@ -170,6 +170,7 @@
     <ClInclude Include="sources\expression-solving\RollupExpressionResolver.h" />
     <ClInclude Include="sources\expression-solving\CacheHelper.h" />
     <ClInclude Include="sources\expression-solving\TotalUtilities.h" />
+    <ClInclude Include="sources\MatchPattern.h" />
     <ClInclude Include="sources\pdh\my-pdh.h" />
     <ClInclude Include="sources\pdh\PdhFormat.h" />
     <ClInclude Include="sources\pdh\PdhSnapshot.h" />

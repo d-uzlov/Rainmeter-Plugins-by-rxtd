@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 rxtd
+ * Copyright (C) 2019-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -9,18 +9,18 @@
 
 #pragma once
 
-#include <cstdint>
-#include <vector>
-#include <map>
 #include <algorithm>
+#include <any>
+#include <cstdint>
+#include <cwctype>
+#include <map>
+#include <optional>
+#include <set>
 #include <string>
 #include <string_view>
-#include <cwctype>
 #include <utility>
-#include <optional>
-#include <any>
 #include <variant>
-#include <set>
+#include <vector>
 
 namespace rxtd {
 	using index = ptrdiff_t;
@@ -28,17 +28,13 @@ namespace rxtd {
 	using sview = std::wstring_view;
 }
 
-using namespace rxtd;
-
 #include "array_view.h"
 #include "CaseInsensitiveString.h"
 #include "GenericBaseClasses.h"
 
 template<typename T>
-std::optional<T> parseEnum(isview) {
+std::optional<T> parseEnum(rxtd::isview) {
+	// ReSharper disable once CppStaticAssertFailure
 	static_assert(false, "Template specialization of parseEnum() must be created by user.");
+	return {};
 }
-
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif

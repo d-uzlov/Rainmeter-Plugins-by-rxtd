@@ -9,7 +9,7 @@
 
 #include "legacy_FiniteTimeFilter.h"
 
-using namespace audio_analyzer;
+using namespace rxtd::audio_analyzer;
 
 SoundHandlerBase::ParseResult legacy_FiniteTimeFilter::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,

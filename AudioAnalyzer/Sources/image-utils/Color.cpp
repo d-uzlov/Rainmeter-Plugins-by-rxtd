@@ -12,10 +12,10 @@
 #include "option-parsing/OptionList.h"
 #include "rainmeter/Logger.h"
 
-using namespace ::rxtd::utils;
-using namespace ::rxtd::common::options;
-using Logger = ::rxtd::common::rainmeter::Logger;
-using BufferPrinter = ::rxtd::common::buffer_printer::BufferPrinter;
+using namespace rxtd::utils;
+using namespace rxtd::common::options;
+using Logger = rxtd::common::rainmeter::Logger;
+using BufferPrinter = rxtd::common::buffer_printer::BufferPrinter;
 
 Color Color::parse(sview desc, Color defaultValue) {
 	if (desc.empty()) {
@@ -99,17 +99,19 @@ Color Color::rgb2hsv() const {
 
 	const float val = xMax;
 	const float chroma = xMax - xMin;
-	const float l = (xMax + xMin) * 0.5f;
+
 	float hue = 0.0f;
 	if (chroma == 0.0f) {
 		hue = 0.0f;
 	} else if (val == _.rgb.red) {
-		hue = 60.0f * (_.rgb.green - _.rgb.blue) / chroma;
+		hue = (_.rgb.green - _.rgb.blue) / chroma;
 	} else if (val == _.rgb.green) {
-		hue = 60.0f * (2.0f + (_.rgb.blue - _.rgb.red) / chroma);
+		hue = 2.0f + (_.rgb.blue - _.rgb.red) / chroma;
 	} else if (val == _.rgb.blue) {
-		hue = 60.0f * (4.0f + (_.rgb.red - _.rgb.green) / chroma);
+		hue = 4.0f + (_.rgb.red - _.rgb.green) / chroma;
 	}
+	hue *= 60.0f;
+	
 	const float sat = val == 0.0f ? 0.0f : chroma / val;
 
 	return { hue, sat, val, alpha, Mode::eHSV };
@@ -161,20 +163,20 @@ Color Color::hsv2rgb() const {
 	struct {
 		float r, g, b;
 	} tmp{};
-	if (chroma == 0.0) {
-		tmp = { 0.0, 0.0, 0.0 };
-	} else if (h >= 0.0 && h <= 1.0) {
-		tmp = { chroma, x, 0.0 };
-	} else if (h >= 1.0 && h <= 2.0) {
-		tmp = { x, chroma, 0.0 };
-	} else if (h >= 2.0 && h <= 3.0) {
-		tmp = { 0.0, chroma, x };
-	} else if (h >= 3.0 && h <= 4.0) {
-		tmp = { 0.0, x, chroma };
-	} else if (h >= 4.0 && h <= 5.0) {
-		tmp = { x, 0.0, chroma };
+	if (chroma == 0.0f) {
+		tmp = { 0.0f, 0.0f, 0.0f };
+	} else if (h >= 0.0f && h <= 1.0f) {
+		tmp = { chroma, x, 0.0f };
+	} else if (h >= 1.0f && h <= 2.0f) {
+		tmp = { x, chroma, 0.0f };
+	} else if (h >= 2.0f && h <= 3.0f) {
+		tmp = { 0.0f, chroma, x };
+	} else if (h >= 3.0f && h <= 4.0f) {
+		tmp = { 0.0f, x, chroma };
+	} else if (h >= 4.0f && h <= 5.0f) {
+		tmp = { x, 0.0f, chroma };
 	} else {
-		tmp = { chroma, 0.0, x };
+		tmp = { chroma, 0.0f, x };
 	}
 
 	const float m = _.hsv.val - chroma;

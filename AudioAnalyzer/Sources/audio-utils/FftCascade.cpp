@@ -11,7 +11,7 @@
 
 #include "DiscreetInterpolator.h"
 
-using namespace audio_utils;
+using namespace rxtd::audio_utils;
 
 void FftCascade::setParams(Params _params, FFT* _fftPtr, FftCascade* _successorPtr, index _cascadeIndex) {
 	// check for unchanged params should be done in FftAnalyzer handler

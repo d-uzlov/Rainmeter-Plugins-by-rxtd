@@ -13,9 +13,9 @@
 #include "MyMath.h"
 
 using namespace std::string_literals;
-using utils::Color;
+using rxtd::utils::Color;
 
-using namespace audio_analyzer;
+using namespace rxtd::audio_analyzer;
 
 SoundHandlerBase::ParseResult WaveForm::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,

@@ -15,7 +15,7 @@
 #include "option-parsing/OptionSequence.h"
 #include "../butterworth-lib/ButterworthWrapper.h"
 
-using namespace audio_utils;
+using namespace rxtd::audio_utils;
 
 FilterCascade FilterCascadeCreator::getInstance(double samplingFrequency) const {
 	std::vector<std::unique_ptr<AbstractFilter>> result;
@@ -204,7 +204,7 @@ FilterCascadeParser::parseBW(isview name, const OptionMap& description, Logger& 
 	return {};
 }
 
-template<index size>
+template<rxtd::index size>
 FilterCascadeParser::FCF FilterCascadeParser::createButterworthMaker(
 	index order, double forcedGain, double freq1,
 	double freq2,

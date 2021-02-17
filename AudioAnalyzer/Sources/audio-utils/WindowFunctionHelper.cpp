@@ -13,8 +13,8 @@
 #include "option-parsing/OptionSequence.h"
 #include "cheby_win-lib/cheby_win.h"
 
-using namespace audio_utils;
-using namespace ::rxtd::common::options;
+using namespace rxtd::audio_utils;
+using namespace rxtd::common::options;
 
 static const auto pi = std::acos(-1.0);
 

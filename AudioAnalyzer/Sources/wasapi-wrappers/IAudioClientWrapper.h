@@ -9,12 +9,16 @@
 
 #pragma once
 
-#include "winapi-wrappers/GenericComWrapper.h"
+ // my-windows must be before any WINAPI include
+#include "my-windows.h"
+// ReSharper disable once CppWrongIncludesOrder
 #include <Audioclient.h>
-#include "IAudioCaptureClientWrapper.h"
-#include "WaveFormat.h"
-#include "MediaDeviceType.h"
+
 #include "audiopolicy.h"
+#include "IAudioCaptureClientWrapper.h"
+#include "MediaDeviceType.h"
+#include "WaveFormat.h"
+#include "winapi-wrappers/GenericComWrapper.h"
 #include "winapi-wrappers/GenericCoTaskMemWrapper.h"
 
 namespace rxtd::audio_analyzer::wasapi_wrappers {

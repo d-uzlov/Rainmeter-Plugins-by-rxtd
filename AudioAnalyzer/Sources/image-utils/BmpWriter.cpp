@@ -10,11 +10,11 @@
 #include "BmpWriter.h"
 #include "winapi-wrappers/FileWrapper.h"
 
-using utils::IntColor;
+using rxtd::utils::IntColor;
 
 #pragma pack( push, 1 )
 struct BMPHeader {
-	static constexpr index dibSize = 108;
+	static constexpr rxtd::index dibSize = 108;
 
 	struct {
 		uint16_t id = 0x4d42; // == 'BM' (little-endian)
@@ -49,7 +49,7 @@ private:
 	std::byte padding[dibSize - sizeof(dibHeader)]{};
 
 public:
-	BMPHeader(index width, index height) {
+	BMPHeader(rxtd::index width, rxtd::index height) {
 		fileHeader.pixelArrayOffsetInBytes = sizeof(fileHeader) + dibHeader.headerSizeInBytes;
 		dibHeader.bitmapSizeInBytes = uint32_t(width * height * sizeof(uint32_t));
 		fileHeader.fileSizeInBytes = fileHeader.pixelArrayOffsetInBytes + dibHeader.bitmapSizeInBytes;
@@ -60,7 +60,7 @@ public:
 #pragma pack( pop )
 
 
-void utils::BmpWriter::writeFile(const string& filepath, array2d_view<IntColor> imageData) {
+void rxtd::utils::BmpWriter::writeFile(const string& filepath, array2d_view<IntColor> imageData) {
 	BMPHeader header(imageData.getBufferSize(), imageData.getBuffersCount());
 
 	FileWrapper file(filepath.c_str());

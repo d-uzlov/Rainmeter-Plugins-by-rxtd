@@ -9,7 +9,7 @@
 
 #include "TimeResampler.h"
 
-using namespace audio_analyzer;
+using namespace rxtd::audio_analyzer;
 
 SoundHandlerBase::ParseResult TimeResampler::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,

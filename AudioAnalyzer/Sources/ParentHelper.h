@@ -19,9 +19,9 @@
 namespace rxtd::audio_analyzer {
 	class ParentHelper : MovableOnlyBase {
 	public:
-		using Rainmeter = ::rxtd::common::rainmeter::Rainmeter;
-		using Logger = ::rxtd::common::rainmeter::Logger;
-		using OptionMap = ::rxtd::common::options::OptionMap;
+		using Rainmeter = common::rainmeter::Rainmeter;
+		using Logger = common::rainmeter::Logger;
+		using OptionMap = common::options::OptionMap;
 		using MediaDeviceType = wasapi_wrappers::MediaDeviceType;
 
 		struct SnapshotStruct {

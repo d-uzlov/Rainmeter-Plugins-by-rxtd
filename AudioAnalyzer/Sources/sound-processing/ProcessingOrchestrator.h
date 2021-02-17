@@ -13,7 +13,7 @@
 namespace rxtd::audio_analyzer {
 	class ProcessingOrchestrator {
 	public:
-		using Logger = ::rxtd::common::rainmeter::Logger;
+		using Logger = common::rainmeter::Logger;
 		using Snapshot = std::map<istring, ProcessingManager::Snapshot, std::less<>>;
 
 	private:

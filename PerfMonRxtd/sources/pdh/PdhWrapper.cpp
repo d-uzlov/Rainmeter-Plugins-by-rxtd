@@ -16,7 +16,7 @@
 
 #pragma comment(lib, "pdh.lib")
 
-using namespace perfmon::pdh;
+using namespace rxtd::perfmon::pdh;
 
 bool PdhWrapper::init(Logger logger) {
 	log = std::move(logger);

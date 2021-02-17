@@ -11,14 +11,14 @@
 #include <chrono>
 
 #include "Channel.h"
-#include "../ParamParser.h"
 #include "ChannelMixer.h"
+#include "../ParamParser.h"
 #include "../audio-utils/DownsampleHelper.h"
 
 namespace rxtd::audio_analyzer {
 	class ProcessingManager {
 	public:
-		using Logger = ::rxtd::common::rainmeter::Logger;
+		using Logger = common::rainmeter::Logger;
 		using ChannelSnapshot = std::map<istring, SoundHandlerBase::Snapshot, std::less<>>;
 		using Snapshot = std::map<Channel, ChannelSnapshot, std::less<>>;
 

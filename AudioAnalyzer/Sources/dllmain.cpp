@@ -20,14 +20,14 @@ static_assert(std::is_same<WCHAR, wchar_t>::value);
 static_assert(std::is_same<LPCWSTR, const wchar_t*>::value);
 
 PLUGIN_EXPORT void Initialize(void** data, void* rm) {
-	::rxtd::common::rainmeter::Rainmeter rain(rm);
+	rxtd::common::rainmeter::Rainmeter rain(rm);
 
 	const auto typeString = rain.read(L"Type").asIString();
 	try {
 		if (typeString == L"Parent") {
-			*data = new audio_analyzer::AudioParent(std::move(rain));
+			*data = new rxtd::audio_analyzer::AudioParent(std::move(rain));
 		} else {
-			*data = new audio_analyzer::AudioChild(std::move(rain));
+			*data = new rxtd::audio_analyzer::AudioChild(std::move(rain));
 		}
 	} catch (std::runtime_error&) {
 		*data = nullptr;
@@ -38,14 +38,14 @@ PLUGIN_EXPORT void Reload(void* data, void*, double*) {
 	if (data == nullptr) {
 		return;
 	}
-	static_cast<utils::TypeHolder*>(data)->reload();
+	static_cast<rxtd::utils::TypeHolder*>(data)->reload();
 }
 
 PLUGIN_EXPORT double Update(void* data) {
 	if (data == nullptr) {
 		return 0.0;
 	}
-	const auto result = static_cast<utils::TypeHolder*>(data)->update();
+	const auto result = static_cast<rxtd::utils::TypeHolder*>(data)->update();
 	return result;
 }
 
@@ -53,7 +53,7 @@ PLUGIN_EXPORT const wchar_t* GetString(void* data) {
 	if (data == nullptr) {
 		return L"";
 	}
-	const auto result = static_cast<utils::TypeHolder*>(data)->getString();
+	const auto result = static_cast<rxtd::utils::TypeHolder*>(data)->getString();
 	return result;
 }
 
@@ -61,20 +61,20 @@ PLUGIN_EXPORT void Finalize(void* data) {
 	if (data == nullptr) {
 		return;
 	}
-	delete static_cast<utils::TypeHolder*>(data);
+	delete static_cast<rxtd::utils::TypeHolder*>(data);
 }
 
 PLUGIN_EXPORT void ExecuteBang(void* data, const wchar_t* args) {
 	if (data == nullptr) {
 		return;
 	}
-	static_cast<utils::TypeHolder*>(data)->command(args);
+	static_cast<rxtd::utils::TypeHolder*>(data)->command(args);
 }
 
 PLUGIN_EXPORT const wchar_t* resolve(void* data, const int argc, const wchar_t* argv[]) {
 	if (data == nullptr) {
 		return nullptr;
 	}
-	const auto result = static_cast<utils::TypeHolder*>(data)->resolve(argc, argv);
+	const auto result = static_cast<rxtd::utils::TypeHolder*>(data)->resolve(argc, argv);
 	return result;
 }

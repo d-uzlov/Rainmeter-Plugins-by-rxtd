@@ -12,6 +12,9 @@
 #include <atomic>
 #include <mutex>
 
+ // my-windows must be before any WINAPI include
+#include "my-windows.h"
+// ReSharper disable once CppWrongIncludesOrder
 #include <audiopolicy.h>
 
 #include "../IAudioClientWrapper.h"
@@ -53,7 +56,7 @@ namespace rxtd::audio_analyzer::wasapi_wrappers {
 
 		// I'm not sure, but we are changing the volume inside listener on volume changes
 		// We can potentially receive event of our own actions
-		// (ideally I would research now this really works and not just throw check here to be safe but that requires time which I don't have)
+		// (ideally I would research how this really works and not just throw check here to be safe but that requires time which I don't have)
 		// Due to the use of a mutex deadlock can occur
 		// This atomic prevents this
 		// I can't use std::mutex#try_lock for this purpose because it can spuriously fail
@@ -173,7 +176,7 @@ namespace rxtd::audio_analyzer::wasapi_wrappers {
 			if (!preventVolumeChange || !mainVolumeControllerIsValid.load()) {
 				return S_OK;
 			}
-
+			
 			if (recursionAtomic.load()) {
 				return S_OK;
 			}

@@ -13,7 +13,7 @@
 
 #include "StringUtils.h"
 
-using namespace perfmon::pdh;
+using namespace rxtd::perfmon::pdh;
 
 using namespace std::string_view_literals;
 
@@ -85,7 +85,7 @@ void NamesManager::generateSearchNames() {
 	CharUpperBuffW(buffer.data(), int32_t(namesBuffer - buffer.data()));
 }
 
-sview NamesManager::copyString(sview source, wchar_t* dest) {
+rxtd::sview NamesManager::copyString(sview source, wchar_t* dest) {
 	std::copy(source.begin(), source.end(), dest);
 	return { dest, source.length() };
 }

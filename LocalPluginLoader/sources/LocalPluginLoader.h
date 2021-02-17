@@ -12,24 +12,26 @@
 #include <my-windows.h>
 #include "rainmeter/Rainmeter.h"
 
-class LocalPluginLoader : NonMovableBase {
-	common::rainmeter::Rainmeter rain;
-	common::rainmeter::Logger logger;
-	HMODULE hLib = {};
-	void* pluginData = nullptr;
+namespace rxtd::local_plugin_loader {
+	class LocalPluginLoader : NonMovableBase {
+		common::rainmeter::Rainmeter rain;
+		common::rainmeter::Logger logger;
+		HMODULE hLib = {};
+		void* pluginData = nullptr;
 
-	void (*reloadFunc)(void* data, void* rm, double* maxValue) = nullptr;
-	double (*updateFunc)(void* data) = nullptr;
-	const wchar_t* (*getStringFunc)(void* data) = nullptr;
-	void (*executeBangFunc)(void* data, const wchar_t* args) = nullptr;
+		void (*reloadFunc)(void* data, void* rm, double* maxValue) = nullptr;
+		double (*updateFunc)(void* data) = nullptr;
+		const wchar_t* (*getStringFunc)(void* data) = nullptr;
+		void (*executeBangFunc)(void* data, const wchar_t* args) = nullptr;
 
-public:
-	LocalPluginLoader(void* rm);
-	~LocalPluginLoader();
-	
-	void reload(double* maxValue, void* rm) const;
-	double update() const;
-	const wchar_t* getStringValue() const;
-	void executeBang(const wchar_t* args) const;
-	const wchar_t* solveSectionVariable(int count, const wchar_t* args[]);
-};
+	public:
+		LocalPluginLoader(void* rm);
+		~LocalPluginLoader();
+
+		void reload(double* maxValue, void* rm) const;
+		double update() const;
+		const wchar_t* getStringValue() const;
+		void executeBang(const wchar_t* args) const;
+		const wchar_t* solveSectionVariable(int count, const wchar_t* args[]);
+	};
+}

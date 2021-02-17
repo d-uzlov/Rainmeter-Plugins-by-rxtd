@@ -17,7 +17,7 @@
 
 #include "winapi-wrappers/PropertyStoreWrapper.h"
 
-using namespace ::rxtd::audio_analyzer::wasapi_wrappers;
+using namespace rxtd::audio_analyzer::wasapi_wrappers;
 
 MediaDeviceWrapper::DeviceInfo MediaDeviceWrapper::readDeviceInfo() noexcept(false) {
 	if (!isValid()) {
@@ -53,7 +53,7 @@ IAudioClientWrapper MediaDeviceWrapper::openAudioClient() {
 	};
 }
 
-sview MediaDeviceWrapper::convertFormFactor(std::optional<EndpointFormFactor> valueOpt) {
+rxtd::sview MediaDeviceWrapper::convertFormFactor(std::optional<EndpointFormFactor> valueOpt) {
 	if (!valueOpt.has_value()) {
 		return L"";
 	}

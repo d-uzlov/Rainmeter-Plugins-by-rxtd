@@ -11,7 +11,7 @@
 #include "StringUtils.h"
 #include "Tokenizer.h"
 
-using namespace common::options;
+using namespace rxtd::common::options;
 
 OptionMap::OptionMap(sview view, wchar_t optionDelimiter, wchar_t nameDelimiter) :
 	OptionBase(view), optionDelimiter(optionDelimiter), nameDelimiter(nameDelimiter) {
@@ -38,7 +38,7 @@ bool OptionMap::has(isview name) const {
 	return optionInfoPtr != nullptr;
 }
 
-std::vector<isview> OptionMap::getListOfUntouched() const {
+std::vector<rxtd::isview> OptionMap::getListOfUntouched() const {
 	std::vector<isview> result;
 
 	for (auto [name, valueInfo] : params) {

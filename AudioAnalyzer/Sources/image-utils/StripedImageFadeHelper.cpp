@@ -10,7 +10,7 @@
 #include "StripedImageFadeHelper.h"
 #include "IntMixer.h"
 
-using namespace utils;
+using namespace rxtd::utils;
 
 void StripedImageFadeHelper::inflate(array2d_view<IntColor> source) {
 	const index height = source.getBuffersCount();

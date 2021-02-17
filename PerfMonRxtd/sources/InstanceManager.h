@@ -25,6 +25,7 @@ namespace rxtd::perfmon {
 		double sortValue = 0.0;
 		Indices indices;
 
+		[[nodiscard]]
 		Indices getFirst() const {
 			return indices;
 		}
@@ -35,6 +36,7 @@ namespace rxtd::perfmon {
 		sview sortName;
 		double sortValue = 0.0;
 
+		[[nodiscard]]
 		Indices getFirst() const {
 			return indices.front();
 		}
@@ -42,7 +44,7 @@ namespace rxtd::perfmon {
 
 	class InstanceManager {
 	public:
-		using Logger = ::rxtd::common::rainmeter::Logger;
+		using Logger = common::rainmeter::Logger;
 
 		enum class SortBy {
 			eNONE,
@@ -357,8 +359,8 @@ namespace rxtd::perfmon {
 }
 
 template<>
-inline std::optional<perfmon::InstanceManager::SortBy> parseEnum<perfmon::InstanceManager::SortBy>(isview name) {
-	using SortBy = perfmon::InstanceManager::SortBy;
+inline std::optional<rxtd::perfmon::InstanceManager::SortBy> parseEnum<rxtd::perfmon::InstanceManager::SortBy>(rxtd::isview name) {
+	using SortBy = rxtd::perfmon::InstanceManager::SortBy;
 	if (name == L"None")
 		return SortBy::eNONE;
 	else if (name == L"InstanceName")
@@ -378,8 +380,8 @@ inline std::optional<perfmon::InstanceManager::SortBy> parseEnum<perfmon::Instan
 }
 
 template<>
-inline std::optional<perfmon::InstanceManager::SortOrder> parseEnum<perfmon::InstanceManager::SortOrder>(isview name) {
-	using SortOrder = perfmon::InstanceManager::SortOrder;
+inline std::optional<rxtd::perfmon::InstanceManager::SortOrder> parseEnum<rxtd::perfmon::InstanceManager::SortOrder>(rxtd::isview name) {
+	using SortOrder = rxtd::perfmon::InstanceManager::SortOrder;
 	if (name == L"Descending")
 		return SortOrder::eDESCENDING;
 	else if (name == L"Ascending")

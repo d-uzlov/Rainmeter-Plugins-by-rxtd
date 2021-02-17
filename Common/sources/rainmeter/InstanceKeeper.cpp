@@ -33,25 +33,25 @@
 // See InstanceKeeper.h for reasoning for this solution.
 // 
 
-using namespace ::rxtd::common::rainmeter;
+using namespace rxtd::common::rainmeter;
 
 using Message = InstanceKeeper::Message;
 
-struct MessageQueue : DataWithLock {
+struct MessageQueue : rxtd::DataWithLock {
 	std::vector<Message> buffer;
 	std::condition_variable sleepVariable;
 
 	MessageQueue() : DataWithLock(true) { }
 };
 
-static constexpr index cCRITICAL_MESSAGES_COUNT = 100;
+static constexpr rxtd::index cCRITICAL_MESSAGES_COUNT = 100;
 
 struct ThreadArguments {
 	HMODULE dllHandle = nullptr;
 };
 
 std::atomic<int32_t> counter = 0;
-struct ThreadGuard : DataWithLock {
+struct ThreadGuard : rxtd::DataWithLock {
 	bool threadIsRunning = false;
 };
 

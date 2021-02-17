@@ -21,8 +21,7 @@ namespace rxtd::audio_analyzer {
 			SoundHandlerBase::ExternalData data;
 			SoundHandlerBase::ExternalMethods::FinishMethodType finisher = nullptr;
 		};
-
-		// handlerName → handlerData for cleanup
+		
 		using ProcessingCleanersMap = std::map<istring, CleanerData, std::less<>>;
 		using CleanersMap = std::map<istring, ProcessingCleanersMap, std::less<>>;
 
@@ -45,7 +44,9 @@ namespace rxtd::audio_analyzer {
 			void setLogger(Logger logger);
 
 			void reset();
-		} logHelpers;
+		};
+
+		mutable LogHelpers logHelpers;
 
 		Version version{};
 		ParamParser paramParser;
@@ -81,7 +82,7 @@ namespace rxtd::audio_analyzer {
 
 	private:
 		void initLogHelpers();
-		
+
 		void runFinisher(
 			SoundHandlerBase::ExternalMethods::FinishMethodType finisher,
 			const SoundHandlerBase::ExternalData& handlerData,

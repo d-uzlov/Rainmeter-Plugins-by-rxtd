@@ -13,9 +13,9 @@
 
 #include "Audioclient.h"
 
-using namespace ::rxtd::common::winapi_wrappers;
+using namespace rxtd::common::winapi_wrappers;
 
-static std::optional<sview> formatWinApiCode(index value) {
+static std::optional<rxtd::sview> formatWinApiCode(rxtd::index value) {
 	switch (uint32_t(value)) {
 	case uint32_t(E_POINTER): return L"E_POINTER";
 	case uint32_t(E_OUTOFMEMORY): return L"E_OUTOFMEMORY";

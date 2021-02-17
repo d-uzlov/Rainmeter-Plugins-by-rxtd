@@ -9,7 +9,7 @@
 
 #include "StringUtils.h"
 
-using namespace utils;
+using namespace rxtd::utils;
 
 SubstringViewInfo SubstringViewInfo::substr(
 	index subOffset,
@@ -49,7 +49,7 @@ SubstringViewInfo StringUtils::trimInfo(const wchar_t* base, SubstringViewInfo v
 	return viewInfo.substr(begin, end - begin + 1);
 }
 
-index StringUtils::parseInt(sview view) {
+rxtd::index StringUtils::parseInt(sview view) {
 	view = trim(view);
 
 	bool hex = false;

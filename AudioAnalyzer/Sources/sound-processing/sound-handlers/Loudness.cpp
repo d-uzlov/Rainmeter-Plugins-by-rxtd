@@ -11,7 +11,7 @@
 
 #include "MyMath.h"
 
-using namespace audio_analyzer;
+using namespace rxtd::audio_analyzer;
 
 SoundHandlerBase::ParseResult Loudness::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,

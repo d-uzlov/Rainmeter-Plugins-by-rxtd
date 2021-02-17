@@ -10,7 +10,7 @@
 #include "BQFilterBuilder.h"
 #include "MyMath.h"
 
-using namespace audio_utils;
+using namespace rxtd::audio_utils;
 
 // Based on formulas from Audio-EQ-Cookbook
 

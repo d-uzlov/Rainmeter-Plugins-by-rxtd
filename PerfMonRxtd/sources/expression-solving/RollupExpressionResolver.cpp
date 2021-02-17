@@ -15,12 +15,12 @@
 #include "expressions/ASTSolver.h"
 #include "option-parsing/OptionList.h"
 
-using namespace perfmon;
+using namespace rxtd::perfmon;
 
 RollupExpressionResolver::RollupExpressionResolver(Logger log, const InstanceManager& instanceManager, ExpressionSolver& simpleExpressionSolver) :
 	log(std::move(log)), instanceManager(instanceManager), simpleExpressionSolver(simpleExpressionSolver) {}
 
-index RollupExpressionResolver::getExpressionsCount() const {
+rxtd::index RollupExpressionResolver::getExpressionsCount() const {
 	return index(expressions.size());
 }
 

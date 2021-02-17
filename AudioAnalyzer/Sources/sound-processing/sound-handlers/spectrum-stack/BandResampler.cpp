@@ -15,7 +15,7 @@
 
 using namespace std::string_literals;
 
-using namespace audio_analyzer;
+using namespace rxtd::audio_analyzer;
 
 SoundHandlerBase::ParseResult BandResampler::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,

@@ -12,7 +12,7 @@
 
 #include "FftAnalyzer.h"
 
-using namespace audio_analyzer;
+using namespace rxtd::audio_analyzer;
 
 SoundHandlerBase::ParseResult FftAnalyzer::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,

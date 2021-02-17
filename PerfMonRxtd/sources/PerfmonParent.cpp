@@ -14,7 +14,7 @@
 #include "PerfmonParent.h"
 #include "option-parsing/OptionList.h"
 
-using namespace perfmon;
+using namespace rxtd::perfmon;
 
 PerfmonParent::PerfmonParent(Rainmeter&& _rain) : ParentBase(std::move(_rain)) {
 	setUseResultString(true);

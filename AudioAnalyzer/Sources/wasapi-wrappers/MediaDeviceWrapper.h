@@ -9,6 +9,9 @@
 
 #pragma once
 
+// my-windows must be before any WINAPI include
+#include "my-windows.h"
+// ReSharper disable once CppWrongIncludesOrder
 #include <endpointvolume.h>
 #include <mmdeviceapi.h>
 

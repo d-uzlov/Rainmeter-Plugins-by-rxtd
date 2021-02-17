@@ -10,6 +10,8 @@
 #include "LocalPluginLoader.h"
 #include "StringUtils.h"
 
+using namespace rxtd::local_plugin_loader;
+
 LocalPluginLoader::LocalPluginLoader(void* rm) {
 	rain = common::rainmeter::Rainmeter{ rm };
 	logger = rain.createLogger();

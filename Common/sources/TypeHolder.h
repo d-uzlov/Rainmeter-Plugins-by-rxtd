@@ -80,7 +80,7 @@ namespace rxtd::utils {
 	};
 
 	class ParentBase : public TypeHolder {
-		using SkinHandle = ::rxtd::common::rainmeter::SkinHandle;
+		using SkinHandle = common::rainmeter::SkinHandle;
 		using ParentMeasureName = istring;
 		using SkinMap = std::map<ParentMeasureName, ParentBase*, std::less<>>;
 		static std::map<SkinHandle, SkinMap> globalMeasuresMap;

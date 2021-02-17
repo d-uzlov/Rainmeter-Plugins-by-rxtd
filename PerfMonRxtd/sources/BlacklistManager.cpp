@@ -13,7 +13,7 @@
 #include "option-parsing/Option.h"
 #include "option-parsing/OptionList.h"
 
-using namespace perfmon;
+using namespace rxtd::perfmon;
 
 BlacklistManager::MatchList::MatchList(string sourceString, bool upperCase) {
 	auto [_, optList] = common::options::Option{ sourceString }.asList(L'|').consume();

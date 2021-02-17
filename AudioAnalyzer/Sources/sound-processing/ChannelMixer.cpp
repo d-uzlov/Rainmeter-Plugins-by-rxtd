@@ -12,7 +12,7 @@
 
 #include <set>
 
-using namespace audio_analyzer;
+using namespace rxtd::audio_analyzer;
 
 void ChannelMixer::setLayout(const ChannelLayout& _layout) {
 	if (layout == _layout) {

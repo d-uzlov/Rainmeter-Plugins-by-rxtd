@@ -11,7 +11,7 @@
 
 #include "StringUtils.h"
 
-using namespace common::expressions;
+using namespace rxtd::common::expressions;
 
 void ASTParser::setGrammar(const GrammarDescription& grammarDescription, bool allowFreeFunctions) {
 	functionParsingIsAllowed = allowFreeFunctions;

@@ -14,13 +14,11 @@
 
 //
 // I created BufferPrinter class long time ago as an exercise for variadic templates.
-// It doesn't have any real advantages compared to the famous fmt library, for example
+// It doesn't have any real advantages compared to, for example, the famous fmt library
 // but it works, I don't really need more functions then BufferPrinter supports,
 // so I don't see any reason to get rid of it.
 //
 namespace rxtd::common::buffer_printer {
-	using ::operator<<;
-
 	template<typename E>
 	sview getEnumName(E value) {
 		return L"<unknown enum>";
@@ -96,11 +94,12 @@ namespace rxtd::common::buffer_printer {
 	//	• Enums: use "{name}" to call function getEnumName(EnumType), which must be provided by user.
 	//		Default getEnumName always returns "<unknown enum>".
 	//	• Bool: use "{number}" to print as 0 or 1. Default behaviour is printing "true" or "false"
-	//	• std::vector: not options, prints [value1, value2] using operator<<(std::owstream) on vector type
+	//	• std::vector: no options, prints [value1, value2] using operator<<(std::owstream) on vector type
 	//
 	class BufferPrinter {
 		ReadableStreamBuffer buffer;
-		const wchar_t* formatString = nullptr;
+		const wchar_t* formatStringCurrent = nullptr;
+		const wchar_t* formatStringEnd = nullptr;
 		bool skipUnlistedArgs = true;
 
 	public:
@@ -125,10 +124,11 @@ namespace rxtd::common::buffer_printer {
 		}
 
 		template<typename... Args>
-		void append(const wchar_t* formatString, const Args&... args) {
-			this->formatString = formatString;
+		void append(sview formatString, const Args&... args) {
+			this->formatStringCurrent = formatString.data();
+			this->formatStringEnd = formatString.data() + formatString.size();
 			writeToStream(args...);
-			this->formatString = nullptr;
+			this->formatStringCurrent = nullptr;
 		}
 
 		void reset() {
@@ -152,15 +152,15 @@ namespace rxtd::common::buffer_printer {
 		// I'm not proud of this function but it works, so I just don't touch it
 		template<typename T, typename... Args>
 		void writeToStream(const T& t, const Args&... args) {
-			auto begin = formatString;
+			auto begin = formatStringCurrent;
 			std::optional<sview> option;
 
 			std::wostream stream = std::wostream(&buffer);
 
 			while (true) {
-				auto current = formatString[0];
+				auto current = formatStringCurrent[0];
 
-				if (current == L'\0') {
+				if (formatStringCurrent == formatStringEnd || current == L'\0') {
 					stream << begin;
 
 					writeUnlisted(t, args...);
@@ -168,18 +168,18 @@ namespace rxtd::common::buffer_printer {
 				}
 
 				if (current != L'{') {
-					formatString++;
+					formatStringCurrent++;
 					continue;
 				}
 
 				// current == L'{'
-				stream << sview(begin, formatString - begin);
+				stream << sview(begin, formatStringCurrent - begin);
 
-				formatString++;
-				begin = formatString;
+				formatStringCurrent++;
+				begin = formatStringCurrent;
 				auto end = begin;
 				while (true) {
-					current = formatString[0];
+					current = formatStringCurrent[0];
 
 					if (current == L'\0') {
 						stream << L'{';
@@ -190,11 +190,11 @@ namespace rxtd::common::buffer_printer {
 					}
 
 					if (current == L'}') {
-						end = formatString;
-						formatString++;
+						end = formatStringCurrent;
+						formatStringCurrent++;
 						break;
 					}
-					formatString++;
+					formatStringCurrent++;
 				}
 
 				const auto view = sview(begin, end - begin);
@@ -206,7 +206,7 @@ namespace rxtd::common::buffer_printer {
 					break;
 				}
 
-				formatString++;
+				formatStringCurrent++;
 			}
 
 			if (!option.has_value()) {
@@ -220,7 +220,7 @@ namespace rxtd::common::buffer_printer {
 
 		void writeToStream() {
 			std::wostream stream = std::wostream(&buffer);
-			stream << formatString;
+			stream << formatStringCurrent;
 		}
 
 		template<typename T, typename... Args>

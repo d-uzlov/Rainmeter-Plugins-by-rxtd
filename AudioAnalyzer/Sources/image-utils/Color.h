@@ -41,7 +41,7 @@ namespace rxtd::utils {
 			} tv;
 		} _{};
 
-		float alpha = 1.0;
+		float alpha = 1.0f;
 		Mode mode = Mode::eRGB;
 
 	public:

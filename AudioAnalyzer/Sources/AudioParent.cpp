@@ -11,7 +11,7 @@
 
 #include "ParamParser.h"
 
-using namespace audio_analyzer;
+using namespace rxtd::audio_analyzer;
 
 void AudioParent::LogHelpers::setLogger(Logger logger) {
 	generic.setLogger(logger);
@@ -456,7 +456,7 @@ bool AudioParent::isHandlerShouldExist(isview procName, Channel channel, isview 
 	return true;
 }
 
-isview AudioParent::findProcessingFor(isview handlerName) const {
+rxtd::isview AudioParent::findProcessingFor(isview handlerName) const {
 	for (auto& [name, pd] : paramParser.getParseResult()) {
 		auto& patchers = pd.handlersInfo.patchers;
 		if (patchers.find(handlerName) != patchers.end()) {

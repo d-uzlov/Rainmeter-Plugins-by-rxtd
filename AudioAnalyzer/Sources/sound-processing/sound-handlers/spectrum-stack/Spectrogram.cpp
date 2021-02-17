@@ -18,9 +18,9 @@
 
 using namespace std::string_literals;
 
-using namespace audio_analyzer;
+using namespace rxtd::audio_analyzer;
 
-using utils::Color;
+using rxtd::utils::Color;
 
 SoundHandlerBase::ParseResult Spectrogram::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,

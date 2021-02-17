@@ -11,7 +11,7 @@
 
 #include "IntMixer.h"
 
-using namespace utils;
+using namespace rxtd::utils;
 
 void WaveFormDrawer::setImageParams(index width, index height, bool stationary) {
 	if (width == this->width && height == this->height) {

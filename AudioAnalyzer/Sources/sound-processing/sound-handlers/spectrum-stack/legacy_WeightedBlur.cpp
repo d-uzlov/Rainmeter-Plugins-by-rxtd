@@ -9,7 +9,7 @@
 
 #include "legacy_WeightedBlur.h"
 
-using namespace audio_analyzer;
+using namespace rxtd::audio_analyzer;
 
 SoundHandlerBase::ParseResult legacy_WeightedBlur::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,

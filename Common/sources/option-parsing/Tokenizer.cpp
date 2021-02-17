@@ -9,8 +9,8 @@
 
 #include "Tokenizer.h"
 
-using namespace common::options;
-using SubstringViewInfo = utils::SubstringViewInfo;
+using namespace rxtd::common::options;
+using SubstringViewInfo = rxtd::utils::SubstringViewInfo;
 
 std::vector<SubstringViewInfo> Tokenizer::parse(sview view, wchar_t delimiter) {
 	// this method is guarantied to return non empty views

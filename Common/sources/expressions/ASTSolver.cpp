@@ -9,7 +9,7 @@
 
 #include "ASTSolver.h"
 
-using namespace common::expressions;
+using namespace rxtd::common::expressions;
 
 ASTSolver::ASTSolver() {
 	tree.allocateNode<ast_nodes::ConstantNode>(0.0);

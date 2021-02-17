@@ -15,8 +15,8 @@
 
 #include "MyMath.h"
 
-using namespace ::rxtd::audio_utils;
-using namespace ::rxtd::common::options;
+using namespace rxtd::audio_utils;
+using namespace rxtd::common::options;
 using CVT = CustomizableValueTransformer;
 
 double CVT::apply(double value) {

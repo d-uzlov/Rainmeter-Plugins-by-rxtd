@@ -11,7 +11,7 @@
 #include "expression-solving/ExpressionSolver.h"
 #include "expression-solving/RollupExpressionResolver.h"
 
-using namespace perfmon;
+using namespace rxtd::perfmon;
 
 InstanceManager::InstanceManager(Logger log, const pdh::PdhWrapper& phWrapper) :
 	log(std::move(log)), pdhWrapper(phWrapper) { }
@@ -89,11 +89,11 @@ void InstanceManager::update() {
 	}
 }
 
-index InstanceManager::findPreviousName(pdh::UniqueInstanceId uniqueId, index hint) const {
+rxtd::index InstanceManager::findPreviousName(pdh::UniqueInstanceId uniqueId, index hint) const {
 	// try to find a match for the current instance name in the previous buffer
 	// counter buffers tend to be *mostly* aligned, so we'll try to short-circuit a full search
 
-	const auto itemCountPrevious = idsPrevious.size();
+	const auto itemCountPrevious = index(idsPrevious.size());
 
 	// try for a direct hit
 	auto previousInx = std::clamp<index>(hint, 0, itemCountPrevious - 1);

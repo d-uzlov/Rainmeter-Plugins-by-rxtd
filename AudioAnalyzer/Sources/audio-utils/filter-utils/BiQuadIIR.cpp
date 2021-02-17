@@ -10,7 +10,7 @@
 #include "BiQuadIIR.h"
 #include "MyMath.h"
 
-using namespace audio_utils;
+using namespace rxtd::audio_utils;
 
 BiQuadIIR::BiQuadIIR(double _a0, double _a1, double _a2, double _b0, double _b1, double _b2) {
 	a1 = _a1 / _a0;

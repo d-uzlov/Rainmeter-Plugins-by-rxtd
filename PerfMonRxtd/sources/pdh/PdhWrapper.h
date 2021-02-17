@@ -35,8 +35,8 @@ namespace rxtd::perfmon::pdh {
 	};
 
 	class PdhWrapper : MovableOnlyBase {
-		using Logger = ::rxtd::common::rainmeter::Logger;
-		using OptionList = ::rxtd::common::options::OptionList;
+		using Logger = common::rainmeter::Logger;
+		using OptionList = common::options::OptionList;
 		
 		struct QueryWrapper : MovableOnlyBase {
 			PDH_HQUERY handle = nullptr;

@@ -16,7 +16,7 @@ namespace rxtd::audio_utils {
 		// http://en.wikipedia.org/wiki/Window_function
 
 	public:
-		using Logger = ::rxtd::common::rainmeter::Logger;
+		using Logger = common::rainmeter::Logger;
 		using WindowCreationFunc = std::function<std::vector<float>(index size)>;
 
 		static WindowCreationFunc parse(sview desc, Logger& cl);

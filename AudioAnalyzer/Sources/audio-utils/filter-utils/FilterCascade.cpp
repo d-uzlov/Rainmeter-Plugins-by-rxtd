@@ -9,7 +9,7 @@
 
 #include "FilterCascade.h"
 
-using namespace audio_utils;
+using namespace rxtd::audio_utils;
 
 void FilterCascade::apply(array_view<float> wave) {
 	wave.transferToVector(processed);

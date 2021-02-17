@@ -30,10 +30,10 @@
 #include <utility>
 
 #include "BufferPrinter.h"
-#include "rainmeter/Rainmeter.h"
 #include "Vector2D.h"
 #include "../../Version.h"
 #include "option-parsing/OptionMap.h"
+#include "rainmeter/Rainmeter.h"
 
 namespace rxtd::audio_analyzer {
 	class SoundHandlerBase;
@@ -48,14 +48,14 @@ namespace rxtd::audio_analyzer {
 
 	class SoundHandlerBase : VirtualDestructorBase {
 	public:
-		using Option = ::rxtd::common::options::Option;
-		using OptionMap = ::rxtd::common::options::OptionMap;
-		using OptionList = ::rxtd::common::options::OptionList;
-		using Rainmeter = ::rxtd::common::rainmeter::Rainmeter;
-		using Logger = ::rxtd::common::rainmeter::Logger;
+		using Option = common::options::Option;
+		using OptionMap = common::options::OptionMap;
+		using OptionList = common::options::OptionList;
+		using Rainmeter = common::rainmeter::Rainmeter;
+		using Logger = common::rainmeter::Logger;
 		using clock = std::chrono::high_resolution_clock;
 		static_assert(clock::is_steady);
-		using BufferPrinter = ::rxtd::common::buffer_printer::BufferPrinter;
+		using BufferPrinter = common::buffer_printer::BufferPrinter;
 
 		class TooManyValuesException : public std::runtime_error {
 			string sourceName;

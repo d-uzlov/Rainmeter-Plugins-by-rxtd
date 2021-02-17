@@ -13,13 +13,13 @@
 #include "TotalUtilities.h"
 #include "option-parsing/OptionList.h"
 
-using namespace perfmon;
+using namespace rxtd::perfmon;
 
 ExpressionSolver::ExpressionSolver(Logger log, const InstanceManager& instanceManager) :
 	log(std::move(log)),
 	instanceManager(instanceManager) {}
 
-index ExpressionSolver::getExpressionsCount() const {
+rxtd::index ExpressionSolver::getExpressionsCount() const {
 	return index(expressions.size());
 }
 

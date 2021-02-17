@@ -9,9 +9,9 @@
 
 #include "CaptureManager.h"
 
-using namespace audio_analyzer;
+using namespace rxtd::audio_analyzer;
 
-using ComException = ::rxtd::common::winapi_wrappers::ComException;
+using ComException = rxtd::common::winapi_wrappers::ComException;
 
 void CaptureManager::setBufferSizeInSec(double value) {
 	bufferSizeSec = std::clamp(value, 0.0, 1.0);
@@ -268,7 +268,7 @@ std::optional<wasapi_wrappers::MediaDeviceWrapper> CaptureManager::getDevice(con
 	return {};
 }
 
-string CaptureManager::makeFormatString(wasapi_wrappers::WaveFormat waveFormat) {
+rxtd::string CaptureManager::makeFormatString(wasapi_wrappers::WaveFormat waveFormat) {
 	common::buffer_printer::BufferPrinter bp;
 
 	if (waveFormat.channelLayout.getName().empty()) {
@@ -387,7 +387,7 @@ void CaptureManager::createExclusiveStreamListener() {
 	logger.notice(L"{}", bp.getBufferView());
 }
 
-std::vector<common::winapi_wrappers::GenericComWrapper<IAudioSessionControl>> CaptureManager::getActiveSessions() noexcept(false) {
+std::vector<rxtd::common::winapi_wrappers::GenericComWrapper<IAudioSessionControl>> CaptureManager::getActiveSessions() noexcept(false) {
 	std::vector<GenericComWrapper<IAudioSessionControl>> result;
 
 	auto sessionManager = audioDeviceHandle.activateFor<IAudioSessionManager2>();

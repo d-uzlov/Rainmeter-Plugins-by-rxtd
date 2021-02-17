@@ -11,7 +11,7 @@
 #include <my-windows.h>
 #include <Audioclient.h>
 
-using namespace audio_analyzer;
+using namespace rxtd::audio_analyzer;
 
 std::optional<Channel> ChannelUtils::parse(isview string) {
 	if (string == L"Auto") {
@@ -48,7 +48,7 @@ std::optional<Channel> ChannelUtils::parse(isview string) {
 	return {};
 }
 
-sview ChannelUtils::getTechnicalName(Channel channel) {
+rxtd::sview ChannelUtils::getTechnicalName(Channel channel) {
 	switch (channel) {
 	case Channel::eFRONT_LEFT: return L"fl";
 	case Channel::eFRONT_RIGHT: return L"fr";
@@ -64,7 +64,7 @@ sview ChannelUtils::getTechnicalName(Channel channel) {
 	return {};
 }
 
-sview ChannelUtils::getTechnicalNameLegacy(Channel channel) {
+rxtd::sview ChannelUtils::getTechnicalNameLegacy(Channel channel) {
 	switch (channel) {
 	case Channel::eFRONT_LEFT: return L"FRONT_LEFT";
 	case Channel::eFRONT_RIGHT: return L"FRONT_RIGHT";
@@ -96,7 +96,7 @@ ChannelLayout::ChannelLayout(sview _name, std::vector<std::optional<Channel>> ch
 	}
 }
 
-std::optional<index> ChannelLayout::indexOf(Channel channel) const {
+std::optional<rxtd::index> ChannelLayout::indexOf(Channel channel) const {
 	const auto iter = channelMap.find(channel);
 	if (iter == channelMap.end()) {
 		return std::nullopt;
@@ -104,7 +104,7 @@ std::optional<index> ChannelLayout::indexOf(Channel channel) const {
 	return iter->second;
 }
 
-sview getLayoutName(uint32_t bitMask) {
+rxtd::sview getLayoutName(uint32_t bitMask) {
 	switch (bitMask) {
 	case KSAUDIO_SPEAKER_MONO: return L"1.0 mono";
 	case KSAUDIO_SPEAKER_1POINT1: return L"1.1";

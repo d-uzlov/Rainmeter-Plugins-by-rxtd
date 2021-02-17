@@ -212,7 +212,6 @@
     <ClInclude Include="sources\winapi-wrappers\implementations\IUnknownImpl.h" />
     <ClInclude Include="sources\winapi-wrappers\PropertyStoreWrapper.h" />
     <ClInclude Include="sources\winapi-wrappers\WinApiReturnCode.h" />
-    <ClInclude Include="undef.h" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="array_view.natvis" />

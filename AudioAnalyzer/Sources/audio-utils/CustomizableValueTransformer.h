@@ -16,8 +16,8 @@
 namespace rxtd::audio_utils {
 	class CustomizableValueTransformer {
 	public:
-		using Logger = ::rxtd::common::rainmeter::Logger;
-		using OptionList = ::rxtd::common::options::OptionList;
+		using Logger = common::rainmeter::Logger;
+		using OptionList = common::options::OptionList;
 
 		enum class TransformType {
 			eDB,

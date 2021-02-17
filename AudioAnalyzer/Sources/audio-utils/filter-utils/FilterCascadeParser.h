@@ -46,10 +46,10 @@ namespace rxtd::audio_utils {
 	public:
 		using FCF = FilterCascadeCreator::FilterCreationFunction;
 		
-		using Logger = ::rxtd::common::rainmeter::Logger;
-		using Option = ::rxtd::common::options::Option;
-		using OptionList = ::rxtd::common::options::OptionList;
-		using OptionMap = ::rxtd::common::options::OptionMap;
+		using Logger = common::rainmeter::Logger;
+		using Option = common::options::Option;
+		using OptionList = common::options::OptionList;
+		using OptionMap = common::options::OptionMap;
 
 		[[nodiscard]]
 		static FilterCascadeCreator parse(const Option& description, Logger& logger);

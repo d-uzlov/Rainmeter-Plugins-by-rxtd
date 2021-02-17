@@ -14,15 +14,15 @@ namespace rxtd::audio_analyzer {
 	template<typename... CacheTypes>
 	class LogErrorHelper {
 	public:
-		using Logger = ::rxtd::common::rainmeter::Logger;
+		using Logger = common::rainmeter::Logger;
 		using KeyType = std::tuple<CacheTypes...>;
 		using LogFunctionType = void(*)(Logger& logger, CacheTypes ... args);
 
 	private:
-		mutable Logger logger;
+		Logger logger;
 		LogFunctionType fun = nullptr;
 
-		mutable std::map<KeyType, bool> cache;
+		std::map<KeyType, bool> cache;
 
 	public:
 		void setLogger(Logger value) {
@@ -38,7 +38,7 @@ namespace rxtd::audio_analyzer {
 		}
 
 		template<typename... Args>
-		void log(Args ... args) const {
+		void log(Args ... args) {
 			auto& logged = cache[KeyType(args...)];
 			if (logged) {
 				return;
@@ -52,10 +52,10 @@ namespace rxtd::audio_analyzer {
 	};
 
 	class NoArgLogErrorHelper {
-		using Logger = ::rxtd::common::rainmeter::Logger;
-		mutable Logger logger;
+		using Logger = common::rainmeter::Logger;
 
-		mutable std::map<string, bool> cache;
+		Logger logger;
+		std::map<string, bool> cache;
 
 	public:
 		void setLogger(Logger value) {
@@ -66,13 +66,12 @@ namespace rxtd::audio_analyzer {
 			cache = {};
 		}
 
-		void log(const wchar_t* message) const {
-			auto& logged = cache[message];
+		void log(sview message) {
+			auto& logged = cache[message % own()];
 			if (logged) {
 				return;
 			}
 
-			// todo make log functions accept strings
 			logger.error(message);
 			logged = true;
 		}

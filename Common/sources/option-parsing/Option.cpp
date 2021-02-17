@@ -22,10 +22,10 @@
 #include "expressions/GrammarBuilder.h"
 #include "rainmeter/Logger.h"
 
-using namespace common::options;
-using StringUtils = utils::StringUtils;
+using namespace rxtd::common::options;
+using StringUtils = rxtd::utils::StringUtils;
 
-sview Option::asString(sview defaultValue) const & {
+rxtd::sview Option::asString(sview defaultValue) const & {
 	sview view = getView();
 	if (view.empty()) {
 		return defaultValue;
@@ -33,7 +33,7 @@ sview Option::asString(sview defaultValue) const & {
 	return view;
 }
 
-isview Option::asIString(isview defaultValue) const & {
+rxtd::isview Option::asIString(isview defaultValue) const & {
 	sview view = getView();
 	if (view.empty()) {
 		return defaultValue;
@@ -166,21 +166,23 @@ OptionSequence Option::asSequence(
 // on each call to Option#parseNumber().
 //
 class ParserKeeper {
-	struct ParserMap : public DataWithLock {
-		std::map<std::thread::id, std::unique_ptr<common::expressions::ASTParser>> m;
+	struct ParserMap : public rxtd::DataWithLock {
+		std::map<std::thread::id, std::unique_ptr<rxtd::common::expressions::ASTParser>> m;
 	};
 
 	ParserMap mapWithLock;
 
 public:
-	common::expressions::ASTParser& getParser(std::thread::id id = std::this_thread::get_id()) {
-		common::expressions::ASTParser* parserPtr = mapWithLock.runGuarded(
-			[&]() {
+	using ASTParser = rxtd::common::expressions::ASTParser;
+
+	ASTParser& getParser(std::thread::id id = std::this_thread::get_id()) {
+		ASTParser* parserPtr = mapWithLock.runGuarded(
+			[&]() -> ASTParser* {
 				auto& parserOpt = mapWithLock.m[id];
 				if (parserOpt == nullptr) {
-					parserOpt = std::make_unique<common::expressions::ASTParser>();
+					parserOpt = std::make_unique<ASTParser>();
 
-					parserOpt->setGrammar(common::expressions::GrammarBuilder::makeSimpleMath(), false);
+					parserOpt->setGrammar(rxtd::common::expressions::GrammarBuilder::makeSimpleMath(), false);
 				}
 
 				return parserOpt.get();

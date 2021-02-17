@@ -91,9 +91,6 @@
     <ClInclude Include="precompiled.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="undef.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="sources\CaseInsensitiveString.h">
       <Filter>Source Files</Filter>
     </ClInclude>

@@ -10,6 +10,8 @@
 #include "LocalPluginLoader.h"
 #include "RainmeterAPI.h"
 
+using LocalPluginLoader = rxtd::local_plugin_loader::LocalPluginLoader;
+
 PLUGIN_EXPORT void Initialize(void** data, void* rm) {
 	*data = new LocalPluginLoader(rm);
 }

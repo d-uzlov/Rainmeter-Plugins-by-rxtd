@@ -9,7 +9,7 @@
 
 #include "ParentHelper.h"
 
-using namespace audio_analyzer;
+using namespace rxtd::audio_analyzer;
 
 ParentHelper::~ParentHelper() {
 	threadSafeFields.notificationClient.ref().deinit(enumeratorWrapper);
@@ -410,7 +410,7 @@ bool ParentHelper::updateDeviceListStrings() {
 	return anyChanged;
 }
 
-string ParentHelper::makeDeviceListString(MediaDeviceType type) {
+rxtd::string ParentHelper::makeDeviceListString(MediaDeviceType type) {
 	string result;
 
 	auto collection = enumeratorWrapper.getActiveDevices(type);
@@ -486,7 +486,7 @@ string ParentHelper::makeDeviceListString(MediaDeviceType type) {
 	return result;
 }
 
-string ParentHelper::legacy_makeDeviceListString(MediaDeviceType type) {
+rxtd::string ParentHelper::legacy_makeDeviceListString(MediaDeviceType type) {
 	string result;
 
 	auto collection = enumeratorWrapper.getActiveDevices(type);

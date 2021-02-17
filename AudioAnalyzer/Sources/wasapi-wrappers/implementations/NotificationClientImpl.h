@@ -13,6 +13,9 @@
 #include <mutex>
 #include <set>
 
+// my-windows must be before any WINAPI include
+#include "my-windows.h"
+// ReSharper disable once CppWrongIncludesOrder
 #include <mmdeviceapi.h>
 
 #include "../IMMDeviceEnumeratorWrapper.h"
@@ -70,14 +73,15 @@ namespace rxtd::audio_analyzer::wasapi_wrappers {
 			}
 
 			defaultInputId = enumerator.getDefaultDevice(MediaDeviceType::eINPUT).value_or(MediaDeviceWrapper{}).getId();
-			defaultInputId = enumerator.getDefaultDevice(MediaDeviceType::eOUTPUT).value_or(MediaDeviceWrapper{}).getId();
+			defaultOutputId = enumerator.getDefaultDevice(MediaDeviceType::eOUTPUT).value_or(MediaDeviceWrapper{}).getId();
 		}
 
 		void deinit(IMMDeviceEnumeratorWrapper& enumerator) {
 			enumerator.ref().UnregisterEndpointNotificationCallback(this);
 		}
 
-		// callback should not call any methods of the object
+		// callback must not call any methods of the object
+		//		including #takeChanges()
 		// any such call will result in a deadlock
 		void setCallback(std::function<void()> value) {
 			auto lock = getLock();

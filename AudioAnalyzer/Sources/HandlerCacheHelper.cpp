@@ -28,7 +28,7 @@
 
 using namespace std::string_literals;
 
-using namespace audio_analyzer;
+using namespace rxtd::audio_analyzer;
 
 PatchInfo* HandlerCacheHelper::getHandler(const istring& name) {
 	auto& info = patchersCache[name];

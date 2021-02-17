@@ -9,9 +9,9 @@
 
 #include "TypeHolder.h"
 
-using namespace utils;
+using namespace rxtd::utils;
 
-std::map<common::rainmeter::SkinHandle, std::map<istring, ParentBase*, std::less<>>> ParentBase::globalMeasuresMap{}; // NOLINT(clang-diagnostic-exit-time-destructors)
+std::map<rxtd::common::rainmeter::SkinHandle, std::map<rxtd::istring, ParentBase*, std::less<>>> ParentBase::globalMeasuresMap{}; // NOLINT(clang-diagnostic-exit-time-destructors)
 
 TypeHolder::TypeHolder(Rainmeter&& _rain) : rain(std::move(_rain)) {
 	logger = rain.createLogger();

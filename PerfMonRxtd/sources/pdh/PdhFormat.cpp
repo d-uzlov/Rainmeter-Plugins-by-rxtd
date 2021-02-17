@@ -15,7 +15,7 @@
 #include <Pdh.h>
 #include <PdhMsg.h>
 
-static std::optional<sview> formatPdhCode(index code) {
+static std::optional<rxtd::sview> formatPdhCode(rxtd::index code) {
 	switch (uint32_t(code)) {
 	case uint32_t(PDH_CSTATUS_VALID_DATA): return L"PDH_CSTATUS_VALID_DATA";
 	case uint32_t(PDH_CSTATUS_NEW_DATA): return L"PDH_CSTATUS_NEW_DATA";
@@ -107,7 +107,7 @@ static std::optional<sview> formatPdhCode(index code) {
 	}
 }
 
-void perfmon::pdh::writeType(std::wostream& stream, const PdhReturnCode& code, sview options) {
+void rxtd::perfmon::pdh::writeType(std::wostream& stream, const PdhReturnCode& code, sview options) {
 	auto viewOpt = formatPdhCode(code.code);
 	if (viewOpt.has_value()) {
 		stream << viewOpt.value();

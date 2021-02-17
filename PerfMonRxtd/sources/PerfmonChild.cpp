@@ -10,7 +10,7 @@
 
 #include "PerfmonChild.h"
 
-using namespace perfmon;
+using namespace rxtd::perfmon;
 
 PerfmonChild::PerfmonChild(Rainmeter&& _rain) : TypeHolder(std::move(_rain)) {
 	auto parentName = rain.read(L"Parent").asIString();

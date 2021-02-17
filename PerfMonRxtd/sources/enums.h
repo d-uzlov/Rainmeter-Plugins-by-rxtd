@@ -27,8 +27,8 @@ namespace rxtd::perfmon {
 }
 
 template<>
-inline std::optional<perfmon::RollupFunction> parseEnum<perfmon::RollupFunction>(isview name) {
-	using RF = perfmon::RollupFunction;
+inline std::optional<rxtd::perfmon::RollupFunction> parseEnum<rxtd::perfmon::RollupFunction>(rxtd::isview name) {
+	using RF = rxtd::perfmon::RollupFunction;
 	if (name == L"Sum") {
 		return RF::eSUM;
 	} else if (name == L"Average") {
@@ -44,8 +44,8 @@ inline std::optional<perfmon::RollupFunction> parseEnum<perfmon::RollupFunction>
 }
 
 template<>
-inline std::optional<perfmon::ResultString> parseEnum<perfmon::ResultString>(isview name) {
-	using RS = perfmon::ResultString;
+inline std::optional<rxtd::perfmon::ResultString> parseEnum<rxtd::perfmon::ResultString>(rxtd::isview name) {
+	using RS = rxtd::perfmon::ResultString;
 	if (name == L"Number") {
 		return RS::eNUMBER;
 	} else if (name == L"OriginalName") {

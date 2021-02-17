@@ -9,7 +9,7 @@
 
 #include "MyMath.h"
 
-using namespace utils;
+using namespace rxtd::utils;
 
 const double MyMath::pi = std::acos(-1.0);
 

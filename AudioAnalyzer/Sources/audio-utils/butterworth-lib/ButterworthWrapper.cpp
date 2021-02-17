@@ -10,7 +10,7 @@
 #include "ButterworthWrapper.h"
 #include "iir.h"
 
-using namespace audio_utils;
+using namespace rxtd::audio_utils;
 
 using BW = ButterworthWrapper;
 using GCC = BW::GenericCoefCalculator;

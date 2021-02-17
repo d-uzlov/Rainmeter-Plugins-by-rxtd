@@ -13,7 +13,7 @@
 #include "StringUtils.h"
 #include "expressions/GrammarBuilder.h"
 
-using namespace perfmon;
+using namespace rxtd::perfmon;
 
 ExpressionParser::ExpressionParser() {
 	setGrammar(common::expressions::GrammarBuilder::makeSimpleMath(), false);

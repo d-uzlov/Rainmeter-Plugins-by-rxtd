@@ -10,7 +10,7 @@
 #include "SoundHandlerBase.h"
 #include "StringUtils.h"
 
-using namespace audio_analyzer;
+using namespace rxtd::audio_analyzer;
 
 bool SoundHandlerBase::patch(
 	string name,
@@ -75,7 +75,7 @@ bool SoundHandlerBase::patch(
 	return true;
 }
 
-index SoundHandlerBase::legacy_parseIndexProp(
+rxtd::index SoundHandlerBase::legacy_parseIndexProp(
 	const isview& request, const isview& propName,
 	index minBound, index endBound
 ) {

@@ -9,7 +9,7 @@
 
 #include "GrammarBuilder.h"
 
-using namespace common::expressions;
+using namespace rxtd::common::expressions;
 
 GrammarDescription GrammarBuilder::makeSimpleMath() {
 	GrammarBuilder builder;

@@ -18,7 +18,7 @@ namespace kiss_fft {
 	 * Returns the smallest integer k, such that k >= @c size and k has only "fast" factors (2,3,5)
 	 * If @c real is @c true, then returned value is guaranteed to be even.
 	 */
-	inline index calculateNextFastSize(index size, bool real) {
+	inline rxtd::index calculateNextFastSize(rxtd::index size, bool real) {
 		if (size == 0) {
 			return 0;
 		}

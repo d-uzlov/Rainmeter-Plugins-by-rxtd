@@ -9,6 +9,10 @@
 
 #pragma once
 #include <type_traits>
+
+// my-windows must be before any WINAPI include
+#include "my-windows.h"
+// ReSharper disable once CppWrongIncludesOrder
 #include <Unknwn.h>
 
 #include "ComException.h"

@@ -9,7 +9,7 @@
 
 #include "GaussianCoefficientsManager.h"
 
-using namespace audio_utils;
+using namespace rxtd::audio_utils;
 
 std::vector<double> GaussianCoefficientsManager::generateGaussianKernel(index radius) {
 	std::vector<double> kernel;

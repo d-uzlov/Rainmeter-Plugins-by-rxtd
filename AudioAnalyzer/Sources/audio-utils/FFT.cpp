@@ -9,7 +9,7 @@
 
 #include "FFT.h"
 
-using namespace audio_utils;
+using namespace rxtd::audio_utils;
 
 void FFT::setParams(index newSize, bool correctScalar, std::vector<float> _window) {
 	fftSize = newSize;

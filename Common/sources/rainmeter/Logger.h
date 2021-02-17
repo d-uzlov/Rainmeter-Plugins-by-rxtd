@@ -43,22 +43,22 @@ namespace rxtd::common::rainmeter {
 		explicit Logger(DataHandle dh, string prefix = {}) : dataHandle(dh), instanceKeeper(dh), prefix(std::move(prefix)) { }
 
 		template<typename... Args>
-		void error(const wchar_t* formatString, const Args&... args) const {
+		void error(sview formatString, const Args&... args) const {
 			log(LogLevel::eERROR, formatString, args...);
 		}
 
 		template<typename... Args>
-		void warning(const wchar_t* formatString, const Args&... args) const {
+		void warning(sview formatString, const Args&... args) const {
 			log(LogLevel::eWARNING, formatString, args...);
 		}
 
 		template<typename... Args>
-		void notice(const wchar_t* formatString, const Args&... args) const {
+		void notice(sview formatString, const Args&... args) const {
 			log(LogLevel::eNOTICE, formatString, args...);
 		}
 
 		template<typename... Args>
-		void debug(const wchar_t* formatString, const Args&... args) const {
+		void debug(sview formatString, const Args&... args) const {
 			log(LogLevel::eDEBUG, formatString, args...);
 		}
 
@@ -85,7 +85,7 @@ namespace rxtd::common::rainmeter {
 
 	private:
 		template<typename... Args>
-		void log(LogLevel logLevel, const wchar_t* formatString, const Args&... args) const {
+		void log(LogLevel logLevel, sview formatString, const Args&... args) const {
 			if (isSilent) {
 				return;
 			}

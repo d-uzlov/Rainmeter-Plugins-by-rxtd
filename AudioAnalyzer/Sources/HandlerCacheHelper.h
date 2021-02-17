@@ -40,9 +40,9 @@ namespace rxtd::audio_analyzer {
 	};
 
 	class HandlerCacheHelper {
-		using Logger = ::rxtd::common::rainmeter::Logger;
-		using Rainmeter = ::rxtd::common::rainmeter::Rainmeter;
-		using OptionMap = ::rxtd::common::options::OptionMap;
+		using Logger = common::rainmeter::Logger;
+		using Rainmeter = common::rainmeter::Rainmeter;
+		using OptionMap = common::options::OptionMap;
 
 		struct HandlerRawInfo {
 			bool updated = false;
