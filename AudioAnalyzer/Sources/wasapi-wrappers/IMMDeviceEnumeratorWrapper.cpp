@@ -27,7 +27,7 @@ std::optional<MediaDeviceWrapper> IMMDeviceEnumeratorWrapper::getDeviceByID(cons
 	try {
 		return MediaDeviceWrapper{
 			[&](auto ptr) {
-				throwOnError(ref().GetDevice(id.c_str(), ptr), {});
+				throwOnError(ref().GetDevice(id.c_str(), ptr), L"Device with specified id is not found");
 				return true;
 			},
 			id
@@ -41,11 +41,14 @@ std::optional<MediaDeviceWrapper> IMMDeviceEnumeratorWrapper::getDefaultDevice(M
 	try {
 		return MediaDeviceWrapper{
 			[&](auto ptr) {
-				return S_OK == ref().GetDefaultAudioEndpoint(
-					type == MediaDeviceType::eOUTPUT ? eRender : eCapture,
-					eConsole,
-					ptr
+				throwOnError(
+					ref().GetDefaultAudioEndpoint(
+						type == MediaDeviceType::eOUTPUT ? eRender : eCapture,
+						eConsole,
+						ptr
+					), L"Default audio device is not found"
 				);
+				return true;
 			},
 			type
 		};
