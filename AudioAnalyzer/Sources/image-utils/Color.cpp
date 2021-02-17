@@ -30,9 +30,8 @@ Color Color::parse(sview desc, Color defaultValue) {
 		components = colorDesc.asList(L',');
 
 		if (colorDesc.empty()) {
-			BufferPrinter bp;
-			bp.print(L"annotated color without color components: '{}'", desc);
-			Logger::sourcelessLog(bp.getBufferPtr());
+			Logger logger;
+			logger.error(L"annotated color without color components: '{}'", desc);
 			return defaultValue;
 		}
 
@@ -50,9 +49,8 @@ Color Color::parse(sview desc, Color defaultValue) {
 				result.mode = Mode::eRGB;
 
 				if (colorDesc.asString().size() != 6 && colorDesc.asString().size() != 8) {
-					BufferPrinter bp;
-					bp.print(L"can't parse '{}' as HEX color, need 6 or 8 digits", colorDesc);
-					Logger::sourcelessLog(bp.getBufferPtr());
+					Logger logger;
+					logger.error(L"can't parse '{}' as HEX color, need 6 or 8 digits", colorDesc);
 					return defaultValue;
 				}
 
@@ -77,15 +75,13 @@ Color Color::parse(sview desc, Color defaultValue) {
 
 	const auto count = components.size();
 	if (count < 3) {
-		BufferPrinter bp;
-		bp.print(L"can't parse '{}' as color: not enough color components: {}, but need 3 or 4", desc, count);
-		Logger::sourcelessLog(bp.getBufferPtr());
+		Logger logger;
+		logger.error(L"can't parse '{}' as color: not enough color components: {}, but need 3 or 4", desc, count);
 		return defaultValue;
 	}
 	if (count > 4) {
-		BufferPrinter bp;
-		bp.print(L"can't parse '{}' as color: too many color components: {}, but need 3 or 4", desc, count);
-		Logger::sourcelessLog(bp.getBufferPtr());
+		Logger logger;
+		logger.error(L"can't parse '{}' as color: too many color components: {}, but need 3 or 4", desc, count);
 		return defaultValue;
 	}
 

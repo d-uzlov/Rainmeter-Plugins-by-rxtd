@@ -36,7 +36,6 @@ namespace rxtd::common::rainmeter {
 	//	https://devblogs.microsoft.com/oldnewthing/20131105-00/?p=2733
 	// See my issue "ticket" that doesn't have any answer from Rainmeter devs at the moment of writing this comment:
 	//	https://forum.rainmeter.net/viewtopic.php?f=14&t=35948&p=182576
-	// See InstanceKeeper.cpp for details of implementation
 	//
 	// Usage:
 	//
@@ -46,11 +45,13 @@ namespace rxtd::common::rainmeter {
 	class InstanceKeeper final {
 	public:
 		struct Message {
-			using Action = void(*)(const Message& message);
+			// must return true when need to stop the thread
+			using Action = bool(*)(const Message& message);
 			Action action = nullptr;
 			string messageText;
 			int logLevel = 0;
-			void* rainmeterData = nullptr;
+			DataHandle dataHandle;
+			SkinHandle skinHandle;
 		};
 
 		InstanceKeeper() {
@@ -59,6 +60,7 @@ namespace rxtd::common::rainmeter {
 
 		explicit InstanceKeeper(DataHandle handle) {
 			incrementCounter(handle.getRawHandle());
+
 		}
 
 		~InstanceKeeper() {
@@ -70,27 +72,21 @@ namespace rxtd::common::rainmeter {
 		}
 
 		InstanceKeeper(InstanceKeeper&& other) noexcept {
-			try {
-				// Can't actually throw anything
-				// If global counter of InstanceKeeper was 0 then incrementCounter() can potentially throw
-				// However, since InstanceKeeper&& already exists then counter can't be 0
-				// But linter writes warnings without try-catch block
-				incrementCounter(nullptr);
-			} catch (...) {}
+			incrementCounter(nullptr);
 		}
 
 		InstanceKeeper& operator=(const InstanceKeeper& other) = default;
 
 		InstanceKeeper& operator=(InstanceKeeper&& other) noexcept = default;
 
-		static void sendLog(DataHandle handle, string message, int level);
-		static void sendCommand(SkinHandle skin, string command);
+		void sendLog(DataHandle handle, string message, int level) const;
+		void sendCommand(DataHandle handle, SkinHandle skin, string command);
 
 	private:
 		void incrementCounter(void* data);
 		void decrementCounter();
 
-		void initThread(void* rm);
-		static void sendMessage(Message message);
+		static void initThread(void* rm);
+		void sendMessage(Message message) const;
 	};
 }

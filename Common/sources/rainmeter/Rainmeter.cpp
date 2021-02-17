@@ -41,7 +41,7 @@ void Rainmeter::executeCommandAsync(sview command, SkinHandle skin) {
 	if (command.empty()) {
 		return;
 	}
-	instanceKeeper.sendCommand(skin, command % own());
+	instanceKeeper.sendCommand(dataHandle, skin, command % own());
 }
 
 const wchar_t* Rainmeter::makeNullTerminated(sview view) const {

@@ -41,7 +41,7 @@ namespace rxtd::common::rainmeter {
 		Logger() = default;
 
 		explicit Logger(DataHandle dh, string prefix = {}) : dataHandle(dh), instanceKeeper(dh), prefix(std::move(prefix)) { }
-		
+
 		template<typename... Args>
 		void error(const wchar_t* formatString, const Args&... args) const {
 			log(LogLevel::eERROR, formatString, args...);
@@ -75,16 +75,12 @@ namespace rxtd::common::rainmeter {
 		void setSilent(bool value) {
 			isSilent = value;
 		}
-		
+
 		[[nodiscard]]
 		static Logger getSilent() {
 			Logger result{};
 			result.setSilent(true);
 			return result;
-		}
-
-		static void sourcelessLog(const wchar_t* message) {
-			InstanceKeeper::sendLog({}, message, static_cast<int>(LogLevel::eDEBUG));
 		}
 
 	private:
@@ -104,7 +100,7 @@ namespace rxtd::common::rainmeter {
 		}
 
 		void logRainmeter(LogLevel logLevel, sview message) const {
-			InstanceKeeper::sendLog(dataHandle, message % own(), static_cast<int>(logLevel));
+			instanceKeeper.sendLog(dataHandle, message % own(), static_cast<int>(logLevel));
 		}
 	};
 }

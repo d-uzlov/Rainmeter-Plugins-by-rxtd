@@ -202,17 +202,14 @@ double Option::parseNumber(sview source) {
 		expressions::ASTSolver solver{ parser.takeTree() };
 		return solver.solve(nullptr);
 	} catch (expressions::ASTSolver::Exception& e) {
-		buffer_printer::BufferPrinter printer;
-		printer.print(L"can't parse '{}' as a number: {}", source, e.getMessage());
-		rainmeter::Logger::sourcelessLog(printer.getBufferPtr());
+		rainmeter::Logger logger;
+		logger.error(L"can't parse '{}' as a number: {}", source, e.getMessage());
 	} catch (expressions::Lexer::Exception& e) {
-		buffer_printer::BufferPrinter printer;
-		printer.print(L"can't parse '{}' as a number: unknown token here: '{}'", source, source.substr(e.getPosition()));
-		rainmeter::Logger::sourcelessLog(printer.getBufferPtr());
+		rainmeter::Logger logger;
+		logger.error(L"can't parse '{}' as a number: unknown token here: '{}'", source, source.substr(e.getPosition()));
 	} catch (expressions::ASTParser::Exception& e) {
-		buffer_printer::BufferPrinter printer;
-		printer.print(L"can't parse '{}' as a number: {}, at position: '{}'", source, e.getReason(), source.substr(e.getPosition()));
-		rainmeter::Logger::sourcelessLog(printer.getBufferPtr());
+		rainmeter::Logger logger;
+		logger.error(L"can't parse '{}' as a number: {}, at position: '{}'", source, e.getReason(), source.substr(e.getPosition()));
 	}
 
 	return 0;
