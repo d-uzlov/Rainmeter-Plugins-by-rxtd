@@ -78,6 +78,7 @@ namespace rxtd::audio_analyzer {
 		ProcessingsInfoMap parseResult;
 		Version version{};
 		HandlerCacheHelper hch;
+		std::set<istring> handlerNames;
 
 		mutable bool anythingChanged = false;
 
@@ -113,6 +114,6 @@ namespace rxtd::audio_analyzer {
 		std::set<Channel> parseChannels(const OptionList& channelsStringList, Logger& logger) const;
 
 		[[nodiscard]]
-		HandlerPatchersInfo parseHandlers(const OptionList& indices);
+		std::optional<ParamParser::HandlerPatchersInfo> parseHandlers(const OptionList& indices, const Logger& logger);
 	};
 }

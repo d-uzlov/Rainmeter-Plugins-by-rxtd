@@ -40,6 +40,7 @@ bool ParamParser::parse(Version _version, bool suppressLogger) {
 	hch.reset();
 	hch.setUnusedOptionsWarning(unusedOptionsWarning);
 	hch.setVersion(version);
+	handlerNames.clear();
 
 	ProcessingsInfoMap result;
 	for (const auto& nameOption : processingIndices) {
@@ -111,7 +112,13 @@ void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldData
 		return;
 	}
 
-	oldData.handlersInfo = parseHandlers(handlersList);
+	auto handlersInfoOpt = parseHandlers(handlersList, cl);
+	if (!handlersInfoOpt.has_value()) {
+		// #parseHandlers must have logged all errors in this case
+		anythingChanged = true;
+		return;
+	}
+	oldData.handlersInfo = handlersInfoOpt.value();
 	if (oldData.handlersInfo.order.empty()) {
 		cl.warning(L"no valid handlers found");
 		anythingChanged = true;
@@ -222,12 +229,16 @@ std::set<Channel> ParamParser::parseChannels(const OptionList& channelsStringLis
 	return set;
 }
 
-ParamParser::HandlerPatchersInfo
-ParamParser::parseHandlers(const OptionList& names) {
+std::optional<ParamParser::HandlerPatchersInfo> ParamParser::parseHandlers(const OptionList& names, const Logger& logger) {
 	HandlerPatchersInfo result;
 
 	for (auto nameOption : names) {
 		auto name = istring{ nameOption.asIString() };
+		if (auto [iter, isNewElement] = handlerNames.insert(name);
+			!isNewElement) {
+			logger.error(L"handler '{}' was already used in another processing, invalidate processing", name);
+			return {};
+		}
 
 		auto handler = hch.getHandler(name);
 
@@ -235,7 +246,8 @@ ParamParser::parseHandlers(const OptionList& names) {
 			if (version < Version::eVERSION2) {
 				continue;
 			} else {
-				return result;
+				logger.error(L"handler '{}' is invalid, invalidate processing", name);
+				return {};
 			}
 		}
 
