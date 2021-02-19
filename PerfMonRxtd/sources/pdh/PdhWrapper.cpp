@@ -154,7 +154,7 @@ double PdhWrapper::extractFormattedValue(
 		return 0.0;
 	}
 
-	// something strange, TODO handle this
+	// something strange, but it's unlikely we can do anything
 	return 0.0;
 }
 

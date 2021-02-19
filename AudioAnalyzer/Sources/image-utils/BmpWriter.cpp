@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 rxtd
+ * Copyright (C) 2019-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -8,7 +8,6 @@
  */
 
 #include "BmpWriter.h"
-#include "winapi-wrappers/FileWrapper.h"
 
 using rxtd::utils::IntColor;
 
@@ -17,7 +16,7 @@ struct BMPHeader {
 	static constexpr rxtd::index dibSize = 108;
 
 	struct {
-		uint16_t id = 0x4d42; // == 'BM' (little-endian)
+		char id2[2] = { 'B', 'M' };
 		uint32_t fileSizeInBytes{};
 		uint16_t reserved1 = 0;
 		uint16_t reserved2 = 0;
@@ -46,7 +45,7 @@ struct BMPHeader {
 	} dibHeader{};
 
 private:
-	std::byte padding[dibSize - sizeof(dibHeader)]{};
+	std::byte padding[dibSize - sizeof(dibHeader)]{}; // NOLINT(clang-diagnostic-unused-private-field)
 
 public:
 	BMPHeader(rxtd::index width, rxtd::index height) {
@@ -60,11 +59,13 @@ public:
 #pragma pack( pop )
 
 
-void rxtd::utils::BmpWriter::writeFile(const string& filepath, array2d_view<IntColor> imageData) {
+void rxtd::utils::BmpWriter::writeFile(std::ostream& stream, array2d_view<IntColor> imageData) {
 	BMPHeader header(imageData.getBufferSize(), imageData.getBuffersCount());
 
-	FileWrapper file(filepath.c_str());
+	stream.write(reinterpret_cast<const char*>(&header), sizeof(header));
+	stream.write(reinterpret_cast<const char*>(imageData[0].data()), header.dibHeader.bitmapSizeInBytes);
 
-	file.write(&header, sizeof(header));
-	file.write(imageData[0].data(), header.dibHeader.bitmapSizeInBytes);
+	// FileWrapper file(filepath.c_str());
+	// file.write(&header, sizeof(header));
+	// file.write(imageData[0].data(), header.dibHeader.bitmapSizeInBytes);
 }

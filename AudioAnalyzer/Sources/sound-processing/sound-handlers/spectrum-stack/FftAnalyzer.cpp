@@ -148,7 +148,7 @@ FftAnalyzer::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData
 
 	fft.setParams(fftSize, !params.legacyAmplification, params.wcf(fftSize));
 
-	inputStride = static_cast<index>(fftSize * (1 - params.overlap));
+	inputStride = static_cast<index>(fftSize * (1.0 - params.overlap));
 	inputStride = std::clamp<index>(inputStride, minFftSize, fftSize);
 
 	randomBlockSize = index(params.randomDuration * config.sampleRate * fftSize / inputStride);

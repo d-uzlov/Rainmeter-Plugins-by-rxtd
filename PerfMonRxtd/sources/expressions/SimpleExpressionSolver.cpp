@@ -117,7 +117,7 @@ double SimpleExpressionSolver::resolveReference(const Reference& ref, Indices in
 				totalCaches.raw, instanceManager.getInstances(), ref.counter, ref.rollupFunction,
 				[&](InstanceInfo info) { return solveExpression(ref.counter, info.indices); }
 			);
-		case Type::eROLLUP_EXPRESSION: return 0.0; // todo throw
+		case Type::eROLLUP_EXPRESSION: return 0.0; // all checks must have been done elsewhere
 		case Type::eCOUNT: return ref.rollupFunction == RollupFunction::eSUM ? static_cast<double>(instanceManager.getInstances().size()) : 1.0;
 		}
 	}
@@ -134,12 +134,12 @@ double SimpleExpressionSolver::resolveReference(const Reference& ref, Indices in
 	case Type::eCOUNTER_RAW: return instanceManager.calculateRaw(ref.counter, indices);
 	case Type::eCOUNTER_FORMATTED: return instanceManager.calculateFormatted(ref.counter, indices);
 	case Type::eEXPRESSION: return solveExpression(ref.counter, indices);
-	case Type::eROLLUP_EXPRESSION: return 0.0; // todo throw
+	case Type::eROLLUP_EXPRESSION: return 0.0; // all checks must have been done elsewhere
 	case Type::eCOUNT: return 1.0;
 	}
 
-	log.error(L"unexpected reference type in resolveReference(): {}", ref.type);
-	return 0.0; // todo throw
+	log.error(L"unexpected reference type in SimpleExpressionSolver.resolveReference(): {}", ref.type);
+	return 0.0;
 }
 
 double SimpleExpressionSolver::solveExpression(index expressionIndex, Indices indices) const {

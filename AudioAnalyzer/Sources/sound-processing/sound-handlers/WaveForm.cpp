@@ -47,10 +47,7 @@ SoundHandlerBase::ParseResult WaveForm::parseParams(
 	}
 	params.resolution *= 0.001;
 
-	params.folder = utils::FileWrapper::getAbsolutePath(
-		om.get(L"folder").asString() % own(),
-		rain.replaceVariables(L"[#CURRENTPATH]") % own()
-	);
+	params.folder = rain.getPathFromCurrent(om.get(L"folder").asString() % own());
 
 	params.colors.background = Color::parse(om.get(L"backgroundColor").asString(), { 0, 0, 0 }).toIntColor();
 	params.colors.wave = Color::parse(om.get(L"waveColor").asString(), { 1, 1, 1 }).toIntColor();

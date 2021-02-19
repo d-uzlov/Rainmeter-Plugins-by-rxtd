@@ -259,7 +259,7 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		bool patch(
 			string name,
-			const ParamsContainer& params, const std::vector<istring>& sources,
+			const ParamsContainer& params, array_view<istring> sources,
 			index sampleRate, Version version,
 			HandlerFinder& hf, Logger& cl,
 			Snapshot& snapshot

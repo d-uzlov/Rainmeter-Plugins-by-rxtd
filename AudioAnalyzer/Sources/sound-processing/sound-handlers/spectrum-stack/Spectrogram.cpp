@@ -14,7 +14,6 @@
 #include "LinearInterpolator.h"
 #include "MyMath.h"
 #include "option-parsing/OptionList.h"
-#include "winapi-wrappers/FileWrapper.h"
 
 using namespace std::string_literals;
 
@@ -51,10 +50,7 @@ SoundHandlerBase::ParseResult Spectrogram::parseParams(
 	}
 	params.resolution *= 0.001;
 
-	params.folder = utils::FileWrapper::getAbsolutePath(
-		om.get(L"folder").asString() % own(),
-		rain.replaceVariables(L"[#CURRENTPATH]") % own()
-	);
+	params.folder = rain.getPathFromCurrent(om.get(L"folder").asString() % own());
 
 	using MixMode = Color::Mode;
 	if (auto mixMode = om.get(L"mixMode").asIString(L"srgb");

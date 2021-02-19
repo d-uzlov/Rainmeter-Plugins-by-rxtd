@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 rxtd
+ * Copyright (C) 2020-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -9,24 +9,13 @@
 
 #pragma once
 #include "BmpWriter.h"
-#include "winapi-wrappers/FileWrapper.h"
 
 namespace rxtd::utils {
 	class ImageWriteHelper {
 		bool emptinessWritten = false;
 
 	public:
-		void write(array2d_view<IntColor> pixels, bool empty, const string& filepath) {
-			if (emptinessWritten && empty) {
-				return;
-			}
-
-			FileWrapper::createDirectories(filepath);
-
-			BmpWriter::writeFile(filepath, pixels);
-
-			emptinessWritten = empty;
-		}
+		void write(array2d_view<IntColor> pixels, bool empty, const string& filepath);
 
 		[[nodiscard]]
 		bool isEmptinessWritten() const {

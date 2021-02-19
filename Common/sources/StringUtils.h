@@ -240,8 +240,5 @@ namespace rxtd::utils {
 
 		[[nodiscard]]
 		static double parseFloat(sview view);
-
-		[[nodiscard]]
-		static double parseFractional(sview view);
 	};
 }

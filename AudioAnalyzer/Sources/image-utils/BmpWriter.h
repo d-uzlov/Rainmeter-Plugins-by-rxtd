@@ -8,12 +8,12 @@
  */
 
 #pragma once
-#include "Vector2D.h"
 #include "IntColor.h"
+#include "Vector2D.h"
 
 namespace rxtd::utils {
 	class BmpWriter {
 	public:
-		static void writeFile(const string& filepath, array2d_view<IntColor> imageData);
+		static void writeFile(std::ostream& stream, array2d_view<IntColor> imageData);
 	};
 }

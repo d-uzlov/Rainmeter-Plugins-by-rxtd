@@ -385,6 +385,9 @@
     <ClCompile Include="Sources\wasapi-wrappers\implementations\MediaDeviceListNotificationClient.cpp">
       <Filter>Source Files\wasapi-wrappers\implementations</Filter>
     </ClCompile>
+    <ClCompile Include="Sources\image-utils\ImageWriteHelper.cpp">
+      <Filter>Source Files\image-utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\Common\resources\version.rc">

@@ -259,6 +259,7 @@
     <ClCompile Include="Sources\HandlerCacheHelper.cpp" />
     <ClCompile Include="Sources\image-utils\BmpWriter.cpp" />
     <ClCompile Include="Sources\image-utils\Color.cpp" />
+    <ClCompile Include="Sources\image-utils\ImageWriteHelper.cpp" />
     <ClCompile Include="Sources\image-utils\StripedImageFadeHelper.cpp" />
     <ClCompile Include="Sources\image-utils\WaveFormDrawer.cpp" />
     <ClCompile Include="Sources\ParamParser.cpp" />

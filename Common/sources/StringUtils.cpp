@@ -122,32 +122,3 @@ double StringUtils::parseFloat(sview view) {
 	std::from_chars(buffer, buffer + size, result);
 	return result;
 }
-
-double StringUtils::parseFractional(sview view) {
-	view = trim(view);
-
-	if (view.empty() || !iswdigit(view.front())) {
-		return 0;
-	}
-
-	// TODO remove this mess
-	char buffer[80];
-	buffer[0] = '0';
-	buffer[1] = '.';
-
-	index size = std::min(view.length(), sizeof(buffer) / sizeof(*buffer));
-	for (index i = 0; i < size; ++i) {
-		const auto wc = view[i];
-		// check that all symbols fit into 1 byte
-		if (wc > std::numeric_limits<uint8_t>::max()) {
-			buffer[i + 2] = '\0';
-			size = i;
-			break;
-		}
-		buffer[i + 2] = static_cast<char>(wc);
-	}
-
-	double result = 0;
-	std::from_chars(buffer, buffer + size + 2, result);
-	return result;
-}

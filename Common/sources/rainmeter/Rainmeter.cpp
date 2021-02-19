@@ -9,6 +9,9 @@
 
 #include "Rainmeter.h"
 
+#include <filesystem>
+
+
 #include "RainmeterAPI.h"
 
 #pragma comment(lib, "Rainmeter.lib")
@@ -42,6 +45,24 @@ void Rainmeter::executeCommandAsync(sview command, SkinHandle skin) {
 		return;
 	}
 	instanceKeeper.sendCommand(dataHandle, skin, command % own());
+}
+
+rxtd::string Rainmeter::getPathFromCurrent(string folder) const {
+	std::filesystem::path path{ folder };
+	if (!path.is_absolute()) {
+		string f = std::move(folder);
+		folder = replaceVariables(L"[#CURRENTPATH]");
+		folder += f;
+	}
+
+	folder = std::filesystem::absolute(folder).wstring();
+	folder = LR"(\\?\)" + folder;
+
+	if (folder.back() != L'\\') {
+		folder += L'\\';
+	}
+
+	return folder;
 }
 
 const wchar_t* Rainmeter::makeNullTerminated(sview view) const {

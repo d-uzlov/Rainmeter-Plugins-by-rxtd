@@ -103,7 +103,6 @@ namespace rxtd::audio_analyzer {
 
 	public:
 		index getFftSize() const {
-			// todo is this even needed?
 			return fftSize;
 		}
 

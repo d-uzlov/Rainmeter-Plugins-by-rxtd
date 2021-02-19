@@ -38,9 +38,6 @@
     <ClCompile Include="sources\MyMath.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sources\winapi-wrappers\FileWrapper.cpp">
-      <Filter>Source Files\winapi-wrappers</Filter>
-    </ClCompile>
     <ClCompile Include="sources\rainmeter\Rainmeter.cpp">
       <Filter>Source Files\rainmeter</Filter>
     </ClCompile>
@@ -120,9 +117,6 @@
     </ClInclude>
     <ClInclude Include="sources\winapi-wrappers\implementations\IUnknownImpl.h">
       <Filter>Source Files\winapi-wrappers\implementations</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\winapi-wrappers\FileWrapper.h">
-      <Filter>Source Files\winapi-wrappers</Filter>
     </ClInclude>
     <ClInclude Include="sources\winapi-wrappers\GenericComWrapper.h">
       <Filter>Source Files\winapi-wrappers</Filter>

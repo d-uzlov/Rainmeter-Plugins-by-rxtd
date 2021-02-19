@@ -51,6 +51,9 @@ namespace rxtd::common::rainmeter {
 		void executeCommandAsync(sview command, SkinHandle skin);
 
 		[[nodiscard]]
+		string getPathFromCurrent(string folder) const;
+
+		[[nodiscard]]
 		DataHandle getHandle() const {
 			return dataHandle;
 		}
@@ -64,7 +67,7 @@ namespace rxtd::common::rainmeter {
 		sview getMeasureName() const {
 			return measureName;
 		}
-		
+
 		Logger createLogger() const {
 			return Logger{ dataHandle };
 		}

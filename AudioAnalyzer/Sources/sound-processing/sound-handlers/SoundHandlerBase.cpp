@@ -14,13 +14,13 @@ using namespace rxtd::audio_analyzer;
 
 bool SoundHandlerBase::patch(
 	string name,
-	const ParamsContainer& params, const std::vector<istring>& sources,
+	const ParamsContainer& params, array_view<istring> sources,
 	index sampleRate, Version version,
 	HandlerFinder& hf, Logger& cl,
 	Snapshot& snapshot
 ) {
 	if (sources.size() > 1) {
-		throw std::exception{ "no support for multiple sources yet" }; // todo
+		throw std::exception{ "no support for multiple sources yet" };
 	}
 
 	handlerName = std::move(name);
