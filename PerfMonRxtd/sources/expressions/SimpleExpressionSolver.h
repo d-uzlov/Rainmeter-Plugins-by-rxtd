@@ -13,7 +13,7 @@
 
 #include "CacheHelper.h"
 #include "ExpressionParser.h"
-#include "SimpleInstanceManager.h"
+#include "instances/SimpleInstanceManager.h"
 #include "Reference.h"
 #include "expressions/ASTSolver.h"
 
@@ -22,6 +22,8 @@ namespace rxtd::perfmon::expressions {
 		using Logger = common::rainmeter::Logger;
 		using OptionList = common::options::OptionList;
 		using ASTSolver = common::expressions::ASTSolver;
+		using Indices = SimpleInstanceManager::Indices;
+		using InstanceInfo = SimpleInstanceManager::InstanceInfo;
 
 		class ReferenceResolver : public common::expressions::ASTSolver::ValueProvider {
 			const SimpleExpressionSolver& expressionResolver;

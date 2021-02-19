@@ -12,7 +12,8 @@
 
 #include "CacheHelper.h"
 #include "ExpressionParser.h"
-#include "SimpleInstanceManager.h"
+#include "instances/SimpleInstanceManager.h"
+#include "instances/RollupInstanceManager.h"
 #include "Reference.h"
 #include "SimpleExpressionSolver.h"
 #include "expressions/ASTSolver.h"
@@ -22,6 +23,8 @@ namespace rxtd::perfmon::expressions {
 		using Logger = common::rainmeter::Logger;
 		using OptionList = common::options::OptionList;
 		using ASTSolver = common::expressions::ASTSolver;
+		using Indices = SimpleInstanceManager::Indices;
+		using RollupInstanceInfo = RollupInstanceManager::RollupInstanceInfo;
 
 		class ReferenceResolver : public ASTSolver::ValueProvider {
 			const RollupExpressionResolver& expressionResolver;
@@ -39,7 +42,8 @@ namespace rxtd::perfmon::expressions {
 
 		Logger log;
 
-		const SimpleInstanceManager& instanceManager;
+		const SimpleInstanceManager& simpleInstanceManager;
+		const RollupInstanceManager& rollupInstanceManager;
 		SimpleExpressionSolver& simpleExpressionSolver;
 
 		ExpressionParser parser;
@@ -75,7 +79,14 @@ namespace rxtd::perfmon::expressions {
 		mutable TotalCaches totalCaches;
 
 	public:
-		RollupExpressionResolver(Logger log, const SimpleInstanceManager& instanceManager, SimpleExpressionSolver& simpleExpressionSolver);
+		RollupExpressionResolver(
+			Logger log,
+			const SimpleInstanceManager& simpleInstanceManager, const RollupInstanceManager& rollupInstanceManager,
+			SimpleExpressionSolver& simpleExpressionSolver
+		) : log(std::move(log)),
+		    simpleInstanceManager(simpleInstanceManager),
+		    rollupInstanceManager(rollupInstanceManager),
+		    simpleExpressionSolver(simpleExpressionSolver) {}
 
 		index getExpressionsCount() const;
 

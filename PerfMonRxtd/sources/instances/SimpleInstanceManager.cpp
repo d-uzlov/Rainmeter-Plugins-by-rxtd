@@ -8,6 +8,8 @@
  */
 
 #include "SimpleInstanceManager.h"
+
+#include "InstanceManagerUtilities.h"
 #include "expressions/SimpleExpressionSolver.h"
 #include "expressions/RollupExpressionResolver.h"
 
@@ -16,57 +18,12 @@ using namespace rxtd::perfmon;
 SimpleInstanceManager::SimpleInstanceManager(Logger log, const pdh::PdhWrapper& phWrapper) :
 	log(std::move(log)), pdhWrapper(phWrapper) { }
 
-void SimpleInstanceManager::checkIndices(index counters, index expressions, index rollupExpressions) {
-	index checkCount = 0;
-
-	switch (options.sortBy) {
-	case SortBy::eNONE: return;
-	case SortBy::eINSTANCE_NAME: return;
-	case SortBy::eRAW_COUNTER: [[fallthrough]];
-	case SortBy::eFORMATTED_COUNTER:
-		checkCount = counters;
-		break;
-	case SortBy::eEXPRESSION: {
-		if (expressions <= 0) {
-			log.error(L"Sort by Expression requires at least 1 Expression specified. Set to None.");
-			options.sortBy = SortBy::eNONE;
-			return;
-		}
-		checkCount = expressions;
-		break;
-	}
-	case SortBy::eROLLUP_EXPRESSION: {
-		if (!rollupExpressions) {
-			log.error(L"RollupExpressions can't be used for sort if rollup is disabled. Set to None.");
-			options.sortBy = SortBy::eNONE;
-			return;
-		}
-		if (rollupExpressions <= 0) {
-			log.error(L"Sort by RollupExpression requires at least 1 RollupExpression specified. Set to None.");
-			options.sortBy = SortBy::eNONE;
-			return;
-		}
-		checkCount = rollupExpressions;
-		break;
-	}
-	case SortBy::eCOUNT: return;
-	}
-
-	if (options.sortIndex >= 0 && options.sortIndex < checkCount) {
-		return;
-	}
-	log.error(L"SortIndex {} is out of bounds (must be in [0; {}]). Set to 0.", expressions, options.sortIndex);
-	options.sortIndex = 0;
-	return;
-}
-
 void SimpleInstanceManager::setNameModificationType(pdh::NamesManager::ModificationType value) {
 	namesManager.setModificationType(value);
 }
 
 void SimpleInstanceManager::update() {
 	instances.clear();
-	instancesRolledUp.clear();
 	instancesDiscarded.clear();
 
 	nameCaches.reset();
@@ -84,8 +41,24 @@ void SimpleInstanceManager::update() {
 	} else {
 		buildInstanceKeys();
 	}
-	if (options.rollup) {
-		buildRollupKeys();
+}
+
+void SimpleInstanceManager::sort(const expressions::SimpleExpressionSolver& simpleExpressionSolver) {
+	switch (options.sortInfo.sortBy) {
+	case SortBy::eNONE: return;
+	case SortBy::eINSTANCE_NAME:
+		InstanceManagerUtilities::sortByName(array_span<InstanceInfo>{ instances }, options.sortInfo.sortOrder);
+		break;
+	case SortBy::eVALUE: {
+		Reference ref;
+
+		ref.type = options.sortInfo.sortByValueInformation.expressionType;
+		ref.counter = options.sortInfo.sortByValueInformation.sortIndex;
+		ref.rollupFunction = options.sortInfo.sortByValueInformation.sortRollupFunction;
+
+		InstanceManagerUtilities::sort(array_span<InstanceInfo>{ instances }, simpleExpressionSolver, ref, options.sortInfo.sortOrder);
+		break;
+	}
 	}
 }
 
@@ -172,22 +145,7 @@ void SimpleInstanceManager::buildInstanceKeys() {
 	}
 }
 
-void SimpleInstanceManager::buildRollupKeys() {
-	std::unordered_map<sview, RollupInstanceInfo> mapRollupKeys;
-	mapRollupKeys.reserve(instances.size());
-
-	for (const auto& instance : instances) {
-		auto& item = mapRollupKeys[instance.sortName];
-		item.indices.push_back(instance.indices);
-	}
-
-	instancesRolledUp.reserve(mapRollupKeys.size());
-	for (auto& [key, value] : mapRollupKeys) {
-		instancesRolledUp.emplace_back(std::move(value));
-	}
-}
-
-const InstanceInfo* SimpleInstanceManager::findSimpleInstance(const Reference& ref, index sortedIndex) const {
+const SimpleInstanceManager::InstanceInfo* SimpleInstanceManager::findSimpleInstance(const Reference& ref, index sortedIndex) const {
 	if (!ref.namePattern.isEmpty()) {
 		return findSimpleInstanceByName(ref);
 	}
@@ -200,28 +158,11 @@ const InstanceInfo* SimpleInstanceManager::findSimpleInstance(const Reference& r
 	return &instances[sortedIndex];
 }
 
-const RollupInstanceInfo* SimpleInstanceManager::findRollupInstance(const Reference& ref, index sortedIndex) const {
-	if (!ref.namePattern.isEmpty()) {
-		return findRollupInstanceByName(ref);
-	}
-
-	sortedIndex += indexOffset;
-	if (sortedIndex < 0 || sortedIndex >= index(instances.size())) {
-		return nullptr;
-	}
-
-	return &instancesRolledUp[sortedIndex];
-}
-
-const InstanceInfo* SimpleInstanceManager::findSimpleInstanceByName(const Reference& ref) const {
+const SimpleInstanceManager::InstanceInfo* SimpleInstanceManager::findSimpleInstanceByName(const Reference& ref) const {
 	if (ref.discarded) {
-		return findInstanceByNameInList(ref, array_view<InstanceInfo>{ instancesDiscarded }, nameCaches.discarded);
+		return InstanceManagerUtilities::findInstanceByNameInList(array_view<InstanceInfo>{ instancesDiscarded }, ref, nameCaches.discarded, namesManager);
 	}
-	return findInstanceByNameInList(ref, array_view<InstanceInfo>{ instances }, nameCaches.simple);
-}
-
-const RollupInstanceInfo* SimpleInstanceManager::findRollupInstanceByName(const Reference& ref) const {
-	return findInstanceByNameInList(ref, array_view<RollupInstanceInfo>{ instancesRolledUp }, nameCaches.rollup);
+	return InstanceManagerUtilities::findInstanceByNameInList(array_view<InstanceInfo>{ instances }, ref, nameCaches.simple, namesManager);
 }
 
 double SimpleInstanceManager::calculateRaw(index counterIndex, Indices originalIndexes) const {

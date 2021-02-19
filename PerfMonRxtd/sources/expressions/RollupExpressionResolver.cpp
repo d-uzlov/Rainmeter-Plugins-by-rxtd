@@ -17,9 +17,6 @@
 
 using namespace rxtd::perfmon::expressions;
 
-RollupExpressionResolver::RollupExpressionResolver(Logger log, const SimpleInstanceManager& instanceManager, SimpleExpressionSolver& simpleExpressionSolver) :
-	log(std::move(log)), instanceManager(instanceManager), simpleExpressionSolver(simpleExpressionSolver) {}
-
 rxtd::index RollupExpressionResolver::getExpressionsCount() const {
 	return index(expressions.size());
 }
@@ -86,7 +83,7 @@ void RollupExpressionResolver::checkExpressionIndices() {
 							log.error(L"RollupExpression {} can't reference RollupExpression {}", i, ref.counter);
 							throw std::runtime_error{ "" };
 						}
-						
+
 						if (ref.type == Reference::Type::EXPRESSION || ref.type == Reference::Type::ROLLUP_EXPRESSION) {
 							if (!ref.useOrigName) {
 								utils::StringUtils::makeUppercaseInPlace(ref.namePattern.getName());
@@ -130,7 +127,7 @@ double RollupExpressionResolver::resolveReference(const Reference& ref, array_vi
 		case Reference::Type::COUNTER_RAW:
 		case Reference::Type::COUNTER_FORMATTED:
 		case Reference::Type::EXPRESSION: return TotalUtilities::getTotal(
-				totalCaches.simpleExpression, instanceManager.getRollupInstances(), ref.counter, ref.rollupFunction,
+				totalCaches.simpleExpression, rollupInstanceManager.getRollupInstances(), ref.counter, ref.rollupFunction,
 				[&](const RollupInstanceInfo& info) {
 					return TotalUtilities::calculateTotal(
 						array_view<Indices>{ info.indices }, ref.rollupFunction, [&](Indices ind) {
@@ -140,7 +137,7 @@ double RollupExpressionResolver::resolveReference(const Reference& ref, array_vi
 				}
 			);
 		case Reference::Type::ROLLUP_EXPRESSION: return TotalUtilities::getTotal(
-				totalCaches.expression, instanceManager.getRollupInstances(), ref.counter, ref.rollupFunction,
+				totalCaches.expression, rollupInstanceManager.getRollupInstances(), ref.counter, ref.rollupFunction,
 				[&](const RollupInstanceInfo& info) { return solveExpression(ref.counter, info.indices); }
 			);
 		case Reference::Type::COUNT: return calculateRollupCountTotal(ref.rollupFunction);
@@ -150,13 +147,13 @@ double RollupExpressionResolver::resolveReference(const Reference& ref, array_vi
 
 	if (!ref.namePattern.isEmpty()) {
 		if (ref.discarded) {
-			const auto instancePtr = instanceManager.findSimpleInstanceByName(ref);
+			const auto instancePtr = simpleInstanceManager.findSimpleInstanceByName(ref);
 			if (instancePtr == nullptr) {
 				return 0.0;
 			}
 			indices = array_view<Indices>{ &instancePtr->indices, 1 };
 		} else {
-			const auto instancePtr = instanceManager.findRollupInstanceByName(ref);
+			const auto instancePtr = rollupInstanceManager.findRollupInstanceByName(ref);
 			if (instancePtr == nullptr) {
 				return 0.0;
 			}
@@ -181,14 +178,19 @@ double RollupExpressionResolver::resolveReference(const Reference& ref, array_vi
 }
 
 double RollupExpressionResolver::calculateRollupCountTotal(const RollupFunction rollupFunction) const {
+	auto instances = rollupInstanceManager.getRollupInstances();
+	if (instances.empty()) {
+		return 0.0;
+	}
+
 	switch (rollupFunction) {
-	case RollupFunction::eSUM: return static_cast<double>(instanceManager.getRollupInstances().size());
+	case RollupFunction::eSUM: return static_cast<double>(instances.size());
 	case RollupFunction::eAVERAGE:
-		return static_cast<double>(instanceManager.getInstances().size())
-			/ double(instanceManager.getRollupInstances().size());
+		return static_cast<double>(simpleInstanceManager.getInstances().size())
+			/ double(instances.size());
 	case RollupFunction::eMINIMUM: {
 		index min = std::numeric_limits<index>::max();
-		for (const auto& item : instanceManager.getRollupInstances()) {
+		for (const auto& item : instances) {
 			index val = index(item.indices.size()) + 1;
 			min = std::min(min, val);
 		}
@@ -196,17 +198,14 @@ double RollupExpressionResolver::calculateRollupCountTotal(const RollupFunction 
 	}
 	case RollupFunction::eMAXIMUM: {
 		index max = 0;
-		for (const auto& item : instanceManager.getRollupInstances()) {
+		for (const auto& item : instances) {
 			index val = index(item.indices.size()) + 1;
 			max = std::max(max, val);
 		}
 		return static_cast<double>(max);
 	}
 	case RollupFunction::eFIRST:
-		if (!instanceManager.getRollupInstances().empty()) {
-			return static_cast<double>(instanceManager.getRollupInstances()[0].indices.size() + 1);
-		}
-		return 0.0;
+		return static_cast<double>(instances[0].indices.size() + 1);
 	}
 
 	return 0.0;

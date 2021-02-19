@@ -24,7 +24,9 @@ PerfmonParent::PerfmonParent(Rainmeter&& _rain) : ParentBase(std::move(_rain)) {
 		throw std::runtime_error{ "" };
 	}
 
-	instanceManager.setIndexOffset(rain.read(L"InstanceIndexOffset").asInt(), false);
+	const auto InstanceIndexOffset = rain.read(L"InstanceIndexOffset").asInt();
+	simpleInstanceManager.setIndexOffset(InstanceIndexOffset, false);
+	rollupInstanceManager.setIndexOffset(InstanceIndexOffset, false);
 }
 
 void PerfmonParent::vReload() {
@@ -50,48 +52,14 @@ void PerfmonParent::vReload() {
 		return;
 	}
 
+	useRollup = rain.read(L"Rollup").asBool();
 
 	SimpleInstanceManager::Options imo;
-	imo.sortIndex = rain.read(L"SortIndex").asInt();
 	imo.syncRawFormatted = rain.read(L"SyncRawFormatted").asBool();
 	imo.keepDiscarded = rain.read(L"KeepDiscarded").asBool();
-	imo.rollup = rain.read(L"Rollup").asBool();
 	imo.limitIndexOffset = rain.read(L"LimitIndexOffset").asBool();
 
-	auto str = rain.read(L"SortBy").asIString(L"None");
-	using SortBy = SimpleInstanceManager::SortBy;
-	auto sortByOpt = parseEnum<SortBy>(str);
-	if (sortByOpt.has_value()) {
-		imo.sortBy = sortByOpt.value();
-	} else {
-		logger.error(L"SortBy '{}' is invalid, set to 'None'", str);
-		imo.sortBy = SortBy::eNONE;
-	}
-
-	str = rain.read(L"SortOrder").asIString(L"Descending");
-	auto sortOrderOpt = parseEnum<SimpleInstanceManager::SortOrder>(str);
-	if (sortOrderOpt.has_value()) {
-		imo.sortOrder = sortOrderOpt.value();
-	} else {
-		logger.error(L"SortOrder '{}' is invalid, set to 'Descending'", str);
-		imo.sortOrder = SimpleInstanceManager::SortOrder::eDESCENDING;
-	}
-
-
-	auto rollupFunctionStr = rain.read(L"SortRollupFunction").asIString(L"Sum");
-	if (rollupFunctionStr == L"Count") {
-		logger.warning(L"SortRollupFunction 'Count' is deprecated, SortBy set to 'Count'");
-		imo.sortBy = SortBy::eCOUNT;
-		imo.sortRollupFunction = RollupFunction::eSUM;
-	} else {
-		auto typeOpt = parseEnum<RollupFunction>(rollupFunctionStr);
-		if (typeOpt.has_value()) {
-			imo.sortRollupFunction = typeOpt.value();
-		} else {
-			logger.error(L"SortRollupFunction '{}' is invalid, set to 'Sum'", str);
-			imo.sortRollupFunction = RollupFunction::eSUM;
-		}
-	}
+	imo.sortInfo = parseSortInfo();
 
 	imo.blacklist = rain.read(L"Blacklist").asString();
 	imo.blacklistOrig = rain.read(L"BlacklistOrig").asString();
@@ -104,7 +72,8 @@ void PerfmonParent::vReload() {
 	const auto rollupExpressionTokens = rain.read(L"RollupExpressionList").asList(L'|');
 	rollupExpressionSolver.setExpressions(rollupExpressionTokens);
 
-	instanceManager.checkIndices(
+	checkAndFixSortInfo(
+		imo.sortInfo, 
 		counterNames.size(),
 		expressionResolver.getExpressionsCount(),
 		rollupExpressionSolver.getExpressionsCount()
@@ -157,16 +126,21 @@ void PerfmonParent::vReload() {
 		return;
 	}
 
-	instanceManager.setOptions(imo);
-	instanceManager.setNameModificationType(nameModificationType);
+	simpleInstanceManager.setOptions(imo);
+	simpleInstanceManager.setNameModificationType(nameModificationType);
+
+	RollupInstanceManager::Options rio;
+	rio.sortInfo = imo.sortInfo;
+	rio.limitIndexOffset = imo.limitIndexOffset;
+	rollupInstanceManager.setOptions(rio);
 }
 
-void PerfmonParent::getInstanceName(Indices indices, ResultString stringType, string& str) const {
+void PerfmonParent::getInstanceName(SimpleInstanceManager::Indices indices, ResultString stringType, string& str) const {
 	if (stringType == ResultString::eNUMBER) {
 		return;
 	}
-	const auto& item = instanceManager.getNames(indices.current);
-	if (instanceManager.isRollup()) {
+	const auto& item = simpleInstanceManager.getNames(indices.current);
+	if (useRollup) {
 		str = item.displayName;
 		return;
 	}
@@ -175,7 +149,7 @@ void PerfmonParent::getInstanceName(Indices indices, ResultString stringType, st
 		str = item.originalName;
 		return;
 	case ResultString::eUNIQUE_NAME: {
-		auto ids = instanceManager.getIds(indices.current);
+		auto ids = simpleInstanceManager.getIds(indices.current);
 		str = std::to_wstring(ids.id1);
 		str += std::to_wstring(ids.id2);
 		return;
@@ -194,17 +168,17 @@ double PerfmonParent::vUpdate() {
 	if (!stopped) {
 		const bool success = pdhWrapper.fetch();
 		if (!success) {
-			instanceManager.clear();
+			simpleInstanceManager.clear();
 			state = State::eFETCH_ERROR;
 			return 0;
 		}
 
-		instanceManager.swapSnapshot(pdhWrapper.getMainSnapshot(), pdhWrapper.getProcessIdsSnapshot());
+		simpleInstanceManager.swapSnapshot(pdhWrapper.getMainSnapshot(), pdhWrapper.getProcessIdsSnapshot());
 
 		needUpdate = true;
 	}
 
-	if (!instanceManager.canGetRaw()) {
+	if (!simpleInstanceManager.canGetRaw()) {
 		state = State::eNO_DATA;
 		return 0;
 	}
@@ -215,11 +189,12 @@ double PerfmonParent::vUpdate() {
 
 		expressionResolver.resetCache();
 
-		instanceManager.update();
-		if (instanceManager.isRollup()) {
-			instanceManager.sort(rollupExpressionSolver, instanceManager.getRollupInstances());
+		simpleInstanceManager.update();
+		if (useRollup) {
+			rollupInstanceManager.update();
+			rollupInstanceManager.sort(rollupExpressionSolver);
 		} else {
-			instanceManager.sort(expressionResolver, instanceManager.getInstances());
+			simpleInstanceManager.sort(expressionResolver);
 		}
 	}
 
@@ -259,7 +234,9 @@ void PerfmonParent::vCommand(isview bangArgs) {
 	if (name.asIString() == L"SetIndexOffset") {
 		const index offset = value.asInt();
 		const auto firstSymbol = value.asString()[0];
-		instanceManager.setIndexOffset(offset, firstSymbol == L'-' || firstSymbol == L'+');
+		const bool isRelativeValue = firstSymbol == L'-' || firstSymbol == L'+';
+		simpleInstanceManager.setIndexOffset(offset, isRelativeValue);
+		rollupInstanceManager.setIndexOffset(offset, isRelativeValue);
 	}
 }
 
@@ -269,7 +246,7 @@ void PerfmonParent::vResolve(array_view<isview> args, string& resolveBufferStrin
 	}
 
 	if (args[0] == L"fetch size") {
-		resolveBufferString = std::to_wstring(instanceManager.getItemsCount());
+		resolveBufferString = std::to_wstring(simpleInstanceManager.getItemsCount());
 		return;
 	}
 	if (args[0] == L"is stopped") {
@@ -279,29 +256,143 @@ void PerfmonParent::vResolve(array_view<isview> args, string& resolveBufferStrin
 }
 
 double PerfmonParent::getValues(const Reference& ref, index sortedIndex, ResultString stringType, string& str) const {
-	if (!instanceManager.canGetRaw() || ref.type == Reference::Type::COUNTER_FORMATTED && !instanceManager.canGetFormatted()) {
+	if (!simpleInstanceManager.canGetRaw() || ref.type == Reference::Type::COUNTER_FORMATTED && !simpleInstanceManager.canGetFormatted()) {
 		str = ref.total ? L"Total" : L"";
 		return 0.0;
 	}
 
 	if (ref.total) {
 		str = L"Total";
-		if (instanceManager.isRollup()) {
+		if (useRollup) {
 			return rollupExpressionSolver.resolveReference(ref, {});
 		} else {
 			return expressionResolver.resolveReference(ref, {});
 		}
+	}
+
+	if (useRollup) {
+		const auto instance = rollupInstanceManager.findRollupInstance(ref, sortedIndex);
+		str.clear();
+		getInstanceName(instance->indices.front(), stringType, str);
+		return rollupExpressionSolver.resolveReference(ref, instance->indices);
+	}
+
+	const auto instance = simpleInstanceManager.findSimpleInstance(ref, sortedIndex);
+	str.clear();
+	getInstanceName(instance->indices, stringType, str);
+	return expressionResolver.resolveReference(ref, instance->indices);
+}
+
+SortInfo PerfmonParent::parseSortInfo() {
+	SortInfo result;
+
+	result.sortByValueInformation.sortIndex = rain.read(L"SortIndex").asInt();
+
+	const auto sortByString = rain.read(L"SortBy").asIString(L"None");
+	if (const auto sortByOpt = parseEnum<SortBy>(sortByString);
+		sortByOpt.has_value()) {
+		result.sortBy = sortByOpt.value();
 	} else {
-		if (instanceManager.isRollup()) {
-			auto instance = instanceManager.findRollupInstance(ref, sortedIndex);
-			str.clear();
-			getInstanceName(instance->indices.front(), stringType, str);
-			return rollupExpressionSolver.resolveReference(ref, instance->indices);
-		} else {
-			auto instance = instanceManager.findSimpleInstance(ref, sortedIndex);
-			str.clear();
-			getInstanceName(instance->indices, stringType, str);
-			return expressionResolver.resolveReference(ref, instance->indices);
+		result.sortBy = SortBy::eVALUE;
+
+		if (sortByString == L"RawCounter")
+			result.sortByValueInformation.expressionType = Reference::Type::COUNTER_RAW;
+		else if (sortByString == L"FormattedCounter")
+			result.sortByValueInformation.expressionType = Reference::Type::COUNTER_FORMATTED;
+		else if (sortByString == L"Expression")
+			result.sortByValueInformation.expressionType = Reference::Type::EXPRESSION;
+		else if (sortByString == L"RollupExpression")
+			result.sortByValueInformation.expressionType = Reference::Type::ROLLUP_EXPRESSION;
+		else if (sortByString == L"Count")
+			result.sortByValueInformation.expressionType = Reference::Type::COUNT;
+		else {
+			logger.error(L"SortBy '{}' is invalid, set to 'None'", sortByString);
+			result.sortBy = SortBy::eNONE;
 		}
+	}
+
+	const auto sortOrderString = rain.read(L"SortOrder").asIString(L"Descending");
+	if (const auto sortOrderOpt = parseEnum<SortOrder>(sortOrderString);
+		sortOrderOpt.has_value()) {
+		result.sortOrder = sortOrderOpt.value();
+	} else {
+		logger.error(L"SortOrder '{}' is invalid, set to 'Descending'", sortOrderString);
+		result.sortOrder = SortOrder::eDESCENDING;
+	}
+
+	if (const auto rollupFunctionStr = rain.read(L"SortRollupFunction").asIString(L"Sum");
+		rollupFunctionStr == L"Count") {
+		logger.warning(L"SortRollupFunction 'Count' is deprecated, SortBy set to 'Count'");
+		result.sortBy = SortBy::eVALUE;
+		result.sortByValueInformation.expressionType = Reference::Type::COUNT;
+		result.sortByValueInformation.sortRollupFunction = RollupFunction::eSUM;
+	} else {
+		auto typeOpt = parseEnum<RollupFunction>(rollupFunctionStr);
+		if (typeOpt.has_value()) {
+			result.sortByValueInformation.sortRollupFunction = typeOpt.value();
+		} else {
+			logger.error(L"SortRollupFunction '{}' is invalid, set to 'Sum'", rollupFunctionStr);
+			result.sortByValueInformation.sortRollupFunction = RollupFunction::eSUM;
+		}
+	}
+
+	return result;
+}
+
+void PerfmonParent::checkAndFixSortInfo(SortInfo& sortInfo, index counters, index expressions, index rollupExpressions) const {
+	index checkCount = 0;
+
+	if (sortInfo.sortBy != SortBy::eVALUE) {
+		return;
+	}
+
+	auto info = sortInfo.sortByValueInformation;
+
+	if (info.sortIndex < 0) {
+		logger.error(L"SortIndex can't be negative");
+		sortInfo.sortBy = SortBy::eNONE;
+		return;
+	}
+
+	switch (info.expressionType) {
+	case Reference::Type::COUNTER_RAW:
+	case Reference::Type::COUNTER_FORMATTED:
+		checkCount = counters;
+		break;
+	case Reference::Type::EXPRESSION: {
+		if (expressions <= 0) {
+			logger.error(L"Sort by Expression requires at least 1 Expression specified. Set to None.");
+			sortInfo.sortBy = SortBy::eNONE;
+			return;
+		}
+		checkCount = expressions;
+		break;
+	}
+	case Reference::Type::ROLLUP_EXPRESSION: {
+		if (!useRollup) {
+			logger.error(L"RollupExpressions can't be used for sort if rollup is disabled. Set to None.");
+			sortInfo.sortBy = SortBy::eNONE;
+			return;
+		}
+		if (rollupExpressions <= 0) {
+			logger.error(L"Sort by RollupExpression requires at least 1 RollupExpression specified. Set to None.");
+			sortInfo.sortBy = SortBy::eNONE;
+			return;
+		}
+		checkCount = rollupExpressions;
+		break;
+	}
+	case Reference::Type::COUNT: {
+		if (!useRollup) {
+			logger.warning(L"SortBy Count does nothing when rollup is disabled");
+			sortInfo.sortBy = SortBy::eNONE;
+		}
+		return;
+	}
+	}
+
+	if (info.sortIndex >= checkCount) {
+		logger.error(L"SortIndex {} is out of bounds (must be in [0; {}]). Set to 0.", checkCount, info.sortIndex);
+		info.sortIndex = 0;
 	}
 }

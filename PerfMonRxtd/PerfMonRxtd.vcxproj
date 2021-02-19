@@ -153,7 +153,8 @@
     <ClCompile Include="sources\BlacklistManager.cpp" />
     <ClCompile Include="sources\expressions\RollupExpressionResolver.cpp" />
     <ClCompile Include="sources\expressions\SimpleExpressionSolver.cpp" />
-    <ClCompile Include="sources\SimpleInstanceManager.cpp" />
+    <ClCompile Include="sources\instances\RollupInstanceManager.cpp" />
+    <ClCompile Include="sources\instances\SimpleInstanceManager.cpp" />
     <ClCompile Include="sources\pdh\PdhFormat.cpp" />
     <ClCompile Include="sources\PerfmonChild.cpp" />
     <ClCompile Include="sources\enums.h" />
@@ -170,7 +171,12 @@
     <ClInclude Include="sources\expressions\RollupExpressionResolver.h" />
     <ClInclude Include="sources\expressions\SimpleExpressionSolver.h" />
     <ClInclude Include="sources\expressions\TotalUtilities.h" />
-    <ClInclude Include="sources\SimpleInstanceManager.h" />
+    <ClInclude Include="sources\instances\InstanceManagerUtilities.h" />
+    <ClInclude Include="sources\instances\RollupInstanceManager.h" />
+    <ClInclude Include="sources\instances\SimpleInstanceManager.h" />
+    <ClInclude Include="sources\instances\SortBy.h" />
+    <ClInclude Include="sources\instances\SortInfo.h" />
+    <ClInclude Include="sources\instances\SortOrder.h" />
     <ClInclude Include="sources\MatchPattern.h" />
     <ClInclude Include="sources\pdh\my-pdh.h" />
     <ClInclude Include="sources\pdh\PdhFormat.h" />

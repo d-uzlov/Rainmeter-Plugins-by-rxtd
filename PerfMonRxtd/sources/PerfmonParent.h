@@ -55,10 +55,11 @@
 
 #pragma once
 
-#include "SimpleInstanceManager.h"
 #include "TypeHolder.h"
 #include "expressions/RollupExpressionResolver.h"
 #include "expressions/SimpleExpressionSolver.h"
+#include "instances/SimpleInstanceManager.h"
+#include "instances/RollupInstanceManager.h"
 #include "pdh/PdhWrapper.h"
 
 namespace rxtd::perfmon {
@@ -74,15 +75,17 @@ namespace rxtd::perfmon {
 
 		string objectName;
 
+		bool useRollup = false;
 		bool stopped = false;
 		bool needUpdate = true;
 
 		pdh::PdhWrapper pdhWrapper;
 
-		SimpleInstanceManager instanceManager{ logger, pdhWrapper };
+		SimpleInstanceManager simpleInstanceManager{ logger, pdhWrapper };
+		RollupInstanceManager rollupInstanceManager{ logger, simpleInstanceManager };
 
-		expressions::SimpleExpressionSolver expressionResolver{ logger, instanceManager };
-		expressions::RollupExpressionResolver rollupExpressionSolver{ logger, instanceManager, expressionResolver };
+		expressions::SimpleExpressionSolver expressionResolver{ logger, simpleInstanceManager };
+		expressions::RollupExpressionResolver rollupExpressionSolver{ logger, simpleInstanceManager, rollupInstanceManager, expressionResolver };
 
 	public:
 		explicit PerfmonParent(Rainmeter&& _rain);
@@ -102,6 +105,11 @@ namespace rxtd::perfmon {
 			string& str
 		) const;
 
-		void getInstanceName(Indices indices, ResultString stringType, string& str) const;
+	private:
+		SortInfo parseSortInfo();
+
+		void checkAndFixSortInfo(SortInfo& sortInfo, index counters, index expressions, index rollupExpressions) const;
+
+		void getInstanceName(SimpleInstanceManager::Indices indices, ResultString stringType, string& str) const;
 	};
 }

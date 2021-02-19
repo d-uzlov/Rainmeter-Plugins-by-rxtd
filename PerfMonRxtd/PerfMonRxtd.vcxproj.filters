@@ -15,6 +15,9 @@
     <Filter Include="Source Files\expressions">
       <UniqueIdentifier>{eca1d183-f1f1-497d-bd5a-83182e162a33}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\instances">
+      <UniqueIdentifier>{7d317e8a-9169-4f86-980e-2e21abc066a0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\enums.h">
@@ -53,8 +56,11 @@
     <ClCompile Include="sources\expressions\SimpleExpressionSolver.cpp">
       <Filter>Source Files\expressions</Filter>
     </ClCompile>
-    <ClCompile Include="sources\SimpleInstanceManager.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="sources\instances\RollupInstanceManager.cpp">
+      <Filter>Source Files\instances</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\instances\SimpleInstanceManager.cpp">
+      <Filter>Source Files\instances</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -109,8 +115,23 @@
     <ClInclude Include="sources\expressions\TotalUtilities.h">
       <Filter>Source Files\expressions</Filter>
     </ClInclude>
-    <ClInclude Include="sources\SimpleInstanceManager.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="sources\instances\InstanceManagerUtilities.h">
+      <Filter>Source Files\instances</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\instances\RollupInstanceManager.h">
+      <Filter>Source Files\instances</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\instances\SimpleInstanceManager.h">
+      <Filter>Source Files\instances</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\instances\SortOrder.h">
+      <Filter>Source Files\instances</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\instances\SortBy.h">
+      <Filter>Source Files\instances</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\instances\SortInfo.h">
+      <Filter>Source Files\instances</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
