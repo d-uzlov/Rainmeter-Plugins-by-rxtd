@@ -7,27 +7,27 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include "ExpressionSolver.h"
+#include "SimpleExpressionSolver.h"
 
 
 #include "TotalUtilities.h"
 #include "option-parsing/OptionList.h"
 
-using namespace rxtd::perfmon;
+using namespace rxtd::perfmon::expressions;
 
-ExpressionSolver::ExpressionSolver(Logger log, const InstanceManager& instanceManager) :
+SimpleExpressionSolver::SimpleExpressionSolver(Logger log, const SimpleInstanceManager& instanceManager) :
 	log(std::move(log)),
 	instanceManager(instanceManager) {}
 
-rxtd::index ExpressionSolver::getExpressionsCount() const {
+rxtd::index SimpleExpressionSolver::getExpressionsCount() const {
 	return index(expressions.size());
 }
 
-void ExpressionSolver::resetCache() {
+void SimpleExpressionSolver::resetCache() {
 	totalCaches.reset();
 }
 
-ExpressionSolver::ASTSolver ExpressionSolver::parseExpression(sview expressionString, sview loggerName, index loggerIndex) {
+SimpleExpressionSolver::ASTSolver SimpleExpressionSolver::parseExpression(sview expressionString, sview loggerName, index loggerIndex) {
 	using common::expressions::ASTSolver;
 
 	try {
@@ -52,7 +52,7 @@ ExpressionSolver::ASTSolver ExpressionSolver::parseExpression(sview expressionSt
 	return {};
 }
 
-void ExpressionSolver::checkExpressionIndices() {
+void SimpleExpressionSolver::checkExpressionIndices() {
 	for (index i = 0; i < index(expressions.size()); ++i) {
 		try {
 			using CustomNode = common::expressions::ast_nodes::CustomTerminalNode;
@@ -80,7 +80,7 @@ void ExpressionSolver::checkExpressionIndices() {
 						}
 
 						if (!ref.useOrigName) {
-							CharUpperW(&ref.name[0]);
+							utils::StringUtils::makeUppercaseInPlace(ref.namePattern.getName());
 						}
 					}
 				}
@@ -91,7 +91,7 @@ void ExpressionSolver::checkExpressionIndices() {
 	}
 }
 
-void ExpressionSolver::setExpressions(OptionList expressionsList) {
+void SimpleExpressionSolver::setExpressions(OptionList expressionsList) {
 	expressions.resize(expressionsList.size());
 	for (index i = 0; i < index(expressionsList.size()); ++i) {
 		expressions[i] = parseExpression(expressionsList.get(i).asString(), L"Expression", i);
@@ -100,7 +100,7 @@ void ExpressionSolver::setExpressions(OptionList expressionsList) {
 	checkExpressionIndices();
 }
 
-double ExpressionSolver::resolveReference(const Reference& ref, Indices indices) const {
+double SimpleExpressionSolver::resolveReference(const Reference& ref, Indices indices) const {
 	using Type = Reference::Type;
 
 	if (ref.total) {
@@ -142,7 +142,7 @@ double ExpressionSolver::resolveReference(const Reference& ref, Indices indices)
 	return 0.0; // todo throw
 }
 
-double ExpressionSolver::solveExpression(index expressionIndex, Indices indices) const {
+double SimpleExpressionSolver::solveExpression(index expressionIndex, Indices indices) const {
 	ReferenceResolver referenceResolver{ *this, indices };
 	return expressions[expressionIndex].solve(&referenceResolver);
 }

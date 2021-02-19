@@ -11,13 +11,13 @@
 
 namespace rxtd::perfmon {
 	/// <summary>
-	/// Class MatchPattern is a primitive matching helper
+	/// Class MatchPattern is a primitive matching helper.
 	/// When pattern has a form of "*<values>*" (asterisks at the beginning and at the end)
-	///		then MatchPattern checks if pattern is a substring of tested string
-	///	Otherwise checks the exact match
+	///		then MatchPattern checks if pattern is a substring of tested string.
+	///	Otherwise checks the exact match.
 	///
 	///	The class doesn't manage it's memory, so the caller must ensure
-	///	that source of the string_view lives at least as long as MatchPattern instance is used
+	///	that source of the string_view lives at least as long as MatchPattern instance is used.
 	/// </summary>
 	class MatchPattern {
 		sview substring{};
@@ -53,6 +53,11 @@ namespace rxtd::perfmon {
 		friend bool operator<(const MatchPattern& lhs, const MatchPattern& rhs) {
 			return lhs.substring < rhs.substring
 				&& lhs.matchSubstring < rhs.matchSubstring;
+		}
+
+		[[nodiscard]]
+		sview getName() const {
+			return substring;
 		}
 	};
 }

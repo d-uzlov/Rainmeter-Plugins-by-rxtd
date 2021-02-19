@@ -10,14 +10,14 @@
 #include "RollupExpressionResolver.h"
 
 
-#include "ExpressionSolver.h"
+#include "SimpleExpressionSolver.h"
 #include "TotalUtilities.h"
 #include "expressions/ASTSolver.h"
 #include "option-parsing/OptionList.h"
 
-using namespace rxtd::perfmon;
+using namespace rxtd::perfmon::expressions;
 
-RollupExpressionResolver::RollupExpressionResolver(Logger log, const InstanceManager& instanceManager, ExpressionSolver& simpleExpressionSolver) :
+RollupExpressionResolver::RollupExpressionResolver(Logger log, const SimpleInstanceManager& instanceManager, SimpleExpressionSolver& simpleExpressionSolver) :
 	log(std::move(log)), instanceManager(instanceManager), simpleExpressionSolver(simpleExpressionSolver) {}
 
 rxtd::index RollupExpressionResolver::getExpressionsCount() const {
@@ -86,10 +86,10 @@ void RollupExpressionResolver::checkExpressionIndices() {
 							log.error(L"RollupExpression {} can't reference RollupExpression {}", i, ref.counter);
 							throw std::runtime_error{ "" };
 						}
-
+						
 						if (ref.type == Reference::Type::EXPRESSION || ref.type == Reference::Type::ROLLUP_EXPRESSION) {
 							if (!ref.useOrigName) {
-								CharUpperW(&ref.name[0]);
+								utils::StringUtils::makeUppercaseInPlace(ref.namePattern.getName());
 							}
 						}
 					}

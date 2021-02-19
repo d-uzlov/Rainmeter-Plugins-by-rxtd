@@ -7,16 +7,16 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include "InstanceManager.h"
-#include "expression-solving/ExpressionSolver.h"
-#include "expression-solving/RollupExpressionResolver.h"
+#include "SimpleInstanceManager.h"
+#include "expressions/SimpleExpressionSolver.h"
+#include "expressions/RollupExpressionResolver.h"
 
 using namespace rxtd::perfmon;
 
-InstanceManager::InstanceManager(Logger log, const pdh::PdhWrapper& phWrapper) :
+SimpleInstanceManager::SimpleInstanceManager(Logger log, const pdh::PdhWrapper& phWrapper) :
 	log(std::move(log)), pdhWrapper(phWrapper) { }
 
-void InstanceManager::checkIndices(index counters, index expressions, index rollupExpressions) {
+void SimpleInstanceManager::checkIndices(index counters, index expressions, index rollupExpressions) {
 	index checkCount = 0;
 
 	switch (options.sortBy) {
@@ -60,11 +60,11 @@ void InstanceManager::checkIndices(index counters, index expressions, index roll
 	return;
 }
 
-void InstanceManager::setNameModificationType(pdh::NamesManager::ModificationType value) {
+void SimpleInstanceManager::setNameModificationType(pdh::NamesManager::ModificationType value) {
 	namesManager.setModificationType(value);
 }
 
-void InstanceManager::update() {
+void SimpleInstanceManager::update() {
 	instances.clear();
 	instancesRolledUp.clear();
 	instancesDiscarded.clear();
@@ -89,7 +89,7 @@ void InstanceManager::update() {
 	}
 }
 
-rxtd::index InstanceManager::findPreviousName(pdh::UniqueInstanceId uniqueId, index hint) const {
+rxtd::index SimpleInstanceManager::findPreviousName(pdh::UniqueInstanceId uniqueId, index hint) const {
 	// try to find a match for the current instance name in the previous buffer
 	// counter buffers tend to be *mostly* aligned, so we'll try to short-circuit a full search
 
@@ -129,7 +129,7 @@ rxtd::index InstanceManager::findPreviousName(pdh::UniqueInstanceId uniqueId, in
 	return -1;
 }
 
-void InstanceManager::buildInstanceKeysZero() {
+void SimpleInstanceManager::buildInstanceKeysZero() {
 	instances.reserve(snapshotCurrent.getItemsCount());
 
 	for (index currentIndex = 0; currentIndex < snapshotCurrent.getItemsCount(); ++currentIndex) {
@@ -148,7 +148,7 @@ void InstanceManager::buildInstanceKeysZero() {
 	}
 }
 
-void InstanceManager::buildInstanceKeys() {
+void SimpleInstanceManager::buildInstanceKeys() {
 	instances.reserve(snapshotCurrent.getItemsCount());
 
 	for (index current = 0; current < snapshotCurrent.getItemsCount(); ++current) {
@@ -172,7 +172,7 @@ void InstanceManager::buildInstanceKeys() {
 	}
 }
 
-void InstanceManager::buildRollupKeys() {
+void SimpleInstanceManager::buildRollupKeys() {
 	std::unordered_map<sview, RollupInstanceInfo> mapRollupKeys;
 	mapRollupKeys.reserve(instances.size());
 
@@ -187,7 +187,7 @@ void InstanceManager::buildRollupKeys() {
 	}
 }
 
-const InstanceInfo* InstanceManager::findSimpleInstance(const Reference& ref, index sortedIndex) const {
+const InstanceInfo* SimpleInstanceManager::findSimpleInstance(const Reference& ref, index sortedIndex) const {
 	if (!ref.namePattern.isEmpty()) {
 		return findSimpleInstanceByName(ref);
 	}
@@ -200,7 +200,7 @@ const InstanceInfo* InstanceManager::findSimpleInstance(const Reference& ref, in
 	return &instances[sortedIndex];
 }
 
-const RollupInstanceInfo* InstanceManager::findRollupInstance(const Reference& ref, index sortedIndex) const {
+const RollupInstanceInfo* SimpleInstanceManager::findRollupInstance(const Reference& ref, index sortedIndex) const {
 	if (!ref.namePattern.isEmpty()) {
 		return findRollupInstanceByName(ref);
 	}
@@ -213,22 +213,22 @@ const RollupInstanceInfo* InstanceManager::findRollupInstance(const Reference& r
 	return &instancesRolledUp[sortedIndex];
 }
 
-const InstanceInfo* InstanceManager::findSimpleInstanceByName(const Reference& ref) const {
+const InstanceInfo* SimpleInstanceManager::findSimpleInstanceByName(const Reference& ref) const {
 	if (ref.discarded) {
 		return findInstanceByNameInList(ref, array_view<InstanceInfo>{ instancesDiscarded }, nameCaches.discarded);
 	}
 	return findInstanceByNameInList(ref, array_view<InstanceInfo>{ instances }, nameCaches.simple);
 }
 
-const RollupInstanceInfo* InstanceManager::findRollupInstanceByName(const Reference& ref) const {
+const RollupInstanceInfo* SimpleInstanceManager::findRollupInstanceByName(const Reference& ref) const {
 	return findInstanceByNameInList(ref, array_view<RollupInstanceInfo>{ instancesRolledUp }, nameCaches.rollup);
 }
 
-double InstanceManager::calculateRaw(index counterIndex, Indices originalIndexes) const {
+double SimpleInstanceManager::calculateRaw(index counterIndex, Indices originalIndexes) const {
 	return double(snapshotCurrent.getItem(counterIndex, originalIndexes.current).FirstValue);
 }
 
-double InstanceManager::calculateFormatted(index counterIndex, Indices originalIndexes) const {
+double SimpleInstanceManager::calculateFormatted(index counterIndex, Indices originalIndexes) const {
 	if (!canGetFormatted()) {
 		return 0.0;
 	}

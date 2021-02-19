@@ -42,7 +42,7 @@ namespace rxtd::perfmon {
 		}
 	};
 
-	class InstanceManager {
+	class SimpleInstanceManager {
 	public:
 		using Logger = common::rainmeter::Logger;
 
@@ -124,7 +124,7 @@ namespace rxtd::perfmon {
 		mutable Caches nameCaches;
 
 	public:
-		InstanceManager(Logger log, const pdh::PdhWrapper& phWrapper);
+		SimpleInstanceManager(Logger log, const pdh::PdhWrapper& phWrapper);
 
 		void setOptions(Options value) {
 			options = value;
@@ -356,8 +356,8 @@ namespace rxtd::perfmon {
 }
 
 template<>
-inline std::optional<rxtd::perfmon::InstanceManager::SortBy> parseEnum<rxtd::perfmon::InstanceManager::SortBy>(rxtd::isview name) {
-	using SortBy = rxtd::perfmon::InstanceManager::SortBy;
+inline std::optional<rxtd::perfmon::SimpleInstanceManager::SortBy> parseEnum<rxtd::perfmon::SimpleInstanceManager::SortBy>(rxtd::isview name) {
+	using SortBy = rxtd::perfmon::SimpleInstanceManager::SortBy;
 	if (name == L"None")
 		return SortBy::eNONE;
 	else if (name == L"InstanceName")
@@ -377,8 +377,8 @@ inline std::optional<rxtd::perfmon::InstanceManager::SortBy> parseEnum<rxtd::per
 }
 
 template<>
-inline std::optional<rxtd::perfmon::InstanceManager::SortOrder> parseEnum<rxtd::perfmon::InstanceManager::SortOrder>(rxtd::isview name) {
-	using SortOrder = rxtd::perfmon::InstanceManager::SortOrder;
+inline std::optional<rxtd::perfmon::SimpleInstanceManager::SortOrder> parseEnum<rxtd::perfmon::SimpleInstanceManager::SortOrder>(rxtd::isview name) {
+	using SortOrder = rxtd::perfmon::SimpleInstanceManager::SortOrder;
 	if (name == L"Descending")
 		return SortOrder::eDESCENDING;
 	else if (name == L"Ascending")

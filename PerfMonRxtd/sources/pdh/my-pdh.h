@@ -14,4 +14,5 @@
 // which have some unwanted defines,
 // that are disabled in my-windows.h
 #include "my-windows.h"
+// ReSharper disable once CppWrongIncludesOrder
 #include <Pdh.h>

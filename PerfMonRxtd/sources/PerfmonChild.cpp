@@ -36,7 +36,7 @@ void PerfmonChild::vReload() {
 
 	instanceName = rain.read(L"InstanceName").asString();
 	if (!ref.useOrigName) {
-		CharUpperW(instanceName.data());
+		utils::StringUtils::makeUppercaseInPlace(instanceName);
 	}
 	ref.namePattern = MatchPattern{ instanceName };
 

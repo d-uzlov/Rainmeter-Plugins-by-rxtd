@@ -9,6 +9,8 @@
 
 #include "StringUtils.h"
 
+#include "my-windows.h"
+
 using namespace rxtd::utils;
 
 SubstringViewInfo SubstringViewInfo::substr(
@@ -33,6 +35,14 @@ bool SubstringViewInfo::operator<(const SubstringViewInfo& other) const {
 	}
 
 	return length < other.length;
+}
+
+void StringUtils::makeUppercaseInPlace(sview str) {
+	// waiting for std::string_span to arrive to c++ standard.
+	// Hopefully this will require no more than 10-15 years.
+	auto* data = const_cast<wchar_t*>(str.data());
+
+	CharUpperBuffW(data, DWORD(str.length()));
 }
 
 

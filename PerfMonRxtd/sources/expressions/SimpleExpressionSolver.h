@@ -13,22 +13,22 @@
 
 #include "CacheHelper.h"
 #include "ExpressionParser.h"
-#include "InstanceManager.h"
+#include "SimpleInstanceManager.h"
 #include "Reference.h"
 #include "expressions/ASTSolver.h"
 
-namespace rxtd::perfmon {
-	class ExpressionSolver {
+namespace rxtd::perfmon::expressions {
+	class SimpleExpressionSolver {
 		using Logger = common::rainmeter::Logger;
 		using OptionList = common::options::OptionList;
 		using ASTSolver = common::expressions::ASTSolver;
 
 		class ReferenceResolver : public common::expressions::ASTSolver::ValueProvider {
-			const ExpressionSolver& expressionResolver;
+			const SimpleExpressionSolver& expressionResolver;
 			Indices indices;
 
 		public:
-			ReferenceResolver(const ExpressionSolver& expressionResolver, Indices indices) :
+			ReferenceResolver(const SimpleExpressionSolver& expressionResolver, Indices indices) :
 				expressionResolver(expressionResolver), indices(indices) {}
 
 			std::optional<NodeData> solveCustom(const std::any& value) override {
@@ -39,7 +39,7 @@ namespace rxtd::perfmon {
 
 		Logger log;
 
-		const InstanceManager& instanceManager;
+		const SimpleInstanceManager& instanceManager;
 
 		ExpressionParser parser;
 
@@ -72,7 +72,7 @@ namespace rxtd::perfmon {
 		mutable TotalCaches totalCaches;
 
 	public:
-		ExpressionSolver(Logger log, const InstanceManager& instanceManager);
+		SimpleExpressionSolver(Logger log, const SimpleInstanceManager& instanceManager);
 
 		index getExpressionsCount() const;
 

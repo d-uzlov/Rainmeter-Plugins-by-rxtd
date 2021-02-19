@@ -9,7 +9,6 @@
 
 #include "BlacklistManager.h"
 
-#include "my-windows.h"
 #include "option-parsing/Tokenizer.h"
 
 using namespace rxtd::perfmon;
@@ -17,7 +16,7 @@ using namespace rxtd::perfmon;
 BlacklistManager::MatchList::MatchList(string sourceString, bool upperCase) {
 	source = std::move(sourceString);
 	if (upperCase) {
-		CharUpperW(source.data());
+		utils::StringUtils::makeUppercaseInPlace(source);
 	}
 
 	auto tokens = common::options::Tokenizer::parse(source, L'|');

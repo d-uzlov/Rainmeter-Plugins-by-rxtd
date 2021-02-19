@@ -51,7 +51,7 @@ void PerfmonParent::vReload() {
 	}
 
 
-	InstanceManager::Options imo;
+	SimpleInstanceManager::Options imo;
 	imo.sortIndex = rain.read(L"SortIndex").asInt();
 	imo.syncRawFormatted = rain.read(L"SyncRawFormatted").asBool();
 	imo.keepDiscarded = rain.read(L"KeepDiscarded").asBool();
@@ -59,7 +59,7 @@ void PerfmonParent::vReload() {
 	imo.limitIndexOffset = rain.read(L"LimitIndexOffset").asBool();
 
 	auto str = rain.read(L"SortBy").asIString(L"None");
-	using SortBy = InstanceManager::SortBy;
+	using SortBy = SimpleInstanceManager::SortBy;
 	auto sortByOpt = parseEnum<SortBy>(str);
 	if (sortByOpt.has_value()) {
 		imo.sortBy = sortByOpt.value();
@@ -69,12 +69,12 @@ void PerfmonParent::vReload() {
 	}
 
 	str = rain.read(L"SortOrder").asIString(L"Descending");
-	auto sortOrderOpt = parseEnum<InstanceManager::SortOrder>(str);
+	auto sortOrderOpt = parseEnum<SimpleInstanceManager::SortOrder>(str);
 	if (sortOrderOpt.has_value()) {
 		imo.sortOrder = sortOrderOpt.value();
 	} else {
 		logger.error(L"SortOrder '{}' is invalid, set to 'Descending'", str);
-		imo.sortOrder = InstanceManager::SortOrder::eDESCENDING;
+		imo.sortOrder = SimpleInstanceManager::SortOrder::eDESCENDING;
 	}
 
 

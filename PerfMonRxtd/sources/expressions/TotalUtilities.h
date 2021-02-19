@@ -11,7 +11,7 @@
 #include "CacheHelper.h"
 #include "enums.h"
 
-namespace rxtd::perfmon {
+namespace rxtd::perfmon::expressions {
 	class TotalUtilities {
 	public:
 		template<typename CacheKey, typename InstanceStruct, typename Callable>

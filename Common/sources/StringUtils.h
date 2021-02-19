@@ -64,6 +64,21 @@ namespace rxtd::utils {
 
 	class StringUtils {
 	public:
+		/// <summary>
+		/// Translated all symbols in the string to uppercase
+		/// Be careful when using: c++17 doesn't have anything like string_span built-in
+		/// and string_view can be constructed from read-only memory.
+		/// However, since string_view is a lot easier to pass around,
+		/// this function forcefully change string_view content.
+		/// This may result in page fault!
+		/// The caller is responsible to only call this on read-write views.
+		/// </summary>
+		static void makeUppercaseInPlace(sview str);
+
+		static void makeUppercaseInPlace(string& str) {
+			makeUppercaseInPlace(sview{ str });
+		}
+
 		template<typename CharTraits>
 		static std::basic_string_view<wchar_t, CharTraits> trim(std::basic_string_view<wchar_t, CharTraits> view) {
 			const auto begin = view.find_first_not_of(L" \t");

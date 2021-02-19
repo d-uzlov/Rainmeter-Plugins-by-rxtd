@@ -10,21 +10,20 @@
 #pragma once
 #include <unordered_map>
 
-
 #include "CacheHelper.h"
 #include "ExpressionParser.h"
-#include "ExpressionSolver.h"
-#include "InstanceManager.h"
+#include "SimpleInstanceManager.h"
 #include "Reference.h"
+#include "SimpleExpressionSolver.h"
 #include "expressions/ASTSolver.h"
 
-namespace rxtd::perfmon {
+namespace rxtd::perfmon::expressions {
 	class RollupExpressionResolver {
 		using Logger = common::rainmeter::Logger;
 		using OptionList = common::options::OptionList;
 		using ASTSolver = common::expressions::ASTSolver;
 
-		class ReferenceResolver : public common::expressions::ASTSolver::ValueProvider {
+		class ReferenceResolver : public ASTSolver::ValueProvider {
 			const RollupExpressionResolver& expressionResolver;
 			array_view<Indices> indices;
 
@@ -40,8 +39,8 @@ namespace rxtd::perfmon {
 
 		Logger log;
 
-		const InstanceManager& instanceManager;
-		ExpressionSolver& simpleExpressionSolver;
+		const SimpleInstanceManager& instanceManager;
+		SimpleExpressionSolver& simpleExpressionSolver;
 
 		ExpressionParser parser;
 
@@ -76,7 +75,7 @@ namespace rxtd::perfmon {
 		mutable TotalCaches totalCaches;
 
 	public:
-		RollupExpressionResolver(Logger log, const InstanceManager& instanceManager, ExpressionSolver& simpleExpressionSolver);
+		RollupExpressionResolver(Logger log, const SimpleInstanceManager& instanceManager, SimpleExpressionSolver& simpleExpressionSolver);
 
 		index getExpressionsCount() const;
 

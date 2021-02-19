@@ -55,10 +55,10 @@
 
 #pragma once
 
-#include "expression-solving/ExpressionSolver.h"
-#include "expression-solving/RollupExpressionResolver.h"
-#include "InstanceManager.h"
+#include "SimpleInstanceManager.h"
 #include "TypeHolder.h"
+#include "expressions/RollupExpressionResolver.h"
+#include "expressions/SimpleExpressionSolver.h"
 #include "pdh/PdhWrapper.h"
 
 namespace rxtd::perfmon {
@@ -79,10 +79,10 @@ namespace rxtd::perfmon {
 
 		pdh::PdhWrapper pdhWrapper;
 
-		InstanceManager instanceManager{ logger, pdhWrapper };
+		SimpleInstanceManager instanceManager{ logger, pdhWrapper };
 
-		ExpressionSolver expressionResolver{ logger, instanceManager };
-		RollupExpressionResolver rollupExpressionSolver{ logger, instanceManager, expressionResolver };
+		expressions::SimpleExpressionSolver expressionResolver{ logger, instanceManager };
+		expressions::RollupExpressionResolver rollupExpressionSolver{ logger, instanceManager, expressionResolver };
 
 	public:
 		explicit PerfmonParent(Rainmeter&& _rain);
