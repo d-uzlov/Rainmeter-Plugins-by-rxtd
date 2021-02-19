@@ -14,27 +14,25 @@
 // ReSharper disable once CppWrongIncludesOrder
 #include <mmdeviceapi.h>
 
-#include "MediaDeviceWrapper.h"
+#include "MediaDeviceHandle.h"
 #include "winapi-wrappers/GenericComWrapper.h"
 
 namespace rxtd::audio_analyzer::wasapi_wrappers {
-	enum class MediaDeviceType;
-
-	class IMMDeviceEnumeratorWrapper : public common::winapi_wrappers::GenericComWrapper<IMMDeviceEnumerator> {
+	class MediaDeviceEnumerator : public common::winapi_wrappers::GenericComWrapper<IMMDeviceEnumerator> {
 	public:
-		IMMDeviceEnumeratorWrapper();
+		MediaDeviceEnumerator();
 
 		[[nodiscard]]
-		std::optional<MediaDeviceWrapper> getDeviceByID(const string& id);
+		std::optional<MediaDeviceHandle> getDeviceByID(const string& id);
 
 		[[nodiscard]]
-		std::optional<MediaDeviceWrapper> getDefaultDevice(MediaDeviceType type);
+		std::optional<MediaDeviceHandle> getDefaultDevice(MediaDeviceType type);
 
 		[[nodiscard]]
-		std::vector<MediaDeviceWrapper> getActiveDevices(MediaDeviceType type);
+		std::vector<MediaDeviceHandle> getActiveDevices(MediaDeviceType type);
 
 	private:
 		[[nodiscard]]
-		std::vector<MediaDeviceWrapper> getCollection(MediaDeviceType type, uint32_t deviceStateMask);
+		std::vector<MediaDeviceHandle> getCollection(MediaDeviceType type, uint32_t deviceStateMask);
 	};
 }

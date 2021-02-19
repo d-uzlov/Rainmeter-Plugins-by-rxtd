@@ -203,19 +203,7 @@
     <ClInclude Include="Sources\audio-utils\MinMaxCounter.h">
       <Filter>Source Files\audio-utils</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\wasapi-wrappers\IAudioCaptureClientWrapper.h">
-      <Filter>Source Files\wasapi-wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="Sources\wasapi-wrappers\IAudioClientWrapper.h">
-      <Filter>Source Files\wasapi-wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="Sources\wasapi-wrappers\IMMDeviceEnumeratorWrapper.h">
-      <Filter>Source Files\wasapi-wrappers</Filter>
-    </ClInclude>
     <ClInclude Include="Sources\wasapi-wrappers\MediaDeviceType.h">
-      <Filter>Source Files\wasapi-wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="Sources\wasapi-wrappers\MediaDeviceWrapper.h">
       <Filter>Source Files\wasapi-wrappers</Filter>
     </ClInclude>
     <ClInclude Include="Sources\wasapi-wrappers\WaveFormat.h">
@@ -232,6 +220,18 @@
     </ClInclude>
     <ClInclude Include="Sources\sound-processing\sound-handlers\SoundHandlerBase.h">
       <Filter>Source Files\sound-processing\sound-handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\wasapi-wrappers\MediaDeviceEnumerator.h">
+      <Filter>Source Files\wasapi-wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\wasapi-wrappers\MediaDeviceHandle.h">
+      <Filter>Source Files\wasapi-wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\wasapi-wrappers\AudioClientHandle.h">
+      <Filter>Source Files\wasapi-wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\wasapi-wrappers\AudioCaptureClient.h">
+      <Filter>Source Files\wasapi-wrappers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -364,20 +364,20 @@
     <ClCompile Include="Sources\audio-utils\CustomizableValueTransformer.cpp">
       <Filter>Source Files\audio-utils</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\wasapi-wrappers\IAudioCaptureClientWrapper.cpp">
-      <Filter>Source Files\wasapi-wrappers</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\wasapi-wrappers\IAudioClientWrapper.cpp">
-      <Filter>Source Files\wasapi-wrappers</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\wasapi-wrappers\IMMDeviceEnumeratorWrapper.cpp">
-      <Filter>Source Files\wasapi-wrappers</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\wasapi-wrappers\MediaDeviceWrapper.cpp">
-      <Filter>Source Files\wasapi-wrappers</Filter>
-    </ClCompile>
     <ClCompile Include="Sources\sound-processing\sound-handlers\SoundHandlerBase.cpp">
       <Filter>Source Files\sound-processing\sound-handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\wasapi-wrappers\MediaDeviceEnumerator.cpp">
+      <Filter>Source Files\wasapi-wrappers</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\wasapi-wrappers\MediaDeviceHandle.cpp">
+      <Filter>Source Files\wasapi-wrappers</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\wasapi-wrappers\AudioClientHandle.cpp">
+      <Filter>Source Files\wasapi-wrappers</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\wasapi-wrappers\AudioCaptureClient.cpp">
+      <Filter>Source Files\wasapi-wrappers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

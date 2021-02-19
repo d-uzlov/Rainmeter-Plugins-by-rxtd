@@ -12,13 +12,13 @@
 
 using namespace rxtd::audio_analyzer;
 
-AudioChild::AudioChild(Rainmeter&& _rain) : TypeHolder(std::move(_rain)) {
+AudioChild::AudioChild(Rainmeter&& _rain) : MeasureBase(std::move(_rain)) {
 	const auto parentName = rain.read(L"Parent").asIString();
 	if (parentName.empty()) {
 		logger.error(L"Parent must be specified");
 		throw std::runtime_error{ "" };
 	}
-	parent = utils::ParentBase::find<AudioParent>(rain.getSkin(), parentName);
+	parent = utils::ParentMeasureBase::find<AudioParent>(rain.getSkin(), parentName);
 
 	if (parent == nullptr) {
 		logger.error(L"Parent '{}' doesn't exist", parentName);

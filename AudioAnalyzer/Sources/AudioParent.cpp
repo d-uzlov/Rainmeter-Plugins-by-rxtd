@@ -50,7 +50,7 @@ void AudioParent::LogHelpers::reset() {
 }
 
 AudioParent::AudioParent(Rainmeter&& _rain) :
-	ParentBase(std::move(_rain)) {
+	ParentMeasureBase(std::move(_rain)) {
 	setUseResultString(false);
 	initLogHelpers();
 	

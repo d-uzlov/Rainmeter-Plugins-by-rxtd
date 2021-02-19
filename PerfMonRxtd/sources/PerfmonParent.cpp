@@ -16,7 +16,7 @@
 
 using namespace rxtd::perfmon;
 
-PerfmonParent::PerfmonParent(Rainmeter&& _rain) : ParentBase(std::move(_rain)) {
+PerfmonParent::PerfmonParent(Rainmeter&& _rain) : ParentMeasureBase(std::move(_rain)) {
 	setUseResultString(true);
 
 	bool success = pdhWrapper.init(logger);
@@ -256,7 +256,7 @@ void PerfmonParent::vResolve(array_view<isview> args, string& resolveBufferStrin
 }
 
 double PerfmonParent::getValues(const Reference& ref, index sortedIndex, ResultString stringType, string& str) const {
-	if (!simpleInstanceManager.canGetRaw() || ref.type == Reference::Type::COUNTER_FORMATTED && !simpleInstanceManager.canGetFormatted()) {
+	if (!simpleInstanceManager.canGetRaw() || ref.type == Reference::Type::eCOUNTER_FORMATTED && !simpleInstanceManager.canGetFormatted()) {
 		str = ref.total ? L"Total" : L"";
 		return 0.0;
 	}
@@ -296,15 +296,15 @@ SortInfo PerfmonParent::parseSortInfo() {
 		result.sortBy = SortBy::eVALUE;
 
 		if (sortByString == L"RawCounter")
-			result.sortByValueInformation.expressionType = Reference::Type::COUNTER_RAW;
+			result.sortByValueInformation.expressionType = Reference::Type::eCOUNTER_RAW;
 		else if (sortByString == L"FormattedCounter")
-			result.sortByValueInformation.expressionType = Reference::Type::COUNTER_FORMATTED;
+			result.sortByValueInformation.expressionType = Reference::Type::eCOUNTER_FORMATTED;
 		else if (sortByString == L"Expression")
-			result.sortByValueInformation.expressionType = Reference::Type::EXPRESSION;
+			result.sortByValueInformation.expressionType = Reference::Type::eEXPRESSION;
 		else if (sortByString == L"RollupExpression")
-			result.sortByValueInformation.expressionType = Reference::Type::ROLLUP_EXPRESSION;
+			result.sortByValueInformation.expressionType = Reference::Type::eROLLUP_EXPRESSION;
 		else if (sortByString == L"Count")
-			result.sortByValueInformation.expressionType = Reference::Type::COUNT;
+			result.sortByValueInformation.expressionType = Reference::Type::eCOUNT;
 		else {
 			logger.error(L"SortBy '{}' is invalid, set to 'None'", sortByString);
 			result.sortBy = SortBy::eNONE;
@@ -324,7 +324,7 @@ SortInfo PerfmonParent::parseSortInfo() {
 		rollupFunctionStr == L"Count") {
 		logger.warning(L"SortRollupFunction 'Count' is deprecated, SortBy set to 'Count'");
 		result.sortBy = SortBy::eVALUE;
-		result.sortByValueInformation.expressionType = Reference::Type::COUNT;
+		result.sortByValueInformation.expressionType = Reference::Type::eCOUNT;
 		result.sortByValueInformation.sortRollupFunction = RollupFunction::eSUM;
 	} else {
 		auto typeOpt = parseEnum<RollupFunction>(rollupFunctionStr);
@@ -355,11 +355,11 @@ void PerfmonParent::checkAndFixSortInfo(SortInfo& sortInfo, index counters, inde
 	}
 
 	switch (info.expressionType) {
-	case Reference::Type::COUNTER_RAW:
-	case Reference::Type::COUNTER_FORMATTED:
+	case Reference::Type::eCOUNTER_RAW:
+	case Reference::Type::eCOUNTER_FORMATTED:
 		checkCount = counters;
 		break;
-	case Reference::Type::EXPRESSION: {
+	case Reference::Type::eEXPRESSION: {
 		if (expressions <= 0) {
 			logger.error(L"Sort by Expression requires at least 1 Expression specified. Set to None.");
 			sortInfo.sortBy = SortBy::eNONE;
@@ -368,7 +368,7 @@ void PerfmonParent::checkAndFixSortInfo(SortInfo& sortInfo, index counters, inde
 		checkCount = expressions;
 		break;
 	}
-	case Reference::Type::ROLLUP_EXPRESSION: {
+	case Reference::Type::eROLLUP_EXPRESSION: {
 		if (!useRollup) {
 			logger.error(L"RollupExpressions can't be used for sort if rollup is disabled. Set to None.");
 			sortInfo.sortBy = SortBy::eNONE;
@@ -382,7 +382,7 @@ void PerfmonParent::checkAndFixSortInfo(SortInfo& sortInfo, index counters, inde
 		checkCount = rollupExpressions;
 		break;
 	}
-	case Reference::Type::COUNT: {
+	case Reference::Type::eCOUNT: {
 		if (!useRollup) {
 			logger.warning(L"SortBy Count does nothing when rollup is disabled");
 			sortInfo.sortBy = SortBy::eNONE;

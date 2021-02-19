@@ -7,11 +7,11 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include "IMMDeviceEnumeratorWrapper.h"
+#include "MediaDeviceEnumerator.h"
 
 using namespace rxtd::audio_analyzer::wasapi_wrappers;
 
-IMMDeviceEnumeratorWrapper::IMMDeviceEnumeratorWrapper() : GenericComWrapper(
+MediaDeviceEnumerator::MediaDeviceEnumerator() : GenericComWrapper(
 	[](auto ptr) {
 		return S_OK == CoCreateInstance(
 			__uuidof(MMDeviceEnumerator),
@@ -23,9 +23,9 @@ IMMDeviceEnumeratorWrapper::IMMDeviceEnumeratorWrapper() : GenericComWrapper(
 	}
 ) {}
 
-std::optional<MediaDeviceWrapper> IMMDeviceEnumeratorWrapper::getDeviceByID(const string& id) {
+std::optional<MediaDeviceHandle> MediaDeviceEnumerator::getDeviceByID(const string& id) {
 	try {
-		return MediaDeviceWrapper{
+		return MediaDeviceHandle{
 			[&](auto ptr) {
 				throwOnError(ref().GetDevice(id.c_str(), ptr), L"Device with specified id is not found");
 				return true;
@@ -37,9 +37,9 @@ std::optional<MediaDeviceWrapper> IMMDeviceEnumeratorWrapper::getDeviceByID(cons
 	}
 }
 
-std::optional<MediaDeviceWrapper> IMMDeviceEnumeratorWrapper::getDefaultDevice(MediaDeviceType type) {
+std::optional<MediaDeviceHandle> MediaDeviceEnumerator::getDefaultDevice(MediaDeviceType type) {
 	try {
-		return MediaDeviceWrapper{
+		return MediaDeviceHandle{
 			[&](auto ptr) {
 				throwOnError(
 					ref().GetDefaultAudioEndpoint(
@@ -57,11 +57,11 @@ std::optional<MediaDeviceWrapper> IMMDeviceEnumeratorWrapper::getDefaultDevice(M
 	}
 }
 
-std::vector<MediaDeviceWrapper> IMMDeviceEnumeratorWrapper::getActiveDevices(MediaDeviceType type) {
+std::vector<MediaDeviceHandle> MediaDeviceEnumerator::getActiveDevices(MediaDeviceType type) {
 	return getCollection(type, DEVICE_STATE_ACTIVE);
 }
 
-std::vector<MediaDeviceWrapper> IMMDeviceEnumeratorWrapper::getCollection(
+std::vector<MediaDeviceHandle> MediaDeviceEnumerator::getCollection(
 	MediaDeviceType type, uint32_t deviceStateMask
 ) {
 	GenericComWrapper<IMMDeviceCollection> collection{
@@ -80,9 +80,9 @@ std::vector<MediaDeviceWrapper> IMMDeviceEnumeratorWrapper::getCollection(
 	collection.ref().GetCount(&devicesCountUINT);
 	const index devicesCount = devicesCountUINT;
 
-	std::vector<MediaDeviceWrapper> result;
+	std::vector<MediaDeviceHandle> result;
 	for (index i = 0; i < devicesCount; ++i) {
-		MediaDeviceWrapper device{
+		MediaDeviceHandle device{
 			[&](auto ptr) {
 				return S_OK == collection.ref().Item(UINT(i), ptr);
 			},

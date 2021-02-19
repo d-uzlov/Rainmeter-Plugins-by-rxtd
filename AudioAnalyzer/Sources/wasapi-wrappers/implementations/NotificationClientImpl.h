@@ -18,7 +18,7 @@
 // ReSharper disable once CppWrongIncludesOrder
 #include <mmdeviceapi.h>
 
-#include "../IMMDeviceEnumeratorWrapper.h"
+#include "../MediaDeviceEnumerator.h"
 #include "winapi-wrappers/implementations/IUnknownImpl.h"
 
 namespace rxtd::audio_analyzer::wasapi_wrappers {
@@ -38,7 +38,7 @@ namespace rxtd::audio_analyzer::wasapi_wrappers {
 		};
 
 	private:
-		IMMDeviceEnumeratorWrapper enumerator;
+		MediaDeviceEnumerator enumerator;
 		std::mutex mut;
 
 		std::function<void()> changesCallback;
@@ -60,7 +60,7 @@ namespace rxtd::audio_analyzer::wasapi_wrappers {
 		~MediaDeviceListNotificationClient() = default;
 
 	public:
-		void init(IMMDeviceEnumeratorWrapper& enumerator) {
+		void init(MediaDeviceEnumerator& enumerator) {
 			auto lock = getLock();
 			enumerator.ref().RegisterEndpointNotificationCallback(this);
 
@@ -72,11 +72,11 @@ namespace rxtd::audio_analyzer::wasapi_wrappers {
 				activeDevices.insert(dev.getId() % own());
 			}
 
-			defaultInputId = enumerator.getDefaultDevice(MediaDeviceType::eINPUT).value_or(MediaDeviceWrapper{}).getId();
-			defaultOutputId = enumerator.getDefaultDevice(MediaDeviceType::eOUTPUT).value_or(MediaDeviceWrapper{}).getId();
+			defaultInputId = enumerator.getDefaultDevice(MediaDeviceType::eINPUT).value_or(MediaDeviceHandle{}).getId();
+			defaultOutputId = enumerator.getDefaultDevice(MediaDeviceType::eOUTPUT).value_or(MediaDeviceHandle{}).getId();
 		}
 
-		void deinit(IMMDeviceEnumeratorWrapper& enumerator) {
+		void deinit(MediaDeviceEnumerator& enumerator) {
 			enumerator.ref().UnregisterEndpointNotificationCallback(this);
 		}
 
@@ -93,23 +93,7 @@ namespace rxtd::audio_analyzer::wasapi_wrappers {
 			auto lock = getLock();
 			return std::exchange(changes, {});
 		}
-
-		HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppvInterface) override {
-			const auto result = IUnknownImpl::QueryInterface(riid, ppvInterface);
-			if (result == S_OK) {
-				return result;
-			}
-
-			if (__uuidof(IMMNotificationClient) == riid) {
-				AddRef();
-				*ppvInterface = this;
-			} else {
-				*ppvInterface = nullptr;
-				return E_NOINTERFACE;
-			}
-			return S_OK;
-		}
-
+		
 		HRESULT STDMETHODCALLTYPE OnDefaultDeviceChanged(EDataFlow flow, ERole role, const wchar_t* deviceId) override {
 			if (role != eConsole) {
 				return S_OK;

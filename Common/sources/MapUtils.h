@@ -25,21 +25,7 @@ namespace rxtd::utils {
 				}
 			}
 		}
-
-		// remove element if predicate returns false
-		// predicate must be a callable that accepts map::key_type and returns bool
-		template<typename Map, typename Predicate>
-		static void intersectKeysWithPredicate(Map& map, const Predicate& predicate) {
-			for (auto iter = map.begin();
-			     iter != map.end();) {
-				if (!predicate(iter->first)) {
-					iter = map.erase(iter);
-				} else {
-					++iter;
-				}
-			}
-		}
-
+		
 		// remove element if predicate returns true
 		// predicate must be a callable that accepts map::key_type and returns bool
 		template<typename Map, typename Predicate>

@@ -51,6 +51,9 @@ namespace rxtd::common::winapi_wrappers {
 			if (__uuidof(IUnknown) == riid) {
 				AddRef();
 				*ppvInterface = this;
+			} else if (__uuidof(T) == riid) {
+				AddRef();
+				*ppvInterface = this;
 			} else {
 				*ppvInterface = nullptr;
 				return E_NOINTERFACE;

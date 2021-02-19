@@ -17,7 +17,7 @@
 // ReSharper disable once CppWrongIncludesOrder
 #include <audiopolicy.h>
 
-#include "../IAudioClientWrapper.h"
+#include "../AudioClientHandle.h"
 #include "winapi-wrappers/GenericComWrapper.h"
 #include "winapi-wrappers/implementations/IUnknownImpl.h"
 
@@ -71,7 +71,7 @@ namespace rxtd::audio_analyzer::wasapi_wrappers {
 		std::mutex mut;
 
 	public:
-		static AudioSessionEventsImpl* create(IAudioClientWrapper& audioClient, bool preventVolumeChange) noexcept(false) {
+		static AudioSessionEventsImpl* create(AudioClientHandle& audioClient, bool preventVolumeChange) noexcept(false) {
 			AudioSessionEventsImpl& result = *new AudioSessionEventsImpl;
 			result.preventVolumeChange = preventVolumeChange;
 
@@ -147,23 +147,7 @@ namespace rxtd::audio_analyzer::wasapi_wrappers {
 			result.disconnectionReason = disconnectionReason.load();
 			return result;
 		}
-
-		HRESULT STDMETHODCALLTYPE QueryInterface(const GUID& riid, void** ppvInterface) override {
-			const auto result = IUnknownImpl::QueryInterface(riid, ppvInterface);
-			if (result == S_OK) {
-				return result;
-			}
-
-			if (__uuidof(IAudioSessionEvents) == riid) {
-				AddRef();
-				*ppvInterface = this;
-			} else {
-				*ppvInterface = nullptr;
-				return E_NOINTERFACE;
-			}
-			return S_OK;
-		}
-
+		
 		HRESULT STDMETHODCALLTYPE OnDisplayNameChanged(const wchar_t* name, const GUID* context) override {
 			return S_OK;
 		}
@@ -295,7 +279,7 @@ namespace rxtd::audio_analyzer::wasapi_wrappers {
 	public:
 		AudioSessionEventsWrapper() = default;
 
-		void listenTo(IAudioClientWrapper& client, bool preventVolumeChange) {
+		void listenTo(AudioClientHandle& client, bool preventVolumeChange) {
 			destruct();
 			impl = {
 				[&](auto ptr) {

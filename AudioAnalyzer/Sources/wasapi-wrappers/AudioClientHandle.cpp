@@ -7,7 +7,7 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include "IAudioClientWrapper.h"
+#include "AudioClientHandle.h"
 
 #include "MyMath.h"
 #include "winapi-wrappers/ComException.h"
@@ -15,7 +15,7 @@
 
 using namespace rxtd::audio_analyzer::wasapi_wrappers;
 
-IAudioCaptureClientWrapper IAudioClientWrapper::openCapture(double bufferSizeSec) {
+AudioCaptureClient AudioClientHandle::openCapture(double bufferSizeSec) {
 	// Documentation for IAudioClient::Initialize says
 	// ""
 	//	Note  In Windows 8, the first use of IAudioClient to access the audio device
@@ -59,13 +59,9 @@ IAudioCaptureClientWrapper IAudioClientWrapper::openCapture(double bufferSizeSec
 		L"IAudioClient.Initialize() in IAudioClientWrapper::openCapture()"
 	);
 
-	auto result = IAudioCaptureClientWrapper{
+	auto result = AudioCaptureClient{
 		[&](auto ptr) {
-			throwOnError(
-				typedQuery(&IAudioClient::GetService, ptr),
-				L"IAudioClient.GetService(IAudioCaptureClient) in IAudioClientWrapper::openCapture()"
-			);
-			return true;
+			typedQuery(&IAudioClient::GetService, ptr, L"IAudioClient.GetService(IAudioCaptureClient) in IAudioClientWrapper::openCapture()");
 		}
 	};
 
@@ -74,7 +70,7 @@ IAudioCaptureClientWrapper IAudioClientWrapper::openCapture(double bufferSizeSec
 	return result;
 }
 
-rxtd::common::winapi_wrappers::GenericComWrapper<IAudioRenderClient> IAudioClientWrapper::openRender() noexcept(false) {
+rxtd::common::winapi_wrappers::GenericComWrapper<IAudioRenderClient> AudioClientHandle::openRender() noexcept(false) {
 	throwOnError(
 		ref().Initialize(
 			AUDCLNT_SHAREMODE_SHARED,
@@ -89,18 +85,14 @@ rxtd::common::winapi_wrappers::GenericComWrapper<IAudioRenderClient> IAudioClien
 
 	auto result = GenericComWrapper<IAudioRenderClient>{
 		[&](auto ptr) {
-			throwOnError(
-				typedQuery(&IAudioClient::GetService, ptr),
-				L"IAudioClient.GetService(IAudioCaptureClient) in IAudioClientWrapper::openRender()"
-			);
-			return true;
+			typedQuery(&IAudioClient::GetService, ptr, L"IAudioClient.GetService(IAudioCaptureClient) in IAudioClientWrapper::openRender()");
 		}
 	};
 
 	return result;
 }
 
-void IAudioClientWrapper::testExclusive() {
+void AudioClientHandle::testExclusive() {
 	auto client3 = GenericComWrapper<IAudioClient3>{
 		[&](auto ptr) {
 			auto code = ref().QueryInterface<IAudioClient3>(ptr);
@@ -150,7 +142,7 @@ void IAudioClientWrapper::testExclusive() {
 	}
 }
 
-void IAudioClientWrapper::readFormat() {
+void AudioClientHandle::readFormat() {
 	nativeFormat = {
 		[&](auto ptr) {
 			throwOnError(ref().GetMixFormat(ptr), L"WAVEFORMATEX.GetMixFormat() in IAudioClientWrapper::()");
@@ -168,9 +160,9 @@ void IAudioClientWrapper::readFormat() {
 		const auto& formatExtensible = reinterpret_cast<const WAVEFORMATEXTENSIBLE&>(waveFormatRaw);
 
 		if (formatExtensible.SubFormat == KSDATAFORMAT_SUBTYPE_PCM && formatExtensible.Format.wBitsPerSample == 16) {
-			formatType = IAudioCaptureClientWrapper::Type::eInt16;
+			formatType = AudioCaptureClient::Type::eInt16;
 		} else if (formatExtensible.SubFormat == KSDATAFORMAT_SUBTYPE_IEEE_FLOAT) {
-			formatType = IAudioCaptureClientWrapper::Type::eFloat;
+			formatType = AudioCaptureClient::Type::eFloat;
 		} else {
 			throw FormatException{};
 		}
@@ -178,9 +170,9 @@ void IAudioClientWrapper::readFormat() {
 		channelMask = formatExtensible.dwChannelMask;
 	} else {
 		if (waveFormatRaw.wFormatTag == WAVE_FORMAT_PCM && waveFormatRaw.wBitsPerSample == 16) {
-			formatType = IAudioCaptureClientWrapper::Type::eInt16;
+			formatType = AudioCaptureClient::Type::eInt16;
 		} else if (waveFormatRaw.wFormatTag == WAVE_FORMAT_IEEE_FLOAT) {
-			formatType = IAudioCaptureClientWrapper::Type::eFloat;
+			formatType = AudioCaptureClient::Type::eFloat;
 		} else {
 			throw FormatException{};
 		}

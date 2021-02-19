@@ -29,7 +29,6 @@ void CaptureManager::disconnect() {
 	snapshot.state = State::eMANUALLY_DISCONNECTED;
 	audioCaptureClient = {};
 	sessionEventsWrapper = {};
-	sessionEventsWrapper = {};
 	renderClient = {};
 }
 
@@ -77,13 +76,15 @@ CaptureManager::State CaptureManager::setSourceAndGetState(const SourceDesc& des
 		}
 
 		snapshot.formatString = makeFormatString(snapshot.format);
+
 		snapshot.channelsString.clear();
 		auto channels = snapshot.format.channelLayout.ordered();
-		for (int i = 0; i < channels.size() - 1; ++i) {
-			snapshot.channelsString += ChannelUtils::getTechnicalName(channels[i]);
+		snapshot.channelsString += ChannelUtils::getTechnicalName(channels.front());
+		channels.remove_prefix(1);
+		for (auto channel : channels) {
 			snapshot.channelsString += L',';
+			snapshot.channelsString += ChannelUtils::getTechnicalName(channel);
 		}
-		snapshot.channelsString += ChannelUtils::getTechnicalName(channels.back());
 
 		channelMixer.setLayout(snapshot.format.channelLayout);
 
@@ -92,7 +93,7 @@ CaptureManager::State CaptureManager::setSourceAndGetState(const SourceDesc& des
 		try {
 			sessionEventsWrapper.listenTo(audioClient, true);
 		} catch (ComException& e) {
-			logger.error(L"Can't create session listener: error {}, caused by {}", e.getCode(), e.getSource());
+			logger.warning(L"Can't create session listener: error {}, caused by {}", e.getCode(), e.getSource());
 		}
 
 		audioClient.throwOnError(audioClient.ref().Start(), L"IAudioClient.Start()");
@@ -128,7 +129,6 @@ CaptureManager::State CaptureManager::setSourceAndGetState(const SourceDesc& des
 
 	} catch (wasapi_wrappers::FormatException&) {
 		logger.error(L"Can't create silent renderer: format error");
-		return State::eDEVICE_CONNECTION_ERROR;
 	} catch (ComException& e) {
 		if (e.getCode().code == AUDCLNT_E_DEVICE_IN_USE) {
 			// #createExclusiveStreamListener can change state,
@@ -255,7 +255,7 @@ void CaptureManager::tryToRecoverFromExclusive() {
 	} catch (ComException&) { }
 }
 
-std::optional<wasapi_wrappers::MediaDeviceWrapper> CaptureManager::getDevice(const SourceDesc& desc) {
+std::optional<wasapi_wrappers::MediaDeviceHandle> CaptureManager::getDevice(const SourceDesc& desc) {
 	switch (desc.type) {
 	case SourceDesc::Type::eDEFAULT_INPUT:
 		return enumeratorWrapper.getDefaultDevice(wasapi_wrappers::MediaDeviceType::eINPUT);

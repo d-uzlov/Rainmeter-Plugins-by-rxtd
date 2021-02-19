@@ -11,7 +11,7 @@
 // source: https://social.msdn.microsoft.com/Forums/Windowsapps/en-US/00853e55-51dd-46bc-bceb-04c0c2e5cc06/unresolved-external-symbols?forum=mediafoundationdevelopment
 #include <initguid.h>
 
-#include "MediaDeviceWrapper.h"
+#include "MediaDeviceHandle.h"
 
 #include <functiondiscoverykeys_devpkey.h>
 
@@ -19,7 +19,7 @@
 
 using namespace rxtd::audio_analyzer::wasapi_wrappers;
 
-MediaDeviceWrapper::DeviceInfo MediaDeviceWrapper::readDeviceInfo() noexcept(false) {
+MediaDeviceHandle::DeviceInfo MediaDeviceHandle::readDeviceInfo() noexcept(false) {
 	if (!isValid()) {
 		return {};
 	}
@@ -43,22 +43,17 @@ MediaDeviceWrapper::DeviceInfo MediaDeviceWrapper::readDeviceInfo() noexcept(fal
 	return deviceInfo;
 }
 
-IAudioClientWrapper MediaDeviceWrapper::openAudioClient() {
-	return IAudioClientWrapper{
+AudioClientHandle MediaDeviceHandle::openAudioClient() noexcept(false) {
+	return AudioClientHandle{
 		[&](auto ptr) {
-			throwOnError(typedQuery(&IMMDevice::Activate, ptr, CLSCTX_INPROC_SERVER, nullptr), L"IMMDevice.Activate(IAudioClient) in MediaDeviceWrapper::openAudioClient()");
-			return true;
+			typedQuery(&IMMDevice::Activate, ptr, L"IMMDevice.Activate(IAudioClient) in MediaDeviceWrapper::openAudioClient()", CLSCTX_INPROC_SERVER, nullptr);
 		},
 		type
 	};
 }
 
-rxtd::sview MediaDeviceWrapper::convertFormFactor(std::optional<EndpointFormFactor> valueOpt) {
-	if (!valueOpt.has_value()) {
-		return L"";
-	}
-
-	switch (valueOpt.value()) {
+rxtd::sview MediaDeviceHandle::convertFormFactor(std::optional<EndpointFormFactor> valueOpt) noexcept {
+	switch (valueOpt.value_or(UnknownFormFactor)) {
 	case RemoteNetworkDevice: return L"RemoteNetworkDevice";
 	case Speakers: return L"Speakers";
 	case LineLevel: return L"LineLevel";
@@ -74,5 +69,38 @@ rxtd::sview MediaDeviceWrapper::convertFormFactor(std::optional<EndpointFormFact
 	case EndpointFormFactor_enum_count:
 		break;
 	}
-	return L"";
+	return {};
+}
+
+void MediaDeviceHandle::readType() noexcept(false) {
+	auto endpoint = GenericComWrapper<IMMEndpoint>{
+		[&](auto ptr) {
+			throwOnError(ref().QueryInterface(ptr), L"IMMDevice.QueryInterface(IMMEndpoint)");
+			return true;
+		}
+	};
+	EDataFlow flow{};
+	throwOnError(endpoint.ref().GetDataFlow(&flow), L"IMMEndpoint.GetDataFlow()");
+	switch (flow) {
+	case eRender:
+		type = MediaDeviceType::eOUTPUT;
+		break;
+	case eCapture:
+		type = MediaDeviceType::eINPUT;
+		break;
+	default: throw ComException{ -1, L"invalid EDataFlow value from IMMEndpoint.GetDataFlow()" };
+	}
+}
+
+void MediaDeviceHandle::readId() noexcept(false) {
+	common::winapi_wrappers::GenericCoTaskMemWrapper<wchar_t> idWrapper{
+		[&](auto ptr) {
+			throwOnError(ref().GetId(ptr), L"IMMDevice.GetId()");
+			return true;
+		}
+	};
+	id = idWrapper.getPointer();
+	if (id.empty()) {
+		throw ComException{ -1, L"invalid empty value for device id from IMMDevice.GetId()" };
+	}
 }

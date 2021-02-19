@@ -74,17 +74,17 @@ void RollupExpressionResolver::checkExpressionIndices() {
 							throw std::runtime_error{ "" };
 						}
 
-						if (ref.type == Reference::Type::EXPRESSION && ref.counter >= simpleExpressionSolver.getExpressionsCount()) {
+						if (ref.type == Reference::Type::eEXPRESSION && ref.counter >= simpleExpressionSolver.getExpressionsCount()) {
 							log.error(L"RollupExpression {}: invalid reference: Expression {} doesn't exist", i, ref.counter);
 							throw std::runtime_error{ "" };
 						}
 
-						if (ref.type == Reference::Type::ROLLUP_EXPRESSION && ref.counter >= i) {
+						if (ref.type == Reference::Type::eROLLUP_EXPRESSION && ref.counter >= i) {
 							log.error(L"RollupExpression {} can't reference RollupExpression {}", i, ref.counter);
 							throw std::runtime_error{ "" };
 						}
 
-						if (ref.type == Reference::Type::EXPRESSION || ref.type == Reference::Type::ROLLUP_EXPRESSION) {
+						if (ref.type == Reference::Type::eEXPRESSION || ref.type == Reference::Type::eROLLUP_EXPRESSION) {
 							if (!ref.useOrigName) {
 								utils::StringUtils::makeUppercaseInPlace(ref.namePattern.getName());
 							}
@@ -124,9 +124,9 @@ double RollupExpressionResolver::resolveReference(const Reference& ref, array_vi
 
 	if (ref.total) {
 		switch (ref.type) {
-		case Reference::Type::COUNTER_RAW:
-		case Reference::Type::COUNTER_FORMATTED:
-		case Reference::Type::EXPRESSION: return TotalUtilities::getTotal(
+		case Reference::Type::eCOUNTER_RAW:
+		case Reference::Type::eCOUNTER_FORMATTED:
+		case Reference::Type::eEXPRESSION: return TotalUtilities::getTotal(
 				totalCaches.simpleExpression, rollupInstanceManager.getRollupInstances(), ref.counter, ref.rollupFunction,
 				[&](const RollupInstanceInfo& info) {
 					return TotalUtilities::calculateTotal(
@@ -136,11 +136,11 @@ double RollupExpressionResolver::resolveReference(const Reference& ref, array_vi
 					);
 				}
 			);
-		case Reference::Type::ROLLUP_EXPRESSION: return TotalUtilities::getTotal(
+		case Reference::Type::eROLLUP_EXPRESSION: return TotalUtilities::getTotal(
 				totalCaches.expression, rollupInstanceManager.getRollupInstances(), ref.counter, ref.rollupFunction,
 				[&](const RollupInstanceInfo& info) { return solveExpression(ref.counter, info.indices); }
 			);
-		case Reference::Type::COUNT: return calculateRollupCountTotal(ref.rollupFunction);
+		case Reference::Type::eCOUNT: return calculateRollupCountTotal(ref.rollupFunction);
 		}
 		return 0.0;
 	}
@@ -162,15 +162,15 @@ double RollupExpressionResolver::resolveReference(const Reference& ref, array_vi
 	}
 
 	switch (ref.type) {
-	case Reference::Type::COUNTER_RAW:
-	case Reference::Type::COUNTER_FORMATTED:
-	case Reference::Type::EXPRESSION: return TotalUtilities::calculateTotal(
+	case Reference::Type::eCOUNTER_RAW:
+	case Reference::Type::eCOUNTER_FORMATTED:
+	case Reference::Type::eEXPRESSION: return TotalUtilities::calculateTotal(
 			indices, ref.rollupFunction, [&](Indices ind) {
 				return simpleExpressionSolver.resolveReference(totalRef, ind);
 			}
 		);
-	case Reference::Type::ROLLUP_EXPRESSION: return solveExpression(ref.counter, indices);
-	case Reference::Type::COUNT: return double(indices.size());
+	case Reference::Type::eROLLUP_EXPRESSION: return solveExpression(ref.counter, indices);
+	case Reference::Type::eCOUNT: return double(indices.size());
 	}
 
 	log.error(L"unexpected reference type in resolveReference(): {}", ref.type);

@@ -12,7 +12,7 @@
 #include "audio-utils/CustomizableValueTransformer.h"
 
 namespace rxtd::audio_analyzer {
-	class AudioChild : public utils::TypeHolder {
+	class AudioChild : public utils::MeasureBase {
 		using CVT = audio_utils::CustomizableValueTransformer;
 
 		struct Options {

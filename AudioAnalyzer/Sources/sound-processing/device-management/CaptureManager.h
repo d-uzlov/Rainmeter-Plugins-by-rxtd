@@ -11,13 +11,12 @@
 
 #include <functional>
 
-#include "AudioSessionEventsWrapper.h"
-#include "rainmeter/Logger.h"
-#include "../ChannelMixer.h"
 #include "../../Version.h"
-#include "wasapi-wrappers/IAudioCaptureClientWrapper.h"
-#include "wasapi-wrappers/IMMDeviceEnumeratorWrapper.h"
-#include "wasapi-wrappers/MediaDeviceWrapper.h"
+#include "rainmeter/Logger.h"
+#include "sound-processing/ChannelMixer.h"
+#include "wasapi-wrappers/AudioCaptureClient.h"
+#include "wasapi-wrappers/MediaDeviceEnumerator.h"
+#include "wasapi-wrappers/MediaDeviceHandle.h"
 #include "wasapi-wrappers/implementations/AudioSessionEventsImpl.h"
 
 namespace rxtd::audio_analyzer {
@@ -73,10 +72,10 @@ namespace rxtd::audio_analyzer {
 		Version version{};
 		double bufferSizeSec = 0.0;
 
-		wasapi_wrappers::IMMDeviceEnumeratorWrapper enumeratorWrapper;
+		wasapi_wrappers::MediaDeviceEnumerator enumeratorWrapper;
 
-		wasapi_wrappers::MediaDeviceWrapper audioDeviceHandle;
-		wasapi_wrappers::IAudioCaptureClientWrapper audioCaptureClient;
+		wasapi_wrappers::MediaDeviceHandle audioDeviceHandle;
+		wasapi_wrappers::AudioCaptureClient audioCaptureClient;
 		wasapi_wrappers::AudioSessionEventsWrapper sessionEventsWrapper;
 		GenericComWrapper<IAudioRenderClient> renderClient;
 		ChannelMixer channelMixer;
@@ -125,7 +124,7 @@ namespace rxtd::audio_analyzer {
 
 	private:
 		[[nodiscard]]
-		std::optional<wasapi_wrappers::MediaDeviceWrapper> getDevice(const SourceDesc& desc);
+		std::optional<wasapi_wrappers::MediaDeviceHandle> getDevice(const SourceDesc& desc);
 
 		[[nodiscard]]
 		static string makeFormatString(wasapi_wrappers::WaveFormat waveFormat);

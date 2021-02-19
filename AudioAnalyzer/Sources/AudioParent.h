@@ -10,11 +10,11 @@
 #pragma once
 
 #include "LogErrorHelper.h"
-#include "TypeHolder.h"
+#include "MeasureBase.h"
 #include "ParentHelper.h"
 
 namespace rxtd::audio_analyzer {
-	class AudioParent : public utils::ParentBase {
+	class AudioParent : public utils::ParentMeasureBase {
 		using DeviceRequest = std::optional<CaptureManager::SourceDesc>;
 
 		struct CleanerData {

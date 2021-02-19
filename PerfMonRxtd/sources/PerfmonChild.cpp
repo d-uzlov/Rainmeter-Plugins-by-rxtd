@@ -12,13 +12,13 @@
 
 using namespace rxtd::perfmon;
 
-PerfmonChild::PerfmonChild(Rainmeter&& _rain) : TypeHolder(std::move(_rain)) {
+PerfmonChild::PerfmonChild(Rainmeter&& _rain) : MeasureBase(std::move(_rain)) {
 	auto parentName = rain.read(L"Parent").asIString();
 	if (parentName.empty()) {
 		logger.error(L"Parent must be specified");
 		throw std::runtime_error{ "" };
 	}
-	parent = utils::ParentBase::find<PerfmonParent>(rain.getSkin(), parentName);
+	parent = utils::ParentMeasureBase::find<PerfmonParent>(rain.getSkin(), parentName);
 
 	if (parent == nullptr) {
 		logger.error(L"Parent '{}' is not found", parentName);
@@ -45,27 +45,27 @@ void PerfmonChild::vReload() {
 	const auto type = rain.read(L"Type").asIString();
 	if (type == L"GetInstanceCount") {
 		logger.warning(L"Type 'GetInstanceCount' is deprecated, set to 'GetCount' with Total=1 and RollupFunction=Sum");
-		ref.type = Reference::Type::COUNT;
+		ref.type = Reference::Type::eCOUNT;
 		ref.total = true;
 		ref.rollupFunction = RollupFunction::eSUM;
 		needReadRollupFunction = false;
 	} else if (type == L"GetCount")
-		ref.type = Reference::Type::COUNT;
+		ref.type = Reference::Type::eCOUNT;
 	else if (type == L"GetInstanceName") {
 		logger.warning(L"Type 'GetInstanceName' is deprecated, set to 'GetCount' with Total=0");
-		ref.type = Reference::Type::COUNT;
+		ref.type = Reference::Type::eCOUNT;
 		ref.total = false;
 		ref.rollupFunction = RollupFunction::eFIRST;
 		resultStringType = ResultString::eDISPLAY_NAME;
 		forceUseName = true;
 	} else if (type == L"GetRawCounter") {
-		ref.type = Reference::Type::COUNTER_RAW;
+		ref.type = Reference::Type::eCOUNTER_RAW;
 	} else if (type == L"GetFormattedCounter") {
-		ref.type = Reference::Type::COUNTER_FORMATTED;
+		ref.type = Reference::Type::eCOUNTER_FORMATTED;
 	} else if (type == L"GetExpression") {
-		ref.type = Reference::Type::EXPRESSION;
+		ref.type = Reference::Type::eEXPRESSION;
 	} else if (type == L"GetRollupExpression") {
-		ref.type = Reference::Type::ROLLUP_EXPRESSION;
+		ref.type = Reference::Type::eROLLUP_EXPRESSION;
 	} else {
 		logger.error(L"Type '{}' is invalid for child measure", type);
 		setInvalid();
@@ -76,7 +76,7 @@ void PerfmonChild::vReload() {
 		auto rollupFunctionStr = rain.read(L"RollupFunction").asIString(L"Sum");
 		if (rollupFunctionStr == L"Count") {
 			logger.warning(L"RollupFunction 'Count' is deprecated, measure type set to 'GetCount'");
-			ref.type = Reference::Type::COUNT;
+			ref.type = Reference::Type::eCOUNT;
 		} else {
 			auto typeOpt = parseEnum<RollupFunction>(rollupFunctionStr);
 			if (typeOpt.has_value()) {

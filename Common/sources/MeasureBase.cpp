@@ -7,17 +7,17 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include "TypeHolder.h"
+#include "MeasureBase.h"
 
 using namespace rxtd::utils;
 
-std::map<rxtd::common::rainmeter::SkinHandle, std::map<rxtd::istring, ParentBase*, std::less<>>> ParentBase::globalMeasuresMap{}; // NOLINT(clang-diagnostic-exit-time-destructors)
+std::map<rxtd::common::rainmeter::SkinHandle, std::map<rxtd::istring, ParentMeasureBase*, std::less<>>> ParentMeasureBase::globalMeasuresMap{}; // NOLINT(clang-diagnostic-exit-time-destructors)
 
-TypeHolder::TypeHolder(Rainmeter&& _rain) : rain(std::move(_rain)) {
+MeasureBase::MeasureBase(Rainmeter&& _rain) : rain(std::move(_rain)) {
 	logger = rain.createLogger();
 }
 
-double TypeHolder::update() {
+double MeasureBase::update() {
 	if (!objectIsValid) {
 		return 0.0;
 	}
@@ -40,7 +40,7 @@ double TypeHolder::update() {
 	return resultDouble;
 }
 
-void TypeHolder::reload() {
+void MeasureBase::reload() {
 	objectIsValid = true;
 	try {
 		vReload();
@@ -50,7 +50,7 @@ void TypeHolder::reload() {
 	}
 }
 
-void TypeHolder::command(const wchar_t* bangArgs) {
+void MeasureBase::command(const wchar_t* bangArgs) {
 	if (!objectIsValid) {
 		logger.warning(L"Skipping bang on a broken measure");
 		return;
@@ -64,7 +64,7 @@ void TypeHolder::command(const wchar_t* bangArgs) {
 	}
 }
 
-const wchar_t* TypeHolder::resolve(int argc, const wchar_t* argv[]) {
+const wchar_t* MeasureBase::resolve(int argc, const wchar_t* argv[]) {
 	if (!objectIsValid) {
 		logger.warning(L"Skipping resolve on a broken measure");
 		return L"";
@@ -79,7 +79,7 @@ const wchar_t* TypeHolder::resolve(int argc, const wchar_t* argv[]) {
 	return resolve(resolveVector);
 }
 
-const wchar_t* TypeHolder::resolve(array_view<isview> args) {
+const wchar_t* MeasureBase::resolve(array_view<isview> args) {
 	if (!objectIsValid) {
 		logger.warning(L"Skipping resolve on a broken measure");
 		return L"";
@@ -97,7 +97,7 @@ const wchar_t* TypeHolder::resolve(array_view<isview> args) {
 	return resolveString.c_str();
 }
 
-const wchar_t* TypeHolder::getString() const {
+const wchar_t* MeasureBase::getString() const {
 	if (!objectIsValid) {
 		return L"broken";
 	}
@@ -105,11 +105,11 @@ const wchar_t* TypeHolder::getString() const {
 	return useResultString ? resultString.c_str() : nullptr;
 }
 
-ParentBase::ParentBase(Rainmeter&& _rain): TypeHolder(std::move(_rain)) {
+ParentMeasureBase::ParentMeasureBase(Rainmeter&& _rain): MeasureBase(std::move(_rain)) {
 	globalMeasuresMap[rain.getSkin()][rain.getMeasureName() % ciView() % own()] = this;
 }
 
-ParentBase::~ParentBase() {
+ParentMeasureBase::~ParentMeasureBase() {
 	const auto skinIter = globalMeasuresMap.find(rain.getSkin());
 	if (skinIter == globalMeasuresMap.end()) {
 		std::terminate();
@@ -127,7 +127,7 @@ ParentBase::~ParentBase() {
 	}
 }
 
-ParentBase* ParentBase::findParent(SkinHandle skin, isview measureName) {
+ParentMeasureBase* ParentMeasureBase::findParent(SkinHandle skin, isview measureName) {
 	const auto skinIter = globalMeasuresMap.find(skin);
 	if (skinIter == globalMeasuresMap.end()) {
 		return nullptr;

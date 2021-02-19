@@ -11,13 +11,18 @@
 #include <mutex>
 
 namespace rxtd {
-	struct DataWithLock {
+	class DataWithLock {
 		bool useLocking = false;
 		std::mutex mutex;
 
+	public:
 		DataWithLock() = default;
 
 		explicit DataWithLock(bool useLocking) : useLocking(useLocking) { }
+
+		void setUseLocking(bool value) {
+			useLocking = value;
+		}
 
 		std::unique_lock<std::mutex> getLock() {
 			auto lock = std::unique_lock<std::mutex>{ mutex, std::defer_lock };

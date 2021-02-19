@@ -55,7 +55,7 @@
 
 #pragma once
 
-#include "TypeHolder.h"
+#include "MeasureBase.h"
 #include "expressions/RollupExpressionResolver.h"
 #include "expressions/SimpleExpressionSolver.h"
 #include "instances/SimpleInstanceManager.h"
@@ -64,7 +64,7 @@
 
 namespace rxtd::perfmon {
 
-	class PerfmonParent : public utils::ParentBase {
+	class PerfmonParent : public utils::ParentMeasureBase {
 		enum class State {
 			eFETCH_ERROR,
 			eNO_DATA,

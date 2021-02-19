@@ -9,31 +9,31 @@
 
 #pragma once
 
- // my-windows must be before any WINAPI include
+// my-windows must be before any WINAPI include
 #include "my-windows.h"
 // ReSharper disable once CppWrongIncludesOrder
 #include <Audioclient.h>
 
 #include "audiopolicy.h"
-#include "IAudioCaptureClientWrapper.h"
+#include "AudioCaptureClient.h"
 #include "MediaDeviceType.h"
 #include "WaveFormat.h"
 #include "winapi-wrappers/GenericComWrapper.h"
 #include "winapi-wrappers/GenericCoTaskMemWrapper.h"
 
 namespace rxtd::audio_analyzer::wasapi_wrappers {
-	class IAudioClientWrapper : public common::winapi_wrappers::GenericComWrapper<IAudioClient> {
+	class AudioClientHandle : public common::winapi_wrappers::GenericComWrapper<IAudioClient> {
 		common::winapi_wrappers::GenericCoTaskMemWrapper<WAVEFORMATEX> nativeFormat{};
 		WaveFormat format;
 
 		MediaDeviceType type{};
-		IAudioCaptureClientWrapper::Type formatType{};
+		AudioCaptureClient::Type formatType{};
 
 	public:
-		IAudioClientWrapper() = default;
+		AudioClientHandle() = default;
 
 		template<typename InitFunction>
-		IAudioClientWrapper(InitFunction initFunction, MediaDeviceType type) : GenericComWrapper(std::move(initFunction)), type(type) {
+		AudioClientHandle(InitFunction initFunction, MediaDeviceType type) : GenericComWrapper(std::move(initFunction)), type(type) {
 			readFormat();
 		}
 
@@ -45,7 +45,7 @@ namespace rxtd::audio_analyzer::wasapi_wrappers {
 		// the object is unusable after this function, so create separate object before calling this
 		void testExclusive() noexcept(false);
 
-		IAudioCaptureClientWrapper openCapture(double bufferSizeSec) noexcept(false);
+		AudioCaptureClient openCapture(double bufferSizeSec) noexcept(false);
 
 		GenericComWrapper<IAudioRenderClient> openRender() noexcept(false);
 
@@ -80,8 +80,7 @@ namespace rxtd::audio_analyzer::wasapi_wrappers {
 
 			return {
 				[&](auto ptr) {
-					throwOnError(typedQuery(&IAudioClient::GetService, ptr), source);
-					return true;
+					typedQuery(&IAudioClient::GetService, ptr, source);
 				}
 			};
 		}

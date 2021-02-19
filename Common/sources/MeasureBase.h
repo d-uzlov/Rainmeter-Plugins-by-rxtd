@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 rxtd
+ * Copyright (C) 2019-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -21,7 +21,7 @@ namespace rxtd::utils {
 	// for information on when and why functions are called and what they should do.
 	//	https://docs.rainmeter.net/developers/plugin/plugin-anatomy/
 	//
-	class TypeHolder : NonMovableBase, VirtualDestructorBase {
+	class MeasureBase : NonMovableBase, VirtualDestructorBase {
 	protected:
 		using Rainmeter = common::rainmeter::Rainmeter;
 		using Logger = common::rainmeter::Logger;
@@ -40,7 +40,7 @@ namespace rxtd::utils {
 		std::vector<isview> resolveVector;
 
 	public:
-		TypeHolder(Rainmeter&& rain);
+		MeasureBase(Rainmeter&& rain);
 
 		double update();
 		void reload();
@@ -79,27 +79,27 @@ namespace rxtd::utils {
 		}
 	};
 
-	class ParentBase : public TypeHolder {
+	class ParentMeasureBase : public MeasureBase {
 		using SkinHandle = common::rainmeter::SkinHandle;
 		using ParentMeasureName = istring;
-		using SkinMap = std::map<ParentMeasureName, ParentBase*, std::less<>>;
+		using SkinMap = std::map<ParentMeasureName, ParentMeasureBase*, std::less<>>;
 		static std::map<SkinHandle, SkinMap> globalMeasuresMap;
 
 	public:
-		explicit ParentBase(Rainmeter&& _rain);
+		explicit ParentMeasureBase(Rainmeter&& _rain);
 
-		~ParentBase();
+		~ParentMeasureBase();
 
 		template<typename T>
 		[[nodiscard]]
 		static T* find(SkinHandle skin, isview measureName) {
-			static_assert(std::is_base_of<ParentBase, T>::value, "only parent measures can be searched for");
+			static_assert(std::is_base_of<ParentMeasureBase, T>::value, "only parent measures can be searched for");
 
 			return dynamic_cast<T*>(findParent(skin, measureName));
 		}
 
 	private:
 		[[nodiscard]]
-		static ParentBase* findParent(SkinHandle skin, isview measureName);
+		static ParentMeasureBase* findParent(SkinHandle skin, isview measureName);
 	};
 }

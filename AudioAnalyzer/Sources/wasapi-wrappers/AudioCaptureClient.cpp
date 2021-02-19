@@ -7,7 +7,7 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include "IAudioCaptureClientWrapper.h"
+#include "AudioCaptureClient.h"
 
 #include <type_traits>
 
@@ -18,7 +18,7 @@ static_assert(std::is_same<UINT32, uint32_t>::value);
 
 // static_assert(std::is_same<DWORD, uint32_t>::value); // ...
 
-HRESULT IAudioCaptureClientWrapper::readBuffer() {
+HRESULT AudioCaptureClient::readBuffer() {
 	uint8_t* data = nullptr;
 	DWORD flags{};
 	uint32_t dataSize;
@@ -54,7 +54,7 @@ HRESULT IAudioCaptureClientWrapper::readBuffer() {
 	return S_OK;
 }
 
-void IAudioCaptureClientWrapper::copyFloat(void* source, array_span<float> dest, index offset, index stride) {
+void AudioCaptureClient::copyFloat(void* source, array_span<float> dest, index offset, index stride) {
 	const auto bufferInt = static_cast<const float*>(source);
 	const auto framesCount = dest.size();
 
@@ -66,7 +66,7 @@ void IAudioCaptureClientWrapper::copyFloat(void* source, array_span<float> dest,
 	}
 }
 
-void IAudioCaptureClientWrapper::copyInt(void* source, array_span<float> dest, index offset, index stride) {
+void AudioCaptureClient::copyInt(void* source, array_span<float> dest, index offset, index stride) {
 	const auto bufferInt = static_cast<const int16_t*>(source);
 	const auto framesCount = dest.size();
 

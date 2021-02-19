@@ -31,7 +31,7 @@ void ParentHelper::init(
 
 	if (!enumeratorWrapper.isValid()) {
 		mainFields.logger.error(L"Fatal error: can't create IMMDeviceEnumerator");
-		throw std::runtime_error{""};
+		throw std::runtime_error{ "" };
 	}
 
 	updateDeviceListStrings();
@@ -56,7 +56,7 @@ void ParentHelper::init(
 		);
 	} else {
 		mainFields.logger.error(L"Fatal error: Threading: unknown policy '{}'");
-		throw std::runtime_error{""};
+		throw std::runtime_error{ "" };
 	}
 
 	const double warnTime = threadingMap.get(L"warnTime").asFloat(-1.0);
@@ -81,8 +81,8 @@ void ParentHelper::init(
 	mainFields.captureManager.setVersion(constFields.version);
 	mainFields.captureManager.setBufferSizeInSec(bufferSize);
 
-	requestFields.useLocking = constFields.useThreading;
-	threadSleepFields.useLocking = constFields.useThreading;
+	requestFields.setUseLocking(constFields.useThreading);
+	threadSleepFields.setUseLocking(constFields.useThreading);
 	snapshot.setThreading(constFields.useThreading);
 }
 
@@ -431,7 +431,7 @@ rxtd::string ParentHelper::makeDeviceListString(MediaDeviceType type) {
 	};
 
 	// returns success
-	auto appendFormat = [&](wasapi_wrappers::MediaDeviceWrapper& device) {
+	auto appendFormat = [&](wasapi_wrappers::MediaDeviceHandle& device) {
 		try {
 			auto audioClient = device.openAudioClient();
 

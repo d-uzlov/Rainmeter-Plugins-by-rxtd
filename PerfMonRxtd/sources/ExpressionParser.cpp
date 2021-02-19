@@ -27,15 +27,15 @@ std::optional<ExpressionParser::IndexType> ExpressionParser::parseCustom() {
 	Reference ref;
 	const isview name = next.value % ciView();
 	if (name == L"counterRaw" || name == L"CR") {
-		ref.type = Type::COUNTER_RAW;
+		ref.type = Type::eCOUNTER_RAW;
 	} else if (name == L"counterFormated" || name == L"counterFormatted" || name == L"CF") {
-		ref.type = Type::COUNTER_FORMATTED;
+		ref.type = Type::eCOUNTER_FORMATTED;
 	} else if (name == L"expression" || name == L"E") {
-		ref.type = Type::EXPRESSION;
+		ref.type = Type::eEXPRESSION;
 	} else if (name == L"rollupExpression" || name == L"R") {
-		ref.type = Type::ROLLUP_EXPRESSION;
+		ref.type = Type::eROLLUP_EXPRESSION;
 	} else if (name == L"count" || name == L"C") {
-		ref.type = Type::COUNT;
+		ref.type = Type::eCOUNT;
 	} else {
 		return {};
 	}
@@ -47,7 +47,7 @@ std::optional<ExpressionParser::IndexType> ExpressionParser::parseCustom() {
 
 	skipToken(additionalSymbols);
 
-	if (ref.type != Type::COUNT) {
+	if (ref.type != Type::eCOUNT) {
 		if (next.type != Lexer::Type::eNUMBER) {
 			throwException(L"Expected number but something else was found");
 		}
@@ -105,7 +105,7 @@ std::optional<ExpressionParser::IndexType> ExpressionParser::parseCustom() {
 			ref.rollupFunction = RollupFunction::eMAXIMUM;
 		} else if (suffix == L"COUNT" || suffix == L"C") {
 			// handling deprecated rollup function
-			ref.type = Type::COUNT;
+			ref.type = Type::eCOUNT;
 		} else if (suffix == L"FIRST" || suffix == L"F") {
 			ref.rollupFunction = RollupFunction::eFIRST;
 		}

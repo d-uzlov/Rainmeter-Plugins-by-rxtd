@@ -29,9 +29,6 @@
     <ClCompile Include="sources\StringUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sources\TypeHolder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="precompiled.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -74,15 +71,15 @@
     <ClCompile Include="sources\expressions\GrammarBuilder.cpp">
       <Filter>Source Files\expressions</Filter>
     </ClCompile>
+    <ClCompile Include="sources\MeasureBase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sources\BufferPrinter.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="sources\StringUtils.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\TypeHolder.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="sources\my-windows.h">
@@ -201,6 +198,9 @@
     </ClInclude>
     <ClInclude Include="sources\expressions\GenericNode.h">
       <Filter>Source Files\expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\MeasureBase.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

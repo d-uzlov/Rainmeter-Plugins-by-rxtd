@@ -15,12 +15,12 @@
 #include <endpointvolume.h>
 #include <mmdeviceapi.h>
 
-#include "IAudioClientWrapper.h"
+#include "AudioClientHandle.h"
 #include "winapi-wrappers/GenericComWrapper.h"
 #include "winapi-wrappers/GenericCoTaskMemWrapper.h"
 
 namespace rxtd::audio_analyzer::wasapi_wrappers {
-	class MediaDeviceWrapper : public common::winapi_wrappers::GenericComWrapper<IMMDevice> {
+	class MediaDeviceHandle : public common::winapi_wrappers::GenericComWrapper<IMMDevice> {
 	public:
 		struct DeviceInfo {
 			string name;
@@ -35,15 +35,21 @@ namespace rxtd::audio_analyzer::wasapi_wrappers {
 		MediaDeviceType type{};
 
 	public:
-		MediaDeviceWrapper() = default;
+		MediaDeviceHandle() = default;
 
+		/// <summary>
+		/// Can throw ComException.
+		/// </summary>
 		template<typename InitFunction>
-		MediaDeviceWrapper(InitFunction initFunction, sview id) : GenericComWrapper(std::move(initFunction)), id(id) {
+		MediaDeviceHandle(InitFunction initFunction, sview id) noexcept(false) : GenericComWrapper(std::move(initFunction)), id(id) {
 			readType();
 		}
 
+		/// <summary>
+		/// Can throw ComException.
+		/// </summary>
 		template<typename InitFunction>
-		MediaDeviceWrapper(InitFunction initFunction, MediaDeviceType type) : GenericComWrapper(std::move(initFunction)), type(type) {
+		MediaDeviceHandle(InitFunction initFunction, MediaDeviceType type) noexcept(false) : GenericComWrapper(std::move(initFunction)), type(type) {
 			readId();
 		}
 
@@ -52,14 +58,26 @@ namespace rxtd::audio_analyzer::wasapi_wrappers {
 			return id;
 		}
 
+		/// <summary>
+		/// Can throw ComException.
+		/// </summary>
 		[[nodiscard]]
 		DeviceInfo readDeviceInfo() noexcept(false);
 
+		/// <summary>
+		/// Can throw ComException.
+		/// </summary>
 		[[nodiscard]]
-		IAudioClientWrapper openAudioClient();
+		AudioClientHandle openAudioClient() noexcept(false);
 
+		/// <summary>
+		/// Type safe call to IMMDevice::Activate.
+		/// Can throw ComException.
+		/// </summary>
+		/// <typeparam name="Interface">Type of the class to be retrieved by IMMDevice::Activate.</typeparam>
+		/// <returns>Valid GenericComWrapper object.</returns>
 		template<typename Interface>
-		GenericComWrapper<Interface> activateFor() {
+		GenericComWrapper<Interface> activateFor() noexcept(false) {
 			sview source;
 			if constexpr (std::is_same_v<IAudioClient, Interface>) {
 				source = L"IAudioClient.Activate(IAudioClient)";
@@ -79,47 +97,23 @@ namespace rxtd::audio_analyzer::wasapi_wrappers {
 
 			return {
 				[&](auto ptr) {
-					throwOnError(typedQuery(&IMMDevice::Activate, ptr, CLSCTX_INPROC_SERVER, nullptr), source);
-					return true;
+					typedQuery(&IMMDevice::Activate, ptr, source, CLSCTX_INPROC_SERVER, nullptr);
 				}
 			};
 		}
 
 	private:
 		[[nodiscard]]
-		static sview convertFormFactor(std::optional<EndpointFormFactor> value);
+		static sview convertFormFactor(std::optional<EndpointFormFactor> value) noexcept;
 
-		void readType() noexcept(false) {
-			auto endpoint = GenericComWrapper<IMMEndpoint>{
-				[&](auto ptr) {
-					throwOnError(ref().QueryInterface(ptr), L"IMMDevice.QueryInterface(IMMEndpoint)");
-					return true;
-				}
-			};
-			EDataFlow flow{};
-			throwOnError(endpoint.ref().GetDataFlow(&flow), L"IMMEndpoint.GetDataFlow()");
-			switch (flow) {
-			case eRender:
-				type = MediaDeviceType::eOUTPUT;
-				break;
-			case eCapture:
-				type = MediaDeviceType::eINPUT;
-				break;
-			default: throw ComException{ -1, L"invalid EDataFlow value from IMMEndpoint.GetDataFlow()" };
-			}
-		}
+		/// <summary>
+		/// Can throw ComException.
+		/// </summary>
+		void readType() noexcept(false);
 
-		void readId() noexcept(false) {
-			common::winapi_wrappers::GenericCoTaskMemWrapper<wchar_t> idWrapper{
-				[&](auto ptr) {
-					throwOnError(ref().GetId(ptr), L"IMMDevice.GetId()");
-					return true;
-				}
-			};
-			id = idWrapper.getPointer();
-			if (id.empty()) {
-				throw ComException{ -1, L"invalid empty value for device id from IMMDevice.GetId()" };
-			}
-		}
+		/// <summary>
+		/// Can throw ComException.
+		/// </summary>
+		void readId() noexcept(false);
 	};
 }

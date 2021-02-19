@@ -18,7 +18,7 @@
 #include "winapi-wrappers/GenericComWrapper.h"
 
 namespace rxtd::audio_analyzer::wasapi_wrappers {
-	class IAudioCaptureClientWrapper : public common::winapi_wrappers::GenericComWrapper<IAudioCaptureClient> {
+	class AudioCaptureClient : public common::winapi_wrappers::GenericComWrapper<IAudioCaptureClient> {
 	public:
 		enum class Type {
 			eInt16,
@@ -32,10 +32,10 @@ namespace rxtd::audio_analyzer::wasapi_wrappers {
 		utils::Vector2D<float> buffer;
 
 	public:
-		IAudioCaptureClientWrapper() = default;
+		AudioCaptureClient() = default;
 
 		template<typename InitFunction>
-		IAudioCaptureClientWrapper(InitFunction initFunction) : GenericComWrapper(std::move(initFunction)) { }
+		AudioCaptureClient(InitFunction initFunction) : GenericComWrapper(std::move(initFunction)) { }
 
 		void setParams(Type _type, index _channelsCount) {
 			type = _type;

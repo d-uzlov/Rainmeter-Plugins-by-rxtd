@@ -14,11 +14,11 @@
 namespace rxtd::perfmon {
 	struct Reference {
 		enum class Type : uint8_t {
-			COUNTER_RAW,
-			COUNTER_FORMATTED,
-			EXPRESSION,
-			ROLLUP_EXPRESSION,
-			COUNT,
+			eCOUNTER_RAW,
+			eCOUNTER_FORMATTED,
+			eEXPRESSION,
+			eROLLUP_EXPRESSION,
+			eCOUNT,
 		};
 
 		MatchPattern namePattern;

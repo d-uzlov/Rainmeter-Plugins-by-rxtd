@@ -36,12 +36,14 @@ namespace rxtd::common::winapi_wrappers {
 	public:
 		GenericComWrapper() = default;
 
+		/// <summary>
+		/// InitFunction must be an object that have operator() overloaded to accept ObjectType** value.
+		/// InitFunction must initialize ObjectType* value of the pointer it accepted or leave as nullptr.
+		/// InitFunction is advised to throw an exception if it is unable to initialize the pointer.
+		/// </summary>
 		template<typename InitFunction>
-		GenericComWrapper(InitFunction initFunction) {
-			const bool success = initFunction(&ptr);
-			if (!success) {
-				release();
-			}
+		GenericComWrapper(InitFunction initFunction) noexcept(false) {
+			initFunction(&ptr);
 		}
 
 		GenericComWrapper(GenericComWrapper&& other) noexcept {
@@ -96,7 +98,7 @@ namespace rxtd::common::winapi_wrappers {
 		}
 
 		[[nodiscard]]
-		bool isValid() const {
+		bool isValid() const noexcept {
 			return ptr != nullptr;
 		}
 
@@ -105,11 +107,29 @@ namespace rxtd::common::winapi_wrappers {
 			return *ptr;
 		}
 
+		/// <summary>
+		/// Calls method with __uuidof(Interface), specified args and a pointer on this object.
+		/// Example: replace IMMDevice::Activate(CLSCTX_INPROC_SERVER, nullptr, &ptr) with typedQuery(&IMMDevice::Activate, ptr, CLSCTX_INPROC_SERVER, nullptr)
+		/// Intended to be used as a type-safe replacement
+		/// for type-unsafe calls to object creation functions in COM API.
+		/// Throws ComException on error.
+		/// </summary>
+		/// <typeparam name="Interface">Class to take uuid of.</typeparam>
+		/// <param name="method">Method to call.</param>
+		/// <param name="errorMessage">Message for the exception.</param>
+		/// <param name="interfacePtr">Pointer that will receive the value from method.</param>
+		/// <param name="args">All the args for MethodType except uuid and last receiving pointer.</param>
 		template<typename Interface, typename MethodType, typename... Args>
-		HRESULT typedQuery(MethodType method, Interface** interfacePtr, Args ... args) {
-			return (ptr->*method)(__uuidof(Interface), args..., reinterpret_cast<void**>(interfacePtr));
+		void typedQuery(MethodType method, Interface** interfacePtr, sview errorMessage, Args ... args) noexcept(false) {
+			throwOnError((ptr->*method)(__uuidof(Interface), args..., reinterpret_cast<void**>(interfacePtr)), errorMessage);
 		}
 
+		/// <summary>
+		/// Compares code with S_OK value.
+		/// If code != S_OK then throws ComException with provided error message.
+		/// </summary>
+		/// <param name="code">WASAPI return code to check.</param>
+		/// <param name="source">Message for the exception.</param>
 		static void throwOnError(HRESULT code, sview source) noexcept(false) {
 			if (code != S_OK) {
 				throw ComException{ code, source };
