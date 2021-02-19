@@ -14,7 +14,7 @@
 #include "sound-processing/ProcessingManager.h"
 #include "sound-processing/device-management/CaptureManager.h"
 #include "sound-processing/ProcessingOrchestrator.h"
-#include "wasapi-wrappers/implementations/NotificationClientImpl.h"
+#include "wasapi-wrappers/implementations/MediaDeviceListNotificationClient.h"
 
 namespace rxtd::audio_analyzer {
 	class ParentHelper : MovableOnlyBase {

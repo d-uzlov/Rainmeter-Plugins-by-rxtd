@@ -225,7 +225,7 @@
     <ClInclude Include="Sources\wasapi-wrappers\AudioClientHandle.h" />
     <ClInclude Include="Sources\wasapi-wrappers\MediaDeviceEnumerator.h" />
     <ClInclude Include="Sources\wasapi-wrappers\implementations\AudioSessionEventsImpl.h" />
-    <ClInclude Include="Sources\wasapi-wrappers\implementations\NotificationClientImpl.h" />
+    <ClInclude Include="Sources\wasapi-wrappers\implementations\MediaDeviceListNotificationClient.h" />
     <ClInclude Include="Sources\wasapi-wrappers\MediaDeviceType.h" />
     <ClInclude Include="Sources\wasapi-wrappers\MediaDeviceHandle.h" />
     <ClInclude Include="Sources\wasapi-wrappers\WaveFormat.h" />
@@ -284,6 +284,8 @@
     <ClCompile Include="Sources\sound-processing\ProcessingManager.cpp" />
     <ClCompile Include="Sources\wasapi-wrappers\AudioCaptureClient.cpp" />
     <ClCompile Include="Sources\wasapi-wrappers\AudioClientHandle.cpp" />
+    <ClCompile Include="Sources\wasapi-wrappers\implementations\AudioSessionEventsImpl.cpp" />
+    <ClCompile Include="Sources\wasapi-wrappers\implementations\MediaDeviceListNotificationClient.cpp" />
     <ClCompile Include="Sources\wasapi-wrappers\MediaDeviceEnumerator.cpp" />
     <ClCompile Include="Sources\wasapi-wrappers\MediaDeviceHandle.cpp" />
   </ItemGroup>

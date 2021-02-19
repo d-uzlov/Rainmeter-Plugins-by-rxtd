@@ -212,9 +212,6 @@
     <ClInclude Include="Sources\wasapi-wrappers\implementations\AudioSessionEventsImpl.h">
       <Filter>Source Files\wasapi-wrappers\implementations</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\wasapi-wrappers\implementations\NotificationClientImpl.h">
-      <Filter>Source Files\wasapi-wrappers\implementations</Filter>
-    </ClInclude>
     <ClInclude Include="Sources\Version.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -232,6 +229,9 @@
     </ClInclude>
     <ClInclude Include="Sources\wasapi-wrappers\AudioCaptureClient.h">
       <Filter>Source Files\wasapi-wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\wasapi-wrappers\implementations\MediaDeviceListNotificationClient.h">
+      <Filter>Source Files\wasapi-wrappers\implementations</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -378,6 +378,12 @@
     </ClCompile>
     <ClCompile Include="Sources\wasapi-wrappers\AudioCaptureClient.cpp">
       <Filter>Source Files\wasapi-wrappers</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\wasapi-wrappers\implementations\AudioSessionEventsImpl.cpp">
+      <Filter>Source Files\wasapi-wrappers\implementations</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\wasapi-wrappers\implementations\MediaDeviceListNotificationClient.cpp">
+      <Filter>Source Files\wasapi-wrappers\implementations</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
