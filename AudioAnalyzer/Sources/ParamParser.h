@@ -108,6 +108,9 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		static bool checkListUnique(const OptionList& list);
 
+		[[nodiscard]]
+		static bool checkNameAllowed(sview name);
+
 		void parseProcessing(sview name, Logger cl, ProcessingData& oldData);
 
 		[[nodiscard]]

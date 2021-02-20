@@ -61,6 +61,13 @@ bool ParamParser::parse(Version _version, bool suppressLogger) {
 }
 
 void ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& oldData) {
+	if (!checkNameAllowed(name)) {
+		cl.error(L"invalid processing name");
+		oldData = {};
+		anythingChanged = true;
+		return;
+	}
+
 	string processingOptionIndex = L"Processing-"s += name;
 	auto processingDescriptionOption = rain.read(processingOptionIndex);
 	if (processingDescriptionOption.empty()) {
@@ -214,6 +221,30 @@ bool ParamParser::checkListUnique(const OptionList& list) {
 	return true;
 }
 
+bool ParamParser::checkNameAllowed(sview name) {
+	// Names are only allowed to have latin letters, digits and underscore symbol.
+	// Symbols are deliberately checked manually
+	// to forbid non-latin letters.
+
+	const wchar_t first = name.front();
+	const bool firstIsAllowed = (first >= L'a' && first <= L'z')
+		|| (first >= L'A' && first <= L'Z') || first == L'_';
+
+	if (!firstIsAllowed) {
+		return false;
+	}
+
+	return std::all_of(
+		name.begin(), name.end(),
+		[](wchar_t c) {
+			return (c >= L'a' && c <= L'z')
+				|| (c >= L'A' && c <= L'Z')
+				|| (c >= L'0' && c <= L'9')
+				|| c == L'_';
+		}
+	);
+}
+
 std::set<Channel> ParamParser::parseChannels(const OptionList& channelsStringList, Logger& logger) const {
 	std::set<Channel> set;
 
@@ -233,6 +264,12 @@ std::optional<ParamParser::HandlerPatchersInfo> ParamParser::parseHandlers(const
 	HandlerPatchersInfo result;
 
 	for (auto nameOption : names) {
+		if (!checkNameAllowed(nameOption.asString())) {
+			logger.error(L"handler {}: invalid handler name", nameOption);
+			anythingChanged = true;
+			return {};
+		}
+
 		auto name = istring{ nameOption.asIString() };
 		if (auto [iter, isNewElement] = handlerNames.insert(name);
 			!isNewElement) {
@@ -240,13 +277,13 @@ std::optional<ParamParser::HandlerPatchersInfo> ParamParser::parseHandlers(const
 			return {};
 		}
 
-		auto handler = hch.getHandler(name);
+		auto handler = hch.getHandler(name, logger.context(L"handler {}: ", name));
 
 		if (handler == nullptr) {
 			if (version < Version::eVERSION2) {
 				continue;
 			} else {
-				logger.error(L"handler '{}' is invalid, invalidate processing", name);
+				logger.error(L"invalidate processing", name);
 				return {};
 			}
 		}

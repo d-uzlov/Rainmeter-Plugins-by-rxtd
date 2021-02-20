@@ -9,6 +9,7 @@
 
 #include "HandlerCacheHelper.h"
 
+#include "AudioChild.h"
 #include "sound-processing/sound-handlers/BlockHandler.h"
 #include "sound-processing/sound-handlers/WaveForm.h"
 #include "sound-processing/sound-handlers/Loudness.h"
@@ -30,26 +31,24 @@ using namespace std::string_literals;
 
 using namespace rxtd::audio_analyzer;
 
-PatchInfo* HandlerCacheHelper::getHandler(const istring& name) {
+PatchInfo* HandlerCacheHelper::getHandler(const istring& name, Logger& cl) {
 	auto& info = patchersCache[name];
 
 	if (!info.updated) {
-		info = parseHandler(name % csView(), std::move(info));
+		info = parseHandler(name % csView(), std::move(info), cl);
 		info.updated = true;
 	}
 
 	return info.patchInfo.fun == nullptr ? nullptr : &info.patchInfo;
 }
 
-HandlerCacheHelper::HandlerRawInfo HandlerCacheHelper::parseHandler(sview name, HandlerRawInfo handler) {
+HandlerCacheHelper::HandlerRawInfo HandlerCacheHelper::parseHandler(sview name, HandlerRawInfo handler, Logger& cl) {
 	string optionName = L"Handler-"s += name;
 	auto descriptionOption = rain.read(optionName);
 	if (descriptionOption.empty()) {
 		optionName = L"Handler_"s += name;
 		descriptionOption = rain.read(optionName);
 	}
-
-	auto cl = rain.createLogger().context(L"Handler '{}': ", name);
 
 	if (descriptionOption.empty()) {
 		cl.error(L"description is not found", name);

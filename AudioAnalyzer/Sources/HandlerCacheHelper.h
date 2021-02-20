@@ -82,11 +82,11 @@ namespace rxtd::audio_analyzer {
 		}
 
 		[[nodiscard]]
-		PatchInfo* getHandler(const istring& name);
+		PatchInfo* getHandler(const istring& name, Logger& cl);
 
 	private:
 		[[nodiscard]]
-		HandlerRawInfo parseHandler(sview name, HandlerRawInfo handler);
+		HandlerRawInfo parseHandler(sview name, HandlerRawInfo handler, Logger& cl);
 
 		[[nodiscard]]
 		PatchInfo createHandlerPatcher(const OptionMap& optionMap, Logger& cl) const;
