@@ -178,8 +178,8 @@ float BandCascadeTransformer::computeForBand(index band) const {
 	if (cascadesSummed == 0.0f) {
 		// bandWeight < params.minWeight for all cascades
 		// let's use value of the last cascade with non zero weight and value
-		for (index i = bandWeights.size() - 1; i >= 0; ++i) {
-			if (bandWeights[i] > 0.0 && snapshot[i].data[band] > params.zeroLevelHard) {
+		for (index i = bandWeights.size() - 1; i >= 0; i--) {
+			if (bandWeights[i] > 0.0f && snapshot[i].data[band] > static_cast<float>(params.zeroLevelHard)) {
 				return snapshot[i].data[band];
 			}
 		}
