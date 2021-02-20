@@ -5,3 +5,4 @@ _ReSharper.Caches
 *~*.TMP
 *.ipch
 vc-fileutils.settings
+enc_temp_folder/
