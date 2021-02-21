@@ -68,8 +68,8 @@
     <ClCompile Include="sources\expressions\GrammarBuilder.cpp">
       <Filter>Source Files\expressions</Filter>
     </ClCompile>
-    <ClCompile Include="sources\MeasureBase.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="sources\rainmeter\MeasureBase.cpp">
+      <Filter>Source Files\rainmeter</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -193,8 +193,8 @@
     <ClInclude Include="sources\expressions\GenericNode.h">
       <Filter>Source Files\expressions</Filter>
     </ClInclude>
-    <ClInclude Include="sources\MeasureBase.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="sources\rainmeter\MeasureBase.h">
+      <Filter>Source Files\rainmeter</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

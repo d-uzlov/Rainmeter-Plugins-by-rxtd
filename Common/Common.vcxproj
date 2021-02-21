@@ -163,9 +163,9 @@
     <ClCompile Include="sources\option-parsing\OptionMap.cpp" />
     <ClCompile Include="sources\option-parsing\Tokenizer.cpp" />
     <ClCompile Include="sources\rainmeter\InstanceKeeper.cpp" />
+    <ClCompile Include="sources\rainmeter\MeasureBase.cpp" />
     <ClCompile Include="sources\rainmeter\Rainmeter.cpp" />
     <ClCompile Include="sources\StringUtils.cpp" />
-    <ClCompile Include="sources\MeasureBase.cpp" />
     <ClCompile Include="sources\winapi-wrappers\WinApiReturnCode.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -195,6 +195,7 @@
     <ClInclude Include="sources\option-parsing\Tokenizer.h" />
     <ClInclude Include="sources\rainmeter\InstanceKeeper.h" />
     <ClInclude Include="sources\rainmeter\Logger.h" />
+    <ClInclude Include="sources\rainmeter\MeasureBase.h" />
     <ClInclude Include="sources\rainmeter\Rainmeter.h" />
     <ClInclude Include="sources\rainmeter\DataHandle.h" />
     <ClInclude Include="sources\rainmeter\SkinHandle.h" />
@@ -203,7 +204,6 @@
     <ClInclude Include="sources\MyMath.h" />
     <ClInclude Include="sources\my-windows.h" />
     <ClInclude Include="sources\StringUtils.h" />
-    <ClInclude Include="sources\MeasureBase.h" />
     <ClInclude Include="sources\winapi-wrappers\ComException.h" />
     <ClInclude Include="sources\winapi-wrappers\GenericComWrapper.h" />
     <ClInclude Include="sources\winapi-wrappers\GenericCoTaskMemWrapper.h" />

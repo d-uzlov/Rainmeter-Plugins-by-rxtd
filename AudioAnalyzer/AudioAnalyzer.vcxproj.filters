@@ -45,15 +45,15 @@
     <Filter Include="Source Files\wasapi-wrappers\implementations">
       <UniqueIdentifier>{1efe0513-1dc6-45a6-a7af-26c084b2ac30}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\options">
+      <UniqueIdentifier>{40b0d339-0169-4605-96ed-3a00020889f4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Sources\AudioChild.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Sources\AudioParent.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Sources\ParamParser.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="local-version.h">
@@ -146,9 +146,6 @@
     <ClInclude Include="Sources\audio-utils\GaussianCoefficientsManager.h">
       <Filter>Source Files\audio-utils</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\HandlerCacheHelper.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Sources\audio-utils\WindowFunctionHelper.h">
       <Filter>Source Files\audio-utils</Filter>
     </ClInclude>
@@ -233,15 +230,27 @@
     <ClInclude Include="Sources\wasapi-wrappers\implementations\MediaDeviceListNotificationClient.h">
       <Filter>Source Files\wasapi-wrappers\implementations</Filter>
     </ClInclude>
+    <ClInclude Include="Sources\options\ParamParser.h">
+      <Filter>Source Files\options</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\options\HandlerPatchersInfo.h">
+      <Filter>Source Files\options</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\options\HandlerCacheHelper.h">
+      <Filter>Source Files\options</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\options\PatchInfo.h">
+      <Filter>Source Files\options</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\options\ProcessingData.h">
+      <Filter>Source Files\options</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sources\AudioChild.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Sources\AudioParent.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\ParamParser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\Common\precompiled.cpp">
@@ -322,9 +331,6 @@
     <ClCompile Include="Sources\audio-utils\GaussianCoefficientsManager.cpp">
       <Filter>Source Files\audio-utils</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\HandlerCacheHelper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Sources\audio-utils\WindowFunctionHelper.cpp">
       <Filter>Source Files\audio-utils</Filter>
     </ClCompile>
@@ -387,6 +393,12 @@
     </ClCompile>
     <ClCompile Include="Sources\image-utils\ImageWriteHelper.cpp">
       <Filter>Source Files\image-utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\options\ParamParser.cpp">
+      <Filter>Source Files\options</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\options\HandlerCacheHelper.cpp">
+      <Filter>Source Files\options</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

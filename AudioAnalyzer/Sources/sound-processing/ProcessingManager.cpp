@@ -15,7 +15,7 @@ using namespace rxtd::audio_analyzer;
 
 void ProcessingManager::setParams(
 	Logger logger,
-	const ParamParser::ProcessingData& pd,
+	const ProcessingData& pd,
 	Version version,
 	index sampleRate, ChannelLayout layout,
 	Snapshot& snapshot

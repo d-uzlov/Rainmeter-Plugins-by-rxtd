@@ -9,8 +9,8 @@
 
 #include "ParamParser.h"
 
-#include "option-parsing/OptionMap.h"
 #include "option-parsing/OptionList.h"
+#include "option-parsing/OptionMap.h"
 
 using namespace std::string_literals;
 
@@ -260,7 +260,7 @@ std::set<Channel> ParamParser::parseChannels(const OptionList& channelsStringLis
 	return set;
 }
 
-std::optional<ParamParser::HandlerPatchersInfo> ParamParser::parseHandlers(const OptionList& names, const Logger& logger) {
+std::optional<HandlerPatchersInfo> ParamParser::parseHandlers(const OptionList& names, const Logger& logger) {
 	HandlerPatchersInfo result;
 
 	for (auto nameOption : names) {

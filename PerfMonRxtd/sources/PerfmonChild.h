@@ -9,7 +9,6 @@
 
 #pragma once
 #include "PerfmonParent.h"
-#include "MeasureBase.h"
 
 namespace rxtd::perfmon {
 	class PerfmonChild : public utils::MeasureBase {

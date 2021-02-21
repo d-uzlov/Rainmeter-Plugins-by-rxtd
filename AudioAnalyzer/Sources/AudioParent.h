@@ -10,8 +10,10 @@
 #pragma once
 
 #include "LogErrorHelper.h"
-#include "MeasureBase.h"
 #include "ParentHelper.h"
+#include "options/ParamParser.h"
+#include "rainmeter/MeasureBase.h"
+#include "sound-processing/sound-handlers/SoundHandlerBase.h"
 
 namespace rxtd::audio_analyzer {
 	class AudioParent : public utils::ParentMeasureBase {
@@ -95,7 +97,7 @@ namespace rxtd::audio_analyzer {
 			string& resolveBufferString,
 			isview procName, Channel channel, isview handlerName, isview propName
 		);
-		ProcessingCleanersMap createCleanersFor(const ParamParser::ProcessingData& pd) const;
+		ProcessingCleanersMap createCleanersFor(const ProcessingData& pd) const;
 		void runCleaners() const;
 	};
 }

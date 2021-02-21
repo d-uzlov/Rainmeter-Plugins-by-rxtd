@@ -55,12 +55,12 @@
 
 #pragma once
 
-#include "MeasureBase.h"
 #include "expressions/RollupExpressionResolver.h"
 #include "expressions/SimpleExpressionSolver.h"
-#include "instances/SimpleInstanceManager.h"
 #include "instances/RollupInstanceManager.h"
+#include "instances/SimpleInstanceManager.h"
 #include "pdh/PdhWrapper.h"
+#include "rainmeter/MeasureBase.h"
 
 namespace rxtd::perfmon {
 

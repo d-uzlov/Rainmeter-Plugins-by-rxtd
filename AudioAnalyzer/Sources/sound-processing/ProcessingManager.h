@@ -12,7 +12,7 @@
 
 #include "Channel.h"
 #include "ChannelMixer.h"
-#include "../ParamParser.h"
+#include "options/ParamParser.h"
 #include "../audio-utils/DownsampleHelper.h"
 
 namespace rxtd::audio_analyzer {
@@ -57,7 +57,7 @@ namespace rxtd::audio_analyzer {
 	public:
 		void setParams(
 			Logger logger,
-			const ParamParser::ProcessingData& pd,
+			const ProcessingData& pd,
 			Version version,
 			index sampleRate, ChannelLayout layout,
 			Snapshot& snapshot

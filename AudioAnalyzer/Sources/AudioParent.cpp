@@ -9,8 +9,6 @@
 
 #include "AudioParent.h"
 
-#include "ParamParser.h"
-
 using namespace rxtd::audio_analyzer;
 
 void AudioParent::LogHelpers::setLogger(Logger logger) {
@@ -728,7 +726,7 @@ void AudioParent::resolveProp(
 	resolveBufferString = bp.getBufferView();
 }
 
-AudioParent::ProcessingCleanersMap AudioParent::createCleanersFor(const ParamParser::ProcessingData& pd) const {
+AudioParent::ProcessingCleanersMap AudioParent::createCleanersFor(const ProcessingData& pd) const {
 	std::set<Channel> channels = pd.channels;
 
 	using HandlerMap = std::map<istring, std::unique_ptr<SoundHandlerBase>, std::less<>>;

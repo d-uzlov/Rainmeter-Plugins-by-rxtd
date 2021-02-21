@@ -11,7 +11,6 @@
 #include "PerfmonParent.h"
 #include "PerfMonRXTD.h"
 #include "RainmeterAPI.h"
-#include "MeasureBase.h"
 
 PLUGIN_EXPORT void Initialize(void** data, void* rm) {
 	rxtd::common::rainmeter::Rainmeter rain(rm);
