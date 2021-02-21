@@ -104,7 +104,7 @@ void ProcessingManager::process(const ChannelMixer& mixer, clock::time_point kil
 		for (auto& [channel, channelStruct] : channelMap) {
 			auto& channelSnapshot = snapshot[channel];
 
-			SoundHandlerBase::ProcessContext context{};
+			handler::HandlerBase::ProcessContext context{};
 
 			if (auto wave = mixer.getChannelPCM(channel);
 				resamplingDivider <= 1) {
@@ -127,7 +127,7 @@ void ProcessingManager::process(const ChannelMixer& mixer, clock::time_point kil
 				handler.process(context, channelSnapshot[handlerName]);
 			}
 		}
-	} catch (SoundHandlerBase::TooManyValuesException& e) {
+	} catch (handler::HandlerBase::TooManyValuesException& e) {
 		logger.error(L"{}: memory usage exceeded limit. Check your settings", e.getSourceName());
 		logger.error(L"processing stopped");
 		channelMap.clear();

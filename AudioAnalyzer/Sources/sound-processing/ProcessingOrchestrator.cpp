@@ -44,7 +44,7 @@ void ProcessingOrchestrator::configureSnapshot(Snapshot& snap) const {
 }
 
 void ProcessingOrchestrator::process(const ChannelMixer& channelMixer) {
-	using clock = SoundHandlerBase::clock;
+	using clock = handler::HandlerBase::clock;
 	using namespace std::chrono_literals;
 
 	const auto processBeginTime = clock::now();

@@ -8,12 +8,11 @@
  */
 
 #pragma once
-#include "../SoundHandlerBase.h"
-#include "BandResampler.h"
 #include "ResamplerProvider.h"
-#include "../../../audio-utils/GaussianCoefficientsManager.h"
+#include "audio-utils/GaussianCoefficientsManager.h"
+#include "sound-processing/sound-handlers/HandlerBase.h"
 
-namespace rxtd::audio_analyzer {
+namespace rxtd::audio_analyzer::handler {
 	class legacy_WeightedBlur : public ResamplerProvider {
 		struct Params {
 			double radiusMultiplier{};

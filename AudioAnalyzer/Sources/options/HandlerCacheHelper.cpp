@@ -10,26 +10,27 @@
 #include "HandlerCacheHelper.h"
 
 #include "AudioChild.h"
-#include "sound-processing/sound-handlers/BlockHandler.h"
-#include "sound-processing/sound-handlers/WaveForm.h"
-#include "sound-processing/sound-handlers/Loudness.h"
+#include "sound-processing/sound-handlers/basic-handlers//BlockHandler.h"
+#include "sound-processing/sound-handlers/basic-handlers//Loudness.h"
+#include "sound-processing/sound-handlers/basic-handlers//WaveForm.h"
 
-#include "sound-processing/sound-handlers/spectrum-stack/FftAnalyzer.h"
-#include "sound-processing/sound-handlers/spectrum-stack/BandResampler.h"
 #include "sound-processing/sound-handlers/spectrum-stack/BandCascadeTransformer.h"
-#include "sound-processing/sound-handlers/spectrum-stack/UniformBlur.h"
-#include "sound-processing/sound-handlers/spectrum-stack/Spectrogram.h"
+#include "sound-processing/sound-handlers/spectrum-stack/BandResampler.h"
+#include "sound-processing/sound-handlers/spectrum-stack/FftAnalyzer.h"
 #include "sound-processing/sound-handlers/spectrum-stack/SingleValueTransformer.h"
+#include "sound-processing/sound-handlers/spectrum-stack/Spectrogram.h"
 #include "sound-processing/sound-handlers/spectrum-stack/TimeResampler.h"
+#include "sound-processing/sound-handlers/spectrum-stack/UniformBlur.h"
 
-#include "sound-processing/sound-handlers/spectrum-stack/legacy_WeightedBlur.h"
 #include "sound-processing/sound-handlers/spectrum-stack/legacy_FiniteTimeFilter.h"
+#include "sound-processing/sound-handlers/spectrum-stack/legacy_WeightedBlur.h"
 
 #include "option-parsing/OptionMap.h"
 
 using namespace std::string_literals;
 
-using namespace rxtd::audio_analyzer;
+using rxtd::audio_analyzer::HandlerCacheHelper;
+using rxtd::audio_analyzer::PatchInfo;
 
 PatchInfo* HandlerCacheHelper::getHandler(const istring& name, Logger& cl) {
 	auto& info = patchersCache[name];
@@ -83,6 +84,8 @@ PatchInfo HandlerCacheHelper::createHandlerPatcher(
 	const OptionMap& optionMap,
 	Logger& cl
 ) const {
+	using namespace handler;
+
 	const auto type = optionMap.get(L"type").asIString();
 
 	if (type.empty()) {

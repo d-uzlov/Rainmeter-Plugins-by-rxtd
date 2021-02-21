@@ -10,14 +10,15 @@
 #include "BandResampler.h"
 
 #include "LinearInterpolator.h"
-#include "../../../audio-utils/CubicInterpolationHelper.h"
+#include "audio-utils/CubicInterpolationHelper.h"
 #include "option-parsing/OptionList.h"
+
+using rxtd::audio_analyzer::handler::BandResampler;
+using rxtd::audio_analyzer::handler::HandlerBase;
 
 using namespace std::string_literals;
 
-using namespace rxtd::audio_analyzer;
-
-SoundHandlerBase::ParseResult BandResampler::parseParams(
+HandlerBase::ParseResult BandResampler::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {
@@ -187,7 +188,7 @@ std::vector<float> BandResampler::makeBandsFromFreqs(array_span<float> freqs, Lo
 	return result;
 }
 
-SoundHandlerBase::ConfigurationResult
+HandlerBase::ConfigurationResult
 BandResampler::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
 	params = _params.cast<Params>();
 
@@ -377,7 +378,7 @@ bool BandResampler::getProp(
 	const Snapshot& snapshot,
 	isview prop,
 	BufferPrinter& printer,
-	const ExternCallContext& context
+	const ExternalMethods::CallContext& context
 ) {
 	const index bandsCount = snapshot.bandFreqs.size();
 

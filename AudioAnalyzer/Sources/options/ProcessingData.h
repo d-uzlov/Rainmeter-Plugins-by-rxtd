@@ -11,11 +11,11 @@
 #include "HandlerPatchersInfo.h"
 #include "audio-utils/filter-utils/FilterCascadeParser.h"
 #include "sound-processing/Channel.h"
-#include "sound-processing/sound-handlers/SoundHandlerBase.h"
+#include "sound-processing/sound-handlers/ExternalMethods.h"
 
 namespace rxtd::audio_analyzer {
 	struct ProcessingData {
-		using Finisher = SoundHandlerBase::ExternalMethods::FinishMethodType;
+		using Finisher = handler::ExternalMethods::FinishMethodType;
 
 		string rawFccDescription;
 		audio_utils::FilterCascadeCreator fcc;

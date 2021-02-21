@@ -8,12 +8,12 @@
  */
 
 #pragma once
-#include "SoundHandlerBase.h"
-#include "../../audio-utils/CustomizableValueTransformer.h"
+#include "audio-utils/CustomizableValueTransformer.h"
 #include "audio-utils/filter-utils/LogarithmicIRF.h"
+#include "sound-processing/sound-handlers/HandlerBase.h"
 
-namespace rxtd::audio_analyzer {
-	class BlockHandler : public SoundHandlerBase {
+namespace rxtd::audio_analyzer::handler {
+	class BlockHandler : public HandlerBase {
 		using CVT = audio_utils::CustomizableValueTransformer;
 
 		struct Params {
@@ -80,7 +80,7 @@ namespace rxtd::audio_analyzer {
 			const Snapshot& snapshot,
 			isview prop,
 			BufferPrinter& printer,
-			const ExternCallContext& context
+			const ExternalMethods::CallContext& context
 		);
 	};
 

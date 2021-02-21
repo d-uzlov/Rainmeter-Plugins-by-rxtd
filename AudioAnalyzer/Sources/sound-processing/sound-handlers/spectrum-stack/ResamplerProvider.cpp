@@ -10,7 +10,8 @@
 #include "ResamplerProvider.h"
 #include "BandResampler.h"
 
-using namespace rxtd::audio_analyzer;
+using rxtd::audio_analyzer::handler::ResamplerProvider;
+using rxtd::audio_analyzer::handler::BandResampler;
 
 BandResampler* ResamplerProvider::getResampler() {
 	auto& config = getConfiguration();

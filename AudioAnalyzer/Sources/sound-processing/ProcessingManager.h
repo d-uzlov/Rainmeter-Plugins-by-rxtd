@@ -13,18 +13,18 @@
 #include "Channel.h"
 #include "ChannelMixer.h"
 #include "options/ParamParser.h"
-#include "../audio-utils/DownsampleHelper.h"
+#include "audio-utils/DownsampleHelper.h"
 
 namespace rxtd::audio_analyzer {
 	class ProcessingManager {
 	public:
 		using Logger = common::rainmeter::Logger;
-		using ChannelSnapshot = std::map<istring, SoundHandlerBase::Snapshot, std::less<>>;
+		using ChannelSnapshot = std::map<istring, handler::HandlerBase::Snapshot, std::less<>>;
 		using Snapshot = std::map<Channel, ChannelSnapshot, std::less<>>;
 
-		using clock = SoundHandlerBase::clock;
+		using clock = handler::HandlerBase::clock;
 
-		using HandlerMap = std::map<istring, std::unique_ptr<SoundHandlerBase>, std::less<>>;
+		using HandlerMap = std::map<istring, std::unique_ptr<handler::HandlerBase>, std::less<>>;
 
 		struct ChannelStruct {
 			HandlerMap handlerMap;
@@ -40,7 +40,7 @@ namespace rxtd::audio_analyzer {
 			explicit HandlerFinderImpl(const HandlerMap& channelData) : channelData(channelData) { }
 
 			[[nodiscard]]
-			SoundHandlerBase* getHandler(isview id) const override {
+			handler::HandlerBase* getHandler(isview id) const override {
 				const auto iter = channelData.find(id);
 				return iter == channelData.end() ? nullptr : iter->second.get();
 			}

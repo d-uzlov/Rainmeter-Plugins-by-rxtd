@@ -12,12 +12,13 @@
 
 #include "MyMath.h"
 
+using rxtd::audio_analyzer::handler::WaveForm;
+using rxtd::audio_analyzer::handler::HandlerBase;
+
 using namespace std::string_literals;
 using rxtd::utils::Color;
 
-using namespace rxtd::audio_analyzer;
-
-SoundHandlerBase::ParseResult WaveForm::parseParams(
+HandlerBase::ParseResult WaveForm::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {
@@ -95,7 +96,7 @@ SoundHandlerBase::ParseResult WaveForm::parseParams(
 	return result;
 }
 
-SoundHandlerBase::ConfigurationResult
+HandlerBase::ConfigurationResult
 WaveForm::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
 	params = _params.cast<Params>();
 
@@ -183,7 +184,7 @@ void WaveForm::vProcess(ProcessContext context, ExternalData& externalData) {
 	}
 }
 
-void WaveForm::staticFinisher(const Snapshot& snapshot, const ExternCallContext& context) {
+void WaveForm::staticFinisher(const Snapshot& snapshot, const ExternalMethods::CallContext& context) {
 	auto& writeNeeded = snapshot.writeNeeded;
 	if (!writeNeeded) {
 		return;
@@ -201,7 +202,7 @@ bool WaveForm::getProp(
 	const Snapshot& snapshot,
 	isview prop,
 	BufferPrinter& printer,
-	const ExternCallContext& context
+	const ExternalMethods::CallContext& context
 ) {
 	if (prop == L"file") {
 		snapshot.filenameBuffer = snapshot.prefix;

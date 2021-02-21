@@ -11,9 +11,10 @@
 #include "BandResampler.h"
 #include "ResamplerProvider.h"
 
-using namespace rxtd::audio_analyzer;
+using rxtd::audio_analyzer::handler::BandCascadeTransformer;
+using rxtd::audio_analyzer::handler::HandlerBase;
 
-SoundHandlerBase::ParseResult BandCascadeTransformer::parseParams(
+HandlerBase::ParseResult BandCascadeTransformer::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {
@@ -64,7 +65,7 @@ SoundHandlerBase::ParseResult BandCascadeTransformer::parseParams(
 	return result;
 }
 
-SoundHandlerBase::ConfigurationResult
+HandlerBase::ConfigurationResult
 BandCascadeTransformer::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
 	params = _params.cast<Params>();
 

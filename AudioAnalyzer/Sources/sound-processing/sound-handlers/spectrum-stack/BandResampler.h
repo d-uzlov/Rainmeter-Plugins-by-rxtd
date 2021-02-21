@@ -9,11 +9,11 @@
 
 #pragma once
 #include "FftAnalyzer.h"
-#include "../SoundHandlerBase.h"
 #include "ResamplerProvider.h"
 #include "Vector2D.h"
+#include "sound-processing/sound-handlers/HandlerBase.h"
 
-namespace rxtd::audio_analyzer {
+namespace rxtd::audio_analyzer::handler {
 	class BandResampler final : public ResamplerProvider {
 		struct Params {
 			index minCascade{};
@@ -117,7 +117,7 @@ namespace rxtd::audio_analyzer {
 			const Snapshot& snapshot,
 			isview prop,
 			BufferPrinter& printer,
-			const ExternCallContext& context
+			const ExternalMethods::CallContext& context
 		);
 	};
 }

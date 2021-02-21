@@ -15,7 +15,6 @@
 #include "rainmeter/Logger.h"
 #include "rainmeter/Rainmeter.h"
 #include "sound-processing/Channel.h"
-#include "sound-processing/sound-handlers/SoundHandlerBase.h"
 
 namespace rxtd::audio_analyzer {
 	class ParamParser {

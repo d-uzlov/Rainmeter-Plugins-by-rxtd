@@ -8,11 +8,11 @@
  */
 
 #pragma once
-#include "../SoundHandlerBase.h"
 #include "BandResampler.h"
 #include "ResamplerProvider.h"
+#include "sound-processing/sound-handlers/HandlerBase.h"
 
-namespace rxtd::audio_analyzer {
+namespace rxtd::audio_analyzer::handler {
 	class legacy_FiniteTimeFilter : public ResamplerProvider {
 		enum class SmoothingCurve {
 			FLAT,

@@ -8,11 +8,11 @@
  */
 
 #pragma once
-#include "../SoundHandlerBase.h"
-#include "../../../audio-utils/CustomizableValueTransformer.h"
 #include "ResamplerProvider.h"
+#include "audio-utils/CustomizableValueTransformer.h"
+#include "sound-processing/sound-handlers/HandlerBase.h"
 
-namespace rxtd::audio_analyzer {
+namespace rxtd::audio_analyzer::handler {
 	class SingleValueTransformer : public ResamplerProvider {
 		using CVT = audio_utils::CustomizableValueTransformer;
 

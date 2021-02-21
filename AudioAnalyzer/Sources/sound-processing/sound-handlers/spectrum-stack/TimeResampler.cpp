@@ -9,9 +9,10 @@
 
 #include "TimeResampler.h"
 
-using namespace rxtd::audio_analyzer;
+using rxtd::audio_analyzer::handler::TimeResampler;
+using rxtd::audio_analyzer::handler::HandlerBase;
 
-SoundHandlerBase::ParseResult TimeResampler::parseParams(
+HandlerBase::ParseResult TimeResampler::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {
@@ -44,7 +45,7 @@ SoundHandlerBase::ParseResult TimeResampler::parseParams(
 	return result;
 }
 
-SoundHandlerBase::ConfigurationResult
+HandlerBase::ConfigurationResult
 TimeResampler::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
 	params = _params.cast<Params>();
 

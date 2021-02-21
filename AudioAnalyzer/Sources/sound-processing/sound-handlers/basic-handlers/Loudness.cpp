@@ -11,9 +11,10 @@
 
 #include "MyMath.h"
 
-using namespace rxtd::audio_analyzer;
+using rxtd::audio_analyzer::handler::Loudness;
+using rxtd::audio_analyzer::handler::HandlerBase;
 
-SoundHandlerBase::ParseResult Loudness::parseParams(
+HandlerBase::ParseResult Loudness::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {
@@ -40,7 +41,7 @@ SoundHandlerBase::ParseResult Loudness::parseParams(
 	return result;
 }
 
-SoundHandlerBase::ConfigurationResult Loudness::vConfigure(
+HandlerBase::ConfigurationResult Loudness::vConfigure(
 	const ParamsContainer& _params, Logger& cl,
 	ExternalData& externalData
 ) {

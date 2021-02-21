@@ -8,14 +8,14 @@
  */
 
 #pragma once
-#include "SoundHandlerBase.h"
-#include "image-utils/WaveFormDrawer.h"
-#include "image-utils/ImageWriteHelper.h"
-#include "../../audio-utils/CustomizableValueTransformer.h"
+#include "audio-utils/CustomizableValueTransformer.h"
 #include "audio-utils/MinMaxCounter.h"
+#include "image-utils/ImageWriteHelper.h"
+#include "image-utils/WaveFormDrawer.h"
+#include "sound-processing/sound-handlers/HandlerBase.h"
 
-namespace rxtd::audio_analyzer {
-	class WaveForm : public SoundHandlerBase {
+namespace rxtd::audio_analyzer::handler {
+	class WaveForm : public HandlerBase {
 		using LDP = utils::WaveFormDrawer::LineDrawingPolicy;
 		using Colors = utils::WaveFormDrawer::Colors;
 		using CVT = audio_utils::CustomizableValueTransformer;
@@ -99,13 +99,13 @@ namespace rxtd::audio_analyzer {
 		void vProcess(ProcessContext context, ExternalData& externalData) override;
 
 	private:
-		static void staticFinisher(const Snapshot& snapshot, const ExternCallContext& context);
+		static void staticFinisher(const Snapshot& snapshot, const ExternalMethods::CallContext& context);
 
 		static bool getProp(
 			const Snapshot& snapshot,
 			isview prop,
 			BufferPrinter& printer,
-			const ExternCallContext& context
+			const ExternalMethods::CallContext& context
 		);
 	};
 }

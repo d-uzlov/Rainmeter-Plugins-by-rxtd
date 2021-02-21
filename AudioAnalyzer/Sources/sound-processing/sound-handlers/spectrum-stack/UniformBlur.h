@@ -8,11 +8,11 @@
  */
 
 #pragma once
-#include "../SoundHandlerBase.h"
 #include "ResamplerProvider.h"
-#include "../../../audio-utils/GaussianCoefficientsManager.h"
+#include "audio-utils/GaussianCoefficientsManager.h"
+#include "sound-processing/sound-handlers/HandlerBase.h"
 
-namespace rxtd::audio_analyzer {
+namespace rxtd::audio_analyzer::handler {
 	class UniformBlur : public ResamplerProvider {
 		struct Params {
 			double blurRadius{};

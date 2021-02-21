@@ -8,11 +8,11 @@
  */
 
 #pragma once
-#include "SoundHandlerBase.h"
-#include "../../audio-utils/CustomizableValueTransformer.h"
+#include "audio-utils/CustomizableValueTransformer.h"
+#include "sound-processing/sound-handlers/HandlerBase.h"
 
-namespace rxtd::audio_analyzer {
-	class Loudness : public SoundHandlerBase {
+namespace rxtd::audio_analyzer::handler {
+	class Loudness : public HandlerBase {
 		using CVT = audio_utils::CustomizableValueTransformer;
 
 		struct Params {

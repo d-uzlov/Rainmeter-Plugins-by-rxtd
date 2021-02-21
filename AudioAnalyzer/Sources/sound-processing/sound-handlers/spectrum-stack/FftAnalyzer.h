@@ -8,13 +8,13 @@
  */
 
 #pragma once
-#include "../SoundHandlerBase.h"
-#include "../../../audio-utils/FFT.h"
-#include "../../../audio-utils/FftCascade.h"
-#include "../../../audio-utils/WindowFunctionHelper.h"
+#include "audio-utils/FFT.h"
+#include "audio-utils/FftCascade.h"
+#include "audio-utils/WindowFunctionHelper.h"
+#include "sound-processing/sound-handlers/HandlerBase.h"
 
-namespace rxtd::audio_analyzer {
-	class FftAnalyzer : public SoundHandlerBase {
+namespace rxtd::audio_analyzer::handler {
+	class FftAnalyzer : public HandlerBase {
 		using WCF = audio_utils::WindowFunctionHelper::WindowCreationFunc;
 
 		enum class SizeBy {
@@ -113,7 +113,7 @@ namespace rxtd::audio_analyzer {
 			const Snapshot& snapshot,
 			isview prop,
 			BufferPrinter& printer,
-			const ExternCallContext& context
+			const ExternalMethods::CallContext& context
 		);
 
 		void processRandom(index waveSize, clock::time_point killTime);

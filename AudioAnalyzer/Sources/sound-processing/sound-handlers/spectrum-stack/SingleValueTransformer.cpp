@@ -9,9 +9,10 @@
 
 #include "SingleValueTransformer.h"
 
-using namespace rxtd::audio_analyzer;
+using rxtd::audio_analyzer::handler::SingleValueTransformer;
+using rxtd::audio_analyzer::handler::HandlerBase;
 
-SoundHandlerBase::ParseResult SingleValueTransformer::parseParams(
+HandlerBase::ParseResult SingleValueTransformer::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {
@@ -31,7 +32,7 @@ SoundHandlerBase::ParseResult SingleValueTransformer::parseParams(
 	return result;
 }
 
-SoundHandlerBase::ConfigurationResult
+HandlerBase::ConfigurationResult
 SingleValueTransformer::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
 	params = _params.cast<Params>();
 

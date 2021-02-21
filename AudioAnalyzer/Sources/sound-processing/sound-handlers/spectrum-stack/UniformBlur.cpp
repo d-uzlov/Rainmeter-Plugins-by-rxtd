@@ -10,9 +10,10 @@
 #include "UniformBlur.h"
 #include "BandResampler.h"
 
-using namespace rxtd::audio_analyzer;
+using rxtd::audio_analyzer::handler::UniformBlur;
+using rxtd::audio_analyzer::handler::HandlerBase;
 
-SoundHandlerBase::ParseResult UniformBlur::parseParams(
+HandlerBase::ParseResult UniformBlur::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {
@@ -33,7 +34,7 @@ SoundHandlerBase::ParseResult UniformBlur::parseParams(
 	return result;
 }
 
-SoundHandlerBase::ConfigurationResult
+HandlerBase::ConfigurationResult
 UniformBlur::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
 	params = _params.cast<Params>();
 

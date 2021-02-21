@@ -9,9 +9,10 @@
 
 #include "legacy_WeightedBlur.h"
 
-using namespace rxtd::audio_analyzer;
+using rxtd::audio_analyzer::handler::legacy_WeightedBlur;
+using rxtd::audio_analyzer::handler::HandlerBase;
 
-SoundHandlerBase::ParseResult legacy_WeightedBlur::parseParams(
+HandlerBase::ParseResult legacy_WeightedBlur::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {
@@ -42,7 +43,7 @@ SoundHandlerBase::ParseResult legacy_WeightedBlur::parseParams(
 	return result;
 }
 
-SoundHandlerBase::ConfigurationResult
+HandlerBase::ConfigurationResult
 legacy_WeightedBlur::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
 	params = _params.cast<Params>();
 

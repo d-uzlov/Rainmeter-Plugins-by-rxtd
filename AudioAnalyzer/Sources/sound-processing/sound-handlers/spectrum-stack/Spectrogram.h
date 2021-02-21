@@ -8,15 +8,15 @@
  */
 
 #pragma once
-#include "../SoundHandlerBase.h"
-#include "image-utils/Color.h"
 #include "audio-utils/MinMaxCounter.h"
-#include "image-utils/StripedImage.h"
+#include "image-utils/Color.h"
 #include "image-utils/ImageWriteHelper.h"
+#include "image-utils/StripedImage.h"
 #include "image-utils/StripedImageFadeHelper.h"
+#include "sound-processing/sound-handlers/HandlerBase.h"
 
-namespace rxtd::audio_analyzer {
-	class Spectrogram : public SoundHandlerBase {
+namespace rxtd::audio_analyzer::handler {
+	class Spectrogram : public handler::HandlerBase {
 		struct ColorDescription {
 			float widthInverted{};
 			utils::Color color;
@@ -175,13 +175,13 @@ namespace rxtd::audio_analyzer {
 		void vProcess(ProcessContext context, ExternalData& externalData) override;
 
 	private:
-		static void staticFinisher(const Snapshot& snapshot, const ExternCallContext& context);
+		static void staticFinisher(const Snapshot& snapshot, const ExternalMethods::CallContext& context);
 
 		static bool getProp(
 			const Snapshot& snapshot,
 			isview prop,
 			BufferPrinter& printer,
-			const ExternCallContext& context
+			const ExternalMethods::CallContext& context
 		);
 	};
 }

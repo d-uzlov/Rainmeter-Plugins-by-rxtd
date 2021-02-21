@@ -9,9 +9,10 @@
 
 #include "legacy_FiniteTimeFilter.h"
 
-using namespace rxtd::audio_analyzer;
+using rxtd::audio_analyzer::handler::legacy_FiniteTimeFilter;
+using rxtd::audio_analyzer::handler::HandlerBase;
 
-SoundHandlerBase::ParseResult legacy_FiniteTimeFilter::parseParams(
+HandlerBase::ParseResult legacy_FiniteTimeFilter::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {
@@ -48,7 +49,7 @@ SoundHandlerBase::ParseResult legacy_FiniteTimeFilter::parseParams(
 	return result;
 }
 
-SoundHandlerBase::ConfigurationResult
+HandlerBase::ConfigurationResult
 legacy_FiniteTimeFilter::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
 	params = _params.cast<Params>();
 

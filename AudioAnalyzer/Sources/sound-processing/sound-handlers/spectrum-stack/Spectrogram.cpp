@@ -17,11 +17,12 @@
 
 using namespace std::string_literals;
 
-using namespace rxtd::audio_analyzer;
+using rxtd::audio_analyzer::handler::Spectrogram;
+using rxtd::audio_analyzer::handler::HandlerBase;
 
 using rxtd::utils::Color;
 
-SoundHandlerBase::ParseResult Spectrogram::parseParams(
+HandlerBase::ParseResult Spectrogram::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {
@@ -133,7 +134,7 @@ SoundHandlerBase::ParseResult Spectrogram::parseParams(
 	return result;
 }
 
-SoundHandlerBase::ConfigurationResult
+HandlerBase::ConfigurationResult
 Spectrogram::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
 	params = _params.cast<Params>();
 
@@ -239,7 +240,7 @@ void Spectrogram::vProcess(ProcessContext context, ExternalData& externalData) {
 	}
 }
 
-void Spectrogram::staticFinisher(const Snapshot& snapshot, const ExternCallContext& context) {
+void Spectrogram::staticFinisher(const Snapshot& snapshot, const ExternalMethods::CallContext& context) {
 	if (!snapshot.writeNeeded) {
 		return;
 	}
@@ -295,7 +296,7 @@ bool Spectrogram::getProp(
 	const Snapshot& snapshot,
 	isview prop,
 	BufferPrinter& printer,
-	const ExternCallContext& context
+	const ExternalMethods::CallContext& context
 ) {
 	if (prop == L"file") {
 		snapshot.filenameBuffer = snapshot.prefix;

@@ -9,9 +9,12 @@
 
 #include "BlockHandler.h"
 
-using namespace rxtd::audio_analyzer;
+using rxtd::audio_analyzer::handler::BlockHandler;
+using rxtd::audio_analyzer::handler::HandlerBase;
+using rxtd::audio_analyzer::handler::BlockRms;
+using rxtd::audio_analyzer::handler::BlockPeak;
 
-SoundHandlerBase::ParseResult BlockHandler::parseParams(
+HandlerBase::ParseResult BlockHandler::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {
@@ -44,7 +47,7 @@ SoundHandlerBase::ParseResult BlockHandler::parseParams(
 	return result;
 }
 
-SoundHandlerBase::ConfigurationResult
+HandlerBase::ConfigurationResult
 BlockHandler::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
 	params = _params.cast<Params>();
 
@@ -74,7 +77,7 @@ bool BlockHandler::getProp(
 	const Snapshot& snapshot,
 	isview prop,
 	BufferPrinter& printer,
-	const ExternCallContext& context
+	const ExternalMethods::CallContext& context
 ) {
 	if (prop == L"block size") {
 		printer.print(snapshot.blockSize);

@@ -8,13 +8,14 @@
  */
 
 #include <random>
-#include "../../../audio-utils/RandomGenerator.h"
+#include "audio-utils/RandomGenerator.h"
 
 #include "FftAnalyzer.h"
 
-using namespace rxtd::audio_analyzer;
+using rxtd::audio_analyzer::handler::FftAnalyzer;
+using rxtd::audio_analyzer::handler::HandlerBase;
 
-SoundHandlerBase::ParseResult FftAnalyzer::parseParams(
+HandlerBase::ParseResult FftAnalyzer::parseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {
@@ -112,7 +113,7 @@ SoundHandlerBase::ParseResult FftAnalyzer::parseParams(
 	return result;
 }
 
-SoundHandlerBase::ConfigurationResult
+HandlerBase::ConfigurationResult
 FftAnalyzer::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) {
 	params = _params.cast<Params>();
 
@@ -208,7 +209,7 @@ bool FftAnalyzer::getProp(
 	const Snapshot& snapshot,
 	isview prop,
 	BufferPrinter& printer,
-	const ExternCallContext& context
+	const ExternalMethods::CallContext& context
 ) {
 	if (prop == L"size") {
 		printer.print(snapshot.fftSize);

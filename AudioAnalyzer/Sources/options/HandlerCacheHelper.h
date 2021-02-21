@@ -11,7 +11,7 @@
 #include "PatchInfo.h"
 #include "rainmeter/Logger.h"
 #include "rainmeter/Rainmeter.h"
-#include "sound-processing/sound-handlers/SoundHandlerBase.h"
+#include "sound-processing/sound-handlers/HandlerBase.h"
 
 namespace rxtd::audio_analyzer {
 	class HandlerCacheHelper {
@@ -70,8 +70,8 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		PatchInfo createPatcherT(const OptionMap& om, Logger& cl) const {
 			T instance{};
-			SoundHandlerBase& ref = instance;
-			SoundHandlerBase::ParseResult parseResult = ref.parseParams(om, cl, rain, version);
+			handler::HandlerBase& ref = instance;
+			handler::HandlerBase::ParseResult parseResult = ref.parseParams(om, cl, rain, version);
 
 			if (!parseResult.valid) {
 				return {};
@@ -79,7 +79,7 @@ namespace rxtd::audio_analyzer {
 
 			PatchInfo result;
 			result.params = std::move(parseResult.params);
-			result.fun = SoundHandlerBase::patchHandlerImpl<T>;
+			result.fun = handler::HandlerBase::patchHandlerImpl<T>;
 			result.sources = std::move(parseResult.sources);
 			result.externalMethods = parseResult.externalMethods;
 			return result;

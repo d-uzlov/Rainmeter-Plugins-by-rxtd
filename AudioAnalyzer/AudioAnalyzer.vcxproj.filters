@@ -48,6 +48,9 @@
     <Filter Include="Source Files\options">
       <UniqueIdentifier>{40b0d339-0169-4605-96ed-3a00020889f4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\sound-processing\sound-handlers\basic-handlers">
+      <UniqueIdentifier>{a439639a-9638-414b-87e1-915134dbb534}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Sources\AudioChild.h">
@@ -67,15 +70,6 @@
     </ClInclude>
     <ClInclude Include="Sources\sound-processing\ChannelMixer.h">
       <Filter>Source Files\sound-processing</Filter>
-    </ClInclude>
-    <ClInclude Include="Sources\sound-processing\sound-handlers\BlockHandler.h">
-      <Filter>Source Files\sound-processing\sound-handlers</Filter>
-    </ClInclude>
-    <ClInclude Include="Sources\sound-processing\sound-handlers\Loudness.h">
-      <Filter>Source Files\sound-processing\sound-handlers</Filter>
-    </ClInclude>
-    <ClInclude Include="Sources\sound-processing\sound-handlers\WaveForm.h">
-      <Filter>Source Files\sound-processing\sound-handlers</Filter>
     </ClInclude>
     <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\BandCascadeTransformer.h">
       <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
@@ -212,9 +206,6 @@
     <ClInclude Include="Sources\Version.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\sound-handlers\SoundHandlerBase.h">
-      <Filter>Source Files\sound-processing\sound-handlers</Filter>
-    </ClInclude>
     <ClInclude Include="Sources\wasapi-wrappers\MediaDeviceEnumerator.h">
       <Filter>Source Files\wasapi-wrappers</Filter>
     </ClInclude>
@@ -245,6 +236,30 @@
     <ClInclude Include="Sources\options\ProcessingData.h">
       <Filter>Source Files\options</Filter>
     </ClInclude>
+    <ClInclude Include="Sources\sound-processing\sound-handlers\HandlerControlObject.h">
+      <Filter>Source Files\sound-processing\sound-handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\sound-processing\sound-handlers\basic-handlers\BlockHandler.h">
+      <Filter>Source Files\sound-processing\sound-handlers\basic-handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\sound-processing\sound-handlers\basic-handlers\Loudness.h">
+      <Filter>Source Files\sound-processing\sound-handlers\basic-handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\sound-processing\sound-handlers\basic-handlers\WaveForm.h">
+      <Filter>Source Files\sound-processing\sound-handlers\basic-handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\sound-processing\sound-handlers\ParamsContainer.h">
+      <Filter>Source Files\sound-processing\sound-handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\sound-processing\sound-handlers\ExternalData.h">
+      <Filter>Source Files\sound-processing\sound-handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\sound-processing\sound-handlers\ExternalMethods.h">
+      <Filter>Source Files\sound-processing\sound-handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\sound-processing\sound-handlers\HandlerBase.h">
+      <Filter>Source Files\sound-processing\sound-handlers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sources\AudioChild.cpp">
@@ -267,15 +282,6 @@
     </ClCompile>
     <ClCompile Include="Sources\dllmain.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\sound-processing\sound-handlers\BlockHandler.cpp">
-      <Filter>Source Files\sound-processing\sound-handlers</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\sound-processing\sound-handlers\Loudness.cpp">
-      <Filter>Source Files\sound-processing\sound-handlers</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\sound-processing\sound-handlers\WaveForm.cpp">
-      <Filter>Source Files\sound-processing\sound-handlers</Filter>
     </ClCompile>
     <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\BandCascadeTransformer.cpp">
       <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
@@ -370,9 +376,6 @@
     <ClCompile Include="Sources\audio-utils\CustomizableValueTransformer.cpp">
       <Filter>Source Files\audio-utils</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\sound-processing\sound-handlers\SoundHandlerBase.cpp">
-      <Filter>Source Files\sound-processing\sound-handlers</Filter>
-    </ClCompile>
     <ClCompile Include="Sources\wasapi-wrappers\MediaDeviceEnumerator.cpp">
       <Filter>Source Files\wasapi-wrappers</Filter>
     </ClCompile>
@@ -399,6 +402,18 @@
     </ClCompile>
     <ClCompile Include="Sources\options\HandlerCacheHelper.cpp">
       <Filter>Source Files\options</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\sound-processing\sound-handlers\basic-handlers\BlockHandler.cpp">
+      <Filter>Source Files\sound-processing\sound-handlers\basic-handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\sound-processing\sound-handlers\basic-handlers\Loudness.cpp">
+      <Filter>Source Files\sound-processing\sound-handlers\basic-handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\sound-processing\sound-handlers\basic-handlers\WaveForm.cpp">
+      <Filter>Source Files\sound-processing\sound-handlers\basic-handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\sound-processing\sound-handlers\HandlerBase.cpp">
+      <Filter>Source Files\sound-processing\sound-handlers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

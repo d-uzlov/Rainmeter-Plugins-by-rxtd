@@ -8,11 +8,11 @@
  */
 
 #pragma once
-#include "../SoundHandlerBase.h"
 #include "BandResampler.h"
+#include "sound-processing/sound-handlers/HandlerBase.h"
 
-namespace rxtd::audio_analyzer {
-	class BandCascadeTransformer : public SoundHandlerBase {
+namespace rxtd::audio_analyzer::handler {
+	class BandCascadeTransformer : public HandlerBase {
 		enum class MixFunction {
 			AVERAGE,
 			PRODUCT,

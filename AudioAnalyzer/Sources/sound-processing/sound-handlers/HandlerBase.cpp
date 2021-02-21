@@ -7,12 +7,13 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include "SoundHandlerBase.h"
+#include "HandlerBase.h"
+
 #include "StringUtils.h"
 
-using namespace rxtd::audio_analyzer;
+using rxtd::audio_analyzer::handler::HandlerBase;
 
-bool SoundHandlerBase::patch(
+bool HandlerBase::patch(
 	string name,
 	const ParamsContainer& params, array_view<istring> sources,
 	index sampleRate, Version version,
@@ -23,7 +24,7 @@ bool SoundHandlerBase::patch(
 		throw std::exception{ "no support for multiple sources yet" };
 	}
 
-	handlerName = std::move(name);
+	_name = std::move(name);
 
 	Configuration newConfig;
 	if (!sources.empty()) {
@@ -75,7 +76,7 @@ bool SoundHandlerBase::patch(
 	return true;
 }
 
-rxtd::index SoundHandlerBase::legacy_parseIndexProp(
+rxtd::index HandlerBase::legacy_parseIndexProp(
 	const isview& request, const isview& propName,
 	index minBound, index endBound
 ) {

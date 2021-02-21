@@ -534,9 +534,9 @@ void AudioParent::initLogHelpers() {
 }
 
 void AudioParent::runFinisher(
-	SoundHandlerBase::ExternalMethods::FinishMethodType finisher, const SoundHandlerBase::ExternalData& handlerData, isview procName, Channel channel, isview handlerName
+	handler::ExternalMethods::FinishMethodType finisher, const handler::ExternalData& handlerData, isview procName, Channel channel, isview handlerName
 ) const {
-	SoundHandlerBase::ExternCallContext context;
+	handler::ExternalMethods::CallContext context;
 	context.version = version;
 
 	context.channelName =
@@ -668,7 +668,7 @@ void AudioParent::resolveProp(
 	// and if we still don't find requested info then it is caused either by delay in updating second thread
 	// or by device not having requested channel
 
-	SoundHandlerBase::ExternalData* handlerExternalData = nullptr;
+	handler::ExternalData* handlerExternalData = nullptr;
 
 	if (auto procIter = data._.find(procName);
 		procIter != data._.end()) {
@@ -699,7 +699,7 @@ void AudioParent::resolveProp(
 	}
 
 
-	SoundHandlerBase::ExternCallContext context;
+	handler::ExternalMethods::CallContext context;
 	context.version = version;
 
 	context.channelName =
@@ -729,7 +729,7 @@ void AudioParent::resolveProp(
 AudioParent::ProcessingCleanersMap AudioParent::createCleanersFor(const ProcessingData& pd) const {
 	std::set<Channel> channels = pd.channels;
 
-	using HandlerMap = std::map<istring, std::unique_ptr<SoundHandlerBase>, std::less<>>;
+	using HandlerMap = std::map<istring, std::unique_ptr<handler::HandlerBase>, std::less<>>;
 
 	ProcessingManager::ChannelSnapshot tempSnapshot;
 	HandlerMap tempChannelMap;
@@ -741,7 +741,7 @@ AudioParent::ProcessingCleanersMap AudioParent::createCleanersFor(const Processi
 
 		auto cl = logger.getSilent();
 		ProcessingManager::HandlerFinderImpl hf{ tempChannelMap };
-		SoundHandlerBase::Snapshot handlerSpecificData;
+		handler::HandlerBase::Snapshot handlerSpecificData;
 		const bool success = handlerPtr->patch(
 			handlerName % csView() % own(),
 			patchInfo.params, patchInfo.sources,

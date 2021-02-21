@@ -11,9 +11,8 @@
 #include <my-windows.h>
 #include "RainmeterAPI.h"
 
-#include "MeasureBase.h"
-#include "AudioParent.h"
 #include "AudioChild.h"
+#include "AudioParent.h"
 #include "rainmeter/Rainmeter.h"
 
 static_assert(std::is_same<WCHAR, wchar_t>::value);

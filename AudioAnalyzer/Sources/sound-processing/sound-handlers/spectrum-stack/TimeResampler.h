@@ -8,12 +8,12 @@
  */
 
 #pragma once
-#include "../SoundHandlerBase.h"
 #include "ResamplerProvider.h"
 #include "audio-utils/CustomizableValueTransformer.h"
 #include "audio-utils/filter-utils/LogarithmicIRF.h"
+#include "sound-processing/sound-handlers/HandlerBase.h"
 
-namespace rxtd::audio_analyzer {
+namespace rxtd::audio_analyzer::handler {
 	class TimeResampler : public ResamplerProvider {
 		using CVT = audio_utils::CustomizableValueTransformer;
 

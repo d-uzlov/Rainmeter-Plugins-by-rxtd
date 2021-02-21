@@ -13,15 +13,14 @@
 #include "ParentHelper.h"
 #include "options/ParamParser.h"
 #include "rainmeter/MeasureBase.h"
-#include "sound-processing/sound-handlers/SoundHandlerBase.h"
 
 namespace rxtd::audio_analyzer {
 	class AudioParent : public utils::ParentMeasureBase {
 		using DeviceRequest = std::optional<CaptureManager::SourceDesc>;
 
 		struct CleanerData {
-			SoundHandlerBase::ExternalData data;
-			SoundHandlerBase::ExternalMethods::FinishMethodType finisher = nullptr;
+			handler::ExternalData data;
+			handler::ExternalMethods::FinishMethodType finisher = nullptr;
 		};
 		
 		using ProcessingCleanersMap = std::map<istring, CleanerData, std::less<>>;
@@ -86,8 +85,8 @@ namespace rxtd::audio_analyzer {
 		void initLogHelpers();
 
 		void runFinisher(
-			SoundHandlerBase::ExternalMethods::FinishMethodType finisher,
-			const SoundHandlerBase::ExternalData& handlerData,
+			handler::ExternalMethods::FinishMethodType finisher,
+			const handler::ExternalData& handlerData,
 			isview procName, Channel channel, isview handlerName
 		) const;
 
