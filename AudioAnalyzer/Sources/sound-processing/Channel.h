@@ -46,6 +46,11 @@ namespace rxtd::audio_analyzer {
 		}
 
 		[[nodiscard]]
+		array_view<Channel> getOrdered() const {
+			return channelOrder;
+		}
+
+		[[nodiscard]]
 		array_view<Channel> ordered() const {
 			return channelOrder;
 		}

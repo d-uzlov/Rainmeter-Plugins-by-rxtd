@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 rxtd
+ * Copyright (C) 2019-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -59,7 +59,7 @@ namespace rxtd::audio_analyzer {
 			Logger logger,
 			const ProcessingData& pd,
 			Version version,
-			index sampleRate, ChannelLayout layout,
+			index sampleRate, array_view<Channel> layout,
 			Snapshot& snapshot
 		);
 

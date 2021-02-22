@@ -377,7 +377,7 @@ void ParentHelper::updateProcessings() {
 	mainFields.orchestrator.patch(
 		mainFields.settings.patches, constFields.version,
 		mainFields.captureManager.getSnapshot().format.samplesPerSec,
-		mainFields.captureManager.getSnapshot().format.channelLayout
+		mainFields.captureManager.getSnapshot().format.channelLayout.getOrdered()
 	);
 }
 

@@ -35,12 +35,12 @@ namespace rxtd::audio_analyzer::handler {
 
 	public:
 		[[nodiscard]]
-		bool checkSameParams(const ParamsContainer& p) const override {
+		bool vCheckSameParams(const ParamsContainer& p) const override {
 			return compareParamsEquals(params, p);
 		}
 
 		[[nodiscard]]
-		ParseResult parseParams(
+		ParamsContainer vParseParams(
 			const OptionMap& om, Logger& cl, const Rainmeter& rain,
 			Version version
 		) const override;

@@ -12,12 +12,12 @@
 using rxtd::audio_analyzer::handler::legacy_FiniteTimeFilter;
 using rxtd::audio_analyzer::handler::HandlerBase;
 
-HandlerBase::ParseResult legacy_FiniteTimeFilter::parseParams(
+rxtd::audio_analyzer::handler::ParamsContainer legacy_FiniteTimeFilter::vParseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {
-	ParseResult result{ true };
-	auto& params = result.params.clear<Params>();
+	ParamsContainer result;
+	auto& params = result.clear<Params>();
 
 	const auto sourceId = om.get(L"source").asIString();
 	if (sourceId.empty()) {
@@ -45,7 +45,6 @@ HandlerBase::ParseResult legacy_FiniteTimeFilter::parseParams(
 		params.smoothingCurve = SmoothingCurve::FLAT;
 	}
 
-	result.sources.emplace_back(sourceId);
 	return result;
 }
 

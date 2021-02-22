@@ -12,12 +12,12 @@
 using rxtd::audio_analyzer::handler::legacy_WeightedBlur;
 using rxtd::audio_analyzer::handler::HandlerBase;
 
-HandlerBase::ParseResult legacy_WeightedBlur::parseParams(
+rxtd::audio_analyzer::handler::ParamsContainer legacy_WeightedBlur::vParseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {
-	ParseResult result{ true };
-	auto& params = result.params.clear<Params>();
+	ParamsContainer result;
+	auto& params = result.clear<Params>();
 
 	const auto sourceId = om.get(L"source").asIString();
 	if (sourceId.empty()) {
@@ -39,7 +39,6 @@ HandlerBase::ParseResult legacy_WeightedBlur::parseParams(
 	// params.minWeight = std::max<double>(optionMap.get(L"minWeight"sv).asFloat(0), std::numeric_limits<float>::epsilon());
 	params.minWeight = 0.0; // doesn't work as expected
 
-	result.sources.emplace_back(sourceId);
 	return result;
 }
 

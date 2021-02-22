@@ -18,12 +18,12 @@ using rxtd::audio_analyzer::handler::HandlerBase;
 
 using namespace std::string_literals;
 
-HandlerBase::ParseResult BandResampler::parseParams(
+rxtd::audio_analyzer::handler::ParamsContainer BandResampler::vParseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {
-	ParseResult result{ true };
-	auto& params = result.params.clear<Params>();
+	ParamsContainer result;
+	auto& params = result.clear<Params>();
 
 	const auto sourceId = om.get(L"source").asIString();
 	if (sourceId.empty()) {
@@ -86,8 +86,6 @@ HandlerBase::ParseResult BandResampler::parseParams(
 	const bool defaultCubicResampling = !(version < Version::eVERSION2);
 	params.useCubicResampling = om.get(L"cubicInterpolation").asBool(defaultCubicResampling);
 
-	result.externalMethods.getProp = wrapExternalMethod<Snapshot, &getProp>();
-	result.sources.emplace_back(sourceId);
 	return result;
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 rxtd
+ * Copyright (C) 2020-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -30,20 +30,21 @@
 using namespace std::string_literals;
 
 using rxtd::audio_analyzer::HandlerCacheHelper;
-using rxtd::audio_analyzer::PatchInfo;
+using rxtd::audio_analyzer::HandlerInfo;
+using rxtd::audio_analyzer::handler::HandlerBase;
 
-PatchInfo* HandlerCacheHelper::getHandler(const istring& name, Logger& cl) {
-	auto& info = patchersCache[name];
+HandlerInfo* HandlerCacheHelper::getHandlerInfo(const istring& name, Logger& cl) {
+	auto& val = patchersCache[name];
 
-	if (!info.updated) {
-		info = parseHandler(name % csView(), std::move(info), cl);
-		info.updated = true;
+	if (!val.updated) {
+		val = parseHandler(name % csView(), std::move(val), cl);
+		val.updated = true;
 	}
 
-	return info.patchInfo.fun == nullptr ? nullptr : &info.patchInfo;
+	return val.info.meta.valid ? &val.info : nullptr;
 }
 
-HandlerCacheHelper::HandlerRawInfo HandlerCacheHelper::parseHandler(sview name, HandlerRawInfo handler, Logger& cl) {
+HandlerCacheHelper::MapValue HandlerCacheHelper::parseHandler(sview name, MapValue val, Logger& cl) {
 	string optionName = L"Handler-"s += name;
 	auto descriptionOption = rain.read(optionName);
 	if (descriptionOption.empty()) {
@@ -60,27 +61,33 @@ HandlerCacheHelper::HandlerRawInfo HandlerCacheHelper::parseHandler(sview name, 
 	string rawDescription2;
 	readRawDescription2(optionMap.get(L"type").asIString(), optionMap, rawDescription2);
 
-	if (handler.patchInfo.rawDescription == descriptionOption.asString()
-		&& handler.patchInfo.rawDescription2 == rawDescription2) {
-		return handler;
+	if (val.info.rawDescription == descriptionOption.asString()
+		&& val.info.rawDescription2 == rawDescription2) {
+		return val;
 	}
+
 	anythingChanged = true;
 
-	handler.patchInfo = createHandlerPatcher(optionMap, cl);
-	handler.patchInfo.type = optionMap.get(L"type").asIString();
+	val.info.meta = createHandlerPatcher(optionMap, cl);
+
+	val.info.sources.clear();
+	for (auto opt : optionMap.get(L"source").asList(L',')) {
+		val.info.sources.push_back(opt.asIString() % own());
+	}
+	val.info.type = optionMap.get(L"type").asIString();
 
 	const auto unusedOptions = optionMap.getListOfUntouched();
 	if (unusedOptionsWarning && !unusedOptions.empty()) {
 		cl.warning(L"unused options: '{}'", unusedOptions);
 	}
 
-	handler.patchInfo.rawDescription2 = std::move(rawDescription2);
-	handler.patchInfo.rawDescription = descriptionOption.asString();
+	val.info.rawDescription2 = std::move(rawDescription2);
+	val.info.rawDescription = descriptionOption.asString();
 
-	return handler;
+	return val;
 }
 
-PatchInfo HandlerCacheHelper::createHandlerPatcher(
+HandlerBase::HandlerMetaInfo HandlerCacheHelper::createHandlerPatcher(
 	const OptionMap& optionMap,
 	Logger& cl
 ) const {
@@ -94,50 +101,50 @@ PatchInfo HandlerCacheHelper::createHandlerPatcher(
 	}
 
 	if (type == L"rms") {
-		return createPatcherT<BlockRms>(optionMap, cl);
+		return HandlerBase::createMetaForClass<BlockRms>(optionMap, cl, rain, version);
 	}
 	if (type == L"peak") {
-		return createPatcherT<BlockPeak>(optionMap, cl);
+		return HandlerBase::createMetaForClass<BlockPeak>(optionMap, cl, rain, version);
 	}
 	if (type == L"fft") {
-		return createPatcherT<FftAnalyzer>(optionMap, cl);
+		return HandlerBase::createMetaForClass<FftAnalyzer>(optionMap, cl, rain, version);
 	}
 	if (type == L"BandResampler") {
-		return createPatcherT<BandResampler>(optionMap, cl);
+		return HandlerBase::createMetaForClass<BandResampler>(optionMap, cl, rain, version);
 	}
 	if (type == L"BandCascadeTransformer") {
-		return createPatcherT<BandCascadeTransformer>(optionMap, cl);
+		return HandlerBase::createMetaForClass<BandCascadeTransformer>(optionMap, cl, rain, version);
 	}
 	if (type == L"UniformBlur") {
-		return createPatcherT<UniformBlur>(optionMap, cl);
+		return HandlerBase::createMetaForClass<UniformBlur>(optionMap, cl, rain, version);
 	}
 	if (type == L"spectrogram") {
-		return createPatcherT<Spectrogram>(optionMap, cl);
+		return HandlerBase::createMetaForClass<Spectrogram>(optionMap, cl, rain, version);
 	}
 	if (type == L"waveform") {
-		return createPatcherT<WaveForm>(optionMap, cl);
+		return HandlerBase::createMetaForClass<WaveForm>(optionMap, cl, rain, version);
 	}
 	if (type == L"loudness") {
-		return createPatcherT<Loudness>(optionMap, cl);
+		return HandlerBase::createMetaForClass<Loudness>(optionMap, cl, rain, version);
 	}
 	if (type == L"ValueTransformer") {
-		return createPatcherT<SingleValueTransformer>(optionMap, cl);
+		return HandlerBase::createMetaForClass<SingleValueTransformer>(optionMap, cl, rain, version);
 	}
 	if (type == L"TimeResampler") {
-		return createPatcherT<TimeResampler>(optionMap, cl);
+		return HandlerBase::createMetaForClass<TimeResampler>(optionMap, cl, rain, version);
 	}
 
 	if (type == L"WeightedBlur") {
 		if (!(version < Version::eVERSION2)) {
 			cl.warning(L"handler WeightedBlur is deprecated");
 		}
-		return createPatcherT<legacy_WeightedBlur>(optionMap, cl);
+		return HandlerBase::createMetaForClass<legacy_WeightedBlur>(optionMap, cl, rain, version);
 	}
 	if (type == L"FiniteTimeFilter") {
 		if (!(version < Version::eVERSION2)) {
 			cl.warning(L"handler FiniteTimeFilter is deprecated");
 		}
-		return createPatcherT<legacy_FiniteTimeFilter>(optionMap, cl);
+		return HandlerBase::createMetaForClass<legacy_FiniteTimeFilter>(optionMap, cl, rain, version);
 	}
 
 	if (type == L"LogarithmicValueMapper") {
@@ -157,7 +164,7 @@ PatchInfo HandlerCacheHelper::createHandlerPatcher(
 
 		bp.append(L"| transform db map[from -{} : 0, to {} : {}]", sensitivity * 0.5, offset, 1.0 + offset);
 		auto optionMapLocal = common::options::Option{ bp.getBufferView() }.asMap(L'|', L' ');
-		return createPatcherT<SingleValueTransformer>(optionMapLocal, cl);
+		return HandlerBase::createMetaForClass<SingleValueTransformer>(optionMapLocal, cl, rain, version);
 	}
 
 	cl.error(L"unknown type '{}'", type);

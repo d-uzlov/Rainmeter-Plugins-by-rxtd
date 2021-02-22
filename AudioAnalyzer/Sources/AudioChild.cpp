@@ -48,7 +48,7 @@ void AudioChild::vReload() {
 	setUseResultString(!options.infoRequest.empty());
 
 	if (!options.procName.empty()) {
-		const auto success = parent->isHandlerShouldExist(options.procName, options.channel, options.handlerName);
+		const auto success = parent->checkHandlerShouldExist(options.procName, options.channel, options.handlerName);
 		if (!success) {
 			logger.error(L"Measure is invalid, see parent measure log message for reason");
 			setInvalid();

@@ -18,12 +18,12 @@ using rxtd::audio_analyzer::handler::HandlerBase;
 using namespace std::string_literals;
 using rxtd::utils::Color;
 
-HandlerBase::ParseResult WaveForm::parseParams(
+rxtd::audio_analyzer::handler::ParamsContainer WaveForm::vParseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {
-	ParseResult result{ true };
-	auto& params = result.params.clear<Params>();
+	ParamsContainer result;
+	auto& params = result.clear<Params>();
 
 	params.width = om.get(L"width").asInt(100);
 	if (params.width < 2) {
@@ -91,8 +91,6 @@ HandlerBase::ParseResult WaveForm::parseParams(
 		params.transformer = CVT::parse(om.get(L"transform").asString(), transformLogger);
 	}
 
-	result.externalMethods.finish = wrapExternalMethod<Snapshot, &staticFinisher>();
-	result.externalMethods.getProp = wrapExternalMethod<Snapshot, &getProp>();
 	return result;
 }
 

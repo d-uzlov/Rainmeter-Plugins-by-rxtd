@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 rxtd
+ * Copyright (C) 2020-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -21,7 +21,7 @@ void ProcessingOrchestrator::reset() {
 void ProcessingOrchestrator::patch(
 	const ParamParser::ProcessingsInfoMap& patches,
 	Version version,
-	index samplesPerSec, ChannelLayout channelLayout
+	index samplesPerSec, array_view<Channel> channels
 ) {
 	utils::MapUtils::intersectKeyCollection(saMap, patches);
 	utils::MapUtils::intersectKeyCollection(snapshot, patches);
@@ -31,7 +31,7 @@ void ProcessingOrchestrator::patch(
 		sa.setParams(
 			logger.context(L"Proc '{}': ", name),
 			data,
-			version, samplesPerSec, channelLayout,
+			version, samplesPerSec, channels,
 			snapshot[name]
 		);
 	}

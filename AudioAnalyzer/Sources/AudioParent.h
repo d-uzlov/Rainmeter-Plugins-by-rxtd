@@ -18,14 +18,6 @@ namespace rxtd::audio_analyzer {
 	class AudioParent : public utils::ParentMeasureBase {
 		using DeviceRequest = std::optional<CaptureManager::SourceDesc>;
 
-		struct CleanerData {
-			handler::ExternalData data;
-			handler::ExternalMethods::FinishMethodType finisher = nullptr;
-		};
-		
-		using ProcessingCleanersMap = std::map<istring, CleanerData, std::less<>>;
-		using CleanersMap = std::map<istring, ProcessingCleanersMap, std::less<>>;
-
 		struct LogHelpers {
 			NoArgLogErrorHelper generic;
 			LogErrorHelper<istring> sourceTypeIsNotRecognized;
@@ -37,8 +29,7 @@ namespace rxtd::audio_analyzer {
 			LogErrorHelper<istring> processingNotFound;
 			LogErrorHelper<istring> channelNotRecognized;
 			LogErrorHelper<istring> noProcessingHaveHandler;
-			LogErrorHelper<istring, istring> processingDoesNotHaveHandler;
-			LogErrorHelper<istring, istring> processingDoesNotHaveChannel;
+			LogErrorHelper<istring, Channel> processingDoesNotHaveChannel;
 			LogErrorHelper<istring> handlerDoesNotHaveProps;
 			LogErrorHelper<istring, istring> propNotFound;
 
@@ -58,7 +49,8 @@ namespace rxtd::audio_analyzer {
 
 		bool cleanersExecuted = false;
 
-		CleanersMap cleanersMap;
+		std::map<istring, ProcessingManager, std::less<>> clearProcessings;
+		ProcessingOrchestrator::Snapshot clearSnapshot;
 
 	public:
 		explicit AudioParent(Rainmeter&& rain);
@@ -77,7 +69,7 @@ namespace rxtd::audio_analyzer {
 			return version;
 		}
 
-		bool isHandlerShouldExist(isview procName, Channel channel, isview handlerName) const;
+		bool checkHandlerShouldExist(isview procName, Channel channel, isview handlerName) const;
 
 		isview findProcessingFor(isview handlerName) const;
 
@@ -90,13 +82,12 @@ namespace rxtd::audio_analyzer {
 			isview procName, Channel channel, isview handlerName
 		) const;
 
-		void updateCleaners();
 		DeviceRequest readRequest() const;
 		void resolveProp(
 			string& resolveBufferString,
 			isview procName, Channel channel, isview handlerName, isview propName
 		);
-		ProcessingCleanersMap createCleanersFor(const ProcessingData& pd) const;
-		void runCleaners() const;
+
+		void runFinishers(ProcessingOrchestrator::Snapshot snapshot) const;
 	};
 }

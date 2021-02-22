@@ -14,12 +14,12 @@ using rxtd::audio_analyzer::handler::HandlerBase;
 using rxtd::audio_analyzer::handler::BlockRms;
 using rxtd::audio_analyzer::handler::BlockPeak;
 
-HandlerBase::ParseResult BlockHandler::parseParams(
+rxtd::audio_analyzer::handler::ParamsContainer BlockHandler::vParseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {
-	ParseResult result{ true };
-	auto& params = result.params.clear<Params>();
+	ParamsContainer result;
+	auto& params = result.clear<Params>();
 
 	if (om.has(L"resolution")) {
 		params.updateInterval = om.get(L"resolution").asFloat(10.0);
@@ -43,7 +43,6 @@ HandlerBase::ParseResult BlockHandler::parseParams(
 	auto transformLogger = cl.context(L"transform: ");
 	params.transformer = CVT::parse(om.get(L"transform").asString(), transformLogger);
 
-	result.externalMethods.getProp = wrapExternalMethod<Snapshot, &getProp>();
 	return result;
 }
 

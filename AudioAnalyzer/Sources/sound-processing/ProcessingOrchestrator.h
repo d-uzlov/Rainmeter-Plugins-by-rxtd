@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 rxtd
+ * Copyright (C) 2020-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -50,7 +50,7 @@ namespace rxtd::audio_analyzer {
 		void patch(
 			const ParamParser::ProcessingsInfoMap& patches,
 			Version version,
-			index samplesPerSec, ChannelLayout channelLayout
+			index samplesPerSec, array_view<Channel> channels
 		);
 		void configureSnapshot(Snapshot& snap) const;
 

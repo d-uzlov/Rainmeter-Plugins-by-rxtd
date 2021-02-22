@@ -12,12 +12,12 @@
 using rxtd::audio_analyzer::handler::SingleValueTransformer;
 using rxtd::audio_analyzer::handler::HandlerBase;
 
-HandlerBase::ParseResult SingleValueTransformer::parseParams(
+rxtd::audio_analyzer::handler::ParamsContainer SingleValueTransformer::vParseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {
-	ParseResult result{ true };
-	auto& params = result.params.clear<Params>();
+	ParamsContainer result;
+	auto& params = result.clear<Params>();
 
 	const auto sourceId = om.get(L"source").asIString();
 	if (sourceId.empty()) {
@@ -28,7 +28,6 @@ HandlerBase::ParseResult SingleValueTransformer::parseParams(
 	auto transformLogger = cl.context(L"transform: ");
 	params.transformer = CVT::parse(om.get(L"transform").asString(), transformLogger);
 
-	result.sources.emplace_back(sourceId);
 	return result;
 }
 

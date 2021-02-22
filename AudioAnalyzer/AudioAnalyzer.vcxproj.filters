@@ -224,20 +224,11 @@
     <ClInclude Include="Sources\options\ParamParser.h">
       <Filter>Source Files\options</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\options\HandlerPatchersInfo.h">
-      <Filter>Source Files\options</Filter>
-    </ClInclude>
     <ClInclude Include="Sources\options\HandlerCacheHelper.h">
-      <Filter>Source Files\options</Filter>
-    </ClInclude>
-    <ClInclude Include="Sources\options\PatchInfo.h">
       <Filter>Source Files\options</Filter>
     </ClInclude>
     <ClInclude Include="Sources\options\ProcessingData.h">
       <Filter>Source Files\options</Filter>
-    </ClInclude>
-    <ClInclude Include="Sources\sound-processing\sound-handlers\HandlerControlObject.h">
-      <Filter>Source Files\sound-processing\sound-handlers</Filter>
     </ClInclude>
     <ClInclude Include="Sources\sound-processing\sound-handlers\basic-handlers\BlockHandler.h">
       <Filter>Source Files\sound-processing\sound-handlers\basic-handlers</Filter>
@@ -259,6 +250,9 @@
     </ClInclude>
     <ClInclude Include="Sources\sound-processing\sound-handlers\HandlerBase.h">
       <Filter>Source Files\sound-processing\sound-handlers</Filter>
+    </ClInclude>
+    <ClInclude Include="Sources\options\HandlerInfo.h">
+      <Filter>Source Files\options</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

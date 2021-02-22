@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 rxtd
+ * Copyright (C) 2019-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -17,14 +17,14 @@ void ProcessingManager::setParams(
 	Logger logger,
 	const ProcessingData& pd,
 	Version version,
-	index sampleRate, ChannelLayout layout,
+	index sampleRate, array_view<Channel> channelsView,
 	Snapshot& snapshot
 ) {
 	this->logger = logger;
 
 	std::set<Channel> channels;
 	for (const auto channel : pd.channels) {
-		if (channel == Channel::eAUTO || layout.contains(channel)) {
+		if (channel == Channel::eAUTO || channelsView.contains(channel)) {
 			channels.insert(channel);
 		}
 	}
@@ -32,7 +32,7 @@ void ProcessingManager::setParams(
 	if (pd.targetRate == 0) {
 		resamplingDivider = 1;
 	} else {
-		const auto ratio = static_cast<double>(sampleRate) / pd.targetRate;
+		const auto ratio = static_cast<double>(sampleRate) / static_cast<double>(pd.targetRate);
 		resamplingDivider = ratio > 1 ? static_cast<index>(ratio) : 1;
 	}
 	const index finalSampleRate = sampleRate / resamplingDivider;
@@ -41,24 +41,24 @@ void ProcessingManager::setParams(
 
 	for (auto channel : channels) {
 		auto& newChannelStruct = channelMap[channel];
-		newChannelStruct.filter = pd.fcc.getInstance(double(finalSampleRate));
+		newChannelStruct.filter = pd.filter.creator.getInstance(double(finalSampleRate));
 		newChannelStruct.downsampleHelper.setFactor(resamplingDivider);
 	}
 
 	order.clear();
-	for (auto& handlerName : pd.handlersInfo.order) {
-		auto& patchInfo = pd.handlersInfo.patchers.find(handlerName)->second;
+	for (auto& handlerName : pd.handlerOrder) {
+		const HandlerInfo& patchInfo = pd.handlers.find(handlerName)->second;
 
 		bool handlerIsValid = true;
 		for (auto channel : channels) {
 			auto& channelDataNew = channelMap[channel].handlerMap;
-			auto handlerPtr = patchInfo.fun(std::move(oldChannelMap[channel].handlerMap[handlerName]));
+			auto handlerPtr = patchInfo.meta.transform(std::move(oldChannelMap[channel].handlerMap[handlerName]));
 
 			auto cl = logger.context(L"handler '{}': ", handlerName);
 			HandlerFinderImpl hf{ channelDataNew };
 			const bool success = handlerPtr->patch(
 				handlerName % csView() % own(),
-				patchInfo.params, patchInfo.sources,
+				patchInfo.meta.params, patchInfo.sources,
 				finalSampleRate, version,
 				hf, cl,
 				snapshot[channel][handlerName]

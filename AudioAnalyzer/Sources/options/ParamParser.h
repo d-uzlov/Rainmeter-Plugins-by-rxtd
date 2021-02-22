@@ -9,9 +9,7 @@
 
 #pragma once
 #include "HandlerCacheHelper.h"
-#include "HandlerPatchersInfo.h"
 #include "ProcessingData.h"
-#include "audio-utils/filter-utils/FilterCascadeParser.h"
 #include "rainmeter/Logger.h"
 #include "rainmeter/Rainmeter.h"
 #include "sound-processing/Channel.h"
@@ -58,7 +56,7 @@ namespace rxtd::audio_analyzer {
 		}
 
 	private:
-		void parseFilters(const OptionMap& optionMap, ProcessingData& data, Logger& cl) const;
+		void parseFilter(const OptionMap& optionMap, ProcessingData::FilterInfo& fi, Logger& cl) const;
 		void parseTargetRate(const OptionMap& optionMap, ProcessingData& data, Logger& cl) const;
 
 		[[nodiscard]]
@@ -67,12 +65,14 @@ namespace rxtd::audio_analyzer {
 		[[nodiscard]]
 		static bool checkNameAllowed(sview name);
 
-		void parseProcessing(sview name, Logger cl, ProcessingData& oldData);
+		[[nodiscard]]
+		ProcessingData parseProcessing(sview name, Logger cl, ProcessingData data);
 
 		[[nodiscard]]
-		std::set<Channel> parseChannels(const OptionList& channelsStringList, Logger& logger) const;
+		std::vector<Channel> parseChannels(const OptionList& channelsStringList, Logger& logger) const;
 
+		// returns true on success, false otherwise
 		[[nodiscard]]
-		std::optional<HandlerPatchersInfo> parseHandlers(const OptionList& indices, const Logger& logger);
+		bool parseHandlers(const OptionList& names, ProcessingData& data, const Logger& cl);
 	};
 }

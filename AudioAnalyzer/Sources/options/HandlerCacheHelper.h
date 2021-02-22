@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 rxtd
+ * Copyright (C) 2020-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -8,7 +8,7 @@
  */
 
 #pragma once
-#include "PatchInfo.h"
+#include "HandlerInfo.h"
 #include "rainmeter/Logger.h"
 #include "rainmeter/Rainmeter.h"
 #include "sound-processing/sound-handlers/HandlerBase.h"
@@ -19,12 +19,12 @@ namespace rxtd::audio_analyzer {
 		using Rainmeter = common::rainmeter::Rainmeter;
 		using OptionMap = common::options::OptionMap;
 
-		struct HandlerRawInfo {
+		struct MapValue {
 			bool updated = false;
-			PatchInfo patchInfo;
+			HandlerInfo info;
 		};
 
-		using PatchersMap = std::map<istring, HandlerRawInfo, std::less<>>;
+		using PatchersMap = std::map<istring, MapValue, std::less<>>;
 		PatchersMap patchersCache;
 		Rainmeter rain;
 		bool anythingChanged = false;
@@ -57,33 +57,14 @@ namespace rxtd::audio_analyzer {
 		}
 
 		[[nodiscard]]
-		PatchInfo* getHandler(const istring& name, Logger& cl);
+		HandlerInfo* getHandlerInfo(const istring& name, Logger& cl);
 
 	private:
 		[[nodiscard]]
-		HandlerRawInfo parseHandler(sview name, HandlerRawInfo handler, Logger& cl);
+		MapValue parseHandler(sview name, MapValue val, Logger& cl);
 
 		[[nodiscard]]
-		PatchInfo createHandlerPatcher(const OptionMap& optionMap, Logger& cl) const;
-
-		template<typename T>
-		[[nodiscard]]
-		PatchInfo createPatcherT(const OptionMap& om, Logger& cl) const {
-			T instance{};
-			handler::HandlerBase& ref = instance;
-			handler::HandlerBase::ParseResult parseResult = ref.parseParams(om, cl, rain, version);
-
-			if (!parseResult.valid) {
-				return {};
-			}
-
-			PatchInfo result;
-			result.params = std::move(parseResult.params);
-			result.fun = handler::HandlerBase::patchHandlerImpl<T>;
-			result.sources = std::move(parseResult.sources);
-			result.externalMethods = parseResult.externalMethods;
-			return result;
-		}
+		handler::HandlerBase::HandlerMetaInfo createHandlerPatcher(const OptionMap& optionMap, Logger& cl) const;
 
 		void readRawDescription2(isview type, const OptionMap& optionMap, string& rawDescription2) const;
 	};

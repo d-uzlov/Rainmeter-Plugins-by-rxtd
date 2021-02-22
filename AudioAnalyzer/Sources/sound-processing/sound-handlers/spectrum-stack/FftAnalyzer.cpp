@@ -15,12 +15,12 @@
 using rxtd::audio_analyzer::handler::FftAnalyzer;
 using rxtd::audio_analyzer::handler::HandlerBase;
 
-HandlerBase::ParseResult FftAnalyzer::parseParams(
+rxtd::audio_analyzer::handler::ParamsContainer FftAnalyzer::vParseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {
-	ParseResult result{ true };
-	auto& params = result.params.clear<Params>();
+	ParamsContainer result;
+	auto& params = result.clear<Params>();
 
 	if (version < Version::eVERSION2) {
 		params.legacy_attackTime = std::max(om.get(L"attack").asFloat(100), 0.0);
@@ -109,7 +109,6 @@ HandlerBase::ParseResult FftAnalyzer::parseParams(
 	params.wcfDescription = om.get(L"windowFunction").asString(L"hann");
 	params.wcf = audio_utils::WindowFunctionHelper::parse(params.wcfDescription, cl);
 
-	result.externalMethods.getProp = wrapExternalMethod<Snapshot, &getProp>();
 	return result;
 }
 

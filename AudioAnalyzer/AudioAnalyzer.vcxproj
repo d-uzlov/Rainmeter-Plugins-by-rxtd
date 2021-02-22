@@ -199,9 +199,8 @@
     <ClInclude Include="Sources\image-utils\WaveFormDrawer.h" />
     <ClInclude Include="Sources\LogErrorHelper.h" />
     <ClInclude Include="Sources\options\HandlerCacheHelper.h" />
-    <ClInclude Include="Sources\options\HandlerPatchersInfo.h" />
     <ClInclude Include="Sources\options\ParamParser.h" />
-    <ClInclude Include="Sources\options\PatchInfo.h" />
+    <ClInclude Include="Sources\options\HandlerInfo.h" />
     <ClInclude Include="Sources\options\ProcessingData.h" />
     <ClInclude Include="Sources\ParentHelper.h" />
     <ClInclude Include="Sources\sound-processing\Channel.h" />
@@ -214,7 +213,6 @@
     <ClInclude Include="Sources\sound-processing\sound-handlers\ExternalData.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\ExternalMethods.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\ParamsContainer.h" />
-    <ClInclude Include="Sources\sound-processing\sound-handlers\HandlerControlObject.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\HandlerBase.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\BandCascadeTransformer.h" />
     <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\BandResampler.h" />

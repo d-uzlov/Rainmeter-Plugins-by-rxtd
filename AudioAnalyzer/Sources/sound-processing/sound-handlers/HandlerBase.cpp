@@ -14,7 +14,7 @@
 using rxtd::audio_analyzer::handler::HandlerBase;
 
 bool HandlerBase::patch(
-	string name,
+	sview name,
 	const ParamsContainer& params, array_view<istring> sources,
 	index sampleRate, Version version,
 	HandlerFinder& hf, Logger& cl,
@@ -24,7 +24,7 @@ bool HandlerBase::patch(
 		throw std::exception{ "no support for multiple sources yet" };
 	}
 
-	_name = std::move(name);
+	_name = name;
 
 	Configuration newConfig;
 	if (!sources.empty()) {
@@ -48,7 +48,7 @@ bool HandlerBase::patch(
 
 	if (_configuration != newConfig
 		|| newConfig.sourcePtr != nullptr && newConfig.sourcePtr->_anyChanges
-		|| !checkSameParams(params)) {
+		|| !vCheckSameParams(params)) {
 		_anyChanges = true;
 
 		_configuration = newConfig;

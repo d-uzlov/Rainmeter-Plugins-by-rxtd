@@ -19,6 +19,7 @@
 #include <iterator>
 #include <limits>
 #include <cassert>
+#include <stdexcept>
 
 template<typename T>
 class array_view;
@@ -136,37 +137,37 @@ public:
 		return data_[__pos];
 	}
 
-	constexpr reference at(size_type __pos) {
+	constexpr reference at(size_type __pos) noexcept(false) {
 		if (__pos >= size())
 			throw std::out_of_range("array_view1d::at");
 		return data_[__pos];
 	}
 
-	constexpr const_reference at(size_type __pos) const {
+	constexpr const_reference at(size_type __pos) const noexcept(false) {
 		if (__pos >= size())
 			throw std::out_of_range("array_view1d::at");
 		return data_[__pos];
 	}
 
-	constexpr reference front() {
+	constexpr reference front() noexcept(false) {
 		if (empty())
 			throw std::out_of_range("array_view1d::front");
 		return data_[0];
 	}
 
-	constexpr const_reference front() const {
+	constexpr const_reference front() const noexcept(false) {
 		if (empty())
 			throw std::out_of_range("array_view1d::front");
 		return data_[0];
 	}
 
-	constexpr reference back() {
+	constexpr reference back() noexcept(false) {
 		if (empty())
 			throw std::out_of_range("array_view1d::back");
 		return data_[size_ - 1];
 	}
 
-	constexpr const_reference back() const {
+	constexpr const_reference back() const noexcept(false) {
 		if (empty())
 			throw std::out_of_range("array_view1d::back");
 		return data_[size_ - 1];
@@ -216,7 +217,7 @@ public:
 
 
 	// Copyright (C) 2020 rxtd
-	constexpr void transferToSpan(array_span<value_type> dest) const {
+	constexpr void transferToSpan(array_span<value_type> dest) const noexcept(false) {
 		if (dest.size() != size())
 			throw std::out_of_range("array_view1d::transferToSpan");
 		auto myIter = begin();
@@ -227,13 +228,18 @@ public:
 	}
 
 	// Copyright (C) 2020 rxtd
-	constexpr void transferToVector(std::vector<value_type>& dest) const {
+	constexpr void transferToVector(std::vector<value_type>& dest) const noexcept(false) {
 		dest.resize(size());
 		transferToSpan(array_span<value_type>{ dest });
 	}
 
 	// Copyright (C) 2020 rxtd
 	constexpr void copyFrom(array_view<value_type> source);
+
+	// Copyright (C) 2021 rxtd
+	constexpr bool contains(const value_type& val) const {
+		return std::find(begin(), end(), val) != end();
+	}
 
 
 private:
@@ -333,19 +339,19 @@ public:
 		return data_[__pos];
 	}
 
-	constexpr const_reference at(size_type __pos) const {
+	constexpr const_reference at(size_type __pos) const noexcept(false) {
 		if (__pos >= size())
 			throw std::out_of_range("array_view1d::at");
 		return data_[__pos];
 	}
 
-	constexpr const_reference front() const {
+	constexpr const_reference front() const noexcept(false) {
 		if (empty())
 			throw std::out_of_range("array_view1d::front");
 		return data_[0];
 	}
 
-	constexpr const_reference back() const {
+	constexpr const_reference back() const noexcept(false) {
 		if (empty())
 			throw std::out_of_range("array_view1d::back");
 		return data_[size_ - 1];
@@ -395,7 +401,7 @@ public:
 
 
 	// Copyright (C) 2020 rxtd
-	constexpr void transferToSpan(array_span<value_type> dest) const {
+	constexpr void transferToSpan(array_span<value_type> dest) const noexcept(false) {
 		if (dest.size() != size())
 			throw std::out_of_range("array_view1d::transferToSpan");
 		auto myIter = begin();
@@ -406,11 +412,15 @@ public:
 	}
 
 	// Copyright (C) 2020 rxtd
-	constexpr void transferToVector(std::vector<value_type>& dest) const {
+	constexpr void transferToVector(std::vector<value_type>& dest) const noexcept(false) {
 		dest.resize(size());
 		transferToSpan(array_span<T>{ dest });
 	}
 
+	// Copyright (C) 2021 rxtd
+	constexpr bool contains(const value_type& val) const {
+		return std::find(begin(), end(), val) != end();
+	}
 
 private:
 	const_pointer data_;

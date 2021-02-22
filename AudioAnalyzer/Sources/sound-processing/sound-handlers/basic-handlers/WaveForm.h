@@ -82,12 +82,12 @@ namespace rxtd::audio_analyzer::handler {
 
 	public:
 		[[nodiscard]]
-		bool checkSameParams(const ParamsContainer& p) const override {
+		bool vCheckSameParams(const ParamsContainer& p) const override {
 			return compareParamsEquals(params, p);
 		}
 
 		[[nodiscard]]
-		ParseResult parseParams(
+		ParamsContainer vParseParams(
 			const OptionMap& om, Logger& cl, const Rainmeter& rain,
 			Version version
 		) const override;
@@ -97,6 +97,14 @@ namespace rxtd::audio_analyzer::handler {
 		ConfigurationResult vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) override;
 
 		void vProcess(ProcessContext context, ExternalData& externalData) override;
+
+		ExternalMethods::GetPropMethodType vGetExt_getProp() const override {
+			return wrapExternalGetProp<Snapshot, &getProp>();
+		}
+
+		ExternalMethods::FinishMethodType vGetExt_finish() const override {
+			return wrapExternalFinish<Snapshot, &staticFinisher>();
+		}
 
 	private:
 		static void staticFinisher(const Snapshot& snapshot, const ExternalMethods::CallContext& context);

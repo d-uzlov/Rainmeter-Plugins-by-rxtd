@@ -9,6 +9,8 @@
 
 #include "AudioParent.h"
 
+#include "MapUtils.h"
+
 using namespace rxtd::audio_analyzer;
 
 void AudioParent::LogHelpers::setLogger(Logger logger) {
@@ -21,7 +23,6 @@ void AudioParent::LogHelpers::setLogger(Logger logger) {
 	processingNotFound.setLogger(logger);
 	channelNotRecognized.setLogger(logger);
 	noProcessingHaveHandler.setLogger(logger);
-	processingDoesNotHaveHandler.setLogger(logger);
 	processingDoesNotHaveChannel.setLogger(logger);
 	handlerDoesNotHaveProps.setLogger(logger);
 	propNotFound.setLogger(logger);
@@ -39,9 +40,8 @@ void AudioParent::LogHelpers::reset() {
 	// legacy_invalidPort.reset();
 
 	processingNotFound.reset();
-	channelNotRecognized.reset();
+	// channelNotRecognized.reset();
 	noProcessingHaveHandler.reset();
-	processingDoesNotHaveHandler.reset();
 	processingDoesNotHaveChannel.reset();
 	// handlerDoesNotHaveProps.reset();
 	// propNotFound.reset();
@@ -51,7 +51,7 @@ AudioParent::AudioParent(Rainmeter&& _rain) :
 	ParentMeasureBase(std::move(_rain)) {
 	setUseResultString(false);
 	initLogHelpers();
-	
+
 	// will throw std::runtime_error on invalid MagicNumber value,
 	// std::runtime_error is allowed to be thrown from constructor
 	version = Version::parseVersion(rain.read(L"MagicNumber").asInt(0));
@@ -82,7 +82,19 @@ void AudioParent::vReload() {
 	const bool paramsChanged = paramParser.parse(version, false);
 
 	if (paramsChanged) {
-		updateCleaners();
+		utils::MapUtils::intersectKeyCollection(clearProcessings, paramParser.getParseResult());
+		utils::MapUtils::intersectKeyCollection(clearSnapshot, paramParser.getParseResult());
+
+		for (const auto& [name, data] : paramParser.getParseResult()) {
+			auto& sa = clearProcessings[name];
+			ProcessingManager::Snapshot& snapshot = clearSnapshot[name];
+			sa.setParams(
+				logger.getSilent(),
+				data,
+				version, 48000, data.channels,
+				snapshot
+			);
+		}
 	}
 
 	const auto oldCallbacks = std::move(callbacks);
@@ -110,7 +122,7 @@ double AudioParent::vUpdate() {
 
 	if (!helper.getSnapshot().deviceIsAvailable.load()) {
 		if (!cleanersExecuted) {
-			runCleaners();
+			runFinishers(clearSnapshot);
 			cleanersExecuted = true;
 		}
 		return {};
@@ -119,28 +131,10 @@ double AudioParent::vUpdate() {
 	}
 
 	{
-		auto& data = helper.getSnapshot().data;
-		auto lock = data.getLock();
+		auto& snapshotData = helper.getSnapshot().data;
+		auto lock = snapshotData.getLock();
 
-		for (const auto& [procName, procInfo] : paramParser.getParseResult()) {
-			auto iter = data._.find(procName);
-			if (iter == data._.end()) {
-				continue;
-			}
-
-			auto& processingSnapshot = iter->second;
-			for (const auto& [handlerName, finisher] : procInfo.finishers) {
-				for (auto& [channel, channelSnapshot] : processingSnapshot) {
-					auto handlerDataIter = channelSnapshot.find(handlerName);
-					if (handlerDataIter != channelSnapshot.end()) {
-						runFinisher(
-							finisher, handlerDataIter->second.handlerSpecificData, procName, channel,
-							handlerName
-						);
-					}
-				}
-			}
-		}
+		runFinishers(snapshotData._);
 	}
 
 	return 1.0;
@@ -329,7 +323,7 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 		}
 
 		if (optionName == L"value") {
-			if (!isHandlerShouldExist(procName, channelOpt.value(), handlerName)) {
+			if (!checkHandlerShouldExist(procName, channelOpt.value(), handlerName)) {
 				// handlerInfo has its own check for isHandlerShouldExist
 				// inside #resolveProp()
 				return;
@@ -428,10 +422,10 @@ double AudioParent::getValue(isview proc, isview id, Channel channel, index ind)
 		return 0.0;
 	}
 
-	return values[0][ind];
+	return static_cast<double>(values[0][ind]);
 }
 
-bool AudioParent::isHandlerShouldExist(isview procName, Channel channel, isview handlerName) const {
+bool AudioParent::checkHandlerShouldExist(isview procName, Channel channel, isview handlerName) const {
 	const auto procDataIter = paramParser.getParseResult().find(procName);
 	if (procDataIter == paramParser.getParseResult().end()) {
 		logHelpers.processingNotFound.log(procName);
@@ -439,15 +433,14 @@ bool AudioParent::isHandlerShouldExist(isview procName, Channel channel, isview 
 	}
 
 	auto procData = procDataIter->second;
-	auto& channels = procData.channels;
-	if (channels.find(channel) == channels.end()) {
-		logHelpers.processingDoesNotHaveChannel.log(procName, ChannelUtils::getTechnicalName(channel) % ciView());
+	array_view<Channel> channels = procData.channels;
+	if (!channels.contains(channel)) {
+		logHelpers.processingDoesNotHaveChannel.log(procName, channel);
 		return false;
 	}
 
-	auto& handlerMap = procData.handlersInfo.patchers;
+	auto& handlerMap = procData.handlers;
 	if (handlerMap.find(handlerName) == handlerMap.end()) {
-		logHelpers.processingDoesNotHaveHandler.log(procName, handlerName);
 		return false;
 	}
 
@@ -456,8 +449,8 @@ bool AudioParent::isHandlerShouldExist(isview procName, Channel channel, isview 
 
 rxtd::isview AudioParent::findProcessingFor(isview handlerName) const {
 	for (auto& [name, pd] : paramParser.getParseResult()) {
-		auto& patchers = pd.handlersInfo.patchers;
-		if (patchers.find(handlerName) != patchers.end()) {
+		auto& order = pd.handlerOrder;
+		if (std::find(order.begin(), order.end(), handlerName) != order.end()) {
 			return name;
 		}
 	}
@@ -511,24 +504,19 @@ void AudioParent::initLogHelpers() {
 			logger.error(L"No processing have handler '{}'", channelName);
 		}
 	);
-	logHelpers.processingDoesNotHaveHandler.setLogFunction(
-		[](Logger& logger, istring procName, istring handlerName) {
-			logger.error(L"Processing '{}' doesn't have handler '{}'", procName, handlerName);
-		}
-	);
 	logHelpers.processingDoesNotHaveChannel.setLogFunction(
-		[](Logger& logger, istring procName, istring channelName) {
-			logger.error(L"Processing '{}' doesn't have channel '{}'", procName, channelName);
+		[](Logger& logger, istring procName, Channel channel) {
+			logger.error(L"Processing {} doesn't have channel {}", procName, ChannelUtils::getTechnicalNameLegacy(channel));
 		}
 	);
 	logHelpers.handlerDoesNotHaveProps.setLogFunction(
 		[](Logger& logger, istring type) {
-			logger.error(L"handler type '{}' doesn't have any props", type);
+			logger.error(L"handler type {} doesn't have any props", type);
 		}
 	);
 	logHelpers.propNotFound.setLogFunction(
 		[](Logger& logger, istring type, istring propName) {
-			logger.error(L"Handler type '{}' doesn't have info '{}'", type, propName);
+			logger.error(L"Handler type {} doesn't have info '{}'", type, propName);
 		}
 	);
 }
@@ -554,37 +542,6 @@ void AudioParent::runFinisher(
 	context.filePrefix = filePrefix;
 
 	finisher(handlerData, context);
-}
-
-void AudioParent::updateCleaners() {
-	for (auto& [processingName, pd] : paramParser.getParseResult()) {
-		auto newCleaners = createCleanersFor(pd);
-		auto& oldCleaners = cleanersMap[processingName];
-		for (auto& [handlerName, data] : oldCleaners) {
-			if (newCleaners.find(handlerName) == newCleaners.end()) {
-				// clean old images
-				if (data.finisher != nullptr) {
-					for (auto channel : pd.channels) {
-						runFinisher(data.finisher, data.data, processingName, channel, handlerName);
-					}
-				}
-			}
-		}
-		for (auto& [handlerName, data] : newCleaners) {
-			if (oldCleaners.find(handlerName) == oldCleaners.end()) {
-				// draw placeholders for new images
-				if (data.finisher != nullptr) {
-					for (auto channel : pd.channels) {
-						auto dataCopy = data.data;
-						runFinisher(data.finisher, dataCopy, processingName, channel, handlerName);
-					}
-				}
-			}
-		}
-		// handlers that exist both in old and new options should be fine without any actions
-
-		oldCleaners = std::move(newCleaners);
-	}
 }
 
 AudioParent::DeviceRequest AudioParent::readRequest() const {
@@ -646,15 +603,15 @@ void AudioParent::resolveProp(
 	string& resolveBufferString,
 	isview procName, Channel channel, isview handlerName, isview propName
 ) {
-	if (!isHandlerShouldExist(procName, channel, handlerName)) {
+	if (!checkHandlerShouldExist(procName, channel, handlerName)) {
 		return;
 	}
 
 	const auto procIter0 = paramParser.getParseResult().find(procName);
-	const auto handlerInfoIter = procIter0->second.handlersInfo.patchers.find(handlerName);
+	const auto handlerInfoIter = procIter0->second.handlers.find(handlerName);
 
-	const PatchInfo* const handlerInfo = &handlerInfoIter->second;
-	const auto propGetter = handlerInfo->externalMethods.getProp;
+	const HandlerInfo* const handlerInfo = &handlerInfoIter->second;
+	const auto propGetter = handlerInfo->meta.externalMethods.getProp;
 
 	if (propGetter == nullptr) {
 		logHelpers.handlerDoesNotHaveProps.log(handlerInfo->type);
@@ -668,27 +625,32 @@ void AudioParent::resolveProp(
 	// and if we still don't find requested info then it is caused either by delay in updating second thread
 	// or by device not having requested channel
 
-	handler::ExternalData* handlerExternalData = nullptr;
+	handler::ExternalData const* handlerExternalData = nullptr;
 
-	if (auto procIter = data._.find(procName);
-		procIter != data._.end()) {
+	auto findExternalData = [&](const ProcessingOrchestrator::Snapshot& snap) -> handler::ExternalData const* {
+		if (auto procIter = snap.find(procName);
+			procIter != snap.end()) {
 
-		auto& processingSnapshot = procIter->second;
+			auto& processingSnapshot = procIter->second;
 
-		if (auto channelSnapshotIter = processingSnapshot.find(channel);
-			channelSnapshotIter != processingSnapshot.end()) {
-			auto& channelSnapshot = channelSnapshotIter->second;
+			if (auto channelSnapshotIter = processingSnapshot.find(channel);
+				channelSnapshotIter != processingSnapshot.end()) {
+				auto& channelSnapshot = channelSnapshotIter->second;
 
-			if (auto handlerSnapshotIter = channelSnapshot.find(handlerName);
-				handlerSnapshotIter != channelSnapshot.end()) {
-				handlerExternalData = &handlerSnapshotIter->second.handlerSpecificData;
+				if (auto handlerSnapshotIter = channelSnapshot.find(handlerName);
+					handlerSnapshotIter != channelSnapshot.end()) {
+					return &handlerSnapshotIter->second.handlerSpecificData;
+				}
 			}
 		}
-	}
+
+		return nullptr;
+	};
+
+	handlerExternalData = findExternalData(data._);
+
 	if (handlerExternalData == nullptr) {
-		// we can access paramParser values here without checks
-		// because isHandlerShouldExist above checked that it should be valid to access them
-		handlerExternalData = &cleanersMap.find(procName)->second.find(handlerName)->second.data;
+		handlerExternalData = findExternalData(clearSnapshot);
 	}
 
 	if (handlerExternalData == nullptr) {
@@ -726,63 +688,27 @@ void AudioParent::resolveProp(
 	resolveBufferString = bp.getBufferView();
 }
 
-AudioParent::ProcessingCleanersMap AudioParent::createCleanersFor(const ProcessingData& pd) const {
-	std::set<Channel> channels = pd.channels;
-
-	using HandlerMap = std::map<istring, std::unique_ptr<handler::HandlerBase>, std::less<>>;
-
-	ProcessingManager::ChannelSnapshot tempSnapshot;
-	HandlerMap tempChannelMap;
-
-	for (auto& handlerName : pd.handlersInfo.order) {
-		auto& patchInfo = pd.handlersInfo.patchers.find(handlerName)->second;
-
-		auto handlerPtr = patchInfo.fun({});
-
-		auto cl = logger.getSilent();
-		ProcessingManager::HandlerFinderImpl hf{ tempChannelMap };
-		handler::HandlerBase::Snapshot handlerSpecificData;
-		const bool success = handlerPtr->patch(
-			handlerName % csView() % own(),
-			patchInfo.params, patchInfo.sources,
-			48000, version,
-			hf, cl,
-			handlerSpecificData
-		);
-
-		if (success) {
-			tempChannelMap[handlerName] = std::move(handlerPtr);
-			tempSnapshot[handlerName] = std::move(handlerSpecificData);
-		}
-	}
-
-	ProcessingCleanersMap result;
-	for (const auto& [handlerName, finisher] : pd.finishers) {
-		auto dataIter = tempSnapshot.find(handlerName);
-		if (dataIter != tempSnapshot.end()) {
-			result[handlerName] = { std::move(dataIter->second.handlerSpecificData), finisher };
-		}
-	}
-
-	return result;
-}
-
-void AudioParent::runCleaners() const {
+void AudioParent::runFinishers(ProcessingOrchestrator::Snapshot snapshot) const {
 	for (const auto& [procName, procInfo] : paramParser.getParseResult()) {
-		auto processingCleanersIter = cleanersMap.find(procName);
-		if (processingCleanersIter == cleanersMap.end()) {
-			continue;
-		}
+		auto procIter = snapshot.find(procName);
+		if (procIter == snapshot.end()) { continue; }
+		ProcessingManager::Snapshot& procSnapshot = procIter->second;
 
-		auto& processingCleaners = processingCleanersIter->second;
-		for (const auto& [handlerName, finisher] : procInfo.finishers) {
-			auto handlerDataIter = processingCleaners.find(handlerName);
-			if (handlerDataIter == processingCleaners.end()) {
-				continue;
-			}
-			for (auto channel : procInfo.channels) {
-				auto dataCopy = handlerDataIter->second.data;
-				runFinisher(finisher, dataCopy, procName, channel, handlerName);
+		for (const auto channel : procInfo.channels) {
+			auto channelIter = procSnapshot.find(channel);
+			if (channelIter == procSnapshot.end()) { continue; }
+			ProcessingManager::ChannelSnapshot& channelSnapshot = channelIter->second;
+
+			for (const auto& [handlerName, handlerInfo] : procInfo.handlers) {
+				auto handlerIter = channelSnapshot.find(handlerName);
+				if (handlerIter == channelSnapshot.end()) { continue; }
+				handler::HandlerBase::Snapshot& handlerSnapshot = handlerIter->second;
+
+				const handler::ExternalMethods::FinishMethodType finisher = handlerInfo.meta.externalMethods.finish;
+				runFinisher(
+					finisher, handlerSnapshot.handlerSpecificData, procName, channel,
+					handlerName
+				);
 			}
 		}
 	}

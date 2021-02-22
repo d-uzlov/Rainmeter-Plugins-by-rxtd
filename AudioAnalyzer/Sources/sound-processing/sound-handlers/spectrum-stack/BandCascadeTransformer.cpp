@@ -14,12 +14,12 @@
 using rxtd::audio_analyzer::handler::BandCascadeTransformer;
 using rxtd::audio_analyzer::handler::HandlerBase;
 
-HandlerBase::ParseResult BandCascadeTransformer::parseParams(
+rxtd::audio_analyzer::handler::ParamsContainer BandCascadeTransformer::vParseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {
-	ParseResult result{ true };
-	auto& params = result.params.clear<Params>();
+	ParamsContainer result;
+	auto& params = result.clear<Params>();
 
 	const auto sourceId = om.get(L"source").asIString();
 	if (sourceId.empty()) {
@@ -61,7 +61,6 @@ HandlerBase::ParseResult BandCascadeTransformer::parseParams(
 		params.mixFunction = MixFunction::PRODUCT;
 	}
 
-	result.sources.emplace_back(sourceId);
 	return result;
 }
 

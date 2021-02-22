@@ -74,6 +74,11 @@ namespace rxtd::audio_analyzer::handler {
 			}
 		};
 
+		class InvalidOptionsException : public std::runtime_error {
+		public:
+			explicit InvalidOptionsException() : runtime_error("") {}
+		};
+
 		struct DataSize {
 			index valuesCount{};
 			index layersCount{};
@@ -99,15 +104,19 @@ namespace rxtd::audio_analyzer::handler {
 			clock::time_point killTime;
 		};
 
-		struct ParseResult {
+		struct HandlerMetaInfo {
+			using handlerUptr = std::unique_ptr<HandlerBase>;
+			using TransformFun = handlerUptr(*)(handlerUptr old);
+
 			bool valid = false;
 			ParamsContainer params;
-			std::vector<istring> sources;
+			// std::vector<istring> sources;
+			TransformFun transform = [](handlerUptr ptr) -> handlerUptr { return {}; };
 			ExternalMethods externalMethods{};
 
-			ParseResult() : ParseResult(false) {}
+			HandlerMetaInfo() : HandlerMetaInfo(false) {}
 
-			explicit ParseResult(bool isValid) {
+			explicit HandlerMetaInfo(bool isValid) {
 				valid = isValid;
 			}
 		};
@@ -164,29 +173,82 @@ namespace rxtd::audio_analyzer::handler {
 		Configuration _configuration{};
 
 	public:
+		/// <summary>
+		/// Creates all the necessary meta info to create an object of a class, patch it and use it.
+		/// </summary>
+		/// <typeparam name="Type">Type of the handler implementation. Must be a descendant from HandlerBase class.</typeparam>
+		/// <param name="om">Map to read options from.</param>
+		/// <param name="cl">Logger.</param>
+		/// <param name="rain">Rainmeter object for possible communication with outside world. One such example would be to read current directory for current skin.</param>
+		/// <param name="version">Current version of the plugin API.</param>
+		/// <returns>Valid HandlerMetaInfo object.</returns>
 		template<typename Type>
 		[[nodiscard]]
-		static std::unique_ptr<HandlerBase> patchHandlerImpl(std::unique_ptr<HandlerBase> handlerPtr) {
+		static HandlerMetaInfo createMetaForClass(const OptionMap& om, Logger& cl, const Rainmeter& rain, Version version) {
 			using HandlerType = Type;
+			HandlerMetaInfo meta;
 
-			HandlerBase* ptr = dynamic_cast<HandlerType*>(handlerPtr.get());
-			if (ptr == nullptr) {
-				ptr = new HandlerType();
-				handlerPtr = std::unique_ptr<HandlerBase>{ ptr };
-			}
+			meta.transform = patchHandlerImpl<HandlerType>;
 
-			return handlerPtr;
+			HandlerType instance;
+			HandlerBase& ref = instance;
+
+			meta.params = ref.vParseParams(om, cl, rain, version);
+			meta.externalMethods.finish = ref.vGetExt_finish();
+			meta.externalMethods.getProp = ref.vGetExt_getProp();
+
+			meta.valid = true;
+
+			return meta;
+		}
+
+	protected:
+		[[nodiscard]]
+		virtual ExternalMethods::FinishMethodType vGetExt_finish() const {
+			return [](const ExternalData&, const ExternalMethods::CallContext&) {};
 		}
 
 		[[nodiscard]]
-		virtual ParseResult
-		parseParams(const OptionMap& om, Logger& cl, const Rainmeter& rain, Version version) const = 0;
+		virtual ExternalMethods::GetPropMethodType vGetExt_getProp() const {
+			return [](const ExternalData&, isview, BufferPrinter&, const ExternalMethods::CallContext&) -> bool {
+				return {};
+			};
+		}
 
+		/// <summary>
+		/// Reads options from map and creates a ParamsContainer object.
+		/// Implementation is allowed to throw InvalidOptionsException.
+		/// </summary>
+		/// <param name="om">Map to read options from.</param>
+		/// <param name="cl">Logger.</param>
+		/// <param name="rain">Rainmeter object for possible communication with outside world. One such example would be to read current directory for current skin.</param>
+		/// <param name="version">Current version of the plugin API.</param>
+		/// <returns>ParamsContainer, that is valid for vConfigure call on the same object.</returns>
+		[[nodiscard]]
+		virtual ParamsContainer vParseParams(const OptionMap& om, Logger& cl, const Rainmeter& rain, Version version) const noexcept(false) = 0;
+
+		// if handler is potentially heavy,
+		// handler should try to return control to caller
+		// when time is more than context.killTime
+		virtual void vProcess(ProcessContext context, ExternalData& handlerSpecificData) = 0;
+
+		[[nodiscard]]
+		virtual ConfigurationResult vConfigure(
+			const ParamsContainer& _params, Logger& cl,
+			ExternalData& externalData
+		) = 0;
+
+		// should return true when params are the same
+		[[nodiscard]]
+		virtual bool vCheckSameParams(const ParamsContainer& p) const = 0;
+
+	public:
 		// returns true on success, false on invalid handler
 		[[nodiscard]]
 		bool patch(
-			string name,
-			const ParamsContainer& params, array_view<istring> sources,
+			sview name,
+			const ParamsContainer& params,
+			array_view<istring> sources,
 			index sampleRate, Version version,
 			HandlerFinder& hf, Logger& cl,
 			Snapshot& snapshot
@@ -251,44 +313,31 @@ namespace rxtd::audio_analyzer::handler {
 		}
 
 		template<typename DataStructType, auto methodPtr>
-		static auto wrapExternalMethod() {
-			if constexpr (std::is_invocable<
-					decltype(methodPtr),
-					const DataStructType&,
-					const ExternalMethods::CallContext&>::value
-			) {
-				return [](const ExternalData& dataWrapper, const ExternalMethods::CallContext& context) {
-					return methodPtr(dataWrapper.cast<DataStructType>(), context);
-				};
-			} else if constexpr (
-				std::is_invocable_r<
-					bool,
-					decltype(methodPtr),
-					const DataStructType&, isview, BufferPrinter&, const ExternalMethods::CallContext&>::value
-			) {
-				return [](
-					const ExternalData& dataWrapper,
-					isview prop,
-					BufferPrinter& bp,
-					const ExternalMethods::CallContext& context
-				) {
-					return methodPtr(dataWrapper.cast<DataStructType>(), prop, bp, context);
-				};
-			} else {
-				// ReSharper disable once CppStaticAssertFailure
-				static_assert(false, L"wrapExternalMethod: unsupported method");
-			}
+		static ExternalMethods::FinishMethodType wrapExternalFinish() {
+			static_assert(
+				std::is_invocable<decltype(methodPtr), const DataStructType&, const ExternalMethods::CallContext&>::value,
+				"Method doesn't match the required signature."
+			);
+			return [](const ExternalData& dataWrapper, const ExternalMethods::CallContext& context) {
+				return methodPtr(dataWrapper.cast<DataStructType>(), context);
+			};
 		}
 
-		// should return true when params are the same
-		[[nodiscard]]
-		virtual bool checkSameParams(const ParamsContainer& p) const = 0;
-
-		[[nodiscard]]
-		virtual ConfigurationResult vConfigure(
-			const ParamsContainer& _params, Logger& cl,
-			ExternalData& externalData
-		) = 0;
+		template<typename DataStructType, auto methodPtr>
+		static ExternalMethods::GetPropMethodType wrapExternalGetProp() {
+			static_assert(
+				std::is_invocable_r<bool, decltype(methodPtr), const DataStructType&, isview, BufferPrinter&, const ExternalMethods::CallContext&>::value,
+				"Method doesn't match the required signature."
+			);
+			return [](
+				const ExternalData& dataWrapper,
+				isview prop,
+				BufferPrinter& bp,
+				const ExternalMethods::CallContext& context
+			) {
+				return methodPtr(dataWrapper.cast<DataStructType>(), prop, bp, context);
+			};
+		}
 
 		[[nodiscard]]
 		const Configuration& getConfiguration() const {
@@ -313,11 +362,6 @@ namespace rxtd::audio_analyzer::handler {
 			return { _buffer.data() + offset, _dataSize.valuesCount };
 		}
 
-		// if handler is potentially heavy,
-		// handler should try to return control to caller
-		// when time is more than context.killTime
-		virtual void vProcess(ProcessContext context, ExternalData& handlerSpecificData) = 0;
-
 		static index legacy_parseIndexProp(const isview& request, const isview& propName, index endBound) {
 			return legacy_parseIndexProp(request, propName, 0, endBound);
 		}
@@ -329,6 +373,18 @@ namespace rxtd::audio_analyzer::handler {
 		);
 
 	private:
+		template<typename Type>
+		[[nodiscard]]
+		static std::unique_ptr<HandlerBase> patchHandlerImpl(std::unique_ptr<HandlerBase> handlerPtr) {
+			using HandlerType = Type;
+
+			if (dynamic_cast<HandlerType*>(handlerPtr.get()) == nullptr) {
+				handlerPtr = std::make_unique<HandlerType>();
+			}
+
+			return handlerPtr;
+		}
+
 		void inflateLayers() const {
 			if (_layersAreValid) {
 				return;

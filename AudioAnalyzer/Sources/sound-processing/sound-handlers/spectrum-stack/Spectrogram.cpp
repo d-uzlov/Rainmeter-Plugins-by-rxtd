@@ -22,12 +22,12 @@ using rxtd::audio_analyzer::handler::HandlerBase;
 
 using rxtd::utils::Color;
 
-HandlerBase::ParseResult Spectrogram::parseParams(
+rxtd::audio_analyzer::handler::ParamsContainer Spectrogram::vParseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {
-	ParseResult result{ true };
-	auto& params = result.params.clear<Params>();
+	ParamsContainer result;
+	auto& params = result.clear<Params>();
 
 	const auto sourceId = om.get(L"source").asIString();
 	if (sourceId.empty()) {
@@ -128,9 +128,6 @@ HandlerBase::ParseResult Spectrogram::parseParams(
 	params.silenceThreshold = om.get(L"silenceThreshold").asFloatF(-70);
 	params.silenceThreshold = utils::MyMath::db2amplitude(params.silenceThreshold);
 
-	result.externalMethods.finish = wrapExternalMethod<Snapshot, &staticFinisher>();
-	result.externalMethods.getProp = wrapExternalMethod<Snapshot, &getProp>();
-	result.sources.emplace_back(sourceId);
 	return result;
 }
 

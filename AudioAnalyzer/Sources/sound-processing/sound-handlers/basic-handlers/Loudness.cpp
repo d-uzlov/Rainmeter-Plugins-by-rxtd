@@ -14,12 +14,12 @@
 using rxtd::audio_analyzer::handler::Loudness;
 using rxtd::audio_analyzer::handler::HandlerBase;
 
-HandlerBase::ParseResult Loudness::parseParams(
+rxtd::audio_analyzer::handler::ParamsContainer Loudness::vParseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {
-	ParseResult result{ true };
-	auto& params = result.params.clear<Params>();
+	ParamsContainer result;
+	auto& params = result.clear<Params>();
 
 	auto transformLogger = cl.context(L"transform: ");
 	params.transformer = CVT::parse(om.get(L"transform").asString(), transformLogger);
