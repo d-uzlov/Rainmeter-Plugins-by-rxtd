@@ -22,9 +22,6 @@
 #include "sound-processing/sound-handlers/spectrum-stack/TimeResampler.h"
 #include "sound-processing/sound-handlers/spectrum-stack/UniformBlur.h"
 
-#include "sound-processing/sound-handlers/spectrum-stack/legacy_FiniteTimeFilter.h"
-#include "sound-processing/sound-handlers/spectrum-stack/legacy_WeightedBlur.h"
-
 #include "option-parsing/OptionMap.h"
 
 using namespace std::string_literals;
@@ -132,39 +129,6 @@ HandlerBase::HandlerMetaInfo HandlerCacheHelper::createHandlerPatcher(
 	}
 	if (type == L"TimeResampler") {
 		return HandlerBase::createMetaForClass<TimeResampler>(optionMap, cl, rain, version);
-	}
-
-	if (type == L"WeightedBlur") {
-		if (!(version < Version::eVERSION2)) {
-			cl.warning(L"handler WeightedBlur is deprecated");
-		}
-		return HandlerBase::createMetaForClass<legacy_WeightedBlur>(optionMap, cl, rain, version);
-	}
-	if (type == L"FiniteTimeFilter") {
-		if (!(version < Version::eVERSION2)) {
-			cl.warning(L"handler FiniteTimeFilter is deprecated");
-		}
-		return HandlerBase::createMetaForClass<legacy_FiniteTimeFilter>(optionMap, cl, rain, version);
-	}
-
-	if (type == L"LogarithmicValueMapper") {
-		if (!(version < Version::eVERSION2)) {
-			cl.warning(L"handler LogarithmicValueMapper is deprecated");
-		}
-
-		common::buffer_printer::BufferPrinter bp;
-		bp.append(L"type ValueTransformer");
-		bp.append(L"| source {}", optionMap.get(L"source").asString());
-		const double sensitivity = std::clamp<double>(
-			optionMap.get(L"sensitivity").asFloat(35.0),
-			std::numeric_limits<float>::epsilon(),
-			1000.0
-		);
-		const double offset = optionMap.get(L"offset").asFloatF(0.0);
-
-		bp.append(L"| transform db map[from -{} : 0, to {} : {}]", sensitivity * 0.5, offset, 1.0 + offset);
-		auto optionMapLocal = common::options::Option{ bp.getBufferView() }.asMap(L'|', L' ');
-		return HandlerBase::createMetaForClass<SingleValueTransformer>(optionMapLocal, cl, rain, version);
 	}
 
 	cl.error(L"unknown type '{}'", type);

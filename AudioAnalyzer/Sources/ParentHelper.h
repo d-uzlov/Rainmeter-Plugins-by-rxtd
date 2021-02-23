@@ -154,6 +154,5 @@ namespace rxtd::audio_analyzer {
 		bool updateDeviceListStrings();
 
 		string makeDeviceListString(MediaDeviceType type);
-		string legacy_makeDeviceListString(MediaDeviceType type);
 	};
 }

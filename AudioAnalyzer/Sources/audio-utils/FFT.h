@@ -28,7 +28,7 @@ namespace rxtd::audio_utils {
 	public:
 		FFT() = default;
 
-		void setParams(index newSize, bool correctScalar, std::vector<float> window);
+		void setParams(index newSize, std::vector<float> window);
 
 		[[nodiscard]]
 		double getDC() const;

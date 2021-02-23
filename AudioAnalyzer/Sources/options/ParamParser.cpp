@@ -264,12 +264,8 @@ bool ParamParser::parseHandlers(const OptionList& names, ProcessingData& data, c
 		auto handlerInfo = hch.getHandlerInfo(name, cl.context(L"handler {}: ", name));
 
 		if (handlerInfo == nullptr) {
-			if (version < Version::eVERSION2) {
-				continue;
-			} else {
-				cl.error(L"invalidate processing", name);
-				return {};
-			}
+			cl.error(L"invalidate processing", name);
+			return {};
 		}
 
 		data.handlers[name] = *handlerInfo;

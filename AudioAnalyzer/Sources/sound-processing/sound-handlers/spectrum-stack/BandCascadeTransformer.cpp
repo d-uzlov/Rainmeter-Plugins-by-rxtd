@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2019-2020 rxtd
+ * Copyright (C) 2019-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -27,29 +27,17 @@ rxtd::audio_analyzer::handler::ParamsContainer BandCascadeTransformer::vParsePar
 		return {};
 	}
 
-	const double epsilon = std::numeric_limits<float>::epsilon();
+	const float epsilon = std::numeric_limits<float>::epsilon();
 
-	params.minWeight = om.get(L"minWeight").asFloat(0.1);
+	params.minWeight = om.get(L"minWeight").asFloatF(0.1f);
 	params.minWeight = std::max(params.minWeight, epsilon);
 
-	params.targetWeight = om.get(L"targetWeight").asFloat(2.5);
+	params.targetWeight = om.get(L"targetWeight").asFloatF(2.5f);
 	params.targetWeight = std::max(params.targetWeight, params.minWeight);
 
-	if (version < Version::eVERSION2) {
-		auto zeroLevel = om.get(L"zeroLevelMultiplier").asFloat(1.0);
-		zeroLevel = std::max(zeroLevel, 0.0);
-		zeroLevel = zeroLevel * 0.66 * epsilon;
-
-		params.zeroLevelHard = om.get(L"zeroLevelHardMultiplier").asFloat(0.01);
-		params.zeroLevelHard = std::clamp(params.zeroLevelHard, 0.0, 1.0) * zeroLevel;
-
-		// touch 'weightFallback' option to prevent log warning
-		(void)om.get(L"weightFallback");
-	} else {
-		params.zeroLevelHard = om.get(L"zeroLevelMultiplier").asFloat(1.0);
-		params.zeroLevelHard = std::max(params.zeroLevelHard, 0.0);
-		params.zeroLevelHard *= epsilon;
-	}
+	params.zeroLevelHard = om.get(L"zeroLevelMultiplier").asFloatF(1.0f);
+	params.zeroLevelHard = std::max(params.zeroLevelHard, 0.0f);
+	params.zeroLevelHard *= epsilon;
 
 	if (const auto mixFunctionString = om.get(L"mixFunction").asIString(L"product");
 		mixFunctionString == L"product") {
@@ -183,7 +171,7 @@ float BandCascadeTransformer::computeForBand(index band) const {
 				return snapshot[i].data[band];
 			}
 		}
-		return 0.0;
+		return 0.0f;
 	}
 
 	return params.mixFunction == MixFunction::PRODUCT

@@ -24,7 +24,6 @@ namespace rxtd::audio_analyzer {
 			LogErrorHelper<istring> unknownCommand;
 			LogErrorHelper<istring> currentDeviceUnknownProp;
 			LogErrorHelper<istring> unknownSectionVariable;
-			LogErrorHelper<istring> legacy_invalidPort;
 
 			LogErrorHelper<istring> processingNotFound;
 			LogErrorHelper<istring> channelNotRecognized;

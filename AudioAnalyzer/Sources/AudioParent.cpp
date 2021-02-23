@@ -19,7 +19,6 @@ void AudioParent::LogHelpers::setLogger(Logger logger) {
 	unknownCommand.setLogger(logger);
 	currentDeviceUnknownProp.setLogger(logger);
 	unknownSectionVariable.setLogger(logger);
-	legacy_invalidPort.setLogger(logger);
 	processingNotFound.setLogger(logger);
 	channelNotRecognized.setLogger(logger);
 	noProcessingHaveHandler.setLogger(logger);
@@ -37,7 +36,6 @@ void AudioParent::LogHelpers::reset() {
 	// unknownCommand.reset();
 	// currentDeviceUnknownProp.reset();
 	// unknownSectionVariable.reset();
-	// legacy_invalidPort.reset();
 
 	processingNotFound.reset();
 	// channelNotRecognized.reset();
@@ -57,7 +55,7 @@ AudioParent::AudioParent(Rainmeter&& _rain) :
 	version = Version::parseVersion(rain.read(L"MagicNumber").asInt(0));
 
 	if (version < Version::eVERSION2) {
-		logger.warning(L"Measure operates in legacy mode. If you are a skin author, consider modernizing it.");
+		throw std::runtime_error{ "legacy mode is not allowed" };
 	}
 
 	const auto threadingParams = rain.read(L"threading").asMap(L'|', L' ');
@@ -349,41 +347,6 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 		return;
 	}
 
-	if (optionName == L"prop") {
-		if (!requestedSource.has_value()) {
-			// if requestedSource.has_value() then
-			//	even if handlers are not valid due to device connection error
-			// we should return correct prop values
-			// because someone could try to read file names
-			// before we actually connect to device and make handlers valid
-			return;
-		}
-
-		// legacy
-		if (args.size() != 4) {
-			logHelpers.generic.log(L"'prop' need 4 arguments");
-			return;
-		}
-
-		const auto channelName = args[1];
-		const auto handlerName = args[2];
-		const auto propName = args[3];
-
-		auto channelOpt = ChannelUtils::parse(channelName);
-		if (!channelOpt.has_value()) {
-			logHelpers.channelNotRecognized.log(channelName);
-			return;
-		}
-
-		auto procName = findProcessingFor(handlerName);
-		if (procName.empty()) {
-			return;
-		}
-
-		resolveProp(resolveBufferString, procName, channelOpt.value(), handlerName, propName);
-		return;
-	}
-
 	logHelpers.unknownSectionVariable.log(optionName);
 }
 
@@ -483,11 +446,6 @@ void AudioParent::initLogHelpers() {
 			logger.error(L"unknown section variable '{}'", optionName);
 		}
 	);
-	logHelpers.legacy_invalidPort.setLogFunction(
-		[](Logger& logger, istring port) {
-			logger.error(L"Invalid Port '{}', must be one of: Output, Input. Set to Output.", port);
-		}
-	);
 
 	logHelpers.processingNotFound.setLogFunction(
 		[](Logger& logger, istring procName) {
@@ -506,7 +464,7 @@ void AudioParent::initLogHelpers() {
 	);
 	logHelpers.processingDoesNotHaveChannel.setLogFunction(
 		[](Logger& logger, istring procName, Channel channel) {
-			logger.error(L"Processing {} doesn't have channel {}", procName, ChannelUtils::getTechnicalNameLegacy(channel));
+			logger.error(L"Processing {} doesn't have channel {}", procName, ChannelUtils::getHumanName(channel));
 		}
 	);
 	logHelpers.handlerDoesNotHaveProps.setLogFunction(
@@ -527,10 +485,7 @@ void AudioParent::runFinisher(
 	handler::ExternalMethods::CallContext context;
 	context.version = version;
 
-	context.channelName =
-		version < Version::eVERSION2
-		? ChannelUtils::getTechnicalNameLegacy(channel)
-		: ChannelUtils::getTechnicalName(channel);
+	context.channelName = ChannelUtils::getTechnicalName(channel);
 
 	string filePrefix;
 	filePrefix += procName % csView();
@@ -548,52 +503,35 @@ AudioParent::DeviceRequest AudioParent::readRequest() const {
 	CaptureManager::SourceDesc result;
 
 	using ST = CaptureManager::SourceDesc::Type;
-	if (version < Version::eVERSION2) {
-		if (auto legacyID = rain.read(L"DeviceID").asString();
-			!legacyID.empty()) {
-			result.type = ST::eID;
-			result.id = std::move(legacyID);
-		} else {
-			const auto port = rain.read(L"Port").asIString(L"Output");
-			if (port == L"Output") {
-				result.type = ST::eDEFAULT_OUTPUT;
-			} else if (port == L"Input") {
-				result.type = ST::eDEFAULT_INPUT;
-			} else {
-				logHelpers.legacy_invalidPort.log(port);
-				result.type = ST::eDEFAULT_OUTPUT;
-			}
+
+	auto sourceOpt = rain.read(L"Source");
+	const auto source = sourceOpt.asIString(L"DefaultOutput");
+
+	if (source == L"Output") {
+		logHelpers.generic.log(L"Source type 'Output' is not recognized. Did you mean DefaultOutput?");
+		return {};
+	}
+	if (source == L"Input") {
+		logHelpers.generic.log(L"Source type 'Input' is not recognized. Did you mean DefaultInput?");
+		return {};
+	}
+
+	if (source == L"DefaultOutput") {
+		result.type = ST::eDEFAULT_OUTPUT;
+	} else if (source == L"DefaultInput") {
+		result.type = ST::eDEFAULT_INPUT;
+	} else if (auto [type, value] = sourceOpt.breakFirst(L':');
+		type.asIString() == L"id") {
+		if (value.empty()) {
+			logHelpers.generic.log(L"device ID can not be empty");
+			return {};
 		}
+
+		result.type = ST::eID;
+		result.id = value.asString();
 	} else {
-		auto sourceOpt = rain.read(L"Source");
-		const auto source = sourceOpt.asIString(L"DefaultOutput");
-
-		if (source == L"Output") {
-			logHelpers.generic.log(L"Source type 'Output' is not recognized. Did you mean DefaultOutput?");
-			return {};
-		}
-		if (source == L"Input") {
-			logHelpers.generic.log(L"Source type 'Input' is not recognized. Did you mean DefaultInput?");
-			return {};
-		}
-
-		if (source == L"DefaultOutput") {
-			result.type = ST::eDEFAULT_OUTPUT;
-		} else if (source == L"DefaultInput") {
-			result.type = ST::eDEFAULT_INPUT;
-		} else if (auto [type, value] = sourceOpt.breakFirst(L':');
-			type.asIString() == L"id") {
-			if (value.empty()) {
-				logHelpers.generic.log(L"device ID can not be empty");
-				return {};
-			}
-
-			result.type = ST::eID;
-			result.id = value.asString();
-		} else {
-			logHelpers.sourceTypeIsNotRecognized.log(type.asIString());
-			return {};
-		}
+		logHelpers.sourceTypeIsNotRecognized.log(type.asIString());
+		return {};
 	}
 
 	return result;
@@ -664,10 +602,7 @@ void AudioParent::resolveProp(
 	handler::ExternalMethods::CallContext context;
 	context.version = version;
 
-	context.channelName =
-		version < Version::eVERSION2
-		? ChannelUtils::getTechnicalNameLegacy(channel)
-		: ChannelUtils::getTechnicalName(channel);
+	context.channelName = ChannelUtils::getTechnicalName(channel);
 
 	string filePrefix;
 	filePrefix += procName % csView();

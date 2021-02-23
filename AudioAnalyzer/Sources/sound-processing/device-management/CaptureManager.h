@@ -58,7 +58,6 @@ namespace rxtd::audio_analyzer {
 		struct Snapshot {
 			State state = State::eMANUALLY_DISCONNECTED;
 			string name;
-			string nameOnly;
 			string description;
 			string id;
 			string formatString;

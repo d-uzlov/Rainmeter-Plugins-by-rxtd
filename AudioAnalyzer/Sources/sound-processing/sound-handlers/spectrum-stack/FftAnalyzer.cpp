@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2019-2020 rxtd
+ * Copyright (C) 2019-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -22,60 +22,13 @@ rxtd::audio_analyzer::handler::ParamsContainer FftAnalyzer::vParseParams(
 	ParamsContainer result;
 	auto& params = result.clear<Params>();
 
-	if (version < Version::eVERSION2) {
-		params.legacy_attackTime = std::max(om.get(L"attack").asFloat(100), 0.0);
-		params.legacy_decayTime = std::max(om.get(L"decay").asFloat(params.legacy_attackTime), 0.0);
-
-		params.legacy_attackTime *= 0.001;
-		params.legacy_decayTime *= 0.001;
-	} else {
-		params.legacy_attackTime = 0.0;
-		params.legacy_decayTime = 0.0;
+	params.binWidth = om.get(L"binWidth").asFloat(100.0);
+	if (params.binWidth <= 0.0) {
+		cl.error(L"binWidth must be > 0 but {} found", params.binWidth);
+		return {};
 	}
-
-	if (version < Version::eVERSION2) {
-		if (const auto sizeBy = om.get(L"sizeBy").asIString(L"binWidth");
-			sizeBy == L"binWidth") {
-			params.binWidth = om.get(L"binWidth").asFloat(100.0);
-			if (params.binWidth <= 0.0) {
-				cl.error(L"binWidth must be > 0 but {} found", params.binWidth);
-				return {};
-			}
-			if (params.binWidth <= 1.0) {
-				cl.warning(L"BinWidth {} is dangerously small, use values > 1", params.binWidth);
-			}
-			params.legacy_sizeBy = SizeBy::BIN_WIDTH;
-		} else {
-			if (sizeBy == L"size") {
-				params.binWidth = om.get(L"size").asInt(1000);
-				if (params.binWidth < 2) {
-					cl.warning(L"Size must be >= 2 but {} found. Assume 1000", params.binWidth);
-					params.binWidth = 1000;
-				}
-				params.legacy_sizeBy = SizeBy::SIZE;
-
-			} else if (sizeBy == L"sizeExact") {
-				params.binWidth = om.get(L"size").asInt(1000);
-				if (params.binWidth < 2) {
-					cl.error(L"Size must be >= 2, must be even, but {} found", params.binWidth);
-					return {};
-				}
-				params.legacy_sizeBy = SizeBy::SIZE_EXACT;
-			} else {
-				cl.error(L"Unknown fft sizeBy '{}'", sizeBy);
-				return {};
-			}
-		}
-	} else {
-		params.binWidth = om.get(L"binWidth").asFloat(100.0);
-		if (params.binWidth <= 0.0) {
-			cl.error(L"binWidth must be > 0 but {} found", params.binWidth);
-			return {};
-		}
-		if (params.binWidth <= 1.0) {
-			cl.warning(L"BinWidth {} is dangerously small, use values > 1", params.binWidth);
-		}
-		params.legacy_sizeBy = SizeBy::BIN_WIDTH;
+	if (params.binWidth <= 1.0) {
+		cl.warning(L"BinWidth {} is dangerously small, use values > 1", params.binWidth);
 	}
 
 	if (om.has(L"overlapBoost")) {
@@ -98,16 +51,8 @@ rxtd::audio_analyzer::handler::ParamsContainer FftAnalyzer::vParseParams(
 	params.randomTest = std::abs(om.get(L"testRandom").asFloat(0.0));
 	params.randomDuration = std::abs(om.get(L"randomDuration").asFloat(1000.0)) * 0.001;
 
-	if (version < Version::eVERSION2) {
-		params.legacy_correctZero = om.get(L"correctZero").asBool(true);
-		params.legacyAmplification = true;
-	} else {
-		params.legacy_correctZero = false;
-		params.legacyAmplification = false;
-	}
-
 	params.wcfDescription = om.get(L"windowFunction").asString(L"hann");
-	params.wcf = audio_utils::WindowFunctionHelper::parse(params.wcfDescription, cl);
+	params.createWindow = audio_utils::WindowFunctionHelper::parse(params.wcfDescription, cl);
 
 	return result;
 }
@@ -118,40 +63,18 @@ FftAnalyzer::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData
 
 	auto& config = getConfiguration();
 
-	switch (params.legacy_sizeBy) {
-	case SizeBy::BIN_WIDTH:
-		fftSize = kiss_fft::calculateNextFastSize(index(config.sampleRate / params.binWidth), true);
-		break;
-	case SizeBy::SIZE:
-		fftSize = kiss_fft::calculateNextFastSize(index(params.binWidth), true);
-
-		if (fftSize <= 1) {
-			cl.error(L"fft size is too small");
-			return {};
-		}
-
-		break;
-	case SizeBy::SIZE_EXACT:
-		fftSize = static_cast<index>(static_cast<size_t>(params.binWidth) & ~1); // only even sizes are allowed
-
-		if (fftSize <= 1) {
-			cl.error(L"fft size is too small");
-			return {};
-		}
-
-		break;
-	}
+	fftSize = kiss_fft::calculateNextFastSize(static_cast<index>(static_cast<double>(config.sampleRate) / params.binWidth), true);
 
 	constexpr index minFftSize = 16;
 
 	fftSize = std::max<index>(fftSize, minFftSize);
 
-	fft.setParams(fftSize, !params.legacyAmplification, params.wcf(fftSize));
+	fft.setParams(fftSize, params.createWindow(fftSize));
 
-	inputStride = static_cast<index>(fftSize * (1.0 - params.overlap));
+	inputStride = static_cast<index>(static_cast<double>(fftSize) * (1.0 - params.overlap));
 	inputStride = std::clamp<index>(inputStride, minFftSize, fftSize);
 
-	randomBlockSize = index(params.randomDuration * config.sampleRate * fftSize / inputStride);
+	randomBlockSize = static_cast<index>(params.randomDuration * static_cast<double>(config.sampleRate) * static_cast<double>(fftSize) / static_cast<double>(inputStride));
 	randomCurrentOffset = 0;
 
 	cascades.resize(params.cascadesCount);
@@ -159,10 +82,7 @@ FftAnalyzer::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData
 	audio_utils::FftCascade::Params cascadeParams;
 	cascadeParams.fftSize = fftSize;
 	cascadeParams.samplesPerSec = config.sampleRate;
-	cascadeParams.legacy_attackTime = params.legacy_attackTime;
-	cascadeParams.legacy_decayTime = params.legacy_decayTime;
 	cascadeParams.inputStride = inputStride;
-	cascadeParams.legacy_correctZero = params.legacy_correctZero;
 	cascadeParams.callback = [this](array_view<float> result, index cascade) {
 		pushLayer(cascade).copyFrom(result);
 	};
@@ -195,13 +115,6 @@ void FftAnalyzer::vProcess(ProcessContext context, ExternalData& externalData) {
 	} else {
 		cascades[0].process(context.wave, context.killTime);
 	}
-
-	auto& snapshot = externalData.cast<Snapshot>();
-	snapshot.dc.clear();
-
-	for (const auto& cascade : cascades) {
-		snapshot.dc.push_back(float(cascade.legacy_getDC()));
-	}
 }
 
 bool FftAnalyzer::getProp(
@@ -210,51 +123,6 @@ bool FftAnalyzer::getProp(
 	BufferPrinter& printer,
 	const ExternalMethods::CallContext& context
 ) {
-	if (prop == L"size") {
-		printer.print(snapshot.fftSize);
-		return true;
-	}
-
-	auto cascadeIndex = legacy_parseIndexProp(prop, L"nyquist frequency", snapshot.cascadesCount + 1);
-	if (cascadeIndex == -2) {
-		return L"0";
-	}
-	if (cascadeIndex >= 0) {
-		if (cascadeIndex > 0) {
-			cascadeIndex--;
-		}
-		printer.print(static_cast<index>(snapshot.sampleRate / 2.0 / std::pow(2, cascadeIndex)));
-		return true;
-	}
-
-	cascadeIndex = legacy_parseIndexProp(prop, L"dc", snapshot.cascadesCount + 1);
-	if (cascadeIndex == -2) {
-		return L"0";
-	}
-	if (cascadeIndex >= 0) {
-		if (cascadeIndex > 0) {
-			cascadeIndex--;
-		}
-		printer.print(snapshot.dc[cascadeIndex]);
-		return true;
-	}
-
-	cascadeIndex = legacy_parseIndexProp(prop, L"resolution", snapshot.cascadesCount + 1);
-	if (cascadeIndex == -2) {
-		return L"0";
-	}
-	if (cascadeIndex < 0) {
-		cascadeIndex = legacy_parseIndexProp(prop, L"binWidth", snapshot.cascadesCount + 1);
-	}
-	if (cascadeIndex >= 0) {
-		if (cascadeIndex > 0) {
-			cascadeIndex--;
-		}
-		const auto resolution = static_cast<double>(snapshot.sampleRate) / snapshot.fftSize / std::pow(2, cascadeIndex);
-		printer.print(resolution);
-		return true;
-	}
-
 	return false;
 }
 

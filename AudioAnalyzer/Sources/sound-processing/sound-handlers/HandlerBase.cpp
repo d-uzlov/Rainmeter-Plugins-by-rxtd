@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 rxtd
+ * Copyright (C) 2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -31,13 +31,13 @@ bool HandlerBase::patch(
 		const auto& sourceName = sources[0];
 		newConfig.sourcePtr = hf.getHandler(sourceName);
 		if (newConfig.sourcePtr == nullptr) {
-			cl.error(L"source '{}' is not found", sourceName);
+			cl.error(L"source {} is not found", sourceName);
 			return {};
 		}
 
 		const auto dataSize = newConfig.sourcePtr->getDataSize();
 		if (dataSize.isEmpty()) {
-			cl.error(L"source '{}' doesn't produce any data", sourceName);
+			cl.error(L"source {} doesn't produce any data", sourceName);
 			return {};
 		}
 	} else {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019-2020 rxtd
+ * Copyright (C) 2019-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -34,8 +34,7 @@ rxtd::audio_analyzer::handler::ParamsContainer BlockHandler::vParseParams(
 		params.updateInterval = 1.0 / updateRate;
 	}
 
-	const double defaultAttack = version < Version::eVERSION2 ? 100.0 : 0.0;
-	params.attackTime = std::max(om.get(L"attack").asFloat(defaultAttack), 0.0);
+	params.attackTime = std::max(om.get(L"attack").asFloat(0), 0.0);
 	params.decayTime = std::max(om.get(L"decay").asFloat(params.attackTime), 0.0);
 	params.attackTime *= 0.001;
 	params.decayTime *= 0.001;

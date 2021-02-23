@@ -24,28 +24,6 @@ namespace rxtd::audio_analyzer {
 			std::vector<isview> infoRequestC;
 			CVT transformer;
 
-			struct Legacy {
-				enum class NumberTransform {
-					eNONE,
-					eLINEAR,
-					eDB,
-				};
-
-				bool clamp01 = false;
-				NumberTransform numberTransform = NumberTransform::eNONE;
-				double correctingConstant = 0.0;
-
-				friend bool operator==(const Legacy& lhs, const Legacy& rhs) {
-					return lhs.clamp01 == rhs.clamp01
-						&& lhs.numberTransform == rhs.numberTransform
-						&& lhs.correctingConstant == rhs.correctingConstant;
-				}
-
-				friend bool operator!=(const Legacy& lhs, const Legacy& rhs) {
-					return !(lhs == rhs);
-				}
-			} legacy;
-
 			friend bool operator==(const Options& lhs, const Options& rhs) {
 				return lhs.channel == rhs.channel
 					&& lhs.valueIndex == rhs.valueIndex
@@ -53,8 +31,7 @@ namespace rxtd::audio_analyzer {
 					&& lhs.procName == rhs.procName
 					&& lhs.infoRequest == rhs.infoRequest
 					&& lhs.infoRequestC == rhs.infoRequestC
-					&& lhs.transformer == rhs.transformer
-					&& lhs.legacy == rhs.legacy;
+					&& lhs.transformer == rhs.transformer;
 			}
 
 			friend bool operator!=(const Options& lhs, const Options& rhs) {
@@ -76,9 +53,5 @@ namespace rxtd::audio_analyzer {
 
 	private:
 		Options readOptions() const;
-		Options::Legacy legacy_readOptions() const;
-
-		[[nodiscard]]
-		double legacy_update() const;
 	};
 }

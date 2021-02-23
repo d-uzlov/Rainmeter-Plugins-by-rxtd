@@ -172,9 +172,6 @@ Spectrogram::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData
 	auto& snapshot = externalData.clear<Snapshot>();
 
 	snapshot.prefix = params.folder;
-	if (config.version < Version::eVERSION2) {
-		snapshot.prefix += L"spectrogram-";
-	}
 
 	snapshot.blockSize = blockSize;
 
@@ -243,7 +240,7 @@ void Spectrogram::staticFinisher(const Snapshot& snapshot, const ExternalMethods
 	}
 
 	snapshot.filenameBuffer = snapshot.prefix;
-	snapshot.filenameBuffer += context.version < Version::eVERSION2 ? context.channelName : context.filePrefix;
+	snapshot.filenameBuffer += context.filePrefix;
 	snapshot.filenameBuffer += L".bmp";
 
 	snapshot.writerHelper.write(snapshot.pixels, snapshot.empty, snapshot.filenameBuffer);
@@ -297,7 +294,7 @@ bool Spectrogram::getProp(
 ) {
 	if (prop == L"file") {
 		snapshot.filenameBuffer = snapshot.prefix;
-		snapshot.filenameBuffer += context.version < Version::eVERSION2 ? context.channelName : context.filePrefix;
+		snapshot.filenameBuffer += context.filePrefix;
 		snapshot.filenameBuffer += L".bmp";
 
 		printer.print(snapshot.filenameBuffer);

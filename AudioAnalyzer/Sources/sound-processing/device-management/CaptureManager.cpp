@@ -56,8 +56,7 @@ CaptureManager::State CaptureManager::setSourceAndGetState(const SourceDesc& des
 	auto deviceInfo = audioDeviceHandle.readDeviceInfo();
 	snapshot.id = audioDeviceHandle.getId();
 	snapshot.description = deviceInfo.desc;
-	snapshot.name = version < Version::eVERSION2 ? deviceInfo.fullFriendlyName : deviceInfo.name;
-	snapshot.nameOnly = deviceInfo.name;
+	snapshot.name = deviceInfo.name;
 
 	try {
 		auto testAudioClient = audioDeviceHandle.openAudioClient();
@@ -366,7 +365,7 @@ void CaptureManager::createExclusiveStreamListener() {
 	bp.append(
 		L"Device '{} ({})' is in exclusive mode, owner exe is ",
 		snapshot.description,
-		snapshot.nameOnly
+		snapshot.name
 	);
 
 	if (processExe.empty()) {

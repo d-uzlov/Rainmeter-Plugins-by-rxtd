@@ -27,7 +27,6 @@ void FftCascade::setParams(Params _params, FFT* _fftPtr, FftCascade* _successorP
 	resampleResult();
 
 	const auto cascadeSampleRate = index(params.samplesPerSec / std::pow(2, _cascadeIndex));
-	filter.setParams(params.legacy_attackTime, params.legacy_decayTime, cascadeSampleRate, params.inputStride);
 }
 
 void FftCascade::process(array_view<float> wave, clock::time_point killTime) {
@@ -120,27 +119,10 @@ void FftCascade::doFft(array_view<float> chunk) {
 
 	const auto binsCount = params.fftSize / 2;
 
-	const auto newDC = float(fftPtr->getDC());
-	legacy_dc = filter.apply(legacy_dc, newDC);
+	values[0] = static_cast<float>(std::abs(fftPtr->getDC()));
 
-	auto legacy_zerothBin = std::abs(newDC);
-	if (params.legacy_correctZero) {
-		constexpr double root2 = 1.4142135623730950488;
-		legacy_zerothBin *= root2;
-	}
-
-	values[0] = filter.apply(values[0], legacy_zerothBin);
-
-	if (params.legacy_attackTime != 0.0 || params.legacy_decayTime != 0.0) {
-		for (index bin = 1; bin < binsCount; ++bin) {
-			const float oldValue = values[bin];
-			const float newValue = fftPtr->getBinMagnitude(bin);
-			values[bin] = filter.apply(oldValue, newValue);
-		}
-	} else {
-		for (index bin = 1; bin < binsCount; ++bin) {
-			values[bin] = fftPtr->getBinMagnitude(bin);
-		}
+	for (index bin = 1; bin < binsCount; ++bin) {
+		values[bin] = fftPtr->getBinMagnitude(bin);
 	}
 
 	hasChanges = true;

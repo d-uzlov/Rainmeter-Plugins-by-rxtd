@@ -95,9 +95,6 @@
     <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\SingleValueTransformer.h">
       <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\legacy_FiniteTimeFilter.h">
-      <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
-    </ClInclude>
     <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\ResamplerProvider.h">
       <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
     </ClInclude>
@@ -154,9 +151,6 @@
     </ClInclude>
     <ClInclude Include="Sources\sound-processing\ProcessingOrchestrator.h">
       <Filter>Source Files\sound-processing</Filter>
-    </ClInclude>
-    <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\legacy_WeightedBlur.h">
-      <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
     </ClInclude>
     <ClInclude Include="Sources\ParentHelper.h">
       <Filter>Source Files</Filter>
@@ -298,9 +292,6 @@
     <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\SingleValueTransformer.cpp">
       <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\legacy_FiniteTimeFilter.cpp">
-      <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
-    </ClCompile>
     <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\ResamplerProvider.cpp">
       <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
     </ClCompile>
@@ -345,9 +336,6 @@
     </ClCompile>
     <ClCompile Include="Sources\sound-processing\ProcessingOrchestrator.cpp">
       <Filter>Source Files\sound-processing</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\legacy_WeightedBlur.cpp">
-      <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
     </ClCompile>
     <ClCompile Include="Sources\ParentHelper.cpp">
       <Filter>Source Files</Filter>

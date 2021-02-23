@@ -25,8 +25,10 @@ PLUGIN_EXPORT void Initialize(void** data, void* rm) {
 	try {
 		if (typeString == L"Parent") {
 			*data = new rxtd::audio_analyzer::AudioParent(std::move(rain));
-		} else {
+		} else if (typeString == L"Child") {
 			*data = new rxtd::audio_analyzer::AudioChild(std::move(rain));
+		} else {
+			*data = nullptr;
 		}
 	} catch (std::runtime_error&) {
 		*data = nullptr;

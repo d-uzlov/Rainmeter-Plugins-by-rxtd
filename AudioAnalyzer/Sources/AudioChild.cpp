@@ -30,12 +30,6 @@ AudioChild::AudioChild(Rainmeter&& _rain) : MeasureBase(std::move(_rain)) {
 	}
 
 	version = parent->getVersion();
-	if (!(version < Version::eVERSION2)) {
-		auto type = rain.read(L"Type").asIString();
-		if (type != L"Child") {
-			rain.createLogger().warning(L"Unknown type '{}', defaulting to Child is deprecated", type);
-		}
-	}
 }
 
 void AudioChild::vReload() {
@@ -61,12 +55,7 @@ double AudioChild::vUpdate() {
 		return 0.0;
 	}
 
-	double result;
-	if (version < Version::eVERSION2) {
-		result = legacy_update();
-	} else {
-		result = parent->getValue(options.procName, options.handlerName, options.channel, options.valueIndex);
-	}
+	double result = parent->getValue(options.procName, options.handlerName, options.channel, options.valueIndex);
 
 	result = options.transformer.apply(result);
 
@@ -127,58 +116,6 @@ AudioChild::Options AudioChild::readOptions() const {
 		// no need to do anything here
 	} else {
 		logger.error(L"Invalid StringValue '{}', set to Number.", stringValueStr);
-	}
-
-	if (version < Version::eVERSION2) {
-		result.legacy = legacy_readOptions();
-	}
-
-	return result;
-}
-
-AudioChild::Options::Legacy AudioChild::legacy_readOptions() const {
-	Options::Legacy legacy{};
-
-	if (const auto numTr = rain.read(L"NumberTransform").asIString(L"Linear");
-		numTr == L"Linear") {
-		legacy.numberTransform = Options::Legacy::NumberTransform::eLINEAR;
-	} else if (numTr == L"DB") {
-		legacy.numberTransform = Options::Legacy::NumberTransform::eDB;
-	} else if (numTr == L"None") {
-		legacy.numberTransform = Options::Legacy::NumberTransform::eNONE;
-	} else {
-		logger.error(L"Invalid NumberTransform '{}', set to Linear.", numTr);
-		legacy.numberTransform = Options::Legacy::NumberTransform::eLINEAR;
-	}
-	legacy.clamp01 = rain.read(L"Clamp01").asBool(true);
-
-	legacy.correctingConstant = rain.read(L"Gain").asFloat();
-	if (legacy.correctingConstant <= 0) {
-		legacy.correctingConstant = 1.0;
-	}
-
-	return legacy;
-}
-
-double AudioChild::legacy_update() const {
-	double result = 0.0;
-
-	switch (options.legacy.numberTransform) {
-	case Options::Legacy::NumberTransform::eLINEAR:
-		result = parent->getValue(options.procName, options.handlerName, options.channel, options.valueIndex);
-		result = result * options.legacy.correctingConstant;
-		break;
-
-	case Options::Legacy::NumberTransform::eDB:
-		result = parent->getValue(options.procName, options.handlerName, options.channel, options.valueIndex);
-		result = 20.0 / options.legacy.correctingConstant * std::log10(result) + 1.0;
-		break;
-
-	case Options::Legacy::NumberTransform::eNONE:
-		break;
-	}
-	if (options.legacy.clamp01) {
-		result = std::clamp(result, 0.0, 1.0);
 	}
 
 	return result;

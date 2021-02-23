@@ -75,7 +75,7 @@ namespace rxtd::audio_analyzer {
 		static sview getTechnicalName(Channel channel);
 
 		[[nodiscard]]
-		static sview getTechnicalNameLegacy(Channel channel);
+		static sview getHumanName(Channel channel);
 
 		[[nodiscard]]
 		static ChannelLayout parseLayout(uint32_t bitMask, bool forbid5Point1Surround);

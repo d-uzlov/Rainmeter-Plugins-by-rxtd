@@ -11,9 +11,9 @@
 
 using namespace rxtd::audio_utils;
 
-void FFT::setParams(index newSize, bool correctScalar, std::vector<float> _window) {
+void FFT::setParams(index newSize, std::vector<float> _window) {
 	fftSize = newSize;
-	scalar = correctScalar ? 1.0f / float(fftSize) : 1.0f / std::sqrtf(float(fftSize));
+	scalar = 1.0f / float(fftSize);
 	window = std::move(_window);
 	kiss.assign(fftSize / 2, false);
 

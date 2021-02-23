@@ -64,18 +64,18 @@ rxtd::sview ChannelUtils::getTechnicalName(Channel channel) {
 	return {};
 }
 
-rxtd::sview ChannelUtils::getTechnicalNameLegacy(Channel channel) {
+rxtd::sview ChannelUtils::getHumanName(Channel channel) {
 	switch (channel) {
-	case Channel::eFRONT_LEFT: return L"FRONT_LEFT";
-	case Channel::eFRONT_RIGHT: return L"FRONT_RIGHT";
-	case Channel::eCENTER: return L"CENTER";
-	case Channel::eCENTER_BACK: return L"CENTER_BACK";
-	case Channel::eLOW_FREQUENCY: return L"LOW_FREQUENCY";
-	case Channel::eBACK_LEFT: return L"BACK_LEFT";
-	case Channel::eBACK_RIGHT: return L"BACK_RIGHT";
-	case Channel::eSIDE_LEFT: return L"SIDE_LEFT";
-	case Channel::eSIDE_RIGHT: return L"SIDE_RIGHT";
-	case Channel::eAUTO: return L"AUTO";
+	case Channel::eFRONT_LEFT: return L"FrontLeft";
+	case Channel::eFRONT_RIGHT: return L"FrontRight";
+	case Channel::eCENTER: return L"Center";
+	case Channel::eCENTER_BACK: return L"CenterBack";
+	case Channel::eLOW_FREQUENCY: return L"LFE";
+	case Channel::eBACK_LEFT: return L"BackLeft";
+	case Channel::eBACK_RIGHT: return L"BackRight";
+	case Channel::eSIDE_LEFT: return L"SideLeft";
+	case Channel::eSIDE_RIGHT: return L"SideRight";
+	case Channel::eAUTO: return L"Auto";
 	}
 	return {};
 }

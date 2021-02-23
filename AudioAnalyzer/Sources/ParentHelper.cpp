@@ -382,15 +382,8 @@ void ParentHelper::updateProcessings() {
 }
 
 bool ParentHelper::updateDeviceListStrings() {
-	string input;
-	string output;
-	if (constFields.version < Version::eVERSION2) {
-		input = legacy_makeDeviceListString(MediaDeviceType::eINPUT);
-		output = legacy_makeDeviceListString(MediaDeviceType::eOUTPUT);
-	} else {
-		input = makeDeviceListString(MediaDeviceType::eINPUT);
-		output = makeDeviceListString(MediaDeviceType::eOUTPUT);
-	}
+	string input = makeDeviceListString(MediaDeviceType::eINPUT);
+	string output = makeDeviceListString(MediaDeviceType::eOUTPUT);
 
 	auto lock = snapshot.deviceLists.getLock();
 
@@ -475,33 +468,6 @@ rxtd::string ParentHelper::makeDeviceListString(MediaDeviceType type) {
 		appendFormat(device);
 
 		bp.append(L"\n");
-	}
-
-	result = bp.getBufferView();
-	if (!result.empty()) {
-		result.pop_back(); // removes \0
-		result.pop_back(); // removes \n
-	}
-
-	return result;
-}
-
-rxtd::string ParentHelper::legacy_makeDeviceListString(MediaDeviceType type) {
-	string result;
-
-	auto collection = enumeratorWrapper.getActiveDevices(type);
-	if (collection.empty()) {
-		return result;
-	}
-
-	common::buffer_printer::BufferPrinter bp;
-	for (auto& device : collection) {
-		try {
-			const auto deviceInfo = device.readDeviceInfo();
-			bp.append(L"{}", device.getId());
-			bp.append(L" ");
-			bp.append(L"{}\n", deviceInfo.fullFriendlyName);
-		} catch (common::winapi_wrappers::ComException&) {}
 	}
 
 	result = bp.getBufferView();

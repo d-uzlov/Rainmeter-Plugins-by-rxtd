@@ -26,11 +26,7 @@ namespace rxtd::audio_utils {
 			index fftSize;
 			index samplesPerSec;
 
-			double legacy_attackTime;
-			double legacy_decayTime;
-
 			index inputStride;
-			bool legacy_correctZero;
 
 			std::function<void(array_view<float> result, index cascade)> callback;
 		};
@@ -44,19 +40,12 @@ namespace rxtd::audio_utils {
 
 		utils::GrowingVector<float> buffer;
 		DownsampleHelper downsampleHelper{ 2 };
-		LogarithmicIRF filter{};
 		std::vector<float> values;
-		float legacy_dc{};
 		bool hasChanges = false;
 
 	public:
 		void setParams(Params _params, FFT* _fftPtr, FftCascade* _successorPtr, index _cascadeIndex);
 		void process(array_view<float> wave, clock::time_point killTime);
-
-		[[nodiscard]]
-		double legacy_getDC() const {
-			return legacy_dc;
-		}
 
 	private:
 		void resampleResult();

@@ -77,10 +77,6 @@ void ProcessingManager::setParams(
 		if (handlerIsValid) {
 			order.push_back(handlerName);
 		} else {
-			if (version < Version::eVERSION2) {
-				continue;
-			}
-
 			order.clear();
 			break;
 		}

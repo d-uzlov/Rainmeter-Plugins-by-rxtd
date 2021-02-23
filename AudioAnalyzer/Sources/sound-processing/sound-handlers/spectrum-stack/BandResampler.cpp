@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright (C) 2019-2020 rxtd
+ * Copyright (C) 2019-2021 rxtd
  *
  * This Source Code Form is subject to the terms of the GNU General Public
  * License; either version 2 of the License, or (at your option) any later
@@ -31,33 +31,12 @@ rxtd::audio_analyzer::handler::ParamsContainer BandResampler::vParseParams(
 		return {};
 	}
 
-	Option freqListOption;
-	Logger bandLogger;
-	if (!om.get(L"bands").empty()) {
-		freqListOption = om.get(L"bands");
-		bandLogger = cl.context(L"bands: ");
-	} else if (!om.get(L"freqList").empty()) {
-		const auto freqListIndex = om.get(L"freqList").asString();
-
-		auto freqListOptionName = L"FreqList-"s += freqListIndex;
-		freqListOption = rain.read(freqListOptionName);
-		if (freqListOption.empty()) {
-			freqListOptionName = L"FreqList_"s += freqListIndex;
-			freqListOption = rain.read(freqListOptionName);
-		}
-
-		bandLogger = rain.createLogger().context(L"FreqList {}: ", freqListIndex);
-
-		if (freqListOption.empty()) {
-			cl.error(L"description is not found");
-			return {};
-		}
-	} else {
+	if (om.get(L"bands").empty()) {
 		cl.error(L"bands option is not found");
 		return {};
 	}
 
-	params.bandFreqs = parseFreqList(freqListOption, bandLogger);
+	params.bandFreqs = parseFreqList(om.get(L"bands"), cl.context(L"bands: "));
 
 	if (params.bandFreqs.size() < 2) {
 		cl.error(L"need >= 2 frequencies but only {} found", params.bandFreqs.size());
@@ -75,16 +54,7 @@ rxtd::audio_analyzer::handler::ParamsContainer BandResampler::vParseParams(
 		return {};
 	}
 
-	if (version < Version::eVERSION2) {
-		params.includeDC = om.get(L"includeDC").asBool(true);
-		params.legacy_proportionalValues = om.get(L"proportionalValues").asBool(true);
-	} else {
-		params.includeDC = true;
-		params.legacy_proportionalValues = false;
-	}
-
-	const bool defaultCubicResampling = !(version < Version::eVERSION2);
-	params.useCubicResampling = om.get(L"cubicInterpolation").asBool(defaultCubicResampling);
+	params.useCubicResampling = om.get(L"cubicInterpolation").asBool(true);
 
 	return result;
 }
@@ -150,12 +120,10 @@ bool BandResampler::parseFreqListElement(OptionList& options, std::vector<float>
 std::vector<float> BandResampler::parseFreqList(Option freqListOption, Logger& cl) {
 	std::vector<float> freqs;
 
-	for (auto boundOption : freqListOption.asList(L'|')) {
-		auto options = boundOption.asList(L' ');
-		const auto success = parseFreqListElement(options, freqs, cl);
-		if (!success) {
-			return {};
-		}
+	auto options = freqListOption.asList(L' ');
+	const auto success = parseFreqListElement(options, freqs, cl);
+	if (!success) {
+		return {};
 	}
 
 	return makeBandsFromFreqs(freqs, cl);
@@ -164,8 +132,7 @@ std::vector<float> BandResampler::parseFreqList(Option freqListOption, Logger& c
 std::vector<float> BandResampler::makeBandsFromFreqs(array_span<float> freqs, Logger& cl) {
 	std::sort(freqs.begin(), freqs.end());
 
-	const double threshold = 0.07;
-	// 0.07 is a random constant that I feel appropriate
+	const float threshold = std::numeric_limits<float>::epsilon();
 
 	std::vector<float> result;
 	result.reserve(freqs.size());
@@ -205,10 +172,6 @@ BandResampler::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalDa
 	}
 
 	bandsCount = index(params.bandFreqs.size() - 1);
-
-	if (params.legacy_proportionalValues) {
-		legacy_generateBandMultipliers();
-	}
 
 	startCascade = 1;
 	endCascade = cascadesCount + 1;
@@ -253,7 +216,7 @@ void BandResampler::vProcess(ProcessContext context, ExternalData& externalData)
 
 	auto& source = *fftSource;
 
-	double binWidth = static_cast<double>(config.sampleRate) / (source.getFftSize() * std::pow(2, startCascade));
+	float binWidth = static_cast<float>(config.sampleRate) / (static_cast<float>(source.getFftSize()) * std::powf(2.0f, static_cast<float>(startCascade)));
 
 	for (index cascadeIndex = startCascade; cascadeIndex < endCascade; ++cascadeIndex) {
 		const index localCascadeIndex = cascadeIndex - startCascade;
@@ -269,52 +232,46 @@ void BandResampler::vProcess(ProcessContext context, ExternalData& externalData)
 			}
 
 			sampleCascade(chunk, dest, binWidth);
-
-			if (params.legacy_proportionalValues) {
-				for (index band = 0; band < bandsCount; ++band) {
-					dest[band] *= legacy_bandFreqMultipliers[band];
-				}
-			}
 		}
 
 		binWidth *= 0.5;
 	}
 }
 
-void BandResampler::sampleCascade(array_view<float> source, array_span<float> dest, double binWidth) {
+void BandResampler::sampleCascade(array_view<float> source, array_span<float> dest, float binWidth) {
 	const index fftBinsCount = source.size();
 
-	utils::LinearInterpolator lowerBinBoundInter;
+	utils::LinearInterpolator<float> lowerBinBoundInter;
 	lowerBinBoundInter.setParams(
-		-binWidth * 0.5,
-		(fftBinsCount - 0.5) * binWidth,
-		double(0),
-		double(fftBinsCount - 1)
+		-binWidth * 0.5f,
+		(static_cast<float>(fftBinsCount) - 0.5f) * binWidth,
+		0.0f,
+		static_cast<float>(fftBinsCount - 1)
 	);
 
 	audio_utils::CubicInterpolationHelper cih;
 	cih.setSource(source);
 
 	for (index band = 0; band < bandsCount; band++) {
-		const double bandMinFreq = params.bandFreqs[band];
-		const double bandMaxFreq = params.bandFreqs[band + 1];
+		const float bandMinFreq = params.bandFreqs[band];
+		const float bandMaxFreq = params.bandFreqs[band + 1];
 
 		if (params.useCubicResampling && bandMaxFreq - bandMinFreq < binWidth) {
-			const double interpolatedCoordinate = lowerBinBoundInter.toValue((bandMinFreq + bandMaxFreq) * 0.5);
-			const double value = cih.getValueFor(interpolatedCoordinate);
-			dest[band] = float(std::max(value, 0.0));
+			const float interpolatedCoordinate = lowerBinBoundInter.toValue((bandMinFreq + bandMaxFreq) * 0.5f);
+			const float value = static_cast<float>(cih.getValueFor(interpolatedCoordinate));
+			dest[band] = std::max(value, 0.0f);
 		} else {
 			const index minBin = index(std::floor(lowerBinBoundInter.toValue(bandMinFreq)));
 			if (minBin >= fftBinsCount) {
 				break;
 			}
-			const index maxBin = std::min(index(std::floor(lowerBinBoundInter.toValue(bandMaxFreq))), fftBinsCount - 1);
+			const index maxBin = std::min(static_cast<index>(std::floor(lowerBinBoundInter.toValue(bandMaxFreq))), fftBinsCount - 1);
 
-			float value = 0.0;
+			float value = 0.0f;
 			for (index bin = minBin; bin <= maxBin; ++bin) {
 				value += source[bin];
 			}
-			const float binsCount = (1.0f + maxBin - minBin);
+			const float binsCount = (1.0f + static_cast<float>(maxBin) - static_cast<float>(minBin));
 			dest[band] = value / binsCount;
 		}
 	}
@@ -322,22 +279,22 @@ void BandResampler::sampleCascade(array_view<float> source, array_span<float> de
 
 void BandResampler::computeWeights(index fftSize) {
 	auto& config = getConfiguration();
-	const auto fftBinsCount = fftSize / 2;
-	double binWidth = static_cast<double>(config.sampleRate) / (fftSize * std::pow(2, startCascade));
+	const index fftBinsCount = fftSize / 2;
+	float binWidth = static_cast<float>(config.sampleRate) / (static_cast<float>(fftSize) * std::powf(2.0f, static_cast<float>(startCascade)));
 
 	for (index i = 0; i < layerWeights.getBuffersCount(); ++i) {
 		computeCascadeWeights(layerWeights[i], fftBinsCount, binWidth);
-		binWidth *= 0.5;
+		binWidth *= 0.5f;
 	}
 }
 
-void BandResampler::computeCascadeWeights(array_span<float> result, index fftBinsCount, double binWidth) {
-	const double binWidthInverse = 1.0 / binWidth;
+void BandResampler::computeCascadeWeights(array_span<float> result, index fftBinsCount, float binWidth) {
+	const float binWidthInverse = 1.0f / binWidth;
 
 	const index bandsCount = params.bandFreqs.size() - 1;
 
-	const float fftMinFreq = float(params.includeDC ? -binWidth * 0.5 : binWidth * 0.5);
-	const float fftMaxFreq = float((fftBinsCount - 0.5) * binWidth);
+	const float fftMinFreq = -binWidth * 0.5f;
+	const float fftMaxFreq = (static_cast<float>(fftBinsCount) - 0.5f) * binWidth;
 
 	for (index band = 0; band < bandsCount; band++) {
 		const float bandMaxFreq = std::min(params.bandFreqs[band + 1], fftMaxFreq);
@@ -352,23 +309,8 @@ void BandResampler::computeCascadeWeights(array_span<float> result, index fftBin
 			continue;
 		}
 
-		const double bandWidth = bandMaxFreq - bandMinFreq;
-		result[band] = float(bandWidth * binWidthInverse);
-	}
-}
-
-void BandResampler::legacy_generateBandMultipliers() {
-	legacy_bandFreqMultipliers.resize(bandsCount);
-	double multipliersSum{};
-	for (index i = 0; i < bandsCount; ++i) {
-		legacy_bandFreqMultipliers[i] = std::log(params.bandFreqs[i + 1] - params.bandFreqs[i] + 1.0f);
-		// bandFreqMultipliers[i] = params.bandFreqs[i + 1] - params.bandFreqs[i];
-		multipliersSum += legacy_bandFreqMultipliers[i];
-	}
-	const double bandFreqMultipliersAverage = multipliersSum / bandsCount;
-	const double multiplierCorrectingConstant = 1.0 / bandFreqMultipliersAverage;
-	for (auto& multiplier : legacy_bandFreqMultipliers) {
-		multiplier = float(multiplier * multiplierCorrectingConstant);
+		const float bandWidth = bandMaxFreq - bandMinFreq;
+		result[band] = bandWidth * binWidthInverse;
 	}
 }
 
