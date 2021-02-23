@@ -45,5 +45,13 @@ namespace rxtd::utils {
 		T toLinear(T value) const {
 			return linMin + (value - valMin) * reverseAlpha;
 		}
+
+		friend bool operator==(const LinearInterpolator& lhs, const LinearInterpolator& rhs) {
+			return lhs.valMin == rhs.valMin
+				&& lhs.linMin == rhs.linMin
+				&& lhs.alpha == rhs.alpha;
+		}
+
+		friend bool operator!=(const LinearInterpolator& lhs, const LinearInterpolator& rhs) { return !(lhs == rhs); }
 	};
 };
