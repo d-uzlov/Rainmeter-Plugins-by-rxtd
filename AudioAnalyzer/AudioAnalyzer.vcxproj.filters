@@ -256,9 +256,6 @@
     <ClCompile Include="Sources\AudioParent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\precompiled.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Sources\sound-processing\Channel.cpp">
       <Filter>Source Files\sound-processing</Filter>
     </ClCompile>
@@ -396,6 +393,9 @@
     </ClCompile>
     <ClCompile Include="Sources\sound-processing\sound-handlers\HandlerBase.cpp">
       <Filter>Source Files\sound-processing\sound-handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="Sources\precompiled.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

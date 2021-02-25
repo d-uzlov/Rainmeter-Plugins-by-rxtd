@@ -14,10 +14,10 @@
     <ClCompile Include="sources\LocalPluginLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\precompiled.cpp">
+    <ClCompile Include="sources\dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sources\dllmain.cpp">
+    <ClCompile Include="sources\precompiled.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

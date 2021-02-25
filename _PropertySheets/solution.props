@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <IncludePath>$(ProjectDir)/Sources;$(ProjectDir)/includes;$(SolutionDir)/Common/sources/;$(SolutionDir)/Common/resources/;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)/libs/$(Platform);$(LibraryPath)</LibraryPath>
+    <SourcePath>$(SourcePath)</SourcePath>
+    <OutDir>$(ProjectDir)/_Build/$(Platform)-$(Configuration)/</OutDir>
+    <IntDir>$(ProjectDir)/_Build/intermediate/$(Platform)-$(Configuration)/</IntDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <BuildMacro Include="test">
+      <Value>$(test)</Value>
+    </BuildMacro>
+  </ItemGroup>
+  <ItemDefinitionGroup>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir)/Common/resources/;</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalOptions>/Gw %(AdditionalOptions)</AdditionalOptions>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <DiagnosticsFormat>Classic</DiagnosticsFormat>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <DisableSpecificWarnings>4100;4458</DisableSpecificWarnings>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>precompiled.h</PrecompiledHeaderFile>
+      <ForcedIncludeFiles>precompiled.h;</ForcedIncludeFiles>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+</Project>

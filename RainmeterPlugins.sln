@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28010.0
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31019.35
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PerfMonRxtd", "PerfMonRxtd\PerfMonRxtd.vcxproj", "{69B18C5D-6B5C-4711-8AB4-91C651EBA6E4}"
 EndProject

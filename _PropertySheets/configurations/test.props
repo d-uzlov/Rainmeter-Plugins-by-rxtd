@@ -1,38 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup />
   <ItemDefinitionGroup>
     <ClCompile>
       <Optimization>Full</Optimization>
-    </ClCompile>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup>
-    <ClCompile>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
-    </ClCompile>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup>
-    <ClCompile>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-    </ClCompile>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup>
-    <ClCompile>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-    </ClCompile>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup>
-    <ClCompile>
       <OmitFramePointers>false</OmitFramePointers>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <SupportJustMyCode>false</SupportJustMyCode>
     </ClCompile>
-    <ResourceCompile>
-      <PreprocessorDefinitions>_UNICODE;UNICODE;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup />
 </Project>

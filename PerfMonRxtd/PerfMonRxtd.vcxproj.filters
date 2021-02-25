@@ -38,9 +38,6 @@
     <ClCompile Include="sources\PerfmonChild.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\precompiled.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="sources\dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -61,6 +58,9 @@
     </ClCompile>
     <ClCompile Include="sources\instances\SimpleInstanceManager.cpp">
       <Filter>Source Files\instances</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\precompiled.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
