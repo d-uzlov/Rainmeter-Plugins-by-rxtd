@@ -7,10 +7,11 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include "PerfmonChild.h"
-#include "PerfmonParent.h"
-#include "PerfMonRXTD.h"
+#include "my-windows.h"
 #include "RainmeterAPI.h"
+#include "rxtd/perfmon/PerfmonChild.h"
+#include "rxtd/perfmon/PerfmonParent.h"
+#include "rxtd/perfmon/PerfMonRXTD.h"
 
 PLUGIN_EXPORT void Initialize(void** data, void* rm) {
 	rxtd::common::rainmeter::Rainmeter rain(rm);

@@ -7,10 +7,11 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include "LocalPluginLoader.h"
+#include "my-windows.h"
 #include "RainmeterAPI.h"
+#include "rxtd/LocalPluginLoader.h"
 
-using LocalPluginLoader = rxtd::local_plugin_loader::LocalPluginLoader;
+using rxtd::LocalPluginLoader;
 
 PLUGIN_EXPORT void Initialize(void** data, void* rm) {
 	*data = new LocalPluginLoader(rm);

@@ -43,14 +43,14 @@
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
     <ClCompile Include="sources\dllmain.cpp" />
-    <ClCompile Include="sources\LocalPluginLoader.cpp" />
     <ClCompile Include="sources\precompiled.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="sources\rxtd\LocalPluginLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="local-version.h" />
-    <ClInclude Include="sources\LocalPluginLoader.h" />
+    <ClInclude Include="sources\rxtd\LocalPluginLoader.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\Common\resources\version.rc" />

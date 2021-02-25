@@ -1,200 +1,203 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\winapi-wrappers">
-      <UniqueIdentifier>{cfe1b36f-90d4-4281-9bd6-dc9d34f62dfe}</UniqueIdentifier>
+    <Filter Include="sources">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Source Files\winapi-wrappers\implementations">
-      <UniqueIdentifier>{574a5653-cea6-48c5-831f-c229edf3cce4}</UniqueIdentifier>
+    <Filter Include="sources\rxtd">
+      <UniqueIdentifier>{b1bfbb52-f84f-4f03-9e3e-2fc6f7f05324}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\rainmeter">
-      <UniqueIdentifier>{3bc16923-f776-413a-816b-d9a0ad095f0a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\option-parsing">
+    <Filter Include="sources\rxtd\option-parsing">
       <UniqueIdentifier>{f56a22ca-0b8d-451f-8bdb-b5ebc4f1b7d7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\expressions">
+    <Filter Include="sources\rxtd\rainmeter">
+      <UniqueIdentifier>{3bc16923-f776-413a-816b-d9a0ad095f0a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sources\rxtd\winapi-wrappers">
+      <UniqueIdentifier>{cfe1b36f-90d4-4281-9bd6-dc9d34f62dfe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sources\rxtd\winapi-wrappers\implementations">
+      <UniqueIdentifier>{574a5653-cea6-48c5-831f-c229edf3cce4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sources\rxtd\expressions">
       <UniqueIdentifier>{7a12fe6b-6e12-47e3-9070-733b1ddbcec2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="sources\StringUtils.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\array_view.h">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\MyMath.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\rainmeter\Rainmeter.cpp">
-      <Filter>Source Files\rainmeter</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\rainmeter\InstanceKeeper.cpp">
-      <Filter>Source Files\rainmeter</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\winapi-wrappers\WinApiReturnCode.cpp">
-      <Filter>Source Files\winapi-wrappers</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\option-parsing\Option.cpp">
-      <Filter>Source Files\option-parsing</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\option-parsing\OptionMap.cpp">
-      <Filter>Source Files\option-parsing</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\option-parsing\Tokenizer.cpp">
-      <Filter>Source Files\option-parsing</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\expressions\Lexer.cpp">
-      <Filter>Source Files\expressions</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\expressions\ASTParser.cpp">
-      <Filter>Source Files\expressions</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\expressions\ASTSolver.cpp">
-      <Filter>Source Files\expressions</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\expressions\GrammarBuilder.cpp">
-      <Filter>Source Files\expressions</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\rainmeter\MeasureBase.cpp">
-      <Filter>Source Files\rainmeter</Filter>
-    </ClCompile>
     <ClCompile Include="sources\precompiled.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\MyMath.cpp">
+      <Filter>sources\rxtd</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\StringUtils.cpp">
+      <Filter>sources\rxtd</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\option-parsing\Option.cpp">
+      <Filter>sources\rxtd\option-parsing</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\option-parsing\OptionMap.cpp">
+      <Filter>sources\rxtd\option-parsing</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\option-parsing\Tokenizer.cpp">
+      <Filter>sources\rxtd\option-parsing</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\rainmeter\InstanceKeeper.cpp">
+      <Filter>sources\rxtd\rainmeter</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\rainmeter\MeasureBase.cpp">
+      <Filter>sources\rxtd\rainmeter</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\rainmeter\Rainmeter.cpp">
+      <Filter>sources\rxtd\rainmeter</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\winapi-wrappers\WinApiReturnCode.cpp">
+      <Filter>sources\rxtd\winapi-wrappers</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\expressions\ASTParser.cpp">
+      <Filter>sources\rxtd\expressions</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\expressions\ASTSolver.cpp">
+      <Filter>sources\rxtd\expressions</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\expressions\GrammarBuilder.cpp">
+      <Filter>sources\rxtd\expressions</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\expressions\Lexer.cpp">
+      <Filter>sources\rxtd\expressions</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="sources\BufferPrinter.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="sources\precompiled.h">
+      <Filter>sources</Filter>
     </ClInclude>
-    <ClInclude Include="sources\StringUtils.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="sources\rxtd\array_view.h">
+      <Filter>sources\rxtd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\BufferPrinter.h">
+      <Filter>sources\rxtd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\CaseInsensitiveString.h">
+      <Filter>sources\rxtd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\DataWithLock.h">
+      <Filter>sources\rxtd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\DiscreetInterpolator.h">
+      <Filter>sources\rxtd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\GenericBaseClasses.h">
+      <Filter>sources\rxtd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\GrowingVector.h">
+      <Filter>sources\rxtd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\IntMixer.h">
+      <Filter>sources\rxtd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\LinearInterpolator.h">
+      <Filter>sources\rxtd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\MapUtils.h">
+      <Filter>sources\rxtd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\MyMath.h">
+      <Filter>sources\rxtd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\ReadableStreamBuffer.h">
+      <Filter>sources\rxtd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\StringUtils.h">
+      <Filter>sources\rxtd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\Vector2D.h">
+      <Filter>sources\rxtd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\option-parsing\Option.h">
+      <Filter>sources\rxtd\option-parsing</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\option-parsing\OptionBase.h">
+      <Filter>sources\rxtd\option-parsing</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\option-parsing\OptionList.h">
+      <Filter>sources\rxtd\option-parsing</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\option-parsing\OptionMap.h">
+      <Filter>sources\rxtd\option-parsing</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\option-parsing\OptionSequence.h">
+      <Filter>sources\rxtd\option-parsing</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\option-parsing\Tokenizer.h">
+      <Filter>sources\rxtd\option-parsing</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\rainmeter\InstanceKeeper.h">
+      <Filter>sources\rxtd\rainmeter</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\rainmeter\Logger.h">
+      <Filter>sources\rxtd\rainmeter</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\rainmeter\MeasureBase.h">
+      <Filter>sources\rxtd\rainmeter</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\rainmeter\Rainmeter.h">
+      <Filter>sources\rxtd\rainmeter</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\rainmeter\DataHandle.h">
+      <Filter>sources\rxtd\rainmeter</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\rainmeter\SkinHandle.h">
+      <Filter>sources\rxtd\rainmeter</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\winapi-wrappers\ComException.h">
+      <Filter>sources\rxtd\winapi-wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\winapi-wrappers\GenericComWrapper.h">
+      <Filter>sources\rxtd\winapi-wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\winapi-wrappers\GenericCoTaskMemWrapper.h">
+      <Filter>sources\rxtd\winapi-wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\winapi-wrappers\PropertyStoreWrapper.h">
+      <Filter>sources\rxtd\winapi-wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\winapi-wrappers\WinApiReturnCode.h">
+      <Filter>sources\rxtd\winapi-wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\winapi-wrappers\implementations\IUnknownImpl.h">
+      <Filter>sources\rxtd\winapi-wrappers\implementations</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\expressions\ASTParser.h">
+      <Filter>sources\rxtd\expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\expressions\ASTSolver.h">
+      <Filter>sources\rxtd\expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\expressions\GenericNode.h">
+      <Filter>sources\rxtd\expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\expressions\GrammarBuilder.h">
+      <Filter>sources\rxtd\expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\expressions\GrammarDescription.h">
+      <Filter>sources\rxtd\expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\expressions\Lexer.h">
+      <Filter>sources\rxtd\expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\expressions\OperatorNodes.h">
+      <Filter>sources\rxtd\expressions</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\expressions\SyntaxTree.h">
+      <Filter>sources\rxtd\expressions</Filter>
     </ClInclude>
     <ClInclude Include="sources\my-windows.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\CaseInsensitiveString.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\Vector2D.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\LinearInterpolator.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\DiscreetInterpolator.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\MyMath.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\IntMixer.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\GrowingVector.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\GenericBaseClasses.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\DataWithLock.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\winapi-wrappers\implementations\IUnknownImpl.h">
-      <Filter>Source Files\winapi-wrappers\implementations</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\winapi-wrappers\GenericComWrapper.h">
-      <Filter>Source Files\winapi-wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\winapi-wrappers\GenericCoTaskMemWrapper.h">
-      <Filter>Source Files\winapi-wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\winapi-wrappers\PropertyStoreWrapper.h">
-      <Filter>Source Files\winapi-wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\winapi-wrappers\ComException.h">
-      <Filter>Source Files\winapi-wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rainmeter\Logger.h">
-      <Filter>Source Files\rainmeter</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rainmeter\Rainmeter.h">
-      <Filter>Source Files\rainmeter</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rainmeter\DataHandle.h">
-      <Filter>Source Files\rainmeter</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rainmeter\SkinHandle.h">
-      <Filter>Source Files\rainmeter</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rainmeter\InstanceKeeper.h">
-      <Filter>Source Files\rainmeter</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\winapi-wrappers\WinApiReturnCode.h">
-      <Filter>Source Files\winapi-wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\ReadableStreamBuffer.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\option-parsing\Option.h">
-      <Filter>Source Files\option-parsing</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\option-parsing\OptionBase.h">
-      <Filter>Source Files\option-parsing</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\option-parsing\OptionList.h">
-      <Filter>Source Files\option-parsing</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\option-parsing\OptionMap.h">
-      <Filter>Source Files\option-parsing</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\option-parsing\OptionSequence.h">
-      <Filter>Source Files\option-parsing</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\option-parsing\Tokenizer.h">
-      <Filter>Source Files\option-parsing</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\expressions\Lexer.h">
-      <Filter>Source Files\expressions</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\expressions\ASTParser.h">
-      <Filter>Source Files\expressions</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\expressions\SyntaxTree.h">
-      <Filter>Source Files\expressions</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\expressions\ASTSolver.h">
-      <Filter>Source Files\expressions</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\expressions\GrammarBuilder.h">
-      <Filter>Source Files\expressions</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\expressions\GrammarDescription.h">
-      <Filter>Source Files\expressions</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\expressions\OperatorNodes.h">
-      <Filter>Source Files\expressions</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\expressions\GenericNode.h">
-      <Filter>Source Files\expressions</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rainmeter\MeasureBase.h">
-      <Filter>Source Files\rainmeter</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\MapUtils.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\precompiled.h">
-      <Filter>Source Files</Filter>
+      <Filter>sources</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -202,8 +205,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
-    <None Include="sources\expressions\README.md">
-      <Filter>Source Files\expressions</Filter>
+    <None Include="sources\rxtd\expressions\README.md">
+      <Filter>sources\rxtd\expressions</Filter>
     </None>
   </ItemGroup>
 </Project>

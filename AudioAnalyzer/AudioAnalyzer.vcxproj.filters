@@ -1,401 +1,407 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\sound-processing">
-      <UniqueIdentifier>{bdb8ab0b-fb55-4af4-aed4-b00fbf3b4a18}</UniqueIdentifier>
+    <Filter Include="sources">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Source Files\sound-processing\sound-handlers">
-      <UniqueIdentifier>{89ee3378-928c-4353-a5d1-3dd6fa638e74}</UniqueIdentifier>
+    <Filter Include="sources\rxtd">
+      <UniqueIdentifier>{2ff3d060-3d75-4eff-9248-13cdb7c172a6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\sound-processing\device-management">
-      <UniqueIdentifier>{477ac0e7-fd2d-4360-b210-9660fdcdb279}</UniqueIdentifier>
+    <Filter Include="sources\rxtd\audio_analyzer">
+      <UniqueIdentifier>{4ae473fb-a788-469e-adc1-3799127eabb3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\audio-utils">
+    <Filter Include="sources\rxtd\audio_analyzer\audio-utils">
       <UniqueIdentifier>{9983f910-0024-44d2-bdc9-31dbc74164be}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\sound-processing\sound-handlers\spectrum-stack">
-      <UniqueIdentifier>{de102e90-3811-445c-9f63-d12d9f1758b2}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\audio-utils\filter-utils">
+    <Filter Include="sources\rxtd\audio_analyzer\audio-utils\filter-utils">
       <UniqueIdentifier>{5b48eb26-d45a-499a-8e18-14f7815e3222}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\audio-utils\butterworth-lib">
+    <Filter Include="sources\rxtd\audio_analyzer\audio-utils\butterworth-lib">
       <UniqueIdentifier>{f1e43e54-5810-43fb-9cfb-0fc68f48aeca}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\audio-utils\kiss_fft-lib">
+    <Filter Include="sources\rxtd\audio_analyzer\audio-utils\kiss_fft-lib">
       <UniqueIdentifier>{3cb7bcf2-f4bf-4ed8-a4a5-8b0851d3df34}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\audio-utils\cheby_win-lib">
+    <Filter Include="sources\rxtd\audio_analyzer\audio-utils\cheby_win-lib">
       <UniqueIdentifier>{ff8b7d47-9950-4cac-9aa1-d513095c24a3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\image-utils">
+    <Filter Include="sources\rxtd\audio_analyzer\image-utils">
       <UniqueIdentifier>{3b0cca31-00be-46d7-9c2b-2190ca8c84e6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\wasapi-wrappers">
-      <UniqueIdentifier>{e9e66964-742b-40c3-b788-52cd69ec7f9f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\wasapi-wrappers\implementations">
-      <UniqueIdentifier>{1efe0513-1dc6-45a6-a7af-26c084b2ac30}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\options">
+    <Filter Include="sources\rxtd\audio_analyzer\options">
       <UniqueIdentifier>{40b0d339-0169-4605-96ed-3a00020889f4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\sound-processing\sound-handlers\basic-handlers">
+    <Filter Include="sources\rxtd\audio_analyzer\sound-processing">
+      <UniqueIdentifier>{bdb8ab0b-fb55-4af4-aed4-b00fbf3b4a18}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sources\rxtd\audio_analyzer\sound-processing\sound-handlers">
+      <UniqueIdentifier>{89ee3378-928c-4353-a5d1-3dd6fa638e74}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack">
+      <UniqueIdentifier>{de102e90-3811-445c-9f63-d12d9f1758b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sources\rxtd\audio_analyzer\sound-processing\sound-handlers\basic-handlers">
       <UniqueIdentifier>{a439639a-9638-414b-87e1-915134dbb534}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sources\rxtd\audio_analyzer\sound-processing\device-management">
+      <UniqueIdentifier>{477ac0e7-fd2d-4360-b210-9660fdcdb279}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sources\rxtd\audio_analyzer\wasapi-wrappers">
+      <UniqueIdentifier>{e9e66964-742b-40c3-b788-52cd69ec7f9f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sources\rxtd\audio_analyzer\wasapi-wrappers\implementations">
+      <UniqueIdentifier>{1efe0513-1dc6-45a6-a7af-26c084b2ac30}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Sources\AudioChild.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Sources\AudioParent.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="local-version.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\Channel.h">
-      <Filter>Source Files\sound-processing</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\AudioChild.h">
+      <Filter>sources\rxtd\audio_analyzer</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\device-management\CaptureManager.h">
-      <Filter>Source Files\sound-processing\device-management</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\AudioParent.h">
+      <Filter>sources\rxtd\audio_analyzer</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\ChannelMixer.h">
-      <Filter>Source Files\sound-processing</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\ParentHelper.h">
+      <Filter>sources\rxtd\audio_analyzer</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\BandCascadeTransformer.h">
-      <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\Version.h">
+      <Filter>sources\rxtd\audio_analyzer</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\BandResampler.h">
-      <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\audio-utils\CustomizableValueTransformer.h">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\FftAnalyzer.h">
-      <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\audio-utils\DownsampleHelper.h">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\Spectrogram.h">
-      <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\audio-utils\FFT.h">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\UniformBlur.h">
-      <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\audio-utils\FftCascade.h">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\audio-utils\FftCascade.h">
-      <Filter>Source Files\audio-utils</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\audio-utils\GaussianCoefficientsManager.h">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\audio-utils\RandomGenerator.h">
-      <Filter>Source Files\audio-utils</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\audio-utils\CubicInterpolationHelper.h">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\SingleValueTransformer.h">
-      <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\audio-utils\MinMaxCounter.h">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\ResamplerProvider.h">
-      <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\audio-utils\RandomGenerator.h">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\audio-utils\filter-utils\BiQuadIIR.h">
-      <Filter>Source Files\audio-utils\filter-utils</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\audio-utils\WindowFunctionHelper.h">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\audio-utils\filter-utils\BQFilterBuilder.h">
-      <Filter>Source Files\audio-utils\filter-utils</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\audio-utils\filter-utils\AbstractFilter.h">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils\filter-utils</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\audio-utils\filter-utils\InfiniteResponseFilter.h">
-      <Filter>Source Files\audio-utils\filter-utils</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\audio-utils\filter-utils\BiQuadIIR.h">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils\filter-utils</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\audio-utils\filter-utils\LogarithmicIRF.h">
-      <Filter>Source Files\audio-utils\filter-utils</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\audio-utils\filter-utils\BQFilterBuilder.h">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils\filter-utils</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\audio-utils\butterworth-lib\iir.h">
-      <Filter>Source Files\audio-utils\butterworth-lib</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\audio-utils\filter-utils\FilterCascade.h">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils\filter-utils</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\audio-utils\filter-utils\AbstractFilter.h">
-      <Filter>Source Files\audio-utils\filter-utils</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\audio-utils\filter-utils\FilterCascadeParser.h">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils\filter-utils</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\audio-utils\filter-utils\FilterCascade.h">
-      <Filter>Source Files\audio-utils\filter-utils</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\audio-utils\filter-utils\InfiniteResponseFilter.h">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils\filter-utils</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\audio-utils\filter-utils\FilterCascadeParser.h">
-      <Filter>Source Files\audio-utils\filter-utils</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\audio-utils\filter-utils\LogarithmicIRF.h">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils\filter-utils</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\audio-utils\kiss_fft-lib\KissFft.hh">
-      <Filter>Source Files\audio-utils\kiss_fft-lib</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\audio-utils\butterworth-lib\ButterworthWrapper.h">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils\butterworth-lib</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\audio-utils\butterworth-lib\ButterworthWrapper.h">
-      <Filter>Source Files\audio-utils\butterworth-lib</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\audio-utils\butterworth-lib\iir.h">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils\butterworth-lib</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\audio-utils\FFT.h">
-      <Filter>Source Files\audio-utils</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\audio-utils\kiss_fft-lib\KissFft.hh">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils\kiss_fft-lib</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\audio-utils\DownsampleHelper.h">
-      <Filter>Source Files\audio-utils</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\audio-utils\cheby_win-lib\cheby_win.h">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils\cheby_win-lib</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\audio-utils\GaussianCoefficientsManager.h">
-      <Filter>Source Files\audio-utils</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\image-utils\BmpWriter.h">
+      <Filter>sources\rxtd\audio_analyzer\image-utils</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\audio-utils\WindowFunctionHelper.h">
-      <Filter>Source Files\audio-utils</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\image-utils\Color.h">
+      <Filter>sources\rxtd\audio_analyzer\image-utils</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\audio-utils\cheby_win-lib\cheby_win.h">
-      <Filter>Source Files\audio-utils\cheby_win-lib</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\image-utils\ImageWriteHelper.h">
+      <Filter>sources\rxtd\audio_analyzer\image-utils</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\audio-utils\CubicInterpolationHelper.h">
-      <Filter>Source Files\audio-utils</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\image-utils\IntColor.h">
+      <Filter>sources\rxtd\audio_analyzer\image-utils</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\ProcessingManager.h">
-      <Filter>Source Files\sound-processing</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\image-utils\StripedImage.h">
+      <Filter>sources\rxtd\audio_analyzer\image-utils</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\ProcessingOrchestrator.h">
-      <Filter>Source Files\sound-processing</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\image-utils\StripedImageFadeHelper.h">
+      <Filter>sources\rxtd\audio_analyzer\image-utils</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\ParentHelper.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\image-utils\WaveFormDrawer.h">
+      <Filter>sources\rxtd\audio_analyzer\image-utils</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\LogErrorHelper.h">
-      <Filter>Source Files\sound-processing</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\options\HandlerCacheHelper.h">
+      <Filter>sources\rxtd\audio_analyzer\options</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\image-utils\BmpWriter.h">
-      <Filter>Source Files\image-utils</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\options\ParamParser.h">
+      <Filter>sources\rxtd\audio_analyzer\options</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\image-utils\Color.h">
-      <Filter>Source Files\image-utils</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\options\HandlerInfo.h">
+      <Filter>sources\rxtd\audio_analyzer\options</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\image-utils\ImageWriteHelper.h">
-      <Filter>Source Files\image-utils</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\options\ProcessingData.h">
+      <Filter>sources\rxtd\audio_analyzer\options</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\image-utils\IntColor.h">
-      <Filter>Source Files\image-utils</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\sound-processing\LogErrorHelper.h">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\image-utils\StripedImage.h">
-      <Filter>Source Files\image-utils</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\sound-processing\Channel.h">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\image-utils\StripedImageFadeHelper.h">
-      <Filter>Source Files\image-utils</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\sound-processing\ChannelMixer.h">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\image-utils\WaveFormDrawer.h">
-      <Filter>Source Files\image-utils</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\sound-processing\ProcessingOrchestrator.h">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\sound-handlers\spectrum-stack\TimeResampler.h">
-      <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\sound-processing\ProcessingManager.h">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\audio-utils\CustomizableValueTransformer.h">
-      <Filter>Source Files\audio-utils</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\sound-processing\sound-handlers\ExternalData.h">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing\sound-handlers</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\audio-utils\MinMaxCounter.h">
-      <Filter>Source Files\audio-utils</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\sound-processing\sound-handlers\ExternalMethods.h">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing\sound-handlers</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\wasapi-wrappers\MediaDeviceType.h">
-      <Filter>Source Files\wasapi-wrappers</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\sound-processing\sound-handlers\ParamsContainer.h">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing\sound-handlers</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\wasapi-wrappers\WaveFormat.h">
-      <Filter>Source Files\wasapi-wrappers</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\sound-processing\sound-handlers\HandlerBase.h">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing\sound-handlers</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\wasapi-wrappers\implementations\AudioSessionEventsImpl.h">
-      <Filter>Source Files\wasapi-wrappers\implementations</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack\BandCascadeTransformer.h">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\Version.h">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack\BandResampler.h">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\wasapi-wrappers\MediaDeviceEnumerator.h">
-      <Filter>Source Files\wasapi-wrappers</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack\FftAnalyzer.h">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\wasapi-wrappers\MediaDeviceHandle.h">
-      <Filter>Source Files\wasapi-wrappers</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack\ResamplerProvider.h">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\wasapi-wrappers\AudioClientHandle.h">
-      <Filter>Source Files\wasapi-wrappers</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack\Spectrogram.h">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\wasapi-wrappers\AudioCaptureClient.h">
-      <Filter>Source Files\wasapi-wrappers</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack\SingleValueTransformer.h">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\wasapi-wrappers\implementations\MediaDeviceListNotificationClient.h">
-      <Filter>Source Files\wasapi-wrappers\implementations</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack\TimeResampler.h">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\options\ParamParser.h">
-      <Filter>Source Files\options</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack\UniformBlur.h">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\options\HandlerCacheHelper.h">
-      <Filter>Source Files\options</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\sound-processing\sound-handlers\basic-handlers\BlockHandler.h">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing\sound-handlers\basic-handlers</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\options\ProcessingData.h">
-      <Filter>Source Files\options</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\sound-processing\sound-handlers\basic-handlers\Loudness.h">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing\sound-handlers\basic-handlers</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\sound-handlers\basic-handlers\BlockHandler.h">
-      <Filter>Source Files\sound-processing\sound-handlers\basic-handlers</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\sound-processing\sound-handlers\basic-handlers\WaveForm.h">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing\sound-handlers\basic-handlers</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\sound-handlers\basic-handlers\Loudness.h">
-      <Filter>Source Files\sound-processing\sound-handlers\basic-handlers</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\sound-processing\device-management\CaptureManager.h">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing\device-management</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\sound-handlers\basic-handlers\WaveForm.h">
-      <Filter>Source Files\sound-processing\sound-handlers\basic-handlers</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\wasapi-wrappers\AudioCaptureClient.h">
+      <Filter>sources\rxtd\audio_analyzer\wasapi-wrappers</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\sound-handlers\ParamsContainer.h">
-      <Filter>Source Files\sound-processing\sound-handlers</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\wasapi-wrappers\AudioClientHandle.h">
+      <Filter>sources\rxtd\audio_analyzer\wasapi-wrappers</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\sound-handlers\ExternalData.h">
-      <Filter>Source Files\sound-processing\sound-handlers</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\wasapi-wrappers\MediaDeviceEnumerator.h">
+      <Filter>sources\rxtd\audio_analyzer\wasapi-wrappers</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\sound-handlers\ExternalMethods.h">
-      <Filter>Source Files\sound-processing\sound-handlers</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\wasapi-wrappers\MediaDeviceType.h">
+      <Filter>sources\rxtd\audio_analyzer\wasapi-wrappers</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\sound-processing\sound-handlers\HandlerBase.h">
-      <Filter>Source Files\sound-processing\sound-handlers</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\wasapi-wrappers\MediaDeviceHandle.h">
+      <Filter>sources\rxtd\audio_analyzer\wasapi-wrappers</Filter>
     </ClInclude>
-    <ClInclude Include="Sources\options\HandlerInfo.h">
-      <Filter>Source Files\options</Filter>
+    <ClInclude Include="sources\rxtd\audio_analyzer\wasapi-wrappers\WaveFormat.h">
+      <Filter>sources\rxtd\audio_analyzer\wasapi-wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\audio_analyzer\wasapi-wrappers\implementations\AudioSessionEventsImpl.h">
+      <Filter>sources\rxtd\audio_analyzer\wasapi-wrappers\implementations</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\audio_analyzer\wasapi-wrappers\implementations\MediaDeviceListNotificationClient.h">
+      <Filter>sources\rxtd\audio_analyzer\wasapi-wrappers\implementations</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Sources\AudioChild.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\AudioParent.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\sound-processing\Channel.cpp">
-      <Filter>Source Files\sound-processing</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\sound-processing\device-management\CaptureManager.cpp">
-      <Filter>Source Files\sound-processing\device-management</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\sound-processing\ChannelMixer.cpp">
-      <Filter>Source Files\sound-processing</Filter>
-    </ClCompile>
     <ClCompile Include="Sources\dllmain.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\BandCascadeTransformer.cpp">
-      <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\BandResampler.cpp">
-      <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\FftAnalyzer.cpp">
-      <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\Spectrogram.cpp">
-      <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\UniformBlur.cpp">
-      <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\audio-utils\FftCascade.cpp">
-      <Filter>Source Files\audio-utils</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\SingleValueTransformer.cpp">
-      <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\ResamplerProvider.cpp">
-      <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\audio-utils\filter-utils\BiQuadIIR.cpp">
-      <Filter>Source Files\audio-utils\filter-utils</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\audio-utils\filter-utils\BQFilterBuilder.cpp">
-      <Filter>Source Files\audio-utils\filter-utils</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\audio-utils\filter-utils\InfiniteResponseFilter.cpp">
-      <Filter>Source Files\audio-utils\filter-utils</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\audio-utils\butterworth-lib\iir.cpp">
-      <Filter>Source Files\audio-utils\butterworth-lib</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\audio-utils\filter-utils\FilterCascade.cpp">
-      <Filter>Source Files\audio-utils\filter-utils</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\audio-utils\filter-utils\FilterCascadeParser.cpp">
-      <Filter>Source Files\audio-utils\filter-utils</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\audio-utils\butterworth-lib\ButterworthWrapper.cpp">
-      <Filter>Source Files\audio-utils\butterworth-lib</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\audio-utils\FFT.cpp">
-      <Filter>Source Files\audio-utils</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\audio-utils\GaussianCoefficientsManager.cpp">
-      <Filter>Source Files\audio-utils</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\audio-utils\WindowFunctionHelper.cpp">
-      <Filter>Source Files\audio-utils</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\audio-utils\cheby_win-lib\cheby_win.cpp">
-      <Filter>Source Files\audio-utils\cheby_win-lib</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\audio-utils\CubicInterpolationHelper.cpp">
-      <Filter>Source Files\audio-utils</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\sound-processing\ProcessingManager.cpp">
-      <Filter>Source Files\sound-processing</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\sound-processing\ProcessingOrchestrator.cpp">
-      <Filter>Source Files\sound-processing</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\ParentHelper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\image-utils\BmpWriter.cpp">
-      <Filter>Source Files\image-utils</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\image-utils\Color.cpp">
-      <Filter>Source Files\image-utils</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\image-utils\StripedImageFadeHelper.cpp">
-      <Filter>Source Files\image-utils</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\image-utils\WaveFormDrawer.cpp">
-      <Filter>Source Files\image-utils</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\sound-processing\sound-handlers\spectrum-stack\TimeResampler.cpp">
-      <Filter>Source Files\sound-processing\sound-handlers\spectrum-stack</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\audio-utils\CustomizableValueTransformer.cpp">
-      <Filter>Source Files\audio-utils</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\wasapi-wrappers\MediaDeviceEnumerator.cpp">
-      <Filter>Source Files\wasapi-wrappers</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\wasapi-wrappers\MediaDeviceHandle.cpp">
-      <Filter>Source Files\wasapi-wrappers</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\wasapi-wrappers\AudioClientHandle.cpp">
-      <Filter>Source Files\wasapi-wrappers</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\wasapi-wrappers\AudioCaptureClient.cpp">
-      <Filter>Source Files\wasapi-wrappers</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\wasapi-wrappers\implementations\AudioSessionEventsImpl.cpp">
-      <Filter>Source Files\wasapi-wrappers\implementations</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\wasapi-wrappers\implementations\MediaDeviceListNotificationClient.cpp">
-      <Filter>Source Files\wasapi-wrappers\implementations</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\image-utils\ImageWriteHelper.cpp">
-      <Filter>Source Files\image-utils</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\options\ParamParser.cpp">
-      <Filter>Source Files\options</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\options\HandlerCacheHelper.cpp">
-      <Filter>Source Files\options</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\sound-processing\sound-handlers\basic-handlers\BlockHandler.cpp">
-      <Filter>Source Files\sound-processing\sound-handlers\basic-handlers</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\sound-processing\sound-handlers\basic-handlers\Loudness.cpp">
-      <Filter>Source Files\sound-processing\sound-handlers\basic-handlers</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\sound-processing\sound-handlers\basic-handlers\WaveForm.cpp">
-      <Filter>Source Files\sound-processing\sound-handlers\basic-handlers</Filter>
-    </ClCompile>
-    <ClCompile Include="Sources\sound-processing\sound-handlers\HandlerBase.cpp">
-      <Filter>Source Files\sound-processing\sound-handlers</Filter>
+      <Filter>sources</Filter>
     </ClCompile>
     <ClCompile Include="Sources\precompiled.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>sources</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\AudioChild.cpp">
+      <Filter>sources\rxtd\audio_analyzer</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\AudioParent.cpp">
+      <Filter>sources\rxtd\audio_analyzer</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\ParentHelper.cpp">
+      <Filter>sources\rxtd\audio_analyzer</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\audio-utils\CustomizableValueTransformer.cpp">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\audio-utils\FFT.cpp">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\audio-utils\FftCascade.cpp">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\audio-utils\GaussianCoefficientsManager.cpp">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\audio-utils\CubicInterpolationHelper.cpp">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\audio-utils\WindowFunctionHelper.cpp">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\audio-utils\filter-utils\BiQuadIIR.cpp">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils\filter-utils</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\audio-utils\filter-utils\BQFilterBuilder.cpp">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils\filter-utils</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\audio-utils\filter-utils\FilterCascade.cpp">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils\filter-utils</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\audio-utils\filter-utils\FilterCascadeParser.cpp">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils\filter-utils</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\audio-utils\filter-utils\InfiniteResponseFilter.cpp">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils\filter-utils</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\audio-utils\butterworth-lib\ButterworthWrapper.cpp">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils\butterworth-lib</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\audio-utils\butterworth-lib\iir.cpp">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils\butterworth-lib</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\audio-utils\cheby_win-lib\cheby_win.cpp">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils\cheby_win-lib</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\image-utils\BmpWriter.cpp">
+      <Filter>sources\rxtd\audio_analyzer\image-utils</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\image-utils\Color.cpp">
+      <Filter>sources\rxtd\audio_analyzer\image-utils</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\image-utils\ImageWriteHelper.cpp">
+      <Filter>sources\rxtd\audio_analyzer\image-utils</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\image-utils\StripedImageFadeHelper.cpp">
+      <Filter>sources\rxtd\audio_analyzer\image-utils</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\image-utils\WaveFormDrawer.cpp">
+      <Filter>sources\rxtd\audio_analyzer\image-utils</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\options\HandlerCacheHelper.cpp">
+      <Filter>sources\rxtd\audio_analyzer\options</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\options\ParamParser.cpp">
+      <Filter>sources\rxtd\audio_analyzer\options</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\sound-processing\Channel.cpp">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\sound-processing\ChannelMixer.cpp">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\sound-processing\ProcessingOrchestrator.cpp">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\sound-processing\ProcessingManager.cpp">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\sound-processing\sound-handlers\HandlerBase.cpp">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing\sound-handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack\BandCascadeTransformer.cpp">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack\BandResampler.cpp">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack\FftAnalyzer.cpp">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack\ResamplerProvider.cpp">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack\Spectrogram.cpp">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack\SingleValueTransformer.cpp">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack\TimeResampler.cpp">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack\UniformBlur.cpp">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing\sound-handlers\spectrum-stack</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\sound-processing\sound-handlers\basic-handlers\BlockHandler.cpp">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing\sound-handlers\basic-handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\sound-processing\sound-handlers\basic-handlers\Loudness.cpp">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing\sound-handlers\basic-handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\sound-processing\sound-handlers\basic-handlers\WaveForm.cpp">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing\sound-handlers\basic-handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\sound-processing\device-management\CaptureManager.cpp">
+      <Filter>sources\rxtd\audio_analyzer\sound-processing\device-management</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\wasapi-wrappers\AudioCaptureClient.cpp">
+      <Filter>sources\rxtd\audio_analyzer\wasapi-wrappers</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\wasapi-wrappers\AudioClientHandle.cpp">
+      <Filter>sources\rxtd\audio_analyzer\wasapi-wrappers</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\wasapi-wrappers\MediaDeviceEnumerator.cpp">
+      <Filter>sources\rxtd\audio_analyzer\wasapi-wrappers</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\wasapi-wrappers\MediaDeviceHandle.cpp">
+      <Filter>sources\rxtd\audio_analyzer\wasapi-wrappers</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\wasapi-wrappers\implementations\AudioSessionEventsImpl.cpp">
+      <Filter>sources\rxtd\audio_analyzer\wasapi-wrappers\implementations</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\wasapi-wrappers\implementations\MediaDeviceListNotificationClient.cpp">
+      <Filter>sources\rxtd\audio_analyzer\wasapi-wrappers\implementations</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -408,5 +414,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="sources\rxtd\audio_analyzer\audio-utils\butterworth-lib\iir.txt">
+      <Filter>sources\rxtd\audio_analyzer\audio-utils\butterworth-lib</Filter>
+    </Text>
   </ItemGroup>
 </Project>

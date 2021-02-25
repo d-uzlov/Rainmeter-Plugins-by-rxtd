@@ -11,9 +11,9 @@
 #include <my-windows.h>
 #include "RainmeterAPI.h"
 
-#include "AudioChild.h"
-#include "AudioParent.h"
-#include "rainmeter/Rainmeter.h"
+#include "rxtd/audio_analyzer/AudioChild.h"
+#include "rxtd/audio_analyzer/AudioParent.h"
+#include "rxtd/rainmeter/Rainmeter.h"
 
 static_assert(std::is_same<WCHAR, wchar_t>::value);
 static_assert(std::is_same<LPCWSTR, const wchar_t*>::value);

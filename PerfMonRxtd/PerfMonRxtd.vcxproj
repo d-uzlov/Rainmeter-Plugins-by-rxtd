@@ -42,47 +42,47 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
-    <ClCompile Include="sources\BlacklistManager.cpp" />
-    <ClCompile Include="sources\expressions\RollupExpressionResolver.cpp" />
-    <ClCompile Include="sources\expressions\SimpleExpressionSolver.cpp" />
-    <ClCompile Include="sources\instances\RollupInstanceManager.cpp" />
-    <ClCompile Include="sources\instances\SimpleInstanceManager.cpp" />
-    <ClCompile Include="sources\pdh\PdhFormat.cpp" />
-    <ClCompile Include="sources\PerfmonChild.cpp" />
-    <ClCompile Include="sources\enums.h" />
-    <ClCompile Include="sources\ExpressionParser.cpp" />
-    <ClCompile Include="sources\PerfmonParent.cpp" />
-    <ClCompile Include="sources\pdh\PdhWrapper.cpp" />
-    <ClCompile Include="sources\pdh\NamesManager.cpp" />
     <ClCompile Include="sources\dllmain.cpp" />
     <ClCompile Include="sources\precompiled.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="sources\rxtd\perfmon\BlacklistManager.cpp" />
+    <ClCompile Include="sources\rxtd\perfmon\ExpressionParser.cpp" />
+    <ClCompile Include="sources\rxtd\perfmon\expressions\RollupExpressionResolver.cpp" />
+    <ClCompile Include="sources\rxtd\perfmon\expressions\SimpleExpressionSolver.cpp" />
+    <ClCompile Include="sources\rxtd\perfmon\instances\RollupInstanceManager.cpp" />
+    <ClCompile Include="sources\rxtd\perfmon\instances\SimpleInstanceManager.cpp" />
+    <ClCompile Include="sources\rxtd\perfmon\pdh\NamesManager.cpp" />
+    <ClCompile Include="sources\rxtd\perfmon\pdh\PdhFormat.cpp" />
+    <ClCompile Include="sources\rxtd\perfmon\pdh\PdhWrapper.cpp" />
+    <ClCompile Include="sources\rxtd\perfmon\PerfmonChild.cpp" />
+    <ClCompile Include="sources\rxtd\perfmon\PerfmonParent.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="local-version.h" />
-    <ClInclude Include="sources\BlacklistManager.h" />
-    <ClInclude Include="sources\expressions\CacheHelper.h" />
-    <ClInclude Include="sources\expressions\RollupExpressionResolver.h" />
-    <ClInclude Include="sources\expressions\SimpleExpressionSolver.h" />
-    <ClInclude Include="sources\expressions\TotalUtilities.h" />
-    <ClInclude Include="sources\instances\InstanceManagerUtilities.h" />
-    <ClInclude Include="sources\instances\RollupInstanceManager.h" />
-    <ClInclude Include="sources\instances\SimpleInstanceManager.h" />
-    <ClInclude Include="sources\instances\SortBy.h" />
-    <ClInclude Include="sources\instances\SortInfo.h" />
-    <ClInclude Include="sources\instances\SortOrder.h" />
-    <ClInclude Include="sources\MatchPattern.h" />
-    <ClInclude Include="sources\pdh\my-pdh.h" />
-    <ClInclude Include="sources\pdh\PdhFormat.h" />
-    <ClInclude Include="sources\pdh\PdhSnapshot.h" />
-    <ClInclude Include="sources\PerfmonChild.h" />
-    <ClInclude Include="sources\ExpressionParser.h" />
-    <ClInclude Include="sources\PerfmonParent.h" />
-    <ClInclude Include="sources\pdh\PdhWrapper.h" />
-    <ClInclude Include="sources\pdh\NamesManager.h" />
-    <ClInclude Include="sources\PerfMonRXTD.h" />
-    <ClInclude Include="sources\Reference.h" />
+    <ClInclude Include="sources\rxtd\perfmon\BlacklistManager.h" />
+    <ClInclude Include="sources\rxtd\perfmon\enums.h" />
+    <ClInclude Include="sources\rxtd\perfmon\ExpressionParser.h" />
+    <ClInclude Include="sources\rxtd\perfmon\expressions\CacheHelper.h" />
+    <ClInclude Include="sources\rxtd\perfmon\expressions\RollupExpressionResolver.h" />
+    <ClInclude Include="sources\rxtd\perfmon\expressions\SimpleExpressionSolver.h" />
+    <ClInclude Include="sources\rxtd\perfmon\expressions\TotalUtilities.h" />
+    <ClInclude Include="sources\rxtd\perfmon\instances\InstanceManagerUtilities.h" />
+    <ClInclude Include="sources\rxtd\perfmon\instances\RollupInstanceManager.h" />
+    <ClInclude Include="sources\rxtd\perfmon\instances\SimpleInstanceManager.h" />
+    <ClInclude Include="sources\rxtd\perfmon\instances\SortBy.h" />
+    <ClInclude Include="sources\rxtd\perfmon\instances\SortInfo.h" />
+    <ClInclude Include="sources\rxtd\perfmon\instances\SortOrder.h" />
+    <ClInclude Include="sources\rxtd\perfmon\MatchPattern.h" />
+    <ClInclude Include="sources\rxtd\perfmon\pdh\my-pdh.h" />
+    <ClInclude Include="sources\rxtd\perfmon\pdh\NamesManager.h" />
+    <ClInclude Include="sources\rxtd\perfmon\pdh\PdhFormat.h" />
+    <ClInclude Include="sources\rxtd\perfmon\pdh\PdhSnapshot.h" />
+    <ClInclude Include="sources\rxtd\perfmon\pdh\PdhWrapper.h" />
+    <ClInclude Include="sources\rxtd\perfmon\PerfmonChild.h" />
+    <ClInclude Include="sources\rxtd\perfmon\PerfmonParent.h" />
+    <ClInclude Include="sources\rxtd\perfmon\PerfMonRXTD.h" />
+    <ClInclude Include="sources\rxtd\perfmon\Reference.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.vcxproj">
