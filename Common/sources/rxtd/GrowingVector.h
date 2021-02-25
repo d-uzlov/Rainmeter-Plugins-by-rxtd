@@ -9,7 +9,7 @@
 
 #pragma once
 
-namespace rxtd::utils {
+namespace rxtd {
 	//
 	// Basically a ring buffer with dynamic size
 	//

@@ -9,9 +9,11 @@
 
 #include "AudioParent.h"
 
-#include "rxtd/MapUtils.h"
+#include "rxtd/std_fixes/MapUtils.h"
 
-using namespace rxtd::audio_analyzer;
+using rxtd::audio_analyzer::AudioParent;
+using rxtd::audio_analyzer::options::ParamParser;
+using rxtd::audio_analyzer::options::HandlerInfo;
 
 void AudioParent::LogHelpers::setLogger(Logger logger) {
 	generic.setLogger(logger);
@@ -80,8 +82,9 @@ void AudioParent::vReload() {
 	const bool paramsChanged = paramParser.parse(version, false);
 
 	if (paramsChanged) {
-		utils::MapUtils::intersectKeyCollection(clearProcessings, paramParser.getParseResult());
-		utils::MapUtils::intersectKeyCollection(clearSnapshot, paramParser.getParseResult());
+		using std_fixes::MapUtils;
+		MapUtils::intersectKeyCollection(clearProcessings, paramParser.getParseResult());
+		MapUtils::intersectKeyCollection(clearSnapshot, paramParser.getParseResult());
 
 		for (const auto& [name, data] : paramParser.getParseResult()) {
 			auto& sa = clearProcessings[name];
@@ -282,7 +285,7 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 			return;
 		}
 
-		auto map = common::options::Option{ args[1] }.asMap(L'|', L' ');
+		auto map = option_parsing::Option{ args[1] }.asMap(L'|', L' ');
 
 		auto procName = map.get(L"proc").asIString();
 		const auto channelName = map.get(L"channel").asIString();
@@ -329,7 +332,7 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 
 			const auto ind = map.get(L"index").asInt(0);
 
-			common::buffer_printer::BufferPrinter bp;
+			buffer_printer::BufferPrinter bp;
 			const auto value = getValue(procName, handlerName, channelOpt.value(), ind);
 			bp.print(value);
 			resolveBufferString = bp.getBufferView();
@@ -613,7 +616,7 @@ void AudioParent::resolveProp(
 
 	context.filePrefix = filePrefix;
 
-	common::buffer_printer::BufferPrinter bp;
+	buffer_printer::BufferPrinter bp;
 	const bool found = propGetter(*handlerExternalData, propName, bp, context);
 	if (!found) {
 		logHelpers.propNotFound.log(handlerInfo->type, propName);

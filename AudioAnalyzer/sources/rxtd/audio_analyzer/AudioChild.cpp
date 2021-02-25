@@ -8,9 +8,9 @@
  */
 
 #include "AudioChild.h"
-#include "rxtd/option-parsing/OptionList.h"
+#include "rxtd/option_parsing/OptionList.h"
 
-using namespace rxtd::audio_analyzer;
+using rxtd::audio_analyzer::AudioChild;
 
 AudioChild::AudioChild(Rainmeter&& _rain) : MeasureBase(std::move(_rain)) {
 	const auto parentName = rain.read(L"Parent").asIString();

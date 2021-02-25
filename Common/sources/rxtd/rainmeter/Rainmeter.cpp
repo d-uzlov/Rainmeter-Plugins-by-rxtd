@@ -16,7 +16,7 @@
 
 #pragma comment(lib, "Rainmeter.lib")
 
-using namespace rxtd::common::rainmeter;
+using rxtd::rainmeter::Rainmeter;
 
 Rainmeter::Rainmeter(void* rm) :
 	dataHandle(rm), instanceKeeper(dataHandle) {
@@ -24,8 +24,8 @@ Rainmeter::Rainmeter(void* rm) :
 	measureName = RmGetMeasureName(rm);
 }
 
-rxtd::common::options::Option Rainmeter::read(sview optionName, bool replaceVariables) const {
-	auto result = options::Option{
+rxtd::option_parsing::Option Rainmeter::read(sview optionName, bool replaceVariables) const {
+	auto result = option_parsing::Option{
 		RmReadString(dataHandle.getRawHandle(), makeNullTerminated(optionName), L"", replaceVariables)
 	};
 	result.own();

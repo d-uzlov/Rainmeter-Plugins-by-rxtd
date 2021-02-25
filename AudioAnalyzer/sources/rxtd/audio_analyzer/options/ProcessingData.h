@@ -8,17 +8,17 @@
  */
 
 #pragma once
-#include "rxtd/audio_analyzer/audio-utils/filter-utils/FilterCascadeParser.h"
-#include "rxtd/audio_analyzer/sound-processing/Channel.h"
-#include "rxtd/audio_analyzer/sound-processing/sound-handlers/ExternalMethods.h"
+#include "rxtd/audio_analyzer/audio_utils/filter_utils/FilterCascadeParser.h"
+#include "rxtd/audio_analyzer/sound_processing/Channel.h"
+#include "rxtd/audio_analyzer/sound_processing/sound_handlers/ExternalMethods.h"
 
-namespace rxtd::audio_analyzer {
+namespace rxtd::audio_analyzer::options {
 	struct ProcessingData {
 		using Finisher = handler::ExternalMethods::FinishMethodType;
 
 		struct FilterInfo {
 			string raw;
-			audio_utils::FilterCascadeCreator creator;
+			audio_utils::filter_utils::FilterCascadeCreator creator;
 
 			friend bool operator==(const FilterInfo& lhs, const FilterInfo& rhs) {
 				return lhs.raw == rhs.raw;

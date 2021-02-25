@@ -9,7 +9,7 @@
 
 #pragma once
 
-namespace rxtd::utils {
+namespace rxtd {
 	//
 	// This class allows mass interpolation of integers without floating pointer arithmetic.
 	// For cases when integer to/from double conversion is too slow.

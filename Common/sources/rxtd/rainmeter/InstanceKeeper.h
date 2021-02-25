@@ -12,7 +12,7 @@
 #include "DataHandle.h"
 #include "SkinHandle.h"
 
-namespace rxtd::common::rainmeter {
+namespace rxtd::rainmeter {
 	//
 	// This class acts as a proxy for Rainmeter API functions RmLog and RmExecute
 	// 

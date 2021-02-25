@@ -14,8 +14,8 @@
 
 namespace rxtd {
 	class LocalPluginLoader : NonMovableBase {
-		common::rainmeter::Rainmeter rain;
-		common::rainmeter::Logger logger;
+		rainmeter::Rainmeter rain;
+		rainmeter::Logger logger;
 		HMODULE hLib = {};
 		void* pluginData = nullptr;
 

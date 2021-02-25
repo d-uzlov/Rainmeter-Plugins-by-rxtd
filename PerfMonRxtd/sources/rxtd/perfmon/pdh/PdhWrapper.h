@@ -13,7 +13,7 @@
 
 #include "PdhFormat.h"
 #include "PdhSnapshot.h"
-#include "rxtd/option-parsing/OptionList.h"
+#include "rxtd/option_parsing/OptionList.h"
 #include "rxtd/rainmeter/Logger.h"
 
 namespace rxtd::perfmon::pdh {
@@ -35,8 +35,8 @@ namespace rxtd::perfmon::pdh {
 	};
 
 	class PdhWrapper : MovableOnlyBase {
-		using Logger = common::rainmeter::Logger;
-		using OptionList = common::options::OptionList;
+		using Logger = rainmeter::Logger;
+		using OptionList = option_parsing::OptionList;
 		
 		struct QueryWrapper : MovableOnlyBase {
 			PDH_HQUERY handle = nullptr;

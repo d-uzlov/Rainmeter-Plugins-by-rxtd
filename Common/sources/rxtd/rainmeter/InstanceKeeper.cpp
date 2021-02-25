@@ -10,13 +10,12 @@
 #include "InstanceKeeper.h"
 
 #include <atomic>
+#include <chrono>
 #include <mutex>
 
-#include "rxtd/BufferPrinter.h"
-#include "rxtd/DataWithLock.h"
 #include "RainmeterAPI.h"
-
-#include <chrono>
+#include "rxtd/DataWithLock.h"
+#include "rxtd/buffer_printer/BufferPrinter.h"
 
 // 
 // How this works:
@@ -33,7 +32,8 @@
 // See InstanceKeeper.h for reasoning for this solution.
 // 
 
-using namespace rxtd::common::rainmeter;
+using rxtd::rainmeter::InstanceKeeper;
+using BufferPrinter = rxtd::buffer_printer::BufferPrinter;
 
 using Message = InstanceKeeper::Message;
 
@@ -220,7 +220,7 @@ void InstanceKeeper::initThread(void* rm) {
 	);
 	if (!handlerReadSuccess) {
 		const auto errorCode = GetLastError();
-		common::buffer_printer::BufferPrinter bp;
+		buffer_printer::BufferPrinter bp;
 		bp.print(L"Log and bangs are not available, GetModuleHandleExW failed (error {})", errorCode);
 		RmLog(rm, LOG_ERROR, bp.getBufferPtr());
 
@@ -262,7 +262,7 @@ void InstanceKeeper::initThread(void* rm) {
 
 	if (threadHandle == nullptr) {
 		const auto errorCode = GetLastError();
-		buffer_printer::BufferPrinter bp;
+		BufferPrinter bp;
 		bp.print(L"Log and bangs are not available, CreateThread failed (error {})", errorCode);
 		RmLog(rm, LOG_ERROR, bp.getBufferPtr());
 

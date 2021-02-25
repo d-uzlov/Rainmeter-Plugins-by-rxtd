@@ -13,8 +13,7 @@
 #include "rxtd/perfmon/expressions/RollupExpressionResolver.h"
 #include "rxtd/perfmon/expressions/SimpleExpressionSolver.h"
 
-using namespace rxtd::perfmon;
-
+using rxtd::perfmon::RollupInstanceManager;
 
 void RollupInstanceManager::update() {
 	instancesRolledUp.clear();

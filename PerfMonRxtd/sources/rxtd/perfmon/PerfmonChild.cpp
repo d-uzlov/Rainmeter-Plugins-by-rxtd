@@ -10,7 +10,8 @@
 
 #include "PerfmonChild.h"
 
-using namespace rxtd::perfmon;
+using rxtd::perfmon::PerfmonChild;
+using rxtd::std_fixes::StringUtils;
 
 PerfmonChild::PerfmonChild(Rainmeter&& _rain) : MeasureBase(std::move(_rain)) {
 	auto parentName = rain.read(L"Parent").asIString();
@@ -36,7 +37,7 @@ void PerfmonChild::vReload() {
 
 	instanceName = rain.read(L"InstanceName").asString();
 	if (!ref.useOrigName) {
-		utils::StringUtils::makeUppercaseInPlace(instanceName);
+		StringUtils::makeUppercaseInPlace(instanceName);
 	}
 	ref.namePattern = MatchPattern{ instanceName };
 

@@ -1,7 +1,7 @@
 #pragma once
 #include "LinearInterpolator.h"
 
-namespace rxtd::utils {
+namespace rxtd {
 	//
 	// Handy little class like LinearInterpolator but for discreet values.
 	// Main purpose is to sample array indices, so in clamps its values to [min, max] range.

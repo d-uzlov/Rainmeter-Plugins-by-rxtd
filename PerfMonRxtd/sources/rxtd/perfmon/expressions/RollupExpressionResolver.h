@@ -12,7 +12,7 @@
 
 #include "CacheHelper.h"
 #include "SimpleExpressionSolver.h"
-#include "rxtd/expressions/ASTSolver.h"
+#include "rxtd/expression_parser/ASTSolver.h"
 #include "rxtd/perfmon/ExpressionParser.h"
 #include "rxtd/perfmon/Reference.h"
 #include "rxtd/perfmon/instances/RollupInstanceManager.h"
@@ -20,9 +20,9 @@
 
 namespace rxtd::perfmon::expressions {
 	class RollupExpressionResolver {
-		using Logger = common::rainmeter::Logger;
-		using OptionList = common::options::OptionList;
-		using ASTSolver = common::expressions::ASTSolver;
+		using Logger = rainmeter::Logger;
+		using OptionList = option_parsing::OptionList;
+		using ASTSolver = expression_parser::ASTSolver;
 		using Indices = SimpleInstanceManager::Indices;
 		using RollupInstanceInfo = RollupInstanceManager::RollupInstanceInfo;
 

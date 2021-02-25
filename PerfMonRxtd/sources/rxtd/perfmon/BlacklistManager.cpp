@@ -9,17 +9,19 @@
 
 #include "BlacklistManager.h"
 
-#include "rxtd/option-parsing/Tokenizer.h"
+#include "rxtd/option_parsing/Tokenizer.h"
 
-using namespace rxtd::perfmon;
+using rxtd::perfmon::BlacklistManager;
+using rxtd::std_fixes::StringUtils;
+using rxtd::option_parsing::Tokenizer;
 
 BlacklistManager::MatchList::MatchList(string sourceString, bool upperCase) {
 	source = std::move(sourceString);
 	if (upperCase) {
-		utils::StringUtils::makeUppercaseInPlace(source);
+		StringUtils::makeUppercaseInPlace(source);
 	}
 
-	auto tokens = common::options::Tokenizer::parse(source, L'|');
+	auto tokens = Tokenizer::parse(source, L'|');
 
 	list.reserve(tokens.size());
 

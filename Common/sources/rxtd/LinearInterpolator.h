@@ -9,7 +9,7 @@
 
 #pragma once
 
-namespace rxtd::utils {
+namespace rxtd {
 	//
 	// Neat little class to avoid writing linear interpolation by hand again and again.
 	// It is definitely inferior to std::lerp in terms of edge cases

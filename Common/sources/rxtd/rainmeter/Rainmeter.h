@@ -12,9 +12,9 @@
 #include "InstanceKeeper.h"
 #include "Logger.h"
 #include "SkinHandle.h"
-#include "rxtd/option-parsing/Option.h"
+#include "rxtd/option_parsing/Option.h"
 
-namespace rxtd::common::rainmeter {
+namespace rxtd::rainmeter {
 	class Rainmeter {
 		DataHandle dataHandle{};
 		SkinHandle skin{};
@@ -30,7 +30,7 @@ namespace rxtd::common::rainmeter {
 
 		// Read named option from description linked to "void* rm" pointer from ctor
 		[[nodiscard]]
-		options::Option read(sview optionName, bool replaceVariables = true) const;
+		option_parsing::Option read(sview optionName, bool replaceVariables = true) const;
 
 		// Replaces Rainmeter variables with its values
 		// See https://docs.rainmeter.net/developers/plugin/cpp/api/#ReplaceVariables

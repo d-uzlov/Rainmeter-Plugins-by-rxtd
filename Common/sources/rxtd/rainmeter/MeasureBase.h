@@ -23,8 +23,8 @@ namespace rxtd::utils {
 	//
 	class MeasureBase : NonMovableBase, VirtualDestructorBase {
 	protected:
-		using Rainmeter = common::rainmeter::Rainmeter;
-		using Logger = common::rainmeter::Logger;
+		using Rainmeter = rainmeter::Rainmeter;
+		using Logger = rainmeter::Logger;
 
 		Rainmeter rain;
 		Logger logger;
@@ -80,7 +80,7 @@ namespace rxtd::utils {
 	};
 
 	class ParentMeasureBase : public MeasureBase {
-		using SkinHandle = common::rainmeter::SkinHandle;
+		using SkinHandle = rainmeter::SkinHandle;
 		using ParentMeasureName = istring;
 		using SkinMap = std::map<ParentMeasureName, ParentMeasureBase*, std::less<>>;
 		static std::map<SkinHandle, SkinMap> globalMeasuresMap;

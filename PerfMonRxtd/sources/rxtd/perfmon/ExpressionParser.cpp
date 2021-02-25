@@ -12,13 +12,14 @@
 
 #include "MatchPattern.h"
 #include "Reference.h"
-#include "rxtd/StringUtils.h"
-#include "rxtd/expressions/GrammarBuilder.h"
+#include "rxtd/std_fixes/StringUtils.h"
+#include "rxtd/expression_parser/GrammarBuilder.h"
 
-using namespace rxtd::perfmon;
+using rxtd::perfmon::ExpressionParser;
+using StringUtils = rxtd::std_fixes::StringUtils;
 
 ExpressionParser::ExpressionParser() {
-	setGrammar(common::expressions::GrammarBuilder::makeSimpleMath(), false);
+	setGrammar(expression_parser::GrammarBuilder::makeSimpleMath(), false);
 }
 
 std::optional<ExpressionParser::IndexType> ExpressionParser::parseCustom() {
@@ -52,7 +53,7 @@ std::optional<ExpressionParser::IndexType> ExpressionParser::parseCustom() {
 			throwException(L"Expected number but something else was found");
 		}
 
-		ref.counter = utils::StringUtils::parseInt(next.value);
+		ref.counter = StringUtils::parseInt(next.value);
 		skipToken(additionalSymbols);
 	}
 
@@ -80,7 +81,7 @@ std::optional<ExpressionParser::IndexType> ExpressionParser::parseCustom() {
 				description.remove_prefix(indexOfFirstNonFlag);
 			}
 
-			description = utils::StringUtils::trim(description);
+			description = StringUtils::trim(description);
 
 			ref.namePattern = MatchPattern{ description };
 		}
@@ -112,5 +113,5 @@ std::optional<ExpressionParser::IndexType> ExpressionParser::parseCustom() {
 		skipToken();
 	}
 
-	return tree.allocateNode<common::expressions::ast_nodes::CustomTerminalNode>(ref);
+	return tree.allocateNode<expression_parser::ast_nodes::CustomTerminalNode>(ref);
 }

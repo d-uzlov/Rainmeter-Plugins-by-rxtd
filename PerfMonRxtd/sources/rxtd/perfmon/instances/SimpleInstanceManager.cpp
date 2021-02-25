@@ -13,7 +13,7 @@
 #include "rxtd/perfmon/expressions/RollupExpressionResolver.h"
 #include "rxtd/perfmon/expressions/SimpleExpressionSolver.h"
 
-using namespace rxtd::perfmon;
+using rxtd::perfmon::SimpleInstanceManager;
 
 SimpleInstanceManager::SimpleInstanceManager(Logger log, const pdh::PdhWrapper& phWrapper) :
 	log(std::move(log)), pdhWrapper(phWrapper) { }

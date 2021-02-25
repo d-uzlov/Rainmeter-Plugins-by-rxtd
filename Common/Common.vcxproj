@@ -41,73 +41,78 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
-    <ClCompile Include="sources\rxtd\expressions\ASTParser.cpp" />
-    <ClCompile Include="sources\rxtd\expressions\ASTSolver.cpp" />
-    <ClCompile Include="sources\rxtd\expressions\GrammarBuilder.cpp" />
-    <ClCompile Include="sources\rxtd\expressions\Lexer.cpp" />
-    <ClCompile Include="sources\rxtd\MyMath.cpp" />
-    <ClCompile Include="sources\rxtd\option-parsing\Option.cpp" />
-    <ClCompile Include="sources\rxtd\option-parsing\OptionMap.cpp" />
-    <ClCompile Include="sources\rxtd\option-parsing\Tokenizer.cpp" />
+    <ClCompile Include="sources\rxtd\expression_parser\ASTParser.cpp" />
+    <ClCompile Include="sources\rxtd\expression_parser\ASTSolver.cpp" />
+    <ClCompile Include="sources\rxtd\expression_parser\GrammarBuilder.cpp" />
+    <ClCompile Include="sources\rxtd\expression_parser\Lexer.cpp" />
+    <ClCompile Include="sources\rxtd\option_parsing\Option.cpp" />
+    <ClCompile Include="sources\rxtd\option_parsing\OptionMap.cpp" />
+    <ClCompile Include="sources\rxtd\option_parsing\Tokenizer.cpp" />
     <ClCompile Include="sources\rxtd\rainmeter\InstanceKeeper.cpp" />
     <ClCompile Include="sources\rxtd\rainmeter\MeasureBase.cpp" />
     <ClCompile Include="sources\rxtd\rainmeter\Rainmeter.cpp" />
-    <ClCompile Include="sources\rxtd\StringUtils.cpp" />
+    <ClCompile Include="sources\rxtd\std_fixes\CaseInsensitiveString.cpp" />
+    <ClCompile Include="sources\rxtd\std_fixes\MathBitTwiddling.cpp" />
     <ClCompile Include="sources\precompiled.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="sources\rxtd\winapi-wrappers\WinApiReturnCode.cpp" />
+    <ClCompile Include="sources\rxtd\std_fixes\MyMath.cpp" />
+    <ClCompile Include="sources\rxtd\std_fixes\StringUtils.cpp" />
+    <ClCompile Include="sources\rxtd\std_fixes\string_conversion.cpp" />
+    <ClCompile Include="sources\rxtd\winapi_wrappers\WinApiReturnCode.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sources\my-windows.h" />
     <ClInclude Include="sources\precompiled.h" />
-    <ClInclude Include="sources\rxtd\array_view.h" />
-    <ClInclude Include="sources\rxtd\BufferPrinter.h" />
-    <ClInclude Include="sources\rxtd\CaseInsensitiveString.h" />
+    <ClInclude Include="sources\rxtd\buffer_printer\BufferPrinter.h" />
+    <ClInclude Include="sources\rxtd\buffer_printer\ReadableStreamBuffer.h" />
     <ClInclude Include="sources\rxtd\DataWithLock.h" />
     <ClInclude Include="sources\rxtd\DiscreetInterpolator.h" />
-    <ClInclude Include="sources\rxtd\expressions\ASTParser.h" />
-    <ClInclude Include="sources\rxtd\expressions\ASTSolver.h" />
-    <ClInclude Include="sources\rxtd\expressions\GenericNode.h" />
-    <ClInclude Include="sources\rxtd\expressions\GrammarBuilder.h" />
-    <ClInclude Include="sources\rxtd\expressions\GrammarDescription.h" />
-    <ClInclude Include="sources\rxtd\expressions\Lexer.h" />
-    <ClInclude Include="sources\rxtd\expressions\OperatorNodes.h" />
-    <ClInclude Include="sources\rxtd\expressions\SyntaxTree.h" />
+    <ClInclude Include="sources\rxtd\expression_parser\ASTParser.h" />
+    <ClInclude Include="sources\rxtd\expression_parser\ASTSolver.h" />
+    <ClInclude Include="sources\rxtd\expression_parser\GenericNode.h" />
+    <ClInclude Include="sources\rxtd\expression_parser\GrammarBuilder.h" />
+    <ClInclude Include="sources\rxtd\expression_parser\GrammarDescription.h" />
+    <ClInclude Include="sources\rxtd\expression_parser\Lexer.h" />
+    <ClInclude Include="sources\rxtd\expression_parser\OperatorNodes.h" />
+    <ClInclude Include="sources\rxtd\expression_parser\SyntaxTree.h" />
     <ClInclude Include="sources\rxtd\GenericBaseClasses.h" />
     <ClInclude Include="sources\rxtd\GrowingVector.h" />
     <ClInclude Include="sources\rxtd\IntMixer.h" />
     <ClInclude Include="sources\rxtd\LinearInterpolator.h" />
-    <ClInclude Include="sources\rxtd\MapUtils.h" />
-    <ClInclude Include="sources\rxtd\MyMath.h" />
-    <ClInclude Include="sources\rxtd\option-parsing\Option.h" />
-    <ClInclude Include="sources\rxtd\option-parsing\OptionBase.h" />
-    <ClInclude Include="sources\rxtd\option-parsing\OptionList.h" />
-    <ClInclude Include="sources\rxtd\option-parsing\OptionMap.h" />
-    <ClInclude Include="sources\rxtd\option-parsing\OptionSequence.h" />
-    <ClInclude Include="sources\rxtd\option-parsing\Tokenizer.h" />
+    <ClInclude Include="sources\rxtd\option_parsing\Option.h" />
+    <ClInclude Include="sources\rxtd\option_parsing\OptionBase.h" />
+    <ClInclude Include="sources\rxtd\option_parsing\OptionList.h" />
+    <ClInclude Include="sources\rxtd\option_parsing\OptionMap.h" />
+    <ClInclude Include="sources\rxtd\option_parsing\OptionSequence.h" />
+    <ClInclude Include="sources\rxtd\option_parsing\Tokenizer.h" />
     <ClInclude Include="sources\rxtd\rainmeter\DataHandle.h" />
     <ClInclude Include="sources\rxtd\rainmeter\InstanceKeeper.h" />
     <ClInclude Include="sources\rxtd\rainmeter\Logger.h" />
     <ClInclude Include="sources\rxtd\rainmeter\MeasureBase.h" />
     <ClInclude Include="sources\rxtd\rainmeter\Rainmeter.h" />
     <ClInclude Include="sources\rxtd\rainmeter\SkinHandle.h" />
-    <ClInclude Include="sources\rxtd\ReadableStreamBuffer.h" />
-    <ClInclude Include="sources\rxtd\StringUtils.h" />
-    <ClInclude Include="sources\rxtd\Vector2D.h" />
-    <ClInclude Include="sources\rxtd\winapi-wrappers\ComException.h" />
-    <ClInclude Include="sources\rxtd\winapi-wrappers\GenericComWrapper.h" />
-    <ClInclude Include="sources\rxtd\winapi-wrappers\GenericCoTaskMemWrapper.h" />
-    <ClInclude Include="sources\rxtd\winapi-wrappers\implementations\IUnknownImpl.h" />
-    <ClInclude Include="sources\rxtd\winapi-wrappers\PropertyStoreWrapper.h" />
-    <ClInclude Include="sources\rxtd\winapi-wrappers\WinApiReturnCode.h" />
+    <ClInclude Include="sources\rxtd\std_fixes\array_view.h" />
+    <ClInclude Include="sources\rxtd\std_fixes\CaseInsensitiveString.h" />
+    <ClInclude Include="sources\rxtd\std_fixes\MapUtils.h" />
+    <ClInclude Include="sources\rxtd\std_fixes\MathBitTwiddling.h" />
+    <ClInclude Include="sources\rxtd\std_fixes\MyMath.h" />
+    <ClInclude Include="sources\rxtd\std_fixes\StringUtils.h" />
+    <ClInclude Include="sources\rxtd\std_fixes\string_conversion.h" />
+    <ClInclude Include="sources\rxtd\std_fixes\Vector2D.h" />
+    <ClInclude Include="sources\rxtd\winapi_wrappers\ComException.h" />
+    <ClInclude Include="sources\rxtd\winapi_wrappers\GenericComWrapper.h" />
+    <ClInclude Include="sources\rxtd\winapi_wrappers\GenericCoTaskMemWrapper.h" />
+    <ClInclude Include="sources\rxtd\winapi_wrappers\IUnknownImpl.h" />
+    <ClInclude Include="sources\rxtd\winapi_wrappers\PropertyStoreWrapper.h" />
+    <ClInclude Include="sources\rxtd\winapi_wrappers\WinApiReturnCode.h" />
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="array_view.natvis" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
-    <None Include="sources\rxtd\expressions\README.md" />
+    <None Include="sources\rxtd\expression_parser\README.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

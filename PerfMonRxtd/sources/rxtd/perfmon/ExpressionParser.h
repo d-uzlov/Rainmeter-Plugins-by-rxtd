@@ -8,12 +8,12 @@
  */
 
 #pragma once
-#include "rxtd/expressions/ASTParser.h"
+#include "rxtd/expression_parser/ASTParser.h"
 
 namespace rxtd::perfmon {
-	class ExpressionParser : public common::expressions::ASTParser {
-		using IndexType = common::expressions::ast_nodes::IndexType;
-		using Lexer = common::expressions::Lexer;
+	class ExpressionParser : public expression_parser::ASTParser {
+		using IndexType = expression_parser::ast_nodes::IndexType;
+		using Lexer = expression_parser::Lexer;
 
 	public:
 		ExpressionParser();

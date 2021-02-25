@@ -28,9 +28,22 @@ namespace rxtd {
 	using sview = std::wstring_view;
 }
 
-#include "rxtd/array_view.h"
-#include "rxtd/CaseInsensitiveString.h"
 #include "rxtd/GenericBaseClasses.h"
+#include "rxtd/std_fixes/array_view.h"
+#include "rxtd/std_fixes/CaseInsensitiveString.h"
+
+namespace rxtd {
+	using istring = std_fixes::istring;
+	using isview = std_fixes::isview;
+
+	using std_fixes::operator<<;
+}
+
+#include "rxtd/std_fixes/string_conversion.h"
+
+namespace rxtd {
+	using namespace std_fixes::string_conversion;
+}
 
 template<typename T>
 std::optional<T> parseEnum(rxtd::isview) {

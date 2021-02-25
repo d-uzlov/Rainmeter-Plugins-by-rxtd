@@ -11,17 +11,17 @@
 
 #include "rxtd/DataWithLock.h"
 #include "rxtd/rainmeter/Rainmeter.h"
-#include "sound-processing/ProcessingManager.h"
-#include "sound-processing/ProcessingOrchestrator.h"
-#include "sound-processing/device-management/CaptureManager.h"
-#include "wasapi-wrappers/implementations/MediaDeviceListNotificationClient.h"
+#include "sound_processing/ProcessingManager.h"
+#include "sound_processing/ProcessingOrchestrator.h"
+#include "sound_processing/device_management/CaptureManager.h"
+#include "wasapi_wrappers/implementations/MediaDeviceListNotificationClient.h"
 
 namespace rxtd::audio_analyzer {
 	class ParentHelper : MovableOnlyBase {
 	public:
-		using Rainmeter = common::rainmeter::Rainmeter;
-		using Logger = common::rainmeter::Logger;
-		using OptionMap = common::options::OptionMap;
+		using Rainmeter = rainmeter::Rainmeter;
+		using Logger = rainmeter::Logger;
+		using OptionMap = option_parsing::OptionMap;
 		using MediaDeviceType = wasapi_wrappers::MediaDeviceType;
 
 		struct SnapshotStruct {
@@ -76,7 +76,7 @@ namespace rxtd::audio_analyzer {
 		} constFields;
 
 		struct {
-			common::winapi_wrappers::GenericComWrapper<wasapi_wrappers::MediaDeviceListNotificationClient> notificationClient;
+			winapi_wrappers::GenericComWrapper<wasapi_wrappers::implementations::MediaDeviceListNotificationClient> notificationClient;
 		} threadSafeFields;
 
 		struct ThreadSleepFields : DataWithLock {
@@ -93,7 +93,7 @@ namespace rxtd::audio_analyzer {
 
 			struct {
 				CaptureManager::SourceDesc device;
-				ParamParser::ProcessingsInfoMap patches;
+				options::ParamParser::ProcessingsInfoMap patches;
 			} settings;
 
 			Callbacks callbacks;
@@ -106,7 +106,7 @@ namespace rxtd::audio_analyzer {
 			struct {
 				std::optional<Callbacks> callbacks;
 				std::optional<CaptureManager::SourceDesc> device;
-				std::optional<ParamParser::ProcessingsInfoMap> patches;
+				std::optional<options::ParamParser::ProcessingsInfoMap> patches;
 			} settings;
 
 			bool disconnect = false;
@@ -130,7 +130,7 @@ namespace rxtd::audio_analyzer {
 		void setParams(
 			std::optional<Callbacks> callbacks,
 			std::optional<CaptureManager::SourceDesc> device,
-			std::optional<ParamParser::ProcessingsInfoMap> patches
+			std::optional<options::ParamParser::ProcessingsInfoMap> patches
 		);
 
 		SnapshotStruct& getSnapshot() {

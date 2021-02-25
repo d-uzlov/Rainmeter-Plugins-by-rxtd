@@ -9,11 +9,11 @@
 
 #pragma once
 
-#include "rxtd/BufferPrinter.h"
 #include "DataHandle.h"
 #include "InstanceKeeper.h"
+#include "rxtd/buffer_printer/BufferPrinter.h"
 
-namespace rxtd::common::rainmeter {
+namespace rxtd::rainmeter {
 	//
 	// Basic wrapper over Rainmeter logging functions.
 	// Supports formatting using BufferPrinter.
@@ -35,7 +35,8 @@ namespace rxtd::common::rainmeter {
 			eDEBUG = 4
 		};
 
-		mutable buffer_printer::BufferPrinter printer;
+		using BufferPrinter = buffer_printer::BufferPrinter;
+		mutable BufferPrinter printer;
 
 	public:
 		Logger() = default;

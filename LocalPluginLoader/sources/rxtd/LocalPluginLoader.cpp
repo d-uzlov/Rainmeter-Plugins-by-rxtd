@@ -8,12 +8,13 @@
  */
 
 #include "LocalPluginLoader.h"
-#include "rxtd/StringUtils.h"
+#include "rxtd/std_fixes/StringUtils.h"
 
 using rxtd::LocalPluginLoader;
+using rxtd::std_fixes::StringUtils;
 
 LocalPluginLoader::LocalPluginLoader(void* rm) {
-	rain = common::rainmeter::Rainmeter{ rm };
+	rain = rainmeter::Rainmeter{ rm };
 	logger = rain.createLogger();
 
 	string pluginPath = rain.transformPathToAbsolute(rain.read(L"PluginPath").asString()) % own();
@@ -133,7 +134,7 @@ const wchar_t* LocalPluginLoader::solveSectionVariable(const int count, const wc
 		return nullptr;
 	}
 
-	const auto funcName = utils::StringUtils::trim(args[0]) % own();
+	const auto funcName = StringUtils::trim(args[0]) % own();
 	// Prevent calling known API functions
 	if (funcName == L"Initialize" ||
 		funcName == L"Reload" ||

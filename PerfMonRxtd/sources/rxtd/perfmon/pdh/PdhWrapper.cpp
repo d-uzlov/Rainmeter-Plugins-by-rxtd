@@ -12,11 +12,11 @@
 
 #include <PdhMsg.h>
 
-#include "rxtd/option-parsing/OptionList.h"
+#include "rxtd/option_parsing/OptionList.h"
 
 #pragma comment(lib, "pdh.lib")
 
-using namespace rxtd::perfmon::pdh;
+using rxtd::perfmon::pdh::PdhWrapper;
 
 bool PdhWrapper::init(Logger logger) {
 	log = std::move(logger);
@@ -92,7 +92,7 @@ PDH_HCOUNTER PdhWrapper::addCounter(sview objectName, sview counterName) {
 	//   counterPath = L"\\System(*)\Processes" returns a single instance with an instance name of "*"
 	//   counterPath = L"\\System\Processes"    returns a single instance with an instance name of ""
 
-	common::buffer_printer::BufferPrinter bp;
+	buffer_printer::BufferPrinter bp;
 	bp.print(L"\\{}(*)\\{}", objectName, counterName);
 
 	PDH_HCOUNTER counterHandle{};

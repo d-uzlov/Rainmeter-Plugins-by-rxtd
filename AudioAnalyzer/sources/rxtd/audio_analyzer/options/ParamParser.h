@@ -12,14 +12,14 @@
 #include "ProcessingData.h"
 #include "rxtd/rainmeter/Logger.h"
 #include "rxtd/rainmeter/Rainmeter.h"
-#include "rxtd/audio_analyzer/sound-processing/Channel.h"
+#include "rxtd/audio_analyzer/sound_processing/Channel.h"
 
-namespace rxtd::audio_analyzer {
+namespace rxtd::audio_analyzer::options {
 	class ParamParser {
-		using Logger = common::rainmeter::Logger;
-		using Rainmeter = common::rainmeter::Rainmeter;
-		using OptionMap = common::options::OptionMap;
-		using OptionList = common::options::OptionList;
+		using Logger = rainmeter::Logger;
+		using Rainmeter = rainmeter::Rainmeter;
+		using OptionMap = option_parsing::OptionMap;
+		using OptionList = option_parsing::OptionList;
 
 	public:
 		using ProcessingsInfoMap = std::map<istring, ProcessingData, std::less<>>;

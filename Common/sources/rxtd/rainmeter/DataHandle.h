@@ -9,7 +9,7 @@
 
 #pragma once
 
-namespace rxtd::common::rainmeter {
+namespace rxtd::rainmeter {
 	/**
 	 * Wrapper over a rainmeter data handler.
 	 * Used for type safety only.

@@ -9,7 +9,7 @@
 
 #include "ParentHelper.h"
 
-using namespace rxtd::audio_analyzer;
+using rxtd::audio_analyzer::ParentHelper;
 
 ParentHelper::~ParentHelper() {
 	threadSafeFields.notificationClient.ref().deinit(enumeratorWrapper);
@@ -38,7 +38,7 @@ void ParentHelper::init(
 
 	threadSafeFields.notificationClient = {
 		[](auto ptr) {
-			*ptr = wasapi_wrappers::MediaDeviceListNotificationClient::create();
+			*ptr = wasapi_wrappers::implementations::MediaDeviceListNotificationClient::create();
 			return true;
 		}
 	};
@@ -98,7 +98,7 @@ void ParentHelper::setInvalid() {
 void ParentHelper::setParams(
 	std::optional<Callbacks> callbacks,
 	std::optional<CaptureManager::SourceDesc> device,
-	std::optional<ParamParser::ProcessingsInfoMap> patches
+	std::optional<options::ParamParser::ProcessingsInfoMap> patches
 ) {
 	auto requestLock = requestFields.getLock();
 
@@ -225,7 +225,7 @@ void ParentHelper::pUpdate() {
 	const auto changes = threadSafeFields.notificationClient.ref().takeChanges();
 
 	if (!mainFields.disconnected) {
-		using DDC = wasapi_wrappers::MediaDeviceListNotificationClient::DefaultDeviceChange;
+		using DDC = wasapi_wrappers::implementations::MediaDeviceListNotificationClient::DefaultDeviceChange;
 		using ST = CaptureManager::SourceDesc::Type;
 		DDC defaultDeviceChange{};
 		switch (mainFields.settings.device.type) {
@@ -411,7 +411,7 @@ rxtd::string ParentHelper::makeDeviceListString(MediaDeviceType type) {
 		return result;
 	}
 
-	common::buffer_printer::BufferPrinter bp;
+	buffer_printer::BufferPrinter bp;
 	auto append = [&](sview str, bool semicolon = true) {
 		if (str.empty()) {
 			bp.append(L"<unknown>");
@@ -444,7 +444,7 @@ rxtd::string ParentHelper::makeDeviceListString(MediaDeviceType type) {
 			}
 
 			return;
-		} catch (wasapi_wrappers::FormatException&) { } catch (common::winapi_wrappers::ComException&) { }
+		} catch (wasapi_wrappers::FormatException&) { } catch (winapi_wrappers::ComException&) { }
 
 		append({});
 		append({});
@@ -459,7 +459,7 @@ rxtd::string ParentHelper::makeDeviceListString(MediaDeviceType type) {
 			append(deviceInfo.name);
 			append(deviceInfo.desc);
 			append(deviceInfo.formFactor);
-		} catch (common::winapi_wrappers::ComException&) {
+		} catch (winapi_wrappers::ComException&) {
 			append({});
 			append({});
 			append({});

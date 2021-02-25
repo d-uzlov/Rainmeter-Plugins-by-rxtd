@@ -11,11 +11,12 @@
 
 #include <unordered_map>
 
-#include "rxtd/StringUtils.h"
-
-using namespace rxtd::perfmon::pdh;
+#include "rxtd/std_fixes/StringUtils.h"
 
 using namespace std::string_view_literals;
+
+using rxtd::perfmon::pdh::NamesManager;
+using rxtd::std_fixes::StringUtils;
 
 void NamesManager::createModifiedNames(const PdhSnapshot& snapshot, const PdhSnapshot& processIdSnapshot, array_span<UniqueInstanceId> ids) {
 	names.resize(snapshot.getItemsCount());
@@ -147,7 +148,7 @@ void NamesManager::modifyNameLogicalDiskDriveLetter() {
 
 		if (item.originalName[1] == L':') {
 			item.displayName = item.originalName.substr(0, 2);
-		} else if (utils::StringUtils::checkStartsWith(item.originalName, L"HarddiskVolume"sv)) {
+		} else if (StringUtils::checkStartsWith(item.originalName, L"HarddiskVolume"sv)) {
 			item.displayName = L"HarddiskVolume"sv;
 		}
 	}
@@ -167,7 +168,7 @@ void NamesManager::modifyNameLogicalDiskMountPath() {
 			if (slashPosition != sview::npos) {
 				item.displayName = item.originalName.substr(0, slashPosition + 1);
 			}
-		} else if (utils::StringUtils::checkStartsWith(item.originalName, L"HarddiskVolume"sv)) {
+		} else if (StringUtils::checkStartsWith(item.originalName, L"HarddiskVolume"sv)) {
 			item.displayName = L"HarddiskVolume"sv;
 		}
 	}
@@ -191,7 +192,7 @@ void NamesManager::modifyNameGPUProcessName(const PdhSnapshot& idSnapshot) {
 			continue;
 		}
 
-		const auto pid = utils::StringUtils::parseInt(item.originalName.substr(pidPosition + 4));
+		const auto pid = StringUtils::parseInt(item.originalName.substr(pidPosition + 4));
 		const auto iter = pidToName.find(pid);
 		if (iter == pidToName.end()) {
 			continue;

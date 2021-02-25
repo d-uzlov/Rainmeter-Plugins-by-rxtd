@@ -8,9 +8,9 @@
  */
 
 #pragma once
-#include "rxtd/audio_analyzer/sound-processing/sound-handlers/HandlerBase.h"
+#include "rxtd/audio_analyzer/sound_processing/sound_handlers/HandlerBase.h"
 
-namespace rxtd::audio_analyzer {
+namespace rxtd::audio_analyzer::options {
 	struct HandlerInfo {
 		string rawDescription;
 		string rawDescription2;

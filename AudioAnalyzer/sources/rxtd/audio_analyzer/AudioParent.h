@@ -13,7 +13,7 @@
 #include "Version.h"
 #include "options/ParamParser.h"
 #include "rxtd/rainmeter/MeasureBase.h"
-#include "sound-processing/LogErrorHelper.h"
+#include "sound_processing/LogErrorHelper.h"
 
 namespace rxtd::audio_analyzer {
 	class AudioParent : public utils::ParentMeasureBase {
@@ -41,7 +41,7 @@ namespace rxtd::audio_analyzer {
 		mutable LogHelpers logHelpers;
 
 		Version version{};
-		ParamParser paramParser;
+		options::ParamParser paramParser;
 
 		DeviceRequest requestedSource;
 		ParentHelper::Callbacks callbacks;

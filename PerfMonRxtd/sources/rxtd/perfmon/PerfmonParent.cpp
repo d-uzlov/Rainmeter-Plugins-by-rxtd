@@ -9,9 +9,9 @@
  */
 
 #include "PerfmonParent.h"
-#include "rxtd/option-parsing/OptionList.h"
+#include "rxtd/option_parsing/OptionList.h"
 
-using namespace rxtd::perfmon;
+using rxtd::perfmon::PerfmonParent;
 
 PerfmonParent::PerfmonParent(Rainmeter&& _rain) : ParentMeasureBase(std::move(_rain)) {
 	setUseResultString(true);
@@ -227,7 +227,7 @@ void PerfmonParent::vCommand(isview bangArgs) {
 		stopped = !stopped;
 		return;
 	}
-	auto [name, value] = common::options::Option{ bangArgs }.breakFirst(L' ');
+	auto [name, value] = option_parsing::Option{ bangArgs }.breakFirst(L' ');
 	if (name.asIString() == L"SetIndexOffset") {
 		const index offset = value.asInt();
 		const auto firstSymbol = value.asString()[0];
@@ -280,7 +280,7 @@ double PerfmonParent::getValues(const Reference& ref, index sortedIndex, ResultS
 	return expressionResolver.resolveReference(ref, instance->indices);
 }
 
-SortInfo PerfmonParent::parseSortInfo() {
+rxtd::perfmon::SortInfo PerfmonParent::parseSortInfo() {
 	SortInfo result;
 
 	result.sortByValueInformation.sortIndex = rain.read(L"SortIndex").asInt();

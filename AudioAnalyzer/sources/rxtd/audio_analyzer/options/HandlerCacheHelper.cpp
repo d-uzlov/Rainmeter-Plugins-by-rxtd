@@ -9,24 +9,24 @@
 
 #include "HandlerCacheHelper.h"
 
-#include "rxtd/audio_analyzer/sound-processing/sound-handlers/basic-handlers//BlockHandler.h"
-#include "rxtd/audio_analyzer/sound-processing/sound-handlers/basic-handlers//Loudness.h"
-#include "rxtd/audio_analyzer/sound-processing/sound-handlers/basic-handlers//WaveForm.h"
+#include "rxtd/audio_analyzer/sound_processing/sound_handlers/basic-handlers//BlockHandler.h"
+#include "rxtd/audio_analyzer/sound_processing/sound_handlers/basic-handlers//Loudness.h"
+#include "rxtd/audio_analyzer/sound_processing/sound_handlers/basic-handlers//WaveForm.h"
 
-#include "rxtd/audio_analyzer/sound-processing/sound-handlers/spectrum-stack/BandCascadeTransformer.h"
-#include "rxtd/audio_analyzer/sound-processing/sound-handlers/spectrum-stack/BandResampler.h"
-#include "rxtd/audio_analyzer/sound-processing/sound-handlers/spectrum-stack/FftAnalyzer.h"
-#include "rxtd/audio_analyzer/sound-processing/sound-handlers/spectrum-stack/SingleValueTransformer.h"
-#include "rxtd/audio_analyzer/sound-processing/sound-handlers/spectrum-stack/Spectrogram.h"
-#include "rxtd/audio_analyzer/sound-processing/sound-handlers/spectrum-stack/TimeResampler.h"
-#include "rxtd/audio_analyzer/sound-processing/sound-handlers/spectrum-stack/UniformBlur.h"
+#include "rxtd/audio_analyzer/sound_processing/sound_handlers/spectrum-stack/BandCascadeTransformer.h"
+#include "rxtd/audio_analyzer/sound_processing/sound_handlers/spectrum-stack/BandResampler.h"
+#include "rxtd/audio_analyzer/sound_processing/sound_handlers/spectrum-stack/FftAnalyzer.h"
+#include "rxtd/audio_analyzer/sound_processing/sound_handlers/spectrum-stack/SingleValueTransformer.h"
+#include "rxtd/audio_analyzer/sound_processing/sound_handlers/spectrum-stack/Spectrogram.h"
+#include "rxtd/audio_analyzer/sound_processing/sound_handlers/spectrum-stack/TimeResampler.h"
+#include "rxtd/audio_analyzer/sound_processing/sound_handlers/spectrum-stack/UniformBlur.h"
 
-#include "rxtd/option-parsing/OptionMap.h"
+#include "rxtd/option_parsing/OptionMap.h"
 
 using namespace std::string_literals;
 
-using rxtd::audio_analyzer::HandlerCacheHelper;
-using rxtd::audio_analyzer::HandlerInfo;
+using rxtd::audio_analyzer::options::HandlerCacheHelper;
+using rxtd::audio_analyzer::options::HandlerInfo;
 using rxtd::audio_analyzer::handler::HandlerBase;
 
 HandlerInfo* HandlerCacheHelper::getHandlerInfo(const istring& name, Logger& cl) {

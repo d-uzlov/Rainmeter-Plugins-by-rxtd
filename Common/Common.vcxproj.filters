@@ -12,40 +12,28 @@
     <Filter Include="sources\rxtd">
       <UniqueIdentifier>{b1bfbb52-f84f-4f03-9e3e-2fc6f7f05324}</UniqueIdentifier>
     </Filter>
-    <Filter Include="sources\rxtd\option-parsing">
-      <UniqueIdentifier>{f56a22ca-0b8d-451f-8bdb-b5ebc4f1b7d7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="sources\rxtd\rainmeter">
       <UniqueIdentifier>{3bc16923-f776-413a-816b-d9a0ad095f0a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="sources\rxtd\winapi-wrappers">
-      <UniqueIdentifier>{cfe1b36f-90d4-4281-9bd6-dc9d34f62dfe}</UniqueIdentifier>
+    <Filter Include="sources\rxtd\std_fixes">
+      <UniqueIdentifier>{a6aa3799-8c24-417b-9c38-f6b8de426ed3}</UniqueIdentifier>
     </Filter>
-    <Filter Include="sources\rxtd\winapi-wrappers\implementations">
-      <UniqueIdentifier>{574a5653-cea6-48c5-831f-c229edf3cce4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="sources\rxtd\expressions">
+    <Filter Include="sources\rxtd\expression_parser">
       <UniqueIdentifier>{7a12fe6b-6e12-47e3-9070-733b1ddbcec2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sources\rxtd\option_parsing">
+      <UniqueIdentifier>{f56a22ca-0b8d-451f-8bdb-b5ebc4f1b7d7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sources\rxtd\buffer_printer">
+      <UniqueIdentifier>{2c8a77a3-9199-48ff-96e9-379923144dca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sources\rxtd\winapi_wrappers">
+      <UniqueIdentifier>{cfe1b36f-90d4-4281-9bd6-dc9d34f62dfe}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\precompiled.cpp">
       <Filter>sources</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\rxtd\MyMath.cpp">
-      <Filter>sources\rxtd</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\rxtd\StringUtils.cpp">
-      <Filter>sources\rxtd</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\rxtd\option-parsing\Option.cpp">
-      <Filter>sources\rxtd\option-parsing</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\rxtd\option-parsing\OptionMap.cpp">
-      <Filter>sources\rxtd\option-parsing</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\rxtd\option-parsing\Tokenizer.cpp">
-      <Filter>sources\rxtd\option-parsing</Filter>
     </ClCompile>
     <ClCompile Include="sources\rxtd\rainmeter\InstanceKeeper.cpp">
       <Filter>sources\rxtd\rainmeter</Filter>
@@ -56,34 +44,49 @@
     <ClCompile Include="sources\rxtd\rainmeter\Rainmeter.cpp">
       <Filter>sources\rxtd\rainmeter</Filter>
     </ClCompile>
-    <ClCompile Include="sources\rxtd\winapi-wrappers\WinApiReturnCode.cpp">
-      <Filter>sources\rxtd\winapi-wrappers</Filter>
+    <ClCompile Include="sources\rxtd\std_fixes\MathBitTwiddling.cpp">
+      <Filter>sources\rxtd\std_fixes</Filter>
     </ClCompile>
-    <ClCompile Include="sources\rxtd\expressions\ASTParser.cpp">
-      <Filter>sources\rxtd\expressions</Filter>
+    <ClCompile Include="sources\rxtd\std_fixes\MyMath.cpp">
+      <Filter>sources\rxtd\std_fixes</Filter>
     </ClCompile>
-    <ClCompile Include="sources\rxtd\expressions\ASTSolver.cpp">
-      <Filter>sources\rxtd\expressions</Filter>
+    <ClCompile Include="sources\rxtd\std_fixes\StringUtils.cpp">
+      <Filter>sources\rxtd\std_fixes</Filter>
     </ClCompile>
-    <ClCompile Include="sources\rxtd\expressions\GrammarBuilder.cpp">
-      <Filter>sources\rxtd\expressions</Filter>
+    <ClCompile Include="sources\rxtd\std_fixes\CaseInsensitiveString.cpp">
+      <Filter>sources\rxtd\std_fixes</Filter>
     </ClCompile>
-    <ClCompile Include="sources\rxtd\expressions\Lexer.cpp">
-      <Filter>sources\rxtd\expressions</Filter>
+    <ClCompile Include="sources\rxtd\std_fixes\string_conversion.cpp">
+      <Filter>sources\rxtd\std_fixes</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\option_parsing\Option.cpp">
+      <Filter>sources\rxtd\option_parsing</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\option_parsing\OptionMap.cpp">
+      <Filter>sources\rxtd\option_parsing</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\option_parsing\Tokenizer.cpp">
+      <Filter>sources\rxtd\option_parsing</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\expression_parser\ASTParser.cpp">
+      <Filter>sources\rxtd\expression_parser</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\expression_parser\ASTSolver.cpp">
+      <Filter>sources\rxtd\expression_parser</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\expression_parser\GrammarBuilder.cpp">
+      <Filter>sources\rxtd\expression_parser</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\expression_parser\Lexer.cpp">
+      <Filter>sources\rxtd\expression_parser</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\winapi_wrappers\WinApiReturnCode.cpp">
+      <Filter>sources\rxtd\winapi_wrappers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sources\precompiled.h">
       <Filter>sources</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\array_view.h">
-      <Filter>sources\rxtd</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\BufferPrinter.h">
-      <Filter>sources\rxtd</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\CaseInsensitiveString.h">
-      <Filter>sources\rxtd</Filter>
     </ClInclude>
     <ClInclude Include="sources\rxtd\DataWithLock.h">
       <Filter>sources\rxtd</Filter>
@@ -103,39 +106,6 @@
     <ClInclude Include="sources\rxtd\LinearInterpolator.h">
       <Filter>sources\rxtd</Filter>
     </ClInclude>
-    <ClInclude Include="sources\rxtd\MapUtils.h">
-      <Filter>sources\rxtd</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\MyMath.h">
-      <Filter>sources\rxtd</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\ReadableStreamBuffer.h">
-      <Filter>sources\rxtd</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\StringUtils.h">
-      <Filter>sources\rxtd</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\Vector2D.h">
-      <Filter>sources\rxtd</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\option-parsing\Option.h">
-      <Filter>sources\rxtd\option-parsing</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\option-parsing\OptionBase.h">
-      <Filter>sources\rxtd\option-parsing</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\option-parsing\OptionList.h">
-      <Filter>sources\rxtd\option-parsing</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\option-parsing\OptionMap.h">
-      <Filter>sources\rxtd\option-parsing</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\option-parsing\OptionSequence.h">
-      <Filter>sources\rxtd\option-parsing</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\option-parsing\Tokenizer.h">
-      <Filter>sources\rxtd\option-parsing</Filter>
-    </ClInclude>
     <ClInclude Include="sources\rxtd\rainmeter\InstanceKeeper.h">
       <Filter>sources\rxtd\rainmeter</Filter>
     </ClInclude>
@@ -154,50 +124,98 @@
     <ClInclude Include="sources\rxtd\rainmeter\SkinHandle.h">
       <Filter>sources\rxtd\rainmeter</Filter>
     </ClInclude>
-    <ClInclude Include="sources\rxtd\winapi-wrappers\ComException.h">
-      <Filter>sources\rxtd\winapi-wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\winapi-wrappers\GenericComWrapper.h">
-      <Filter>sources\rxtd\winapi-wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\winapi-wrappers\GenericCoTaskMemWrapper.h">
-      <Filter>sources\rxtd\winapi-wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\winapi-wrappers\PropertyStoreWrapper.h">
-      <Filter>sources\rxtd\winapi-wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\winapi-wrappers\WinApiReturnCode.h">
-      <Filter>sources\rxtd\winapi-wrappers</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\winapi-wrappers\implementations\IUnknownImpl.h">
-      <Filter>sources\rxtd\winapi-wrappers\implementations</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\expressions\ASTParser.h">
-      <Filter>sources\rxtd\expressions</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\expressions\ASTSolver.h">
-      <Filter>sources\rxtd\expressions</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\expressions\GenericNode.h">
-      <Filter>sources\rxtd\expressions</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\expressions\GrammarBuilder.h">
-      <Filter>sources\rxtd\expressions</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\expressions\GrammarDescription.h">
-      <Filter>sources\rxtd\expressions</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\expressions\Lexer.h">
-      <Filter>sources\rxtd\expressions</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\expressions\OperatorNodes.h">
-      <Filter>sources\rxtd\expressions</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\expressions\SyntaxTree.h">
-      <Filter>sources\rxtd\expressions</Filter>
-    </ClInclude>
     <ClInclude Include="sources\my-windows.h">
       <Filter>sources</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\std_fixes\array_view.h">
+      <Filter>sources\rxtd\std_fixes</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\std_fixes\Vector2D.h">
+      <Filter>sources\rxtd\std_fixes</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\std_fixes\MapUtils.h">
+      <Filter>sources\rxtd\std_fixes</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\std_fixes\MyMath.h">
+      <Filter>sources\rxtd\std_fixes</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\std_fixes\MathBitTwiddling.h">
+      <Filter>sources\rxtd\std_fixes</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\std_fixes\StringUtils.h">
+      <Filter>sources\rxtd\std_fixes</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\std_fixes\CaseInsensitiveString.h">
+      <Filter>sources\rxtd\std_fixes</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\std_fixes\string_conversion.h">
+      <Filter>sources\rxtd\std_fixes</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\option_parsing\Option.h">
+      <Filter>sources\rxtd\option_parsing</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\option_parsing\OptionBase.h">
+      <Filter>sources\rxtd\option_parsing</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\option_parsing\OptionList.h">
+      <Filter>sources\rxtd\option_parsing</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\option_parsing\OptionMap.h">
+      <Filter>sources\rxtd\option_parsing</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\option_parsing\OptionSequence.h">
+      <Filter>sources\rxtd\option_parsing</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\option_parsing\Tokenizer.h">
+      <Filter>sources\rxtd\option_parsing</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\expression_parser\ASTParser.h">
+      <Filter>sources\rxtd\expression_parser</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\expression_parser\ASTSolver.h">
+      <Filter>sources\rxtd\expression_parser</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\expression_parser\GenericNode.h">
+      <Filter>sources\rxtd\expression_parser</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\expression_parser\GrammarBuilder.h">
+      <Filter>sources\rxtd\expression_parser</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\expression_parser\GrammarDescription.h">
+      <Filter>sources\rxtd\expression_parser</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\expression_parser\Lexer.h">
+      <Filter>sources\rxtd\expression_parser</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\expression_parser\OperatorNodes.h">
+      <Filter>sources\rxtd\expression_parser</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\expression_parser\SyntaxTree.h">
+      <Filter>sources\rxtd\expression_parser</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\buffer_printer\BufferPrinter.h">
+      <Filter>sources\rxtd\buffer_printer</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\buffer_printer\ReadableStreamBuffer.h">
+      <Filter>sources\rxtd\buffer_printer</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\winapi_wrappers\ComException.h">
+      <Filter>sources\rxtd\winapi_wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\winapi_wrappers\GenericComWrapper.h">
+      <Filter>sources\rxtd\winapi_wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\winapi_wrappers\GenericCoTaskMemWrapper.h">
+      <Filter>sources\rxtd\winapi_wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\winapi_wrappers\PropertyStoreWrapper.h">
+      <Filter>sources\rxtd\winapi_wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\winapi_wrappers\WinApiReturnCode.h">
+      <Filter>sources\rxtd\winapi_wrappers</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\winapi_wrappers\IUnknownImpl.h">
+      <Filter>sources\rxtd\winapi_wrappers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -205,8 +223,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
-    <None Include="sources\rxtd\expressions\README.md">
-      <Filter>sources\rxtd\expressions</Filter>
+    <None Include="sources\rxtd\expression_parser\README.md">
+      <Filter>sources\rxtd\expression_parser</Filter>
     </None>
   </ItemGroup>
 </Project>

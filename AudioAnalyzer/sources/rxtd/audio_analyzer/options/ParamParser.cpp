@@ -9,12 +9,15 @@
 
 #include "ParamParser.h"
 
-#include "rxtd/option-parsing/OptionList.h"
-#include "rxtd/option-parsing/OptionMap.h"
+#include "rxtd/option_parsing/OptionList.h"
+#include "rxtd/option_parsing/OptionMap.h"
 
 using namespace std::string_literals;
 
-using namespace rxtd::audio_analyzer;
+using rxtd::audio_analyzer::options::ParamParser;
+using rxtd::audio_analyzer::options::ProcessingData;
+using rxtd::audio_analyzer::Channel;
+using rxtd::audio_analyzer::audio_utils::filter_utils::FilterCascadeParser;
 
 bool ParamParser::parse(Version _version, bool suppressLogger) {
 	anythingChanged = false;
@@ -151,8 +154,8 @@ void ParamParser::parseFilter(const OptionMap& optionMap, ProcessingData::Filter
 	}
 
 	if (filterType == L"like-a") {
-		fi.creator = audio_utils::FilterCascadeParser::parse(
-			common::options::Option{
+		fi.creator = FilterCascadeParser::parse(
+			option_parsing::Option{
 				L"bqHighPass[q 0.3, freq 200, forcedGain 3.58]  " // spaces in the ends of the strings are necessary
 				L"bwLowPass[order 5, freq 10000] "
 			}, filterLogger
@@ -161,8 +164,8 @@ void ParamParser::parseFilter(const OptionMap& optionMap, ProcessingData::Filter
 	}
 
 	if (filterType == L"like-d") {
-		fi.creator = audio_utils::FilterCascadeParser::parse(
-			common::options::Option{
+		fi.creator = FilterCascadeParser::parse(
+			option_parsing::Option{
 				L"bqHighPass[q 0.3, freq 200, forcedGain 3.65]  " // spaces in the ends of the strings are necessary
 				L"bqPeak[q 1.0, freq 6000, gain 5.28] "
 				L"bwLowPass[order 5, freq 10000] "
@@ -172,7 +175,7 @@ void ParamParser::parseFilter(const OptionMap& optionMap, ProcessingData::Filter
 	}
 
 	if (filterType == L"custom") {
-		fi.creator = audio_utils::FilterCascadeParser::parse(filterParams, filterLogger);
+		fi.creator = FilterCascadeParser::parse(filterParams, filterLogger);
 		return;
 	}
 

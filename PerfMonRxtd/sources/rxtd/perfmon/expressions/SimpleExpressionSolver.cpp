@@ -11,9 +11,9 @@
 
 
 #include "TotalUtilities.h"
-#include "rxtd/option-parsing/OptionList.h"
+#include "rxtd/option_parsing/OptionList.h"
 
-using namespace rxtd::perfmon::expressions;
+using rxtd::perfmon::expressions::SimpleExpressionSolver;
 
 SimpleExpressionSolver::SimpleExpressionSolver(Logger log, const SimpleInstanceManager& instanceManager) :
 	log(std::move(log)),
@@ -28,7 +28,7 @@ void SimpleExpressionSolver::resetCache() {
 }
 
 SimpleExpressionSolver::ASTSolver SimpleExpressionSolver::parseExpression(sview expressionString, sview loggerName, index loggerIndex) {
-	using common::expressions::ASTSolver;
+	using expression_parser::ASTSolver;
 
 	try {
 		parser.parse(expressionString);
@@ -37,12 +37,12 @@ SimpleExpressionSolver::ASTSolver SimpleExpressionSolver::parseExpression(sview 
 		solver.optimize(nullptr);
 
 		return solver;
-	} catch (common::expressions::Lexer::Exception& e) {
+	} catch (expression_parser::Lexer::Exception& e) {
 		log.error(
 			L"{} {} can't be parsed: unknown token here: '{}'",
 			loggerName, loggerIndex, expressionString.substr(e.getPosition())
 		);
-	} catch (common::expressions::ASTParser::Exception& e) {
+	} catch (expression_parser::ASTParser::Exception& e) {
 		log.error(
 			L"{} {} can't be parsed: {}, at position: '{}'",
 			loggerName, loggerIndex, e.getReason(), expressionString.substr(e.getPosition())
@@ -55,7 +55,7 @@ SimpleExpressionSolver::ASTSolver SimpleExpressionSolver::parseExpression(sview 
 void SimpleExpressionSolver::checkExpressionIndices() {
 	for (index i = 0; i < index(expressions.size()); ++i) {
 		try {
-			using CustomNode = common::expressions::ast_nodes::CustomTerminalNode;
+			using CustomNode = expression_parser::ast_nodes::CustomTerminalNode;
 
 			expressions[i].peekTree().visitNodes(
 				[&](const auto& node) {
