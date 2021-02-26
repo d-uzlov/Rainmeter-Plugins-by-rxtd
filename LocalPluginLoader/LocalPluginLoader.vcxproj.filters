@@ -17,9 +17,6 @@
     <ClCompile Include="sources\dllmain.cpp">
       <Filter>sources</Filter>
     </ClCompile>
-    <ClCompile Include="sources\precompiled.cpp">
-      <Filter>sources</Filter>
-    </ClCompile>
     <ClCompile Include="sources\rxtd\LocalPluginLoader.cpp">
       <Filter>sources\rxtd</Filter>
     </ClCompile>

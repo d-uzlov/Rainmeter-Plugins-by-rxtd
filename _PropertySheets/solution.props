@@ -3,17 +3,12 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <IncludePath>$(ProjectDir)/Sources;$(ProjectDir)/includes;$(SolutionDir)/Common/sources/;$(SolutionDir)/Common/resources/;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)/libs/$(Platform);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)sources;$(ProjectDir)external/includes;$(SolutionDir)Utils/StdLibExtension/sources/;$(SolutionDir)Common/sources/;$(SolutionDir)Common/includes/;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)external/libs-$(Platform)/;$(LibraryPath)</LibraryPath>
     <SourcePath>$(SourcePath)</SourcePath>
-    <OutDir>$(ProjectDir)/_Build/$(Platform)-$(Configuration)/</OutDir>
-    <IntDir>$(ProjectDir)/_Build/intermediate/$(Platform)-$(Configuration)/</IntDir>
+    <OutDir>$(ProjectDir)_Build/$(Platform)-$(Configuration)/</OutDir>
+    <IntDir>$(OutDir)intermediate/</IntDir>
   </PropertyGroup>
-  <ItemGroup>
-    <BuildMacro Include="test">
-      <Value>$(test)</Value>
-    </BuildMacro>
-  </ItemGroup>
   <ItemDefinitionGroup>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)/Common/resources/;</AdditionalIncludeDirectories>
@@ -29,12 +24,11 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <DisableSpecificWarnings>4100;4458</DisableSpecificWarnings>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PrecompiledHeaderFile>precompiled.h</PrecompiledHeaderFile>
-      <ForcedIncludeFiles>precompiled.h;</ForcedIncludeFiles>
+      <ProgramDataBaseFileName>$(IntDir)$(ProjectName)-vc$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ProgramDatabaseFile>$(OutDir)$(TargetName)-linked.pdb</ProgramDatabaseFile>
     </Link>
   </ItemDefinitionGroup>
 </Project>

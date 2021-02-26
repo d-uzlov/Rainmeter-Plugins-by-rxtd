@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <SharedPchDir>$(SolutionDir)Utils/StdLibExtension/_Build/$(Platform)-$(Configuration)/</SharedPchDir>
+    <SharedPch>$(SharedPchDir)StdLibExtension.pch</SharedPch>
+    <SharedPdb>$(SharedPchDir)intermediate/StdLibExtension-vc142.pdb</SharedPdb>
+    <SharedIdb>$(SharedPchDir)intermediate/StdLibExtension-vc142.idb</SharedIdb>
+  </PropertyGroup>
+  <ItemGroup>
+    <BuildMacro Include="SharedPchDir">
+      <Value>$(SharedPchDir)</Value>
+    </BuildMacro>
+    <BuildMacro Include="SharedPch">
+      <Value>$(SharedPch)</Value>
+    </BuildMacro>
+    <BuildMacro Include="SharedPdb">
+      <Value>$(SharedPdb)</Value>
+    </BuildMacro>
+    <BuildMacro Include="SharedIdb">
+      <Value>$(SharedIdb)</Value>
+    </BuildMacro>
+  </ItemGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>common_precompiled_header/precompiled.h</PrecompiledHeaderFile>
+      <ForcedIncludeFiles>common_precompiled_header/precompiled.h;</ForcedIncludeFiles>
+      <PrecompiledHeaderOutputFile>$(OutDir)\$(ProjectName).pch</PrecompiledHeaderOutputFile>
+    </ClCompile>
+  </ItemDefinitionGroup>
+</Project>

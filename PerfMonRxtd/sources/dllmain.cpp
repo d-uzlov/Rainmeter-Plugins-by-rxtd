@@ -7,7 +7,7 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include "my-windows.h"
+#include "rxtd/my-windows.h"
 #include "RainmeterAPI.h"
 #include "rxtd/perfmon/PerfmonChild.h"
 #include "rxtd/perfmon/PerfmonParent.h"

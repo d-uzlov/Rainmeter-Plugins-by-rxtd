@@ -5,6 +5,7 @@
     <ProjectGuid>{8817A113-76AD-4DF9-8AB8-CCC1D9CFDF09}</ProjectGuid>
     <RootNamespace>Common</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>Common</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <Import Label="ProjectConfigurations" Project="$(PropertySheetsDir)/project_configs.props" />
@@ -36,6 +37,8 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets">
     <Import Project="$(PropertySheetsDir)/solution.props" />
+    <Import Project="$(PropertySheetsDir)/pch.props" />
+    <Import Project="$(PropertySheetsDir)/pch_copy.props" />
     <Import Project="$(PropertySheetsDir)/platforms/$(Platform).props" />
     <Import Project="$(PropertySheetsDir)/configurations/$(Configuration).props" />
   </ImportGroup>
@@ -51,19 +54,9 @@
     <ClCompile Include="sources\rxtd\rainmeter\InstanceKeeper.cpp" />
     <ClCompile Include="sources\rxtd\rainmeter\MeasureBase.cpp" />
     <ClCompile Include="sources\rxtd\rainmeter\Rainmeter.cpp" />
-    <ClCompile Include="sources\rxtd\std_fixes\CaseInsensitiveString.cpp" />
-    <ClCompile Include="sources\rxtd\std_fixes\MathBitTwiddling.cpp" />
-    <ClCompile Include="sources\precompiled.cpp">
-      <PrecompiledHeader>Create</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="sources\rxtd\std_fixes\MyMath.cpp" />
-    <ClCompile Include="sources\rxtd\std_fixes\StringUtils.cpp" />
-    <ClCompile Include="sources\rxtd\std_fixes\string_conversion.cpp" />
     <ClCompile Include="sources\rxtd\winapi_wrappers\WinApiReturnCode.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="sources\my-windows.h" />
-    <ClInclude Include="sources\precompiled.h" />
     <ClInclude Include="sources\rxtd\buffer_printer\BufferPrinter.h" />
     <ClInclude Include="sources\rxtd\buffer_printer\ReadableStreamBuffer.h" />
     <ClInclude Include="sources\rxtd\DataWithLock.h" />
@@ -76,7 +69,6 @@
     <ClInclude Include="sources\rxtd\expression_parser\Lexer.h" />
     <ClInclude Include="sources\rxtd\expression_parser\OperatorNodes.h" />
     <ClInclude Include="sources\rxtd\expression_parser\SyntaxTree.h" />
-    <ClInclude Include="sources\rxtd\GenericBaseClasses.h" />
     <ClInclude Include="sources\rxtd\GrowingVector.h" />
     <ClInclude Include="sources\rxtd\IntMixer.h" />
     <ClInclude Include="sources\rxtd\LinearInterpolator.h" />
@@ -92,14 +84,6 @@
     <ClInclude Include="sources\rxtd\rainmeter\MeasureBase.h" />
     <ClInclude Include="sources\rxtd\rainmeter\Rainmeter.h" />
     <ClInclude Include="sources\rxtd\rainmeter\SkinHandle.h" />
-    <ClInclude Include="sources\rxtd\std_fixes\array_view.h" />
-    <ClInclude Include="sources\rxtd\std_fixes\CaseInsensitiveString.h" />
-    <ClInclude Include="sources\rxtd\std_fixes\MapUtils.h" />
-    <ClInclude Include="sources\rxtd\std_fixes\MathBitTwiddling.h" />
-    <ClInclude Include="sources\rxtd\std_fixes\MyMath.h" />
-    <ClInclude Include="sources\rxtd\std_fixes\StringUtils.h" />
-    <ClInclude Include="sources\rxtd\std_fixes\string_conversion.h" />
-    <ClInclude Include="sources\rxtd\std_fixes\Vector2D.h" />
     <ClInclude Include="sources\rxtd\winapi_wrappers\ComException.h" />
     <ClInclude Include="sources\rxtd\winapi_wrappers\GenericComWrapper.h" />
     <ClInclude Include="sources\rxtd\winapi_wrappers\GenericCoTaskMemWrapper.h" />
@@ -113,6 +97,11 @@
   <ItemGroup>
     <None Include="README.md" />
     <None Include="sources\rxtd\expression_parser\README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Utils\StdLibExtension\StdLibExtension.vcxproj">
+      <Project>{76a3d6d3-45e8-4391-8b94-2477afe23596}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

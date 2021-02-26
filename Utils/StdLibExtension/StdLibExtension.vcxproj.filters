@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="sources">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="sources\rxtd">
+      <UniqueIdentifier>{02d4694d-76af-4a30-9a6c-ee5b928f2031}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sources\rxtd\std_fixes">
+      <UniqueIdentifier>{a1aaaa1c-fed2-42fe-988e-a14c2ed5d6f3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sources\common_precompiled_header">
+      <UniqueIdentifier>{25ffe83c-1246-424e-80bf-01e594b0931e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="sources\rxtd\std_fixes\MathBitTwiddling.cpp">
+      <Filter>sources\rxtd\std_fixes</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\std_fixes\MyMath.cpp">
+      <Filter>sources\rxtd\std_fixes</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\std_fixes\StringUtils.cpp">
+      <Filter>sources\rxtd\std_fixes</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\std_fixes\string_conversion.cpp">
+      <Filter>sources\rxtd\std_fixes</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\common_precompiled_header\precompiled.cpp">
+      <Filter>sources\common_precompiled_header</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\std_fixes\case_insensitive_string.cpp">
+      <Filter>sources\rxtd\std_fixes</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="sources\rxtd\std_fixes\array_view.h">
+      <Filter>sources\rxtd\std_fixes</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\std_fixes\MapUtils.h">
+      <Filter>sources\rxtd\std_fixes</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\std_fixes\MathBitTwiddling.h">
+      <Filter>sources\rxtd\std_fixes</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\std_fixes\MyMath.h">
+      <Filter>sources\rxtd\std_fixes</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\std_fixes\StringUtils.h">
+      <Filter>sources\rxtd\std_fixes</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\std_fixes\string_conversion.h">
+      <Filter>sources\rxtd\std_fixes</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\std_fixes\Vector2D.h">
+      <Filter>sources\rxtd\std_fixes</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\common_precompiled_header\precompiled.h">
+      <Filter>sources\common_precompiled_header</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\std_fixes\case_insensitive_string.h">
+      <Filter>sources\rxtd\std_fixes</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\my-windows.h">
+      <Filter>sources\rxtd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\GenericBaseClasses.h">
+      <Filter>sources\rxtd</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

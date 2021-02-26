@@ -36,6 +36,8 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets">
     <Import Project="$(PropertySheetsDir)/solution.props" />
+    <Import Project="$(PropertySheetsDir)/pch.props" />
+    <Import Project="$(PropertySheetsDir)/pch_copy.props" />
     <Import Project="$(PropertySheetsDir)/rainmeter_plugin.props" />
     <Import Project="$(PropertySheetsDir)/platforms/$(Platform).props" />
     <Import Project="$(PropertySheetsDir)/configurations/$(Configuration).props" />
@@ -43,9 +45,6 @@
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
     <ClCompile Include="sources\dllmain.cpp" />
-    <ClCompile Include="sources\precompiled.cpp">
-      <PrecompiledHeader>Create</PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="sources\rxtd\perfmon\BlacklistManager.cpp" />
     <ClCompile Include="sources\rxtd\perfmon\ExpressionParser.cpp" />
     <ClCompile Include="sources\rxtd\perfmon\expressions\RollupExpressionResolver.cpp" />
@@ -87,6 +86,9 @@
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.vcxproj">
       <Project>{8817a113-76ad-4df9-8ab8-ccc1d9cfdf09}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Utils\StdLibExtension\StdLibExtension.vcxproj">
+      <Project>{76a3d6d3-45e8-4391-8b94-2477afe23596}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -29,9 +29,6 @@
     <ClCompile Include="sources\dllmain.cpp">
       <Filter>sources</Filter>
     </ClCompile>
-    <ClCompile Include="sources\precompiled.cpp">
-      <Filter>sources</Filter>
-    </ClCompile>
     <ClCompile Include="sources\rxtd\perfmon\BlacklistManager.cpp">
       <Filter>sources\rxtd\perfmon</Filter>
     </ClCompile>

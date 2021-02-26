@@ -8,7 +8,7 @@
  */
 
 
-#include <my-windows.h>
+#include "rxtd/my-windows.h"
 #include "RainmeterAPI.h"
 
 #include "rxtd/audio_analyzer/AudioChild.h"

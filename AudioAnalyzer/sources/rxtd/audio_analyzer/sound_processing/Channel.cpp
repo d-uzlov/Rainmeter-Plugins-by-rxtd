@@ -8,7 +8,7 @@
  */
 
 #include "Channel.h"
-#include <my-windows.h>
+#include "rxtd/my-windows.h"
 #include <Audioclient.h>
 
 using rxtd::audio_analyzer::ChannelUtils;

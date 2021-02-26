@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include <my-windows.h>
+#include "rxtd/my-windows.h"
 #include "rxtd/rainmeter/Rainmeter.h"
 
 namespace rxtd {

@@ -7,7 +7,7 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include "CaseInsensitiveString.h"
+#include "case_insensitive_string.h"
 
 std::wostream& rxtd::std_fixes::operator<<(std::wostream& stream, isview view) {
 	return stream << (view % csView());

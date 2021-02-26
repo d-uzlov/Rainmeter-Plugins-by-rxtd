@@ -8,10 +8,10 @@
     <ProjectName>AudioAnalyzer</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <Import Label="ProjectConfigurations" Project="$(PropertySheetsDir)/project_configs.props" />
-  <Import Project="$(PropertySheetsDir)/configuration.props" />
-  <Import Project="$(PropertySheetsDir)/build_type/dll.props" />
-  <Import Project="$(PropertySheetsDir)/configurations/$(Configuration)_config.props" />
+  <Import Label="ProjectConfigurations" Project="$(PropertySheetsDir)project_configs.props" />
+  <Import Project="$(PropertySheetsDir)configuration.props" />
+  <Import Project="$(PropertySheetsDir)build_type/dll.props" />
+  <Import Project="$(PropertySheetsDir)configurations/$(Configuration)_config.props" />
   <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
@@ -36,10 +36,12 @@
   <ImportGroup Label="Shared">
   </ImportGroup>
   <ImportGroup Label="PropertySheets">
-    <Import Project="$(PropertySheetsDir)/solution.props" />
-    <Import Project="$(PropertySheetsDir)/rainmeter_plugin.props" />
-    <Import Project="$(PropertySheetsDir)/platforms/$(Platform).props" />
-    <Import Project="$(PropertySheetsDir)/configurations/$(Configuration).props" />
+    <Import Project="$(PropertySheetsDir)solution.props" />
+    <Import Project="$(PropertySheetsDir)pch.props" />
+    <Import Project="$(PropertySheetsDir)pch_copy.props" />
+    <Import Project="$(PropertySheetsDir)rainmeter_plugin.props" />
+    <Import Project="$(PropertySheetsDir)platforms/$(Platform).props" />
+    <Import Project="$(PropertySheetsDir)configurations/$(Configuration).props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
@@ -110,9 +112,6 @@
     <ClInclude Include="sources\rxtd\audio_analyzer\wasapi_wrappers\WaveFormat.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="sources\precompiled.cpp">
-      <PrecompiledHeader>Create</PrecompiledHeader>
-    </ClCompile>
     <ClCompile Include="Sources\dllmain.cpp" />
     <ClCompile Include="sources\rxtd\audio_analyzer\AudioChild.cpp" />
     <ClCompile Include="sources\rxtd\audio_analyzer\AudioParent.cpp" />
@@ -169,6 +168,9 @@
     <ProjectReference Include="..\Common\Common.vcxproj">
       <Project>{8817a113-76ad-4df9-8ab8-ccc1d9cfdf09}</Project>
       <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
+    </ProjectReference>
+    <ProjectReference Include="..\Utils\StdLibExtension\StdLibExtension.vcxproj">
+      <Project>{76a3d6d3-45e8-4391-8b94-2477afe23596}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

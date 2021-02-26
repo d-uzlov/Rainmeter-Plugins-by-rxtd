@@ -259,9 +259,6 @@
     <ClCompile Include="Sources\dllmain.cpp">
       <Filter>sources</Filter>
     </ClCompile>
-    <ClCompile Include="Sources\precompiled.cpp">
-      <Filter>sources</Filter>
-    </ClCompile>
     <ClCompile Include="sources\rxtd\audio_analyzer\AudioChild.cpp">
       <Filter>sources\rxtd\audio_analyzer</Filter>
     </ClCompile>

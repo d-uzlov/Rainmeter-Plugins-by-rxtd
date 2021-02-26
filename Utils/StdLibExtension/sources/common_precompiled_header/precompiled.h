@@ -30,7 +30,7 @@ namespace rxtd {
 
 #include "rxtd/GenericBaseClasses.h"
 #include "rxtd/std_fixes/array_view.h"
-#include "rxtd/std_fixes/CaseInsensitiveString.h"
+#include "rxtd/std_fixes/case_insensitive_string.h"
 
 namespace rxtd {
 	using istring = std_fixes::istring;

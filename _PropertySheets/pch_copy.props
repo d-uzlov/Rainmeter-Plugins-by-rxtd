@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Target Name="CopyFreshPch" BeforeTargets="ClCompile" Inputs="$(SharedPdb);$(SharedIdb);$(SharedPch)" Outputs="%(ClCompile.ProgramDataBaseFileName);%(ClCompile.PrecompiledHeaderOutputFile)" >
+    <PropertyGroup>
+      <IdbFileName>$([System.String]::Copy(&quot;%(ClCompile.ProgramDataBaseFileName)&quot;).Replace(&quot;.pdb&quot;,&quot;.idb&quot;))</IdbFileName>
+    </PropertyGroup>
+    <Message  Importance="High" Text="Copying pch info" />
+    <Copy
+        SourceFiles="$(SharedPdb)"
+        DestinationFiles="%(ClCompile.ProgramDataBaseFileName)">
+    </Copy>
+    <Copy
+        SourceFiles="$(SharedIdb)"
+        DestinationFiles="$(IdbFileName)">
+    </Copy>
+    <Copy
+        SourceFiles="$(SharedPch)"
+        DestinationFiles="%(ClCompile.PrecompiledHeaderOutputFile)">
+    </Copy>
+  </Target>
+</Project>

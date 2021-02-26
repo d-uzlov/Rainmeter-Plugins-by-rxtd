@@ -15,9 +15,6 @@
     <Filter Include="sources\rxtd\rainmeter">
       <UniqueIdentifier>{3bc16923-f776-413a-816b-d9a0ad095f0a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="sources\rxtd\std_fixes">
-      <UniqueIdentifier>{a6aa3799-8c24-417b-9c38-f6b8de426ed3}</UniqueIdentifier>
-    </Filter>
     <Filter Include="sources\rxtd\expression_parser">
       <UniqueIdentifier>{7a12fe6b-6e12-47e3-9070-733b1ddbcec2}</UniqueIdentifier>
     </Filter>
@@ -32,9 +29,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="sources\precompiled.cpp">
-      <Filter>sources</Filter>
-    </ClCompile>
     <ClCompile Include="sources\rxtd\rainmeter\InstanceKeeper.cpp">
       <Filter>sources\rxtd\rainmeter</Filter>
     </ClCompile>
@@ -43,21 +37,6 @@
     </ClCompile>
     <ClCompile Include="sources\rxtd\rainmeter\Rainmeter.cpp">
       <Filter>sources\rxtd\rainmeter</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\rxtd\std_fixes\MathBitTwiddling.cpp">
-      <Filter>sources\rxtd\std_fixes</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\rxtd\std_fixes\MyMath.cpp">
-      <Filter>sources\rxtd\std_fixes</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\rxtd\std_fixes\StringUtils.cpp">
-      <Filter>sources\rxtd\std_fixes</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\rxtd\std_fixes\CaseInsensitiveString.cpp">
-      <Filter>sources\rxtd\std_fixes</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\rxtd\std_fixes\string_conversion.cpp">
-      <Filter>sources\rxtd\std_fixes</Filter>
     </ClCompile>
     <ClCompile Include="sources\rxtd\option_parsing\Option.cpp">
       <Filter>sources\rxtd\option_parsing</Filter>
@@ -85,16 +64,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="sources\precompiled.h">
-      <Filter>sources</Filter>
-    </ClInclude>
     <ClInclude Include="sources\rxtd\DataWithLock.h">
       <Filter>sources\rxtd</Filter>
     </ClInclude>
     <ClInclude Include="sources\rxtd\DiscreetInterpolator.h">
-      <Filter>sources\rxtd</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\GenericBaseClasses.h">
       <Filter>sources\rxtd</Filter>
     </ClInclude>
     <ClInclude Include="sources\rxtd\GrowingVector.h">
@@ -123,33 +96,6 @@
     </ClInclude>
     <ClInclude Include="sources\rxtd\rainmeter\SkinHandle.h">
       <Filter>sources\rxtd\rainmeter</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\my-windows.h">
-      <Filter>sources</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\std_fixes\array_view.h">
-      <Filter>sources\rxtd\std_fixes</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\std_fixes\Vector2D.h">
-      <Filter>sources\rxtd\std_fixes</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\std_fixes\MapUtils.h">
-      <Filter>sources\rxtd\std_fixes</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\std_fixes\MyMath.h">
-      <Filter>sources\rxtd\std_fixes</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\std_fixes\MathBitTwiddling.h">
-      <Filter>sources\rxtd\std_fixes</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\std_fixes\StringUtils.h">
-      <Filter>sources\rxtd\std_fixes</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\std_fixes\CaseInsensitiveString.h">
-      <Filter>sources\rxtd\std_fixes</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\std_fixes\string_conversion.h">
-      <Filter>sources\rxtd\std_fixes</Filter>
     </ClInclude>
     <ClInclude Include="sources\rxtd\option_parsing\Option.h">
       <Filter>sources\rxtd\option_parsing</Filter>
