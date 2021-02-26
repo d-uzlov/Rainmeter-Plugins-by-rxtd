@@ -20,7 +20,6 @@ namespace rxtd::audio_analyzer {
 	class ParentHelper : MovableOnlyBase {
 	public:
 		using Rainmeter = rainmeter::Rainmeter;
-		using Logger = rainmeter::Logger;
 		using OptionMap = option_parsing::OptionMap;
 		using MediaDeviceType = wasapi_wrappers::MediaDeviceType;
 

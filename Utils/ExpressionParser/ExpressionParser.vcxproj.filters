@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="sources">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="sources\rxtd">
+      <UniqueIdentifier>{516dadb7-4fc2-43f9-802e-75a3f8e39b9e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sources\rxtd\expression_parser">
+      <UniqueIdentifier>{82d89acd-6c48-4c14-b408-ed7afc90b2e4}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="sources\rxtd\expression_parser\ASTParser.cpp">
+      <Filter>sources\rxtd\expression_parser</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\expression_parser\ASTSolver.cpp">
+      <Filter>sources\rxtd\expression_parser</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\expression_parser\GrammarBuilder.cpp">
+      <Filter>sources\rxtd\expression_parser</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\expression_parser\Lexer.cpp">
+      <Filter>sources\rxtd\expression_parser</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="sources\rxtd\expression_parser\ASTParser.h">
+      <Filter>sources\rxtd\expression_parser</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\expression_parser\ASTSolver.h">
+      <Filter>sources\rxtd\expression_parser</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\expression_parser\GenericNode.h">
+      <Filter>sources\rxtd\expression_parser</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\expression_parser\GrammarBuilder.h">
+      <Filter>sources\rxtd\expression_parser</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\expression_parser\GrammarDescription.h">
+      <Filter>sources\rxtd\expression_parser</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\expression_parser\Lexer.h">
+      <Filter>sources\rxtd\expression_parser</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\expression_parser\OperatorNodes.h">
+      <Filter>sources\rxtd\expression_parser</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\expression_parser\SyntaxTree.h">
+      <Filter>sources\rxtd\expression_parser</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" />
+  </ItemGroup>
+</Project>

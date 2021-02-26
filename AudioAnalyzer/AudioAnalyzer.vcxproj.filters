@@ -155,16 +155,10 @@
     <ClInclude Include="sources\rxtd\audio_analyzer\sound_processing\ProcessingOrchestrator.h">
       <Filter>sources\rxtd\audio_analyzer\sound_processing</Filter>
     </ClInclude>
-    <ClInclude Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\ExternalData.h">
-      <Filter>sources\rxtd\audio_analyzer\sound_processing\sound_handlers</Filter>
-    </ClInclude>
     <ClInclude Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\ExternalMethods.h">
       <Filter>sources\rxtd\audio_analyzer\sound_processing\sound_handlers</Filter>
     </ClInclude>
     <ClInclude Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\HandlerBase.h">
-      <Filter>sources\rxtd\audio_analyzer\sound_processing\sound_handlers</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\ParamsContainer.h">
       <Filter>sources\rxtd\audio_analyzer\sound_processing\sound_handlers</Filter>
     </ClInclude>
     <ClInclude Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\spectrum-stack\BandCascadeTransformer.h">
@@ -405,9 +399,6 @@
     <ResourceCompile Include="..\Common\resources\version.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Natvis Include="..\Common\array_view.natvis" />
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />

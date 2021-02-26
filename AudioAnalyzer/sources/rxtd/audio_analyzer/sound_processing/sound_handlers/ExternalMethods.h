@@ -8,12 +8,14 @@
  */
 
 #pragma once
-#include "ExternalData.h"
-#include "rxtd/buffer_printer/BufferPrinter.h"
 #include "rxtd/audio_analyzer/Version.h"
+#include "rxtd/buffer_printer/BufferPrinter.h"
+#include "rxtd/std_fixes/AnyContainer.h"
 
 namespace rxtd::audio_analyzer::handler {
 	struct ExternalMethods {
+		using ExternalData = std_fixes::AnyContainer;
+
 		struct CallContext {
 			Version version{};
 			sview channelName{};
@@ -26,7 +28,7 @@ namespace rxtd::audio_analyzer::handler {
 			isview prop,
 			buffer_printer::BufferPrinter& printer,
 			const CallContext& context
-			);
+		);
 
 		FinishMethodType finish = nullptr;
 

@@ -13,8 +13,9 @@ using rxtd::audio_analyzer::handler::BlockHandler;
 using rxtd::audio_analyzer::handler::HandlerBase;
 using rxtd::audio_analyzer::handler::BlockRms;
 using rxtd::audio_analyzer::handler::BlockPeak;
+using ParamsContainer = HandlerBase::ParamsContainer;
 
-rxtd::audio_analyzer::handler::ParamsContainer BlockHandler::vParseParams(
+ParamsContainer BlockHandler::vParseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {

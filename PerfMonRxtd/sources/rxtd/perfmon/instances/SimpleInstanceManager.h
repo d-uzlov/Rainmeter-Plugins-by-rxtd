@@ -21,8 +21,6 @@ namespace rxtd::perfmon {
 
 	class SimpleInstanceManager {
 	public:
-		using Logger = rainmeter::Logger;
-
 		struct Options {
 			bool keepDiscarded = false;
 			bool syncRawFormatted = true;

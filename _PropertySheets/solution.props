@@ -3,7 +3,7 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <IncludePath>$(ProjectDir)sources;$(ProjectDir)external/includes;$(SolutionDir)Utils/StdLibExtension/sources/;$(SolutionDir)Common/sources/;$(SolutionDir)Common/includes/;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)sources;$(ProjectDir)external/includes;$(SolutionDir)Utils/GenericUtils/sources/;$(SolutionDir)Utils/ExpressionParser/sources/;$(SolutionDir)Utils/StdLibExtension/sources/;$(SolutionDir)Common/sources/;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)external/libs-$(Platform)/;$(LibraryPath)</LibraryPath>
     <SourcePath>$(SourcePath)</SourcePath>
     <OutDir>$(ProjectDir)_Build/$(Platform)-$(Configuration)/</OutDir>

@@ -20,8 +20,9 @@ using namespace std::string_literals;
 using rxtd::std_fixes::MyMath;
 using rxtd::audio_analyzer::handler::Spectrogram;
 using rxtd::audio_analyzer::handler::HandlerBase;
+using ParamsContainer = HandlerBase::ParamsContainer;
 
-rxtd::audio_analyzer::handler::ParamsContainer Spectrogram::vParseParams(
+ParamsContainer Spectrogram::vParseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {

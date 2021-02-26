@@ -39,10 +39,12 @@
     <Import Project="$(PropertySheetsDir)solution.props" />
     <Import Project="$(PropertySheetsDir)pch.props" />
     <Import Project="$(PropertySheetsDir)pch_copy.props" />
-    <Import Project="$(PropertySheetsDir)rainmeter_plugin.props" />
     <Import Project="$(PropertySheetsDir)platforms/$(Platform).props" />
     <Import Project="$(PropertySheetsDir)configurations/$(Configuration).props" />
   </ImportGroup>
+  <PropertyGroup>
+    <IncludePath>$(SolutionDir)Utils/RainmeterApiHelpers/sources/;$(SolutionDir)Utils/WinApiWrappers/sources/;$(IncludePath)</IncludePath>
+  </PropertyGroup>
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
     <ClInclude Include="local-version.h" />
@@ -89,10 +91,8 @@
     <ClInclude Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\basic-handlers\BlockHandler.h" />
     <ClInclude Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\basic-handlers\Loudness.h" />
     <ClInclude Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\basic-handlers\WaveForm.h" />
-    <ClInclude Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\ExternalData.h" />
     <ClInclude Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\ExternalMethods.h" />
     <ClInclude Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\HandlerBase.h" />
-    <ClInclude Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\ParamsContainer.h" />
     <ClInclude Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\spectrum-stack\BandCascadeTransformer.h" />
     <ClInclude Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\spectrum-stack\BandResampler.h" />
     <ClInclude Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\spectrum-stack\FftAnalyzer.h" />
@@ -165,16 +165,18 @@
     <ResourceCompile Include="..\Common\resources\version.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Common\Common.vcxproj">
-      <Project>{8817a113-76ad-4df9-8ab8-ccc1d9cfdf09}</Project>
-      <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
+    <ProjectReference Include="..\Utils\GenericUtils\GenericUtils.vcxproj">
+      <Project>{ed9dc428-f99f-4695-a5f7-aafba501a962}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Utils\RainmeterApiHelpers\RainmeterApiHelpers.vcxproj">
+      <Project>{e2f48041-57e0-4ce7-ba1f-97b3a9429575}</Project>
     </ProjectReference>
     <ProjectReference Include="..\Utils\StdLibExtension\StdLibExtension.vcxproj">
       <Project>{76a3d6d3-45e8-4391-8b94-2477afe23596}</Project>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Natvis Include="..\Common\array_view.natvis" />
+    <ProjectReference Include="..\Utils\WinApiWrappers\WinApiWrappers.vcxproj">
+      <Project>{8dbaec2b-165f-447b-9e00-cc968d987493}</Project>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />

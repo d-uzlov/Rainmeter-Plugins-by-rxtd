@@ -8,15 +8,11 @@
  */
 
 
-#include "rxtd/my-windows.h"
-#include "RainmeterAPI.h"
-
 #include "rxtd/audio_analyzer/AudioChild.h"
 #include "rxtd/audio_analyzer/AudioParent.h"
 #include "rxtd/rainmeter/Rainmeter.h"
 
-static_assert(std::is_same<WCHAR, wchar_t>::value);
-static_assert(std::is_same<LPCWSTR, const wchar_t*>::value);
+#define PLUGIN_EXPORT EXTERN_C __declspec(dllexport)
 
 PLUGIN_EXPORT void Initialize(void** data, void* rm) {
 	rxtd::rainmeter::Rainmeter rain(rm);

@@ -78,7 +78,7 @@ namespace rxtd::audio_analyzer {
 
 		void runFinisher(
 			handler::ExternalMethods::FinishMethodType finisher,
-			const handler::ExternalData& handlerData,
+			const handler::HandlerBase::ExternalData& handlerData,
 			isview procName, Channel channel, isview handlerName
 		) const;
 

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{e2f48041-57e0-4ce7-ba1f-97b3a9429575}</ProjectGuid>
+    <RootNamespace>RainmeterApiHelpers</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <Import Label="ProjectConfigurations" Project="$(PropertySheetsDir)/project_configs.props" />
+  <Import Project="$(PropertySheetsDir)/configuration.props" />
+  <Import Project="$(PropertySheetsDir)/build_type/static_lib.props" />
+  <Import Project="$(PropertySheetsDir)/configurations/$(Configuration)_config.props" />
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Test|x64'">
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <PropertyGroup>
+    <IncludePath>$(SolutionDir)Utils/GenericUtils/sources/;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <Lib>
+      <AdditionalDependencies>$(SolutionDir)Utils/RainmeterApiHelpers/external/libs-$(Platform)/Rainmeter.lib</AdditionalDependencies>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(PropertySheetsDir)/solution.props" />
+    <Import Project="$(PropertySheetsDir)/pch.props" />
+    <Import Project="$(PropertySheetsDir)/pch_copy.props" />
+    <Import Project="$(PropertySheetsDir)/platforms/$(Platform).props" />
+    <Import Project="$(PropertySheetsDir)/configurations/$(Configuration).props" />
+  </ImportGroup>
+  <ItemGroup>
+    <ClCompile Include="sources\rxtd\rainmeter\InstanceKeeper.cpp" />
+    <ClCompile Include="sources\rxtd\rainmeter\MeasureBase.cpp" />
+    <ClCompile Include="sources\rxtd\rainmeter\Rainmeter.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="sources\rxtd\rainmeter\DataHandle.h" />
+    <ClInclude Include="sources\rxtd\rainmeter\InstanceKeeper.h" />
+    <ClInclude Include="sources\rxtd\rainmeter\MeasureBase.h" />
+    <ClInclude Include="sources\rxtd\rainmeter\Rainmeter.h" />
+    <ClInclude Include="sources\rxtd\rainmeter\SkinHandle.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GenericUtils\GenericUtils.vcxproj">
+      <Project>{ed9dc428-f99f-4695-a5f7-aafba501a962}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\StdLibExtension\StdLibExtension.vcxproj">
+      <Project>{76a3d6d3-45e8-4391-8b94-2477afe23596}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

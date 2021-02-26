@@ -29,12 +29,12 @@
 #include <utility>
 
 #include "ExternalMethods.h"
-#include "ParamsContainer.h"
 #include "rxtd/audio_analyzer/Version.h"
 #include "rxtd/buffer_printer/BufferPrinter.h"
-#include "rxtd/std_fixes/Vector2D.h"
 #include "rxtd/option_parsing/OptionMap.h"
 #include "rxtd/rainmeter/Rainmeter.h"
+#include "rxtd/std_fixes/AnyContainer.h"
+#include "rxtd/std_fixes/Vector2D.h"
 
 
 namespace rxtd::audio_analyzer::handler {
@@ -58,7 +58,8 @@ namespace rxtd::audio_analyzer::handler {
 		using OptionMap = option_parsing::OptionMap;
 		using OptionList = option_parsing::OptionList;
 		using Rainmeter = rainmeter::Rainmeter;
-		using Logger = rainmeter::Logger;
+		using ParamsContainer = std_fixes::AnyContainer;
+		using ExternalData = ExternalMethods::ExternalData;
 		using clock = std::chrono::high_resolution_clock;
 		static_assert(clock::is_steady);
 		using BufferPrinter = buffer_printer::BufferPrinter;

@@ -15,11 +15,12 @@
 using rxtd::std_fixes::MyMath;
 using rxtd::audio_analyzer::handler::WaveForm;
 using rxtd::audio_analyzer::handler::HandlerBase;
+using ParamsContainer = HandlerBase::ParamsContainer;
 
 using namespace std::string_literals;
 using rxtd::audio_analyzer::image_utils::Color;
 
-rxtd::audio_analyzer::handler::ParamsContainer WaveForm::vParseParams(
+ParamsContainer WaveForm::vParseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {

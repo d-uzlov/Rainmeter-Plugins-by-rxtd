@@ -8,16 +8,16 @@
  */
 
 #include "Color.h"
+#include "rxtd/Logger.h"
 #include "rxtd/option_parsing/Option.h"
 #include "rxtd/option_parsing/OptionList.h"
-#include "rxtd/rainmeter/Logger.h"
 
 using rxtd::audio_analyzer::image_utils::Color;
 
 using rxtd::option_parsing::OptionList;
 using rxtd::option_parsing::Option;
 using rxtd::std_fixes::StringUtils;
-using rxtd::rainmeter::Logger;
+using rxtd::Logger;
 
 Color Color::parse(sview desc, Color defaultValue) {
 	if (desc.empty()) {

@@ -20,7 +20,6 @@ namespace rxtd::perfmon {
 
 	class RollupInstanceManager {
 	public:
-		using Logger = rainmeter::Logger;
 		using Indices = SimpleInstanceManager::Indices;
 
 		struct RollupInstanceInfo {

@@ -15,10 +15,9 @@
 
 using rxtd::audio_analyzer::handler::BandResampler;
 using rxtd::audio_analyzer::handler::HandlerBase;
+using ParamsContainer = HandlerBase::ParamsContainer;
 
-using namespace std::string_literals;
-
-rxtd::audio_analyzer::handler::ParamsContainer BandResampler::vParseParams(
+ParamsContainer BandResampler::vParseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {

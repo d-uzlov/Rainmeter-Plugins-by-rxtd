@@ -14,8 +14,9 @@
 using rxtd::std_fixes::MyMath;
 using rxtd::audio_analyzer::handler::Loudness;
 using rxtd::audio_analyzer::handler::HandlerBase;
+using ParamsContainer = HandlerBase::ParamsContainer;
 
-rxtd::audio_analyzer::handler::ParamsContainer Loudness::vParseParams(
+ParamsContainer Loudness::vParseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {

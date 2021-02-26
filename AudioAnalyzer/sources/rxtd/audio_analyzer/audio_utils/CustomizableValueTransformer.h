@@ -11,12 +11,10 @@
 #include <array>
 #include "rxtd/LinearInterpolator.h"
 #include "rxtd/option_parsing/OptionList.h"
-#include "rxtd/rainmeter/Logger.h"
 
 namespace rxtd::audio_analyzer::audio_utils {
 	class CustomizableValueTransformer {
 	public:
-		using Logger = rainmeter::Logger;
 		using OptionList = option_parsing::OptionList;
 
 		enum class TransformType {

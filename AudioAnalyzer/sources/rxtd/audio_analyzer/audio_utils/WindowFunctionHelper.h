@@ -9,14 +9,13 @@
 
 #pragma once
 #include <functional>
-#include "rxtd/rainmeter/Logger.h"
+#include "rxtd/Logger.h"
 
 namespace rxtd::audio_analyzer::audio_utils {
 	class WindowFunctionHelper {
 		// http://en.wikipedia.org/wiki/Window_function
 
 	public:
-		using Logger = rainmeter::Logger;
 		using WindowCreationFunc = std::function<std::vector<float>(index size)>;
 
 		static WindowCreationFunc parse(sview desc, Logger& cl);

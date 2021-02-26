@@ -38,10 +38,12 @@
     <Import Project="$(PropertySheetsDir)/solution.props" />
     <Import Project="$(PropertySheetsDir)/pch.props" />
     <Import Project="$(PropertySheetsDir)/pch_copy.props" />
-    <Import Project="$(PropertySheetsDir)/rainmeter_plugin.props" />
     <Import Project="$(PropertySheetsDir)/platforms/$(Platform).props" />
     <Import Project="$(PropertySheetsDir)/configurations/$(Configuration).props" />
   </ImportGroup>
+  <PropertyGroup>
+    <IncludePath>$(SolutionDir)Utils/RainmeterApiHelpers/sources/;$(IncludePath)</IncludePath>
+  </PropertyGroup>
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
     <ClCompile Include="sources\dllmain.cpp" />
@@ -55,8 +57,8 @@
     <ResourceCompile Include="..\Common\resources\version.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Common\Common.vcxproj">
-      <Project>{8817a113-76ad-4df9-8ab8-ccc1d9cfdf09}</Project>
+    <ProjectReference Include="..\Utils\RainmeterApiHelpers\RainmeterApiHelpers.vcxproj">
+      <Project>{e2f48041-57e0-4ce7-ba1f-97b3a9429575}</Project>
     </ProjectReference>
     <ProjectReference Include="..\Utils\StdLibExtension\StdLibExtension.vcxproj">
       <Project>{76a3d6d3-45e8-4391-8b94-2477afe23596}</Project>

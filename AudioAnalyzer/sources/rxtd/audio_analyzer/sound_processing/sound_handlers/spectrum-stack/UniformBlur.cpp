@@ -12,8 +12,9 @@
 
 using rxtd::audio_analyzer::handler::UniformBlur;
 using rxtd::audio_analyzer::handler::HandlerBase;
+using ParamsContainer = HandlerBase::ParamsContainer;
 
-rxtd::audio_analyzer::handler::ParamsContainer UniformBlur::vParseParams(
+ParamsContainer UniformBlur::vParseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {

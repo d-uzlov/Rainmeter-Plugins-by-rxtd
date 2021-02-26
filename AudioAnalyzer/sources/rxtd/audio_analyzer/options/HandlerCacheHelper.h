@@ -9,13 +9,12 @@
 
 #pragma once
 #include "HandlerInfo.h"
-#include "rxtd/rainmeter/Logger.h"
-#include "rxtd/rainmeter/Rainmeter.h"
+#include "rxtd/Logger.h"
 #include "rxtd/audio_analyzer/sound_processing/sound_handlers/HandlerBase.h"
+#include "rxtd/rainmeter/Rainmeter.h"
 
 namespace rxtd::audio_analyzer::options {
 	class HandlerCacheHelper {
-		using Logger = rainmeter::Logger;
 		using Rainmeter = rainmeter::Rainmeter;
 		using OptionMap = option_parsing::OptionMap;
 

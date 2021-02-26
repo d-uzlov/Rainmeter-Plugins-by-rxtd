@@ -19,7 +19,6 @@
 
 namespace rxtd::perfmon::expressions {
 	class SimpleExpressionSolver {
-		using Logger = rainmeter::Logger;
 		using OptionList = option_parsing::OptionList;
 		using ASTSolver = expression_parser::ASTSolver;
 		using Indices = SimpleInstanceManager::Indices;

@@ -14,7 +14,7 @@
 #include "PdhFormat.h"
 #include "PdhSnapshot.h"
 #include "rxtd/option_parsing/OptionList.h"
-#include "rxtd/rainmeter/Logger.h"
+#include "rxtd/Logger.h"
 
 namespace rxtd::perfmon::pdh {
 	class PdhException : std::runtime_error {
@@ -35,7 +35,6 @@ namespace rxtd::perfmon::pdh {
 	};
 
 	class PdhWrapper : MovableOnlyBase {
-		using Logger = rainmeter::Logger;
 		using OptionList = option_parsing::OptionList;
 		
 		struct QueryWrapper : MovableOnlyBase {

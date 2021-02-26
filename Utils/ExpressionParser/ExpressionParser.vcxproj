@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{69308053-9c59-46c7-9158-a17de9e7615b}</ProjectGuid>
+    <RootNamespace>ExpressionParser</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <Import Label="ProjectConfigurations" Project="$(PropertySheetsDir)/project_configs.props" />
+  <Import Project="$(PropertySheetsDir)/configuration.props" />
+  <Import Project="$(PropertySheetsDir)/build_type/static_lib.props" />
+  <Import Project="$(PropertySheetsDir)/configurations/$(Configuration)_config.props" />
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Test|x64'">
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(PropertySheetsDir)/solution.props" />
+    <Import Project="$(PropertySheetsDir)/pch.props" />
+    <Import Project="$(PropertySheetsDir)/pch_copy.props" />
+    <Import Project="$(PropertySheetsDir)/platforms/$(Platform).props" />
+    <Import Project="$(PropertySheetsDir)/configurations/$(Configuration).props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ItemGroup>
+    <ClCompile Include="sources\rxtd\expression_parser\ASTParser.cpp" />
+    <ClCompile Include="sources\rxtd\expression_parser\ASTSolver.cpp" />
+    <ClCompile Include="sources\rxtd\expression_parser\GrammarBuilder.cpp" />
+    <ClCompile Include="sources\rxtd\expression_parser\Lexer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="sources\rxtd\expression_parser\ASTParser.h" />
+    <ClInclude Include="sources\rxtd\expression_parser\ASTSolver.h" />
+    <ClInclude Include="sources\rxtd\expression_parser\GenericNode.h" />
+    <ClInclude Include="sources\rxtd\expression_parser\GrammarBuilder.h" />
+    <ClInclude Include="sources\rxtd\expression_parser\GrammarDescription.h" />
+    <ClInclude Include="sources\rxtd\expression_parser\Lexer.h" />
+    <ClInclude Include="sources\rxtd\expression_parser\OperatorNodes.h" />
+    <ClInclude Include="sources\rxtd\expression_parser\SyntaxTree.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\StdLibExtension\StdLibExtension.vcxproj">
+      <Project>{76a3d6d3-45e8-4391-8b94-2477afe23596}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

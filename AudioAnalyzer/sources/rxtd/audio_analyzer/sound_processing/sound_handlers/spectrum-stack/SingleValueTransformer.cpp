@@ -11,8 +11,9 @@
 
 using rxtd::audio_analyzer::handler::SingleValueTransformer;
 using rxtd::audio_analyzer::handler::HandlerBase;
+using ParamsContainer = HandlerBase::ParamsContainer;
 
-rxtd::audio_analyzer::handler::ParamsContainer SingleValueTransformer::vParseParams(
+ParamsContainer SingleValueTransformer::vParseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {

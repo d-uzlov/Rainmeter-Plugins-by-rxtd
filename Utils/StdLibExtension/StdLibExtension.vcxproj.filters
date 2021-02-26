@@ -73,5 +73,11 @@
     <ClInclude Include="sources\rxtd\GenericBaseClasses.h">
       <Filter>sources\rxtd</Filter>
     </ClInclude>
+    <ClInclude Include="sources\rxtd\std_fixes\AnyContainer.h">
+      <Filter>sources\rxtd\std_fixes</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="array_view.natvis" />
   </ItemGroup>
 </Project>

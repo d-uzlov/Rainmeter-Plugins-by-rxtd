@@ -11,8 +11,9 @@
 
 using rxtd::audio_analyzer::handler::TimeResampler;
 using rxtd::audio_analyzer::handler::HandlerBase;
+using ParamsContainer = HandlerBase::ParamsContainer;
 
-rxtd::audio_analyzer::handler::ParamsContainer TimeResampler::vParseParams(
+ParamsContainer TimeResampler::vParseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {

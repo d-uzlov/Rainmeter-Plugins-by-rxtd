@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="sources">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="sources\rxtd">
+      <UniqueIdentifier>{2f43b30a-7934-4768-b175-212f0833d5e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sources\rxtd\buffer_printer">
+      <UniqueIdentifier>{1d514651-9657-41aa-bc49-564ee3f64541}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sources\rxtd\option_parsing">
+      <UniqueIdentifier>{d5bb7a08-de7f-42c8-bf02-faa72c8a5967}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="sources\rxtd\DataWithLock.h">
+      <Filter>sources\rxtd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\DiscreetInterpolator.h">
+      <Filter>sources\rxtd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\GrowingVector.h">
+      <Filter>sources\rxtd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\IntMixer.h">
+      <Filter>sources\rxtd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\LinearInterpolator.h">
+      <Filter>sources\rxtd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\buffer_printer\BufferPrinter.h">
+      <Filter>sources\rxtd\buffer_printer</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\buffer_printer\ReadableStreamBuffer.h">
+      <Filter>sources\rxtd\buffer_printer</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\option_parsing\Option.h">
+      <Filter>sources\rxtd\option_parsing</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\option_parsing\OptionBase.h">
+      <Filter>sources\rxtd\option_parsing</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\option_parsing\OptionList.h">
+      <Filter>sources\rxtd\option_parsing</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\option_parsing\OptionMap.h">
+      <Filter>sources\rxtd\option_parsing</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\option_parsing\OptionSequence.h">
+      <Filter>sources\rxtd\option_parsing</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\option_parsing\Tokenizer.h">
+      <Filter>sources\rxtd\option_parsing</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\Logger.h">
+      <Filter>sources\rxtd</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="sources\rxtd\option_parsing\Option.cpp">
+      <Filter>sources\rxtd\option_parsing</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\option_parsing\OptionMap.cpp">
+      <Filter>sources\rxtd\option_parsing</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\option_parsing\Tokenizer.cpp">
+      <Filter>sources\rxtd\option_parsing</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

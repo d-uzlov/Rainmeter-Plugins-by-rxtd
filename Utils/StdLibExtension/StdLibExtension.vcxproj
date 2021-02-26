@@ -56,6 +56,7 @@
     <ClInclude Include="sources\common_precompiled_header\precompiled.h" />
     <ClInclude Include="sources\rxtd\GenericBaseClasses.h" />
     <ClInclude Include="sources\rxtd\my-windows.h" />
+    <ClInclude Include="sources\rxtd\std_fixes\AnyContainer.h" />
     <ClInclude Include="sources\rxtd\std_fixes\array_view.h" />
     <ClInclude Include="sources\rxtd\std_fixes\case_insensitive_string.h" />
     <ClInclude Include="sources\rxtd\std_fixes\MapUtils.h" />
@@ -64,6 +65,9 @@
     <ClInclude Include="sources\rxtd\std_fixes\StringUtils.h" />
     <ClInclude Include="sources\rxtd\std_fixes\string_conversion.h" />
     <ClInclude Include="sources\rxtd\std_fixes\Vector2D.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="array_view.natvis" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

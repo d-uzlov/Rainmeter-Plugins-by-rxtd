@@ -8,13 +8,12 @@
  */
 
 #pragma once
-#include "rxtd/rainmeter/Logger.h"
+#include "rxtd/Logger.h"
 
 namespace rxtd::audio_analyzer {
 	template<typename... CacheTypes>
 	class LogErrorHelper {
 	public:
-		using Logger = rainmeter::Logger;
 		using KeyType = std::tuple<CacheTypes...>;
 		using LogFunctionType = void(*)(Logger& logger, CacheTypes ... args);
 
@@ -52,8 +51,6 @@ namespace rxtd::audio_analyzer {
 	};
 
 	class NoArgLogErrorHelper {
-		using Logger = rainmeter::Logger;
-
 		Logger logger;
 		std::map<string, bool> cache;
 

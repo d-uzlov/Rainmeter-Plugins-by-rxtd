@@ -11,19 +11,17 @@
 
 #include <functional>
 
+#include "rxtd/Logger.h"
 #include "rxtd/audio_analyzer/Version.h"
 #include "rxtd/audio_analyzer/sound_processing/ChannelMixer.h"
 #include "rxtd/audio_analyzer/wasapi_wrappers/AudioCaptureClient.h"
 #include "rxtd/audio_analyzer/wasapi_wrappers/MediaDeviceEnumerator.h"
 #include "rxtd/audio_analyzer/wasapi_wrappers/MediaDeviceHandle.h"
 #include "rxtd/audio_analyzer/wasapi_wrappers/implementations/AudioSessionEventsImpl.h"
-#include "rxtd/rainmeter/Logger.h"
 
 namespace rxtd::audio_analyzer {
 	class CaptureManager {
 	public:
-		using Logger = rainmeter::Logger;
-
 		template<typename T>
 		using GenericComWrapper = winapi_wrappers::GenericComWrapper<T>;
 

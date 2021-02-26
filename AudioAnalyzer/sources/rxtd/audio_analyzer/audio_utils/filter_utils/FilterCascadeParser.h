@@ -11,15 +11,15 @@
 #include <functional>
 #include "AbstractFilter.h"
 #include "FilterCascade.h"
+#include "rxtd/Logger.h"
 #include "rxtd/audio_analyzer/audio_utils/butterworth_lib/ButterworthWrapper.h"
 #include "rxtd/option_parsing/Option.h"
-#include "rxtd/rainmeter/Logger.h"
 
 namespace rxtd::audio_analyzer::audio_utils::filter_utils {
 	class FilterCascadeCreator {
 	public:
 		using FilterCreationFunction = std::function<std::unique_ptr<AbstractFilter>(double sampleFrequency)>;
-		
+
 	private:
 		string source;
 		std::vector<FilterCreationFunction> patchers;
@@ -45,8 +45,7 @@ namespace rxtd::audio_analyzer::audio_utils::filter_utils {
 	class FilterCascadeParser {
 	public:
 		using FCF = FilterCascadeCreator::FilterCreationFunction;
-		
-		using Logger = rainmeter::Logger;
+
 		using Option = option_parsing::Option;
 		using OptionList = option_parsing::OptionList;
 		using OptionMap = option_parsing::OptionMap;

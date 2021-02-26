@@ -13,8 +13,9 @@
 
 using rxtd::audio_analyzer::handler::FftAnalyzer;
 using rxtd::audio_analyzer::handler::HandlerBase;
+using ParamsContainer = HandlerBase::ParamsContainer;
 
-rxtd::audio_analyzer::handler::ParamsContainer FftAnalyzer::vParseParams(
+ParamsContainer FftAnalyzer::vParseParams(
 	const OptionMap& om, Logger& cl, const Rainmeter& rain,
 	Version version
 ) const {

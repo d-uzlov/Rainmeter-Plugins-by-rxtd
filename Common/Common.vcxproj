@@ -43,66 +43,6 @@
     <Import Project="$(PropertySheetsDir)/configurations/$(Configuration).props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <ItemGroup>
-    <ClCompile Include="sources\rxtd\expression_parser\ASTParser.cpp" />
-    <ClCompile Include="sources\rxtd\expression_parser\ASTSolver.cpp" />
-    <ClCompile Include="sources\rxtd\expression_parser\GrammarBuilder.cpp" />
-    <ClCompile Include="sources\rxtd\expression_parser\Lexer.cpp" />
-    <ClCompile Include="sources\rxtd\option_parsing\Option.cpp" />
-    <ClCompile Include="sources\rxtd\option_parsing\OptionMap.cpp" />
-    <ClCompile Include="sources\rxtd\option_parsing\Tokenizer.cpp" />
-    <ClCompile Include="sources\rxtd\rainmeter\InstanceKeeper.cpp" />
-    <ClCompile Include="sources\rxtd\rainmeter\MeasureBase.cpp" />
-    <ClCompile Include="sources\rxtd\rainmeter\Rainmeter.cpp" />
-    <ClCompile Include="sources\rxtd\winapi_wrappers\WinApiReturnCode.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="sources\rxtd\buffer_printer\BufferPrinter.h" />
-    <ClInclude Include="sources\rxtd\buffer_printer\ReadableStreamBuffer.h" />
-    <ClInclude Include="sources\rxtd\DataWithLock.h" />
-    <ClInclude Include="sources\rxtd\DiscreetInterpolator.h" />
-    <ClInclude Include="sources\rxtd\expression_parser\ASTParser.h" />
-    <ClInclude Include="sources\rxtd\expression_parser\ASTSolver.h" />
-    <ClInclude Include="sources\rxtd\expression_parser\GenericNode.h" />
-    <ClInclude Include="sources\rxtd\expression_parser\GrammarBuilder.h" />
-    <ClInclude Include="sources\rxtd\expression_parser\GrammarDescription.h" />
-    <ClInclude Include="sources\rxtd\expression_parser\Lexer.h" />
-    <ClInclude Include="sources\rxtd\expression_parser\OperatorNodes.h" />
-    <ClInclude Include="sources\rxtd\expression_parser\SyntaxTree.h" />
-    <ClInclude Include="sources\rxtd\GrowingVector.h" />
-    <ClInclude Include="sources\rxtd\IntMixer.h" />
-    <ClInclude Include="sources\rxtd\LinearInterpolator.h" />
-    <ClInclude Include="sources\rxtd\option_parsing\Option.h" />
-    <ClInclude Include="sources\rxtd\option_parsing\OptionBase.h" />
-    <ClInclude Include="sources\rxtd\option_parsing\OptionList.h" />
-    <ClInclude Include="sources\rxtd\option_parsing\OptionMap.h" />
-    <ClInclude Include="sources\rxtd\option_parsing\OptionSequence.h" />
-    <ClInclude Include="sources\rxtd\option_parsing\Tokenizer.h" />
-    <ClInclude Include="sources\rxtd\rainmeter\DataHandle.h" />
-    <ClInclude Include="sources\rxtd\rainmeter\InstanceKeeper.h" />
-    <ClInclude Include="sources\rxtd\rainmeter\Logger.h" />
-    <ClInclude Include="sources\rxtd\rainmeter\MeasureBase.h" />
-    <ClInclude Include="sources\rxtd\rainmeter\Rainmeter.h" />
-    <ClInclude Include="sources\rxtd\rainmeter\SkinHandle.h" />
-    <ClInclude Include="sources\rxtd\winapi_wrappers\ComException.h" />
-    <ClInclude Include="sources\rxtd\winapi_wrappers\GenericComWrapper.h" />
-    <ClInclude Include="sources\rxtd\winapi_wrappers\GenericCoTaskMemWrapper.h" />
-    <ClInclude Include="sources\rxtd\winapi_wrappers\IUnknownImpl.h" />
-    <ClInclude Include="sources\rxtd\winapi_wrappers\PropertyStoreWrapper.h" />
-    <ClInclude Include="sources\rxtd\winapi_wrappers\WinApiReturnCode.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Natvis Include="array_view.natvis" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="README.md" />
-    <None Include="sources\rxtd\expression_parser\README.md" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Utils\StdLibExtension\StdLibExtension.vcxproj">
-      <Project>{76a3d6d3-45e8-4391-8b94-2477afe23596}</Project>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

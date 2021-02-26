@@ -483,7 +483,7 @@ void AudioParent::initLogHelpers() {
 }
 
 void AudioParent::runFinisher(
-	handler::ExternalMethods::FinishMethodType finisher, const handler::ExternalData& handlerData, isview procName, Channel channel, isview handlerName
+	handler::ExternalMethods::FinishMethodType finisher, const handler::HandlerBase::ExternalData& handlerData, isview procName, Channel channel, isview handlerName
 ) const {
 	handler::ExternalMethods::CallContext context;
 	context.version = version;
@@ -566,9 +566,9 @@ void AudioParent::resolveProp(
 	// and if we still don't find requested info then it is caused either by delay in updating second thread
 	// or by device not having requested channel
 
-	handler::ExternalData const* handlerExternalData = nullptr;
+	handler::HandlerBase::ExternalData const* handlerExternalData = nullptr;
 
-	auto findExternalData = [&](const ProcessingOrchestrator::Snapshot& snap) -> handler::ExternalData const* {
+	auto findExternalData = [&](const ProcessingOrchestrator::Snapshot& snap) -> handler::HandlerBase::ExternalData const* {
 		if (auto procIter = snap.find(procName);
 			procIter != snap.end()) {
 
