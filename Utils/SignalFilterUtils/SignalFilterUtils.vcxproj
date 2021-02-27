@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{d0130229-8eba-4d32-b144-9cbc54cc50a2}</ProjectGuid>
+    <RootNamespace>SignalFilterUtils</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <Import Label="ProjectConfigurations" Project="$(PropertySheetsDir)/project_configs.props" />
+  <Import Project="$(PropertySheetsDir)/configuration.props" />
+  <Import Project="$(PropertySheetsDir)/build_type/static_lib.props" />
+  <Import Project="$(PropertySheetsDir)/configurations/$(Configuration)_config.props" />
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Test|x64'">
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <PlatformToolset>v142</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(PropertySheetsDir)/solution.props" />
+    <Import Project="$(PropertySheetsDir)/pch.props" />
+    <Import Project="$(PropertySheetsDir)/pch_copy.props" />
+    <Import Project="$(PropertySheetsDir)/platforms/$(Platform).props" />
+    <Import Project="$(PropertySheetsDir)/configurations/$(Configuration).props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <ItemGroup>
+    <ClCompile Include="sources\rxtd\filter_utils\BiQuadIIR.cpp" />
+    <ClCompile Include="sources\rxtd\filter_utils\BQFilterBuilder.cpp" />
+    <ClCompile Include="sources\rxtd\filter_utils\butterworth_lib\ButterworthWrapper.cpp" />
+    <ClCompile Include="sources\rxtd\filter_utils\butterworth_lib\iir.cpp" />
+    <ClCompile Include="sources\rxtd\filter_utils\FilterCascade.cpp" />
+    <ClCompile Include="sources\rxtd\filter_utils\FilterCascadeParser.cpp" />
+    <ClCompile Include="sources\rxtd\filter_utils\InfiniteResponseFilter.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="sources\rxtd\filter_utils\AbstractFilter.h" />
+    <ClInclude Include="sources\rxtd\filter_utils\BiQuadIIR.h" />
+    <ClInclude Include="sources\rxtd\filter_utils\BQFilterBuilder.h" />
+    <ClInclude Include="sources\rxtd\filter_utils\butterworth_lib\ButterworthWrapper.h" />
+    <ClInclude Include="sources\rxtd\filter_utils\butterworth_lib\iir.h" />
+    <ClInclude Include="sources\rxtd\filter_utils\FilterCascade.h" />
+    <ClInclude Include="sources\rxtd\filter_utils\FilterCascadeParser.h" />
+    <ClInclude Include="sources\rxtd\filter_utils\InfiniteResponseFilter.h" />
+    <ClInclude Include="sources\rxtd\filter_utils\LogarithmicIRF.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\StdLibExtension\StdLibExtension.vcxproj">
+      <Project>{76a3d6d3-45e8-4391-8b94-2477afe23596}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="sources\rxtd\filter_utils\butterworth_lib\iir.txt" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

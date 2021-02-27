@@ -21,15 +21,6 @@
     <Filter Include="sources\rxtd\audio_analyzer\image_utils">
       <UniqueIdentifier>{3b0cca31-00be-46d7-9c2b-2190ca8c84e6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="sources\rxtd\audio_analyzer\audio_utils">
-      <UniqueIdentifier>{9983f910-0024-44d2-bdc9-31dbc74164be}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="sources\rxtd\audio_analyzer\audio_utils\kiss_fft-lib">
-      <UniqueIdentifier>{3cb7bcf2-f4bf-4ed8-a4a5-8b0851d3df34}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="sources\rxtd\audio_analyzer\audio_utils\cheby_win-lib">
-      <UniqueIdentifier>{ff8b7d47-9950-4cac-9aa1-d513095c24a3}</UniqueIdentifier>
-    </Filter>
     <Filter Include="sources\rxtd\audio_analyzer\sound_processing">
       <UniqueIdentifier>{bdb8ab0b-fb55-4af4-aed4-b00fbf3b4a18}</UniqueIdentifier>
     </Filter>
@@ -50,12 +41,6 @@
     </Filter>
     <Filter Include="sources\rxtd\audio_analyzer\wasapi_wrappers\implementations">
       <UniqueIdentifier>{1efe0513-1dc6-45a6-a7af-26c084b2ac30}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="sources\rxtd\audio_analyzer\audio_utils\butterworth_lib">
-      <UniqueIdentifier>{f1e43e54-5810-43fb-9cfb-0fc68f48aeca}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="sources\rxtd\audio_analyzer\audio_utils\filter_utils">
-      <UniqueIdentifier>{5b48eb26-d45a-499a-8e18-14f7815e3222}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -106,39 +91,6 @@
     </ClInclude>
     <ClInclude Include="sources\rxtd\audio_analyzer\image_utils\WaveFormDrawer.h">
       <Filter>sources\rxtd\audio_analyzer\image_utils</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\CubicInterpolationHelper.h">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\CustomizableValueTransformer.h">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\DownsampleHelper.h">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\FFT.h">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\FftCascade.h">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\GaussianCoefficientsManager.h">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\MinMaxCounter.h">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\RandomGenerator.h">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\WindowFunctionHelper.h">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\kiss_fft-lib\KissFft.hh">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils\kiss_fft-lib</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\cheby_win-lib\cheby_win.h">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils\cheby_win-lib</Filter>
     </ClInclude>
     <ClInclude Include="sources\rxtd\audio_analyzer\sound_processing\Channel.h">
       <Filter>sources\rxtd\audio_analyzer\sound_processing</Filter>
@@ -221,33 +173,6 @@
     <ClInclude Include="sources\rxtd\audio_analyzer\wasapi_wrappers\implementations\MediaDeviceListNotificationClient.h">
       <Filter>sources\rxtd\audio_analyzer\wasapi_wrappers\implementations</Filter>
     </ClInclude>
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\filter_utils\AbstractFilter.h">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils\filter_utils</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\filter_utils\BiQuadIIR.h">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils\filter_utils</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\filter_utils\BQFilterBuilder.h">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils\filter_utils</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\filter_utils\FilterCascade.h">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils\filter_utils</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\filter_utils\FilterCascadeParser.h">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils\filter_utils</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\filter_utils\InfiniteResponseFilter.h">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils\filter_utils</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\filter_utils\LogarithmicIRF.h">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils\filter_utils</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\butterworth_lib\ButterworthWrapper.h">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils\butterworth_lib</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\butterworth_lib\iir.h">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils\butterworth_lib</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sources\dllmain.cpp">
@@ -282,27 +207,6 @@
     </ClCompile>
     <ClCompile Include="sources\rxtd\audio_analyzer\image_utils\WaveFormDrawer.cpp">
       <Filter>sources\rxtd\audio_analyzer\image_utils</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\CubicInterpolationHelper.cpp">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\CustomizableValueTransformer.cpp">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\FFT.cpp">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\FftCascade.cpp">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\GaussianCoefficientsManager.cpp">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\WindowFunctionHelper.cpp">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\cheby_win-lib\cheby_win.cpp">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils\cheby_win-lib</Filter>
     </ClCompile>
     <ClCompile Include="sources\rxtd\audio_analyzer\sound_processing\Channel.cpp">
       <Filter>sources\rxtd\audio_analyzer\sound_processing</Filter>
@@ -373,27 +277,6 @@
     <ClCompile Include="sources\rxtd\audio_analyzer\wasapi_wrappers\implementations\MediaDeviceListNotificationClient.cpp">
       <Filter>sources\rxtd\audio_analyzer\wasapi_wrappers\implementations</Filter>
     </ClCompile>
-    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\filter_utils\BiQuadIIR.cpp">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils\filter_utils</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\filter_utils\BQFilterBuilder.cpp">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils\filter_utils</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\filter_utils\FilterCascade.cpp">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils\filter_utils</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\filter_utils\FilterCascadeParser.cpp">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils\filter_utils</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\filter_utils\InfiniteResponseFilter.cpp">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils\filter_utils</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\butterworth_lib\ButterworthWrapper.cpp">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils\butterworth_lib</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\butterworth_lib\iir.cpp">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils\butterworth_lib</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\Common\resources\version.rc">
@@ -402,10 +285,5 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="sources\rxtd\audio_analyzer\audio_utils\butterworth_lib\iir.txt">
-      <Filter>sources\rxtd\audio_analyzer\audio_utils\butterworth_lib</Filter>
-    </Text>
   </ItemGroup>
 </Project>

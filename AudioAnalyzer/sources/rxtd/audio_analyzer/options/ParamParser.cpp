@@ -17,7 +17,7 @@ using namespace std::string_literals;
 using rxtd::audio_analyzer::options::ParamParser;
 using rxtd::audio_analyzer::options::ProcessingData;
 using rxtd::audio_analyzer::Channel;
-using rxtd::audio_analyzer::audio_utils::filter_utils::FilterCascadeParser;
+using rxtd::filter_utils::FilterCascadeParser;
 
 bool ParamParser::parse(Version _version, bool suppressLogger) {
 	anythingChanged = false;

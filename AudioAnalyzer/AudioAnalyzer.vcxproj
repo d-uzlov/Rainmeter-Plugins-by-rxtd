@@ -43,33 +43,13 @@
     <Import Project="$(PropertySheetsDir)configurations/$(Configuration).props" />
   </ImportGroup>
   <PropertyGroup>
-    <IncludePath>$(SolutionDir)Utils/RainmeterApiHelpers/sources/;$(SolutionDir)Utils/WinApiWrappers/sources/;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)Utils/RainmeterApiHelpers/sources/;$(SolutionDir)Utils/WinApiWrappers/sources/;$(SolutionDir)Utils/SignalFilterUtils/sources/;$(SolutionDir)Utils/FftUtils/sources/;$(SolutionDir)Utils/GenericSignalUtils/sources/;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
     <ClInclude Include="local-version.h" />
     <ClInclude Include="sources\rxtd\audio_analyzer\AudioChild.h" />
     <ClInclude Include="sources\rxtd\audio_analyzer\AudioParent.h" />
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\butterworth_lib\ButterworthWrapper.h" />
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\butterworth_lib\iir.h" />
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\cheby_win-lib\cheby_win.h" />
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\CubicInterpolationHelper.h" />
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\CustomizableValueTransformer.h" />
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\DownsampleHelper.h" />
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\FFT.h" />
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\FftCascade.h" />
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\filter_utils\AbstractFilter.h" />
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\filter_utils\BiQuadIIR.h" />
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\filter_utils\BQFilterBuilder.h" />
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\filter_utils\FilterCascade.h" />
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\filter_utils\FilterCascadeParser.h" />
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\filter_utils\InfiniteResponseFilter.h" />
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\filter_utils\LogarithmicIRF.h" />
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\GaussianCoefficientsManager.h" />
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\kiss_fft-lib\KissFft.hh" />
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\MinMaxCounter.h" />
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\RandomGenerator.h" />
-    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\WindowFunctionHelper.h" />
     <ClInclude Include="sources\rxtd\audio_analyzer\image_utils\BmpWriter.h" />
     <ClInclude Include="sources\rxtd\audio_analyzer\image_utils\Color.h" />
     <ClInclude Include="sources\rxtd\audio_analyzer\image_utils\ImageWriteHelper.h" />
@@ -115,20 +95,6 @@
     <ClCompile Include="Sources\dllmain.cpp" />
     <ClCompile Include="sources\rxtd\audio_analyzer\AudioChild.cpp" />
     <ClCompile Include="sources\rxtd\audio_analyzer\AudioParent.cpp" />
-    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\butterworth_lib\ButterworthWrapper.cpp" />
-    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\butterworth_lib\iir.cpp" />
-    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\cheby_win-lib\cheby_win.cpp" />
-    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\CubicInterpolationHelper.cpp" />
-    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\CustomizableValueTransformer.cpp" />
-    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\FFT.cpp" />
-    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\FftCascade.cpp" />
-    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\filter_utils\BiQuadIIR.cpp" />
-    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\filter_utils\BQFilterBuilder.cpp" />
-    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\filter_utils\FilterCascade.cpp" />
-    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\filter_utils\FilterCascadeParser.cpp" />
-    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\filter_utils\InfiniteResponseFilter.cpp" />
-    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\GaussianCoefficientsManager.cpp" />
-    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\WindowFunctionHelper.cpp" />
     <ClCompile Include="sources\rxtd\audio_analyzer\image_utils\BmpWriter.cpp" />
     <ClCompile Include="sources\rxtd\audio_analyzer\image_utils\Color.cpp" />
     <ClCompile Include="sources\rxtd\audio_analyzer\image_utils\ImageWriteHelper.cpp" />
@@ -165,11 +131,20 @@
     <ResourceCompile Include="..\Common\resources\version.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Utils\FftUtils\FftUtils.vcxproj">
+      <Project>{1c4c178d-a05d-4e2b-9dca-8c3baf84bed9}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Utils\GenericSignalUtils\GenericSignalUtils.vcxproj">
+      <Project>{7af3fb6d-71e1-47d0-bd4c-01f6390a66a2}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\Utils\GenericUtils\GenericUtils.vcxproj">
       <Project>{ed9dc428-f99f-4695-a5f7-aafba501a962}</Project>
     </ProjectReference>
     <ProjectReference Include="..\Utils\RainmeterApiHelpers\RainmeterApiHelpers.vcxproj">
       <Project>{e2f48041-57e0-4ce7-ba1f-97b3a9429575}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Utils\SignalFilterUtils\SignalFilterUtils.vcxproj">
+      <Project>{d0130229-8eba-4d32-b144-9cbc54cc50a2}</Project>
     </ProjectReference>
     <ProjectReference Include="..\Utils\StdLibExtension\StdLibExtension.vcxproj">
       <Project>{76a3d6d3-45e8-4391-8b94-2477afe23596}</Project>
@@ -180,9 +155,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
-  </ItemGroup>
-  <ItemGroup>
-    <Text Include="sources\rxtd\audio_analyzer\audio_utils\butterworth_lib\iir.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

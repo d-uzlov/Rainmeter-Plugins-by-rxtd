@@ -7,7 +7,7 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include "rxtd/audio_analyzer/audio_utils/RandomGenerator.h"
+#include "rxtd/audio_utils/RandomGenerator.h"
 
 #include "FftAnalyzer.h"
 
@@ -52,7 +52,7 @@ ParamsContainer FftAnalyzer::vParseParams(
 	params.randomDuration = std::abs(om.get(L"randomDuration").asFloat(1000.0)) * 0.001;
 
 	params.wcfDescription = om.get(L"windowFunction").asString(L"hann");
-	params.createWindow = audio_utils::WindowFunctionHelper::parse(params.wcfDescription, cl);
+	params.createWindow = fft_utils::WindowFunctionHelper::parse(params.wcfDescription, cl);
 
 	return result;
 }
@@ -79,7 +79,7 @@ FftAnalyzer::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData
 
 	cascades.resize(params.cascadesCount);
 
-	audio_utils::FftCascade::Params cascadeParams;
+	fft_utils::FftCascade::Params cascadeParams;
 	cascadeParams.fftSize = fftSize;
 	cascadeParams.samplesPerSec = config.sampleRate;
 	cascadeParams.inputStride = inputStride;
@@ -133,7 +133,7 @@ void FftAnalyzer::processRandom(index waveSize, clock::time_point killTime) {
 	wave.reserve(waveSize);
 
 	for (index i = 0; i < waveSize; ++i) {
-		if (randomState == RandomState::ON) {
+		if (randomState == RandomState::eON) {
 			wave.push_back(float(random.next() * params.randomTest));
 		} else {
 			wave.push_back(0.0f);
@@ -142,10 +142,10 @@ void FftAnalyzer::processRandom(index waveSize, clock::time_point killTime) {
 		randomCurrentOffset++;
 		if (randomCurrentOffset == randomBlockSize) {
 			randomCurrentOffset = 0;
-			if (randomState == RandomState::ON) {
-				randomState = RandomState::OFF;
+			if (randomState == RandomState::eON) {
+				randomState = RandomState::eOFF;
 			} else {
-				randomState = RandomState::ON;
+				randomState = RandomState::eON;
 			}
 		}
 	}

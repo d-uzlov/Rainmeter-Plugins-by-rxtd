@@ -9,7 +9,7 @@
 
 #pragma once
 #include "ResamplerProvider.h"
-#include "rxtd/audio_analyzer/audio_utils/CustomizableValueTransformer.h"
+#include "rxtd/audio_utils/CustomizableValueTransformer.h"
 #include "rxtd/audio_analyzer/sound_processing/sound_handlers/HandlerBase.h"
 
 namespace rxtd::audio_analyzer::handler {

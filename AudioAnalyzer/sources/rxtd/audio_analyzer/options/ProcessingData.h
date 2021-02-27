@@ -8,7 +8,7 @@
  */
 
 #pragma once
-#include "rxtd/audio_analyzer/audio_utils/filter_utils/FilterCascadeParser.h"
+#include "rxtd/filter_utils/FilterCascadeParser.h"
 #include "rxtd/audio_analyzer/sound_processing/Channel.h"
 #include "rxtd/audio_analyzer/sound_processing/sound_handlers/ExternalMethods.h"
 
@@ -18,7 +18,7 @@ namespace rxtd::audio_analyzer::options {
 
 		struct FilterInfo {
 			string raw;
-			audio_utils::filter_utils::FilterCascadeCreator creator;
+			filter_utils::FilterCascadeCreator creator;
 
 			friend bool operator==(const FilterInfo& lhs, const FilterInfo& rhs) {
 				return lhs.raw == rhs.raw;

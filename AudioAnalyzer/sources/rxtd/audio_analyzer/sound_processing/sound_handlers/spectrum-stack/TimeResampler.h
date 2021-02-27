@@ -9,14 +9,14 @@
 
 #pragma once
 #include "ResamplerProvider.h"
-#include "rxtd/audio_analyzer/audio_utils/CustomizableValueTransformer.h"
-#include "rxtd/audio_analyzer/audio_utils/filter_utils/LogarithmicIRF.h"
+#include "rxtd/audio_utils/CustomizableValueTransformer.h"
 #include "rxtd/audio_analyzer/sound_processing/sound_handlers/HandlerBase.h"
+#include "rxtd/filter_utils/LogarithmicIRF.h"
 
 namespace rxtd::audio_analyzer::handler {
 	class TimeResampler : public ResamplerProvider {
 		using CVT = audio_utils::CustomizableValueTransformer;
-		using LogarithmicIRF = audio_utils::filter_utils::LogarithmicIRF;
+		using LogarithmicIRF = filter_utils::LogarithmicIRF;
 
 		struct Params {
 			double granularity{};

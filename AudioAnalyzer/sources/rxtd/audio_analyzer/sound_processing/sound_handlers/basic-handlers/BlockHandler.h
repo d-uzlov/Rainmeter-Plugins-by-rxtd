@@ -8,14 +8,14 @@
  */
 
 #pragma once
-#include "rxtd/audio_analyzer/audio_utils/CustomizableValueTransformer.h"
-#include "rxtd/audio_analyzer/audio_utils/filter_utils/LogarithmicIRF.h"
+#include "rxtd/audio_utils/CustomizableValueTransformer.h"
+#include "rxtd/filter_utils/LogarithmicIRF.h"
 #include "rxtd/audio_analyzer/sound_processing/sound_handlers/HandlerBase.h"
 
 namespace rxtd::audio_analyzer::handler {
 	class BlockHandler : public HandlerBase {
 		using CVT = audio_utils::CustomizableValueTransformer;
-		using LogarithmicIRF = audio_utils::filter_utils::LogarithmicIRF;
+		using LogarithmicIRF = filter_utils::LogarithmicIRF;
 
 		struct Params {
 			double updateInterval{};

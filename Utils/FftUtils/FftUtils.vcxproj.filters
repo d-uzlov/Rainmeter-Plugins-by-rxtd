@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="sources">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="sources\rxtd">
+      <UniqueIdentifier>{4960bbf4-242f-4b70-a259-768d9bb83859}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sources\rxtd\fft_utils">
+      <UniqueIdentifier>{d7576117-2a41-4430-81da-89681ae62e0c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sources\libs">
+      <UniqueIdentifier>{0a4ffc87-d45f-4537-81fc-4d688b949e0e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sources\libs\kiss_fft">
+      <UniqueIdentifier>{265c9136-dc91-49c1-ad0d-2d155ba9fc11}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sources\libs\cheby_win">
+      <UniqueIdentifier>{1a4e012f-1b1b-4c0b-b2c4-843991768ac1}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="sources\rxtd\fft_utils\FFT.h">
+      <Filter>sources\rxtd\fft_utils</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\fft_utils\FftCascade.h">
+      <Filter>sources\rxtd\fft_utils</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\libs\kiss_fft\KissFft.hh">
+      <Filter>sources\libs\kiss_fft</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\libs\cheby_win\cheby_win.h">
+      <Filter>sources\libs\cheby_win</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\fft_utils\WindowFunctionHelper.h">
+      <Filter>sources\rxtd\fft_utils</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="sources\rxtd\fft_utils\FFT.cpp">
+      <Filter>sources\rxtd\fft_utils</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\fft_utils\FftCascade.cpp">
+      <Filter>sources\rxtd\fft_utils</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\libs\cheby_win\cheby_win.cpp">
+      <Filter>sources\libs\cheby_win</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\fft_utils\WindowFunctionHelper.cpp">
+      <Filter>sources\rxtd\fft_utils</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

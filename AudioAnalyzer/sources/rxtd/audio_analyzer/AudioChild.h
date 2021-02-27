@@ -9,7 +9,7 @@
 
 #pragma once
 #include "AudioParent.h"
-#include "audio_utils/CustomizableValueTransformer.h"
+#include "rxtd/audio_utils/CustomizableValueTransformer.h"
 
 namespace rxtd::audio_analyzer {
 	class AudioChild : public utils::MeasureBase {

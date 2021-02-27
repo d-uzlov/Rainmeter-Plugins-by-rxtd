@@ -8,14 +8,14 @@
  */
 
 #pragma once
-#include "rxtd/audio_analyzer/audio_utils/FFT.h"
-#include "rxtd/audio_analyzer/audio_utils/FftCascade.h"
-#include "rxtd/audio_analyzer/audio_utils/WindowFunctionHelper.h"
+#include "rxtd/fft_utils/FFT.h"
+#include "rxtd/fft_utils/FftCascade.h"
+#include "rxtd/fft_utils/WindowFunctionHelper.h"
 #include "rxtd/audio_analyzer/sound_processing/sound_handlers/HandlerBase.h"
 
 namespace rxtd::audio_analyzer::handler {
 	class FftAnalyzer : public HandlerBase {
-		using WCF = audio_utils::WindowFunctionHelper::WindowCreationFunc;
+		using WCF = fft_utils::WindowFunctionHelper::WindowCreationFunc;
 
 		struct Params {
 		private:
@@ -61,11 +61,11 @@ namespace rxtd::audio_analyzer::handler {
 		index randomBlockSize = 0;
 		index randomCurrentOffset = 0;
 
-		enum class RandomState { ON, OFF } randomState{ RandomState::ON };
+		enum class RandomState { eON, eOFF } randomState{ RandomState::eON };
 
-		std::vector<audio_utils::FftCascade> cascades{};
+		std::vector<fft_utils::FftCascade> cascades{};
 
-		audio_utils::FFT fft{};
+		fft_utils::FFT fft{};
 
 	public:
 		[[nodiscard]]
