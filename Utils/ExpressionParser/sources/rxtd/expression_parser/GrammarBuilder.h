@@ -22,7 +22,7 @@ namespace rxtd::expression_parser {
 		using PrecedenceType = OperatorInfo::PrecedenceType;
 		using SolveFunction = GrammarDescription::MainOperatorInfo::SolveFunction;
 
-		class OperatorRepeatException : std::runtime_error {
+		class OperatorRepeatException : public std::runtime_error {
 			sview reason;
 		public:
 			explicit OperatorRepeatException(sview reason) : runtime_error(""), reason(reason) {}

@@ -23,7 +23,7 @@
       <DiagnosticsFormat>Classic</DiagnosticsFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <DisableSpecificWarnings>4100;4458</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4100;4458;4239</DisableSpecificWarnings>
       <ProgramDataBaseFileName>$(IntDir)$(ProjectName)-vc$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Link>

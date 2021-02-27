@@ -153,10 +153,10 @@ namespace rxtd::audio_analyzer::image_utils {
 			}
 
 			IntColor result{};
-			result.r = uint8_t(std::clamp<int>(std::lround(_.rgb.red * 255), 0, 255));
-			result.g = uint8_t(std::clamp<int>(std::lround(_.rgb.green * 255), 0, 255));
-			result.b = uint8_t(std::clamp<int>(std::lround(_.rgb.blue * 255), 0, 255));
-			result.a = uint8_t(std::clamp<int>(std::lround(alpha * 255), 0, 255));
+			result.value.rgba.r = uint8_t(std::clamp<int>(std::lround(_.rgb.red * 255), 0, 255));
+			result.value.rgba.g = uint8_t(std::clamp<int>(std::lround(_.rgb.green * 255), 0, 255));
+			result.value.rgba.b = uint8_t(std::clamp<int>(std::lround(_.rgb.blue * 255), 0, 255));
+			result.value.rgba.a = uint8_t(std::clamp<int>(std::lround(alpha * 255), 0, 255));
 
 			return result;
 		}

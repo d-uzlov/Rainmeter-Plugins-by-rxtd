@@ -38,10 +38,10 @@ struct BMPHeader {
 		uint32_t importantColorCount = 0;
 
 		struct {
-			uint32_t red = IntColor{}.withR(0xFF).full;
-			uint32_t green = IntColor{}.withG(0xFF).full;
-			uint32_t blue = IntColor{}.withB(0xFF).full;
-			uint32_t alpha = IntColor{}.withA(0xFF).full;
+			uint32_t r = IntColor{}.withR(0xFF).value.full;
+			uint32_t g = IntColor{}.withG(0xFF).value.full;
+			uint32_t b = IntColor{}.withB(0xFF).value.full;
+			uint32_t a = IntColor{}.withA(0xFF).value.full;
 		} bitMask;
 	} dibHeader{};
 

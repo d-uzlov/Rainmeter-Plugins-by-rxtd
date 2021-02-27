@@ -60,12 +60,7 @@ void StripedImageFadeHelper::inflateLine(array_view<IntColor> source, array_span
 	if (flatBeginIndex >= width) {
 		for (index i = fadeBeginIndex; i < width; i++) {
 			mixer.setFactor(fadeDistance * fadeDistance);
-			auto sc = source[i];
-			sc.a = mixer.mix(back.a, sc.a);
-			sc.r = mixer.mix(back.r, sc.r);
-			sc.g = mixer.mix(back.g, sc.g);
-			sc.b = mixer.mix(back.b, sc.b);
-			dest[i] = sc;
+			dest[i] = back.mixWith(source[i], mixer);
 
 			fadeDistance -= fadeDistanceStep;
 		}
@@ -76,12 +71,7 @@ void StripedImageFadeHelper::inflateLine(array_view<IntColor> source, array_span
 
 	for (index i = fadeBeginIndex; i < flatBeginIndex; i++) {
 		mixer.setFactor(fadeDistance * fadeDistance);
-		auto sc = source[i];
-		sc.a = mixer.mix(back.a, sc.a);
-		sc.r = mixer.mix(back.r, sc.r);
-		sc.g = mixer.mix(back.g, sc.g);
-		sc.b = mixer.mix(back.b, sc.b);
-		dest[i] = sc;
+		dest[i] = back.mixWith(source[i], mixer);
 
 		fadeDistance -= fadeDistanceStep;
 	}
@@ -120,12 +110,12 @@ void StripedImageFadeHelper::drawBorderInLine(array_span<IntColor> line) const {
 	index borderEndIndex = borderBeginIndex + borderSize;
 	if (borderEndIndex >= width) {
 		for (index i = borderBeginIndex; i < width; i++) {
-			line[i].full = border.full;
+			line[i].value.full = border.value.full;
 		}
 		borderBeginIndex = 0;
 		borderEndIndex -= width;
 	}
 	for (index i = borderBeginIndex; i < borderEndIndex; i++) {
-		line[i].full = border.full;
+		line[i].value.full = border.value.full;
 	}
 }

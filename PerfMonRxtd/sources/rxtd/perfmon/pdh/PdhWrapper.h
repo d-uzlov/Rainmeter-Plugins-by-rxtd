@@ -17,7 +17,7 @@
 #include "rxtd/Logger.h"
 
 namespace rxtd::perfmon::pdh {
-	class PdhException : std::runtime_error {
+	class PdhException : public std::runtime_error {
 		PdhReturnCode code;
 		sview cause;
 	public:

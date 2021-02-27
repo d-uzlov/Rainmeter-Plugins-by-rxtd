@@ -11,10 +11,10 @@
 #include "rxtd/IntMixer.h"
 
 namespace rxtd::audio_analyzer::image_utils {
-	union IntColor {
-		struct {
+	struct IntColor {
+		struct Components {
 			// order BGRA is very important for performance reasons
-			// it's a standard order for BMP files
+			// it's the standard order for BMP files
 			// any other order makes image parsing extremely slow
 			uint8_t b;
 			uint8_t g;
@@ -22,49 +22,52 @@ namespace rxtd::audio_analyzer::image_utils {
 			uint8_t a;
 		};
 
-		uint32_t full;
+		union {
+			Components rgba;
+			uint32_t full;
+		} value;
 
 		template<typename MixType, uint8_t precision>
 		[[nodiscard]]
 		IntColor mixWith(IntColor other, IntMixer<MixType, precision> mixer) const {
 			IntColor result{};
-			result.a = mixer.mix(a, other.a);
-			result.r = mixer.mix(r, other.r);
-			result.g = mixer.mix(g, other.g);
-			result.b = mixer.mix(b, other.b);
+			result.value.rgba.a = static_cast<int8_t>(mixer.mix(value.rgba.a, other.value.rgba.a));
+			result.value.rgba.r = static_cast<int8_t>(mixer.mix(value.rgba.r, other.value.rgba.r));
+			result.value.rgba.g = static_cast<int8_t>(mixer.mix(value.rgba.g, other.value.rgba.g));
+			result.value.rgba.b = static_cast<int8_t>(mixer.mix(value.rgba.b, other.value.rgba.b));
 			return result;
 		}
 
 		[[nodiscard]]
 		IntColor withR(index value) const {
 			IntColor result = *this;
-			result.r = uint8_t(value);
+			result.value.rgba.r = uint8_t(value);
 			return result;
 		}
 
 		[[nodiscard]]
 		IntColor withG(index value) const {
 			IntColor result = *this;
-			result.g = uint8_t(value);
+			result.value.rgba.g = uint8_t(value);
 			return result;
 		}
 
 		[[nodiscard]]
 		IntColor withB(index value) const {
 			IntColor result = *this;
-			result.b = uint8_t(value);
+			result.value.rgba.b = uint8_t(value);
 			return result;
 		}
 
 		[[nodiscard]]
 		IntColor withA(index value) const {
 			IntColor result = *this;
-			result.a = uint8_t(value);
+			result.value.rgba.a = uint8_t(value);
 			return result;
 		}
 
 		friend bool operator==(const IntColor& lhs, const IntColor& rhs) {
-			return lhs.full == rhs.full;
+			return lhs.value.full == rhs.value.full;
 		}
 
 		friend bool operator!=(const IntColor& lhs, const IntColor& rhs) {
