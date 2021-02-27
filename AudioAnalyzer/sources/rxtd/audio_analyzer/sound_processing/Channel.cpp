@@ -87,7 +87,7 @@ ChannelLayout::ChannelLayout(sview _name, std::vector<std::optional<Channel>> ch
 	name = _name;
 
 	for (index i = 0; i < static_cast<index>(channels.size()); i++) {
-		auto channelOpt = channels[i];
+		auto channelOpt = channels[static_cast<size_t>(i)];
 		if (!channelOpt.has_value()) {
 			continue;
 		}

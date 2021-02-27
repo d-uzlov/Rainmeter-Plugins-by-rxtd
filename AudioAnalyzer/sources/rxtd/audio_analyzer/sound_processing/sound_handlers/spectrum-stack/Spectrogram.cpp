@@ -137,7 +137,7 @@ Spectrogram::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData
 
 	auto& config = getConfiguration();
 	const index sampleRate = config.sampleRate;
-	blockSize = index(sampleRate * params.resolution);
+	blockSize = static_cast<index>(static_cast<double>(sampleRate) * params.resolution);
 	blockSize = std::max<index>(blockSize, 1);
 
 	const index width = params.length;
@@ -252,7 +252,7 @@ void Spectrogram::InputStripMaker::fillStrip(array_view<float> data, array_span<
 	const auto lowColor = colors[0].color;
 	const auto highColor = colors[1].color;
 
-	for (index i = 0; i < index(buffer.size()); ++i) {
+	for (index i = 0; i < static_cast<index>(buffer.size()); ++i) {
 		auto value = interpolator.toValue(data[i]);
 		value = std::clamp(value, 0.0f, 1.0f);
 

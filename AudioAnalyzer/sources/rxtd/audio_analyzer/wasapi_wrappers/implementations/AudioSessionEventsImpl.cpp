@@ -103,8 +103,8 @@ HRESULT AudioSessionEventsImpl::OnChannelVolumeChanged(DWORD channelCount, float
 	}
 
 	bool otherNoneOne = false;
-	for (index i = 0; i < index(channelCount); ++i) {
-		if (i != index(channel) && volumes[i] != 1.0f) {
+	for (index i = 0; i < static_cast<index>(channelCount); ++i) {
+		if (i != static_cast<index>(channel) && volumes[i] != 1.0f) {
 			otherNoneOne = true;
 			// no break because we need to set everything to 1.0
 			volumes[i] = 1.0f;

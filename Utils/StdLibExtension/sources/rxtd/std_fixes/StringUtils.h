@@ -31,21 +31,19 @@ namespace rxtd::std_fixes {
 		}
 
 		sview makeView(const wchar_t* base) const {
-			return sview(base + offset, length);
+			return sview(base + offset, static_cast<size_t>(length));
 		}
 
 		template<typename CharTraits>
 		[[nodiscard]]
-		std::basic_string_view<wchar_t, CharTraits> makeView(std::basic_string_view<wchar_t, CharTraits> base) const {
-			return std::basic_string_view<wchar_t, CharTraits>(base.data() + offset, length);
+		StringViewBase<wchar_t, CharTraits> makeView(StringViewBase<wchar_t, CharTraits> base) const {
+			return StringViewBase<wchar_t, CharTraits>(base.data() + offset, static_cast<size_t>(length));
 		}
 
 		template<typename CharTraits, typename Allocator>
 		[[nodiscard]]
-		std::basic_string_view<wchar_t, CharTraits> makeView(
-			const std::basic_string<wchar_t, CharTraits, Allocator>& base
-		) const {
-			return std::basic_string_view<wchar_t, CharTraits>(base.data() + offset, length);
+		StringViewBase<wchar_t, CharTraits> makeView(const StringBase<wchar_t, CharTraits, Allocator>& base) const {
+			return StringViewBase<wchar_t, CharTraits>(base.data() + offset, static_cast<size_t>(length));
 		}
 
 		[[nodiscard]]
@@ -74,19 +72,21 @@ namespace rxtd::std_fixes {
 		static void makeUppercaseInPlace(sview str);
 
 		static void makeUppercaseInPlace(string& str) {
-			makeUppercaseInPlace(sview{ str });
+			makeUppercaseInPlace(str.view());
 		}
 
 		template<typename CharTraits>
-		static std::basic_string_view<wchar_t, CharTraits> trim(std::basic_string_view<wchar_t, CharTraits> view) {
+		static StringViewBase<wchar_t, CharTraits> trim(StringViewBase<wchar_t, CharTraits> view) {
 			const auto begin = view.find_first_not_of(L" \t");
 			if (begin == sview::npos) {
 				return {};
 			}
 
+			view.remove_prefix(begin);
+
 			const auto end = view.find_last_not_of(L" \t"); // always valid if find_first_not_of succeeded
 
-			return { view.data() + begin, end - begin + 1 };
+			return view.substr(end);
 		}
 
 		[[nodiscard]]
@@ -152,7 +152,7 @@ namespace rxtd::std_fixes {
 
 		template<typename CharTraits>
 		[[nodiscard]]
-		static std::basic_string<wchar_t, CharTraits> trimCopy(std::basic_string_view<wchar_t, CharTraits> str) {
+		static StringBase<wchar_t, CharTraits> trimCopy(StringViewBase<wchar_t, CharTraits> str) {
 			// from stackoverflow
 			const auto firstNotSpace = std::find_if_not(
 				str.begin(),
@@ -224,7 +224,7 @@ namespace rxtd::std_fixes {
 		) {
 			if (count != string::npos) {
 				const index endRemoveStart = begin + count;
-				if (endRemoveStart <= index(str.length())) {
+				if (endRemoveStart <= static_cast<index>(str.length())) {
 					str.erase(endRemoveStart);
 				}
 			}
@@ -234,7 +234,7 @@ namespace rxtd::std_fixes {
 		}
 
 		[[nodiscard]]
-		static index parseInt(sview view);
+		static index parseInt(sview view, bool forceHex = false);
 
 		[[nodiscard]]
 		static double parseFloat(sview view);

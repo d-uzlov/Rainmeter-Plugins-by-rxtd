@@ -76,6 +76,12 @@
     <ClInclude Include="sources\rxtd\std_fixes\AnyContainer.h">
       <Filter>sources\rxtd\std_fixes</Filter>
     </ClInclude>
+    <ClInclude Include="sources\rxtd\std_fixes\OverloadedVisitor.h">
+      <Filter>sources\rxtd\std_fixes</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\std_fixes\StringBaseExtended.h">
+      <Filter>sources\rxtd\std_fixes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="array_view.natvis" />

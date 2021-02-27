@@ -75,7 +75,7 @@ namespace rxtd::perfmon::pdh {
 		}
 
 		[[nodiscard]]
-		const wchar_t* getName(index item) const {
+		sview getName(index item) const {
 			return getCounterPointer(countersCount - 1)[item].szName;
 		}
 
@@ -84,7 +84,7 @@ namespace rxtd::perfmon::pdh {
 		 */
 		[[nodiscard]]
 		index getNamesSize() const {
-			return (counterBufferSize - itemsCount * sizeof(PDH_RAW_COUNTER_ITEM_W)) / sizeof(wchar_t);
+			return (counterBufferSize - itemsCount * static_cast<index>(sizeof(PDH_RAW_COUNTER_ITEM_W))) / static_cast<index>(sizeof(wchar_t));
 		}
 	};
 }

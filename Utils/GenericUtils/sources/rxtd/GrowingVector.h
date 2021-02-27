@@ -26,12 +26,12 @@ namespace rxtd {
 		// Alternatively you can call #reset()
 		void setMaxSize(index value) {
 			maxSize = value;
-			array.reserve(maxSize);
+			array.reserve(static_cast<size_t>(maxSize));
 		}
 
 		[[nodiscard]]
 		index getRemainingSize() const {
-			return index(array.size()) - offset;
+			return static_cast<index>(array.size()) - offset;
 		}
 
 		[[nodiscard]]
@@ -45,13 +45,13 @@ namespace rxtd {
 
 		[[nodiscard]]
 		array_span<T> allocateNext(index chunkSize) {
-			if (maxSize != 0 && index(array.size()) + chunkSize > maxSize) {
+			if (maxSize != 0 && static_cast<index>(array.size()) + chunkSize > maxSize) {
 				compact();
 			}
 
-			array.resize(index(array.size()) + chunkSize);
+			array.resize(array.size() + static_cast<size_t>(chunkSize));
 
-			return { array.data() + index(array.size()) - chunkSize, chunkSize };
+			return { array.data() + static_cast<index>(array.size()) - chunkSize, chunkSize };
 		}
 
 
@@ -120,7 +120,7 @@ namespace rxtd {
 
 		// resize vector to #count and fill it with #value
 		void reset(index count, T value) {
-			array.resize(count);
+			array.resize(static_cast<size_t>(count));
 			std::fill_n(array.begin(), count, value);
 			offset = 0;
 		}

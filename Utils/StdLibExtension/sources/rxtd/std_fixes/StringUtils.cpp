@@ -43,7 +43,7 @@ void StringUtils::makeUppercaseInPlace(sview str) {
 	// Hopefully this will require no more than 10-15 years.
 	auto* data = const_cast<wchar_t*>(str.data());
 
-	CharUpperBuffW(data, DWORD(str.length()));
+	CharUpperBuffW(data, static_cast<DWORD>(str.length()));
 }
 
 
@@ -57,27 +57,26 @@ SubstringViewInfo StringUtils::trimInfo(const wchar_t* base, SubstringViewInfo v
 
 	const auto end = view.find_last_not_of(L" \t"); // always valid if find_first_not_of succeeded
 
-	return viewInfo.substr(begin, end - begin + 1);
+	return viewInfo.substr(static_cast<index>(begin), static_cast<index>(end - begin + 1));
 }
 
-rxtd::index StringUtils::parseInt(sview view) {
+rxtd::index StringUtils::parseInt(sview view, bool forceHex) {
 	view = trim(view);
 
-	bool hex = false;
 	if (checkStartsWith(view, L"0x") || checkStartsWith(view, L"0X")) {
-		hex = true;
+		forceHex = true;
 		view = view.substr(2);
 	} else if (view[0] == L'+') {
 		view = view.substr(1);
 	}
 
-	if (!hex && view.length() > 0 && !iswdigit(view.front())
-		|| hex && view.length() > 0 && !iswxdigit(view.front())) {
+	if (!forceHex && view.length() > 0 && !iswdigit(view.front())
+		|| forceHex && view.length() > 0 && !iswxdigit(view.front())) {
 		return 0;
 	}
 
 	char buffer[80];
-	index size = std::min(view.length(), sizeof(buffer) / sizeof(*buffer));
+	index size = std::min(static_cast<index>(view.length()), static_cast<index>(sizeof(buffer) / sizeof(*buffer)));
 	for (index i = 0; i < size; ++i) {
 		const auto wc = view[i];
 		// check that all symbols fit into 1 byte
@@ -90,7 +89,7 @@ rxtd::index StringUtils::parseInt(sview view) {
 	}
 
 	index result = 0;
-	const int base = hex ? 16 : 10;
+	const int base = forceHex ? 16 : 10;
 	std::from_chars(buffer, buffer + size, result, base);
 	return result;
 }
@@ -107,7 +106,7 @@ double StringUtils::parseFloat(sview view) {
 	}
 
 	char buffer[80];
-	index size = std::min(view.length(), sizeof(buffer) / sizeof(*buffer));
+	index size = std::min(static_cast<index>(view.length()), static_cast<index>(sizeof(buffer) / sizeof(*buffer)));
 	for (index i = 0; i < size; ++i) {
 		const auto wc = view[i];
 		// check that all symbols fit into 1 byte

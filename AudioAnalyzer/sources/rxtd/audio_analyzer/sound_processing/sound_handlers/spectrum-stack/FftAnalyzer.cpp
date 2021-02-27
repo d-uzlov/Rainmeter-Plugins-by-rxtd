@@ -69,7 +69,10 @@ FftAnalyzer::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData
 
 	fftSize = std::max<index>(fftSize, minFftSize);
 
-	fft.setParams(fftSize, params.createWindow(fftSize));
+	std::vector<float> window;
+	window.resize(static_cast<size_t>(fftSize));
+	params.createWindow(window);
+	fft.setParams(fftSize, std::move(window));
 
 	inputStride = static_cast<index>(static_cast<double>(fftSize) * (1.0 - params.overlap));
 	inputStride = std::clamp<index>(inputStride, minFftSize, fftSize);
@@ -77,7 +80,7 @@ FftAnalyzer::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData
 	randomBlockSize = static_cast<index>(params.randomDuration * static_cast<double>(config.sampleRate) * static_cast<double>(fftSize) / static_cast<double>(inputStride));
 	randomCurrentOffset = 0;
 
-	cascades.resize(params.cascadesCount);
+	cascades.resize(static_cast<size_t>(params.cascadesCount));
 
 	fft_utils::FftCascade::Params cascadeParams;
 	cascadeParams.fftSize = fftSize;
@@ -88,8 +91,8 @@ FftAnalyzer::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData
 	};
 
 	for (index i = 0; i < params.cascadesCount; i++) {
-		const auto next = i + 1 < index(cascades.size()) ? &cascades[i + 1] : nullptr;
-		cascades[i].setParams(cascadeParams, &fft, next, i);
+		const auto next = i + 1 < static_cast<index>(cascades.size()) ? &cascades[static_cast<size_t>(i + 1)] : nullptr;
+		cascades[static_cast<size_t>(i)].setParams(cascadeParams, &fft, next, i);
 	}
 
 
@@ -97,7 +100,7 @@ FftAnalyzer::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData
 
 	snapshot.fftSize = fftSize;
 	snapshot.sampleRate = getConfiguration().sampleRate;
-	snapshot.cascadesCount = cascades.size();
+	snapshot.cascadesCount = static_cast<index>(cascades.size());
 
 	std::vector<index> eqWS;
 	index equivalentSize = inputStride;
@@ -130,11 +133,11 @@ void FftAnalyzer::processRandom(index waveSize, clock::time_point killTime) {
 	audio_utils::RandomGenerator random;
 
 	std::vector<float> wave;
-	wave.reserve(waveSize);
+	wave.reserve(static_cast<size_t>(waveSize));
 
 	for (index i = 0; i < waveSize; ++i) {
 		if (randomState == RandomState::eON) {
-			wave.push_back(float(random.next() * params.randomTest));
+			wave.push_back(static_cast<float>(random.next() * params.randomTest));
 		} else {
 			wave.push_back(0.0f);
 		}

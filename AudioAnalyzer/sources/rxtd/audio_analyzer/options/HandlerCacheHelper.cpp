@@ -142,7 +142,7 @@ void HandlerCacheHelper::readRawDescription2(
 	if (type == L"BandResampler") {
 		auto freqListIndex = optionMap.get(L"freqList").asString();
 		if (!freqListIndex.empty()) {
-			auto freqListOptionName = L"FreqList-"s += freqListIndex;
+			string freqListOptionName = L"FreqList-"s += freqListIndex;
 			auto freqListOption = rain.read(freqListOptionName);
 			if (freqListOption.empty()) {
 				freqListOptionName = L"FreqList_"s += freqListIndex;

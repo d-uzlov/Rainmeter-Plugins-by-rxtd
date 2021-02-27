@@ -54,11 +54,11 @@ namespace rxtd::std_fixes {
 			}
 		};
 
-		template<typename C, typename T, T(*ToUpper)(T)>
-		using case_insensitive_string = std::basic_string<C, ci_char_traits<C, T, ToUpper>>;
+		template<typename C, typename T, T(*ToUpper)(T), class Alloc = std::allocator<C>>
+		using case_insensitive_string = StringBase<C, ci_char_traits<C, T, ToUpper>, Alloc>;
 
 		template<typename C, typename T, T(*ToUpper)(T)>
-		using case_insensitive_string_view = std::basic_string_view<C, ci_char_traits<C, T, ToUpper>>;
+		using case_insensitive_string_view = StringViewBase<C, ci_char_traits<C, T, ToUpper>>;
 	}
 
 	using istring = cistring_details::case_insensitive_string<wchar_t, wint_t, towupper>;

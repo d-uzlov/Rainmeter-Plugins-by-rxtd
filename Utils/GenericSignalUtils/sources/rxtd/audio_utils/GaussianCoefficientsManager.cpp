@@ -13,12 +13,12 @@ using rxtd::audio_utils::GaussianCoefficientsManager;
 
 std::vector<double> GaussianCoefficientsManager::generateGaussianKernel(index radius) {
 	std::vector<double> kernel;
-	kernel.resize(radius * 2ll + 1);
+	kernel.resize(static_cast<std::vector<double>::size_type>(radius * 2 + 1));
 
-	const double restoredSigma = radius * (1.0 / 3.0);
+	const double restoredSigma = static_cast<double>(radius) * (1.0 / 3.0);
 	const double powerFactor = 1.0 / (2.0 * restoredSigma * restoredSigma);
 
-	double r = -double(radius);
+	double r = -static_cast<double>(radius);
 	double sum = 0.0;
 	for (double& k : kernel) {
 		k = std::exp(-r * r * powerFactor);

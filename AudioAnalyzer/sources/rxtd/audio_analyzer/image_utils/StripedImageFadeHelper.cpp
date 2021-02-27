@@ -41,13 +41,13 @@ void StripedImageFadeHelper::inflateLine(array_view<IntColor> source, array_span
 
 	const index realWidth = width - borderSize;
 
-	const index fadeWidth = index(realWidth * fading);
+	const index fadeWidth = static_cast<index>(static_cast<double>(realWidth) * fading);
 	const index flatWidth = realWidth - fadeWidth;
 
 	IntMixer<> mixer;
 	const auto back = background;
 
-	const double fadeDistanceStep = 1.0 / (realWidth * fading);
+	const double fadeDistanceStep = 1.0 / (static_cast<double>(realWidth) * fading);
 	double fadeDistance = 1.0;
 
 	index fadeBeginIndex = pastLastStripIndex + borderSize;

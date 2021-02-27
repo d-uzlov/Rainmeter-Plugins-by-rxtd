@@ -29,7 +29,7 @@ namespace rxtd::audio_utils {
 		}
 
 		[[nodiscard]]
-		double getValueFor(double x);
+		float getValueFor(float x);
 
 	private:
 		[[nodiscard]]

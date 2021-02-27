@@ -10,6 +10,7 @@
 #pragma once
 
 #include "OperatorNodes.h"
+#include "rxtd/std_fixes/OverloadedVisitor.h"
 
 namespace rxtd::expression_parser {
 	struct GenericNode {
@@ -27,26 +28,15 @@ namespace rxtd::expression_parser {
 
 		template<typename T>
 		GenericNode(T t) : value(std::move(t)) { }
-
-	private:
-		// from std::visit documentation
-		template<class... Ts>
-		struct overloadedVisitor : Ts... {
-			using Ts::operator()...;
-		};
-
-		template<class... Ts>
-		overloadedVisitor(Ts ...) -> overloadedVisitor<Ts...>;
-
-	public:
+		
 		template<typename ... Visitor>
 		auto visit(Visitor ... visitor) {
-			return std::visit(overloadedVisitor{ visitor... }, value);
+			return std::visit(std_fixes::OverloadedVisitor{ visitor... }, value);
 		}
 
 		template<typename ... Visitor>
 		auto visit(Visitor ... visitor) const {
-			return std::visit(overloadedVisitor{ visitor... }, value);
+			return std::visit(std_fixes::OverloadedVisitor{ visitor... }, value);
 		}
 
 		template<typename T>

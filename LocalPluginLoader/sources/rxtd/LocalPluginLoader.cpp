@@ -13,6 +13,15 @@
 using rxtd::LocalPluginLoader;
 using rxtd::std_fixes::StringUtils;
 
+namespace {
+	template<typename FunctionSignature>
+	FunctionSignature getDllFunction(HMODULE libHandle, const char* functionName) {
+		const auto ptr = GetProcAddress(libHandle, functionName);
+		const auto rawPtr = reinterpret_cast<void*>(ptr);
+		return reinterpret_cast<FunctionSignature>(rawPtr);
+	}
+}
+
 LocalPluginLoader::LocalPluginLoader(void* rm) {
 	rain = rainmeter::Rainmeter{ rm };
 	logger = rain.createLogger();
@@ -66,12 +75,12 @@ LocalPluginLoader::LocalPluginLoader(void* rm) {
 		return;
 	}
 
-	reloadFunc = reinterpret_cast<decltype(reloadFunc)>(GetProcAddress(hLib, "Reload"));
-	updateFunc = reinterpret_cast<decltype(updateFunc)>(GetProcAddress(hLib, "Update"));
-	getStringFunc = reinterpret_cast<decltype(getStringFunc)>(GetProcAddress(hLib, "GetString"));
-	executeBangFunc = reinterpret_cast<decltype(executeBangFunc)>(GetProcAddress(hLib, "ExecuteBang"));
+	reloadFunc = getDllFunction<decltype(reloadFunc)>(hLib, "Reload");
+	updateFunc = getDllFunction<decltype(updateFunc)>(hLib, "Update");
+	getStringFunc = getDllFunction<decltype(getStringFunc)>(hLib, "GetString");
+	executeBangFunc = getDllFunction<decltype(executeBangFunc)>(hLib, "ExecuteBang");
 
-	const auto initializeFunc = reinterpret_cast<void(*)(void**, void*)>(GetProcAddress(hLib, "Initialize"));
+	const auto initializeFunc = getDllFunction<void(*)(void**, void*)>(hLib, "Initialize");
 	if (initializeFunc != nullptr) {
 		initializeFunc(&pluginData, rm);
 	}
@@ -79,9 +88,9 @@ LocalPluginLoader::LocalPluginLoader(void* rm) {
 
 LocalPluginLoader::~LocalPluginLoader() {
 	if (hLib != nullptr) {
-		const auto finalizeFunc = GetProcAddress(hLib, "Finalize");
+		const auto finalizeFunc = getDllFunction<void(*)(void*)>(hLib, "Finalize");
 		if (finalizeFunc != nullptr) {
-			reinterpret_cast<void(*)(void*)>(finalizeFunc)(pluginData);
+			finalizeFunc(pluginData);
 		}
 
 		pluginData = nullptr;
@@ -150,8 +159,8 @@ const wchar_t* LocalPluginLoader::solveSectionVariable(const int count, const wc
 	}
 
 	std::string byteFuncName;
-	byteFuncName.resize(funcName.length());
-	for (index i = 0; i < index(funcName.length()); ++i) {
+	byteFuncName.resize(static_cast<std::string::size_type>(funcName.length()));
+	for (index i = 0; i < funcName.length(); ++i) {
 		// let's only support ascii
 		const wchar_t wc = funcName[i];
 		const char c = static_cast<char>(wc);
@@ -159,11 +168,12 @@ const wchar_t* LocalPluginLoader::solveSectionVariable(const int count, const wc
 			logger.error(L"Can not find function '{}'", funcName);
 			return nullptr;
 		}
-		byteFuncName[i] = c;
+		byteFuncName[static_cast<size_t>(i)] = c;
 	}
 
-	const auto funcPtr = reinterpret_cast<const wchar_t* (*)(void* data, int argc, const wchar_t* argv[])>(
-		GetProcAddress(hLib, byteFuncName.c_str()));
+	using ResolveFunction = const wchar_t* (*)(void* data, int argc, const wchar_t* argv[]);
+
+	const ResolveFunction funcPtr = getDllFunction<ResolveFunction>(hLib, byteFuncName.c_str());
 	if (funcPtr == nullptr) {
 		logger.error(L"Can not find function '{}'", funcName);
 		return nullptr;

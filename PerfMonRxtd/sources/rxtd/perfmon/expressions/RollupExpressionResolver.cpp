@@ -18,7 +18,7 @@
 using rxtd::perfmon::expressions::RollupExpressionResolver;
 
 rxtd::index RollupExpressionResolver::getExpressionsCount() const {
-	return index(expressions.size());
+	return static_cast<index>(expressions.size());
 }
 
 void RollupExpressionResolver::resetCaches() {
@@ -51,18 +51,19 @@ RollupExpressionResolver::ASTSolver RollupExpressionResolver::parseExpressionTre
 }
 
 void RollupExpressionResolver::parseExpressions(std::vector<ASTSolver>& vector, OptionList list, sview loggerName) {
-	vector.resize(list.size());
-	for (index i = 0; i < index(list.size()); ++i) {
-		vector[i] = parseExpressionTree(list.get(i).asString(), loggerName, i);
+	vector.resize(static_cast<size_t>(list.size()));
+	for (index i = 0; i < static_cast<index>(list.size()); ++i) {
+		vector[static_cast<size_t>(i)] = parseExpressionTree(list.get(i).asString(), loggerName, i);
 	}
 }
 
 void RollupExpressionResolver::checkExpressionIndices() {
-	for (index i = 0; i < index(expressions.size()); ++i) {
+	array_span<ASTSolver> expressionsView = expressions;
+	for (index i = 0; i < expressionsView.size(); ++i) {
 		try {
 			using CustomNode = expression_parser::ast_nodes::CustomTerminalNode;
 
-			expressions[i].peekTree().visitNodes(
+			expressionsView[i].peekTree().visitNodes(
 				[&](const auto& node) {
 					using Type = std::decay<decltype(node)>;
 					if constexpr (std::is_same<Type, CustomNode>::value) {
@@ -86,14 +87,14 @@ void RollupExpressionResolver::checkExpressionIndices() {
 
 						if (ref.type == Reference::Type::eEXPRESSION || ref.type == Reference::Type::eROLLUP_EXPRESSION) {
 							if (!ref.useOrigName) {
-								utils::StringUtils::makeUppercaseInPlace(ref.namePattern.getName());
+								std_fixes::StringUtils::makeUppercaseInPlace(ref.namePattern.getName());
 							}
 						}
 					}
 				}
 			);
 		} catch (std::runtime_error&) {
-			expressions[i] = {};
+			expressionsView[i] = {};
 		}
 	}
 }
@@ -170,7 +171,7 @@ double RollupExpressionResolver::resolveReference(const Reference& ref, array_vi
 			}
 		);
 	case Reference::Type::eROLLUP_EXPRESSION: return solveExpression(ref.counter, indices);
-	case Reference::Type::eCOUNT: return double(indices.size());
+	case Reference::Type::eCOUNT: return static_cast<double>(indices.size());
 	}
 
 	log.error(L"unexpected reference type in resolveReference(): {}", ref.type);
@@ -187,11 +188,11 @@ double RollupExpressionResolver::calculateRollupCountTotal(const RollupFunction 
 	case RollupFunction::eSUM: return static_cast<double>(instances.size());
 	case RollupFunction::eAVERAGE:
 		return static_cast<double>(simpleInstanceManager.getInstances().size())
-			/ double(instances.size());
+			/ static_cast<double>(instances.size());
 	case RollupFunction::eMINIMUM: {
 		index min = std::numeric_limits<index>::max();
 		for (const auto& item : instances) {
-			index val = index(item.indices.size()) + 1;
+			index val = static_cast<index>(item.indices.size()) + 1;
 			min = std::min(min, val);
 		}
 		return static_cast<double>(min);
@@ -199,7 +200,7 @@ double RollupExpressionResolver::calculateRollupCountTotal(const RollupFunction 
 	case RollupFunction::eMAXIMUM: {
 		index max = 0;
 		for (const auto& item : instances) {
-			index val = index(item.indices.size()) + 1;
+			index val = static_cast<index>(item.indices.size()) + 1;
 			max = std::max(max, val);
 		}
 		return static_cast<double>(max);
@@ -213,5 +214,5 @@ double RollupExpressionResolver::calculateRollupCountTotal(const RollupFunction 
 
 double RollupExpressionResolver::solveExpression(index expressionIndex, array_view<Indices> indices) const {
 	ReferenceResolver referenceResolver{ *this, indices };
-	return expressions[expressionIndex].solve(&referenceResolver);
+	return expressions[static_cast<size_t>(expressionIndex)].solve(&referenceResolver);
 }

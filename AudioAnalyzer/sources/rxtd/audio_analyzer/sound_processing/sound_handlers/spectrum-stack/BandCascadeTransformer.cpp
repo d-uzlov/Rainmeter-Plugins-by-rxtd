@@ -72,7 +72,7 @@ BandCascadeTransformer::vConfigure(const ParamsContainer& _params, Logger& cl, E
 
 	const auto dataSize = config.sourcePtr->getDataSize();
 	snapshot.clear();
-	snapshot.resize(dataSize.layersCount);
+	snapshot.resize(static_cast<size_t>(dataSize.layersCount));
 
 	return { dataSize.valuesCount, { config.sourcePtr->getDataSize().eqWaveSizes[0] } };
 }
@@ -83,7 +83,7 @@ void BandCascadeTransformer::vProcess(ProcessContext context, ExternalData& exte
 	const index layersCount = source.getDataSize().layersCount;
 
 	for (index i = 0; i < layersCount; i++) {
-		auto& meta = snapshot[i];
+		auto& meta = snapshot[static_cast<size_t>(i)];
 		meta.nextChunkIndex = 0;
 		meta.data = source.getSavedData(i);
 	}
@@ -101,7 +101,7 @@ void BandCascadeTransformer::vProcess(ProcessContext context, ExternalData& exte
 		}
 
 		for (index i = 0; i < layersCount; i++) {
-			auto& meta = snapshot[i];
+			auto& meta = snapshot[static_cast<size_t>(i)];
 			meta.offset -= eqWS[0];
 
 			auto layerChunks = source.getChunks(i);
@@ -111,7 +111,7 @@ void BandCascadeTransformer::vProcess(ProcessContext context, ExternalData& exte
 
 			meta.data = layerChunks[meta.nextChunkIndex];
 			meta.nextChunkIndex++;
-			meta.offset += eqWS[i];
+			meta.offset += eqWS[static_cast<size_t>(i)];
 			meta.maxValue = *std::max_element(meta.data.begin(), meta.data.end());
 		}
 
@@ -132,11 +132,11 @@ float BandCascadeTransformer::computeForBand(index band) const {
 
 	const auto bandWeights = resampler.getBandWeights(band);
 
-	for (index cascade = 0; cascade < index(snapshot.size()); cascade++) {
+	for (index cascade = 0; cascade < static_cast<index>(snapshot.size()); cascade++) {
 		const float bandWeight = bandWeights[cascade];
-		const float magnitude = snapshot[cascade].data[band];
+		const float magnitude = snapshot[static_cast<size_t>(cascade)].data[band];
 
-		if (snapshot[cascade].maxValue <= params.zeroLevelHard) {
+		if (snapshot[static_cast<size_t>(cascade)].maxValue <= params.zeroLevelHard) {
 			// this most often happens when there was a silence, and then some sound,
 			// so cascade with index more than N haven't updated yet
 			// so in that case we ignore values of all these cascades
@@ -144,7 +144,7 @@ float BandCascadeTransformer::computeForBand(index band) const {
 			if (cascadesSummed == 0.0f) {
 				// if cascadesSummed == 0.0f then bandWeight < params.minWeight for all previous cascades
 				// let's use value of previous cascade to provide at least something
-				return cascade == 0 ? 0.0f : snapshot[cascade - 1].data[band];
+				return cascade == 0 ? 0.0f : snapshot[static_cast<size_t>(cascade - 1)].data[band];
 			}
 			break;
 		}
@@ -168,8 +168,8 @@ float BandCascadeTransformer::computeForBand(index band) const {
 		// bandWeight < params.minWeight for all cascades
 		// let's use value of the last cascade with non zero weight and value
 		for (index i = bandWeights.size() - 1; i >= 0; i--) {
-			if (bandWeights[i] > 0.0f && snapshot[i].data[band] > static_cast<float>(params.zeroLevelHard)) {
-				return snapshot[i].data[band];
+			if (bandWeights[i] > 0.0f && snapshot[static_cast<size_t>(i)].data[band] > static_cast<float>(params.zeroLevelHard)) {
+				return snapshot[static_cast<size_t>(i)].data[band];
 			}
 		}
 		return 0.0f;

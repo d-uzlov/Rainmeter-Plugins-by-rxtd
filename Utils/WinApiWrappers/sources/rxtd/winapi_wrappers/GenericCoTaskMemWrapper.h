@@ -49,7 +49,7 @@ namespace rxtd::winapi_wrappers {
 			other.ptr = nullptr;
 
 			return *this;
-		};
+		}
 
 		virtual ~GenericCoTaskMemWrapper() {
 			release();

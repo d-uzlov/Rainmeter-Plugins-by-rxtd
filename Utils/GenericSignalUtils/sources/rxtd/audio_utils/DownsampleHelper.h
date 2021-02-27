@@ -43,7 +43,7 @@ namespace rxtd::audio_utils {
 
 			decimateFactor = value;
 			// digital frequency of 0.95 / decimateFactor ensures strong cutoff at new nyquist frequency
-			const double digitalCutoff = 0.95 / decimateFactor;
+			const double digitalCutoff = 0.95 / static_cast<double>(decimateFactor);
 			filter1 = { ButterworthWrapper::lowPass.calcCoefDigital(filterOrder, digitalCutoff) };
 			filter2 = filter1;
 			filter3 = filter1;
@@ -71,7 +71,7 @@ namespace rxtd::audio_utils {
 
 			const auto data = buffer.removeFirst(sourceGrabSize);
 			for (index i = 0, j = 0; i < resultSize; i++, j += decimateFactor) {
-				dest[i] = float(data[j]);
+				dest[i] = data[j];
 			}
 
 			return resultSize;
@@ -86,7 +86,7 @@ namespace rxtd::audio_utils {
 
 			const auto data = buffer.removeFirst(sourceGrabSize);
 			for (index i = 0, j = 0; i < resultSize; i++, j += fixedFactor) {
-				dest[i] = float(data[j]);
+				dest[i] = data[j];
 			}
 
 			return resultSize;

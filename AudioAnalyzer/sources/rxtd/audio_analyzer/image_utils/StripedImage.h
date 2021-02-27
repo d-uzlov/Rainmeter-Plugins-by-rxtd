@@ -12,9 +12,9 @@
 #include "rxtd/std_fixes/Vector2D.h"
 
 namespace rxtd::audio_analyzer::image_utils {
-	template<typename PIXEL_VALUE_TYPE>
+	template<typename PixelValueT>
 	class StripedImage {
-		using PixelValueType = PIXEL_VALUE_TYPE;
+		using PixelValueType = PixelValueT;
 
 		GrowingVector<PixelValueType> pixelData{};
 		index width = 0;
@@ -132,7 +132,7 @@ namespace rxtd::audio_analyzer::image_utils {
 			}
 
 			constexpr double reserveCoef = 0.5;
-			return static_cast<index>(std::ceil(size * reserveCoef));
+			return static_cast<index>(std::ceil(static_cast<double>(size) * reserveCoef));
 		}
 
 		[[nodiscard]]

@@ -62,6 +62,8 @@
     <ClInclude Include="sources\rxtd\std_fixes\MapUtils.h" />
     <ClInclude Include="sources\rxtd\std_fixes\MathBitTwiddling.h" />
     <ClInclude Include="sources\rxtd\std_fixes\MyMath.h" />
+    <ClInclude Include="sources\rxtd\std_fixes\OverloadedVisitor.h" />
+    <ClInclude Include="sources\rxtd\std_fixes\StringBaseExtended.h" />
     <ClInclude Include="sources\rxtd\std_fixes\StringUtils.h" />
     <ClInclude Include="sources\rxtd\std_fixes\string_conversion.h" />
     <ClInclude Include="sources\rxtd\std_fixes\Vector2D.h" />

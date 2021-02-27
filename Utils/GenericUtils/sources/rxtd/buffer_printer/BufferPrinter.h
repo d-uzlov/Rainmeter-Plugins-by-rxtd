@@ -51,7 +51,7 @@ namespace rxtd::buffer_printer {
 	template<>
 	inline void writeType(std::wostream& stream, const bool& t, sview options) {
 		if (options == L"number") {
-			stream << index(t);
+			stream << static_cast<index>(t);
 		} else {
 			stream << (t ? L"true" : L"false");
 		}

@@ -20,7 +20,7 @@ SimpleExpressionSolver::SimpleExpressionSolver(Logger log, const SimpleInstanceM
 	instanceManager(instanceManager) {}
 
 rxtd::index SimpleExpressionSolver::getExpressionsCount() const {
-	return index(expressions.size());
+	return static_cast<index>(expressions.size());
 }
 
 void SimpleExpressionSolver::resetCache() {
@@ -53,11 +53,12 @@ SimpleExpressionSolver::ASTSolver SimpleExpressionSolver::parseExpression(sview 
 }
 
 void SimpleExpressionSolver::checkExpressionIndices() {
-	for (index i = 0; i < index(expressions.size()); ++i) {
+	array_span<ASTSolver> expressionsView = expressions;
+	for (index i = 0; i < expressionsView.size(); ++i) {
 		try {
 			using CustomNode = expression_parser::ast_nodes::CustomTerminalNode;
 
-			expressions[i].peekTree().visitNodes(
+			expressionsView[i].peekTree().visitNodes(
 				[&](const auto& node) {
 					using Type = std::decay<decltype(node)>;
 					if constexpr (std::is_same<Type, CustomNode>::value) {
@@ -80,21 +81,21 @@ void SimpleExpressionSolver::checkExpressionIndices() {
 						}
 
 						if (!ref.useOrigName) {
-							utils::StringUtils::makeUppercaseInPlace(ref.namePattern.getName());
+							std_fixes::StringUtils::makeUppercaseInPlace(ref.namePattern.getName());
 						}
 					}
 				}
 			);
 		} catch (std::runtime_error&) {
-			expressions[i] = {};
+			expressionsView[i] = {};
 		}
 	}
 }
 
 void SimpleExpressionSolver::setExpressions(OptionList expressionsList) {
-	expressions.resize(expressionsList.size());
-	for (index i = 0; i < index(expressionsList.size()); ++i) {
-		expressions[i] = parseExpression(expressionsList.get(i).asString(), L"Expression", i);
+	expressions.resize(static_cast<size_t>(expressionsList.size()));
+	for (index i = 0; i < static_cast<index>(expressionsList.size()); ++i) {
+		expressions[static_cast<size_t>(i)] = parseExpression(expressionsList.get(i).asString(), L"Expression", i);
 	}
 
 	checkExpressionIndices();
@@ -144,5 +145,5 @@ double SimpleExpressionSolver::resolveReference(const Reference& ref, Indices in
 
 double SimpleExpressionSolver::solveExpression(index expressionIndex, Indices indices) const {
 	ReferenceResolver referenceResolver{ *this, indices };
-	return expressions[expressionIndex].solve(&referenceResolver);
+	return expressions[static_cast<size_t>(expressionIndex)].solve(&referenceResolver);
 }

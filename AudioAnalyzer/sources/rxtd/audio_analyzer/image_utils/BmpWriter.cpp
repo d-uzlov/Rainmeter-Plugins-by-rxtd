@@ -51,10 +51,10 @@ private:
 public:
 	BMPHeader(rxtd::index width, rxtd::index height) {
 		fileHeader.pixelArrayOffsetInBytes = sizeof(fileHeader) + dibHeader.headerSizeInBytes;
-		dibHeader.bitmapSizeInBytes = uint32_t(width * height * sizeof(uint32_t));
+		dibHeader.bitmapSizeInBytes = static_cast<uint32_t>(width * height * sizeof(uint32_t));
 		fileHeader.fileSizeInBytes = fileHeader.pixelArrayOffsetInBytes + dibHeader.bitmapSizeInBytes;
-		dibHeader.bitmapWidthInPixels = uint32_t(width);
-		dibHeader.bitmapHeightInPixels = uint32_t(height);
+		dibHeader.bitmapWidthInPixels = static_cast<uint32_t>(width);
+		dibHeader.bitmapHeightInPixels = static_cast<uint32_t>(height);
 	}
 };
 #pragma pack( pop )

@@ -12,59 +12,58 @@
 #include "libs/cheby_win/cheby_win.h"
 #include "rxtd/option_parsing/OptionList.h"
 #include "rxtd/option_parsing/OptionSequence.h"
+#include "rxtd/std_fixes/MyMath.h"
 
 using rxtd::fft_utils::WindowFunctionHelper;
 using rxtd::option_parsing::Option;
 using rxtd::option_parsing::OptionList;
-
-static const auto pi = std::acos(-1.0);
 
 WindowFunctionHelper::WindowCreationFunc WindowFunctionHelper::parse(sview desc, Logger& cl) {
 	OptionList description = Option{ desc }.asSequence().begin().operator*();
 	auto type = description.get(0).asIString();
 
 	if (type == L"none") {
-		return [](index size) {
-			return createRectangular(size);
+		return [](array_span<float> result) {
+			createRectangular(result);
 		};
 	}
 
 	if (type == L"hann") {
-		return [](index size) {
-			return createCosineSum(size, 0.5);
+		return [](array_span<float> result) {
+			createCosineSum(result, 0.5f);
 		};
 	}
 
 	if (type == L"hamming") {
-		return [](index size) {
-			return createCosineSum(size, 0.53836);
+		return [](array_span<float> result) {
+			createCosineSum(result, 0.53836f);
 		};
 	}
 
 	if (type == L"kaiser") {
-		const auto param = description.get(1).asFloat(3.0);
-		return [=](index size) {
-			return createKaiser(size, param);
+		const auto param = description.get(1).asFloatF(3.0f);
+		return [=](array_span<float> result) {
+			createKaiser(result, param);
 		};
 	}
 
 	if (type == L"exponential") {
-		const auto param = description.get(1).asFloat(8.69);
-		return [=](index size) {
-			return createExponential(size, param);
+		const auto param = description.get(1).asFloatF(8.69f);
+		return [=](array_span<float> result) {
+			return createExponential(result, param);
 		};
 	}
 
 	if (type == L"chebyshev") {
-		const auto param = description.get(1).asFloat(80.0);
-		return [=](index size) {
-			return createChebyshev(size, param);
+		const auto param = description.get(1).asFloatF(80.0f);
+		return [=](array_span<float> result) {
+			return createChebyshev(result, param);
 		};
 	}
 
 	cl.error(L"unknown windows function '{}', use none instead", type);
-	return [](index size) {
-		return createRectangular(size);
+	return [](array_span<float> result) {
+		return createRectangular(result);
 	};
 }
 
@@ -72,66 +71,42 @@ WindowFunctionHelper::WindowCreationFunc WindowFunctionHelper::parse(sview desc,
 // Windows are asymmetric, so I use "i / size" everywhere instead of "* i / (size - 1)"
 //
 
-std::vector<float> WindowFunctionHelper::createRectangular(index size) {
-	std::vector<float> window;
-	window.resize(size);
-
-	for (index i = 0; i < size; ++i) {
-		window[i] = 1.0f;
+void WindowFunctionHelper::createRectangular(array_span<float> result) {
+	for (auto& val : result) {
+		val = 1.0f;
 	}
-
-	return window;
 }
 
-std::vector<float> WindowFunctionHelper::createCosineSum(index size, double a0) {
-	std::vector<float> window;
-	window.resize(size);
-
-	for (index i = 0; i < size; ++i) {
-		const double value = a0 - (1.0 - a0) * std::cos(2 * pi * i / size);
-		window[i] = float(value);
+void WindowFunctionHelper::createCosineSum(array_span<float> result, float a0) {
+	float reverseSize = 1.0f / static_cast<float>(result.size());
+	for (index i = 0; i < result.size(); ++i) {
+		result[i] = a0 - (1.0f - a0) * std::cos(2.0f * std_fixes::MyMath::pif * static_cast<float>(i) * reverseSize);
 	}
-
-	return window;
 }
 
-std::vector<float> WindowFunctionHelper::createKaiser(index size, double alpha) {
-	std::vector<float> window;
-	window.resize(size);
-
-	const double pia = pi * alpha;
+void WindowFunctionHelper::createKaiser(array_span<float> result, float alpha) {
+	const double pia = std_fixes::MyMath::pi * alpha;
 	const double inverseDenominator = 1.0 / std::cyl_bessel_i(0.0, pia);
 
-	for (index i = 0; i < size; ++i) {
-		const double squaredContent = 2.0 * i / size - 1.0;
+	const double size = static_cast<double>(result.size());
+	for (index i = 0; i < result.size(); ++i) {
+		const double squaredContent = 2.0 * static_cast<double>(i) / size - 1.0;
 		const double rootContent = 1.0 - squaredContent * squaredContent;
 		const double value = std::cyl_bessel_i(0.0, pia * std::sqrt(rootContent));
-		window[i] = float(value * inverseDenominator);
+		result[i] = static_cast<float>(value * inverseDenominator);
 	}
-
-	return window;
 }
 
-std::vector<float> WindowFunctionHelper::createExponential(index size, double targetDecay) {
-	std::vector<float> window;
-	window.resize(size);
+void WindowFunctionHelper::createExponential(array_span<float> result, float targetDecay) {
+	const float tau = static_cast<float>(result.size()) * 0.5f * 8.69f / targetDecay;
+	const float tauInverse = 1.0f / tau;
 
-	const double tau = size * 0.5 * 8.69 / targetDecay;
-	const double tauInverse = 1.0 / tau;
-
-	for (index i = 0; i < size; ++i) {
-		const double value = std::exp(-std::abs(i - size * 0.5) * tauInverse);
-		window[i] = float(value);
+	const float size = static_cast<float>(result.size());
+	for (index i = 0; i < result.size(); ++i) {
+		result[i] = std::exp(-std::abs(static_cast<float>(i) - size * 0.5f) * tauInverse);
 	}
-
-	return window;
 }
 
-std::vector<float> WindowFunctionHelper::createChebyshev(index size, double attenuation) {
-	std::vector<float> window;
-	window.resize(size);
-
-	cheby_win(window.data(), int(size), float(attenuation));
-
-	return window;
+void WindowFunctionHelper::createChebyshev(array_span<float> result, float attenuation) {
+	cheby_win(result.data(), static_cast<int>(result.size()), attenuation);
 }

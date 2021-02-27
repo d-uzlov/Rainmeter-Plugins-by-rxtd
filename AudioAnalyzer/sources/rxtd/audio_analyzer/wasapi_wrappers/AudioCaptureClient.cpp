@@ -73,7 +73,7 @@ void AudioCaptureClient::copyInt(void* source, array_span<float> dest, index off
 	auto channelSourceBuffer = bufferInt + offset;
 
 	for (index frame = 0; frame < framesCount; ++frame) {
-		const float value = float(*channelSourceBuffer) * (1.0f / std::numeric_limits<int16_t>::max());
+		const float value = static_cast<float>(*channelSourceBuffer) * (1.0f / static_cast<float>(std::numeric_limits<int16_t>::max()));
 		dest[frame] = value;
 		channelSourceBuffer += stride;
 	}

@@ -85,7 +85,7 @@ std::vector<MediaDeviceHandle> MediaDeviceEnumerator::getCollection(
 	for (index i = 0; i < devicesCount; ++i) {
 		MediaDeviceHandle device{
 			[&](auto ptr) {
-				return S_OK == collection.ref().Item(UINT(i), ptr);
+				return S_OK == collection.ref().Item(static_cast<UINT>(i), ptr);
 			},
 			type
 		};

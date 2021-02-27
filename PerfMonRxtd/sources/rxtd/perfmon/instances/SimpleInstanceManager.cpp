@@ -33,7 +33,7 @@ void SimpleInstanceManager::update() {
 	}
 
 	std::swap(idsCurrent, idsPrevious);
-	idsCurrent.resize(snapshotCurrent.getItemsCount());
+	idsCurrent.resize(static_cast<size_t>(snapshotCurrent.getItemsCount()));
 	namesManager.createModifiedNames(snapshotCurrent, processIdsSnapshot, idsCurrent);
 
 	if (snapshotPrevious.isEmpty()) {
@@ -66,12 +66,14 @@ rxtd::index SimpleInstanceManager::findPreviousName(pdh::UniqueInstanceId unique
 	// try to find a match for the current instance name in the previous buffer
 	// counter buffers tend to be *mostly* aligned, so we'll try to short-circuit a full search
 
-	const auto itemCountPrevious = index(idsPrevious.size());
+	array_view<pdh::UniqueInstanceId> idsPreviousView = idsPrevious;
+	
+	const auto itemCountPrevious = idsPreviousView.size();
 
 	// try for a direct hit
 	auto previousInx = std::clamp<index>(hint, 0, itemCountPrevious - 1);
 
-	if (uniqueId == idsPrevious[previousInx]) {
+	if (uniqueId == idsPreviousView[previousInx]) {
 		return previousInx;
 	}
 
@@ -82,19 +84,19 @@ rxtd::index SimpleInstanceManager::findPreviousName(pdh::UniqueInstanceId unique
 	const auto highBound = std::clamp<index>(hint + windowSize, 0, itemCountPrevious - 1);
 
 	for (previousInx = lowBound; previousInx <= highBound; ++previousInx) {
-		if (uniqueId == idsPrevious[previousInx]) {
+		if (uniqueId == idsPreviousView[previousInx]) {
 			return previousInx;
 		}
 	}
 
 	// no luck, search the entire array
 	for (previousInx = lowBound - 1; previousInx >= 0; previousInx--) {
-		if (uniqueId == idsPrevious[previousInx]) {
+		if (uniqueId == idsPreviousView[previousInx]) {
 			return previousInx;
 		}
 	}
 	for (previousInx = highBound; previousInx < itemCountPrevious; ++previousInx) {
-		if (uniqueId == idsPrevious[previousInx]) {
+		if (uniqueId == idsPreviousView[previousInx]) {
 			return previousInx;
 		}
 	}
@@ -103,14 +105,14 @@ rxtd::index SimpleInstanceManager::findPreviousName(pdh::UniqueInstanceId unique
 }
 
 void SimpleInstanceManager::buildInstanceKeysZero() {
-	instances.reserve(snapshotCurrent.getItemsCount());
+	instances.reserve(static_cast<size_t>(snapshotCurrent.getItemsCount()));
 
 	for (index currentIndex = 0; currentIndex < snapshotCurrent.getItemsCount(); ++currentIndex) {
 		const auto& item = namesManager.get(currentIndex);
 
 		InstanceInfo instanceKey;
 		instanceKey.sortName = item.searchName;
-		instanceKey.indices.current = int_fast16_t(currentIndex);
+		instanceKey.indices.current = static_cast<int_fast16_t>(currentIndex);
 		instanceKey.indices.previous = 0;
 
 		if (blacklistManager.isAllowed(item.searchName, item.originalName)) {
@@ -122,20 +124,20 @@ void SimpleInstanceManager::buildInstanceKeysZero() {
 }
 
 void SimpleInstanceManager::buildInstanceKeys() {
-	instances.reserve(snapshotCurrent.getItemsCount());
+	instances.reserve(static_cast<size_t>(snapshotCurrent.getItemsCount()));
 
 	for (index current = 0; current < snapshotCurrent.getItemsCount(); ++current) {
 		const auto item = namesManager.get(current);
 
-		const auto previous = findPreviousName(idsCurrent[current], current);
+		const auto previous = findPreviousName(idsCurrent[static_cast<size_t>(current)], current);
 		if (previous < 0) {
 			continue; // formatted values require previous item
 		}
 
 		InstanceInfo instanceKey;
 		instanceKey.sortName = item.searchName;
-		instanceKey.indices.current = int_fast16_t(current);
-		instanceKey.indices.previous = int_fast16_t(previous);
+		instanceKey.indices.current = static_cast<int_fast16_t>(current);
+		instanceKey.indices.previous = static_cast<int_fast16_t>(previous);
 
 		if (blacklistManager.isAllowed(item.searchName, item.originalName)) {
 			instances.push_back(instanceKey);
@@ -151,11 +153,11 @@ const SimpleInstanceManager::InstanceInfo* SimpleInstanceManager::findSimpleInst
 	}
 
 	sortedIndex += indexOffset;
-	if (sortedIndex < 0 || sortedIndex >= index(instances.size())) {
+	if (sortedIndex < 0 || sortedIndex >= static_cast<index>(instances.size())) {
 		return nullptr;
 	}
 
-	return &instances[sortedIndex];
+	return &instances[static_cast<size_t>(sortedIndex)];
 }
 
 const SimpleInstanceManager::InstanceInfo* SimpleInstanceManager::findSimpleInstanceByName(const Reference& ref) const {
@@ -166,7 +168,7 @@ const SimpleInstanceManager::InstanceInfo* SimpleInstanceManager::findSimpleInst
 }
 
 double SimpleInstanceManager::calculateRaw(index counterIndex, Indices originalIndexes) const {
-	return double(snapshotCurrent.getItem(counterIndex, originalIndexes.current).FirstValue);
+	return static_cast<double>(snapshotCurrent.getItem(counterIndex, originalIndexes.current).FirstValue);
 }
 
 double SimpleInstanceManager::calculateFormatted(index counterIndex, Indices originalIndexes) const {

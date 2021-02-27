@@ -61,7 +61,7 @@ bool HandlerBase::patch(
 
 		_dataSize = linkingResult.dataSize;
 		_layers.clear();
-		_layers.resize(linkingResult.dataSize.layersCount);
+		_layers.resize(static_cast<size_t>(linkingResult.dataSize.layersCount));
 		_lastResults.setBuffersCount(linkingResult.dataSize.layersCount);
 		_lastResults.setBufferSize(linkingResult.dataSize.valuesCount);
 		_lastResults.fill(0.0f);

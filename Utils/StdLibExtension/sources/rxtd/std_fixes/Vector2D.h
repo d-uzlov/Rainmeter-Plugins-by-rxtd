@@ -43,7 +43,7 @@ namespace rxtd::std_fixes {
 
 		void setBufferSize(index size) {
 			bufferSize = size;
-			array.resize(buffersCount * size);
+			array.resize(static_cast<size_t>(buffersCount * size));
 		}
 
 		[[nodiscard]]

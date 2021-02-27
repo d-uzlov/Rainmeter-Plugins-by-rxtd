@@ -51,7 +51,7 @@ namespace rxtd::filter_utils::butterworth_lib {
 
 			[[nodiscard]]
 			FilterParameters calcCoefDigital(index _order, double digitalCutoffLow, double digitalCutoffHigh) const {
-				const int order = int(_order);
+				const int order = static_cast<int>(_order);
 				if (order < 0) {
 					return {};
 				}
@@ -89,9 +89,9 @@ namespace rxtd::filter_utils::butterworth_lib {
 
 				T* coefs = funcPtr(args...);
 
-				result.resize(resultSize);
-				for (index i = 0; i < index(result.size()); ++i) {
-					result[i] = coefs[i];
+				result.resize(static_cast<size_t>(resultSize));
+				for (index i = 0; i < static_cast<index>(result.size()); ++i) {
+					result[static_cast<size_t>(i)] = coefs[i];
 				}
 
 				free(coefs);

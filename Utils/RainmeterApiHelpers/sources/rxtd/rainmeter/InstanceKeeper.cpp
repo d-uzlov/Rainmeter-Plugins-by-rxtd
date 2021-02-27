@@ -61,7 +61,7 @@ struct ThreadGuard : rxtd::DataWithLock {
 ThreadGuard threadGuard; // NOLINT(clang-diagnostic-exit-time-destructors)
 MessageQueue queue; // NOLINT(clang-diagnostic-exit-time-destructors)
 
-DWORD WINAPI asyncRun(void* param) {
+DWORD WINAPI asyncRun(void* param) noexcept {
 	using namespace std::chrono_literals;
 
 	auto args = static_cast<ThreadArguments*>(param);

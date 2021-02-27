@@ -58,12 +58,12 @@ Color Color::parse(sview desc, Color defaultValue) {
 
 				using namespace std::string_literals;
 
-				result._.rgb.red = StringUtils::parseInt(L"0x"s += colorDesc.asString().substr(0, 2)) / 255.0f;
-				result._.rgb.green = StringUtils::parseInt(L"0x"s += colorDesc.asString().substr(2, 2)) / 255.0f;
-				result._.rgb.blue = StringUtils::parseInt(L"0x"s += colorDesc.asString().substr(4, 2)) / 255.0f;
+				result._.rgb.red = StringUtils::parseInt(colorDesc.asString().substr(0, 2), true) / 255.0f;
+				result._.rgb.green = StringUtils::parseInt(colorDesc.asString().substr(2, 2), true) / 255.0f;
+				result._.rgb.blue = StringUtils::parseInt(colorDesc.asString().substr(4, 2), true) / 255.0f;
 
 				if (colorDesc.asString().size() == 8) {
-					result.alpha = StringUtils::parseInt(L"0x"s += colorDesc.asString().substr(6, 2)) / 255.0f;
+					result.alpha = StringUtils::parseInt(colorDesc.asString().substr(6, 2), true) / 255.0f;
 				} else {
 					result.alpha = 1.0;
 				}

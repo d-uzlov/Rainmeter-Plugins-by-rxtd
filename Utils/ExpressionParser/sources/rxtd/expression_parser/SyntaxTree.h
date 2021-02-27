@@ -53,7 +53,7 @@ namespace rxtd::expression_parser {
 
 		[[nodiscard]]
 		IndexType getRootIndex() const {
-			return IndexType(nodes.size()) - 1;
+			return static_cast<IndexType>(nodes.size()) - 1;
 		}
 
 		void clear() {
@@ -70,7 +70,7 @@ namespace rxtd::expression_parser {
 		template<typename NodeType, typename ... Args>
 		IndexType allocateNode(Args ... args) {
 			nodes.push_back(NodeType{ std::move(args)... });
-			return IndexType(nodes.size()) - 1;
+			return static_cast<IndexType>(nodes.size()) - 1;
 		}
 	};
 }

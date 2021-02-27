@@ -64,6 +64,9 @@
     <ClInclude Include="sources\rxtd\filter_utils\LogarithmicIRF.h" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\GenericUtils\GenericUtils.vcxproj">
+      <Project>{ed9dc428-f99f-4695-a5f7-aafba501a962}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\StdLibExtension\StdLibExtension.vcxproj">
       <Project>{76a3d6d3-45e8-4391-8b94-2477afe23596}</Project>
     </ProjectReference>

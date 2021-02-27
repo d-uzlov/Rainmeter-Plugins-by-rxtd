@@ -25,8 +25,6 @@ void FftCascade::setParams(Params _params, FFT* _fftPtr, FftCascade* _successorP
 	buffer.setMaxSize(params.fftSize * 5);
 
 	resampleResult();
-
-	const auto cascadeSampleRate = index(params.samplesPerSec / std::pow(2, _cascadeIndex));
 }
 
 void FftCascade::process(array_view<float> wave, clock::time_point killTime) {
@@ -82,33 +80,33 @@ void FftCascade::resampleResult() {
 	const index newValuesSize = params.fftSize / 2;
 
 	if (values.empty()) {
-		values.resize(newValuesSize);
+		values.resize(static_cast<size_t>(newValuesSize));
 		return;
 	}
 
-	if (index(values.size()) == newValuesSize) {
+	if (static_cast<index>(values.size()) == newValuesSize) {
 		return;
 	}
 
 	DiscreetInterpolator inter;
-	inter.setParams(0.0, double(newValuesSize - 1), 0, values.size() - 1);
+	inter.setParams(0.0, static_cast<double>(newValuesSize - 1), 0, static_cast<index>(values.size()) - 1);
 
-	if (index(values.size()) < newValuesSize) {
-		values.resize(newValuesSize);
+	if (static_cast<index>(values.size()) < newValuesSize) {
+		values.resize(static_cast<size_t>(newValuesSize));
+		array_span<float> valuesView = values;
 
 		for (index i = newValuesSize - 1; i >= 1; i--) {
 			const index oldIndex = inter.toValue(i);
-			values[i] = values[oldIndex];
+			valuesView[i] = valuesView[oldIndex];
 		}
-	}
-
-	if (index(values.size()) > newValuesSize) {
+	} else {
+		array_span<float> valuesView = values;
 		for (index i = 1; i < newValuesSize; i++) {
 			const index oldIndex = inter.toValue(i);
-			values[i] = values[oldIndex];
+			valuesView[i] = valuesView[oldIndex];
 		}
 
-		values.resize(newValuesSize);
+		values.resize(static_cast<size_t>(newValuesSize));
 	}
 
 	values[0] = 0.0;
@@ -119,10 +117,10 @@ void FftCascade::doFft(array_view<float> chunk) {
 
 	const auto binsCount = params.fftSize / 2;
 
-	values[0] = static_cast<float>(std::abs(fftPtr->getDC()));
+	values[0] = std::abs(fftPtr->getDC());
 
 	for (index bin = 1; bin < binsCount; ++bin) {
-		values[bin] = fftPtr->getBinMagnitude(bin);
+		values[static_cast<size_t>(bin)] = fftPtr->getBinMagnitude(bin);
 	}
 
 	hasChanges = true;

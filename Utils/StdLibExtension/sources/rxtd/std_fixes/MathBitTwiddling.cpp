@@ -34,17 +34,19 @@ float MathBitTwiddling::fastLog2(float val) {
 	union {
 		float fl;
 		uint32_t ui;
-	} u{ val };
+	} u;
+	
+	u.fl = val;
 
-	int x = u.ui;
-	const int log_2 = ((x >> 23) & 255) - 128;
+	uint32_t x = u.ui;
+	const uint32_t log_2 = ((x >> 23) & 255) - 128;
 	x &= ~(255 << 23);
 	x += 127 << 23;
 	u.ui = x;
 
 	u.fl = ((-1.0f / 3.0f) * u.fl + 2.0f) * u.fl - 2.0f * (1.0f / 3.0f);
 
-	return u.fl + float(log_2);
+	return u.fl + static_cast<float>(log_2);
 }
 
 float MathBitTwiddling::fastSqrt(float value) {

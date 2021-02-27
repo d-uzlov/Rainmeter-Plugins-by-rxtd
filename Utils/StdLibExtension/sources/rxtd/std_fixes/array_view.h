@@ -47,7 +47,7 @@ public:
 	template<size_type N>
 	constexpr array_span(value_type (&arr)[N]) noexcept : data_(arr), size_(N) { }
 
-	constexpr array_span(std::vector<value_type>& vec) : data_(vec.data()), size_(vec.size()) { }
+	constexpr array_span(std::vector<value_type>& vec) : data_(vec.data()), size_(static_cast<size_type>(vec.size())) { }
 
 	constexpr array_span(const array_span& rhs) noexcept = default;
 
@@ -271,7 +271,7 @@ public:
 	template<size_type N>
 	constexpr array_view(const value_type (&arr)[N]) noexcept : data_(arr), size_(N) { }
 
-	constexpr array_view(const std::vector<value_type>& vec) : data_(vec.data()), size_(vec.size()) { }
+	constexpr array_view(const std::vector<value_type>& vec) : data_(vec.data()), size_(static_cast<size_type>(vec.size())) { }
 
 	constexpr array_view(const array_view<value_type>& rhs) noexcept = default;
 
@@ -413,7 +413,7 @@ public:
 
 	// Copyright (C) 2020 rxtd
 	constexpr void transferToVector(std::vector<value_type>& dest) const noexcept(false) {
-		dest.resize(size());
+		dest.resize(static_cast<size_t>(size()));
 		transferToSpan(array_span<T>{ dest });
 	}
 

@@ -9,6 +9,9 @@
 
 #pragma once
 
+// for some reason disabling C4599 in settings doesn't work
+#pragma warning(disable : 4599)
+
 #include <algorithm>
 #include <any>
 #include <cstdint>
@@ -22,14 +25,25 @@
 #include <variant>
 #include <vector>
 
-namespace rxtd {
-	using index = ptrdiff_t;
-	using string = std::wstring;
-	using sview = std::wstring_view;
-}
-
 #include "rxtd/GenericBaseClasses.h"
 #include "rxtd/std_fixes/array_view.h"
+
+namespace rxtd {
+	using index = ptrdiff_t;
+}
+
+#include "rxtd/std_fixes/StringBaseExtended.h"
+
+namespace rxtd {
+	template<class Elem, class Traits = std::char_traits<Elem>, class Alloc = std::allocator<Elem>>
+	using StringBase = std_fixes::StringBaseExtended<Elem, Traits, Alloc>;
+	template<class Elem, class Traits = std::char_traits<Elem>, class Alloc = std::allocator<Elem>>
+	using StringViewBase = std_fixes::StringViewBaseExtended<Elem, Traits>;
+	
+	using string = StringBase<wchar_t>;
+	using sview = StringViewBase<wchar_t>;
+}
+
 #include "rxtd/std_fixes/case_insensitive_string.h"
 
 namespace rxtd {

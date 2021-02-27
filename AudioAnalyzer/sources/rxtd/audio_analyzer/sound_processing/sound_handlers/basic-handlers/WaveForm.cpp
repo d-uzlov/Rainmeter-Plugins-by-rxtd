@@ -95,10 +95,10 @@ WaveForm::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& e
 
 	auto& config = getConfiguration();
 	const index sampleRate = config.sampleRate;
-	auto blockSize = index(sampleRate * params.resolution);
+	auto blockSize = static_cast<index>(static_cast<double>(sampleRate) * params.resolution);
 	blockSize = std::max<index>(blockSize, 1);
 
-	minDistinguishableValue = 1.0 / params.height;
+	minDistinguishableValue = 1.0 / static_cast<double>(params.height);
 
 	drawer.setImageParams(params.width, params.height, params.stationary);
 	drawer.setParams(

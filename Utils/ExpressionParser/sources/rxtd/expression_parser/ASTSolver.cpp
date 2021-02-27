@@ -66,25 +66,26 @@ double ASTSolver::solve(ValueProvider* valueProvider) const {
 	auto nodes = tree.getNodes();
 
 	values.clear();
-	values.resize(nodes.size());
+	values.resize(static_cast<size_t>(nodes.size()));
+	array_span<std::optional<NodeData>> valuesView = values;
 
 	for (index i = 0; i < nodes.size(); i++) {
-		values[i] = nodes[i].visit(
+		valuesView[i] = nodes[i].visit(
 			[](const auto&) -> NodeData { throw Exception{ L"Unexpected node type" }; },
 			[](const ConstantNode& node) { return node.data; },
 			[&](const ast_nodes::PrefixOperatorNode& node) {
-				auto child = values[node.child];
+				auto child = valuesView[node.child];
 				if (!child.has_value()) throw Exception{ L"Expression is not a constant" };
 				return node.opInfo.solveFunction(NodeData{ child.value() }, {});
 			},
 			[&](const ast_nodes::PostfixOperatorNode& node) {
-				auto child = values[node.child];
+				auto child = valuesView[node.child];
 				if (!child.has_value()) throw Exception{ L"Expression is not a constant" };
 				return node.opInfo.solveFunction(NodeData{ child.value() }, {});
 			},
 			[&](const ast_nodes::BinaryOperatorNode& node) {
-				auto left = values[node.left];
-				auto right = values[node.right];
+				auto left = valuesView[node.left];
+				auto right = valuesView[node.right];
 				if (!left.has_value() || !right.has_value()) throw Exception{ L"Expression is not a constant" };
 				return node.opInfo.solveFunction(NodeData{ left.value() }, NodeData{ right.value() });
 			},
@@ -108,7 +109,7 @@ double ASTSolver::solve(ValueProvider* valueProvider) const {
 				std::vector<NodeData> args;
 
 				for (auto childIndex : node.children) {
-					auto child = values[childIndex];
+					auto child = valuesView[childIndex];
 					if (child.has_value()) throw Exception{ L"Expression is not a constant" };
 					args.push_back(child.value());
 				}

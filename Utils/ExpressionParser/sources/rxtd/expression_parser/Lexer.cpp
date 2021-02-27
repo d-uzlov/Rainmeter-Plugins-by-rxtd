@@ -79,7 +79,7 @@ std::optional<Lexer::Lexeme> Lexer::tryParseSymbols(array_view<sview> symbols) {
 	for (sview op : symbols) {
 		const bool found = StringUtils::checkStartsWith(source.substr(position), op);
 		if (found) {
-			position += index(op.length());
+			position += op.length();
 			return Lexeme{ Type::eSYMBOL, op };
 		}
 	}

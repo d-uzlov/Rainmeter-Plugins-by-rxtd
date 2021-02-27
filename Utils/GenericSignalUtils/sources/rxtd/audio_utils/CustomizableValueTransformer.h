@@ -74,7 +74,7 @@ namespace rxtd::audio_utils {
 
 		[[nodiscard]]
 		float apply(float value) {
-			return float(apply(double(value)));
+			return static_cast<float>(apply(static_cast<double>(value)));
 		}
 
 		void applyToArray(array_view<float> source, array_span<float> dest);

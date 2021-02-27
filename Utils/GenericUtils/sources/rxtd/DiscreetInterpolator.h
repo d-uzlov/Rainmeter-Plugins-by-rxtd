@@ -23,9 +23,9 @@ namespace rxtd {
 
 		void setParams(double linMin, double linMax, index valMin, index valMax) {
 			li.setParams(
-				linMin, linMax + double(std::numeric_limits<float>::epsilon()),
-				double(valMin),
-				double(valMax + 1) // +1 is counteracted by std::floor
+				linMin, linMax + static_cast<double>(std::numeric_limits<float>::epsilon()),
+				static_cast<double>(valMin),
+				static_cast<double>(valMax + 1) // +1 is counteracted by std::floor
 			);
 
 			this->valMin = std::min(valMin, valMax);
@@ -45,7 +45,7 @@ namespace rxtd {
 		// Values are clamped to [valMin, valMax] range
 		[[nodiscard]]
 		index toValue(index linear) const {
-			return toValue(double(linear));
+			return toValue(static_cast<double>(linear));
 		}
 	};
 }

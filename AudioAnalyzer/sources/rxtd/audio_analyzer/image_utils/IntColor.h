@@ -31,38 +31,38 @@ namespace rxtd::audio_analyzer::image_utils {
 		[[nodiscard]]
 		IntColor mixWith(IntColor other, IntMixer<MixType, precision> mixer) const {
 			IntColor result{};
-			result.value.rgba.a = static_cast<int8_t>(mixer.mix(value.rgba.a, other.value.rgba.a));
-			result.value.rgba.r = static_cast<int8_t>(mixer.mix(value.rgba.r, other.value.rgba.r));
-			result.value.rgba.g = static_cast<int8_t>(mixer.mix(value.rgba.g, other.value.rgba.g));
-			result.value.rgba.b = static_cast<int8_t>(mixer.mix(value.rgba.b, other.value.rgba.b));
+			result.value.rgba.a = static_cast<uint8_t>(mixer.mix(value.rgba.a, other.value.rgba.a));
+			result.value.rgba.r = static_cast<uint8_t>(mixer.mix(value.rgba.r, other.value.rgba.r));
+			result.value.rgba.g = static_cast<uint8_t>(mixer.mix(value.rgba.g, other.value.rgba.g));
+			result.value.rgba.b = static_cast<uint8_t>(mixer.mix(value.rgba.b, other.value.rgba.b));
 			return result;
 		}
 
 		[[nodiscard]]
 		IntColor withR(index value) const {
 			IntColor result = *this;
-			result.value.rgba.r = uint8_t(value);
+			result.value.rgba.r = static_cast<uint8_t>(value);
 			return result;
 		}
 
 		[[nodiscard]]
 		IntColor withG(index value) const {
 			IntColor result = *this;
-			result.value.rgba.g = uint8_t(value);
+			result.value.rgba.g = static_cast<uint8_t>(value);
 			return result;
 		}
 
 		[[nodiscard]]
 		IntColor withB(index value) const {
 			IntColor result = *this;
-			result.value.rgba.b = uint8_t(value);
+			result.value.rgba.b = static_cast<uint8_t>(value);
 			return result;
 		}
 
 		[[nodiscard]]
 		IntColor withA(index value) const {
 			IntColor result = *this;
-			result.value.rgba.a = uint8_t(value);
+			result.value.rgba.a = static_cast<uint8_t>(value);
 			return result;
 		}
 

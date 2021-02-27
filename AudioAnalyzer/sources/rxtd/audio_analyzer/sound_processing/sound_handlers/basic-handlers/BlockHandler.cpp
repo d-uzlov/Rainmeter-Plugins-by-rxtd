@@ -51,7 +51,7 @@ BlockHandler::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalDat
 	params = _params.cast<Params>();
 
 	auto& config = getConfiguration();
-	blockSize = static_cast<decltype(blockSize)>(config.sampleRate * params.updateInterval);
+	blockSize = static_cast<decltype(blockSize)>(static_cast<double>(config.sampleRate) * params.updateInterval);
 	blockSize = std::max<index>(blockSize, 1);
 
 	filter.setParams(params.attackTime, params.decayTime, config.sampleRate, blockSize);
@@ -97,8 +97,8 @@ void BlockRms::_process(array_view<float> wave) {
 }
 
 void BlockRms::finishBlock() {
-	const double value = std::sqrt(intermediateResult / getBlockSize());
-	setNextValue(float(value));
+	const float value = std::sqrt(static_cast<float>(intermediateResult) / static_cast<float>(getBlockSize()));
+	setNextValue(value);
 	counter = 0;
 	intermediateResult = 0.0;
 }

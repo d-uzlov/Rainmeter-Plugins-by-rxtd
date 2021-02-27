@@ -19,7 +19,7 @@ using rxtd::perfmon::pdh::NamesManager;
 using rxtd::std_fixes::StringUtils;
 
 void NamesManager::createModifiedNames(const PdhSnapshot& snapshot, const PdhSnapshot& processIdSnapshot, array_span<UniqueInstanceId> ids) {
-	names.resize(snapshot.getItemsCount());
+	names.resize(static_cast<std::vector<ModifiedNameItem>::size_type>(snapshot.getItemsCount()));
 
 	fillOriginalNames(snapshot);
 
@@ -67,13 +67,13 @@ void NamesManager::createModifiedNames(const PdhSnapshot& snapshot, const PdhSna
 void NamesManager::fillOriginalNames(const PdhSnapshot& snapshot) {
 	for (index instanceIndex = 0; instanceIndex < snapshot.getItemsCount(); ++instanceIndex) {
 		const sview name = snapshot.getName(instanceIndex);
-		names[instanceIndex].originalName = name;
-		names[instanceIndex].displayName = name;
+		names[static_cast<size_t>(instanceIndex)].originalName = name;
+		names[static_cast<size_t>(instanceIndex)].displayName = name;
 	}
 }
 
 void NamesManager::generateSearchNames() {
-	buffer.resize(namesSize);
+	buffer.resize(static_cast<std::vector<wchar_t>::size_type>(namesSize));
 	wchar_t* namesBuffer = buffer.data();
 
 	for (auto& item : names) {
@@ -83,7 +83,7 @@ void NamesManager::generateSearchNames() {
 		item.searchName = name;
 	}
 
-	CharUpperBuffW(buffer.data(), int32_t(namesBuffer - buffer.data()));
+	CharUpperBuffW(buffer.data(), static_cast<DWORD>(namesBuffer - buffer.data()));
 }
 
 rxtd::sview NamesManager::copyString(sview source, wchar_t* dest) {
@@ -92,9 +92,8 @@ rxtd::sview NamesManager::copyString(sview source, wchar_t* dest) {
 }
 
 void NamesManager::modifyNameProcess(const PdhSnapshot& snapshot, array_span<UniqueInstanceId> ids) {
-	const index namesCount(names.size());
-	for (index instanceIndex = 0; instanceIndex < namesCount; ++instanceIndex) {
-		ModifiedNameItem& item = names[instanceIndex];
+	for (index instanceIndex = 0; instanceIndex < static_cast<index>(names.size()); ++instanceIndex) {
+		ModifiedNameItem& item = names[static_cast<size_t>(instanceIndex)];
 
 		const auto pid = snapshot.getItem(snapshot.getCountersCount() - 1, instanceIndex).FirstValue;
 		if (pid <= 0) {
@@ -121,8 +120,8 @@ void NamesManager::modifyNameThread(const PdhSnapshot& snapshot, array_span<Uniq
 	// _Total/_Total -> _Total
 	// Idle/n -> Idle
 
-	for (index instanceIndex = 0; instanceIndex < index(names.size()); ++instanceIndex) {
-		ModifiedNameItem& item = names[instanceIndex];
+	for (index instanceIndex = 0; instanceIndex < static_cast<index>(names.size()); ++instanceIndex) {
+		ModifiedNameItem& item = names[static_cast<size_t>(instanceIndex)];
 
 		const auto tid = snapshot.getItem(snapshot.getCountersCount() - 1, instanceIndex).FirstValue;
 		if (tid <= 0) {
@@ -180,8 +179,8 @@ void NamesManager::modifyNameGPUProcessName(const PdhSnapshot& idSnapshot) {
 	namesSize = 0;
 
 	std::unordered_map<long long, sview> pidToName;
-	pidToName.reserve(idSnapshot.getItemsCount());
-	for (index instanceIndex = 0; instanceIndex < index(idSnapshot.getItemsCount()); ++instanceIndex) {
+	pidToName.reserve(static_cast<size_t>(idSnapshot.getItemsCount()));
+	for (index instanceIndex = 0; instanceIndex < static_cast<index>(idSnapshot.getItemsCount()); ++instanceIndex) {
 		const auto pid = idSnapshot.getItem(0, instanceIndex).FirstValue;
 		pidToName[pid] = idSnapshot.getName(instanceIndex);
 	}
@@ -215,8 +214,8 @@ void NamesManager::modifyNameGPUEngtype() {
 }
 
 void NamesManager::createIdsBasedOnName(array_span<UniqueInstanceId> ids) {
-	for (index i = 0; i < index(names.size()); ++i) {
-		ids[i].id1 = getIdFromName(names[i].originalName);
+	for (index i = 0; i < static_cast<index>(names.size()); ++i) {
+		ids[i].id1 = getIdFromName(names[static_cast<size_t>(i)].originalName);
 		ids[i].id2 = 0;
 	}
 }

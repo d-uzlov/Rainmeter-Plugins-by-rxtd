@@ -31,7 +31,7 @@ namespace rxtd::fft_utils {
 		void setParams(index newSize, std::vector<float> window);
 
 		[[nodiscard]]
-		double getDC() const;
+		float getDC() const;
 
 		[[nodiscard]]
 		float getBinMagnitude(index binIndex) const;

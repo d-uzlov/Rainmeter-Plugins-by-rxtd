@@ -12,8 +12,8 @@
 using rxtd::utils::MeasureBase;
 using rxtd::utils::ParentMeasureBase;
 
-std::map<rxtd::rainmeter::SkinHandle, std::map<rxtd::istring, ParentMeasureBase*, std::less<>>> ParentMeasureBase::globalMeasuresMap{};
-// NOLINT(clang-diagnostic-exit-time-destructors)
+std::map<rxtd::rainmeter::SkinHandle, std::map<rxtd::istring, ParentMeasureBase*, std::less<>>>
+ParentMeasureBase::globalMeasuresMap{}; // NOLINT(clang-diagnostic-exit-time-destructors)
 
 MeasureBase::MeasureBase(Rainmeter&& _rain) : rain(std::move(_rain)), logger(rain.createLogger()) {}
 

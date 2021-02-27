@@ -93,14 +93,14 @@ void WaveFormDrawer::inflate() {
 void WaveFormDrawer::inflateLine(index line, array_span<IntColor> dest, IntColor backgroundColor) const {
 	const index realWidth = width - borderSize;
 
-	const index fadeWidth = index(realWidth * fading);
+	const index fadeWidth = static_cast<index>(static_cast<double>(realWidth) * fading);
 	const index flatWidth = realWidth - fadeWidth;
 
 	constexpr uint32_t halfPrecision = 8;
 	IntMixer<int_fast32_t, halfPrecision * 2> mixer;
 
 	int_fast32_t fadeDistance = 1 << halfPrecision;
-	const int_fast32_t fadeDistanceStep = int_fast32_t(std::round(fadeDistance / (realWidth * fading)));
+	const int_fast32_t fadeDistanceStep = static_cast<int_fast32_t>(std::lround(static_cast<double>(fadeDistance) / (static_cast<double>(realWidth) * fading)));
 
 	index fadeBeginIndex = minMaxBuffer.getPastLastStripIndex() + borderSize;
 	if (fadeBeginIndex >= width) {

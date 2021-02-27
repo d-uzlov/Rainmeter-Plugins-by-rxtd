@@ -49,14 +49,15 @@ void Rainmeter::executeCommandAsync(sview command, SkinHandle skin) {
 }
 
 rxtd::string Rainmeter::getPathFromCurrent(string folder) const {
-	std::filesystem::path path{ folder };
+	std::wstring& sf = folder;
+	std::filesystem::path path{ sf };
 	if (!path.is_absolute()) {
 		string f = std::move(folder);
 		folder = replaceVariables(L"[#CURRENTPATH]");
 		folder += f;
 	}
 
-	folder = std::filesystem::absolute(folder).wstring();
+	folder = std::filesystem::absolute(sf).wstring();
 	folder = LR"(\\?\)" + folder;
 
 	if (folder.back() != L'\\') {

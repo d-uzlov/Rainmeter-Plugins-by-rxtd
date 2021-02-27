@@ -11,7 +11,7 @@
 
 using rxtd::audio_utils::CubicInterpolationHelper;
 
-double CubicInterpolationHelper::getValueFor(double x) {
+float CubicInterpolationHelper::getValueFor(float x) {
 	const double floor = std::floor(x);
 	if (floor < 0.0f) {
 		return sourceValues[0];
@@ -27,7 +27,7 @@ double CubicInterpolationHelper::getValueFor(double x) {
 		calcCoefsFor(x1);
 	}
 
-	const double dx = x - floor;
+	const double dx = static_cast<double>(x) - floor;
 	double xn = 1.0;
 
 	double result = 0.0;
@@ -42,7 +42,7 @@ double CubicInterpolationHelper::getValueFor(double x) {
 	xn *= dx;
 	result += xn * coefs.a;
 
-	return result;
+	return static_cast<float>(result);
 }
 
 double CubicInterpolationHelper::calcDerivativeFor(index ind) const {

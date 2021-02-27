@@ -40,7 +40,7 @@ namespace rxtd::option_parsing {
 		// Count of elements in list.
 		[[nodiscard]]
 		index size() const {
-			return list.size();
+			return static_cast<index>(list.size());
 		}
 
 		// Alias to "size() == 0".
@@ -52,10 +52,10 @@ namespace rxtd::option_parsing {
 		// Returns Nth element
 		[[nodiscard]]
 		GhostOption get(index ind) const & {
-			if (ind >= index(list.size())) {
+			if (ind >= static_cast<index>(list.size())) {
 				return {};
 			}
-			return GhostOption{ list[ind].makeView(getView()) };
+			return GhostOption{ list[static_cast<std::vector<SubstringViewInfo>::size_type>(ind)].makeView(getView()) };
 		}
 
 		// Returns Nth element

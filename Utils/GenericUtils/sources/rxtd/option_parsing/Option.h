@@ -69,7 +69,7 @@ namespace rxtd::option_parsing {
 		// Parse float, support math operations.
 		[[nodiscard]]
 		float asFloatF(float defaultValue = 0.0) const {
-			return float(asFloat(double(defaultValue)));
+			return static_cast<float>(asFloat(static_cast<double>(defaultValue)));
 		}
 
 		// Parse integer value, support math operations.

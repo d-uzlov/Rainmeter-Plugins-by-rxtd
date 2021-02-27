@@ -60,9 +60,9 @@ namespace kiss_fft {
 		KissFft(const std::size_t nfft, const bool inverse): _nfft(nfft), _inverse(inverse) {
 			// fill twiddle factors
 			_twiddles.resize(_nfft);
-			const scalar_type phinc = (_inverse ? 2 : -2) * std::acos((scalar_type)-1) / _nfft;
+			const scalar_type phinc = (_inverse ? scalar_type(2) : scalar_type (-2)) * std::acos(scalar_type(-1)) / scalar_type(_nfft);
 			for (std::size_t i = 0; i < _nfft; ++i)
-				_twiddles[i] = std::exp(complex_type(0, i * phinc));
+				_twiddles[i] = std::exp(complex_type(0, static_cast<scalar_type>(i) * phinc));
 
 			//factorize
 			//start factoring out 4's, then 2's, then 3,5,7,9,...
@@ -206,7 +206,7 @@ namespace kiss_fft {
 
 			// post processing for all the other k = 1, 2, ..., N-1
 			const scalar_type pi = std::acos((scalar_type)-1);
-			const scalar_type half_phi_inc = (_inverse ? pi : -pi) / N;
+			const scalar_type half_phi_inc = (_inverse ? pi : -pi) / static_cast<scalar_type>(N);
 			const complex_type twiddle_mul = std::exp(complex_type(0, half_phi_inc));
 			for (std::size_t k = 1; 2 * k < N; ++k) {
 				const complex_type w = (scalar_type)0.5 * complex_type(

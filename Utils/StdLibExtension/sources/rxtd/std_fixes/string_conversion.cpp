@@ -24,9 +24,9 @@ rxtd::sview rxtd::std_fixes::string_conversion::operator%(isview view, details::
 }
 
 rxtd::string rxtd::std_fixes::string_conversion::operator%(sview view, details::stringCreationObject) {
-	return { view.data(), view.length() };
+	return string{ view };
 }
 
-rxtd::std_fixes::istring rxtd::std_fixes::string_conversion::operator%(isview view, details::stringCreationObject) {
-	return { view.data(), view.length() };
+rxtd::istring rxtd::std_fixes::string_conversion::operator%(isview view, details::stringCreationObject) {
+	return istring{ view };
 }

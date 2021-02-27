@@ -75,6 +75,7 @@ namespace rxtd::audio_analyzer::wasapi_wrappers {
 			} else if constexpr (std::is_same_v<ISimpleAudioVolume, Interface>) {
 				source = L"IAudioClient.GetService(ISimpleAudioVolume)";
 			} else {
+				// ReSharper disable once CppStaticAssertFailure
 				static_assert(false, "Interface is not supported by IAudioClient");
 			}
 

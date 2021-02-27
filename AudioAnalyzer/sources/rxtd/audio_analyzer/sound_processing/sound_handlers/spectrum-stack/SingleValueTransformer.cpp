@@ -39,7 +39,7 @@ SingleValueTransformer::vConfigure(const ParamsContainer& _params, Logger& cl, E
 	auto& config = getConfiguration();
 	const auto dataSize = config.sourcePtr->getDataSize();
 
-	transformersPerLayer.resize(dataSize.layersCount);
+	transformersPerLayer.resize(static_cast<size_t>(dataSize.layersCount));
 	for (auto& tr : transformersPerLayer) {
 		tr = params.transformer;
 	}

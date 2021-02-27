@@ -40,7 +40,7 @@ namespace rxtd::buffer_printer {
 
 		sview getBuffer() {
 			const index size = pptr() - pbase();
-			return { buffer.data(), sview::size_type(size) };
+			return { buffer.data(), size };
 		}
 
 		void resetPointers() {
@@ -59,12 +59,12 @@ namespace rxtd::buffer_printer {
 
 			const index size = pptr() - pbase();
 			const index newCapacity = std::max<index>(32, size * 2); // initial size will be 32
-			buffer.resize(newCapacity);
+			buffer.resize(static_cast<std::vector<char_type>::size_type>(newCapacity));
 
 			resetPointers();
-			pbump(int(size));
-			if (c != int_type(EOF)) {
-				buffer[size] = c;
+			pbump(static_cast<int>(size));
+			if (c != static_cast<int_type>(EOF)) {
+				buffer[static_cast<std::vector<char_type>::size_type>(size)] = c;
 				pbump(1);
 			}
 			return c;

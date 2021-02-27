@@ -108,7 +108,7 @@ namespace rxtd::audio_analyzer::handler {
 				colorLevels = _colorLevels;
 				counter = 0;
 
-				buffer.resize(bufferSize);
+				buffer.resize(static_cast<size_t>(bufferSize));
 				std::fill(buffer.begin(), buffer.end(), colors[0].color.toIntColor());
 			}
 

@@ -43,7 +43,7 @@ void ProcessingManager::setParams(
 
 	for (auto channel : channels) {
 		auto& newChannelStruct = channelMap[channel];
-		newChannelStruct.filter = pd.filter.creator.getInstance(double(finalSampleRate));
+		newChannelStruct.filter = pd.filter.creator.getInstance(static_cast<double>(finalSampleRate));
 		newChannelStruct.downsampleHelper.setFactor(resamplingDivider);
 	}
 
@@ -109,7 +109,7 @@ void ProcessingManager::process(const ChannelMixer& mixer, clock::time_point kil
 				context.originalWave = wave;
 			} else {
 				const index nextBufferSize = channelStruct.downsampleHelper.pushData(wave);
-				downsampledBuffer.resize(nextBufferSize);
+				downsampledBuffer.resize(static_cast<size_t>(nextBufferSize));
 				channelStruct.downsampleHelper.downsample(downsampledBuffer);
 				context.originalWave = downsampledBuffer;
 			}

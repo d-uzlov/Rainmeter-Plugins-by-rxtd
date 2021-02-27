@@ -74,7 +74,7 @@ namespace rxtd::option_parsing {
 
 		[[nodiscard]]
 		iterator end() const {
-			return { getView(), list, index(list.size()) };
+			return { getView(), list, static_cast<index>(list.size()) };
 		}
 	};
 }

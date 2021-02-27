@@ -41,11 +41,11 @@ Tokenizer::parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wch
 	std::vector<std::vector<SubstringViewInfo>> result;
 	std::vector<SubstringViewInfo> description;
 	index begin = view.find_first_not_of(L" \t");
-	if (begin == index(sview::npos)) {
+	if (begin == static_cast<index>(sview::npos)) {
 		return {};
 	}
 
-	for (index i = begin; i < index(view.length()); ++i) {
+	for (index i = begin; i < static_cast<index>(view.length()); ++i) {
 		const auto symbol = view[i];
 
 		if (symbol == optionBegin) {
@@ -113,7 +113,7 @@ void Tokenizer::emitToken(std::vector<SubstringViewInfo>& list, const index begi
 void Tokenizer::tokenize(std::vector<SubstringViewInfo>& list, sview string, wchar_t delimiter) {
 	index begin = 0;
 
-	for (index i = 0; i < index(string.length()); ++i) {
+	for (index i = 0; i < static_cast<index>(string.length()); ++i) {
 		if (string[i] == delimiter) {
 			const index end = i;
 			emitToken(list, begin, end);

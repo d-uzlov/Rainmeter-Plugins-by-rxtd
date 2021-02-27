@@ -18,6 +18,7 @@ namespace rxtd::std_fixes {
 	class MyMath {
 	public:
 		static const double pi;
+		static const float pif;
 		
 		// A unified way to convert decibels to absolute values,
 		template<typename Float>
@@ -36,6 +37,7 @@ namespace rxtd::std_fixes {
 			} else if constexpr (sizeof(TOut) == sizeof(long long)) {
 				return static_cast<TOut>(std::llround(value));
 			} else {
+				// ReSharper disable once CppStaticAssertFailure
 				static_assert(false);
 				return {};
 			}

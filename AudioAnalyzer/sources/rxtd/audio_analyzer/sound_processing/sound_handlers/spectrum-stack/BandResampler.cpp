@@ -99,11 +99,11 @@ bool BandResampler::parseFreqListElement(OptionList& options, std::vector<float>
 		const auto delta = max - min;
 
 		for (index i = 0; i <= count; ++i) {
-			freqs.push_back(min + delta * i / count);
+			freqs.push_back(min + delta * static_cast<float>(i) / static_cast<float>(count));
 		}
 	} else {
 		// log
-		const auto step = std::pow(2.0f, std::log2(max / min) / count);
+		const auto step = std::pow(2.0f, std::log2(max / min) / static_cast<float>(count));
 		auto freq = min;
 		freqs.push_back(freq);
 
@@ -134,7 +134,7 @@ std::vector<float> BandResampler::makeBandsFromFreqs(array_span<float> freqs, Lo
 	const float threshold = std::numeric_limits<float>::epsilon();
 
 	std::vector<float> result;
-	result.reserve(freqs.size());
+	result.reserve(static_cast<size_t>(freqs.size()));
 	float lastValue = -1;
 	for (auto value : freqs) {
 		if (value <= 0) {
@@ -170,7 +170,7 @@ BandResampler::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalDa
 		return {};
 	}
 
-	bandsCount = index(params.bandFreqs.size() - 1);
+	bandsCount = static_cast<index>(params.bandFreqs.size() - 1);
 
 	startCascade = 1;
 	endCascade = cascadesCount + 1;
@@ -205,7 +205,7 @@ BandResampler::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalDa
 	auto& sourceDataSize = fftSource->getDataSize();
 	std::vector<index> eqWS;
 	for (index i = startCascade; i < endCascade; i++) {
-		eqWS.push_back(sourceDataSize.eqWaveSizes[i]);
+		eqWS.push_back(sourceDataSize.eqWaveSizes[static_cast<size_t>(i)]);
 	}
 	return { bandsCount, std::move(eqWS) };
 }
@@ -233,7 +233,7 @@ void BandResampler::vProcess(ProcessContext context, ExternalData& externalData)
 			sampleCascade(chunk, dest, binWidth);
 		}
 
-		binWidth *= 0.5;
+		binWidth *= 0.5f;
 	}
 }
 
@@ -252,15 +252,15 @@ void BandResampler::sampleCascade(array_view<float> source, array_span<float> de
 	cih.setSource(source);
 
 	for (index band = 0; band < bandsCount; band++) {
-		const float bandMinFreq = params.bandFreqs[band];
-		const float bandMaxFreq = params.bandFreqs[band + 1];
+		const float bandMinFreq = params.bandFreqs[static_cast<size_t>(band)];
+		const float bandMaxFreq = params.bandFreqs[static_cast<size_t>(band + 1)];
 
 		if (params.useCubicResampling && bandMaxFreq - bandMinFreq < binWidth) {
 			const float interpolatedCoordinate = lowerBinBoundInter.toValue((bandMinFreq + bandMaxFreq) * 0.5f);
-			const float value = static_cast<float>(cih.getValueFor(interpolatedCoordinate));
+			const float value = cih.getValueFor(interpolatedCoordinate);
 			dest[band] = std::max(value, 0.0f);
 		} else {
-			const index minBin = index(std::floor(lowerBinBoundInter.toValue(bandMinFreq)));
+			const index minBin = static_cast<index>(std::floor(lowerBinBoundInter.toValue(bandMinFreq)));
 			if (minBin >= fftBinsCount) {
 				break;
 			}
@@ -290,19 +290,19 @@ void BandResampler::computeWeights(index fftSize) {
 void BandResampler::computeCascadeWeights(array_span<float> result, index fftBinsCount, float binWidth) {
 	const float binWidthInverse = 1.0f / binWidth;
 
-	const index bandsCount = params.bandFreqs.size() - 1;
+	const index bandsCount = static_cast<index>(params.bandFreqs.size()) - 1;
 
 	const float fftMinFreq = -binWidth * 0.5f;
 	const float fftMaxFreq = (static_cast<float>(fftBinsCount) - 0.5f) * binWidth;
 
 	for (index band = 0; band < bandsCount; band++) {
-		const float bandMaxFreq = std::min(params.bandFreqs[band + 1], fftMaxFreq);
+		const float bandMaxFreq = std::min(params.bandFreqs[static_cast<size_t>(band + 1)], fftMaxFreq);
 		if (bandMaxFreq < fftMinFreq) {
 			result[band] = 0.0f;
 			continue;
 		}
 
-		const float bandMinFreq = std::max(params.bandFreqs[band], fftMinFreq);
+		const float bandMinFreq = std::max(params.bandFreqs[static_cast<size_t>(band)], fftMinFreq);
 		if (bandMinFreq > fftMaxFreq) {
 			result[band] = 0.0f;
 			continue;
@@ -319,7 +319,7 @@ bool BandResampler::getProp(
 	BufferPrinter& printer,
 	const ExternalMethods::CallContext& context
 ) {
-	const index bandsCount = snapshot.bandFreqs.size();
+	const index bandsCount = static_cast<index>(snapshot.bandFreqs.size());
 
 	if (prop == L"bands count") {
 		printer.print(bandsCount);

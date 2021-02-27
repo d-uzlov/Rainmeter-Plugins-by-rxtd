@@ -11,7 +11,7 @@
 
 #include <atomic>
 
- // my-windows must be before any WINAPI include
+// my-windows must be before any WINAPI include
 #include "rxtd/my-windows.h"
 // ReSharper disable once CppWrongIncludesOrder
 #include <Unknwn.h>
@@ -36,7 +36,7 @@ namespace rxtd::winapi_wrappers {
 	public:
 		ULONG STDMETHODCALLTYPE AddRef() final override {
 			const auto prevValue = referenceCounter.fetch_add(1);
-			return prevValue + 1;
+			return static_cast<ULONG>(prevValue) + 1;
 		}
 
 		ULONG STDMETHODCALLTYPE Release() final override {
@@ -44,14 +44,11 @@ namespace rxtd::winapi_wrappers {
 			if (newValue == 0) {
 				delete this;
 			}
-			return newValue;
+			return static_cast<ULONG>(newValue);
 		}
 
 		HRESULT STDMETHODCALLTYPE QueryInterface(const GUID& riid, void** ppvInterface) override {
-			if (__uuidof(IUnknown) == riid) {
-				AddRef();
-				*ppvInterface = this;
-			} else if (__uuidof(T) == riid) {
+			if (__uuidof(IUnknown) == riid || __uuidof(T) == riid) {
 				AddRef();
 				*ppvInterface = this;
 			} else {

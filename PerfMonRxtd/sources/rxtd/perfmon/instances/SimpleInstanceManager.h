@@ -125,7 +125,7 @@ namespace rxtd::perfmon {
 		}
 
 		const pdh::UniqueInstanceId& getIds(index ind) const {
-			return idsCurrent[ind];
+			return idsCurrent[static_cast<size_t>(ind)];
 		}
 
 		void update();

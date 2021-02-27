@@ -42,7 +42,7 @@ namespace rxtd::filter_utils {
 
 		void apply(array_span<float> signal) override {
 			for (float& value : signal) {
-				value = float(next(value));
+				value = static_cast<float>(next(value));
 			}
 		}
 
@@ -101,7 +101,7 @@ namespace rxtd::filter_utils {
 
 		void apply(array_span<float> signal) override {
 			for (float& value : signal) {
-				value = float(next(value));
+				value = static_cast<float>(next(value));
 			}
 		}
 
@@ -117,12 +117,13 @@ namespace rxtd::filter_utils {
 		double updateState(const double value) {
 			const double filtered = b[0] * value + state[0];
 
-			const index lastIndex = state.size() - 1;
-			for (index i = 0; i < lastIndex; ++i) {
-				const double ai = a[i + 1];
-				const double bi = b[i + 1];
-				const double prevState = state[i + 1];
-				state[i] = bi * value - ai * filtered + prevState;
+			const auto lastIndex = state.size() - 1;
+			for (index i = 0; i < static_cast<index>(lastIndex); ++i) {
+				auto i2 = static_cast<std::vector<float>::size_type>(i);
+				const double ai = a[i2 + 1];
+				const double bi = b[i2 + 1];
+				const double prevState = state[i2 + 1];
+				state[i2] = bi * value - ai * filtered + prevState;
 			}
 
 			state[lastIndex] = b[lastIndex + 1] * value - a[lastIndex + 1] * filtered;

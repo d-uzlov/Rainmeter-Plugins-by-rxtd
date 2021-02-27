@@ -42,7 +42,7 @@ namespace rxtd::perfmon::expressions {
 				for (const auto& item : instances) {
 					value += callable(item);
 				}
-				value /= double(instances.size());
+				value /= static_cast<double>(instances.size());
 				break;
 			}
 			case RollupFunction::eMINIMUM: {

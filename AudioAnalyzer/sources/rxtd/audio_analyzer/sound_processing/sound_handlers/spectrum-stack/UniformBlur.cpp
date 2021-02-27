@@ -97,7 +97,7 @@ void UniformBlur::blurCascade(array_view<float> source, array_span<float> dest, 
 		index bandIndex = bandStartIndex;
 
 		while (true) {
-			if (bandIndex >= bandsCount || kernelIndex >= index(kernel.size())) {
+			if (bandIndex >= bandsCount || kernelIndex >= static_cast<index>(kernel.size())) {
 				break;
 			}
 			result += kernel[kernelIndex] * source[bandIndex];
@@ -106,6 +106,6 @@ void UniformBlur::blurCascade(array_view<float> source, array_span<float> dest, 
 			bandIndex++;
 		}
 
-		dest[i] = float(result);
+		dest[i] = static_cast<float>(result);
 	}
 }

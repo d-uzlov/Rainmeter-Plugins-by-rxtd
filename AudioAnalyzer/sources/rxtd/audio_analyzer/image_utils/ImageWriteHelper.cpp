@@ -22,10 +22,11 @@ void ImageWriteHelper::write(array2d_view<IntColor> pixels, bool empty, const st
 
 	emptinessWritten = false;
 
-	std::filesystem::path directory{ filepath };
+	const std::wstring& sf = filepath;
+	std::filesystem::path directory{ sf };
 	directory.remove_filename();
 	std::error_code ec;
-	std::filesystem::create_directories(directory, ec);
+	create_directories(directory, ec);
 	if (ec) {
 		// Something went wrong.
 		// It's unlikely we can fix it.

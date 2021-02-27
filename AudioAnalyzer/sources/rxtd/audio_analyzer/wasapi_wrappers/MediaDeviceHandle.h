@@ -91,6 +91,7 @@ namespace rxtd::audio_analyzer::wasapi_wrappers {
 			} else if constexpr (std::is_same_v<IDeviceTopology, Interface>) {
 				source = L"IAudioClient.Activate(IDeviceTopology)";
 			} else {
+				// ReSharper disable once CppStaticAssertFailure
 				static_assert(false, "Interface is not supported by IMMDevice");
 			}
 

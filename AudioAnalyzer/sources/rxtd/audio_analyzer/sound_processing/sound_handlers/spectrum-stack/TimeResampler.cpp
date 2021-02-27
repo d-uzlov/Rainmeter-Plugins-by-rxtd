@@ -52,34 +52,34 @@ TimeResampler::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalDa
 	auto& config = getConfiguration();
 	auto& dataSize = config.sourcePtr->getDataSize();
 
-	if (index(layersData.size()) != dataSize.layersCount) {
-		layersData.resize(dataSize.layersCount);
+	if (static_cast<index>(layersData.size()) != dataSize.layersCount) {
+		layersData.resize(static_cast<size_t>(dataSize.layersCount));
 		for (auto& ld : layersData) {
-			ld.values.resize(dataSize.valuesCount);
+			ld.values.resize(static_cast<size_t>(dataSize.valuesCount));
 			std::fill(ld.values.begin(), ld.values.end(), 0.0f);
 			ld.dataCounter = 0;
 			ld.waveCounter = 0;
 		}
-	} else if (index(layersData.front().values.size()) != dataSize.valuesCount) {
+	} else if (static_cast<index>(layersData.front().values.size()) != dataSize.valuesCount) {
 		for (auto& ld : layersData) {
-			ld.values.resize(dataSize.valuesCount);
+			ld.values.resize(static_cast<size_t>(dataSize.valuesCount));
 			std::fill(ld.values.begin(), ld.values.end(), 0.0f);
 			// no need for resetting counters here
 		}
 	}
 
-	blockSize = index(params.granularity * config.sampleRate);
+	blockSize = static_cast<index>(params.granularity * static_cast<double>(config.sampleRate));
 
 	for (index i = 0; i < dataSize.layersCount; ++i) {
-		layersData[i].lowPass.setParams(
+		layersData[static_cast<size_t>(i)].lowPass.setParams(
 			params.attack, params.decay,
 			getConfiguration().sampleRate,
-			std::min(dataSize.eqWaveSizes[i], blockSize)
+			std::min(dataSize.eqWaveSizes[static_cast<size_t>(i)], blockSize)
 		);
 	}
 
 	std::vector<index> eqWS;
-	eqWS.resize(dataSize.layersCount);
+	eqWS.resize(static_cast<size_t>(dataSize.layersCount));
 	for (int i = 0; i < dataSize.layersCount; ++i) {
 		eqWS.push_back(blockSize);
 	}
@@ -95,13 +95,13 @@ void TimeResampler::vProcess(ProcessContext context, ExternalData& externalData)
 }
 
 void TimeResampler::processLayer(index waveSize, index layer) {
-	LayerData& ld = layersData[layer];
+	LayerData& ld = layersData[static_cast<size_t>(layer)];
 	const auto& source = *getConfiguration().sourcePtr;
 	ld.waveCounter += waveSize;
 
 	auto lastValue = source.getSavedData(layer);
 
-	const index equivalentWaveSize = source.getDataSize().eqWaveSizes[layer];
+	const index equivalentWaveSize = source.getDataSize().eqWaveSizes[static_cast<size_t>(layer)];
 
 	for (auto chunk : source.getChunks(layer)) {
 		ld.dataCounter += equivalentWaveSize;

@@ -20,7 +20,6 @@ namespace rxtd::std_fixes::string_conversion {
 		struct caseSensitiveViewObject { };
 
 		struct stringCreationObject { };
-
 	}
 
 	static struct {

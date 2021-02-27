@@ -24,11 +24,11 @@ double CVT::apply(double value) {
 		switch (transform.type) {
 		case TransformType::eDB: {
 			value = std::max<double>(value, 0.0);
-			value = 10.0f * std::log10(value);
+			value = 10.0 * std::log10(value);
 			break;
 		}
 		case TransformType::eMAP: {
-			value = transform.interpolator.toValue(float(value));
+			value = transform.interpolator.toValue(static_cast<float>(value));
 			break;
 		}
 		case TransformType::eCLAMP: {
@@ -42,7 +42,7 @@ double CVT::apply(double value) {
 }
 
 void CVT::applyToArray(array_view<float> source, array_span<float> dest) {
-	const auto logCoef = float(std::log10(2)); // == log(2) / log(10)
+	const auto logCoef = std::log10(2.0f); // == log(2) / log(10)
 
 	for (auto& transform : transforms) {
 		switch (transform.type) {

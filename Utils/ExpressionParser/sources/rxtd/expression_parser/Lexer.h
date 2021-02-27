@@ -85,7 +85,7 @@ namespace rxtd::expression_parser {
 
 		void setSource(sview value) {
 			source = value;
-			sourceLength = index(source.length());
+			sourceLength = source.length();
 			position = 0;
 		}
 

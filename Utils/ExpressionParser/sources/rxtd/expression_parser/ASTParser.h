@@ -161,7 +161,7 @@ namespace rxtd::expression_parser {
 
 		[[noreturn]]
 		void throwException(sview message) const {
-			throw Exception{ message, index(lexer.getPosition() - next.value.length()) };
+			throw Exception{ message, lexer.getPosition() - next.value.length() };
 		}
 	};
 }

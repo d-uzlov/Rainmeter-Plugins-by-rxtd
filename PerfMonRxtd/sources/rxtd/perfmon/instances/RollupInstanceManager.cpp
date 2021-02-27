@@ -44,7 +44,7 @@ void RollupInstanceManager::sort(const expressions::RollupExpressionResolver& si
 
 void RollupInstanceManager::buildRollupKeys() {
 	std::unordered_map<sview, RollupInstanceInfo> mapRollupKeys;
-	mapRollupKeys.reserve(simpleInstanceManager.getInstances().size());
+	mapRollupKeys.reserve(static_cast<size_t>(simpleInstanceManager.getInstances().size()));
 
 	for (const auto& instance : simpleInstanceManager.getInstances()) {
 		auto& item = mapRollupKeys[instance.sortName];
@@ -63,11 +63,11 @@ const RollupInstanceManager::RollupInstanceInfo* RollupInstanceManager::findRoll
 	}
 
 	sortedIndex += indexOffset;
-	if (sortedIndex < 0 || sortedIndex >= index(simpleInstanceManager.getInstances().size())) {
+	if (sortedIndex < 0 || sortedIndex >= static_cast<index>(simpleInstanceManager.getInstances().size())) {
 		return nullptr;
 	}
 
-	return &instancesRolledUp[sortedIndex];
+	return &instancesRolledUp[static_cast<size_t>(sortedIndex)];
 }
 
 const RollupInstanceManager::RollupInstanceInfo* RollupInstanceManager::findRollupInstanceByName(const Reference& ref) const {

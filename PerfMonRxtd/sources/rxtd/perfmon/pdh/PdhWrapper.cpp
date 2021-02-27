@@ -32,7 +32,7 @@ bool PdhWrapper::init(Logger logger) {
 bool PdhWrapper::setCounters(sview objectName, const OptionList& counterList, bool gpuExtraIds) {
 	needFetchExtraIDs = gpuExtraIds;
 
-	counterHandlers.reserve(counterList.size());
+	counterHandlers.reserve(static_cast<size_t>(counterList.size()));
 	for (auto counterOption : counterList) {
 		try {
 			auto counterHandle = addCounter(objectName, counterOption.asString());
@@ -104,7 +104,7 @@ PDH_HCOUNTER PdhWrapper::addCounter(sview objectName, sview counterName) {
 }
 
 bool PdhWrapper::fetch() {
-	mainSnapshot.setCountersCount(counterHandlers.size());
+	mainSnapshot.setCountersCount(static_cast<index>(counterHandlers.size()));
 
 	PDH_STATUS code = PdhCollectQueryData(query.handle);
 	if (code != PDH_STATUS(ERROR_SUCCESS)) {
@@ -138,7 +138,7 @@ double PdhWrapper::extractFormattedValue(
 
 	PDH_FMT_COUNTERVALUE formattedValue;
 	const PDH_STATUS pdhStatus = PdhCalculateCounterFromRawValue(
-		counterHandlers[counter],
+		counterHandlers[static_cast<size_t>(counter)],
 		PDH_FMT_DOUBLE | PDH_FMT_NOCAP100,
 		const_cast<PDH_RAW_COUNTER*>(&current),
 		const_cast<PDH_RAW_COUNTER*>(&previous),
@@ -175,7 +175,7 @@ bool PdhWrapper::fetchSnapshot(array_span<PDH_HCOUNTER> counters, PdhSnapshot& s
 	snapshot.setBufferSize(bufferSize, count);
 
 	// Retrieve counter data for all counters in the measure's counterList.
-	for (index i = 0; i < index(counters.size()); ++i) {
+	for (index i = 0; i < static_cast<index>(counters.size()); ++i) {
 		DWORD dwBufferSize2 = bufferSize;
 		code = PdhGetRawCounterArrayW(counters[i], &dwBufferSize2, &count, snapshot.getCounterPointer(i));
 		if (code != PDH_STATUS(ERROR_SUCCESS)) {

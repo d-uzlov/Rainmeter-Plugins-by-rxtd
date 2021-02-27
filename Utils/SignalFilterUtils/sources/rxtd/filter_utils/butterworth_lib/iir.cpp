@@ -36,6 +36,8 @@
  *
  */
 
+#pragma warning(push, 0)
+
 #include <cstdlib>
 #include "iir.h"
 
@@ -551,3 +553,5 @@ double sf_bwbs(int n, double f1f, double f2f) {
 
 	return (1.0 / sfr);
 }
+
+#pragma warning(pop)

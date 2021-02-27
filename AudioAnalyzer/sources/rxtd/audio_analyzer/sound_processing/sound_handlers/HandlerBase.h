@@ -92,7 +92,7 @@ namespace rxtd::audio_analyzer::handler {
 			DataSize(index valuesCount, std::vector<index> _eqWaveSizes) :
 				valuesCount(valuesCount),
 				eqWaveSizes(std::move(_eqWaveSizes)) {
-				layersCount = eqWaveSizes.size();
+				layersCount = static_cast<index>(eqWaveSizes.size());
 			}
 
 			[[nodiscard]]
@@ -266,8 +266,8 @@ namespace rxtd::audio_analyzer::handler {
 
 			vProcess(context, snapshot.handlerSpecificData);
 
-			for (index layer = 0; layer < index(_dataSize.eqWaveSizes.size()); layer++) {
-				auto& offsets = _layers[layer].offsets;
+			for (index layer = 0; layer < static_cast<index>(_dataSize.eqWaveSizes.size()); layer++) {
+				auto& offsets = _layers[static_cast<size_t>(layer)].offsets;
 				if (!offsets.empty()) {
 					const auto lastChunk = array_view<float>{ _buffer.data() + offsets.back(), _dataSize.valuesCount };
 					snapshot.values[layer].copyFrom(lastChunk);
@@ -290,18 +290,18 @@ namespace rxtd::audio_analyzer::handler {
 
 		[[nodiscard]]
 		array_view<array_view<float>> getChunks(index layer) const {
-			if (layer >= index(_dataSize.eqWaveSizes.size())) {
+			if (layer >= static_cast<index>(_dataSize.eqWaveSizes.size())) {
 				return {};
 			}
 
 			inflateLayers();
-			return _layers[layer].chunksView;
+			return _layers[static_cast<size_t>(layer)].chunksView;
 		}
 
 		// returns saved data from previous iteration
 		[[nodiscard]]
 		array_view<float> getSavedData(index layer) const {
-			if (layer >= index(_dataSize.eqWaveSizes.size())) {
+			if (layer >= static_cast<index>(_dataSize.eqWaveSizes.size())) {
 				return {};
 			}
 
@@ -349,7 +349,7 @@ namespace rxtd::audio_analyzer::handler {
 
 		[[nodiscard]]
 		array_span<float> pushLayer(index layer) {
-			const index offset = index(_buffer.size());
+			const index offset = static_cast<index>(_buffer.size());
 
 			// Prevent handlers from producing too much data
 			// see: https://github.com/d-uzlov/Rainmeter-Plugins-by-rxtd/issues/4
@@ -357,10 +357,10 @@ namespace rxtd::audio_analyzer::handler {
 				throw TooManyValuesException{ _name };
 			}
 
-			_buffer.resize(offset + _dataSize.valuesCount);
+			_buffer.resize(static_cast<size_t>(offset + _dataSize.valuesCount));
 			_layersAreValid = false;
 
-			_layers[layer].offsets.push_back(offset);
+			_layers[static_cast<size_t>(layer)].offsets.push_back(offset);
 
 			return { _buffer.data() + offset, _dataSize.valuesCount };
 		}
@@ -395,8 +395,8 @@ namespace rxtd::audio_analyzer::handler {
 
 			for (auto& data : _layers) {
 				data.chunksView.resize(data.offsets.size());
-				for (index i = 0; i < index(data.offsets.size()); i++) {
-					data.chunksView[i] = { _buffer.data() + data.offsets[i], _dataSize.valuesCount };
+				for (index i = 0; i < static_cast<index>(data.offsets.size()); i++) {
+					data.chunksView[static_cast<size_t>(i)] = { _buffer.data() + data.offsets[static_cast<size_t>(i)], _dataSize.valuesCount };
 				}
 			}
 
@@ -405,7 +405,7 @@ namespace rxtd::audio_analyzer::handler {
 
 		void clearChunks() {
 			for (index layer = 0; layer < _dataSize.layersCount; layer++) {
-				auto& offsets = _layers[layer].offsets;
+				auto& offsets = _layers[static_cast<size_t>(layer)].offsets;
 				if (!offsets.empty()) {
 					_lastResults[layer].copyFrom({ _buffer.data() + offsets.back(), _dataSize.valuesCount });
 				}

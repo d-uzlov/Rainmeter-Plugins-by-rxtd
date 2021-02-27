@@ -16,8 +16,8 @@ namespace rxtd::filter_utils {
 
 	public:
 		void setParams(double attackTime, double decayTime, index sampleRate, index stride) {
-			attackDecayConstants[0] = calculateAttackDecayConstant(float(attackTime), sampleRate, stride);
-			attackDecayConstants[1] = calculateAttackDecayConstant(float(decayTime), sampleRate, stride);
+			attackDecayConstants[0] = calculateAttackDecayConstant(static_cast<float>(attackTime), sampleRate, stride);
+			attackDecayConstants[1] = calculateAttackDecayConstant(static_cast<float>(decayTime), sampleRate, stride);
 		}
 
 		void setParams(double attackTime, double decayTime, index sampleRate) {
@@ -65,7 +65,7 @@ namespace rxtd::filter_utils {
 			// stride and samplesPerSec are semantically guaranteed to be positive
 			// time can be positive or zero
 			// In case of zero result is exp(-inf) == 0 which is totally fine
-			return std::exp(-2.0f * stride / (sampleRate * time));
+			return std::exp(-2.0f * static_cast<float>(stride) / (static_cast<float>(sampleRate) * time));
 		}
 	};
 }

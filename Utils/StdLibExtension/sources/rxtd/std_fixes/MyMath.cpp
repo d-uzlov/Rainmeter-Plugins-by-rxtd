@@ -12,3 +12,4 @@
 using rxtd::std_fixes::MyMath;
 
 const double MyMath::pi = std::acos(-1.0);
+const float MyMath::pif = static_cast<float>(pi);

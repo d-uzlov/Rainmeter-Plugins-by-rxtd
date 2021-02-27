@@ -49,23 +49,23 @@ HandlerBase::ConfigurationResult Loudness::vConfigure(
 ) {
 	params = _params.cast<Params>();
 
-	blocksCount = index(params.timeWindowMs / 1000.0 * params.updatesPerSecond);
+	blocksCount = static_cast<index>(params.timeWindowMs / 1000.0 * params.updatesPerSecond);
 	blocksCount = std::max<index>(blocksCount, 1);
 
 	auto& config = getConfiguration();
 	const index sampleRate = config.sampleRate;
 
-	blockSize = index(sampleRate / params.updatesPerSecond);
-	blockNormalizer = 1.0 / blockSize;
+	blockSize = static_cast<index>(static_cast<double>(sampleRate) / params.updatesPerSecond);
+	blockNormalizer = 1.0 / static_cast<double>(blockSize);
 	blockCounter = 0;
 
-	blocks.resize(blocksCount);
+	blocks.resize(static_cast<size_t>(blocksCount));
 	std::fill(blocks.begin(), blocks.end(), 0.0);
 	prevValue = 0.0;
 
-	gatingValueCoefficient = MyMath::db2amplitude(params.gatingDb) * blockSize;
+	gatingValueCoefficient = MyMath::db2amplitude(params.gatingDb) * static_cast<double>(blockSize);
 
-	minBlocksCount = index(blocksCount * (1.0 - params.gatingLimit));
+	minBlocksCount = static_cast<index>(static_cast<double>(blocksCount) * (1.0 - params.gatingLimit));
 
 	return { 1, { blockSize } };
 }
@@ -83,7 +83,7 @@ void Loudness::vProcess(ProcessContext context, ExternalData& externalData) {
 }
 
 void Loudness::pushMicroBlock(double value) {
-	blocks[nextBlockIndex] = value;
+	blocks[static_cast<size_t>(nextBlockIndex)] = value;
 	nextBlockIndex++;
 	if (nextBlockIndex >= blocksCount) {
 		nextBlockIndex = 0;
@@ -103,7 +103,7 @@ void Loudness::pushMicroBlock(double value) {
 			counter++;
 		}
 	}
-	newValue /= counter;
+	newValue /= static_cast<double>(counter);
 	newValue *= blockNormalizer;
 
 	pushNextValue(newValue);
@@ -113,5 +113,5 @@ void Loudness::pushNextValue(double value) {
 	prevValue = value;
 
 	auto result = pushLayer(0);
-	result[0] = params.transformer.apply(float(value));
+	result[0] = params.transformer.apply(static_cast<float>(value));
 }

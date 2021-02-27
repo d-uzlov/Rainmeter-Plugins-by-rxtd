@@ -40,7 +40,7 @@ namespace rxtd::option_parsing {
 				return;
 			}
 
-			source.resize(view.size());
+			source.resize(static_cast<SourceType::size_type>(view.size()));
 			std::copy(view.begin(), view.end(), source.begin());
 			view = makeView();
 		}

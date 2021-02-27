@@ -56,8 +56,9 @@ namespace rxtd::perfmon::pdh {
 		index namesSize = 0;
 
 	public:
+		[[nodiscard]]
 		const ModifiedNameItem& get(index ind) const {
-			return names[ind];
+			return names[static_cast<std::vector<ModifiedNameItem>::size_type>(ind)];
 		}
 
 		void setModificationType(ModificationType value) {
