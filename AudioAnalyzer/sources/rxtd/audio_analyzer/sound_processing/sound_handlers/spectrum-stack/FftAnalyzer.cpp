@@ -15,44 +15,37 @@ using rxtd::audio_analyzer::handler::FftAnalyzer;
 using rxtd::audio_analyzer::handler::HandlerBase;
 using ParamsContainer = HandlerBase::ParamsContainer;
 
-ParamsContainer FftAnalyzer::vParseParams(
-	const OptionMap& om, Logger& cl, const Rainmeter& rain,
-	Version version
-) const {
+ParamsContainer FftAnalyzer::vParseParams(ParamParseContext& context) const noexcept(false) {
 	ParamsContainer result;
 	auto& params = result.clear<Params>();
 
-	params.binWidth = om.get(L"binWidth").asFloat(100.0);
+	params.binWidth = context.options.get(L"binWidth").asFloat(100.0);
 	if (params.binWidth <= 0.0) {
-		cl.error(L"binWidth must be > 0 but {} found", params.binWidth);
-		return {};
+		context.log.error(L"binWidth must be > 0 but {} found", params.binWidth);
+		throw InvalidOptionsException{};
 	}
 	if (params.binWidth <= 1.0) {
-		cl.warning(L"BinWidth {} is dangerously small, use values > 1", params.binWidth);
+		context.log.warning(L"BinWidth {} is dangerously small, use values > 1", params.binWidth);
 	}
 
-	if (om.has(L"overlapBoost")) {
-		double overlapBoost = om.get(L"overlapBoost").asFloat(2.0);
-		overlapBoost = std::max(overlapBoost, 1.0);
-		params.overlap = (overlapBoost - 1.0) / overlapBoost;
-	} else {
-		params.overlap = std::clamp(om.get(L"overlap").asFloat(0.5), 0.0, 1.0);
-	}
+	double overlapBoost = context.options.get(L"overlapBoost").asFloat(2.0);
+	overlapBoost = std::max(overlapBoost, 1.0);
+	params.overlap = (overlapBoost - 1.0) / overlapBoost;
 
-	params.cascadesCount = om.get(L"cascadesCount").asInt(5);
+	params.cascadesCount = context.options.get(L"cascadesCount").asInt(5);
 	if (params.cascadesCount <= 0) {
-		cl.warning(L"cascadesCount must be in range [1, 20] but {} found. Assume 1", params.cascadesCount);
+		context.log.warning(L"cascadesCount must be in range [1, 20] but {} found. Assume 1", params.cascadesCount);
 		params.cascadesCount = 1;
 	} else if (params.cascadesCount > 20) {
-		cl.warning(L"cascadesCount must be in range [1, 20] but {} found. Assume 20", params.cascadesCount);
+		context.log.warning(L"cascadesCount must be in range [1, 20] but {} found. Assume 20", params.cascadesCount);
 		params.cascadesCount = 20;
 	}
 
-	params.randomTest = std::abs(om.get(L"testRandom").asFloat(0.0));
-	params.randomDuration = std::abs(om.get(L"randomDuration").asFloat(1000.0)) * 0.001;
+	params.randomTest = std::abs(context.options.get(L"testRandom").asFloat(0.0));
+	params.randomDuration = std::abs(context.options.get(L"randomDuration").asFloat(1000.0)) * 0.001;
 
-	params.wcfDescription = om.get(L"windowFunction").asString(L"hann");
-	params.createWindow = fft_utils::WindowFunctionHelper::parse(params.wcfDescription, cl);
+	params.wcfDescription = context.options.get(L"windowFunction").asString(L"hann");
+	params.createWindow = fft_utils::WindowFunctionHelper::parse(params.wcfDescription, context.log.context(L"windowFunction: "));
 
 	return result;
 }

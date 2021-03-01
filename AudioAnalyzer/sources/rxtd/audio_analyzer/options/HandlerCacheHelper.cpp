@@ -37,7 +37,7 @@ HandlerInfo* HandlerCacheHelper::getHandlerInfo(const istring& name, Logger& cl)
 		val.updated = true;
 	}
 
-	return val.info.meta.valid ? &val.info : nullptr;
+	return val.valid ? &val.info : nullptr;
 }
 
 HandlerCacheHelper::MapValue HandlerCacheHelper::parseHandler(sview name, MapValue val, Logger& cl) {
@@ -64,7 +64,13 @@ HandlerCacheHelper::MapValue HandlerCacheHelper::parseHandler(sview name, MapVal
 
 	anythingChanged = true;
 
-	val.info.meta = createHandlerPatcher(optionMap, cl);
+	try {
+		val.info.meta = createHandlerPatcher(optionMap, cl);
+		val.valid = true;
+	} catch (HandlerBase::InvalidOptionsException&) {
+		// function that threw the exception must have handled all log messages about reasons
+		val.valid = false;
+	}
 
 	val.info.sources.clear();
 	for (auto opt : optionMap.get(L"source").asList(L',')) {
@@ -86,14 +92,14 @@ HandlerCacheHelper::MapValue HandlerCacheHelper::parseHandler(sview name, MapVal
 HandlerBase::HandlerMetaInfo HandlerCacheHelper::createHandlerPatcher(
 	const OptionMap& optionMap,
 	Logger& cl
-) const {
+) const noexcept(false) {
 	using namespace handler;
 
 	const auto type = optionMap.get(L"type").asIString();
 
 	if (type.empty()) {
 		cl.error(L"type is not found");
-		return {};
+		throw HandlerBase::InvalidOptionsException{};
 	}
 
 	if (type == L"rms") {

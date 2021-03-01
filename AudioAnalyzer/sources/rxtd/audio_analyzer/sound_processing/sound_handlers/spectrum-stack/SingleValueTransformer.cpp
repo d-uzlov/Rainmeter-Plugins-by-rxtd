@@ -13,21 +13,18 @@ using rxtd::audio_analyzer::handler::SingleValueTransformer;
 using rxtd::audio_analyzer::handler::HandlerBase;
 using ParamsContainer = HandlerBase::ParamsContainer;
 
-ParamsContainer SingleValueTransformer::vParseParams(
-	const OptionMap& om, Logger& cl, const Rainmeter& rain,
-	Version version
-) const {
+ParamsContainer SingleValueTransformer::vParseParams(ParamParseContext& context) const noexcept(false) {
 	ParamsContainer result;
 	auto& params = result.clear<Params>();
 
-	const auto sourceId = om.get(L"source").asIString();
+	const auto sourceId = context.options.get(L"source").asIString();
 	if (sourceId.empty()) {
-		cl.error(L"source is not found");
-		return {};
+		context.log.error(L"source is not found");
+		throw InvalidOptionsException{};
 	}
 
-	auto transformLogger = cl.context(L"transform: ");
-	params.transformer = CVT::parse(om.get(L"transform").asString(), transformLogger);
+	auto transformLogger = context.log.context(L"transform: ");
+	params.transformer = CVT::parse(context.options.get(L"transform").asString(), transformLogger);
 
 	return result;
 }

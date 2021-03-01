@@ -13,25 +13,22 @@ using rxtd::audio_analyzer::handler::TimeResampler;
 using rxtd::audio_analyzer::handler::HandlerBase;
 using ParamsContainer = HandlerBase::ParamsContainer;
 
-ParamsContainer TimeResampler::vParseParams(
-	const OptionMap& om, Logger& cl, const Rainmeter& rain,
-	Version version
-) const {
+ParamsContainer TimeResampler::vParseParams(ParamParseContext& context) const noexcept(false) {
 	ParamsContainer result;
 	auto& params = result.clear<Params>();
 
-	const auto sourceId = om.get(L"source").asIString();
+	const auto sourceId = context.options.get(L"source").asIString();
 	if (sourceId.empty()) {
-		cl.error(L"source is not found");
-		return {};
+		context.log.error(L"source is not found");
+		throw InvalidOptionsException{};
 	}
 
-	params.granularity = om.get(L"granularity").asFloat(1000.0 / 60.0);
+	params.granularity = context.options.get(L"granularity").asFloat(1000.0 / 60.0);
 	params.granularity = std::max(params.granularity, 0.01);
 	params.granularity *= 0.001;
 
-	params.attack = om.get(L"attack").asFloat(0.0);
-	params.decay = om.get(L"decay").asFloat(params.attack);
+	params.attack = context.options.get(L"attack").asFloat(0.0);
+	params.decay = context.options.get(L"decay").asFloat(params.attack);
 
 	params.attack = std::max(params.attack, 0.0);
 	params.decay = std::max(params.decay, 0.0);
@@ -39,8 +36,8 @@ ParamsContainer TimeResampler::vParseParams(
 	params.attack = params.attack * 0.001;
 	params.decay = params.decay * 0.001;
 
-	auto transformLogger = cl.context(L"transform: ");
-	params.transformer = CVT::parse(om.get(L"transform").asString(), transformLogger);
+	auto transformLogger = context.log.context(L"transform: ");
+	params.transformer = CVT::parse(context.options.get(L"transform").asString(), transformLogger);
 
 	return result;
 }

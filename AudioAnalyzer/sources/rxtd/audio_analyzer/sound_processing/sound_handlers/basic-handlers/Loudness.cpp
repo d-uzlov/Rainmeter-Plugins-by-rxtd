@@ -16,29 +16,26 @@ using rxtd::audio_analyzer::handler::Loudness;
 using rxtd::audio_analyzer::handler::HandlerBase;
 using ParamsContainer = HandlerBase::ParamsContainer;
 
-ParamsContainer Loudness::vParseParams(
-	const OptionMap& om, Logger& cl, const Rainmeter& rain,
-	Version version
-) const {
+ParamsContainer Loudness::vParseParams(ParamParseContext& context) const noexcept(false) {
 	ParamsContainer result;
 	auto& params = result.clear<Params>();
 
-	auto transformLogger = cl.context(L"transform: ");
-	params.transformer = CVT::parse(om.get(L"transform").asString(), transformLogger);
+	auto transformLogger = context.log.context(L"transform: ");
+	params.transformer = CVT::parse(context.options.get(L"transform").asString(), transformLogger);
 
-	params.gatingLimit = om.get(L"gatingLimit").asFloat(0.5);
+	params.gatingLimit = context.options.get(L"gatingLimit").asFloat(0.5);
 	params.gatingLimit = std::clamp(params.gatingLimit, 0.0, 1.0);
 
-	params.updatesPerSecond = om.get(L"updateRate").asFloat(20.0);
+	params.updatesPerSecond = context.options.get(L"updateRate").asFloat(20.0);
 	params.updatesPerSecond = std::clamp(params.updatesPerSecond, 0.01, 60.0);
 
-	params.timeWindowMs = om.get(L"timeWindow").asFloat(1000.0);
+	params.timeWindowMs = context.options.get(L"timeWindow").asFloat(1000.0);
 	params.timeWindowMs = std::clamp(params.timeWindowMs, 0.01, 10000.0);
 
-	params.gatingDb = om.get(L"gatingDb").asFloat(-20.0);
+	params.gatingDb = context.options.get(L"gatingDb").asFloat(-20.0);
 	params.gatingDb = std::clamp(params.gatingDb, -70.0, 0.0);
 
-	params.ignoreGatingForSilence = om.get(L"ignoreGatingForSilence").asBool(true);
+	params.ignoreGatingForSilence = context.options.get(L"ignoreGatingForSilence").asBool(true);
 
 	return result;
 }

@@ -111,17 +111,10 @@ namespace rxtd::audio_analyzer::handler {
 			using handlerUptr = std::unique_ptr<HandlerBase>;
 			using TransformFun = handlerUptr(*)(handlerUptr old);
 
-			bool valid = false;
 			ParamsContainer params;
 			// std::vector<istring> sources;
 			TransformFun transform = [](handlerUptr ptr) -> handlerUptr { return {}; };
 			ExternalMethods externalMethods{};
-
-			HandlerMetaInfo() : HandlerMetaInfo(false) {}
-
-			explicit HandlerMetaInfo(bool isValid) {
-				valid = isValid;
-			}
 		};
 
 		struct Snapshot {
@@ -130,6 +123,16 @@ namespace rxtd::audio_analyzer::handler {
 		};
 
 	protected:
+		struct ParamParseContext {
+			const OptionMap& options;
+			Logger& log;
+			const Rainmeter& rain;
+			Version version;
+
+			ParamParseContext(const OptionMap& om, Logger& cl, const Rainmeter& rain, const Version& version) :
+				options(om), log(cl), rain(rain), version(version) {}
+		};
+
 		struct Configuration {
 			HandlerBase* sourcePtr = nullptr;
 			index sampleRate{};
@@ -178,6 +181,7 @@ namespace rxtd::audio_analyzer::handler {
 	public:
 		/// <summary>
 		/// Creates all the necessary meta info to create an object of a class, patch it and use it.
+		/// Can throw InvalidOptionsException.
 		/// </summary>
 		/// <typeparam name="Type">Type of the handler implementation. Must be a descendant from HandlerBase class.</typeparam>
 		/// <param name="om">Map to read options from.</param>
@@ -187,7 +191,7 @@ namespace rxtd::audio_analyzer::handler {
 		/// <returns>Valid HandlerMetaInfo object.</returns>
 		template<typename Type>
 		[[nodiscard]]
-		static HandlerMetaInfo createMetaForClass(const OptionMap& om, Logger& cl, const Rainmeter& rain, Version version) {
+		static HandlerMetaInfo createMetaForClass(const OptionMap& om, Logger& cl, const Rainmeter& rain, Version version) noexcept(false) {
 			using HandlerType = Type;
 			HandlerMetaInfo meta;
 
@@ -196,11 +200,10 @@ namespace rxtd::audio_analyzer::handler {
 			HandlerType instance;
 			HandlerBase& ref = instance;
 
-			meta.params = ref.vParseParams(om, cl, rain, version);
+			ParamParseContext paramParseContext{ om, cl, rain, version };
+			meta.params = ref.vParseParams(paramParseContext);
 			meta.externalMethods.finish = ref.vGetExt_finish();
 			meta.externalMethods.getProp = ref.vGetExt_getProp();
-
-			meta.valid = true;
 
 			return meta;
 		}
@@ -222,13 +225,9 @@ namespace rxtd::audio_analyzer::handler {
 		/// Reads options from map and creates a ParamsContainer object.
 		/// Implementation is allowed to throw InvalidOptionsException.
 		/// </summary>
-		/// <param name="om">Map to read options from.</param>
-		/// <param name="cl">Logger.</param>
-		/// <param name="rain">Rainmeter object for possible communication with outside world. One such example would be to read current directory for current skin.</param>
-		/// <param name="version">Current version of the plugin API.</param>
 		/// <returns>ParamsContainer, that is valid for vConfigure call on the same object.</returns>
 		[[nodiscard]]
-		virtual ParamsContainer vParseParams(const OptionMap& om, Logger& cl, const Rainmeter& rain, Version version) const noexcept(false) = 0;
+		virtual ParamsContainer vParseParams(ParamParseContext& context) const noexcept(false) = 0;
 
 		// if handler is potentially heavy,
 		// handler should try to return control to caller

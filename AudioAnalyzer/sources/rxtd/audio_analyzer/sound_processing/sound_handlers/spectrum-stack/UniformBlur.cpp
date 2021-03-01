@@ -14,22 +14,19 @@ using rxtd::audio_analyzer::handler::UniformBlur;
 using rxtd::audio_analyzer::handler::HandlerBase;
 using ParamsContainer = HandlerBase::ParamsContainer;
 
-ParamsContainer UniformBlur::vParseParams(
-	const OptionMap& om, Logger& cl, const Rainmeter& rain,
-	Version version
-) const {
+ParamsContainer UniformBlur::vParseParams(ParamParseContext& context) const {
 	ParamsContainer result;
 	auto& params = result.clear<Params>();
 
-	const auto sourceId = om.get(L"source").asIString();
+	const auto sourceId = context.options.get(L"source").asIString();
 	if (sourceId.empty()) {
-		cl.error(L"source is not found");
+		context.log.error(L"source is not found");
 		return {};
 	}
 
 	//                                                        ?? ↓↓ looks best ?? at 0.25 ↓↓ ??
-	params.blurRadius = std::max<double>(om.get(L"Radius").asFloat(1.0) * 0.25, 0.0);
-	params.blurRadiusAdaptation = std::max<double>(om.get(L"RadiusAdaptation").asFloat(2.0), 0.0);
+	params.blurRadius = std::max<double>(context.options.get(L"Radius").asFloat(1.0) * 0.25, 0.0);
+	params.blurRadiusAdaptation = std::max<double>(context.options.get(L"RadiusAdaptation").asFloat(2.0), 0.0);
 
 	return result;
 }

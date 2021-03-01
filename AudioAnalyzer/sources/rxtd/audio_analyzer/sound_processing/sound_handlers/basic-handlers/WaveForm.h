@@ -90,10 +90,7 @@ namespace rxtd::audio_analyzer::handler {
 		}
 
 		[[nodiscard]]
-		ParamsContainer vParseParams(
-			const OptionMap& om, Logger& cl, const Rainmeter& rain,
-			Version version
-		) const override;
+		ParamsContainer vParseParams(ParamParseContext& context) const noexcept(false) override;
 
 	protected:
 		[[nodiscard]]

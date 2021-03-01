@@ -17,43 +17,40 @@ using rxtd::audio_analyzer::handler::BandResampler;
 using rxtd::audio_analyzer::handler::HandlerBase;
 using ParamsContainer = HandlerBase::ParamsContainer;
 
-ParamsContainer BandResampler::vParseParams(
-	const OptionMap& om, Logger& cl, const Rainmeter& rain,
-	Version version
-) const {
+ParamsContainer BandResampler::vParseParams(ParamParseContext& context) const noexcept(false) {
 	ParamsContainer result;
 	auto& params = result.clear<Params>();
 
-	const auto sourceId = om.get(L"source").asIString();
+	const auto sourceId = context.options.get(L"source").asIString();
 	if (sourceId.empty()) {
-		cl.error(L"source is not found");
-		return {};
+		context.log.error(L"source is not found");
+		throw InvalidOptionsException{};
 	}
 
-	if (om.get(L"bands").empty()) {
-		cl.error(L"bands option is not found");
-		return {};
+	if (context.options.get(L"bands").empty()) {
+		context.log.error(L"bands option is not found");
+		throw InvalidOptionsException{};
 	}
 
-	params.bandFreqs = parseFreqList(om.get(L"bands"), cl.context(L"bands: "));
+	params.bandFreqs = parseFreqList(context.options.get(L"bands"), context.log.context(L"bands: "));
 
 	if (params.bandFreqs.size() < 2) {
-		cl.error(L"need >= 2 frequencies but only {} found", params.bandFreqs.size());
-		return {};
+		context.log.error(L"need >= 2 frequencies but only {} found", params.bandFreqs.size());
+		throw InvalidOptionsException{};
 	}
 
-	params.minCascade = std::max(om.get(L"minCascade").asInt(0), 0);
-	params.maxCascade = std::max(om.get(L"maxCascade").asInt(0), 0);
+	params.minCascade = std::max(context.options.get(L"minCascade").asInt(0), 0);
+	params.maxCascade = std::max(context.options.get(L"maxCascade").asInt(0), 0);
 
 	if (params.minCascade > params.maxCascade) {
-		cl.error(
+		context.log.error(
 			L"max cascade must be >= min cascade but max={} < min={} are found",
 			params.maxCascade, params.minCascade
 		);
-		return {};
+		throw InvalidOptionsException{};
 	}
 
-	params.useCubicResampling = om.get(L"cubicInterpolation").asBool(true);
+	params.useCubicResampling = context.options.get(L"cubicInterpolation").asBool(true);
 
 	return result;
 }

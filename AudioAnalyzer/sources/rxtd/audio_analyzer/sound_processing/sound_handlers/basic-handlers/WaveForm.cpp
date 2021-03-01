@@ -20,44 +20,41 @@ using ParamsContainer = HandlerBase::ParamsContainer;
 using namespace std::string_literals;
 using rxtd::audio_analyzer::image_utils::Color;
 
-ParamsContainer WaveForm::vParseParams(
-	const OptionMap& om, Logger& cl, const Rainmeter& rain,
-	Version version
-) const {
+ParamsContainer WaveForm::vParseParams(ParamParseContext& context) const noexcept(false) {
 	ParamsContainer result;
 	auto& params = result.clear<Params>();
 
-	params.width = om.get(L"width").asInt(100);
+	params.width = context.options.get(L"width").asInt(100);
 	if (params.width < 2) {
-		cl.error(L"width must be >= 2 but {} found", params.width);
-		return {};
+		context.log.error(L"width must be >= 2 but {} found", params.width);
+		throw InvalidOptionsException{};
 	}
 
-	params.height = om.get(L"height").asInt(100);
+	params.height = context.options.get(L"height").asInt(100);
 	if (params.height < 2) {
-		cl.error(L"height must be >= 2 but {} found", params.height);
-		return {};
+		context.log.error(L"height must be >= 2 but {} found", params.height);
+		throw InvalidOptionsException{};
 	}
 
 	if (params.width * params.height > 1000 * 1000) {
-		cl.warning(L"dangerously big width and height: {}, {}", params.width, params.height);
+		context.log.warning(L"dangerously big width and height: {}, {}", params.width, params.height);
 	}
 
-	params.resolution = om.get(L"resolution").asFloat(50);
+	params.resolution = context.options.get(L"resolution").asFloat(50);
 	if (params.resolution <= 0) {
-		cl.warning(L"resolution must be > 0 but {} found. Assume 100", params.resolution);
+		context.log.warning(L"resolution must be > 0 but {} found. Assume 100", params.resolution);
 		params.resolution = 100;
 	}
 	params.resolution *= 0.001;
 
-	params.folder = rain.getPathFromCurrent(om.get(L"folder").asString() % own());
+	params.folder = context.rain.getPathFromCurrent(context.options.get(L"folder").asString() % own());
 
-	params.colors.background = Color::parse(om.get(L"backgroundColor").asString(), { 0, 0, 0 }).toIntColor();
-	params.colors.wave = Color::parse(om.get(L"waveColor").asString(), { 1, 1, 1 }).toIntColor();
-	params.colors.line = Color::parse(om.get(L"lineColor").asString(), { 0.5, 0.5, 0.5, 0.5 }).toIntColor();
-	params.colors.border = Color::parse(om.get(L"borderColor").asString(), { 1.0, 0.2, 0.2 }).toIntColor();
+	params.colors.background = Color::parse(context.options.get(L"backgroundColor").asString(), { 0, 0, 0 }).toIntColor();
+	params.colors.wave = Color::parse(context.options.get(L"waveColor").asString(), { 1, 1, 1 }).toIntColor();
+	params.colors.line = Color::parse(context.options.get(L"lineColor").asString(), { 0.5, 0.5, 0.5, 0.5 }).toIntColor();
+	params.colors.border = Color::parse(context.options.get(L"borderColor").asString(), { 1.0, 0.2, 0.2 }).toIntColor();
 
-	if (const auto ldpString = om.get(L"lineDrawingPolicy").asIString(L"always");
+	if (const auto ldpString = context.options.get(L"lineDrawingPolicy").asIString(L"always");
 		ldpString == L"always") {
 		params.lineDrawingPolicy = LDP::eALWAYS;
 	} else if (ldpString == L"belowWave") {
@@ -65,26 +62,26 @@ ParamsContainer WaveForm::vParseParams(
 	} else if (ldpString == L"never") {
 		params.lineDrawingPolicy = LDP::eNEVER;
 	} else {
-		cl.warning(L"lineDrawingPolicy '{}' is not recognized, assume 'always'", ldpString);
+		context.log.warning(L"lineDrawingPolicy '{}' is not recognized, assume 'always'", ldpString);
 		params.lineDrawingPolicy = LDP::eALWAYS;
 	}
 
-	params.stationary = om.get(L"stationary").asBool(false);
-	params.connected = om.get(L"connected").asBool(true);
+	params.stationary = context.options.get(L"stationary").asBool(false);
+	params.connected = context.options.get(L"connected").asBool(true);
 
-	params.borderSize = om.get(L"borderSize").asInt(0);
+	params.borderSize = context.options.get(L"borderSize").asInt(0);
 	params.borderSize = std::clamp<index>(params.borderSize, 0, params.width / 2);
 
-	params.lineThickness = om.get(L"lineThickness").asInt(2 - (params.height & 1));
+	params.lineThickness = context.options.get(L"lineThickness").asInt(2 - (params.height & 1));
 	params.lineThickness = std::clamp<index>(params.lineThickness, 0, params.height);
 
-	params.fading = om.get(L"FadingRatio").asFloat(0.0);
+	params.fading = context.options.get(L"FadingRatio").asFloat(0.0);
 
-	params.silenceThreshold = om.get(L"silenceThreshold").asFloatF(-70);
+	params.silenceThreshold = context.options.get(L"silenceThreshold").asFloatF(-70);
 	params.silenceThreshold = MyMath::db2amplitude(params.silenceThreshold);
 
-	auto transformLogger = cl.context(L"transform: ");
-	params.transformer = CVT::parse(om.get(L"transform").asString(), transformLogger);
+	auto transformLogger = context.log.context(L"transform: ");
+	params.transformer = CVT::parse(context.options.get(L"transform").asString(), transformLogger);
 
 	return result;
 }

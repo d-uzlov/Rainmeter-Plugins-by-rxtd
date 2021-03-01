@@ -19,8 +19,9 @@ namespace rxtd::audio_analyzer::options {
 		using OptionMap = option_parsing::OptionMap;
 
 		struct MapValue {
-			bool updated = false;
 			HandlerInfo info;
+			bool valid = false;
+			bool updated = false;
 		};
 
 		using PatchersMap = std::map<istring, MapValue, std::less<>>;
@@ -62,8 +63,14 @@ namespace rxtd::audio_analyzer::options {
 		[[nodiscard]]
 		MapValue parseHandler(sview name, MapValue val, Logger& cl);
 
+		/// <summary>
+		/// Can throw HandlerBase::InvalidOptionsException.
+		/// </summary>
+		/// <param name="optionMap"></param>
+		/// <param name="cl"></param>
+		/// <returns></returns>
 		[[nodiscard]]
-		handler::HandlerBase::HandlerMetaInfo createHandlerPatcher(const OptionMap& optionMap, Logger& cl) const;
+		handler::HandlerBase::HandlerMetaInfo createHandlerPatcher(const OptionMap& optionMap, Logger& cl) const noexcept(false);
 
 		void readRawDescription2(isview type, const OptionMap& optionMap, string& rawDescription2) const;
 	};

@@ -22,39 +22,36 @@ using rxtd::audio_analyzer::handler::Spectrogram;
 using rxtd::audio_analyzer::handler::HandlerBase;
 using ParamsContainer = HandlerBase::ParamsContainer;
 
-ParamsContainer Spectrogram::vParseParams(
-	const OptionMap& om, Logger& cl, const Rainmeter& rain,
-	Version version
-) const {
+ParamsContainer Spectrogram::vParseParams(ParamParseContext& context) const noexcept(false) {
 	ParamsContainer result;
 	auto& params = result.clear<Params>();
 
-	const auto sourceId = om.get(L"source").asIString();
+	const auto sourceId = context.options.get(L"source").asIString();
 	if (sourceId.empty()) {
-		cl.error(L"source is not found");
-		return {};
+		context.log.error(L"source is not found");
+		throw InvalidOptionsException{};
 	}
 
-	params.length = om.get(L"length").asInt(100);
+	params.length = context.options.get(L"length").asInt(100);
 	if (params.length < 2) {
-		cl.error(L"length must be >= 2 but {} found", params.length);
-		return {};
+		context.log.error(L"length must be >= 2 but {} found", params.length);
+		throw InvalidOptionsException{};
 	}
 	if (params.length >= 1500) {
-		cl.warning(L"dangerously large length {}", params.length);
+		context.log.warning(L"dangerously large length {}", params.length);
 	}
 
-	params.resolution = om.get(L"resolution").asFloat(50);
+	params.resolution = context.options.get(L"resolution").asFloat(50);
 	if (params.resolution <= 0) {
-		cl.warning(L"resolution must be > 0 but {} found. Assume 50", params.resolution);
+		context.log.warning(L"resolution must be > 0 but {} found. Assume 50", params.resolution);
 		params.resolution = 100;
 	}
 	params.resolution *= 0.001;
 
-	params.folder = rain.getPathFromCurrent(om.get(L"folder").asString() % own());
+	params.folder = context.rain.getPathFromCurrent(context.options.get(L"folder").asString() % own());
 
 	using MixMode = Color::Mode;
-	if (auto mixMode = om.get(L"mixMode").asIString(L"srgb");
+	if (auto mixMode = context.options.get(L"mixMode").asIString(L"srgb");
 		mixMode == L"srgb") {
 		params.mixMode = MixMode::eRGB;
 	} else if (mixMode == L"hsv") {
@@ -64,12 +61,12 @@ ParamsContainer Spectrogram::vParseParams(
 	} else if (mixMode == L"ycbcr") {
 		params.mixMode = MixMode::eRGB; // difference between ycbcr and rgb is linear
 	} else {
-		cl.error(L"unknown mixMode '{}', using rgb instead", mixMode);
+		context.log.error(L"unknown mixMode '{}', using rgb instead", mixMode);
 		params.mixMode = MixMode::eRGB;
 	}
 
-	if (!om.get(L"colors").empty()) {
-		auto colorsDescriptionList = om.get(L"colors").asList(L';');
+	if (!context.options.get(L"colors").empty()) {
+		auto colorsDescriptionList = context.options.get(L"colors").asList(L';');
 
 		float prevValue = -std::numeric_limits<float>::infinity();
 
@@ -78,18 +75,18 @@ ParamsContainer Spectrogram::vParseParams(
 			auto [valueOpt, colorOpt] = colorsDescription.breakFirst(L':');
 
 			if (colorOpt.empty()) {
-				cl.warning(L"colors: description '{}' doesn't contain color", colorsDescription.asString());
+				context.log.warning(L"colors: description '{}' doesn't contain color", colorsDescription.asString());
 				continue;
 			}
 
 			float value = valueOpt.asFloatF();
 
 			if (value <= prevValue) {
-				cl.error(L"colors: values {} and {}: values must be increasing", prevValue, value);
-				return {};
+				context.log.error(L"colors: values {} and {}: values must be increasing", prevValue, value);
+				throw InvalidOptionsException{};
 			}
 			if (value / prevValue < 1.001f && value - prevValue < 0.001f) {
-				cl.warning(L"colors: values {} and {} are too close, discarding second one", prevValue, value);
+				context.log.warning(L"colors: values {} and {} are too close, discarding second one", prevValue, value);
 				continue;
 			}
 
@@ -106,26 +103,26 @@ ParamsContainer Spectrogram::vParseParams(
 		}
 
 		if (params.colors.size() < 2) {
-			cl.error(L"need at least 2 colors but {} found", params.colors.size());
-			return {};
+			context.log.error(L"need at least 2 colors but {} found", params.colors.size());
+			throw InvalidOptionsException{};
 		}
 	} else {
 		params.colors.resize(2);
-		params.colors[0].color = Color::parse(om.get(L"baseColor").asString(), { 0, 0, 0 }).convert(params.mixMode);
-		params.colors[1].color = Color::parse(om.get(L"maxColor").asString(), { 1, 1, 1 }).convert(params.mixMode);
+		params.colors[0].color = Color::parse(context.options.get(L"baseColor").asString(), { 0, 0, 0 }).convert(params.mixMode);
+		params.colors[1].color = Color::parse(context.options.get(L"maxColor").asString(), { 1, 1, 1 }).convert(params.mixMode);
 		params.colorLevels.push_back(0.0f);
 		params.colorLevels.push_back(1.0f);
 	}
 
-	params.borderColor = Color::parse(om.get(L"borderColor").asString(), { 1.0, 0.2, 0.2 });
+	params.borderColor = Color::parse(context.options.get(L"borderColor").asString(), { 1.0, 0.2, 0.2 });
 
-	params.fading = std::clamp(om.get(L"FadingRatio").asFloat(0.0), 0.0, 1.0);
+	params.fading = std::clamp(context.options.get(L"FadingRatio").asFloat(0.0), 0.0, 1.0);
 
-	params.borderSize = std::clamp<index>(om.get(L"borderSize").asInt(0), 0, params.length / 2);
+	params.borderSize = std::clamp<index>(context.options.get(L"borderSize").asInt(0), 0, params.length / 2);
 
-	params.stationary = om.get(L"stationary").asBool(false);
+	params.stationary = context.options.get(L"stationary").asBool(false);
 
-	params.silenceThreshold = om.get(L"silenceThreshold").asFloatF(-70);
+	params.silenceThreshold = context.options.get(L"silenceThreshold").asFloatF(-70);
 	params.silenceThreshold = MyMath::db2amplitude(params.silenceThreshold);
 
 	return result;

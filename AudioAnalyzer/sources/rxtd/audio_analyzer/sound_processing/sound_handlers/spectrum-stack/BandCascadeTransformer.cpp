@@ -15,38 +15,35 @@ using rxtd::audio_analyzer::handler::BandCascadeTransformer;
 using rxtd::audio_analyzer::handler::HandlerBase;
 using ParamsContainer = HandlerBase::ParamsContainer;
 
-ParamsContainer BandCascadeTransformer::vParseParams(
-	const OptionMap& om, Logger& cl, const Rainmeter& rain,
-	Version version
-) const {
+ParamsContainer BandCascadeTransformer::vParseParams(ParamParseContext& context) const noexcept(false) {
 	ParamsContainer result;
 	auto& params = result.clear<Params>();
 
-	const auto sourceId = om.get(L"source").asIString();
+	const auto sourceId = context.options.get(L"source").asIString();
 	if (sourceId.empty()) {
-		cl.error(L"source not found");
-		return {};
+		context.log.error(L"source not found");
+		throw InvalidOptionsException{};
 	}
 
 	const float epsilon = std::numeric_limits<float>::epsilon();
 
-	params.minWeight = om.get(L"minWeight").asFloatF(0.1f);
+	params.minWeight = context.options.get(L"minWeight").asFloatF(0.1f);
 	params.minWeight = std::max(params.minWeight, epsilon);
 
-	params.targetWeight = om.get(L"targetWeight").asFloatF(2.5f);
+	params.targetWeight = context.options.get(L"targetWeight").asFloatF(2.5f);
 	params.targetWeight = std::max(params.targetWeight, params.minWeight);
 
-	params.zeroLevelHard = om.get(L"zeroLevelMultiplier").asFloatF(1.0f);
+	params.zeroLevelHard = context.options.get(L"zeroLevelMultiplier").asFloatF(1.0f);
 	params.zeroLevelHard = std::max(params.zeroLevelHard, 0.0f);
 	params.zeroLevelHard *= epsilon;
 
-	if (const auto mixFunctionString = om.get(L"mixFunction").asIString(L"product");
+	if (const auto mixFunctionString = context.options.get(L"mixFunction").asIString(L"product");
 		mixFunctionString == L"product") {
 		params.mixFunction = MixFunction::PRODUCT;
 	} else if (mixFunctionString == L"average") {
 		params.mixFunction = MixFunction::AVERAGE;
 	} else {
-		cl.warning(L"mixFunction '{}' is not recognized, assume 'product'", mixFunctionString);
+		context.log.warning(L"mixFunction '{}' is not recognized, assume 'product'", mixFunctionString);
 		params.mixFunction = MixFunction::PRODUCT;
 	}
 
