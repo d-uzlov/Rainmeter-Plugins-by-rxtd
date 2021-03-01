@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <Combaseapi.h>
+
 namespace rxtd::winapi_wrappers {
 	//
 	// Wrapper over objects that need to be freed with CoTaskMemFree.

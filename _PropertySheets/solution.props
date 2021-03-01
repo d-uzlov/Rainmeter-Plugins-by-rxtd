@@ -36,7 +36,8 @@
     $(SolutionDir)Utils/ExpressionParser/sources/;
     $(SolutionDir)Utils/FftUtils/sources/;
     $(SolutionDir)Utils/GenericSignalUtils/sources/;
-    $(SolutionDir)Utils/GenericUtils/sources/;
+    $(SolutionDir)Utils/OptionParsingUtils/sources/;
+    $(SolutionDir)Utils/Logger/sources/;
     $(SolutionDir)Utils/RainmeterApiHelpers/sources/;
     $(SolutionDir)Utils/SignalFilterUtils/sources/;
     $(SolutionDir)Utils/StdLibExtension/sources/;

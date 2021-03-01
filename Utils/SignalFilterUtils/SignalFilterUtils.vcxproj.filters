@@ -74,6 +74,9 @@
     <ClInclude Include="sources\rxtd\filter_utils\butterworth_lib\iir.h">
       <Filter>sources\rxtd\filter_utils\butterworth_lib</Filter>
     </ClInclude>
+    <ClInclude Include="sources\rxtd\filter_utils\DownsampleHelper.h">
+      <Filter>sources\rxtd\filter_utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="sources\rxtd\filter_utils\butterworth_lib\iir.txt">

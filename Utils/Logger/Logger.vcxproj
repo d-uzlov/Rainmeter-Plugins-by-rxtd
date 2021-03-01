@@ -3,8 +3,8 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{e2f48041-57e0-4ce7-ba1f-97b3a9429575}</ProjectGuid>
-    <RootNamespace>RainmeterApiHelpers</RootNamespace>
+    <ProjectGuid>{2b8f5b9c-15d2-441d-9158-90e3f53c7606}</ProjectGuid>
+    <RootNamespace>Logger</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -13,15 +13,6 @@
   <Import Project="$(PropertySheetsDir)build_type/static_lib.props" />
   <Import Project="$(PropertySheetsDir)configurations_specific_settings/$(Configuration)_config.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ImportGroup Label="ExtensionSettings">
-  </ImportGroup>
-  <ImportGroup Label="Shared">
-  </ImportGroup>
-  <ItemDefinitionGroup>
-    <Lib>
-      <AdditionalDependencies>$(SolutionDir)Utils/RainmeterApiHelpers/external/libs-$(Platform)/Rainmeter.lib;$(AdditionalDependencies)</AdditionalDependencies>
-    </Lib>
-  </ItemDefinitionGroup>
   <ImportGroup Label="PropertySheets">
     <Import Project="$(PropertySheetsDir)/solution.props" />
     <Import Project="$(PropertySheetsDir)/pch.props" />
@@ -31,27 +22,17 @@
     <Import Project="$(PropertySheetsDir)/static_lib_export.props" />
   </ImportGroup>
   <ItemGroup>
-    <ClCompile Include="sources\rxtd\rainmeter\InstanceKeeper.cpp" />
-    <ClCompile Include="sources\rxtd\rainmeter\MeasureBase.cpp" />
-    <ClCompile Include="sources\rxtd\rainmeter\Rainmeter.cpp" />
+    <ClInclude Include="sources\rxtd\buffer_printer\BufferPrinter.h" />
+    <ClInclude Include="sources\rxtd\buffer_printer\ReadableStreamBuffer.h" />
+    <ClInclude Include="sources\rxtd\Logger.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="sources\rxtd\rainmeter\DataHandle.h" />
-    <ClInclude Include="sources\rxtd\rainmeter\InstanceKeeper.h" />
-    <ClInclude Include="sources\rxtd\rainmeter\MeasureBase.h" />
-    <ClInclude Include="sources\rxtd\rainmeter\Rainmeter.h" />
-    <ClInclude Include="sources\rxtd\rainmeter\SkinHandle.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Logger\Logger.vcxproj">
-      <Project>{2b8f5b9c-15d2-441d-9158-90e3f53c7606}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\OptionParsingUtils\OptionParsingUtils.vcxproj">
-      <Project>{cf878ad0-e15c-403d-be8b-1f426dba2146}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\StdLibExtension\StdLibExtension.vcxproj">
       <Project>{76a3d6d3-45e8-4391-8b94-2477afe23596}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="sources\rxtd\buffer_printer\ReadableStreamBuffer.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

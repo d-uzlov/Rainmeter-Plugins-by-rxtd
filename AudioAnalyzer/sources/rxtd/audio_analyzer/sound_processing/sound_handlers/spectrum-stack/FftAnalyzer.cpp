@@ -7,7 +7,7 @@
  * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
  */
 
-#include "rxtd/audio_utils/RandomGenerator.h"
+#include "rxtd/audio_analyzer/audio_utils/RandomGenerator.h"
 
 #include "FftAnalyzer.h"
 

@@ -8,9 +8,9 @@
  */
 
 #pragma once
-#include "rxtd/audio_utils/CustomizableValueTransformer.h"
-#include "rxtd/filter_utils/LogarithmicIRF.h"
+#include "rxtd/audio_analyzer/audio_utils/CustomizableValueTransformer.h"
 #include "rxtd/audio_analyzer/sound_processing/sound_handlers/HandlerBase.h"
+#include "rxtd/filter_utils/LogarithmicIRF.h"
 
 namespace rxtd::audio_analyzer::handler {
 	class BlockHandler : public HandlerBase {

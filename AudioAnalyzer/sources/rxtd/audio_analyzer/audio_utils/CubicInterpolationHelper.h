@@ -9,7 +9,7 @@
 
 #pragma once
 
-namespace rxtd::audio_utils {
+namespace rxtd::audio_analyzer::audio_utils {
 	class CubicInterpolationHelper {
 		array_view<float> sourceValues;
 

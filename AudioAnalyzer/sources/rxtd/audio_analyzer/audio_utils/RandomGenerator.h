@@ -10,7 +10,7 @@
 #pragma once
 #include <random>
 
-namespace rxtd::audio_utils {
+namespace rxtd::audio_analyzer::audio_utils {
 	class RandomGenerator {
 		std::random_device rd;
 		std::mt19937 e2;

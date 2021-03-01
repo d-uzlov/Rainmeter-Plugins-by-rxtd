@@ -12,11 +12,9 @@
 #include "rxtd/filter_utils/InfiniteResponseFilter.h"
 #include "rxtd/filter_utils/butterworth_lib/ButterworthWrapper.h"
 
-namespace rxtd::audio_utils {
+namespace rxtd::filter_utils {
 	class DownsampleHelper {
-		using ButterworthWrapper = filter_utils::butterworth_lib::ButterworthWrapper;
-		template<index order>
-		using InfiniteResponseFilterFixed = filter_utils::InfiniteResponseFilterFixed<order>;
+		using ButterworthWrapper = butterworth_lib::ButterworthWrapper;
 		
 		constexpr static index filterOrder = 10;
 		constexpr static index filterSize = ButterworthWrapper::oneSideSlopeSize(filterOrder);

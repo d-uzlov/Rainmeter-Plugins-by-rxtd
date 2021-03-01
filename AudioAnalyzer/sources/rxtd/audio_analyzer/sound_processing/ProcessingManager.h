@@ -13,7 +13,7 @@
 #include "Channel.h"
 #include "ChannelMixer.h"
 #include "rxtd/audio_analyzer/options/ParamParser.h"
-#include "rxtd/audio_utils/DownsampleHelper.h"
+#include "rxtd/filter_utils/DownsampleHelper.h"
 
 namespace rxtd::audio_analyzer {
 	class ProcessingManager {
@@ -22,7 +22,7 @@ namespace rxtd::audio_analyzer {
 		using Snapshot = std::map<Channel, ChannelSnapshot, std::less<>>;
 		using ProcessingData = options::ProcessingData;
 		using FilterCascade = filter_utils::FilterCascade;
-		using DownsampleHelper = audio_utils::DownsampleHelper;
+		using DownsampleHelper = filter_utils::DownsampleHelper;
 
 		using clock = handler::HandlerBase::clock;
 

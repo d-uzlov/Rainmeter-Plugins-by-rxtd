@@ -82,6 +82,21 @@
     <ClInclude Include="sources\rxtd\std_fixes\StringBaseExtended.h">
       <Filter>sources\rxtd\std_fixes</Filter>
     </ClInclude>
+    <ClInclude Include="sources\rxtd\DataWithLock.h">
+      <Filter>sources\rxtd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\DiscreetInterpolator.h">
+      <Filter>sources\rxtd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\GrowingVector.h">
+      <Filter>sources\rxtd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\IntMixer.h">
+      <Filter>sources\rxtd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\LinearInterpolator.h">
+      <Filter>sources\rxtd</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="array_view.natvis" />

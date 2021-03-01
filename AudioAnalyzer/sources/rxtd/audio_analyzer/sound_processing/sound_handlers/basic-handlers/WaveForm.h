@@ -11,8 +11,8 @@
 #include "rxtd/audio_analyzer/image_utils/ImageWriteHelper.h"
 #include "rxtd/audio_analyzer/image_utils/WaveFormDrawer.h"
 #include "rxtd/audio_analyzer/sound_processing/sound_handlers/HandlerBase.h"
-#include "rxtd/audio_utils/CustomizableValueTransformer.h"
-#include "rxtd/audio_utils/MinMaxCounter.h"
+#include "rxtd/audio_analyzer/audio_utils/CustomizableValueTransformer.h"
+#include "rxtd/audio_analyzer/audio_utils/MinMaxCounter.h"
 
 namespace rxtd::audio_analyzer::handler {
 	class WaveForm : public HandlerBase {

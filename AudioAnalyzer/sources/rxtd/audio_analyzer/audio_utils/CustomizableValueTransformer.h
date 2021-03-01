@@ -12,7 +12,7 @@
 #include "rxtd/LinearInterpolator.h"
 #include "rxtd/option_parsing/OptionList.h"
 
-namespace rxtd::audio_utils {
+namespace rxtd::audio_analyzer::audio_utils {
 	class CustomizableValueTransformer {
 	public:
 		using OptionList = option_parsing::OptionList;

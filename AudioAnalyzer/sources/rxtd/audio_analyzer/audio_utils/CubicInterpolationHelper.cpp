@@ -9,7 +9,7 @@
 
 #include "CubicInterpolationHelper.h"
 
-using rxtd::audio_utils::CubicInterpolationHelper;
+using rxtd::audio_analyzer::audio_utils::CubicInterpolationHelper;
 
 float CubicInterpolationHelper::getValueFor(float x) {
 	const double floor = std::floor(x);

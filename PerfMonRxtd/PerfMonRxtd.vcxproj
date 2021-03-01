@@ -7,27 +7,10 @@
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <Import Project="$(PropertySheetsDir)/configuration.props" />
+  <Import Project="$(PropertySheetsDir)configurations.props" />
+  <Import Project="$(PropertySheetsDir)default_platform_toolset.props" />
   <Import Project="$(PropertySheetsDir)/build_type/dll.props" />
-  <Import Project="$(PropertySheetsDir)/configurations/$(Configuration)_config.props" />
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <PlatformToolset>v142</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
-    <PlatformToolset>v142</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <PlatformToolset>v142</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <PlatformToolset>v142</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Test|x64'">
-    <PlatformToolset>v142</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <PlatformToolset>v142</PlatformToolset>
-  </PropertyGroup>
+  <Import Project="$(PropertySheetsDir)configurations_specific_settings/$(Configuration)_config.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
@@ -38,7 +21,7 @@
     <Import Project="$(PropertySheetsDir)/pch.props" />
     <Import Project="$(PropertySheetsDir)/pch_copy.props" />
     <Import Project="$(PropertySheetsDir)/platforms/$(Platform).props" />
-    <Import Project="$(PropertySheetsDir)/configurations/$(Configuration).props" />
+    <Import Project="$(PropertySheetsDir)/configurations_specific_settings/$(Configuration).props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
@@ -85,8 +68,11 @@
     <ProjectReference Include="..\Utils\ExpressionParser\ExpressionParser.vcxproj">
       <Project>{69308053-9c59-46c7-9158-a17de9e7615b}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\Utils\GenericUtils\GenericUtils.vcxproj">
-      <Project>{ed9dc428-f99f-4695-a5f7-aafba501a962}</Project>
+    <ProjectReference Include="..\Utils\Logger\Logger.vcxproj">
+      <Project>{2b8f5b9c-15d2-441d-9158-90e3f53c7606}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\Utils\OptionParsingUtils\OptionParsingUtils.vcxproj">
+      <Project>{cf878ad0-e15c-403d-be8b-1f426dba2146}</Project>
     </ProjectReference>
     <ProjectReference Include="..\Utils\RainmeterApiHelpers\RainmeterApiHelpers.vcxproj">
       <Project>{e2f48041-57e0-4ce7-ba1f-97b3a9429575}</Project>

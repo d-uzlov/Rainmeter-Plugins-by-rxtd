@@ -9,7 +9,7 @@
 
 #pragma once
 
-namespace rxtd::audio_utils {
+namespace rxtd::audio_analyzer::audio_utils {
 	class MinMaxCounter {
 		index blockSize = 1;
 		index counter{};

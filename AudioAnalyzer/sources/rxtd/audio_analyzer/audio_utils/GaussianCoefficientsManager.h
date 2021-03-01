@@ -9,7 +9,7 @@
 
 #pragma once
 
-namespace rxtd::audio_utils {
+namespace rxtd::audio_analyzer::audio_utils {
 	class GaussianCoefficientsManager {
 		// radius -> coefs vector
 		std::map<index, std::vector<double>> blurCoefficients;

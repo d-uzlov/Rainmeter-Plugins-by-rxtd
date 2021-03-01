@@ -8,39 +8,22 @@
     <ProjectName>Common</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <Import Project="$(PropertySheetsDir)/configuration.props" />
-  <Import Project="$(PropertySheetsDir)/build_type/static_lib.props" />
-  <Import Project="$(PropertySheetsDir)/configurations/$(Configuration)_config.props" />
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <PlatformToolset>v142</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Test|Win32'">
-    <PlatformToolset>v142</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <PlatformToolset>v142</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <PlatformToolset>v142</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Test|x64'">
-    <PlatformToolset>v142</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <PlatformToolset>v142</PlatformToolset>
-  </PropertyGroup>
+  <Import Project="$(PropertySheetsDir)configurations.props" />
+  <Import Project="$(PropertySheetsDir)default_platform_toolset.props" />
+  <Import Project="$(PropertySheetsDir)build_type/static_lib.props" />
+  <Import Project="$(PropertySheetsDir)configurations_specific_settings/$(Configuration)_config.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
   <ImportGroup Label="PropertySheets">
-    <Import Project="$(PropertySheetsDir)/solution.props" />
-    <Import Project="$(PropertySheetsDir)/pch.props" />
-    <Import Project="$(PropertySheetsDir)/pch_copy.props" />
-    <Import Project="$(PropertySheetsDir)/platforms/$(Platform).props" />
-    <Import Project="$(PropertySheetsDir)/configurations/$(Configuration).props" />
-    <Import Project="$(PropertySheetsDir)/static_lib_export.props" />
+    <Import Project="$(PropertySheetsDir)solution.props" />
+    <Import Project="$(PropertySheetsDir)pch.props" />
+    <Import Project="$(PropertySheetsDir)pch_copy.props" />
+    <Import Project="$(PropertySheetsDir)platforms/$(Platform).props" />
+    <Import Project="$(PropertySheetsDir)configurations_specific_settings/$(Configuration).props" />
+    <Import Project="$(PropertySheetsDir)static_lib_export.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

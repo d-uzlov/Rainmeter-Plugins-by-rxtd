@@ -42,6 +42,9 @@
     <Filter Include="sources\rxtd\audio_analyzer\wasapi_wrappers\implementations">
       <UniqueIdentifier>{1efe0513-1dc6-45a6-a7af-26c084b2ac30}</UniqueIdentifier>
     </Filter>
+    <Filter Include="sources\rxtd\audio_analyzer\audio_utils">
+      <UniqueIdentifier>{b86d0f22-e736-4e33-b033-0ae3d914e120}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="local-version.h">
@@ -173,6 +176,21 @@
     <ClInclude Include="sources\rxtd\audio_analyzer\wasapi_wrappers\implementations\MediaDeviceListNotificationClient.h">
       <Filter>sources\rxtd\audio_analyzer\wasapi_wrappers\implementations</Filter>
     </ClInclude>
+    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\CubicInterpolationHelper.h">
+      <Filter>sources\rxtd\audio_analyzer\audio_utils</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\CustomizableValueTransformer.h">
+      <Filter>sources\rxtd\audio_analyzer\audio_utils</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\GaussianCoefficientsManager.h">
+      <Filter>sources\rxtd\audio_analyzer\audio_utils</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\MinMaxCounter.h">
+      <Filter>sources\rxtd\audio_analyzer\audio_utils</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\RandomGenerator.h">
+      <Filter>sources\rxtd\audio_analyzer\audio_utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sources\dllmain.cpp">
@@ -276,6 +294,15 @@
     </ClCompile>
     <ClCompile Include="sources\rxtd\audio_analyzer\wasapi_wrappers\implementations\MediaDeviceListNotificationClient.cpp">
       <Filter>sources\rxtd\audio_analyzer\wasapi_wrappers\implementations</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\CubicInterpolationHelper.cpp">
+      <Filter>sources\rxtd\audio_analyzer\audio_utils</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\CustomizableValueTransformer.cpp">
+      <Filter>sources\rxtd\audio_analyzer\audio_utils</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\audio_utils\GaussianCoefficientsManager.cpp">
+      <Filter>sources\rxtd\audio_analyzer\audio_utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

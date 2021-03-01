@@ -11,14 +11,14 @@
 #include <chrono>
 #include <functional>
 
-#include "rxtd/audio_utils/DownsampleHelper.h"
 #include "FFT.h"
 #include "rxtd/GrowingVector.h"
+#include "rxtd/filter_utils/DownsampleHelper.h"
 
 namespace rxtd::fft_utils {
 	class FftCascade {
 	public:
-		using DownsampleHelper = rxtd::audio_utils::DownsampleHelper;
+		using DownsampleHelper = filter_utils::DownsampleHelper;
 		
 		using clock = std::chrono::high_resolution_clock;
 		static_assert(clock::is_steady);

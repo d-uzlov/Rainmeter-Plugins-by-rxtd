@@ -10,7 +10,7 @@
 #include "BandResampler.h"
 
 #include "rxtd/LinearInterpolator.h"
-#include "rxtd/audio_utils/CubicInterpolationHelper.h"
+#include "rxtd/audio_analyzer/audio_utils/CubicInterpolationHelper.h"
 #include "rxtd/option_parsing/OptionList.h"
 
 using rxtd::audio_analyzer::handler::BandResampler;

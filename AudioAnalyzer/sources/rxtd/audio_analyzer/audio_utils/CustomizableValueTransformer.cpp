@@ -14,7 +14,7 @@
 #include "rxtd/option_parsing/OptionSequence.h"
 #include "rxtd/std_fixes/MathBitTwiddling.h"
 
-using CVT = rxtd::audio_utils::CustomizableValueTransformer;
+using CVT = rxtd::audio_analyzer::audio_utils::CustomizableValueTransformer;
 using rxtd::std_fixes::MathBitTwiddling;
 using rxtd::option_parsing::Option;
 using rxtd::option_parsing::OptionMap;
