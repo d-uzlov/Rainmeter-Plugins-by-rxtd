@@ -143,7 +143,7 @@ const wchar_t* LocalPluginLoader::solveSectionVariable(const int count, const wc
 		return nullptr;
 	}
 
-	const auto funcName = StringUtils::trim(args[0]) % own();
+	const auto funcName = StringUtils::trim(sview{ args[0] });
 	// Prevent calling known API functions
 	if (funcName == L"Initialize" ||
 		funcName == L"Reload" ||

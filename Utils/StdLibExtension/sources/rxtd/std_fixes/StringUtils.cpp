@@ -47,8 +47,8 @@ void StringUtils::makeUppercaseInPlace(sview str) {
 }
 
 
-SubstringViewInfo StringUtils::trimInfo(const wchar_t* base, SubstringViewInfo viewInfo) {
-	sview view = viewInfo.makeView(base);
+SubstringViewInfo StringUtils::trimInfo(sview source, SubstringViewInfo viewInfo) {
+	sview view = viewInfo.makeView(source);
 
 	const auto begin = view.find_first_not_of(L" \t");
 	if (begin == sview::npos) {

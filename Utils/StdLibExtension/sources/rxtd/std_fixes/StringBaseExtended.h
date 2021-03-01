@@ -29,6 +29,7 @@ namespace rxtd::std_fixes {
 		using base = std::basic_string_view<Elem, Traits>;
 		using base::base;
 		using base::operator=;
+		using view_type = std::basic_string_view<Elem, Traits>;
 		using size_type = index;
 
 		static constexpr auto npos{ static_cast<size_type>(base::npos) };
@@ -46,7 +47,7 @@ namespace rxtd::std_fixes {
 
 
 		[[nodiscard]]
-		constexpr size_type find_first_not_of(const base right, const size_type off = 0) const noexcept {
+		constexpr size_type find_first_not_of(const view_type right, const size_type off = 0) const noexcept {
 			return static_cast<size_type>(base::find_first_not_of(right, static_cast<typename base::size_type>(off)));
 		}
 
@@ -56,18 +57,18 @@ namespace rxtd::std_fixes {
 		}
 
 		[[nodiscard]]
-		constexpr size_type find_last_not_of(const base right, const size_type off = 0) const noexcept {
-			return static_cast<size_type>(base::find_first_not_of(right, static_cast<typename base::size_type>(off)));
+		constexpr size_type find_last_not_of(const view_type right, const size_type off = npos) const noexcept {
+			return static_cast<size_type>(base::find_last_not_of(right, static_cast<typename base::size_type>(off)));
 		}
 
 		[[nodiscard]]
-		constexpr size_type find_last_not_of(Elem right, const size_type off = 0) const noexcept {
-			return static_cast<size_type>(base::find_first_not_of(right, static_cast<typename base::size_type>(off)));
+		constexpr size_type find_last_not_of(Elem right, const size_type off = npos) const noexcept {
+			return static_cast<size_type>(base::find_last_not_of(right, static_cast<typename base::size_type>(off)));
 		}
 
 
 		[[nodiscard]]
-		constexpr size_type find_first_of(const base right, const size_type off = 0) const noexcept {
+		constexpr size_type find_first_of(const view_type right, const size_type off = 0) const noexcept {
 			return static_cast<size_type>(base::find_first_of(right, static_cast<typename base::size_type>(off)));
 		}
 
@@ -77,18 +78,18 @@ namespace rxtd::std_fixes {
 		}
 
 		[[nodiscard]]
-		constexpr size_type find_last_of(const base right, const size_type off = 0) const noexcept {
-			return static_cast<size_type>(base::find_first_of(right, static_cast<typename base::size_type>(off)));
+		constexpr size_type find_last_of(const view_type right, const size_type off = npos) const noexcept {
+			return static_cast<size_type>(base::find_last_of(right, static_cast<typename base::size_type>(off)));
 		}
 
 		[[nodiscard]]
-		constexpr size_type find_last_of(Elem right, const size_type off = 0) const noexcept {
-			return static_cast<size_type>(base::find_first_of(right, static_cast<typename base::size_type>(off)));
+		constexpr size_type find_last_of(Elem right, const size_type off = npos) const noexcept {
+			return static_cast<size_type>(base::find_last_of(right, static_cast<typename base::size_type>(off)));
 		}
 
 
 		[[nodiscard]]
-		constexpr size_type find(StringViewBaseExtended<Elem, Traits> right, const size_type off = 0) const noexcept {
+		constexpr size_type find(view_type right, const size_type off = 0) const noexcept {
 			return static_cast<size_type>(base::find(right, static_cast<typename base::size_type>(off)));
 		}
 
@@ -132,6 +133,7 @@ namespace rxtd::std_fixes {
 		using base::operator=;
 		using base::operator+=;
 		using base::operator[];
+		using view_type = std::basic_string_view<Elem, Traits>;
 		using base::operator std::basic_string_view<Elem, Traits>;
 		using size_type = index;
 
@@ -164,7 +166,7 @@ namespace rxtd::std_fixes {
 
 
 		[[nodiscard]]
-		constexpr size_type find_first_not_of(const base right, const size_type off = 0) const noexcept {
+		constexpr size_type find_first_not_of(const view_type right, const size_type off = 0) const noexcept {
 			return static_cast<size_type>(base::find_first_not_of(right, static_cast<typename base::size_type>(off)));
 		}
 
@@ -174,18 +176,18 @@ namespace rxtd::std_fixes {
 		}
 
 		[[nodiscard]]
-		constexpr size_type find_last_not_of(const base right, const size_type off = 0) const noexcept {
-			return static_cast<size_type>(base::find_first_not_of(right, static_cast<typename base::size_type>(off)));
+		constexpr size_type find_last_not_of(const view_type right, const size_type off = npos) const noexcept {
+			return static_cast<size_type>(base::find_last_not_of(right, static_cast<typename base::size_type>(off)));
 		}
 
 		[[nodiscard]]
-		constexpr size_type find_last_not_of(Elem right, const size_type off = 0) const noexcept {
-			return static_cast<size_type>(base::find_first_not_of(right, static_cast<typename base::size_type>(off)));
+		constexpr size_type find_last_not_of(Elem right, const size_type off = npos) const noexcept {
+			return static_cast<size_type>(base::find_last_not_of(right, static_cast<typename base::size_type>(off)));
 		}
 
 
 		[[nodiscard]]
-		constexpr size_type find_first_of(const base right, const size_type off = 0) const noexcept {
+		constexpr size_type find_first_of(const view_type right, const size_type off = 0) const noexcept {
 			return static_cast<size_type>(base::find_first_of(right, static_cast<typename base::size_type>(off)));
 		}
 
@@ -195,18 +197,18 @@ namespace rxtd::std_fixes {
 		}
 
 		[[nodiscard]]
-		constexpr size_type find_last_of(const base right, const size_type off = 0) const noexcept {
-			return static_cast<size_type>(base::find_first_of(right, static_cast<typename base::size_type>(off)));
+		constexpr size_type find_last_of(const view_type right, const size_type off = npos) const noexcept {
+			return static_cast<size_type>(base::find_last_of(right, static_cast<typename base::size_type>(off)));
 		}
 
 		[[nodiscard]]
-		constexpr size_type find_last_of(Elem right, const size_type off = 0) const noexcept {
-			return static_cast<size_type>(base::find_first_of(right, static_cast<typename base::size_type>(off)));
+		constexpr size_type find_last_of(Elem right, const size_type off = npos) const noexcept {
+			return static_cast<size_type>(base::find_last_of(right, static_cast<typename base::size_type>(off)));
 		}
 
 
 		[[nodiscard]]
-		constexpr size_type find(StringViewBaseExtended<Elem, Traits> right, const size_type off = 0) const noexcept {
+		constexpr size_type find(view_type right, const size_type off = 0) const noexcept {
 			return static_cast<size_type>(base::find(right, static_cast<typename base::size_type>(off)));
 		}
 

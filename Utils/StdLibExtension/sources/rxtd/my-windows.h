@@ -13,7 +13,7 @@
 #define NOMINMAX
 #endif
 
-#include "Windows.h"
+#include <Windows.h>
 
 #undef IN
 #undef OUT

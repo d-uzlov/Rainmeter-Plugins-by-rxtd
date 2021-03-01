@@ -63,7 +63,7 @@
       <DiagnosticsFormat>Classic</DiagnosticsFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <DisableSpecificWarnings>4100;4239;4458;4514;4599;4820;4868;4605;4625;4626;4866;5045;5026;5027;4435;</DisableSpecificWarnings>
+      <DisableSpecificWarnings>4100;4239;4458;4514;4599;4820;4868;4605;4625;4626;4866;5045;5026;5027;4435;4710;4711;</DisableSpecificWarnings>
       <ProgramDataBaseFileName>$(IntDir)$(ProjectName)-vc$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
       <TreatSpecificWarningsAsErrors>
       </TreatSpecificWarningsAsErrors>

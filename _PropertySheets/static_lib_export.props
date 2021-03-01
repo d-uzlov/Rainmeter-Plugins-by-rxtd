@@ -5,4 +5,9 @@
   <PropertyGroup>
     <PublicIncludeDirectories>$(ProjectPublicIncludePath);$(ProjectLibsIncludePath);$(PublicIncludeDirectories)</PublicIncludeDirectories>
   </PropertyGroup>
+  <ItemDefinitionGroup>
+    <Lib>
+      <AdditionalLibraryDirectories>$(ProjectDir)external/libs-$(Platform)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
+  </ItemDefinitionGroup>
 </Project>

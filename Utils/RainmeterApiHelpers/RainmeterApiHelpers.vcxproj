@@ -19,7 +19,7 @@
   </ImportGroup>
   <ItemDefinitionGroup>
     <Lib>
-      <AdditionalDependencies>$(SolutionDir)Utils/RainmeterApiHelpers/external/libs-$(Platform)/Rainmeter.lib;$(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Rainmeter.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ImportGroup Label="PropertySheets">

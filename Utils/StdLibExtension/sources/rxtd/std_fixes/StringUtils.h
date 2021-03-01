@@ -86,21 +86,11 @@ namespace rxtd::std_fixes {
 
 			const auto end = view.find_last_not_of(L" \t"); // always valid if find_first_not_of succeeded
 
-			return view.substr(end);
+			return view.substr(0, end + 1);
 		}
 
 		[[nodiscard]]
-		static sview trim(const wchar_t* view) {
-			return trim(sview{ view });
-		}
-
-		[[nodiscard]]
-		static SubstringViewInfo trimInfo(const wchar_t* base, SubstringViewInfo viewInfo);
-
-		[[nodiscard]]
-		static SubstringViewInfo trimInfo(sview source, SubstringViewInfo viewInfo) {
-			return trimInfo(source.data(), viewInfo);
-		}
+		static SubstringViewInfo trimInfo(sview source, SubstringViewInfo viewInfo);
 
 		template<typename CharTraits, typename Allocator>
 		static void lowerInplace(std::basic_string<wchar_t, CharTraits, Allocator>& str) {
