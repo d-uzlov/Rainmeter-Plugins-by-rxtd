@@ -59,7 +59,7 @@ namespace rxtd::audio_analyzer::image_utils {
 
 		StripedImage<MinMax> minMaxBuffer{};
 		std_fixes::Vector2D<IntColor> resultBuffer{};
-		DiscreetInterpolator interpolator;
+		DiscreetInterpolator<double> interpolator;
 
 		index width{};
 		index height{};
@@ -97,7 +97,7 @@ namespace rxtd::audio_analyzer::image_utils {
 
 		void fillSilence();
 
-		void fillStrip(double min, double max);
+		void fillStrip(float min, float max);
 
 		[[nodiscard]]
 		std_fixes::array2d_view<IntColor> getResultBuffer() const {

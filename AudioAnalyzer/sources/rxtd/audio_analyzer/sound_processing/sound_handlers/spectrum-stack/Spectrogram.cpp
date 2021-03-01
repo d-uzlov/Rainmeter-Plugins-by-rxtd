@@ -43,8 +43,8 @@ ParamsContainer Spectrogram::vParseParams(ParamParseContext& context) const noex
 
 	params.resolution = context.options.get(L"resolution").asFloat(50);
 	if (params.resolution <= 0) {
-		context.log.warning(L"resolution must be > 0 but {} found. Assume 50", params.resolution);
-		params.resolution = 100;
+		context.log.error(L"resolution must be > 0 but {} found", params.resolution);
+		throw InvalidOptionsException{};
 	}
 	params.resolution *= 0.001;
 
@@ -61,60 +61,26 @@ ParamsContainer Spectrogram::vParseParams(ParamParseContext& context) const noex
 	} else if (mixMode == L"ycbcr") {
 		params.mixMode = MixMode::eRGB; // difference between ycbcr and rgb is linear
 	} else {
-		context.log.error(L"unknown mixMode '{}', using rgb instead", mixMode);
-		params.mixMode = MixMode::eRGB;
+		context.log.error(L"unknown mixMode '{}'", mixMode);
+		throw InvalidOptionsException{};
 	}
 
 	if (!context.options.get(L"colors").empty()) {
 		auto colorsDescriptionList = context.options.get(L"colors").asList(L';');
-
-		float prevValue = -std::numeric_limits<float>::infinity();
-
-		bool first = true;
-		for (auto colorsDescription : colorsDescriptionList) {
-			auto [valueOpt, colorOpt] = colorsDescription.breakFirst(L':');
-
-			if (colorOpt.empty()) {
-				context.log.warning(L"colors: description '{}' doesn't contain color", colorsDescription.asString());
-				continue;
-			}
-
-			float value = valueOpt.asFloatF();
-
-			if (value <= prevValue) {
-				context.log.error(L"colors: values {} and {}: values must be increasing", prevValue, value);
-				throw InvalidOptionsException{};
-			}
-			if (value / prevValue < 1.001f && value - prevValue < 0.001f) {
-				context.log.warning(L"colors: values {} and {} are too close, discarding second one", prevValue, value);
-				continue;
-			}
-
-			params.colorLevels.push_back(value);
-			const auto color = Color::parse(colorOpt.asString()).convert(params.mixMode);
-			if (first) {
-				first = false;
-			} else {
-				params.colors.back().widthInverted = 1.0f / (value - prevValue);
-			}
-			params.colors.push_back(ColorDescription{ 0.0f, color });
-
-			prevValue = value;
-		}
-
-		if (params.colors.size() < 2) {
-			context.log.error(L"need at least 2 colors but {} found", params.colors.size());
-			throw InvalidOptionsException{};
-		}
+		parseColors(params.colors, params.colorLevels, colorsDescriptionList, context.log.context(L"colors: "));
 	} else {
 		params.colors.resize(2);
-		params.colors[0].color = Color::parse(context.options.get(L"baseColor").asString(), { 0, 0, 0 }).convert(params.mixMode);
-		params.colors[1].color = Color::parse(context.options.get(L"maxColor").asString(), { 1, 1, 1 }).convert(params.mixMode);
+		params.colors[0].color = Color::parse(context.options.get(L"baseColor").asString(), { 0.0f, 0.0f, 0.0f });
+		params.colors[1].color = Color::parse(context.options.get(L"maxColor").asString(), { 1.0f, 1.0f, 1.0f });
 		params.colorLevels.push_back(0.0f);
 		params.colorLevels.push_back(1.0f);
 	}
 
-	params.borderColor = Color::parse(context.options.get(L"borderColor").asString(), { 1.0, 0.2, 0.2 });
+	for (auto& [wi, color]: params.colors) {
+		color = color.convert(params.mixMode);
+	}
+
+	params.borderColor = Color::parse(context.options.get(L"borderColor").asString(), { 1.0f, 0.2f, 0.2f });
 
 	params.fading = std::clamp(context.options.get(L"FadingRatio").asFloat(0.0), 0.0, 1.0);
 
@@ -179,6 +145,47 @@ Spectrogram::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData
 
 
 	return { 0, {} };
+}
+
+void Spectrogram::parseColors(std::vector<ColorDescription>& resultColors, std::vector<float>& levels, OptionList list, Logger& cl) {
+	float prevValue = -std::numeric_limits<float>::infinity();
+
+	bool first = true;
+	for (auto colorsDescription : list) {
+		auto [valueOpt, colorOpt] = colorsDescription.breakFirst(L':');
+
+		if (colorOpt.empty()) {
+			cl.error(L"description '{}' doesn't contain color", colorsDescription.asString());
+			throw InvalidOptionsException{};
+		}
+
+		float value = valueOpt.asFloatF();
+
+		if (value <= prevValue) {
+			cl.error(L"values {} and {}: values must be increasing", prevValue, value);
+			throw InvalidOptionsException{};
+		}
+		if (value / prevValue < 1.001f && value - prevValue < 0.001f) { // todo add proper comparison method
+			cl.error(L"values {} and {} are too close", prevValue, value);
+			throw InvalidOptionsException{};
+		}
+
+		levels.push_back(value);
+		const auto color = Color::parse(colorOpt.asString());
+		if (first) {
+			first = false;
+		} else {
+			resultColors.back().widthInverted = 1.0f / (value - prevValue);
+		}
+		resultColors.push_back(ColorDescription{ 0.0f, color });
+
+		prevValue = value;
+	}
+
+	if (resultColors.size() < 2) {
+		cl.error(L"need at least 2 colors but {} found", resultColors.size());
+		throw InvalidOptionsException{};
+	}
 }
 
 void Spectrogram::vProcess(ProcessContext context, ExternalData& externalData) {

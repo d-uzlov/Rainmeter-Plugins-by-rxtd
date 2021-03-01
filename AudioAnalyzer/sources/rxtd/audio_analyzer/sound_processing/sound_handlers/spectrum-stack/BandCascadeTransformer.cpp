@@ -43,8 +43,8 @@ ParamsContainer BandCascadeTransformer::vParseParams(ParamParseContext& context)
 	} else if (mixFunctionString == L"average") {
 		params.mixFunction = MixFunction::AVERAGE;
 	} else {
-		context.log.warning(L"mixFunction '{}' is not recognized, assume 'product'", mixFunctionString);
-		params.mixFunction = MixFunction::PRODUCT;
+		context.log.error(L"mixFunction '{}' is not recognized", mixFunctionString);
+		throw InvalidOptionsException{};
 	}
 
 	return result;

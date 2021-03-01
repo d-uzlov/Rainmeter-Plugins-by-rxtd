@@ -75,7 +75,7 @@ bool BlockHandler::getProp(
 }
 
 void BlockRms::_process(array_view<float> wave) {
-	for (double x : wave) {
+	for (auto x : wave) {
 		intermediateResult += x * x;
 		counter++;
 		if (counter >= getBlockSize()) {
@@ -92,7 +92,7 @@ void BlockRms::finishBlock() {
 }
 
 void BlockPeak::_process(array_view<float> wave) {
-	for (float x : wave) {
+	for (auto x : wave) {
 		intermediateResult = std::max(intermediateResult, std::abs(x));
 		counter++;
 		if (counter >= getBlockSize()) {

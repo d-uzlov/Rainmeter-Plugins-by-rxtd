@@ -38,9 +38,9 @@ void WaveFormDrawer::fillSilence() {
 	minMaxBuffer.pushEmptyStrip(mm);
 }
 
-void WaveFormDrawer::fillStrip(double min, double max) {
-	min = std::clamp(min, -1.0, 1.0);
-	max = std::clamp(max, -1.0, 1.0);
+void WaveFormDrawer::fillStrip(float min, float max) {
+	min = std::clamp(min, -1.0f, 1.0f);
+	max = std::clamp(max, -1.0f, 1.0f);
 	min = std::min(min, max);
 	max = std::max(min, max);
 

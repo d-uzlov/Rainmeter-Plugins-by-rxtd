@@ -39,57 +39,46 @@ ParamsContainer BandResampler::vParseParams(ParamParseContext& context) const no
 		throw InvalidOptionsException{};
 	}
 
-	params.minCascade = std::max(context.options.get(L"minCascade").asInt(0), 0);
-	params.maxCascade = std::max(context.options.get(L"maxCascade").asInt(0), 0);
-
-	if (params.minCascade > params.maxCascade) {
-		context.log.error(
-			L"max cascade must be >= min cascade but max={} < min={} are found",
-			params.maxCascade, params.minCascade
-		);
-		throw InvalidOptionsException{};
-	}
-
 	params.useCubicResampling = context.options.get(L"cubicInterpolation").asBool(true);
 
 	return result;
 }
 
-bool BandResampler::parseFreqListElement(OptionList& options, std::vector<float>& freqs, Logger& cl) {
+void BandResampler::parseFreqListElement(OptionList& options, std::vector<float>& freqs, Logger& cl) {
 	auto type = options.get(0).asIString();
 
 	if (type == L"custom") {
 		if (options.size() < 2) {
 			cl.error(L"custom must have at least two frequencies specified but {} found", options.size());
-			return {};
+			throw InvalidOptionsException{};
 		}
 		for (index i = 1; i < options.size(); ++i) {
 			freqs.push_back(options.get(i).asFloatF());
 		}
-		return true;
+		return;
 	}
 
 	if (type != L"linear" && type != L"log") {
 		cl.error(L"unknown type '{}'", type);
-		return {};
+		throw InvalidOptionsException{};
 	}
 
 	if (options.size() != 4) {
 		cl.error(L"{} must have 3 options (count, min, max)", type);
-		return {};
+		throw InvalidOptionsException{};
 	}
 
 	const index count = options.get(1).asInt(0);
 	if (count < 1) {
 		cl.error(L"count must be >= 1");
-		return {};
+		throw InvalidOptionsException{};
 	}
 
 	const auto min = options.get(2).asFloatF();
 	const auto max = options.get(3).asFloatF();
 	if (max <= min) {
 		cl.error(L"max must be > min");
-		return {};
+		throw InvalidOptionsException{};
 	}
 
 	if (type == L"linear") {
@@ -109,18 +98,13 @@ bool BandResampler::parseFreqListElement(OptionList& options, std::vector<float>
 			freqs.push_back(freq);
 		}
 	}
-
-	return true;
 }
 
 std::vector<float> BandResampler::parseFreqList(Option freqListOption, Logger& cl) {
 	std::vector<float> freqs;
 
 	auto options = freqListOption.asList(L' ');
-	const auto success = parseFreqListElement(options, freqs, cl);
-	if (!success) {
-		return {};
-	}
+	parseFreqListElement(options, freqs, cl);
 
 	return makeBandsFromFreqs(freqs, cl);
 }
@@ -134,9 +118,9 @@ std::vector<float> BandResampler::makeBandsFromFreqs(array_span<float> freqs, Lo
 	result.reserve(static_cast<size_t>(freqs.size()));
 	float lastValue = -1;
 	for (auto value : freqs) {
-		if (value <= 0) {
+		if (value <= 0.0f) {
 			cl.error(L"frequencies must be > 0 but {} found", value);
-			return {};
+			throw InvalidOptionsException{};
 		}
 		if (value - lastValue < threshold) {
 			continue;
@@ -160,28 +144,9 @@ BandResampler::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalDa
 		return {};
 	}
 
-	const auto cascadesCount = fftSource->getDataSize().layersCount;
+	bandsCount = static_cast<index>(params.bandFreqs.size()) - 1;
 
-	if (params.minCascade > cascadesCount) {
-		cl.error(L"minCascade is more than number of cascades");
-		return {};
-	}
-
-	bandsCount = static_cast<index>(params.bandFreqs.size() - 1);
-
-	startCascade = 1;
-	endCascade = cascadesCount + 1;
-	if (params.minCascade > 0) {
-		startCascade = params.minCascade;
-
-		if (params.maxCascade >= params.minCascade && cascadesCount >= params.maxCascade) {
-			endCascade = params.maxCascade + 1;
-		}
-	}
-	startCascade--;
-	endCascade--;
-
-	const index realCascadesCount = endCascade - startCascade;
+	const index realCascadesCount = fftSource->getDataSize().layersCount;
 
 	layerWeights.setBuffersCount(realCascadesCount);
 	layerWeights.setBufferSize(bandsCount);
@@ -200,25 +165,20 @@ BandResampler::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalDa
 	snapshot.bandFreqs = params.bandFreqs;
 
 	auto& sourceDataSize = fftSource->getDataSize();
-	std::vector<index> eqWS;
-	for (index i = startCascade; i < endCascade; i++) {
-		eqWS.push_back(sourceDataSize.eqWaveSizes[static_cast<size_t>(i)]);
-	}
-	return { bandsCount, std::move(eqWS) };
+	return { bandsCount, sourceDataSize.eqWaveSizes };
 }
 
 void BandResampler::vProcess(ProcessContext context, ExternalData& externalData) {
 	auto& config = getConfiguration();
 
 	auto& source = *fftSource;
+	const index layersCount = source.getDataSize().layersCount;
 
-	float binWidth = static_cast<float>(config.sampleRate) / (static_cast<float>(source.getFftSize()) * std::powf(2.0f, static_cast<float>(startCascade)));
+	float binWidth = static_cast<float>(config.sampleRate) / static_cast<float>(source.getFftSize());
 
-	for (index cascadeIndex = startCascade; cascadeIndex < endCascade; ++cascadeIndex) {
-		const index localCascadeIndex = cascadeIndex - startCascade;
-
+	for (index cascadeIndex = 0; cascadeIndex < layersCount; ++cascadeIndex) {
 		for (auto chunk : source.getChunks(cascadeIndex)) {
-			auto dest = pushLayer(localCascadeIndex);
+			auto dest = pushLayer(cascadeIndex);
 
 			if (clock::now() > context.killTime) {
 				auto myChunks = getChunks(cascadeIndex);
@@ -276,7 +236,7 @@ void BandResampler::sampleCascade(array_view<float> source, array_span<float> de
 void BandResampler::computeWeights(index fftSize) {
 	auto& config = getConfiguration();
 	const index fftBinsCount = fftSize / 2;
-	float binWidth = static_cast<float>(config.sampleRate) / (static_cast<float>(fftSize) * std::powf(2.0f, static_cast<float>(startCascade)));
+	float binWidth = static_cast<float>(config.sampleRate) / static_cast<float>(fftSize);
 
 	for (index i = 0; i < layerWeights.getBuffersCount(); ++i) {
 		computeCascadeWeights(layerWeights[i], fftBinsCount, binWidth);

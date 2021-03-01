@@ -62,8 +62,8 @@ ParamsContainer WaveForm::vParseParams(ParamParseContext& context) const noexcep
 	} else if (ldpString == L"never") {
 		params.lineDrawingPolicy = LDP::eNEVER;
 	} else {
-		context.log.warning(L"lineDrawingPolicy '{}' is not recognized, assume 'always'", ldpString);
-		params.lineDrawingPolicy = LDP::eALWAYS;
+		context.log.warning(L"lineDrawingPolicy '{}' is not recognized", ldpString);
+		throw InvalidOptionsException{};
 	}
 
 	params.stationary = context.options.get(L"stationary").asBool(false);

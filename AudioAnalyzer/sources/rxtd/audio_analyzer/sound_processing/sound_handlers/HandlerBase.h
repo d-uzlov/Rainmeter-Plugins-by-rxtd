@@ -283,11 +283,6 @@ namespace rxtd::audio_analyzer::handler {
 		}
 
 		[[nodiscard]]
-		virtual index getStartingLayer() const {
-			return _configuration.sourcePtr == nullptr ? 0 : _configuration.sourcePtr->getStartingLayer();
-		}
-
-		[[nodiscard]]
 		array_view<array_view<float>> getChunks(index layer) const {
 			if (layer >= static_cast<index>(_dataSize.eqWaveSizes.size())) {
 				return {};

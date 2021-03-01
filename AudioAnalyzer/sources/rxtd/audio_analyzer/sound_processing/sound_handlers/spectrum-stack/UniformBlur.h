@@ -30,7 +30,6 @@ namespace rxtd::audio_analyzer::handler {
 
 		Params params{};
 		audio_utils::GaussianCoefficientsManager gcm;
-		double startingRadius{};
 
 	public:
 		[[nodiscard]]

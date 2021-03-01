@@ -21,7 +21,7 @@ ParamsContainer UniformBlur::vParseParams(ParamParseContext& context) const {
 	const auto sourceId = context.options.get(L"source").asIString();
 	if (sourceId.empty()) {
 		context.log.error(L"source is not found");
-		return {};
+		throw InvalidOptionsException{};
 	}
 
 	//                                                        ?? ↓↓ looks best ?? at 0.25 ↓↓ ??
@@ -37,17 +37,6 @@ UniformBlur::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData
 
 	auto& config = getConfiguration();
 
-	index startingLayer = 0;
-	if (const auto provider = dynamic_cast<ResamplerProvider*>(config.sourcePtr);
-		provider != nullptr) {
-		const BandResampler* resamplerPtr = provider->getResampler();
-		if (resamplerPtr != nullptr) {
-			startingLayer = resamplerPtr->getStartingLayer();
-		}
-	}
-
-	startingRadius = params.blurRadius * std::pow(params.blurRadiusAdaptation, startingLayer);
-
 	const auto dataSize = config.sourcePtr->getDataSize();
 	return dataSize;
 }
@@ -56,7 +45,7 @@ void UniformBlur::vProcess(ProcessContext context, ExternalData& externalData) {
 	auto& config = getConfiguration();
 	auto& source = *config.sourcePtr;
 
-	double theoreticalRadius = startingRadius;
+	double theoreticalRadius = params.blurRadius;
 
 	const index cascadesCount = source.getDataSize().layersCount;
 	for (index i = 0; i < cascadesCount; ++i) {
