@@ -18,6 +18,7 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets">
     <Import Project="$(PropertySheetsDir)solution.props" />
+    <Import Project="$(PropertySheetsDir)dll_build.props" />
     <Import Project="$(PropertySheetsDir)pch.props" />
     <Import Project="$(PropertySheetsDir)pch_copy.props" />
     <Import Project="$(PropertySheetsDir)platforms/$(Platform).props" />
@@ -30,10 +31,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="local-version.h" />
+    <ClInclude Include="plugin_version_utils.h" />
     <ClInclude Include="sources\rxtd\LocalPluginLoader.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="..\Common\resources\version.rc" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Utils\Logger\Logger.vcxproj">
@@ -51,6 +50,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="plugin_dll_info.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

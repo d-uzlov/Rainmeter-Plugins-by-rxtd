@@ -136,9 +136,12 @@
     <ClInclude Include="sources\rxtd\perfmon\expressions\TotalUtilities.h">
       <Filter>sources\rxtd\perfmon\expressions</Filter>
     </ClInclude>
+    <ClInclude Include="plugin_version_utils.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\Common\resources\version.rc">
+    <ResourceCompile Include="plugin_dll_info.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>

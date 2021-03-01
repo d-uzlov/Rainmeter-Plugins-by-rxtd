@@ -14,6 +14,7 @@
   <Import Project="$(PropertySheetsDir)configurations_specific_settings/$(Configuration)_config.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="PropertySheets">
+    <Import Project="$(PropertySheetsDir)dll_build.props" />
     <Import Project="$(PropertySheetsDir)solution.props" />
     <Import Project="$(PropertySheetsDir)pch.props" />
     <Import Project="$(PropertySheetsDir)pch_copy.props" />
@@ -26,7 +27,10 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
+    <ClInclude Include="git_commit_version.h" />
     <ClInclude Include="local-version.h" />
+    <ClInclude Include="plugin_version_utils.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="sources\rxtd\audio_analyzer\AudioChild.h" />
     <ClInclude Include="sources\rxtd\audio_analyzer\AudioParent.h" />
     <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\CubicInterpolationHelper.h" />
@@ -115,9 +119,6 @@
     <ClCompile Include="sources\rxtd\audio_analyzer\wasapi_wrappers\MediaDeviceHandle.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\Common\resources\version.rc" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Utils\FftUtils\FftUtils.vcxproj">
       <Project>{1c4c178d-a05d-4e2b-9dca-8c3baf84bed9}</Project>
     </ProjectReference>
@@ -142,6 +143,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="plugin_dll_info.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

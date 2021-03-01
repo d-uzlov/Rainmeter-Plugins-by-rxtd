@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup>
+    <CustomBuildAfterTargets>
+    </CustomBuildAfterTargets>
+    <CustomBuildBeforeTargets>PreBuildEvent</CustomBuildBeforeTargets>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <PreLinkEvent>
+      <Command>
+      </Command>
+    </PreLinkEvent>
+    <CustomBuildStep>
+      <Command>echo | set /p="#define GIT_CUR_COMMIT_HASH " &gt;"git_commit_version.h"
+git describe --always --abbrev=8 &gt;&gt;"git_commit_version.h"
+
+FOR /F "tokens=*" %%g IN ('git status --porcelain') DO @(SET GIT_PORCELAIN_OUTPUT_LINE=%%g)
+echo | set /p="#define GIT_DIRTY_SUFFIX " &gt;&gt;"git_commit_version.h"
+IF NOT "%GIT_PORCELAIN_OUTPUT_LINE%" == "" echo -dirty&gt;&gt;git_commit_version.h"
+
+echo[&gt;&gt;git_commit_version.h"
+
+
+exit /b 0
+</Command>
+      <Outputs>doesnt_exist-git_commit_version.h</Outputs>
+    </CustomBuildStep>
+  </ItemDefinitionGroup>
+</Project>

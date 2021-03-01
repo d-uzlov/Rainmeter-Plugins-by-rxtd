@@ -47,9 +47,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="local-version.h">
-      <Filter>Resource Files</Filter>
-    </ClInclude>
     <ClInclude Include="sources\rxtd\audio_analyzer\AudioChild.h">
       <Filter>sources\rxtd\audio_analyzer</Filter>
     </ClInclude>
@@ -191,6 +188,16 @@
     <ClInclude Include="sources\rxtd\audio_analyzer\audio_utils\RandomGenerator.h">
       <Filter>sources\rxtd\audio_analyzer\audio_utils</Filter>
     </ClInclude>
+    <ClInclude Include="git_commit_version.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="local-version.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="plugin_version_utils.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sources\dllmain.cpp">
@@ -306,11 +313,11 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\Common\resources\version.rc">
-      <Filter>Resource Files</Filter>
-    </ResourceCompile>
+    <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="README.md" />
+    <ResourceCompile Include="plugin_dll_info.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

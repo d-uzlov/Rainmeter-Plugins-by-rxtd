@@ -18,6 +18,7 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets">
     <Import Project="$(PropertySheetsDir)/solution.props" />
+    <Import Project="$(PropertySheetsDir)dll_build.props" />
     <Import Project="$(PropertySheetsDir)/pch.props" />
     <Import Project="$(PropertySheetsDir)/pch_copy.props" />
     <Import Project="$(PropertySheetsDir)/platforms/$(Platform).props" />
@@ -40,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="local-version.h" />
+    <ClInclude Include="plugin_version_utils.h" />
     <ClInclude Include="sources\rxtd\perfmon\BlacklistManager.h" />
     <ClInclude Include="sources\rxtd\perfmon\enums.h" />
     <ClInclude Include="sources\rxtd\perfmon\ExpressionParser.h" />
@@ -82,7 +84,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\Common\resources\version.rc" />
+    <ResourceCompile Include="plugin_dll_info.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -10,4 +10,4 @@
 
 #define PLUGIN_NAME_INCLUDE_VERSIONS 2
 
-#define COPYRIGHT_STRING "2018-2019 - rxtd, 2018 - buckb"
+#define COPYRIGHT_STRING "© 2018-2021 - rxtd, 2018 - buckb"

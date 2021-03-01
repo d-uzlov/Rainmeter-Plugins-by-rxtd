@@ -1,0 +1,34 @@
+#include <VerRsrc.h>
+#include "plugin_version_utils.h"
+
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION PLUGIN_VERSION
+ PRODUCTVERSION TARGET_RAINMETER_VERSION
+ FILEFLAGSMASK 0x17L
+#ifdef _DEBUG
+ FILEFLAGS VS_FF_DEBUG
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS VOS_NT_WINDOWS32
+ FILETYPE VFT_DLL
+ FILESUBTYPE VFT_UNKNOWN
+{
+    BLOCK "StringFileInfo"
+    {
+        BLOCK "040904E4"
+        {
+			VALUE "OriginalFilename", PLUGIN_ORIGINAL_FILE_NAME ".dll"
+            VALUE "FileVersion", PLUGIN_VERSION_STRING
+            VALUE "FileDescription", PLUGIN_FULL_VERSION_STRING
+            VALUE "LegalCopyright", COPYRIGHT_STRING
+            VALUE "ProductName", "Rainmeter"
+            VALUE "ProductVersion", TARGET_RAINMETER_VERSION_STRING
+        }
+    }
+    BLOCK "VarFileInfo"
+    {
+        VALUE "Translation", 0x0409, 1252
+    }
+}

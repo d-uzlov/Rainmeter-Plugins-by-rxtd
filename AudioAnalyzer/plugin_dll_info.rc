@@ -1,5 +1,5 @@
 #include <VerRsrc.h>
-#include "version.h"
+#include "plugin_version_utils.h"
 
 
 VS_VERSION_INFO VERSIONINFO
@@ -19,11 +19,12 @@ VS_VERSION_INFO VERSIONINFO
     {
         BLOCK "040904E4"
         {
-			VALUE "OriginalFilename", FINAL_PLUGIN_NAME ".dll"
-            VALUE "FileVersion", PLUGIN_VERSION_STRING BITNESS_STRING
+			VALUE "OriginalFilename", PLUGIN_ORIGINAL_FILE_NAME ".dll"
+            VALUE "FileVersion", PLUGIN_VERSION_STRING
+            VALUE "FileDescription", PLUGIN_FULL_VERSION_STRING
             VALUE "LegalCopyright", COPYRIGHT_STRING
             VALUE "ProductName", "Rainmeter"
-            VALUE "ProductVersion", TARGET_RAINMETER_VERSION_STRING BITNESS_STRING
+            VALUE "ProductVersion", TARGET_RAINMETER_VERSION_STRING
         }
     }
     BLOCK "VarFileInfo"

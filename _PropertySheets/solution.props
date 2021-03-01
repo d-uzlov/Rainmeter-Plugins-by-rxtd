@@ -3,7 +3,8 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
     <ProjectPublicIncludePath>$(ProjectDir)sources/</ProjectPublicIncludePath>
-    <ProjectPrivateIncludePath></ProjectPrivateIncludePath>
+    <ProjectPrivateIncludePath>
+    </ProjectPrivateIncludePath>
     <ProjectLibsPath>$(ProjectDir)external/libs-$(Platform)/</ProjectLibsPath>
     <ProjectLibsIncludePath>$(ProjectDir)external/includes/</ProjectLibsIncludePath>
   </PropertyGroup>
@@ -45,11 +46,12 @@
     ;$(IncludePath)
     </IncludePath>
   </PropertyGroup>
-  <ItemGroup >
+  <ItemGroup>
   </ItemGroup>
   <ItemDefinitionGroup>
     <ResourceCompile>
-      <AdditionalIncludeDirectories>$(SolutionDir)/Common/resources/;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
     </ResourceCompile>
     <ClCompile>
       <WarningLevel>EnableAllWarnings</WarningLevel>

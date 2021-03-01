@@ -6,3 +6,5 @@ _ReSharper.Caches
 *.ipch
 vc-fileutils.settings
 enc_temp_folder/
+git_commit_version.h
+*.aps
