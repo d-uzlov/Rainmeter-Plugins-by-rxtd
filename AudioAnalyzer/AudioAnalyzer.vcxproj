@@ -109,6 +109,7 @@
     <ClCompile Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\spectrum-stack\ResamplerProvider.cpp" />
     <ClCompile Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\spectrum-stack\SingleValueTransformer.cpp" />
     <ClCompile Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\spectrum-stack\Spectrogram.cpp" />
+    <ClCompile Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\spectrum-stack\Spectrogram.InputStripMaker.cpp" />
     <ClCompile Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\spectrum-stack\TimeResampler.cpp" />
     <ClCompile Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\spectrum-stack\UniformBlur.cpp" />
     <ClCompile Include="sources\rxtd\audio_analyzer\wasapi_wrappers\AudioCaptureClient.cpp" />

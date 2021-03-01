@@ -52,6 +52,12 @@
     <ClCompile Include="sources\rxtd\fft_utils\FftCascade.cpp" />
     <ClCompile Include="sources\rxtd\fft_utils\WindowFunctionHelper.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="sources\libs\cheby_win\cheby_win.mhtml" />
+    <None Include="sources\libs\kiss_fft\COPYING" />
+    <None Include="sources\libs\kiss_fft\LICENSES\BSD-3-Clause" />
+    <None Include="sources\libs\kiss_fft\LICENSES\Unlicense" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
