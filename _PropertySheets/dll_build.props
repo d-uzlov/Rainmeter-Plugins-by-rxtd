@@ -12,19 +12,24 @@
       </Command>
     </PreLinkEvent>
     <CustomBuildStep>
-      <Command>echo | set /p="#define GIT_CUR_COMMIT_HASH " &gt;"git_commit_version.h"
-git describe --always --abbrev=8 &gt;&gt;"git_commit_version.h"
-
-FOR /F "tokens=*" %%g IN ('git status --porcelain') DO @(SET GIT_PORCELAIN_OUTPUT_LINE=%%g)
-echo | set /p="#define GIT_DIRTY_SUFFIX " &gt;&gt;"git_commit_version.h"
-IF NOT "%GIT_PORCELAIN_OUTPUT_LINE%" == "" echo -dirty&gt;&gt;git_commit_version.h"
-
-echo[&gt;&gt;git_commit_version.h"
-
+      <Command>setlocal EnableDelayedExpansion
+where /q git
+IF ERRORLEVEL 1 (
+    echo #define GIT_CUR_COMMIT_HASH unknown_hash &gt;"git_commit_version.h"
+) ELSE (
+    echo | set /p="#define GIT_CUR_COMMIT_HASH " &gt;"git_commit_version.h"
+    git describe --always --abbrev=8 &gt;&gt;"git_commit_version.h"
+    SET GIT_DIRTY_FLAG=0
+    FOR /F "tokens=*" %%g IN ('git status -s') DO @(SET GIT_DIRTY_FLAG=1)
+    IF !GIT_DIRTY_FLAG! == 1 (echo #define GIT_DIRTY_SUFFIX -dirty&gt;&gt;"git_commit_version.h")
+)
 
 exit /b 0
 </Command>
       <Outputs>doesnt_exist-git_commit_version.h</Outputs>
     </CustomBuildStep>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
   </ItemDefinitionGroup>
 </Project>

@@ -1,6 +1,5 @@
 #include <VerRsrc.h>
-#include "plugin_version_utils.h"
-
+#include "Utils/plugin_version_utils.h"
 
 VS_VERSION_INFO VERSIONINFO
  FILEVERSION PLUGIN_VERSION
@@ -8,6 +7,8 @@ VS_VERSION_INFO VERSIONINFO
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS VS_FF_DEBUG
+#elif defined GIT_DIRTY_SUFFIX
+ FILEFLAGS VS_FF_PATCHED
 #else
  FILEFLAGS 0x0L
 #endif

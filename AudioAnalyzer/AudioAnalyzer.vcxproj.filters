@@ -191,9 +191,6 @@
     <ClInclude Include="local-version.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="plugin_version_utils.h">
-      <Filter>Resource Files</Filter>
-    </ClInclude>
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>

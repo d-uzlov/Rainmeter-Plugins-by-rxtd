@@ -28,7 +28,7 @@
     <ClInclude Include="sources\rxtd\LocalPluginLoader.h">
       <Filter>sources\rxtd</Filter>
     </ClInclude>
-    <ClInclude Include="plugin_version_utils.h">
+    <ClInclude Include="git_commit_version.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
   </ItemGroup>

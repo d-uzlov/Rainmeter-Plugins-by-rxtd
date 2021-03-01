@@ -41,7 +41,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="local-version.h" />
-    <ClInclude Include="plugin_version_utils.h" />
     <ClInclude Include="sources\rxtd\perfmon\BlacklistManager.h" />
     <ClInclude Include="sources\rxtd\perfmon\enums.h" />
     <ClInclude Include="sources\rxtd\perfmon\ExpressionParser.h" />

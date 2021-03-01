@@ -30,8 +30,8 @@
     <ClCompile Include="sources\rxtd\LocalPluginLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="git_commit_version.h" />
     <ClInclude Include="local-version.h" />
-    <ClInclude Include="plugin_version_utils.h" />
     <ClInclude Include="sources\rxtd\LocalPluginLoader.h" />
   </ItemGroup>
   <ItemGroup>

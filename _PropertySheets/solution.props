@@ -49,10 +49,6 @@
   <ItemGroup>
   </ItemGroup>
   <ItemDefinitionGroup>
-    <ResourceCompile>
-      <AdditionalIncludeDirectories>
-      </AdditionalIncludeDirectories>
-    </ResourceCompile>
     <ClCompile>
       <WarningLevel>EnableAllWarnings</WarningLevel>
       <FloatingPointModel>Fast</FloatingPointModel>

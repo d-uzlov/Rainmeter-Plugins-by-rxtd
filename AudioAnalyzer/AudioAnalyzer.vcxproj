@@ -29,7 +29,6 @@
   <ItemGroup>
     <ClInclude Include="git_commit_version.h" />
     <ClInclude Include="local-version.h" />
-    <ClInclude Include="plugin_version_utils.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="sources\rxtd\audio_analyzer\AudioChild.h" />
     <ClInclude Include="sources\rxtd\audio_analyzer\AudioParent.h" />
