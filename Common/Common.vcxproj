@@ -8,7 +8,6 @@
     <ProjectName>Common</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <Import Label="ProjectConfigurations" Project="$(PropertySheetsDir)/project_configs.props" />
   <Import Project="$(PropertySheetsDir)/configuration.props" />
   <Import Project="$(PropertySheetsDir)/build_type/static_lib.props" />
   <Import Project="$(PropertySheetsDir)/configurations/$(Configuration)_config.props" />
@@ -41,6 +40,7 @@
     <Import Project="$(PropertySheetsDir)/pch_copy.props" />
     <Import Project="$(PropertySheetsDir)/platforms/$(Platform).props" />
     <Import Project="$(PropertySheetsDir)/configurations/$(Configuration).props" />
+    <Import Project="$(PropertySheetsDir)/static_lib_export.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

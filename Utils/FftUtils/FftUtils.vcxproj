@@ -8,7 +8,6 @@
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <Import Label="ProjectConfigurations" Project="$(PropertySheetsDir)/project_configs.props" />
   <Import Project="$(PropertySheetsDir)/configuration.props" />
   <Import Project="$(PropertySheetsDir)/build_type/static_lib.props" />
   <Import Project="$(PropertySheetsDir)/configurations/$(Configuration)_config.props" />
@@ -41,13 +40,14 @@
     <Import Project="$(PropertySheetsDir)/pch_copy.props" />
     <Import Project="$(PropertySheetsDir)/platforms/$(Platform).props" />
     <Import Project="$(PropertySheetsDir)/configurations/$(Configuration).props" />
+    <Import Project="$(PropertySheetsDir)/static_lib_export.props" />
   </ImportGroup>
-  <PropertyGroup>
-    <IncludePath>$(SolutionDir)Utils/GenericSignalUtils/sources/;$(SolutionDir)Utils/SignalFilterUtils/sources/;$(IncludePath)</IncludePath>
-  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\GenericSignalUtils\GenericSignalUtils.vcxproj">
       <Project>{7af3fb6d-71e1-47d0-bd4c-01f6390a66a2}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\GenericUtils\GenericUtils.vcxproj">
+      <Project>{ed9dc428-f99f-4695-a5f7-aafba501a962}</Project>
     </ProjectReference>
     <ProjectReference Include="..\SignalFilterUtils\SignalFilterUtils.vcxproj">
       <Project>{d0130229-8eba-4d32-b144-9cbc54cc50a2}</Project>

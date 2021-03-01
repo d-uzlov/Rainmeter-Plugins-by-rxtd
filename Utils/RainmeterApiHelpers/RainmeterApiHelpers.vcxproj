@@ -8,7 +8,6 @@
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <Import Label="ProjectConfigurations" Project="$(PropertySheetsDir)/project_configs.props" />
   <Import Project="$(PropertySheetsDir)/configuration.props" />
   <Import Project="$(PropertySheetsDir)/build_type/static_lib.props" />
   <Import Project="$(PropertySheetsDir)/configurations/$(Configuration)_config.props" />
@@ -35,9 +34,6 @@
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
-  <PropertyGroup>
-    <IncludePath>$(SolutionDir)Utils/GenericUtils/sources/;$(IncludePath)</IncludePath>
-  </PropertyGroup>
   <ItemDefinitionGroup>
     <Lib>
       <AdditionalDependencies>$(SolutionDir)Utils/RainmeterApiHelpers/external/libs-$(Platform)/Rainmeter.lib</AdditionalDependencies>
@@ -49,6 +45,7 @@
     <Import Project="$(PropertySheetsDir)/pch_copy.props" />
     <Import Project="$(PropertySheetsDir)/platforms/$(Platform).props" />
     <Import Project="$(PropertySheetsDir)/configurations/$(Configuration).props" />
+    <Import Project="$(PropertySheetsDir)/static_lib_export.props" />
   </ImportGroup>
   <ItemGroup>
     <ClCompile Include="sources\rxtd\rainmeter\InstanceKeeper.cpp" />

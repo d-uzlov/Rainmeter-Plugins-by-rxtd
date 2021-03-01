@@ -4,7 +4,7 @@
     <PropertyGroup>
       <IdbFileName>$([System.String]::Copy(&quot;%(ClCompile.ProgramDataBaseFileName)&quot;).Replace(&quot;.pdb&quot;,&quot;.idb&quot;))</IdbFileName>
     </PropertyGroup>
-    <Message  Importance="High" Text="Copying pch info" />
+    <Message  Importance="High" Text="Copying pch files" />
     <Copy
         SourceFiles="$(SharedPdb)"
         DestinationFiles="%(ClCompile.ProgramDataBaseFileName)">

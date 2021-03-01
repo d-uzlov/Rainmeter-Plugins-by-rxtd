@@ -7,7 +7,6 @@
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <Import Label="ProjectConfigurations" Project="$(PropertySheetsDir)/project_configs.props" />
   <Import Project="$(PropertySheetsDir)/configuration.props" />
   <Import Project="$(PropertySheetsDir)/build_type/dll.props" />
   <Import Project="$(PropertySheetsDir)/configurations/$(Configuration)_config.props" />
@@ -41,9 +40,6 @@
     <Import Project="$(PropertySheetsDir)/platforms/$(Platform).props" />
     <Import Project="$(PropertySheetsDir)/configurations/$(Configuration).props" />
   </ImportGroup>
-  <PropertyGroup>
-    <IncludePath>$(SolutionDir)Utils/RainmeterApiHelpers/sources/;$(IncludePath)</IncludePath>
-  </PropertyGroup>
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
     <ClCompile Include="sources\dllmain.cpp" />
@@ -57,6 +53,9 @@
     <ResourceCompile Include="..\Common\resources\version.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Utils\GenericUtils\GenericUtils.vcxproj">
+      <Project>{ed9dc428-f99f-4695-a5f7-aafba501a962}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\Utils\RainmeterApiHelpers\RainmeterApiHelpers.vcxproj">
       <Project>{e2f48041-57e0-4ce7-ba1f-97b3a9429575}</Project>
     </ProjectReference>

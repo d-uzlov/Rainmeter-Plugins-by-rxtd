@@ -1,14 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
-  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Label="UserMacros">
+    <ProjectPublicIncludePath>$(ProjectDir)sources/</ProjectPublicIncludePath>
+    <ProjectPrivateIncludePath></ProjectPrivateIncludePath>
+    <ProjectLibsPath>$(ProjectDir)external/libs-$(Platform)/</ProjectLibsPath>
+    <ProjectLibsIncludePath>$(ProjectDir)external/includes/</ProjectLibsIncludePath>
+  </PropertyGroup>
+  <ItemGroup>
+    <BuildMacro Include="ProjectPublicIncludePath">
+      <Value>$(ProjectPublicIncludePath)</Value>
+    </BuildMacro>
+    <BuildMacro Include="ProjectPrivateIncludePath">
+      <Value>$(ProjectPrivateIncludePath)</Value>
+    </BuildMacro>
+    <BuildMacro Include="ProjectLibsPath">
+      <Value>$(ProjectLibsPath)</Value>
+    </BuildMacro>
+    <BuildMacro Include="ProjectLibsIncludePath">
+      <Value>$(ProjectLibsIncludePath)</Value>
+    </BuildMacro>
+  </ItemGroup>
   <PropertyGroup>
-    <IncludePath>$(ProjectDir)sources;$(ProjectDir)external/includes;$(SolutionDir)Utils/GenericUtils/sources/;$(SolutionDir)Utils/ExpressionParser/sources/;$(SolutionDir)Utils/StdLibExtension/sources/;$(SolutionDir)Common/sources/;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)external/libs-$(Platform)/;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectPublicIncludePath);$(ProjectPrivateIncludePath);$(ProjectLibsIncludePath);$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectLibsPath);$(LibraryPath)</LibraryPath>
     <SourcePath>$(SourcePath)</SourcePath>
     <OutDir>$(ProjectDir)_Build/$(Platform)-$(Configuration)/</OutDir>
     <IntDir>$(OutDir)intermediate/</IntDir>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'!='DependencyTest'">
+    <!-- Visual studio uses PropertyGroup/PublicIncludeDirectories for external dependencies. -->
+    <!-- Unfortunately, Resharper doesn't seem to work with it. -->
+    <!-- This IncludePath modification force includes everything in the solution for resharper to work. -->
+    <IncludePath>
+    $(SolutionDir)Utils/ExpressionParser/sources/;
+    $(SolutionDir)Utils/FftUtils/sources/;
+    $(SolutionDir)Utils/GenericSignalUtils/sources/;
+    $(SolutionDir)Utils/GenericUtils/sources/;
+    $(SolutionDir)Utils/RainmeterApiHelpers/sources/;
+    $(SolutionDir)Utils/SignalFilterUtils/sources/;
+    $(SolutionDir)Utils/StdLibExtension/sources/;
+    $(SolutionDir)Utils/WinApiWrappers/sources/;
+    ;$(IncludePath)
+    </IncludePath>
+  </PropertyGroup>
+  <ItemGroup >
+  </ItemGroup>
   <ItemDefinitionGroup>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(SolutionDir)/Common/resources/;</AdditionalIncludeDirectories>

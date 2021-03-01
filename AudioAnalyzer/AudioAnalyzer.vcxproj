@@ -8,7 +8,6 @@
     <ProjectName>AudioAnalyzer</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <Import Label="ProjectConfigurations" Project="$(PropertySheetsDir)project_configs.props" />
   <Import Project="$(PropertySheetsDir)configuration.props" />
   <Import Project="$(PropertySheetsDir)build_type/dll.props" />
   <Import Project="$(PropertySheetsDir)configurations/$(Configuration)_config.props" />
@@ -31,10 +30,6 @@
     <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
-  <ImportGroup Label="ExtensionSettings">
-  </ImportGroup>
-  <ImportGroup Label="Shared">
-  </ImportGroup>
   <ImportGroup Label="PropertySheets">
     <Import Project="$(PropertySheetsDir)solution.props" />
     <Import Project="$(PropertySheetsDir)pch.props" />
@@ -42,9 +37,10 @@
     <Import Project="$(PropertySheetsDir)platforms/$(Platform).props" />
     <Import Project="$(PropertySheetsDir)configurations/$(Configuration).props" />
   </ImportGroup>
-  <PropertyGroup>
-    <IncludePath>$(SolutionDir)Utils/RainmeterApiHelpers/sources/;$(SolutionDir)Utils/WinApiWrappers/sources/;$(SolutionDir)Utils/SignalFilterUtils/sources/;$(SolutionDir)Utils/FftUtils/sources/;$(SolutionDir)Utils/GenericSignalUtils/sources/;$(IncludePath)</IncludePath>
-  </PropertyGroup>
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <ItemGroup>
     <ClInclude Include="local-version.h" />
