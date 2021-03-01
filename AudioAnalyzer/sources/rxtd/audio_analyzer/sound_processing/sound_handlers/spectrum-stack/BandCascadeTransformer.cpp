@@ -9,9 +9,9 @@
 
 #include "BandCascadeTransformer.h"
 #include "BandResampler.h"
-#include "ResamplerProvider.h"
 
 using rxtd::audio_analyzer::handler::BandCascadeTransformer;
+using rxtd::audio_analyzer::handler::BandResampler;
 using rxtd::audio_analyzer::handler::HandlerBase;
 using ParamsContainer = HandlerBase::ParamsContainer;
 
@@ -39,9 +39,9 @@ ParamsContainer BandCascadeTransformer::vParseParams(ParamParseContext& context)
 
 	if (const auto mixFunctionString = context.options.get(L"mixFunction").asIString(L"product");
 		mixFunctionString == L"product") {
-		params.mixFunction = MixFunction::PRODUCT;
+		params.mixFunction = MixFunction::ePRODUCT;
 	} else if (mixFunctionString == L"average") {
-		params.mixFunction = MixFunction::AVERAGE;
+		params.mixFunction = MixFunction::eAVERAGE;
 	} else {
 		context.log.error(L"mixFunction '{}' is not recognized", mixFunctionString);
 		throw InvalidOptionsException{};
@@ -55,13 +55,8 @@ BandCascadeTransformer::vConfigure(const ParamsContainer& _params, Logger& cl, E
 	params = _params.cast<Params>();
 
 	auto& config = getConfiguration();
-	const auto provider = dynamic_cast<ResamplerProvider*>(config.sourcePtr);
-	if (provider == nullptr) {
-		cl.error(L"invalid source: BandResampler is not found in the handler chain");
-		return {};
-	}
 
-	resamplerPtr = provider->getResampler();
+	resamplerPtr = findBandResampler(config.sourcePtr);
 	if (resamplerPtr == nullptr) {
 		cl.error(L"BandResampler is not found in the source chain");
 		return {};
@@ -118,6 +113,17 @@ void BandCascadeTransformer::vProcess(ProcessContext context, ExternalData& exte
 	}
 }
 
+const BandResampler* BandCascadeTransformer::findBandResampler(const HandlerBase* source) {
+	while (source != nullptr) {
+		auto ptr = dynamic_cast<const BandResampler*>(source);
+		if (ptr != nullptr) {
+			return ptr;
+		}
+		source = source->getConfiguration().sourcePtr;
+	}
+	return nullptr;
+}
+
 float BandCascadeTransformer::computeForBand(index band) const {
 	const BandResampler& resampler = *resamplerPtr;
 
@@ -172,7 +178,7 @@ float BandCascadeTransformer::computeForBand(index band) const {
 		return 0.0f;
 	}
 
-	return params.mixFunction == MixFunction::PRODUCT
+	return params.mixFunction == MixFunction::ePRODUCT
 	       ? std::pow(valueProduct, 1.0f / cascadesSummed)
 	       : valueSum / cascadesSummed;
 }

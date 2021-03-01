@@ -302,6 +302,10 @@ namespace rxtd::audio_analyzer::handler {
 			return _lastResults[layer];
 		}
 
+		[[nodiscard]]
+		const Configuration& getConfiguration() const {
+			return _configuration;
+		}
 
 	protected:
 		template<typename Params>
@@ -334,11 +338,6 @@ namespace rxtd::audio_analyzer::handler {
 			) {
 				return methodPtr(dataWrapper.cast<DataStructType>(), prop, bp, context);
 			};
-		}
-
-		[[nodiscard]]
-		const Configuration& getConfiguration() const {
-			return _configuration;
 		}
 
 		[[nodiscard]]

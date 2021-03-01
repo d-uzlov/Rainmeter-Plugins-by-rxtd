@@ -14,8 +14,8 @@
 namespace rxtd::audio_analyzer::handler {
 	class BandCascadeTransformer : public HandlerBase {
 		enum class MixFunction {
-			AVERAGE,
-			PRODUCT,
+			eAVERAGE,
+			ePRODUCT,
 		};
 
 		struct Params {
@@ -39,7 +39,7 @@ namespace rxtd::audio_analyzer::handler {
 
 		Params params{};
 
-		BandResampler* resamplerPtr = nullptr;
+		const BandResampler* resamplerPtr = nullptr;
 
 		struct CascadeMeta {
 			index offset{};
@@ -67,6 +67,8 @@ namespace rxtd::audio_analyzer::handler {
 		void vProcess(ProcessContext context, ExternalData& externalData) override;
 
 	private:
+		static const BandResampler* findBandResampler(const HandlerBase* source);
+
 		[[nodiscard]]
 		float computeForBand(index band) const;
 	};

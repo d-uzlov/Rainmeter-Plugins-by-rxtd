@@ -9,12 +9,11 @@
 
 #pragma once
 #include "FftAnalyzer.h"
-#include "ResamplerProvider.h"
-#include "rxtd/std_fixes/Vector2D.h"
 #include "rxtd/audio_analyzer/sound_processing/sound_handlers/HandlerBase.h"
+#include "rxtd/std_fixes/Vector2D.h"
 
 namespace rxtd::audio_analyzer::handler {
-	class BandResampler final : public ResamplerProvider {
+	class BandResampler final : public HandlerBase {
 		struct Params {
 			std::vector<float> bandFreqs;
 			bool useCubicResampling{};
@@ -71,10 +70,6 @@ namespace rxtd::audio_analyzer::handler {
 		[[nodiscard]]
 		array_view<float> getBandWeights(index band) const {
 			return bandWeights[band];
-		}
-
-		BandResampler* getResampler() override {
-			return this;
 		}
 
 	protected:

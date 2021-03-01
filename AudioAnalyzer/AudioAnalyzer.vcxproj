@@ -64,7 +64,6 @@
     <ClInclude Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\spectrum-stack\BandCascadeTransformer.h" />
     <ClInclude Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\spectrum-stack\BandResampler.h" />
     <ClInclude Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\spectrum-stack\FftAnalyzer.h" />
-    <ClInclude Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\spectrum-stack\ResamplerProvider.h" />
     <ClInclude Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\spectrum-stack\SingleValueTransformer.h" />
     <ClInclude Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\spectrum-stack\Spectrogram.h" />
     <ClInclude Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\spectrum-stack\TimeResampler.h" />
@@ -106,7 +105,6 @@
     <ClCompile Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\spectrum-stack\BandCascadeTransformer.cpp" />
     <ClCompile Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\spectrum-stack\BandResampler.cpp" />
     <ClCompile Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\spectrum-stack\FftAnalyzer.cpp" />
-    <ClCompile Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\spectrum-stack\ResamplerProvider.cpp" />
     <ClCompile Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\spectrum-stack\SingleValueTransformer.cpp" />
     <ClCompile Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\spectrum-stack\Spectrogram.cpp" />
     <ClCompile Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\spectrum-stack\Spectrogram.InputStripMaker.cpp" />
