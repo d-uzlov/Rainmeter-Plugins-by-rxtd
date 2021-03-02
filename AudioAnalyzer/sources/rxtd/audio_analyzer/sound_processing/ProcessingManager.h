@@ -31,6 +31,7 @@ namespace rxtd::audio_analyzer {
 		struct ChannelStruct {
 			HandlerMap handlerMap;
 
+			string filterSource;
 			FilterCascade filter;
 			DownsampleHelper downsampleHelper;
 		};
@@ -58,7 +59,7 @@ namespace rxtd::audio_analyzer {
 
 	public:
 		void setParams(
-			Logger logger,
+			Logger _logger,
 			const ProcessingData& pd,
 			Version version,
 			index sampleRate, array_view<Channel> layout,

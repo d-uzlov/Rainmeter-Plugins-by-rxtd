@@ -30,7 +30,7 @@ void ProcessingOrchestrator::patch(
 	for (const auto& [name, data] : patches) {
 		auto& sa = saMap[name];
 		sa.setParams(
-			logger.context(L"Proc '{}': ", name),
+			logger.context(L"{}: ", name),
 			data,
 			version, samplesPerSec, channels,
 			snapshot[name]

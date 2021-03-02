@@ -144,8 +144,6 @@ namespace rxtd::buffer_printer {
 
 		[[nodiscard]]
 		sview getBufferView() {
-			buffer.appendEOL();
-
 			return buffer.getBuffer();
 		}
 

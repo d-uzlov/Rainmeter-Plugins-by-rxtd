@@ -16,13 +16,13 @@ using rxtd::std_fixes::MapUtils;
 using rxtd::audio_analyzer::options::HandlerInfo;
 
 void ProcessingManager::setParams(
-	Logger logger,
+	Logger _logger,
 	const ProcessingData& pd,
 	Version version,
 	index sampleRate, array_view<Channel> channelsView,
 	Snapshot& snapshot
 ) {
-	this->logger = logger;
+	logger = std::move(_logger);
 
 	std::set<Channel> channels;
 	for (const auto channel : pd.channels) {
@@ -43,7 +43,12 @@ void ProcessingManager::setParams(
 
 	for (auto channel : channels) {
 		auto& newChannelStruct = channelMap[channel];
-		newChannelStruct.filter = pd.filter.creator.getInstance(static_cast<double>(finalSampleRate));
+		auto& oldChannelStruct = oldChannelMap[channel];
+		if (oldChannelStruct.filterSource != newChannelStruct.filterSource) {
+			newChannelStruct.filter = std::move(oldChannelStruct.filter);
+		} else {
+			newChannelStruct.filter = pd.filter.creator.getInstance(static_cast<double>(finalSampleRate));
+		}
 		newChannelStruct.downsampleHelper.setFactor(resamplingDivider);
 	}
 
@@ -56,7 +61,7 @@ void ProcessingManager::setParams(
 			auto& channelDataNew = channelMap[channel].handlerMap;
 			auto handlerPtr = patchInfo.meta.transform(std::move(oldChannelMap[channel].handlerMap[handlerName]));
 
-			auto cl = logger.context(L"handler '{}': ", handlerName);
+			auto cl = logger.context(L"{}: ", handlerName);
 			HandlerFinderImpl hf{ channelDataNew };
 			const bool success = handlerPtr->patch(
 				handlerName % csView() % own(),
