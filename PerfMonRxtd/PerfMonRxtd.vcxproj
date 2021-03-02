@@ -85,6 +85,9 @@
   <ItemGroup>
     <ResourceCompile Include="plugin_dll_info.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

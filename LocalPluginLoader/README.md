@@ -32,3 +32,8 @@ so you can also use any other folder on your PC.
 
 This plugin is not intended to be distributed so is doesn't have any official releases.
 If you want to use this, you will have to compile it yourself.
+
+## Building
+
+Plugin LocalPluginLoader can be built as a part of solution that contains everything in the repository.
+See [main readme](README.md) for details.
