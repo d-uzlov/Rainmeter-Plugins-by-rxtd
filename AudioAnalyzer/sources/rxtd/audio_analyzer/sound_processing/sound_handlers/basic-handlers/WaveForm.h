@@ -61,23 +61,21 @@ namespace rxtd::audio_analyzer::handler {
 		};
 
 		struct Snapshot {
-			index blockSize{};
-
-			string prefix;
-
+			string folder;
 			Vector2D<IntColor> pixels;
+			index blockSize{};
+			uint32_t id;
 			bool empty{};
 
 			mutable ImageWriteHelper writerHelper{};
 			mutable bool writeNeeded{};
-
-			mutable string filenameBuffer;
 		};
 
 		Params params;
 
 		audio_utils::MinMaxCounter mainCounter;
 		audio_utils::MinMaxCounter originalCounter;
+		uint32_t snapshotId;
 
 		double minDistinguishableValue{};
 
@@ -107,6 +105,8 @@ namespace rxtd::audio_analyzer::handler {
 		}
 
 	private:
+		void updateSnapshot(Snapshot& snapshot);
+
 		static void staticFinisher(const Snapshot& snapshot, const ExternalMethods::CallContext& context);
 
 		static bool getProp(

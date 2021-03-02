@@ -21,16 +21,20 @@ namespace rxtd::std_fixes {
 		}
 
 		template<typename T>
+		[[nodiscard]]
 		T& cast() {
 			return *std::any_cast<T>(&erasedData);
 		}
 
 		template<typename T>
+		[[nodiscard]]
 		const T& cast() const {
 			return *std::any_cast<T>(&erasedData);
 		}
 
-		// prevent automatic type conversions
 		AnyContainer() = default;
+
+		template<typename T, typename = std::enable_if_t<!std::is_same_v<std::decay_t<T>, AnyContainer>>>
+		AnyContainer(T&& value) : erasedData(std::move(value)) {}
 	};
 }

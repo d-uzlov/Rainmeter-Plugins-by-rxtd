@@ -20,6 +20,7 @@ namespace rxtd::audio_analyzer::handler {
 			Version version{};
 			sview channelName{};
 			sview filePrefix{};
+			mutable string buffer;
 		};
 
 		using FinishMethodType = void(*)(const ExternalData& data, const CallContext& context);

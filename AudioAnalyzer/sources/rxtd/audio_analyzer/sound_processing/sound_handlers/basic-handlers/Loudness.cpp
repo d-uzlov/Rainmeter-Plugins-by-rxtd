@@ -17,8 +17,7 @@ using rxtd::audio_analyzer::handler::HandlerBase;
 using ParamsContainer = HandlerBase::ParamsContainer;
 
 ParamsContainer Loudness::vParseParams(ParamParseContext& context) const noexcept(false) {
-	ParamsContainer result;
-	auto& params = result.clear<Params>();
+	Params params;
 
 	auto transformLogger = context.log.context(L"transform: ");
 	params.transformer = CVT::parse(context.options.get(L"transform").asString(), transformLogger);
@@ -37,7 +36,7 @@ ParamsContainer Loudness::vParseParams(ParamParseContext& context) const noexcep
 
 	params.ignoreGatingForSilence = context.options.get(L"ignoreGatingForSilence").asBool(true);
 
-	return result;
+	return params;
 }
 
 HandlerBase::ConfigurationResult Loudness::vConfigure(

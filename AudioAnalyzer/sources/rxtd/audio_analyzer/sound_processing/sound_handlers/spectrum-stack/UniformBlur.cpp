@@ -15,8 +15,7 @@ using rxtd::audio_analyzer::handler::HandlerBase;
 using ParamsContainer = HandlerBase::ParamsContainer;
 
 ParamsContainer UniformBlur::vParseParams(ParamParseContext& context) const {
-	ParamsContainer result;
-	auto& params = result.clear<Params>();
+	Params params;
 
 	const auto sourceId = context.options.get(L"source").asIString();
 	if (sourceId.empty()) {
@@ -28,7 +27,7 @@ ParamsContainer UniformBlur::vParseParams(ParamParseContext& context) const {
 	params.blurRadius = std::max<double>(context.options.get(L"Radius").asFloat(1.0) * 0.25, 0.0);
 	params.blurRadiusAdaptation = std::max<double>(context.options.get(L"RadiusAdaptation").asFloat(2.0), 0.0);
 
-	return result;
+	return params;
 }
 
 HandlerBase::ConfigurationResult

@@ -16,8 +16,7 @@ using rxtd::audio_analyzer::handler::BlockPeak;
 using ParamsContainer = HandlerBase::ParamsContainer;
 
 ParamsContainer BlockHandler::vParseParams(ParamParseContext& context) const noexcept(false) {
-	ParamsContainer result;
-	auto& params = result.clear<Params>();
+	Params params;
 
 	double updateRate = context.options.get(L"UpdateRate").asFloat(60.0);
 	updateRate = std::clamp(updateRate, 0.01, 500.0);
@@ -31,7 +30,7 @@ ParamsContainer BlockHandler::vParseParams(ParamParseContext& context) const noe
 	auto transformLogger = context.log.context(L"transform: ");
 	params.transformer = CVT::parse(context.options.get(L"transform").asString(), transformLogger);
 
-	return result;
+	return params;
 }
 
 HandlerBase::ConfigurationResult

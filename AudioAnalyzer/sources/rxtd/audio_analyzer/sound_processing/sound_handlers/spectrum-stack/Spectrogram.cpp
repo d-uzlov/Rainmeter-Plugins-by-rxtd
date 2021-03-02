@@ -9,9 +9,6 @@
 
 #include "Spectrogram.h"
 
-#include <filesystem>
-
-#include "rxtd/LinearInterpolator.h"
 #include "rxtd/option_parsing/OptionList.h"
 #include "rxtd/std_fixes/MyMath.h"
 
@@ -23,8 +20,7 @@ using rxtd::audio_analyzer::handler::HandlerBase;
 using ParamsContainer = HandlerBase::ParamsContainer;
 
 ParamsContainer Spectrogram::vParseParams(ParamParseContext& context) const noexcept(false) {
-	ParamsContainer result;
-	auto& params = result.clear<Params>();
+	Params params;
 
 	const auto sourceId = context.options.get(L"source").asIString();
 	if (sourceId.empty()) {
@@ -52,14 +48,14 @@ ParamsContainer Spectrogram::vParseParams(ParamParseContext& context) const noex
 
 	using MixMode = Color::Mode;
 	if (auto mixMode = context.options.get(L"mixMode").asIString(L"srgb");
-		mixMode == L"srgb") {
+		mixMode == L"sRGB") {
 		params.mixMode = MixMode::eRGB;
 	} else if (mixMode == L"hsv") {
 		params.mixMode = MixMode::eHSV;
 	} else if (mixMode == L"hsl") {
 		params.mixMode = MixMode::eHSL;
-	} else if (mixMode == L"ycbcr") {
-		params.mixMode = MixMode::eRGB; // difference between ycbcr and rgb is linear
+	} else if (mixMode == L"yCbCr") {
+		params.mixMode = MixMode::eRGB; // difference between yCbCr and sRGB is linear
 	} else {
 		context.log.error(L"unknown mixMode '{}'", mixMode);
 		throw InvalidOptionsException{};
@@ -76,7 +72,7 @@ ParamsContainer Spectrogram::vParseParams(ParamParseContext& context) const noex
 		params.colorLevels.push_back(1.0f);
 	}
 
-	for (auto& [wi, color]: params.colors) {
+	for (auto& [wi, color] : params.colors) {
 		color = color.convert(params.mixMode);
 	}
 
@@ -91,7 +87,7 @@ ParamsContainer Spectrogram::vParseParams(ParamParseContext& context) const noex
 	params.silenceThreshold = context.options.get(L"silenceThreshold").asFloatF(-70);
 	params.silenceThreshold = MyMath::db2amplitude(params.silenceThreshold);
 
-	return result;
+	return params;
 }
 
 HandlerBase::ConfigurationResult
@@ -100,7 +96,7 @@ Spectrogram::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData
 
 	auto& config = getConfiguration();
 	const index sampleRate = config.sampleRate;
-	blockSize = static_cast<index>(static_cast<double>(sampleRate) * params.resolution);
+	index blockSize = static_cast<index>(static_cast<double>(sampleRate) * params.resolution);
 	blockSize = std::max<index>(blockSize, 1);
 
 	const index width = params.length;
@@ -111,38 +107,23 @@ Spectrogram::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData
 
 	fadeHelper.setParams(backgroundIntColor, params.borderSize, params.borderColor.toIntColor(), params.fading);
 
-	if (params.fading != 0.0) {
-		fadeHelper.setPastLastStripIndex(image.getPastLastStripIndex());
-		fadeHelper.inflate(image.getPixels());
-	} else {
-		if (params.borderSize != 0) {
-			fadeHelper.setPastLastStripIndex(image.getPastLastStripIndex());
-			fadeHelper.drawBorderInPlace(image.getPixelsWritable());
-		}
-	}
-	imageHasChanged = true;
-
-	ism.setParams(
+	inputStripMaker.setParams(
 		blockSize,
 		config.sourcePtr->getDataSize().eqWaveSizes[0],
 		height,
 		params.colors, params.colorLevels
 	);
 
-	minMaxCounter.reset();
 	minMaxCounter.setBlockSize(blockSize);
 
-	auto& snapshot = externalData.clear<Snapshot>();
+	snapshotId++;
 
-	snapshot.prefix = params.folder;
+	auto& snapshot = externalData.clear<Snapshot>();
+	updateSnapshot(snapshot);
+
+	snapshot.folder = params.folder;
 
 	snapshot.blockSize = blockSize;
-
-	snapshot.pixels.copyWithResize(params.fading != 0.0 ? fadeHelper.getResultBuffer() : image.getPixels());
-
-	snapshot.writeNeeded = true;
-	snapshot.empty = false;
-
 
 	return { 0, {} };
 }
@@ -165,7 +146,8 @@ void Spectrogram::parseColors(std::vector<ColorDescription>& resultColors, std::
 			cl.error(L"values {} and {}: values must be increasing", prevValue, value);
 			throw InvalidOptionsException{};
 		}
-		if (value / prevValue < 1.001f && value - prevValue < 0.001f) { // todo add proper comparison method
+		if (value / prevValue < 1.001f && value - prevValue < 0.001f) {
+			// todo add proper comparison method
 			cl.error(L"values {} and {} are too close", prevValue, value);
 			throw InvalidOptionsException{};
 		}
@@ -193,34 +175,40 @@ void Spectrogram::vProcess(ProcessContext context, ExternalData& externalData) {
 
 	auto& source = *getConfiguration().sourcePtr;
 
-	const bool imageWasEmpty = image.isEmpty();
+	inputStripMaker.setChunks(source.getChunks(0));
 
-	ism.setChunks(source.getChunks(0));
-
-	while (true) {
+	while (minMaxCounter.hasNext()) {
 		minMaxCounter.update();
 
-		if (!minMaxCounter.isReady()) {
-			break;
-		}
-
-		ism.next();
-		imageHasChanged = true;
+		inputStripMaker.next();
+		snapshotId++;
 
 		if (minMaxCounter.isBelowThreshold(params.silenceThreshold)) {
 			image.pushEmptyStrip(params.colors[0].color.toIntColor());
 		} else {
-			image.pushStrip(ism.getBuffer());
+			image.pushStrip(inputStripMaker.getBuffer());
 		}
-		minMaxCounter.reset();
+
+		minMaxCounter.skipBlock();
 	}
 
-	if (imageHasChanged) {
+	// consume the rest of the wave
+	minMaxCounter.update();
+
+	updateSnapshot(externalData.cast<Snapshot>());
+}
+
+void Spectrogram::updateSnapshot(Snapshot& snapshot) {
+	if (snapshot.id == snapshotId) {
+		return;
+	}
+	snapshot.id = snapshotId;
+	snapshot.writeNeeded = true;
+
+	if (!(snapshot.empty && image.isEmpty())) {
 		if (params.fading != 0.0) {
-			if (!image.isEmpty() || (image.isEmpty() && !imageWasEmpty)) {
-				fadeHelper.setPastLastStripIndex(image.getPastLastStripIndex());
-				fadeHelper.inflate(image.getPixels());
-			}
+			fadeHelper.setPastLastStripIndex(image.getPastLastStripIndex());
+			fadeHelper.inflate(image.getPixels());
 		} else {
 			if (params.borderSize != 0) {
 				fadeHelper.setPastLastStripIndex(image.getPastLastStripIndex());
@@ -228,13 +216,8 @@ void Spectrogram::vProcess(ProcessContext context, ExternalData& externalData) {
 			}
 		}
 
-		auto& snapshot = externalData.cast<Snapshot>();
-		snapshot.writeNeeded = true;
-		snapshot.empty = image.isEmpty();
-
 		snapshot.pixels.copyWithResize(params.fading != 0.0 ? fadeHelper.getResultBuffer() : image.getPixels());
-
-		imageHasChanged = false;
+		snapshot.empty = image.isEmpty();
 	}
 }
 
@@ -243,51 +226,12 @@ void Spectrogram::staticFinisher(const Snapshot& snapshot, const ExternalMethods
 		return;
 	}
 
-	snapshot.filenameBuffer = snapshot.prefix;
-	snapshot.filenameBuffer += context.filePrefix;
-	snapshot.filenameBuffer += L".bmp";
+	context.buffer = snapshot.folder;
+	context.buffer += context.filePrefix;
+	context.buffer += L".bmp";
 
-	snapshot.writerHelper.write(snapshot.pixels, snapshot.empty, snapshot.filenameBuffer);
+	snapshot.writerHelper.write(snapshot.pixels, snapshot.empty, context.buffer);
 	snapshot.writeNeeded = false;
-}
-
-void Spectrogram::InputStripMaker::fillStrip(array_view<float> data, array_span<IntColor> buffer) const {
-	const LinearInterpolator<float> interpolator{ colorLevels.front(), colorLevels.back(), 0.0f, 1.0f };
-	const auto lowColor = colors[0].color;
-	const auto highColor = colors[1].color;
-
-	for (index i = 0; i < static_cast<index>(buffer.size()); ++i) {
-		auto value = interpolator.toValue(data[i]);
-		value = std::clamp(value, 0.0f, 1.0f);
-
-		buffer[i] = (highColor * value + lowColor * (1.0f - value)).toIntColor();
-	}
-}
-
-void Spectrogram::InputStripMaker::fillStripMulticolor(
-	array_view<float> data, array_span<IntColor> buffer
-) const {
-	for (index i = 0; i < buffer.size(); ++i) {
-		const auto value = std::clamp(data[i], colorLevels.front(), colorLevels.back());
-
-		index lowColorIndex = 0;
-		for (index j = 1; j < colors.size(); j++) {
-			const auto colorHighValue = colorLevels[j];
-			if (value <= colorHighValue) {
-				lowColorIndex = j - 1;
-				break;
-			}
-		}
-
-		const auto lowColorValue = colorLevels[lowColorIndex];
-		const auto intervalCoef = colors[lowColorIndex].widthInverted;
-		const auto lowColor = colors[lowColorIndex].color;
-		const auto highColor = colors[lowColorIndex + 1].color;
-
-		const float percentValue = (value - lowColorValue) * intervalCoef;
-
-		buffer[i] = (highColor * percentValue + lowColor * (1.0f - percentValue)).toIntColor();
-	}
 }
 
 bool Spectrogram::getProp(
@@ -297,11 +241,11 @@ bool Spectrogram::getProp(
 	const ExternalMethods::CallContext& context
 ) {
 	if (prop == L"file") {
-		snapshot.filenameBuffer = snapshot.prefix;
-		snapshot.filenameBuffer += context.filePrefix;
-		snapshot.filenameBuffer += L".bmp";
+		context.buffer = snapshot.folder;
+		context.buffer += context.filePrefix;
+		context.buffer += L".bmp";
 
-		printer.print(snapshot.filenameBuffer);
+		printer.print(context.buffer);
 		return true;
 	}
 	if (prop == L"block size") {

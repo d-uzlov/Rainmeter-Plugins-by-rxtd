@@ -16,11 +16,9 @@ using rxtd::audio_analyzer::image_utils::ImageWriteHelper;
 using rxtd::std_fixes::array2d_view;
 
 void ImageWriteHelper::write(array2d_view<IntColor> pixels, bool empty, const string& filepath) {
-	if (emptinessWritten && empty) {
+	if (state == State::eEMPTY && empty) {
 		return;
 	}
-
-	emptinessWritten = false;
 
 	const std::wstring& sf = filepath;
 	std::filesystem::path directory{ sf };
@@ -41,5 +39,5 @@ void ImageWriteHelper::write(array2d_view<IntColor> pixels, bool empty, const st
 
 	BmpWriter::writeFile(fileStream, pixels);
 
-	emptinessWritten = empty;
+	state = empty ? State::eEMPTY : State::eNOT_EMPTY;
 }

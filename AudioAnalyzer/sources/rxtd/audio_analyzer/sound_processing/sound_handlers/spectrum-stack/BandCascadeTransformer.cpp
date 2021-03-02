@@ -16,8 +16,7 @@ using rxtd::audio_analyzer::handler::HandlerBase;
 using ParamsContainer = HandlerBase::ParamsContainer;
 
 ParamsContainer BandCascadeTransformer::vParseParams(ParamParseContext& context) const noexcept(false) {
-	ParamsContainer result;
-	auto& params = result.clear<Params>();
+	Params params;
 
 	const auto sourceId = context.options.get(L"source").asIString();
 	if (sourceId.empty()) {
@@ -47,7 +46,7 @@ ParamsContainer BandCascadeTransformer::vParseParams(ParamParseContext& context)
 		throw InvalidOptionsException{};
 	}
 
-	return result;
+	return params;
 }
 
 HandlerBase::ConfigurationResult

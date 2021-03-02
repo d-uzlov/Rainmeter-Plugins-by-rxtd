@@ -23,7 +23,7 @@ namespace rxtd::audio_analyzer::handler {
 		using StripedImage = image_utils::StripedImage<T>;
 		using ImageWriteHelper = image_utils::ImageWriteHelper;
 		using StripedImageFadeHelper = image_utils::StripedImageFadeHelper;
-		
+
 		struct ColorDescription {
 			float widthInverted{};
 			Color color;
@@ -74,17 +74,14 @@ namespace rxtd::audio_analyzer::handler {
 		};
 
 		struct Snapshot {
-			index blockSize{};
-
-			string prefix;
-
+			string folder;
 			Vector2D<IntColor> pixels;
+			index blockSize{};
+			uint32_t id = 0;
 			bool empty{};
 
 			mutable ImageWriteHelper writerHelper{};
 			mutable bool writeNeeded{};
-
-			mutable string filenameBuffer;
 		};
 
 		class InputStripMaker {
@@ -121,16 +118,12 @@ namespace rxtd::audio_analyzer::handler {
 
 		Params params;
 
-		index blockSize{};
-
-
-		mutable bool imageHasChanged = false;
-
 		audio_utils::MinMaxCounter minMaxCounter;
+		uint32_t snapshotId = 0;
 
 		StripedImage<IntColor> image{};
 		StripedImageFadeHelper fadeHelper{};
-		InputStripMaker ism;
+		InputStripMaker inputStripMaker;
 
 	public:
 		[[nodiscard]]
@@ -147,7 +140,7 @@ namespace rxtd::audio_analyzer::handler {
 
 	private:
 		static void parseColors(std::vector<ColorDescription>& resultColors, std::vector<float>& levels, OptionList list, Logger& cl);
-	
+
 	public:
 		void vProcess(ProcessContext context, ExternalData& externalData) override;
 
@@ -161,6 +154,8 @@ namespace rxtd::audio_analyzer::handler {
 		}
 
 	private:
+		void updateSnapshot(Snapshot& snapshot);
+
 		static void staticFinisher(const Snapshot& snapshot, const ExternalMethods::CallContext& context);
 
 		static bool getProp(

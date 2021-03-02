@@ -14,8 +14,7 @@ using rxtd::audio_analyzer::handler::HandlerBase;
 using ParamsContainer = HandlerBase::ParamsContainer;
 
 ParamsContainer TimeResampler::vParseParams(ParamParseContext& context) const noexcept(false) {
-	ParamsContainer result;
-	auto& params = result.clear<Params>();
+	Params params;
 
 	const auto sourceId = context.options.get(L"source").asIString();
 	if (sourceId.empty()) {
@@ -39,7 +38,7 @@ ParamsContainer TimeResampler::vParseParams(ParamParseContext& context) const no
 	auto transformLogger = context.log.context(L"transform: ");
 	params.transformer = CVT::parse(context.options.get(L"transform").asString(), transformLogger);
 
-	return result;
+	return params;
 }
 
 HandlerBase::ConfigurationResult

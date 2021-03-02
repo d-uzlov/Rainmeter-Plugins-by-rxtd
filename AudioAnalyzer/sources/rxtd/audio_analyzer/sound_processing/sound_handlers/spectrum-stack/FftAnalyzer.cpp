@@ -16,8 +16,7 @@ using rxtd::audio_analyzer::handler::HandlerBase;
 using ParamsContainer = HandlerBase::ParamsContainer;
 
 ParamsContainer FftAnalyzer::vParseParams(ParamParseContext& context) const noexcept(false) {
-	ParamsContainer result;
-	auto& params = result.clear<Params>();
+	Params params;
 
 	params.binWidth = context.options.get(L"binWidth").asFloat(100.0);
 	if (params.binWidth <= 0.0) {
@@ -47,7 +46,7 @@ ParamsContainer FftAnalyzer::vParseParams(ParamParseContext& context) const noex
 	params.wcfDescription = context.options.get(L"windowFunction").asString(L"hann");
 	params.createWindow = fft_utils::WindowFunctionHelper::parse(params.wcfDescription, context.log.context(L"windowFunction: "));
 
-	return result;
+	return params;
 }
 
 HandlerBase::ConfigurationResult

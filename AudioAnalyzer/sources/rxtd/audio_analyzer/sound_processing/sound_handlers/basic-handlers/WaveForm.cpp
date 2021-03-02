@@ -21,8 +21,7 @@ using namespace std::string_literals;
 using rxtd::audio_analyzer::image_utils::Color;
 
 ParamsContainer WaveForm::vParseParams(ParamParseContext& context) const noexcept(false) {
-	ParamsContainer result;
-	auto& params = result.clear<Params>();
+	Params params;
 
 	params.width = context.options.get(L"width").asInt(100);
 	if (params.width < 2) {
@@ -83,7 +82,7 @@ ParamsContainer WaveForm::vParseParams(ParamParseContext& context) const noexcep
 	auto transformLogger = context.log.context(L"transform: ");
 	params.transformer = CVT::parse(context.options.get(L"transform").asString(), transformLogger);
 
-	return result;
+	return params;
 }
 
 HandlerBase::ConfigurationResult
@@ -104,45 +103,30 @@ WaveForm::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& e
 		params.colors
 	);
 
-	drawer.inflate();
-
-	mainCounter.reset();
-	originalCounter.reset();
-
 	mainCounter.setBlockSize(blockSize);
 	originalCounter.setBlockSize(blockSize);
 
 	auto& snapshot = externalData.clear<Snapshot>();
 
-	snapshot.prefix = params.folder;
+	snapshotId++;
+	updateSnapshot(snapshot);
+
+	snapshot.folder = params.folder;
 
 	snapshot.blockSize = blockSize;
-
-	snapshot.pixels.setBuffersCount(params.height);
-	snapshot.pixels.setBufferSize(params.width);
-
-	snapshot.pixels.copyWithResize(drawer.getResultBuffer());
-
-	snapshot.writeNeeded = true;
-	snapshot.empty = false;
 
 	return { 0, {} };
 }
 
 void WaveForm::vProcess(ProcessContext context, ExternalData& externalData) {
-	const bool wasEmpty = drawer.isEmpty();
-
-	bool anyChanges = false;
-
 	mainCounter.setWave(context.wave);
 	originalCounter.setWave(context.originalWave);
-	while (true) {
+
+	while (originalCounter.hasNext()) {
 		mainCounter.update();
 		originalCounter.update();
 
-		if (!mainCounter.isReady()) {
-			break;
-		}
+		snapshotId++;
 
 		if (originalCounter.isBelowThreshold(params.silenceThreshold)) {
 			drawer.fillSilence();
@@ -155,19 +139,28 @@ void WaveForm::vProcess(ProcessContext context, ExternalData& externalData) {
 			);
 		}
 
-		anyChanges = true;
-		mainCounter.reset();
-		originalCounter.reset();
+		mainCounter.skipBlock();
+		originalCounter.skipBlock();
 	}
 
-	if (anyChanges) {
+	// consume the rest of the wave
+	mainCounter.update();
+	originalCounter.update();
+
+	updateSnapshot(externalData.cast<Snapshot>());
+}
+
+void WaveForm::updateSnapshot(Snapshot& snapshot) {
+	if (snapshot.id == snapshotId) {
+		return;
+	}
+	snapshot.id = snapshotId;
+	snapshot.writeNeeded = true;
+
+	if (!(snapshot.empty && drawer.isEmpty())) {
 		drawer.inflate();
-
-		auto& snapshot = externalData.cast<Snapshot>();
-		snapshot.writeNeeded = true;
-		snapshot.empty = drawer.isEmpty();
-
 		snapshot.pixels.copyWithResize(drawer.getResultBuffer());
+		snapshot.empty = drawer.isEmpty();
 	}
 }
 
@@ -177,11 +170,11 @@ void WaveForm::staticFinisher(const Snapshot& snapshot, const ExternalMethods::C
 		return;
 	}
 
-	snapshot.filenameBuffer = snapshot.prefix;
-	snapshot.filenameBuffer += context.filePrefix;
-	snapshot.filenameBuffer += L".bmp";
+	context.buffer = snapshot.folder;
+	context.buffer += context.filePrefix;
+	context.buffer += L".bmp";
 
-	snapshot.writerHelper.write(snapshot.pixels, snapshot.empty, snapshot.filenameBuffer);
+	snapshot.writerHelper.write(snapshot.pixels, snapshot.empty, context.buffer);
 	writeNeeded = false;
 }
 
@@ -192,11 +185,11 @@ bool WaveForm::getProp(
 	const ExternalMethods::CallContext& context
 ) {
 	if (prop == L"file") {
-		snapshot.filenameBuffer = snapshot.prefix;
-		snapshot.filenameBuffer += context.filePrefix;
-		snapshot.filenameBuffer += L".bmp";
+		context.buffer = snapshot.folder;
+		context.buffer += context.filePrefix;
+		context.buffer += L".bmp";
 
-		printer.print(snapshot.filenameBuffer);
+		printer.print(context.buffer);
 		return true;
 	}
 	if (prop == L"block size") {

@@ -13,8 +13,8 @@ namespace rxtd::audio_analyzer::audio_utils {
 	class MinMaxCounter {
 		index blockSize = 1;
 		index counter{};
-		float min{};
-		float max{};
+		float min = std::numeric_limits<float>::infinity();
+		float max = -std::numeric_limits<float>::infinity();
 		array_view<float> wave;
 
 	public:
@@ -27,10 +27,11 @@ namespace rxtd::audio_analyzer::audio_utils {
 		}
 
 		void update() {
-			const index remainingBlockSize = std::min(blockSize - counter, wave.size());
-			if (remainingBlockSize == 0) {
+			if (wave.empty() || counter >= blockSize) {
 				return;
 			}
+
+			const index remainingBlockSize = std::min(blockSize - counter, wave.size());
 
 			auto [wMin, wMax] = std::minmax_element(wave.begin(), wave.begin() + remainingBlockSize);
 			min = std::min(min, *wMin);
@@ -47,13 +48,9 @@ namespace rxtd::audio_analyzer::audio_utils {
 		}
 
 		[[nodiscard]]
-		bool isEmpty() const {
-			return wave.empty();
-		}
-
-		[[nodiscard]]
-		bool isReady() const {
-			return counter == blockSize;
+		bool hasNext() const {
+			const index missingBlockSize = blockSize - counter;
+			return wave.size() >= missingBlockSize;
 		}
 
 		[[nodiscard]]
@@ -66,8 +63,8 @@ namespace rxtd::audio_analyzer::audio_utils {
 			return max;
 		}
 
-		void reset() {
-			counter = 0;
+		void skipBlock() {
+			counter -= blockSize;
 			min = std::numeric_limits<float>::infinity();
 			max = -std::numeric_limits<float>::infinity();
 		}

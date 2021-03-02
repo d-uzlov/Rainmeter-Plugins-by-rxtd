@@ -18,8 +18,7 @@ using rxtd::audio_analyzer::handler::HandlerBase;
 using ParamsContainer = HandlerBase::ParamsContainer;
 
 ParamsContainer BandResampler::vParseParams(ParamParseContext& context) const noexcept(false) {
-	ParamsContainer result;
-	auto& params = result.clear<Params>();
+	Params params;
 
 	const auto sourceId = context.options.get(L"source").asIString();
 	if (sourceId.empty()) {
@@ -41,7 +40,7 @@ ParamsContainer BandResampler::vParseParams(ParamParseContext& context) const no
 
 	params.useCubicResampling = context.options.get(L"cubicInterpolation").asBool(true);
 
-	return result;
+	return params;
 }
 
 void BandResampler::parseFreqListElement(OptionList& options, std::vector<float>& freqs, Logger& cl) {

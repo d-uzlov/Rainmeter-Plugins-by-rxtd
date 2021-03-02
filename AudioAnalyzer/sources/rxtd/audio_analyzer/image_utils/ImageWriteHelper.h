@@ -12,14 +12,14 @@
 
 namespace rxtd::audio_analyzer::image_utils {
 	class ImageWriteHelper {
-		bool emptinessWritten = false;
+		enum class State {
+			eUNINITIALIZED,
+			eEMPTY,
+			eNOT_EMPTY,
+		};
+		State state = State::eUNINITIALIZED;
 
 	public:
 		void write(std_fixes::array2d_view<IntColor> pixels, bool empty, const string& filepath);
-
-		[[nodiscard]]
-		bool isEmptinessWritten() const {
-			return emptinessWritten;
-		}
 	};
 }

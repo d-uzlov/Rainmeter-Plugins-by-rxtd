@@ -8,19 +8,9 @@
  */
 
 #include "Spectrogram.h"
-
-#include <filesystem>
-
 #include "rxtd/LinearInterpolator.h"
-#include "rxtd/option_parsing/OptionList.h"
-#include "rxtd/std_fixes/MyMath.h"
 
-using namespace std::string_literals;
-
-using rxtd::std_fixes::MyMath;
 using rxtd::audio_analyzer::handler::Spectrogram;
-using rxtd::audio_analyzer::handler::HandlerBase;
-using ParamsContainer = HandlerBase::ParamsContainer;
 
 void Spectrogram::InputStripMaker::setParams(
 	index _blockSize, index _chunkEquivalentWaveSize, index bufferSize, array_view<ColorDescription> _colors, array_view<float> _colorLevels
@@ -55,5 +45,44 @@ void Spectrogram::InputStripMaker::next() {
 			// many colors, but slightly slower
 			fillStripMulticolor(chunk, buffer);
 		}
+	}
+}
+
+void Spectrogram::InputStripMaker::fillStrip(array_view<float> data, array_span<IntColor> buffer) const {
+	const LinearInterpolator<float> interpolator{ colorLevels.front(), colorLevels.back(), 0.0f, 1.0f };
+	const auto lowColor = colors[0].color;
+	const auto highColor = colors[1].color;
+
+	for (index i = 0; i < static_cast<index>(buffer.size()); ++i) {
+		auto value = interpolator.toValue(data[i]);
+		value = std::clamp(value, 0.0f, 1.0f);
+
+		buffer[i] = (highColor * value + lowColor * (1.0f - value)).toIntColor();
+	}
+}
+
+void Spectrogram::InputStripMaker::fillStripMulticolor(
+	array_view<float> data, array_span<IntColor> buffer
+) const {
+	for (index i = 0; i < buffer.size(); ++i) {
+		const auto value = std::clamp(data[i], colorLevels.front(), colorLevels.back());
+
+		index lowColorIndex = 0;
+		for (index j = 1; j < colors.size(); j++) {
+			const auto colorHighValue = colorLevels[j];
+			if (value <= colorHighValue) {
+				lowColorIndex = j - 1;
+				break;
+			}
+		}
+
+		const auto lowColorValue = colorLevels[lowColorIndex];
+		const auto intervalCoef = colors[lowColorIndex].widthInverted;
+		const auto lowColor = colors[lowColorIndex].color;
+		const auto highColor = colors[lowColorIndex + 1].color;
+
+		const float percentValue = (value - lowColorValue) * intervalCoef;
+
+		buffer[i] = (highColor * percentValue + lowColor * (1.0f - percentValue)).toIntColor();
 	}
 }
