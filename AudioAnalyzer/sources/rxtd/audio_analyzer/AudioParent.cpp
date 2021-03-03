@@ -626,7 +626,7 @@ void AudioParent::resolveProp(
 	resolveBufferString = bp.getBufferView();
 }
 
-void AudioParent::runFinishers(ProcessingOrchestrator::Snapshot snapshot) const {
+void AudioParent::runFinishers(ProcessingOrchestrator::Snapshot& snapshot) const {
 	for (const auto& [procName, procInfo] : paramParser.getParseResult()) {
 		auto procIter = snapshot.find(procName);
 		if (procIter == snapshot.end()) { continue; }

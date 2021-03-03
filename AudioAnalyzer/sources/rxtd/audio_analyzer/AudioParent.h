@@ -88,6 +88,6 @@ namespace rxtd::audio_analyzer {
 			isview procName, Channel channel, isview handlerName, isview propName
 		);
 
-		void runFinishers(ProcessingOrchestrator::Snapshot snapshot) const;
+		void runFinishers(ProcessingOrchestrator::Snapshot& snapshot) const;
 	};
 }
