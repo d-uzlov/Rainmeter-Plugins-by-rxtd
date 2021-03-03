@@ -137,7 +137,7 @@ HandlerBase::HandlerMetaInfo HandlerCacheHelper::createHandlerPatcher(
 	}
 
 	cl.error(L"unknown type '{}'", type);
-	return {};
+	throw HandlerBase::InvalidOptionsException{};
 }
 
 void HandlerCacheHelper::readRawDescription2(

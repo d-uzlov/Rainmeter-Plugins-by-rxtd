@@ -59,9 +59,16 @@ void ProcessingManager::setParams(
 		bool handlerIsValid = true;
 		for (auto channel : channels) {
 			auto& channelDataNew = channelMap[channel].handlerMap;
-			auto handlerPtr = patchInfo.meta.transform(std::move(oldChannelMap[channel].handlerMap[handlerName]));
-
 			auto cl = logger.context(L"{}: ", handlerName);
+
+			auto handlerPtr = patchInfo.meta.transform(std::move(oldChannelMap[channel].handlerMap[handlerName]));
+			if (handlerPtr == nullptr) {
+				cl.error(L"invalid handler");
+
+				handlerIsValid = false;
+				break;
+			}
+
 			HandlerFinderImpl hf{ channelDataNew };
 			const bool success = handlerPtr->patch(
 				handlerName % csView() % own(),
