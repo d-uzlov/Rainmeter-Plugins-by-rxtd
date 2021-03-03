@@ -66,6 +66,11 @@ namespace rxtd::audio_analyzer::handler {
 		template<typename T>
 		using Vector2D = std_fixes::Vector2D<T>;
 
+		/// <summary>
+		/// Thrown when a handler generated too many values.
+		/// For example, this can often happen with TimeResampler handler,
+		/// which has an option for how often it pushes new array of values.
+		/// </summary>
 		class TooManyValuesException : public std::runtime_error {
 			string sourceName;
 		public:
@@ -77,14 +82,16 @@ namespace rxtd::audio_analyzer::handler {
 			}
 		};
 
-		class InvalidOptionsException : public std::runtime_error {
-		public:
-			explicit InvalidOptionsException() : runtime_error("") {}
-		};
-
+		/// <summary>
+		/// Struct that describes values that a handler generates.
+		/// </summary>
 		struct DataSize {
 			index valuesCount{};
 			index layersCount{};
+			/// <summary>
+			/// Describes how much time (in audio wave point)
+			/// need to pass for one array of a layer to be generated
+			/// </summary>
 			std::vector<index> eqWaveSizes;
 
 			DataSize() = default;
@@ -108,38 +115,7 @@ namespace rxtd::audio_analyzer::handler {
 			friend bool operator!=(const DataSize& lhs, const DataSize& rhs) { return !(lhs == rhs); }
 		};
 
-		struct ProcessContext {
-			array_view<float> wave;
-			array_view<float> originalWave;
-			clock::time_point killTime;
-		};
-
-		struct HandlerMetaInfo {
-			using handlerUptr = std::unique_ptr<HandlerBase>;
-			using TransformFun = handlerUptr(*)(handlerUptr old);
-
-			ParamsContainer params;
-			// std::vector<istring> sources;
-			TransformFun transform = [](handlerUptr ptr) -> handlerUptr { return {}; };
-			ExternalMethods externalMethods{};
-		};
-
-		struct Snapshot {
-			Vector2D<float> values;
-			ExternalData handlerSpecificData;
-		};
-
 	protected:
-		struct ParamParseContext {
-			const OptionMap& options;
-			Logger& log;
-			const Rainmeter& rain;
-			Version version;
-
-			ParamParseContext(const OptionMap& om, Logger& cl, const Rainmeter& rain, const Version& version) :
-				options(om), log(cl), rain(rain), version(version) {}
-		};
-
 		struct Configuration {
 			HandlerBase* sourcePtr = nullptr;
 			index sampleRate{};
@@ -157,35 +133,58 @@ namespace rxtd::audio_analyzer::handler {
 			}
 		};
 
-		struct ConfigurationResult {
-			bool success = false;
-			DataSize dataSize;
-
-			ConfigurationResult() = default;
-
-			ConfigurationResult(DataSize dataSize): success(true), dataSize(std::move(dataSize)) { }
-
-			ConfigurationResult(index valuesCount, std::vector<index> eqWaveSizes):
-				ConfigurationResult(DataSize{ valuesCount, std::move(eqWaveSizes) }) { }
-		};
-
 	private:
-		struct LayerCache {
-			mutable std::vector<array_view<float>> chunksView;
-			std::vector<index> offsets;
-		};
-
-		string _name;
-		DataSize _dataSize;
 		DataSize _inputDataSize;
-		mutable bool _layersAreValid = false;
-		std::vector<float> _buffer;
-		std::vector<LayerCache> _layers;
-		Vector2D<float> _lastResults;
-
 		Configuration _configuration{};
 
+		struct HandlerBaseData {
+			string name;
+			DataSize size;
+
+			struct {
+				struct LayerCache {
+					mutable std::vector<array_view<float>> chunksView;
+					std::vector<index> offsets;
+				};
+
+				std::vector<LayerCache> inflatableCache;
+				mutable bool valid = false;
+			} layers;
+
+			std::vector<float> buffer;
+			Vector2D<float> lastResults;
+
+
+			void inflateLayers() const;
+
+			void clearChunks();
+
+
+			[[nodiscard]]
+			array_span<float> pushLayer(index layer);
+		} _data;
+
+
 	public:
+		struct HandlerMetaInfo {
+			using handlerUptr = std::unique_ptr<HandlerBase>;
+			using TransformFun = handlerUptr(*)(handlerUptr old);
+
+			ParamsContainer params;
+			// std::vector<istring> sources;
+			TransformFun transform = [](handlerUptr ptr) -> handlerUptr { return {}; };
+			ExternalMethods externalMethods{};
+		};
+
+		/// <summary>
+		/// Thrown when a handler can't parse it's options
+		/// or when the option values are invalid.
+		/// </summary>
+		class InvalidOptionsException : public std::runtime_error {
+		public:
+			explicit InvalidOptionsException() : runtime_error("") {}
+		};
+
 		/// <summary>
 		/// Creates all the necessary meta info to create an object of a class, patch it and use it.
 		/// Can throw InvalidOptionsException.
@@ -228,6 +227,17 @@ namespace rxtd::audio_analyzer::handler {
 			};
 		}
 
+
+		struct ParamParseContext {
+			const OptionMap& options;
+			Logger& log;
+			const Rainmeter& rain;
+			Version version;
+
+			ParamParseContext(const OptionMap& om, Logger& cl, const Rainmeter& rain, const Version& version) :
+				options(om), log(cl), rain(rain), version(version) {}
+		};
+
 		/// <summary>
 		/// Reads options from map and creates a ParamsContainer object.
 		/// Implementation is allowed to throw InvalidOptionsException.
@@ -236,10 +246,41 @@ namespace rxtd::audio_analyzer::handler {
 		[[nodiscard]]
 		virtual ParamsContainer vParseParams(ParamParseContext& context) const noexcept(false) = 0;
 
+	public:
+		struct ProcessContext {
+			array_view<float> wave;
+			array_view<float> originalWave;
+			clock::time_point killTime;
+		};
+
+		struct Snapshot {
+			Vector2D<float> values;
+			ExternalData handlerSpecificData;
+		};
+
+		void process(ProcessContext context, Snapshot& snapshot) {
+			_data.clearChunks();
+			vProcess(context, snapshot.handlerSpecificData);
+			fillSnapshot(snapshot);
+		}
+
+	protected:
 		// if handler is potentially heavy,
 		// handler should try to return control to caller
 		// when time is more than context.killTime
 		virtual void vProcess(ProcessContext context, ExternalData& handlerSpecificData) = 0;
+
+		struct ConfigurationResult {
+			bool success = false;
+			DataSize dataSize;
+
+			ConfigurationResult() = default;
+
+			ConfigurationResult(DataSize dataSize) : success(true), dataSize(std::move(dataSize)) { }
+
+			ConfigurationResult(index valuesCount, std::vector<index> eqWaveSizes) :
+				ConfigurationResult(DataSize{ valuesCount, std::move(eqWaveSizes) }) { }
+		};
 
 		[[nodiscard]]
 		virtual ConfigurationResult vConfigure(
@@ -263,46 +304,30 @@ namespace rxtd::audio_analyzer::handler {
 			Snapshot& snapshot
 		);
 
-		void process(ProcessContext context, Snapshot& snapshot) {
-			clearChunks();
-
-			vProcess(context, snapshot.handlerSpecificData);
-
-			for (index layer = 0; layer < static_cast<index>(_dataSize.eqWaveSizes.size()); layer++) {
-				auto& offsets = _layers[static_cast<size_t>(layer)].offsets;
-				if (!offsets.empty()) {
-					const auto lastChunk = array_view<float>{ _buffer.data() + offsets.back(), _dataSize.valuesCount };
-					snapshot.values[layer].copyFrom(lastChunk);
-				} else {
-					snapshot.values[layer].copyFrom(_lastResults[layer]);
-				}
-			}
-		}
-
 		// following public members are public for access between handlers
 		[[nodiscard]]
 		const DataSize& getDataSize() const {
-			return _dataSize;
+			return _data.size;
 		}
 
 		[[nodiscard]]
 		array_view<array_view<float>> getChunks(index layer) const {
-			if (layer >= static_cast<index>(_dataSize.eqWaveSizes.size())) {
+			if (layer >= static_cast<index>(_data.size.eqWaveSizes.size())) {
 				return {};
 			}
 
-			inflateLayers();
-			return _layers[static_cast<size_t>(layer)].chunksView;
+			_data.inflateLayers();
+			return _data.layers.inflatableCache[static_cast<size_t>(layer)].chunksView;
 		}
 
 		// returns saved data from previous iteration
 		[[nodiscard]]
 		array_view<float> getSavedData(index layer) const {
-			if (layer >= static_cast<index>(_dataSize.eqWaveSizes.size())) {
+			if (layer >= static_cast<index>(_data.size.eqWaveSizes.size())) {
 				return {};
 			}
 
-			return _lastResults[layer];
+			return _data.lastResults[layer];
 		}
 
 		[[nodiscard]]
@@ -345,20 +370,7 @@ namespace rxtd::audio_analyzer::handler {
 
 		[[nodiscard]]
 		array_span<float> pushLayer(index layer) {
-			const index offset = static_cast<index>(_buffer.size());
-
-			// Prevent handlers from producing too much data
-			// see: https://github.com/d-uzlov/Rainmeter-Plugins-by-rxtd/issues/4
-			if (offset + _dataSize.valuesCount > 1'000'000) {
-				throw TooManyValuesException{ _name };
-			}
-
-			_buffer.resize(static_cast<size_t>(offset + _dataSize.valuesCount));
-			_layersAreValid = false;
-
-			_layers[static_cast<size_t>(layer)].offsets.push_back(offset);
-
-			return { _buffer.data() + offset, _dataSize.valuesCount };
+			return _data.pushLayer(layer);
 		}
 
 		static index legacy_parseIndexProp(const isview& request, const isview& propName, index endBound) {
@@ -372,6 +384,18 @@ namespace rxtd::audio_analyzer::handler {
 		);
 
 	private:
+		void fillSnapshot(Snapshot& snapshot) {
+			for (index layer = 0; layer < static_cast<index>(_data.size.eqWaveSizes.size()); layer++) {
+				auto& offsets = _data.layers.inflatableCache[static_cast<size_t>(layer)].offsets;
+				if (!offsets.empty()) {
+					const auto lastChunk = array_view<float>{ _data.buffer.data() + offsets.back(), _data.size.valuesCount };
+					snapshot.values[layer].copyFrom(lastChunk);
+				} else {
+					snapshot.values[layer].copyFrom(_data.lastResults[layer]);
+				}
+			}
+		}
+
 		template<typename Type>
 		[[nodiscard]]
 		static std::unique_ptr<HandlerBase> patchHandlerImpl(std::unique_ptr<HandlerBase> handlerPtr) {
@@ -382,35 +406,6 @@ namespace rxtd::audio_analyzer::handler {
 			}
 
 			return handlerPtr;
-		}
-
-		void inflateLayers() const {
-			if (_layersAreValid) {
-				return;
-			}
-
-			for (auto& data : _layers) {
-				data.chunksView.resize(data.offsets.size());
-				for (index i = 0; i < static_cast<index>(data.offsets.size()); i++) {
-					data.chunksView[static_cast<size_t>(i)] = { _buffer.data() + data.offsets[static_cast<size_t>(i)], _dataSize.valuesCount };
-				}
-			}
-
-			_layersAreValid = true;
-		}
-
-		void clearChunks() {
-			for (index layer = 0; layer < _dataSize.layersCount; layer++) {
-				auto& offsets = _layers[static_cast<size_t>(layer)].offsets;
-				if (!offsets.empty()) {
-					_lastResults[layer].copyFrom({ _buffer.data() + offsets.back(), _dataSize.valuesCount });
-				}
-				offsets.clear();
-			}
-
-			_layersAreValid = false;
-
-			_buffer.clear();
 		}
 	};
 }

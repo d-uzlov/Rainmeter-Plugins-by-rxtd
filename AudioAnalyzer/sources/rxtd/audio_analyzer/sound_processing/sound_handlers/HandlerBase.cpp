@@ -25,7 +25,7 @@ bool HandlerBase::patch(
 		throw std::exception{ "no support for multiple sources yet" };
 	}
 
-	_name = name;
+	_data.name = name;
 
 	Configuration newConfig;
 	if (!sources.empty()) {
@@ -59,17 +59,17 @@ bool HandlerBase::patch(
 			return {};
 		}
 
-		_dataSize = linkingResult.dataSize;
-		_layers.clear();
-		_layers.resize(static_cast<size_t>(linkingResult.dataSize.layersCount));
-		_lastResults.setBuffersCount(linkingResult.dataSize.layersCount);
-		_lastResults.setBufferSize(linkingResult.dataSize.valuesCount);
-		_lastResults.fill(0.0f);
+		_data.size = linkingResult.dataSize;
+		_data.layers.inflatableCache.clear();
+		_data.layers.inflatableCache.resize(static_cast<size_t>(linkingResult.dataSize.layersCount));
+		_data.lastResults.setBuffersCount(linkingResult.dataSize.layersCount);
+		_data.lastResults.setBufferSize(linkingResult.dataSize.valuesCount);
+		_data.lastResults.fill(0.0f);
 
 		auto& sv = snapshot.values;
-		if (sv.getBuffersCount() != _dataSize.layersCount || sv.getBufferSize() != _dataSize.valuesCount) {
-			snapshot.values.setBuffersCount(_dataSize.layersCount);
-			snapshot.values.setBufferSize(_dataSize.valuesCount);
+		if (sv.getBuffersCount() != _data.size.layersCount || sv.getBufferSize() != _data.size.valuesCount) {
+			snapshot.values.setBuffersCount(_data.size.layersCount);
+			snapshot.values.setBufferSize(_data.size.valuesCount);
 			snapshot.values.fill(0.0f);
 		}
 	}

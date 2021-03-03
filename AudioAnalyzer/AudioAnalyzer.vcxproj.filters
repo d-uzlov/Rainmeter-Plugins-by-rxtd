@@ -305,6 +305,9 @@
     <ClCompile Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\spectrum-stack\Spectrogram.InputStripMaker.cpp">
       <Filter>sources\rxtd\audio_analyzer\sound_processing\sound_handlers\spectrum-stack</Filter>
     </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\HandlerBase.HandlerBaseData.cpp">
+      <Filter>sources\rxtd\audio_analyzer\sound_processing\sound_handlers</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />

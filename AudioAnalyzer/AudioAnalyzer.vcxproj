@@ -101,6 +101,7 @@
     <ClCompile Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\basic-handlers\Loudness.cpp" />
     <ClCompile Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\basic-handlers\WaveForm.cpp" />
     <ClCompile Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\HandlerBase.cpp" />
+    <ClCompile Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\HandlerBase.HandlerBaseData.cpp" />
     <ClCompile Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\spectrum-stack\BandCascadeTransformer.cpp" />
     <ClCompile Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\spectrum-stack\BandResampler.cpp" />
     <ClCompile Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\spectrum-stack\FftAnalyzer.cpp" />
