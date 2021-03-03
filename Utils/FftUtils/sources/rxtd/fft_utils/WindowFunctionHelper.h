@@ -10,6 +10,7 @@
 #pragma once
 #include <functional>
 #include "rxtd/Logger.h"
+#include "rxtd/option_parsing/OptionParser.h"
 
 namespace rxtd::fft_utils {
 	class WindowFunctionHelper {
@@ -18,7 +19,7 @@ namespace rxtd::fft_utils {
 	public:
 		using WindowCreationFunc = std::function<void(array_span<float> result)>;
 
-		static WindowCreationFunc parse(sview desc, Logger& cl);
+		static WindowCreationFunc parse(sview desc, option_parsing::OptionParser parser, Logger& cl);
 		
 		static void createRectangular(array_span<float> result);
 		

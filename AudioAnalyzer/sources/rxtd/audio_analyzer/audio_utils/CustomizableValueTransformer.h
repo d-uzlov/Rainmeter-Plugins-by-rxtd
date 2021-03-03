@@ -10,7 +10,9 @@
 #pragma once
 #include <array>
 #include "rxtd/LinearInterpolator.h"
+#include "rxtd/Logger.h"
 #include "rxtd/option_parsing/OptionList.h"
+#include "rxtd/option_parsing/OptionParser.h"
 
 namespace rxtd::audio_analyzer::audio_utils {
 	class CustomizableValueTransformer {
@@ -80,11 +82,10 @@ namespace rxtd::audio_analyzer::audio_utils {
 		void applyToArray(array_view<float> source, array_span<float> dest);
 
 		[[nodiscard]]
-		static CustomizableValueTransformer parse(sview transformDescription, Logger& cl);
+		static CustomizableValueTransformer parse(sview transformDescription, option_parsing::OptionParser parser, Logger& cl);
 
 	private:
 		[[nodiscard]]
-		static std::optional<TransformationInfo>
-		parseTransformation(OptionList list, Logger& cl);
+		static std::optional<TransformationInfo> parseTransformation(OptionList list, option_parsing::OptionParser parser, Logger& cl);
 	};
 }

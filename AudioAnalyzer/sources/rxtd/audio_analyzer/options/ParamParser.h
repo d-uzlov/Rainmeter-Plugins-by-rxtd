@@ -19,6 +19,7 @@ namespace rxtd::audio_analyzer::options {
 		using Rainmeter = rainmeter::Rainmeter;
 		using OptionMap = option_parsing::OptionMap;
 		using OptionList = option_parsing::OptionList;
+		using Parser = option_parsing::OptionParser;
 
 	public:
 		using ProcessingsInfoMap = std::map<istring, ProcessingData, std::less<>>;
@@ -32,6 +33,7 @@ namespace rxtd::audio_analyzer::options {
 		Version version{};
 		HandlerCacheHelper hch;
 		std::set<istring> handlerNames;
+		mutable Parser parser = option_parsing::OptionParser::getDefault();
 
 		mutable bool anythingChanged = false;
 
@@ -39,10 +41,12 @@ namespace rxtd::audio_analyzer::options {
 		void setRainmeter(Rainmeter value) {
 			rain = std::move(value);
 			hch.setRain(rain);
+			parser.setLogger(rain.createLogger());
+			hch.setParser(parser);
 		}
 
 		// return true if there were any changes since last update, false if there were none
-		bool parse(Version version, bool suppressLogger);
+		bool readOptions(Version version, bool suppressLogger);
 
 		[[nodiscard]]
 		const auto& getParseResult() const {
@@ -52,6 +56,10 @@ namespace rxtd::audio_analyzer::options {
 		[[nodiscard]]
 		Version getVersion() const {
 			return version;
+		}
+
+		auto& getParser() {
+			return parser;
 		}
 
 	private:

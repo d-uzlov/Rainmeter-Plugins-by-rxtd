@@ -139,7 +139,7 @@ namespace rxtd::audio_analyzer::handler {
 		ConfigurationResult vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) override;
 
 	private:
-		static void parseColors(std::vector<ColorDescription>& resultColors, std::vector<float>& levels, OptionList list, Logger& cl);
+		static void parseColors(std::vector<ColorDescription>& resultColors, std::vector<float>& levels, OptionList list, option_parsing::OptionParser& parser, Logger& cl);
 
 	public:
 		void vProcess(ProcessContext context, ExternalData& externalData) override;

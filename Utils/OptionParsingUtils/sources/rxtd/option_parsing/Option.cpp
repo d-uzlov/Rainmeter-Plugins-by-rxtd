@@ -9,18 +9,10 @@
 
 #include "Option.h"
 
-#include <mutex>
-#include <thread>
-
 #include "OptionList.h"
 #include "OptionMap.h"
 #include "OptionSequence.h"
 #include "Tokenizer.h"
-#include "rxtd/DataWithLock.h"
-#include "rxtd/expression_parser/ASTParser.h"
-#include "rxtd/expression_parser/ASTSolver.h"
-#include "rxtd/expression_parser/GrammarBuilder.h"
-#include "rxtd/std_fixes/StringUtils.h"
 
 using rxtd::option_parsing::Option;
 using rxtd::option_parsing::GhostOption;
@@ -28,17 +20,6 @@ using rxtd::option_parsing::OptionMap;
 using rxtd::option_parsing::OptionList;
 using rxtd::option_parsing::OptionSequence;
 using StringUtils = rxtd::std_fixes::StringUtils;
-
-// todo redesign and remove global state
-Option::LoggerContainer Option::loggerContainer; // NOLINT(clang-diagnostic-exit-time-destructors)
-
-void Option::setLogger(Logger value) {
-	loggerContainer.runGuarded(
-		[&]() {
-			loggerContainer.logger = std::move(value);
-		}
-	);
-}
 
 rxtd::sview Option::asString(sview defaultValue) const & {
 	sview view = getView();
@@ -55,29 +36,6 @@ rxtd::isview Option::asIString(isview defaultValue) const & {
 	}
 	return view % ciView();
 
-}
-
-double Option::asFloat(double defaultValue) const {
-	sview view = getView();
-	if (view.empty()) {
-		return defaultValue;
-	}
-
-	return parseNumber(view);
-}
-
-bool Option::asBool(bool defaultValue) const {
-	const isview view = getView() % ciView();
-	if (view.empty()) {
-		return defaultValue;
-	}
-	if (view == L"true") {
-		return true;
-	}
-	if (view == L"false") {
-		return false;
-	}
-	return asFloat() != 0.0;
 }
 
 std::pair<GhostOption, GhostOption> Option::breakFirst(wchar_t separator) const & {
@@ -143,93 +101,6 @@ OptionSequence Option::asSequence(
 	} else {
 		return { getView(), optionBegin, optionEnd, optionDelimiter };
 	}
-}
-
-//
-// ASTParser initialization is expensive.
-// It involves defining grammar with a lot of memory allocation and computing
-// and initializing inner structures with a lot of memory allocations and computing.
-//
-// It doesn't make much sense to create a parser for each Option instance:
-//		There are a lot of options, that doesn't even need number parsing.
-//		Maybe it would be better to initialize parser only when needed,
-//		but that's still expensive, considering that most options would only be used once.
-//
-// It doesn't make much sense to create a parser for each Option#parseNumber() call.
-//
-// It doesn't make sense to keep parsers in other classes with longer lifetime, like OptionMap:
-//		Options is an independent class, it can be created from string.
-//
-// It would make a lot of sense to make parser a thread_local variable.
-// Unfortunately, in DLLs thread local variables are not destructed on dll unload.
-// But they are initialized again and again on every DLL load, which crates memory leak.
-// Maybe this behaviour depends on compiler or system,
-// but using thread_local is not a reliable solution.
-//
-// Global objects, unlike thead_local, are destroyed on dll unload.
-//
-// It's possible to use pointers as a thread_local value,
-// and let global variables handle memory management,
-// and since pointers are plain objects that don't need to be destructed,
-// it would prevent memory leak.
-// But then the pointer itself would leak memory from thread local storage,
-// albeit only 8 bytes per thread per DLL load.
-//
-//
-// I believe that ASTParser initialization is expensive enough
-// to justify locking a mutex and std::this_thread::get_id()
-// on each call to Option#parseNumber().
-//
-class ParserKeeper {
-	struct ParserMap : public rxtd::DataWithLock {
-		std::map<std::thread::id, std::unique_ptr<rxtd::expression_parser::ASTParser>> m;
-	};
-
-	ParserMap mapWithLock;
-
-public:
-	using ASTParser = rxtd::expression_parser::ASTParser;
-
-	ASTParser& getParser(std::thread::id id = std::this_thread::get_id()) {
-		ASTParser* parserPtr = mapWithLock.runGuarded(
-			[&]() -> ASTParser* {
-				auto& parserOpt = mapWithLock.m[id];
-				if (parserOpt == nullptr) {
-					parserOpt = std::make_unique<ASTParser>();
-
-					parserOpt->setGrammar(rxtd::expression_parser::GrammarBuilder::makeSimpleMath(), false);
-				}
-
-				return parserOpt.get();
-			}
-		);
-
-		return *parserPtr;
-	}
-};
-
-static ParserKeeper parserKeeper{}; // NOLINT(clang-diagnostic-exit-time-destructors)
-
-double Option::parseNumber(sview source) {
-	auto& parser = parserKeeper.getParser();
-
-	try {
-		parser.parse(source);
-
-		expression_parser::ASTSolver solver{ parser.takeTree() };
-		return solver.solve(nullptr);
-	} catch (expression_parser::ASTSolver::Exception& e) {
-		auto lock = loggerContainer.getLock();
-		loggerContainer.logger.error(L"can't parse '{}' as a number: {}", source, e.getMessage());
-	} catch (expression_parser::Lexer::Exception& e) {
-		auto lock = loggerContainer.getLock();
-		loggerContainer.logger.error(L"can't parse '{}' as a number: unknown token here: '{}'", source, source.substr(e.getPosition()));
-	} catch (expression_parser::ASTParser::Exception& e) {
-		auto lock = loggerContainer.getLock();
-		loggerContainer.logger.error(L"can't parse '{}' as a number: {}, at position: '{}'", source, e.getReason(), source.substr(e.getPosition()));
-	}
-
-	return 0;
 }
 
 std::wostream& rxtd::option_parsing::operator<<(std::wostream& stream, const Option& opt) {

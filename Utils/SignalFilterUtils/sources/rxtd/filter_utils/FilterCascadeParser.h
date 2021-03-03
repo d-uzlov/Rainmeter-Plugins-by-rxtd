@@ -14,6 +14,7 @@
 #include "rxtd/Logger.h"
 #include "rxtd/filter_utils/butterworth_lib/ButterworthWrapper.h"
 #include "rxtd/option_parsing/Option.h"
+#include "rxtd/option_parsing/OptionParser.h"
 
 namespace rxtd::filter_utils {
 	class FilterCascadeCreator {
@@ -42,7 +43,11 @@ namespace rxtd::filter_utils {
 		FilterCascade getInstance(double samplingFrequency) const;
 	};
 
+	class FilterParser { };
+
 	class FilterCascadeParser {
+		option_parsing::OptionParser& parser;
+
 	public:
 		using FCF = FilterCascadeCreator::FilterCreationFunction;
 
@@ -51,22 +56,25 @@ namespace rxtd::filter_utils {
 		using OptionMap = option_parsing::OptionMap;
 		using ButterworthWrapper = butterworth_lib::ButterworthWrapper;
 
+		FilterCascadeParser(option_parsing::OptionParser& parser) :
+			parser(parser) {}
+
 		[[nodiscard]]
-		static FilterCascadeCreator parse(const Option& description, Logger& logger);
+		FilterCascadeCreator parse(const Option& description, Logger& logger);
 
 	private:
 		[[nodiscard]]
-		static FCF parseFilter(const OptionList& description, Logger& logger);
+		FCF parseFilter(const OptionList& description, Logger& logger);
 
 		[[nodiscard]]
-		static FCF parseBQ(isview name, const OptionMap& description, Logger& cl);
+		FCF parseBQ(isview name, const OptionMap& description, Logger& cl);
 
 		[[nodiscard]]
-		static FCF parseBW(isview name, const OptionMap& description, Logger& cl);
+		FCF parseBW(isview name, const OptionMap& description, Logger& cl);
 
 		template<index size>
 		[[nodiscard]]
-		static FCF createButterworthMaker(
+		FCF createButterworthMaker(
 			index order,
 			double forcedGain,
 			double freq1, double freq2,
@@ -75,7 +83,7 @@ namespace rxtd::filter_utils {
 
 		template<ButterworthWrapper::SizeFuncSignature sizeFunc>
 		[[nodiscard]]
-		static FCF createButterworth(
+		FCF createButterworth(
 			index order,
 			double forcedGain,
 			double freq1, double freq2,

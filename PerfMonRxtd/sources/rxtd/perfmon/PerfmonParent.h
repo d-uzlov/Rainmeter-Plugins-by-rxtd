@@ -60,6 +60,7 @@
 #include "instances/RollupInstanceManager.h"
 #include "instances/SimpleInstanceManager.h"
 #include "pdh/PdhWrapper.h"
+#include "rxtd/option_parsing/OptionParser.h"
 #include "rxtd/rainmeter/MeasureBase.h"
 
 namespace rxtd::perfmon {
@@ -80,6 +81,7 @@ namespace rxtd::perfmon {
 		bool needUpdate = true;
 
 		pdh::PdhWrapper pdhWrapper;
+		option_parsing::OptionParser parser = option_parsing::OptionParser::getDefault();
 
 		SimpleInstanceManager simpleInstanceManager{ logger, pdhWrapper };
 		RollupInstanceManager rollupInstanceManager{ logger, simpleInstanceManager };

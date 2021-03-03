@@ -21,6 +21,8 @@ PerfmonChild::PerfmonChild(Rainmeter&& _rain) : MeasureBase(std::move(_rain)) {
 	}
 	parent = utils::ParentMeasureBase::find<PerfmonParent>(rain.getSkin(), parentName);
 
+	parser.setLogger(logger);
+
 	if (parent == nullptr) {
 		logger.error(L"Parent '{}' is not found", parentName);
 		throw std::runtime_error{ "" };
@@ -28,11 +30,11 @@ PerfmonChild::PerfmonChild(Rainmeter&& _rain) : MeasureBase(std::move(_rain)) {
 }
 
 void PerfmonChild::vReload() {
-	instanceIndex = rain.read(L"InstanceIndex").asInt();
-	ref.counter = rain.read(L"CounterIndex").asInt();
-	ref.useOrigName = rain.read(L"SearchOriginalName").asBool();
-	ref.total = rain.read(L"Total").asBool();
-	ref.discarded = rain.read(L"Discarded").asBool();
+	instanceIndex = parser.parseInt(rain.read(L"InstanceIndex"));
+	ref.counter = parser.parseInt(rain.read(L"CounterIndex"));
+	ref.useOrigName = parser.parseBool(rain.read(L"SearchOriginalName"));
+	ref.total = parser.parseBool(rain.read(L"Total"));
+	ref.discarded = parser.parseBool(rain.read(L"Discarded"));
 
 
 	instanceName = rain.read(L"InstanceName").asString();

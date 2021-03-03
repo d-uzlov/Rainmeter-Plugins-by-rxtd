@@ -48,6 +48,9 @@
     <ClInclude Include="sources\rxtd\filter_utils\LogarithmicIRF.h" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ExpressionParser\ExpressionParser.vcxproj">
+      <Project>{69308053-9c59-46c7-9158-a17de9e7615b}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\Logger\Logger.vcxproj">
       <Project>{2b8f5b9c-15d2-441d-9158-90e3f53c7606}</Project>
     </ProjectReference>

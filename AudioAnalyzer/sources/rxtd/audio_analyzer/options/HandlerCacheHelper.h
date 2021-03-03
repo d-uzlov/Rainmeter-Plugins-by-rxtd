@@ -30,8 +30,13 @@ namespace rxtd::audio_analyzer::options {
 		bool anythingChanged = false;
 		bool unusedOptionsWarning = false;
 		Version version{};
+		option_parsing::OptionParser* parserPtr = nullptr;
 
 	public:
+		void setParser(option_parsing::OptionParser& parser) {
+			parserPtr = &parser;
+		}
+
 		void setRain(Rainmeter value) {
 			rain = std::move(value);
 		}

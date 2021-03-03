@@ -51,8 +51,8 @@ namespace rxtd::audio_analyzer::handler {
 		ParamsContainer vParseParams(ParamParseContext& context) const noexcept(false) override;
 
 	private:
-		static void parseFreqListElement(OptionList& options, std::vector<float>& freqs, Logger& cl);
-		static std::vector<float> parseFreqList(Option freqListOption, Logger& cl);
+		static void parseFreqListElement(OptionList& options, std::vector<float>& freqs, Parser& parser, Logger& cl);
+		static std::vector<float> parseFreqList(Option freqListOption, Parser& parser, Logger& cl);
 		static std::vector<float> makeBandsFromFreqs(array_span<float> freqs, Logger& cl);
 
 	protected:

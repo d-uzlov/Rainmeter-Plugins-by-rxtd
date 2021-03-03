@@ -33,6 +33,8 @@ FilterCascade FilterCascadeCreator::getInstance(double samplingFrequency) const 
 FilterCascadeCreator FilterCascadeParser::parse(const Option& description, Logger& logger) {
 	std::vector<FCF> result;
 
+	parser.setLogger(logger);
+
 	for (auto filterDescription : description.asSequence()) {
 		auto patcher = parseFilter(filterDescription, logger);
 		if (patcher == nullptr) {
@@ -80,16 +82,16 @@ FilterCascadeParser::parseBQ(isview name, const OptionMap& description, Logger& 
 		return {};
 	}
 
-	const double q = std::max<double>(description.get(L"q").asFloat(), std::numeric_limits<float>::epsilon());
+	const double q = std::max<double>(parser.parseFloat(description.get(L"q")), std::numeric_limits<float>::epsilon());
 	const double centralFrequency = std::max<double>(
-		description.get(L"freq").asFloat(),
+		parser.parseFloat(description.get(L"freq")),
 		std::numeric_limits<float>::epsilon()
 	);
 	double gain = 0.0;
 	if (name == L"bqHighShelf" || name == L"bqLowShelf" || name == L"bqPeak") {
-		gain = description.get(L"gain").asFloat();
+		gain = parser.parseFloat(description.get(L"gain"));
 	}
-	const double forcedGain = description.get(L"forcedGain").asFloat();
+	const double forcedGain = parser.parseFloat(description.get(L"forcedGain"));
 
 	const auto unused = description.getListOfUntouched();
 	if (!unused.empty()) {
@@ -147,17 +149,17 @@ FilterCascadeParser::parseBW(isview name, const OptionMap& description, Logger& 
 		return {};
 	}
 
-	const index order = description.get(L"order").asInt();
+	const index order = parser.parseInt(description.get(L"order"));
 	if (order <= 0 || order > 5) {
 		cl.error(L"order must be in range [1, 5] but {} found", order);
 		return {};
 	}
 
-	const double cutoff = description.get(L"freq").asFloat();
-	const double cutoffLow = description.get(L"freqLow").asFloat();
-	const double cutoffHigh = description.get(L"freqHigh").asFloat();
+	const double cutoff = parser.parseFloat(description.get(L"freq"));
+	const double cutoffLow = parser.parseFloat(description.get(L"freqLow"));
+	const double cutoffHigh = parser.parseFloat(description.get(L"freqHigh"));
 
-	const double forcedGain = description.get(L"forcedGain").asFloat();
+	const double forcedGain = parser.parseFloat(description.get(L"forcedGain"));
 
 	const auto unused = description.getListOfUntouched();
 	if (!unused.empty()) {

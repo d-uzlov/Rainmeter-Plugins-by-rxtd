@@ -28,7 +28,7 @@ ParamsContainer Spectrogram::vParseParams(ParamParseContext& context) const noex
 		throw InvalidOptionsException{};
 	}
 
-	params.length = context.options.get(L"length").asInt(100);
+	params.length = context.parser.parseInt(context.options.get(L"length"), 100);
 	if (params.length < 2) {
 		context.log.error(L"length must be >= 2 but {} found", params.length);
 		throw InvalidOptionsException{};
@@ -37,7 +37,7 @@ ParamsContainer Spectrogram::vParseParams(ParamParseContext& context) const noex
 		context.log.warning(L"dangerously large length {}", params.length);
 	}
 
-	params.resolution = context.options.get(L"resolution").asFloat(50);
+	params.resolution = context.parser.parseFloat(context.options.get(L"resolution"), 50);
 	if (params.resolution <= 0) {
 		context.log.error(L"resolution must be > 0 but {} found", params.resolution);
 		throw InvalidOptionsException{};
@@ -63,11 +63,11 @@ ParamsContainer Spectrogram::vParseParams(ParamParseContext& context) const noex
 
 	if (!context.options.get(L"colors").empty()) {
 		auto colorsDescriptionList = context.options.get(L"colors").asList(L';');
-		parseColors(params.colors, params.colorLevels, colorsDescriptionList, context.log.context(L"colors: "));
+		parseColors(params.colors, params.colorLevels, colorsDescriptionList, context.parser, context.log.context(L"colors: "));
 	} else {
 		params.colors.resize(2);
-		params.colors[0].color = Color::parse(context.options.get(L"baseColor").asString(), { 0.0f, 0.0f, 0.0f });
-		params.colors[1].color = Color::parse(context.options.get(L"maxColor").asString(), { 1.0f, 1.0f, 1.0f });
+		params.colors[0].color = Color::parse(context.options.get(L"baseColor").asString(), context.parser, { 0.0f, 0.0f, 0.0f });
+		params.colors[1].color = Color::parse(context.options.get(L"maxColor").asString(), context.parser, { 1.0f, 1.0f, 1.0f });
 		params.colorLevels.push_back(0.0f);
 		params.colorLevels.push_back(1.0f);
 	}
@@ -76,15 +76,15 @@ ParamsContainer Spectrogram::vParseParams(ParamParseContext& context) const noex
 		color = color.convert(params.mixMode);
 	}
 
-	params.borderColor = Color::parse(context.options.get(L"borderColor").asString(), { 1.0f, 0.2f, 0.2f });
+	params.borderColor = Color::parse(context.options.get(L"borderColor").asString(), context.parser, { 1.0f, 0.2f, 0.2f });
 
-	params.fading = std::clamp(context.options.get(L"FadingRatio").asFloat(0.0), 0.0, 1.0);
+	params.fading = std::clamp(context.parser.parseFloat(context.options.get(L"FadingRatio"), 0.0), 0.0, 1.0);
 
-	params.borderSize = std::clamp<index>(context.options.get(L"borderSize").asInt(0), 0, params.length / 2);
+	params.borderSize = std::clamp<index>(context.parser.parseInt(context.options.get(L"borderSize"), 0), 0, params.length / 2);
 
-	params.stationary = context.options.get(L"stationary").asBool(false);
+	params.stationary = context.parser.parseBool(context.options.get(L"stationary"), false);
 
-	params.silenceThreshold = context.options.get(L"silenceThreshold").asFloatF(-70);
+	params.silenceThreshold = context.parser.parseFloatF(context.options.get(L"silenceThreshold"), -70);
 	params.silenceThreshold = MyMath::db2amplitude(params.silenceThreshold);
 
 	return params;
@@ -128,7 +128,7 @@ Spectrogram::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData
 	return { 0, {} };
 }
 
-void Spectrogram::parseColors(std::vector<ColorDescription>& resultColors, std::vector<float>& levels, OptionList list, Logger& cl) {
+void Spectrogram::parseColors(std::vector<ColorDescription>& resultColors, std::vector<float>& levels, OptionList list, option_parsing::OptionParser& parser, Logger& cl) {
 	float prevValue = -std::numeric_limits<float>::infinity();
 
 	bool first = true;
@@ -140,7 +140,7 @@ void Spectrogram::parseColors(std::vector<ColorDescription>& resultColors, std::
 			throw InvalidOptionsException{};
 		}
 
-		float value = valueOpt.asFloatF();
+		float value = parser.parseFloatF(valueOpt);
 
 		if (value <= prevValue) {
 			cl.error(L"values {} and {}: values must be increasing", prevValue, value);
@@ -153,7 +153,7 @@ void Spectrogram::parseColors(std::vector<ColorDescription>& resultColors, std::
 		}
 
 		levels.push_back(value);
-		const auto color = Color::parse(colorOpt.asString());
+		const auto color = Color::parse(colorOpt.asString(), parser);
 		if (first) {
 			first = false;
 		} else {

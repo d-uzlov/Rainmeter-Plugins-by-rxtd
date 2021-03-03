@@ -102,38 +102,40 @@ HandlerBase::HandlerMetaInfo HandlerCacheHelper::createHandlerPatcher(
 		throw HandlerBase::InvalidOptionsException{};
 	}
 
+	HandlerBase::ParamParseContext parseContext{ optionMap, cl, rain, version, *parserPtr };
+
 	if (type == L"rms") {
-		return HandlerBase::createMetaForClass<BlockRms>(optionMap, cl, rain, version);
+		return HandlerBase::createMetaForClass<BlockRms>(parseContext);
 	}
 	if (type == L"peak") {
-		return HandlerBase::createMetaForClass<BlockPeak>(optionMap, cl, rain, version);
+		return HandlerBase::createMetaForClass<BlockPeak>(parseContext);
 	}
 	if (type == L"fft") {
-		return HandlerBase::createMetaForClass<FftAnalyzer>(optionMap, cl, rain, version);
+		return HandlerBase::createMetaForClass<FftAnalyzer>(parseContext);
 	}
 	if (type == L"BandResampler") {
-		return HandlerBase::createMetaForClass<BandResampler>(optionMap, cl, rain, version);
+		return HandlerBase::createMetaForClass<BandResampler>(parseContext);
 	}
 	if (type == L"BandCascadeTransformer") {
-		return HandlerBase::createMetaForClass<BandCascadeTransformer>(optionMap, cl, rain, version);
+		return HandlerBase::createMetaForClass<BandCascadeTransformer>(parseContext);
 	}
 	if (type == L"UniformBlur") {
-		return HandlerBase::createMetaForClass<UniformBlur>(optionMap, cl, rain, version);
+		return HandlerBase::createMetaForClass<UniformBlur>(parseContext);
 	}
 	if (type == L"spectrogram") {
-		return HandlerBase::createMetaForClass<Spectrogram>(optionMap, cl, rain, version);
+		return HandlerBase::createMetaForClass<Spectrogram>(parseContext);
 	}
 	if (type == L"waveform") {
-		return HandlerBase::createMetaForClass<WaveForm>(optionMap, cl, rain, version);
+		return HandlerBase::createMetaForClass<WaveForm>(parseContext);
 	}
 	if (type == L"loudness") {
-		return HandlerBase::createMetaForClass<Loudness>(optionMap, cl, rain, version);
+		return HandlerBase::createMetaForClass<Loudness>(parseContext);
 	}
 	if (type == L"ValueTransformer") {
-		return HandlerBase::createMetaForClass<SingleValueTransformer>(optionMap, cl, rain, version);
+		return HandlerBase::createMetaForClass<SingleValueTransformer>(parseContext);
 	}
 	if (type == L"TimeResampler") {
-		return HandlerBase::createMetaForClass<TimeResampler>(optionMap, cl, rain, version);
+		return HandlerBase::createMetaForClass<TimeResampler>(parseContext);
 	}
 
 	cl.error(L"unknown type '{}'", type);

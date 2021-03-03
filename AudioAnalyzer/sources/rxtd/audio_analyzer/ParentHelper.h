@@ -121,6 +121,7 @@ namespace rxtd::audio_analyzer {
 			Rainmeter _rain,
 			Logger _logger,
 			const OptionMap& threadingMap,
+			option_parsing::OptionParser& parser,
 			Version version
 		);
 

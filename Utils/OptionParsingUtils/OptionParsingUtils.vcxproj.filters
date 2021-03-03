@@ -30,6 +30,9 @@
     <ClCompile Include="sources\rxtd\option_parsing\Tokenizer.cpp">
       <Filter>sources\rxtd\option_parsing</Filter>
     </ClCompile>
+    <ClCompile Include="sources\rxtd\option_parsing\OptionParser.cpp">
+      <Filter>sources\rxtd\option_parsing</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sources\rxtd\option_parsing\Option.h">
@@ -48,6 +51,9 @@
       <Filter>sources\rxtd\option_parsing</Filter>
     </ClInclude>
     <ClInclude Include="sources\rxtd\option_parsing\Tokenizer.h">
+      <Filter>sources\rxtd\option_parsing</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\option_parsing\OptionParser.h">
       <Filter>sources\rxtd\option_parsing</Filter>
     </ClInclude>
   </ItemGroup>

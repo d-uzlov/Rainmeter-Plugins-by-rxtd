@@ -10,7 +10,6 @@
 #pragma once
 #include "OptionBase.h"
 #include "rxtd/DataWithLock.h"
-#include "rxtd/Logger.h"
 
 namespace rxtd::option_parsing {
 	class GhostOption;
@@ -23,12 +22,6 @@ namespace rxtd::option_parsing {
 	// See documentation of respective classes to learn about syntax for OptionMap, OptionList, OptionSequence
 	//
 	class Option : public OptionBase {
-		struct LoggerContainer : public DataWithLock {
-			Logger logger = Logger::getSilent();
-		};
-
-		static LoggerContainer loggerContainer;
-
 	public:
 		Option() = default;
 
@@ -37,8 +30,6 @@ namespace rxtd::option_parsing {
 		explicit Option(isview view) : Option(view % csView()) { }
 
 		explicit Option(const wchar_t* view) : Option(sview{ view }) {}
-
-		static void setLogger(Logger value);
 
 		// Raw view of the option.
 		[[nodiscard]]
@@ -61,32 +52,6 @@ namespace rxtd::option_parsing {
 		istring asIString(isview defaultValue = {}) const && {
 			return istring{ asIString(defaultValue) };
 		}
-
-		// Parse float, support math operations.
-		[[nodiscard]]
-		double asFloat(double defaultValue = 0.0) const;
-
-		// Parse float, support math operations.
-		[[nodiscard]]
-		float asFloatF(float defaultValue = 0.0) const {
-			return static_cast<float>(asFloat(static_cast<double>(defaultValue)));
-		}
-
-		// Parse integer value, support math operations.
-		template<typename IntType = int32_t>
-		IntType asInt(IntType defaultValue = 0) const {
-			static_assert(std::is_integral<IntType>::value);
-
-			const auto dVal = asFloat(static_cast<double>(defaultValue));
-			if (dVal > static_cast<double>(std::numeric_limits<IntType>::max()) ||
-				dVal < static_cast<double>(std::numeric_limits<IntType>::lowest())) {
-				return defaultValue;
-			}
-			return static_cast<IntType>(dVal);
-		}
-
-		[[nodiscard]]
-		bool asBool(bool defaultValue = false) const;
 
 		// Returns a pair of options,
 		// where first Option contains content before first inclusion of separator
@@ -127,10 +92,6 @@ namespace rxtd::option_parsing {
 		bool empty() const {
 			return getView().empty();
 		}
-
-	private:
-		[[nodiscard]]
-		static double parseNumber(sview source);
 	};
 
 	std::wostream& operator<<(std::wostream& stream, const Option& opt);

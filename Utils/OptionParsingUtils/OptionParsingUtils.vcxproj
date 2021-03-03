@@ -24,6 +24,7 @@
   <ItemGroup>
     <ClCompile Include="sources\rxtd\option_parsing\Option.cpp" />
     <ClCompile Include="sources\rxtd\option_parsing\OptionMap.cpp" />
+    <ClCompile Include="sources\rxtd\option_parsing\OptionParser.cpp" />
     <ClCompile Include="sources\rxtd\option_parsing\Tokenizer.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -31,6 +32,7 @@
     <ClInclude Include="sources\rxtd\option_parsing\OptionBase.h" />
     <ClInclude Include="sources\rxtd\option_parsing\OptionList.h" />
     <ClInclude Include="sources\rxtd\option_parsing\OptionMap.h" />
+    <ClInclude Include="sources\rxtd\option_parsing\OptionParser.h" />
     <ClInclude Include="sources\rxtd\option_parsing\OptionSequence.h" />
     <ClInclude Include="sources\rxtd\option_parsing\Tokenizer.h" />
   </ItemGroup>

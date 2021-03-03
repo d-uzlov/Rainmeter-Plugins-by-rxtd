@@ -20,21 +20,21 @@ ParamsContainer Loudness::vParseParams(ParamParseContext& context) const noexcep
 	Params params;
 
 	auto transformLogger = context.log.context(L"transform: ");
-	params.transformer = CVT::parse(context.options.get(L"transform").asString(), transformLogger);
+	params.transformer = CVT::parse(context.options.get(L"transform").asString(), context.parser, transformLogger);
 
-	params.gatingLimit = context.options.get(L"gatingLimit").asFloat(0.5);
+	params.gatingLimit = context.parser.parseFloat(context.options.get(L"gatingLimit"), 0.5);
 	params.gatingLimit = std::clamp(params.gatingLimit, 0.0, 1.0);
 
-	params.updatesPerSecond = context.options.get(L"updateRate").asFloat(20.0);
+	params.updatesPerSecond = context.parser.parseFloat(context.options.get(L"updateRate"), 20.0);
 	params.updatesPerSecond = std::clamp(params.updatesPerSecond, 0.01, 60.0);
 
-	params.timeWindowMs = context.options.get(L"timeWindow").asFloat(1000.0);
+	params.timeWindowMs = context.parser.parseFloat(context.options.get(L"timeWindow"), 1000.0);
 	params.timeWindowMs = std::clamp(params.timeWindowMs, 0.01, 10000.0);
 
-	params.gatingDb = context.options.get(L"gatingDb").asFloat(-20.0);
+	params.gatingDb = context.parser.parseFloat(context.options.get(L"gatingDb"), -20.0);
 	params.gatingDb = std::clamp(params.gatingDb, -70.0, 0.0);
 
-	params.ignoreGatingForSilence = context.options.get(L"ignoreGatingForSilence").asBool(true);
+	params.ignoreGatingForSilence = context.parser.parseBool(context.options.get(L"ignoreGatingForSilence"), true);
 
 	return params;
 }

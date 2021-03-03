@@ -31,19 +31,19 @@ ParamsContainer BandResampler::vParseParams(ParamParseContext& context) const no
 		throw InvalidOptionsException{};
 	}
 
-	params.bandFreqs = parseFreqList(context.options.get(L"bands"), context.log.context(L"bands: "));
+	params.bandFreqs = parseFreqList(context.options.get(L"bands"), context.parser, context.log.context(L"bands: "));
 
 	if (params.bandFreqs.size() < 2) {
 		context.log.error(L"need >= 2 frequencies but only {} found", params.bandFreqs.size());
 		throw InvalidOptionsException{};
 	}
 
-	params.useCubicResampling = context.options.get(L"cubicInterpolation").asBool(true);
+	params.useCubicResampling = context.parser.parseBool(context.options.get(L"cubicInterpolation"), true);
 
 	return params;
 }
 
-void BandResampler::parseFreqListElement(OptionList& options, std::vector<float>& freqs, Logger& cl) {
+void BandResampler::parseFreqListElement(OptionList& options, std::vector<float>& freqs, Parser& parser, Logger& cl) {
 	auto type = options.get(0).asIString();
 
 	if (type == L"custom") {
@@ -52,7 +52,7 @@ void BandResampler::parseFreqListElement(OptionList& options, std::vector<float>
 			throw InvalidOptionsException{};
 		}
 		for (index i = 1; i < options.size(); ++i) {
-			freqs.push_back(options.get(i).asFloatF());
+			freqs.push_back(parser.parseFloatF(options.get(i)));
 		}
 		return;
 	}
@@ -67,14 +67,14 @@ void BandResampler::parseFreqListElement(OptionList& options, std::vector<float>
 		throw InvalidOptionsException{};
 	}
 
-	const index count = options.get(1).asInt(0);
+	const index count = parser.parseInt(options.get(1), 0);
 	if (count < 1) {
 		cl.error(L"count must be >= 1");
 		throw InvalidOptionsException{};
 	}
 
-	const auto min = options.get(2).asFloatF();
-	const auto max = options.get(3).asFloatF();
+	const auto min = parser.parseFloatF(options.get(2));
+	const auto max = parser.parseFloatF(options.get(3));
 	if (max <= min) {
 		cl.error(L"max must be > min");
 		throw InvalidOptionsException{};
@@ -99,11 +99,11 @@ void BandResampler::parseFreqListElement(OptionList& options, std::vector<float>
 	}
 }
 
-std::vector<float> BandResampler::parseFreqList(Option freqListOption, Logger& cl) {
+std::vector<float> BandResampler::parseFreqList(Option freqListOption, Parser& parser, Logger& cl) {
 	std::vector<float> freqs;
 
 	auto options = freqListOption.asList(L' ');
-	parseFreqListElement(options, freqs, cl);
+	parseFreqListElement(options, freqs, parser, cl);
 
 	return makeBandsFromFreqs(freqs, cl);
 }

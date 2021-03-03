@@ -19,19 +19,20 @@ using rxtd::audio_analyzer::options::ProcessingData;
 using rxtd::audio_analyzer::Channel;
 using rxtd::filter_utils::FilterCascadeParser;
 
-bool ParamParser::parse(Version _version, bool suppressLogger) {
+bool ParamParser::readOptions(Version _version, bool suppressLogger) {
 	anythingChanged = false;
 	version = _version;
 
 	auto logger = suppressLogger ? Logger::getSilent() : rain.createLogger();
 
-	auto defaultTargetRate = rain.read(L"TargetRate").asInt(44100);
+	parser.setLogger(logger);
+	auto defaultTargetRate = parser.parseInt(rain.read(L"TargetRate"), 44100);
 	if (defaultTargetRate < 0) {
 		logger.warning(L"Invalid TargetRate {}, must be > 0. Assume 0.", defaultTargetRate);
 		defaultTargetRate = 0;
 	}
 
-	unusedOptionsWarning = rain.read(L"UnusedOptionsWarning").asBool(true);
+	unusedOptionsWarning = parser.parseBool(rain.read(L"UnusedOptionsWarning"), true);
 
 	auto processingIndices = rain.read(L"Processing").asList(L'|');
 	if (!checkListUnique(processingIndices)) {
@@ -153,8 +154,12 @@ void ParamParser::parseFilter(const OptionMap& optionMap, ProcessingData::Filter
 		return;
 	}
 
+	parser.setLogger(cl);
+	FilterCascadeParser fcp{ parser };
+
+
 	if (filterType == L"like-a") {
-		fi.creator = FilterCascadeParser::parse(
+		fi.creator = fcp.parse(
 			option_parsing::Option{
 				L"bqHighPass[q 0.3, freq 200, forcedGain 3.58]  " // spaces in the ends of the strings are necessary
 				L"bwLowPass[order 5, freq 10000] "
@@ -164,7 +169,7 @@ void ParamParser::parseFilter(const OptionMap& optionMap, ProcessingData::Filter
 	}
 
 	if (filterType == L"like-d") {
-		fi.creator = FilterCascadeParser::parse(
+		fi.creator = fcp.parse(
 			option_parsing::Option{
 				L"bqHighPass[q 0.3, freq 200, forcedGain 3.65]  " // spaces in the ends of the strings are necessary
 				L"bqPeak[q 1.0, freq 6000, gain 5.28] "
@@ -175,7 +180,7 @@ void ParamParser::parseFilter(const OptionMap& optionMap, ProcessingData::Filter
 	}
 
 	if (filterType == L"custom") {
-		fi.creator = FilterCascadeParser::parse(filterParams, filterLogger);
+		fi.creator = fcp.parse(filterParams, filterLogger);
 		return;
 	}
 
@@ -184,7 +189,7 @@ void ParamParser::parseFilter(const OptionMap& optionMap, ProcessingData::Filter
 }
 
 void ParamParser::parseTargetRate(const OptionMap& optionMap, ProcessingData& data, Logger& cl) const {
-	const auto targetRate = optionMap.get(L"targetRate").asInt(defaultTargetRate);
+	const auto targetRate = parser.parseInt(optionMap.get(L"targetRate"), defaultTargetRate);
 	if (targetRate == data.targetRate) {
 		return;
 	}

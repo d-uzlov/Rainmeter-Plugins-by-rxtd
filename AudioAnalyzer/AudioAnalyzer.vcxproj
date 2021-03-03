@@ -118,6 +118,9 @@
     <ClCompile Include="sources\rxtd\audio_analyzer\wasapi_wrappers\MediaDeviceHandle.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Utils\ExpressionParser\ExpressionParser.vcxproj">
+      <Project>{69308053-9c59-46c7-9158-a17de9e7615b}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\Utils\FftUtils\FftUtils.vcxproj">
       <Project>{1c4c178d-a05d-4e2b-9dca-8c3baf84bed9}</Project>
     </ProjectReference>

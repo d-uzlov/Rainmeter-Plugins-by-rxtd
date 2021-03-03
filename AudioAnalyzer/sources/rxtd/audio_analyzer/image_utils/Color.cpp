@@ -19,7 +19,7 @@ using rxtd::option_parsing::Option;
 using rxtd::std_fixes::StringUtils;
 using rxtd::Logger;
 
-Color Color::parse(sview desc, Color defaultValue) {
+Color Color::parse(sview desc, option_parsing::OptionParser& parser, Color defaultValue) {
 	if (desc.empty()) {
 		return defaultValue;
 	}
@@ -87,10 +87,10 @@ Color Color::parse(sview desc, Color defaultValue) {
 		return defaultValue;
 	}
 
-	result._.rgb.red = components.get(0).asFloatF();
-	result._.rgb.green = components.get(1).asFloatF();
-	result._.rgb.blue = components.get(2).asFloatF();
-	result.alpha = components.get(3).asFloatF(1.0f);
+	result._.rgb.red = parser.parseFloatF(components.get(0), 0.0f);
+	result._.rgb.green = parser.parseFloatF(components.get(1), 0.0f);
+	result._.rgb.blue = parser.parseFloatF(components.get(2), 0.0f);
+	result.alpha = parser.parseFloatF(components.get(3), 1.0f);
 
 	return result;
 }
@@ -113,7 +113,7 @@ Color Color::rgb2hsv() const {
 		hue = 4.0f + (_.rgb.red - _.rgb.green) / chroma;
 	}
 	hue *= 60.0f;
-	
+
 	const float sat = val == 0.0f ? 0.0f : chroma / val;
 
 	return { hue, sat, val, alpha, Mode::eHSV };

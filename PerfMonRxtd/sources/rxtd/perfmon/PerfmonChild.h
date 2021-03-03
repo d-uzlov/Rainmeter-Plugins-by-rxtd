@@ -19,6 +19,7 @@ namespace rxtd::perfmon {
 
 		const PerfmonParent* parent = nullptr;
 		string stringValue;
+		option_parsing::OptionParser parser = option_parsing::OptionParser::getDefault();
 
 	public:
 		explicit PerfmonChild(Rainmeter&& _rain);

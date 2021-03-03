@@ -40,6 +40,7 @@ namespace rxtd::audio_analyzer {
 		} options;
 
 		AudioParent* parent = nullptr;
+		mutable option_parsing::OptionParser parser = option_parsing::OptionParser::getDefault();
 
 		Version version;
 

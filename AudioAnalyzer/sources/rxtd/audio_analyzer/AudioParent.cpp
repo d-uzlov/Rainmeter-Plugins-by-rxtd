@@ -54,14 +54,14 @@ AudioParent::AudioParent(Rainmeter&& _rain) :
 
 	// will throw std::runtime_error on invalid MagicNumber value,
 	// std::runtime_error is allowed to be thrown from constructor
-	version = Version::parseVersion(rain.read(L"MagicNumber").asInt(0));
+	version = Version::parseVersion(paramParser.getParser().parseInt(rain.read(L"MagicNumber"), 0));
 
 	if (version < Version::eVERSION2) {
 		throw std::runtime_error{ "legacy mode is not allowed" };
 	}
 
 	const auto threadingParams = rain.read(L"threading").asMap(L'|', L' ');
-	helper.init(rain, logger, threadingParams, version);
+	helper.init(rain, logger, threadingParams, paramParser.getParser(), version);
 	const auto untouchedOptions = threadingParams.getListOfUntouched();
 	if (!untouchedOptions.empty()) {
 		logger.warning(L"Threading: unused options: {}", untouchedOptions);
@@ -79,7 +79,7 @@ void AudioParent::vReload() {
 		return;
 	}
 
-	const bool paramsChanged = paramParser.parse(version, false);
+	const bool paramsChanged = paramParser.readOptions(version, false);
 
 	if (paramsChanged) {
 		using std_fixes::MapUtils;
@@ -330,7 +330,7 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 				return;
 			}
 
-			const auto ind = map.get(L"index").asInt(0);
+			const auto ind = paramParser.getParser().parseInt(map.get(L"index"), 0);
 
 			buffer_printer::BufferPrinter bp;
 			const auto value = getValue(procName, handlerName, channelOpt.value(), ind);

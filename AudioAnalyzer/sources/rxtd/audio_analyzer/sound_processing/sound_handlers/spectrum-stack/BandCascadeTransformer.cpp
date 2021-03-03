@@ -26,13 +26,13 @@ ParamsContainer BandCascadeTransformer::vParseParams(ParamParseContext& context)
 
 	const float epsilon = std::numeric_limits<float>::epsilon();
 
-	params.minWeight = context.options.get(L"minWeight").asFloatF(0.1f);
+	params.minWeight = context.parser.parseFloatF(context.options.get(L"minWeight"), 10.1f);
 	params.minWeight = std::max(params.minWeight, epsilon);
 
-	params.targetWeight = context.options.get(L"targetWeight").asFloatF(2.5f);
+	params.targetWeight = context.parser.parseFloatF(context.options.get(L"targetWeight"), 2.5f);
 	params.targetWeight = std::max(params.targetWeight, params.minWeight);
 
-	params.zeroLevelHard = context.options.get(L"zeroLevelMultiplier").asFloatF(1.0f);
+	params.zeroLevelHard = context.parser.parseFloatF(context.options.get(L"zeroLevelMultiplier"), 1.0f);
 	params.zeroLevelHard = std::max(params.zeroLevelHard, 0.0f);
 	params.zeroLevelHard *= epsilon;
 

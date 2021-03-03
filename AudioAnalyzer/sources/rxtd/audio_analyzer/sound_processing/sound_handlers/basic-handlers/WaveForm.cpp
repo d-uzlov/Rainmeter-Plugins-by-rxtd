@@ -23,13 +23,13 @@ using rxtd::audio_analyzer::image_utils::Color;
 ParamsContainer WaveForm::vParseParams(ParamParseContext& context) const noexcept(false) {
 	Params params;
 
-	params.width = context.options.get(L"width").asInt(100);
+	params.width = context.parser.parseInt(context.options.get(L"width"), 100);
 	if (params.width < 2) {
 		context.log.error(L"width must be >= 2 but {} found", params.width);
 		throw InvalidOptionsException{};
 	}
 
-	params.height = context.options.get(L"height").asInt(100);
+	params.height = context.parser.parseInt(context.options.get(L"height"), 100);
 	if (params.height < 2) {
 		context.log.error(L"height must be >= 2 but {} found", params.height);
 		throw InvalidOptionsException{};
@@ -39,7 +39,7 @@ ParamsContainer WaveForm::vParseParams(ParamParseContext& context) const noexcep
 		context.log.warning(L"dangerously big width and height: {}, {}", params.width, params.height);
 	}
 
-	params.resolution = context.options.get(L"resolution").asFloat(50);
+	params.resolution = context.parser.parseFloat(context.options.get(L"resolution"), 50);
 	if (params.resolution <= 0) {
 		context.log.warning(L"resolution must be > 0 but {} found. Assume 100", params.resolution);
 		params.resolution = 100;
@@ -48,10 +48,10 @@ ParamsContainer WaveForm::vParseParams(ParamParseContext& context) const noexcep
 
 	params.folder = context.rain.getPathFromCurrent(context.options.get(L"folder").asString() % own());
 
-	params.colors.background = Color::parse(context.options.get(L"backgroundColor").asString(), { 0, 0, 0 }).toIntColor();
-	params.colors.wave = Color::parse(context.options.get(L"waveColor").asString(), { 1, 1, 1 }).toIntColor();
-	params.colors.line = Color::parse(context.options.get(L"lineColor").asString(), { 0.5, 0.5, 0.5, 0.5 }).toIntColor();
-	params.colors.border = Color::parse(context.options.get(L"borderColor").asString(), { 1.0, 0.2, 0.2 }).toIntColor();
+	params.colors.background = Color::parse(context.options.get(L"backgroundColor").asString(), context.parser, { 0, 0, 0 }).toIntColor();
+	params.colors.wave = Color::parse(context.options.get(L"waveColor").asString(), context.parser, { 1, 1, 1 }).toIntColor();
+	params.colors.line = Color::parse(context.options.get(L"lineColor").asString(), context.parser, { 0.5, 0.5, 0.5, 0.5 }).toIntColor();
+	params.colors.border = Color::parse(context.options.get(L"borderColor").asString(), context.parser, { 1.0, 0.2, 0.2 }).toIntColor();
 
 	if (const auto ldpString = context.options.get(L"lineDrawingPolicy").asIString(L"always");
 		ldpString == L"always") {
@@ -65,22 +65,22 @@ ParamsContainer WaveForm::vParseParams(ParamParseContext& context) const noexcep
 		throw InvalidOptionsException{};
 	}
 
-	params.stationary = context.options.get(L"stationary").asBool(false);
-	params.connected = context.options.get(L"connected").asBool(true);
+	params.stationary = context.parser.parseBool(context.options.get(L"stationary"), false);
+	params.connected = context.parser.parseBool(context.options.get(L"connected"), true);
 
-	params.borderSize = context.options.get(L"borderSize").asInt(0);
+	params.borderSize = context.parser.parseInt(context.options.get(L"borderSize"), 0);
 	params.borderSize = std::clamp<index>(params.borderSize, 0, params.width / 2);
 
-	params.lineThickness = context.options.get(L"lineThickness").asInt(2 - (params.height & 1));
+	params.lineThickness = context.parser.parseInt(context.options.get(L"lineThickness"), 2 - (params.height & 1));
 	params.lineThickness = std::clamp<index>(params.lineThickness, 0, params.height);
 
-	params.fading = context.options.get(L"FadingRatio").asFloat(0.0);
+	params.fading = context.parser.parseFloat(context.options.get(L"FadingRatio"), 0.0);
 
-	params.silenceThreshold = context.options.get(L"silenceThreshold").asFloatF(-70);
+	params.silenceThreshold = context.parser.parseFloatF(context.options.get(L"silenceThreshold"), -70);
 	params.silenceThreshold = MyMath::db2amplitude(params.silenceThreshold);
 
 	auto transformLogger = context.log.context(L"transform: ");
-	params.transformer = CVT::parse(context.options.get(L"transform").asString(), transformLogger);
+	params.transformer = CVT::parse(context.options.get(L"transform").asString(), context.parser, transformLogger);
 
 	return params;
 }

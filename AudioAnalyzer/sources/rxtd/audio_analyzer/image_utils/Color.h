@@ -9,6 +9,7 @@
 
 #pragma once
 #include "IntColor.h"
+#include "rxtd/option_parsing/OptionParser.h"
 
 namespace rxtd::audio_analyzer::image_utils {
 	class Color {
@@ -55,7 +56,7 @@ namespace rxtd::audio_analyzer::image_utils {
 		}
 
 		[[nodiscard]]
-		static Color parse(sview desc, Color defaultValue = {});
+		static Color parse(sview desc, option_parsing::OptionParser& parser, Color defaultValue = {});
 
 		[[nodiscard]]
 		Color operator*(float value) const {

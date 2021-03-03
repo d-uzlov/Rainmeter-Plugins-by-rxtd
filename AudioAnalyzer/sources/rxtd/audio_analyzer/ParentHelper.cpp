@@ -22,6 +22,7 @@ void ParentHelper::init(
 	Rainmeter _rain,
 	Logger _logger,
 	const OptionMap& threadingMap,
+	option_parsing::OptionParser& parser,
 	Version version
 ) {
 	mainFields.rain = std::move(_rain);
@@ -59,8 +60,8 @@ void ParentHelper::init(
 		throw std::runtime_error{ "" };
 	}
 
-	const double warnTime = threadingMap.get(L"warnTime").asFloat(-1.0);
-	const double killTimeout = std::clamp(threadingMap.get(L"killTimeout").asFloat(33.0), 0.01, 33.0);
+	const double warnTime = parser.parseFloat(threadingMap.get(L"warnTime"), -1.0);
+	const double killTimeout = std::clamp(parser.parseFloat(threadingMap.get(L"killTimeout"), 33.0), 0.01, 33.0);
 
 	mainFields.orchestrator.setLogger(mainFields.logger);
 	mainFields.orchestrator.setWarnTime(warnTime);
@@ -68,12 +69,12 @@ void ParentHelper::init(
 
 	double bufferSize = 1.0;
 	if (constFields.useThreading) {
-		double updateRate = threadingMap.get(L"updateRate").asFloat(60.0);;
+		double updateRate = parser.parseFloat(threadingMap.get(L"updateRate"), 60.0);
 		updateRate = std::clamp(updateRate, 1.0, 200.0);
 		constFields.updateTime = 1.0 / updateRate;
 
 		const double defaultBufferSize = std::max(constFields.updateTime * 4.0, 0.5);
-		bufferSize = threadingMap.get(L"bufferSize").asFloat(defaultBufferSize);
+		bufferSize = parser.parseFloat(threadingMap.get(L"bufferSize"), defaultBufferSize);
 		bufferSize = std::clamp(bufferSize, 1.0 / 30.0, 4.0);
 	}
 

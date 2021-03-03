@@ -18,7 +18,7 @@ using rxtd::fft_utils::WindowFunctionHelper;
 using rxtd::option_parsing::Option;
 using rxtd::option_parsing::OptionList;
 
-WindowFunctionHelper::WindowCreationFunc WindowFunctionHelper::parse(sview desc, Logger& cl) {
+WindowFunctionHelper::WindowCreationFunc WindowFunctionHelper::parse(sview desc, option_parsing::OptionParser parser, Logger& cl) {
 	OptionList description = Option{ desc }.asSequence().begin().operator*();
 	auto type = description.get(0).asIString();
 
@@ -41,21 +41,21 @@ WindowFunctionHelper::WindowCreationFunc WindowFunctionHelper::parse(sview desc,
 	}
 
 	if (type == L"kaiser") {
-		const auto param = description.get(1).asFloatF(3.0f);
+		const auto param = parser.parseFloatF(description.get(1), 3.0f);
 		return [=](array_span<float> result) {
 			createKaiser(result, param);
 		};
 	}
 
 	if (type == L"exponential") {
-		const auto param = description.get(1).asFloatF(8.69f);
+		const auto param = parser.parseFloatF(description.get(1), 8.69f);
 		return [=](array_span<float> result) {
 			return createExponential(result, param);
 		};
 	}
 
 	if (type == L"chebyshev") {
-		const auto param = description.get(1).asFloatF(80.0f);
+		const auto param = parser.parseFloatF(description.get(1), 80.0f);
 		return [=](array_span<float> result) {
 			return createChebyshev(result, param);
 		};

@@ -105,13 +105,13 @@ void CVT::applyToArray(array_view<float> source, array_span<float> dest) {
 	}
 }
 
-CVT CVT::parse(sview transformDescription, Logger& cl) {
+CVT CVT::parse(sview transformDescription, option_parsing::OptionParser parser, Logger& cl) {
 	std::vector<TransformationInfo> transforms;
 
 
 	for (auto list : Option{ transformDescription }.asSequence()) {
 		auto logger = cl.context(L"{}: ", list.get(0).asString());
-		auto transformOpt = parseTransformation(list, logger);
+		auto transformOpt = parseTransformation(list, parser, logger);
 		if (!transformOpt.has_value()) {
 			return {};
 		}
@@ -121,7 +121,7 @@ CVT CVT::parse(sview transformDescription, Logger& cl) {
 	return CustomizableValueTransformer{ transforms };
 }
 
-std::optional<CVT::TransformationInfo> CVT::parseTransformation(OptionList list, Logger& cl) {
+std::optional<CVT::TransformationInfo> CVT::parseTransformation(OptionList list, option_parsing::OptionParser parser, Logger& cl) {
 	const auto transformName = list.get(0).asIString();
 	TransformationInfo tr{};
 
@@ -147,8 +147,8 @@ std::optional<CVT::TransformationInfo> CVT::parseTransformation(OptionList list,
 			return {};
 		}
 
-		float linMin = sourceRange.get(0).asFloatF();
-		float linMax = sourceRange.get(1).asFloatF();
+		float linMin = parser.parseFloatF(sourceRange.get(0));
+		float linMax = parser.parseFloatF(sourceRange.get(1));
 
 		if (std::abs(linMin - linMax) < std::numeric_limits<float>::epsilon()) {
 			cl.error(L"source range is too small: {} and {}", linMin, linMax);
@@ -165,8 +165,8 @@ std::optional<CVT::TransformationInfo> CVT::parseTransformation(OptionList list,
 				cl.error(L"need 2 params for target range but {} found", range.size());
 				return std::nullopt;
 			}
-			valMin = range.get(0).asFloatF();
-			valMax = range.get(1).asFloatF();
+			valMin = parser.parseFloatF(range.get(0));
+			valMax = parser.parseFloatF(range.get(1));
 		}
 
 		tr.interpolator.setParams(linMin, linMax, valMin, valMax);
@@ -174,8 +174,8 @@ std::optional<CVT::TransformationInfo> CVT::parseTransformation(OptionList list,
 	} else if (transformName == L"clamp") {
 		tr.type = TransformType::eCLAMP;
 
-		tr.args[0] = params.get(L"min").asFloatF(0.0f);
-		tr.args[1] = params.get(L"max").asFloatF(1.0f);
+		tr.args[0] = parser.parseFloatF(params.get(L"min"), 0.0f);
+		tr.args[1] = parser.parseFloatF(params.get(L"max"), 1.0f);
 
 		tr.args[0] = std::min(tr.args[0], tr.args[1]);
 		tr.args[1] = std::max(tr.args[0], tr.args[1]);

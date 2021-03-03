@@ -23,7 +23,7 @@ ParamsContainer SingleValueTransformer::vParseParams(ParamParseContext& context)
 	}
 
 	auto transformLogger = context.log.context(L"transform: ");
-	params.transformer = CVT::parse(context.options.get(L"transform").asString(), transformLogger);
+	params.transformer = CVT::parse(context.options.get(L"transform").asString(), context.parser, transformLogger);
 
 	return params;
 }

@@ -22,12 +22,12 @@ ParamsContainer TimeResampler::vParseParams(ParamParseContext& context) const no
 		throw InvalidOptionsException{};
 	}
 
-	params.granularity = context.options.get(L"granularity").asFloat(1000.0 / 60.0);
+	params.granularity = context.parser.parseFloat(context.options.get(L"granularity"), 1000.0 / 60.0);
 	params.granularity = std::max(params.granularity, 0.01);
 	params.granularity *= 0.001;
 
-	params.attack = context.options.get(L"attack").asFloat(0.0);
-	params.decay = context.options.get(L"decay").asFloat(params.attack);
+	params.attack = context.parser.parseFloat(context.options.get(L"attack"), 0.0);
+	params.decay = context.parser.parseFloat(context.options.get(L"decay"), params.attack);
 
 	params.attack = std::max(params.attack, 0.0);
 	params.decay = std::max(params.decay, 0.0);
@@ -36,7 +36,7 @@ ParamsContainer TimeResampler::vParseParams(ParamParseContext& context) const no
 	params.decay = params.decay * 0.001;
 
 	auto transformLogger = context.log.context(L"transform: ");
-	params.transformer = CVT::parse(context.options.get(L"transform").asString(), transformLogger);
+	params.transformer = CVT::parse(context.options.get(L"transform").asString(), context.parser, transformLogger);
 
 	return params;
 }

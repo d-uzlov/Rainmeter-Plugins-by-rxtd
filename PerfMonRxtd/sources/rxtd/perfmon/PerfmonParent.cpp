@@ -9,6 +9,7 @@
  */
 
 #include "PerfmonParent.h"
+
 #include "rxtd/option_parsing/OptionList.h"
 
 using rxtd::perfmon::PerfmonParent;
@@ -16,12 +17,14 @@ using rxtd::perfmon::PerfmonParent;
 PerfmonParent::PerfmonParent(Rainmeter&& _rain) : ParentMeasureBase(std::move(_rain)) {
 	setUseResultString(true);
 
+	parser.setLogger(logger);
+
 	bool success = pdhWrapper.init(logger);
 	if (!success) {
 		throw std::runtime_error{ "" };
 	}
 
-	const auto InstanceIndexOffset = rain.read(L"InstanceIndexOffset").asInt();
+	const auto InstanceIndexOffset = parser.parseInt(rain.read(L"InstanceIndexOffset"));
 	simpleInstanceManager.setIndexOffset(InstanceIndexOffset, false);
 	rollupInstanceManager.setIndexOffset(InstanceIndexOffset, false);
 }
@@ -49,12 +52,12 @@ void PerfmonParent::vReload() {
 		return;
 	}
 
-	useRollup = rain.read(L"Rollup").asBool();
+	useRollup = parser.parseBool(rain.read(L"Rollup"));
 
 	SimpleInstanceManager::Options imo;
-	imo.syncRawFormatted = rain.read(L"SyncRawFormatted").asBool();
-	imo.keepDiscarded = rain.read(L"KeepDiscarded").asBool();
-	imo.limitIndexOffset = rain.read(L"LimitIndexOffset").asBool();
+	imo.syncRawFormatted = parser.parseBool(rain.read(L"SyncRawFormatted"));
+	imo.keepDiscarded = parser.parseBool(rain.read(L"KeepDiscarded"));
+	imo.limitIndexOffset = parser.parseBool(rain.read(L"LimitIndexOffset"));
 
 	imo.sortInfo = parseSortInfo();
 
@@ -70,7 +73,7 @@ void PerfmonParent::vReload() {
 	rollupExpressionSolver.setExpressions(rollupExpressionTokens);
 
 	checkAndFixSortInfo(
-		imo.sortInfo, 
+		imo.sortInfo,
 		counterNames.size(),
 		expressionResolver.getExpressionsCount(),
 		rollupExpressionSolver.getExpressionsCount()
@@ -229,7 +232,7 @@ void PerfmonParent::vCommand(isview bangArgs) {
 	}
 	auto [name, value] = option_parsing::Option{ bangArgs }.breakFirst(L' ');
 	if (name.asIString() == L"SetIndexOffset") {
-		const index offset = value.asInt();
+		const index offset = parser.parseInt(value);
 		const auto firstSymbol = value.asString()[0];
 		const bool isRelativeValue = firstSymbol == L'-' || firstSymbol == L'+';
 		simpleInstanceManager.setIndexOffset(offset, isRelativeValue);
@@ -283,7 +286,7 @@ double PerfmonParent::getValues(const Reference& ref, index sortedIndex, ResultS
 rxtd::perfmon::SortInfo PerfmonParent::parseSortInfo() {
 	SortInfo result;
 
-	result.sortByValueInformation.sortIndex = rain.read(L"SortIndex").asInt();
+	result.sortByValueInformation.sortIndex = parser.parseInt(rain.read(L"SortIndex"));
 
 	const auto sortByString = rain.read(L"SortBy").asIString(L"None");
 	if (const auto sortByOpt = parseEnum<SortBy>(sortByString);

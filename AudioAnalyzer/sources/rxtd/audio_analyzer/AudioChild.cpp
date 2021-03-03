@@ -29,6 +29,8 @@ AudioChild::AudioChild(Rainmeter&& _rain) : MeasureBase(std::move(_rain)) {
 		throw std::runtime_error{ "" };
 	}
 
+	parser.setLogger(logger);
+
 	version = parent->getVersion();
 }
 
@@ -88,7 +90,7 @@ AudioChild::Options AudioChild::readOptions() const {
 			result.procName = parent->findProcessingFor(result.handlerName);
 		}
 
-		result.valueIndex = rain.read(L"Index").asInt();
+		result.valueIndex = parser.parseInt(rain.read(L"Index"));
 		if (result.valueIndex < 0) {
 			logger.error(L"Invalid Index {}. Index should be > 0. Set to 0.", result.valueIndex);
 			result.valueIndex = 0;
@@ -96,7 +98,7 @@ AudioChild::Options AudioChild::readOptions() const {
 
 		auto transformDesc = rain.read(L"Transform");
 		auto transformLogger = logger.context(L"Transform: ");
-		result.transformer = CVT::parse(transformDesc.asString(), transformLogger);
+		result.transformer = CVT::parse(transformDesc.asString(), parser, transformLogger);
 	}
 
 	if (const auto stringValueStr = rain.read(L"StringValue").asIString(L"Number");

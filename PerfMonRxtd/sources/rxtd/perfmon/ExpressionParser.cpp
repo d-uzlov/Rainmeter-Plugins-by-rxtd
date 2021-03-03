@@ -12,8 +12,8 @@
 
 #include "MatchPattern.h"
 #include "Reference.h"
-#include "rxtd/std_fixes/StringUtils.h"
 #include "rxtd/expression_parser/GrammarBuilder.h"
+#include "rxtd/std_fixes/StringUtils.h"
 
 using rxtd::perfmon::ExpressionParser;
 using StringUtils = rxtd::std_fixes::StringUtils;
