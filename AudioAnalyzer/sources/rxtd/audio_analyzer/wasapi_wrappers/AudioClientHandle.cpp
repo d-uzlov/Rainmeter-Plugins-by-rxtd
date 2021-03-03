@@ -107,7 +107,12 @@ void AudioClientHandle::testExclusive() {
 	// but according to my tests, [when provided with minimum buffer size]
 	// IAudioClient3#InitializeSharedAudioStream leaks less, so this is the preferable method of testing
 
-	if (client3.isValid()) {
+	// Looks like InitializeSharedAudioStream adds crackling to sound in some cases.
+	// Unfortunately, it's not consistent, so it's impossible to know for sure.
+	// If after disabling this if-branch issue won't be present for long time,
+	// then I would assume that InitializeSharedAudioStream is really the cause of this,
+	// and remove this disabled code.
+	if (client3.isValid() && false) {
 		UINT32 pDefaultPeriodInFrames;
 		UINT32 pFundamentalPeriodInFrames;
 		UINT32 pMinPeriodInFrames;
@@ -134,7 +139,7 @@ void AudioClientHandle::testExclusive() {
 		throwOnError(
 			ref().Initialize(
 				AUDCLNT_SHAREMODE_SHARED,
-				0,
+				AUDCLNT_STREAMFLAGS_LOOPBACK,
 				0,
 				0,
 				nativeFormat.getPointer(),
