@@ -89,10 +89,10 @@ namespace rxtd::audio_analyzer::handler {
 
 			DataSize() = default;
 
-			DataSize(index valuesCount, std::vector<index> _eqWaveSizes) :
+			DataSize(index valuesCount, std::vector<index> eqWaveSizes) :
 				valuesCount(valuesCount),
-				eqWaveSizes(std::move(_eqWaveSizes)) {
-				layersCount = static_cast<index>(eqWaveSizes.size());
+				eqWaveSizes(std::move(eqWaveSizes)) {
+				layersCount = static_cast<index>(this->eqWaveSizes.size());
 			}
 
 			[[nodiscard]]

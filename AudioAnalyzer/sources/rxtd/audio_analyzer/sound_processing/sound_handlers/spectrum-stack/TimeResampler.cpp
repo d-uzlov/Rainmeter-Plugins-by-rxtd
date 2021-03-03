@@ -65,6 +65,7 @@ TimeResampler::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalDa
 	}
 
 	blockSize = static_cast<index>(params.granularity * static_cast<double>(config.sampleRate));
+	blockSize = std::max<index>(blockSize, 1);
 
 	for (index i = 0; i < dataSize.layersCount; ++i) {
 		layersData[static_cast<size_t>(i)].lowPass.setParams(
@@ -74,12 +75,8 @@ TimeResampler::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalDa
 		);
 	}
 
-	std::vector<index> eqWS;
-	eqWS.resize(static_cast<size_t>(dataSize.layersCount));
-	for (int i = 0; i < dataSize.layersCount; ++i) {
-		eqWS.push_back(blockSize);
-	}
-	return dataSize;
+	std::vector<index> eqWs(dataSize.layersCount, blockSize);
+	return { dataSize.valuesCount, std::move(eqWs) };
 }
 
 void TimeResampler::vProcess(ProcessContext context, ExternalData& externalData) {
