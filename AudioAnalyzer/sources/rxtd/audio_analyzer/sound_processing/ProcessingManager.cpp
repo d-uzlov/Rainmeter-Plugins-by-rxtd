@@ -101,12 +101,6 @@ void ProcessingManager::setParams(
 		auto& channelSnapshot = snapshot[channel];
 		MapUtils::intersectKeyCollection(channelSnapshot, channelStruct.handlerMap);
 	}
-
-	for (auto& [channel, channelHandlers] : channelMap) {
-		for (auto& handlerName : order) {
-			channelHandlers.handlerMap[handlerName]->finishConfiguration();
-		}
-	}
 }
 
 void ProcessingManager::process(const ChannelMixer& mixer, clock::time_point killTime, Snapshot& snapshot) {

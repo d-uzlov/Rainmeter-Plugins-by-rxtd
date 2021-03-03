@@ -47,11 +47,11 @@ bool HandlerBase::patch(
 	newConfig.sampleRate = sampleRate;
 	newConfig.version = version;
 
+	auto sourceDataSize = newConfig.sourcePtr == nullptr ? DataSize{} : newConfig.sourcePtr->getDataSize();
 	if (_configuration != newConfig
-		|| newConfig.sourcePtr != nullptr && newConfig.sourcePtr->_anyChanges
+		|| sourceDataSize != _inputDataSize
 		|| !vCheckSameParams(params)) {
-		_anyChanges = true;
-
+		_inputDataSize = std::move(sourceDataSize);
 		_configuration = newConfig;
 
 		const auto linkingResult = vConfigure(params, cl, snapshot.handlerSpecificData);

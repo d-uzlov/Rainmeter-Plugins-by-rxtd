@@ -99,6 +99,13 @@ namespace rxtd::audio_analyzer::handler {
 			bool isEmpty() const {
 				return eqWaveSizes.empty() || valuesCount == 0;
 			}
+
+			friend bool operator==(const DataSize& lhs, const DataSize& rhs) {
+				return lhs.valuesCount == rhs.valuesCount
+					&& lhs.eqWaveSizes == rhs.eqWaveSizes;
+			}
+
+			friend bool operator!=(const DataSize& lhs, const DataSize& rhs) { return !(lhs == rhs); }
 		};
 
 		struct ProcessContext {
@@ -169,8 +176,8 @@ namespace rxtd::audio_analyzer::handler {
 		};
 
 		string _name;
-		bool _anyChanges = false;
 		DataSize _dataSize;
+		DataSize _inputDataSize;
 		mutable bool _layersAreValid = false;
 		std::vector<float> _buffer;
 		std::vector<LayerCache> _layers;
@@ -255,10 +262,6 @@ namespace rxtd::audio_analyzer::handler {
 			HandlerFinder& hf, Logger& cl,
 			Snapshot& snapshot
 		);
-
-		void finishConfiguration() {
-			_anyChanges = false;
-		}
 
 		void process(ProcessContext context, Snapshot& snapshot) {
 			clearChunks();
