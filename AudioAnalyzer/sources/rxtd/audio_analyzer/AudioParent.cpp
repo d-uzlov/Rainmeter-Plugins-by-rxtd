@@ -60,8 +60,19 @@ AudioParent::AudioParent(Rainmeter&& _rain) :
 		throw std::runtime_error{ "legacy mode is not allowed" };
 	}
 
+	bool blockCaptureLoudnessChange;
+	auto blockCaptureLoudness = rain.read(L"blockCaptureLoudnessChange").asIString(L"never");
+	if (blockCaptureLoudness == L"never") {
+		blockCaptureLoudnessChange = false;
+	} else if (blockCaptureLoudness == L"ForApp") {
+		blockCaptureLoudnessChange = true;
+	} else {
+		logger.error(L"blockCaptureLoudnessChange value '{}' is not recognized, supported values are: Never, ForApp", blockCaptureLoudness);
+		throw std::runtime_error{ "" };
+	}
+
 	const auto threadingParams = rain.read(L"threading").asMap(L'|', L' ');
-	helper.init(rain, logger, threadingParams, paramParser.getParser(), version);
+	helper.init(rain, logger, threadingParams, paramParser.getParser(), version, blockCaptureLoudnessChange);
 	const auto untouchedOptions = threadingParams.getListOfUntouched();
 	if (!untouchedOptions.empty()) {
 		logger.warning(L"Threading: unused options: {}", untouchedOptions);

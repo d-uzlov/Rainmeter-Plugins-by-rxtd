@@ -37,6 +37,8 @@ AudioSessionEventsImpl* AudioSessionEventsImpl::create(
 		result.channelVolumeControllerIsValid.exchange(result.channelVolumeController.isValid());
 	}
 
+	result.initVolume();
+
 	return &result;
 }
 
@@ -49,6 +51,8 @@ AudioSessionEventsImpl* AudioSessionEventsImpl::create(GenericComWrapper<IAudioS
 		result.sessionController.ref().RegisterAudioSessionNotification(&result),
 		L"IAudioSessionControl.RegisterAudioSessionNotification() in AudioSessionEventsImpl factory"
 	);
+
+	result.initVolume();
 
 	return &result;
 }
@@ -68,12 +72,33 @@ void AudioSessionEventsImpl::deinit() {
 	channelVolumeControllerIsValid.exchange(mainVolumeController.isValid());
 }
 
+void AudioSessionEventsImpl::initVolume() {
+	if (!preventVolumeChange) {
+		return;
+	}
+
+	if (mainVolumeController.isValid()) {
+		mainVolumeController.throwOnError(mainVolumeController.ref().SetMasterVolume(1.0, &guid), L"SetMasterVolume in AudioSessionEventsImpl::initVolume");
+		mainVolumeController.throwOnError(mainVolumeController.ref().SetMute(false, &guid), L"SetMute in AudioSessionEventsImpl::initVolume");
+	}
+
+	if (channelVolumeController.isValid()) {
+		UINT32 channelCount;
+		channelVolumeController.throwOnError(channelVolumeController.ref().GetChannelCount(&channelCount), L"GetChannelCount in AudioSessionEventsImpl::initVolume");
+		std::vector<float> channels(static_cast<size_t>(channelCount), 1.0f);
+		channelVolumeController.throwOnError(
+			channelVolumeController.ref().SetAllVolumes(channelCount, channels.data(), &guid),
+			L"GetAllVolumes in AudioSessionEventsImpl::SetAllVolumes"
+		);
+	}
+}
+
 HRESULT AudioSessionEventsImpl::OnSimpleVolumeChanged(float volumeLevel, BOOL isMuted, const GUID* context) {
 	if (!preventVolumeChange || !mainVolumeControllerIsValid.load()) {
 		return S_OK;
 	}
 
-	if (guid == *context) {
+	if (context != nullptr && guid == *context) {
 		return S_OK;
 	}
 
@@ -98,7 +123,7 @@ HRESULT AudioSessionEventsImpl::OnChannelVolumeChanged(DWORD channelCount, float
 		return S_OK;
 	}
 
-	if (guid == *context) {
+	if (context != nullptr && guid == *context) {
 		return S_OK;
 	}
 

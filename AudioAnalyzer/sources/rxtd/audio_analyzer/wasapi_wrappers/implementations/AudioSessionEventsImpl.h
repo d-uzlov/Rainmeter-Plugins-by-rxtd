@@ -83,6 +83,10 @@ namespace rxtd::audio_analyzer::wasapi_wrappers::implementations {
 		//	which must be manually called when this object is no longer needed
 		void deinit();
 
+	private:
+		void initVolume();
+
+	public:
 		[[nodiscard]]
 		Changes takeChanges() {
 			Changes result{};

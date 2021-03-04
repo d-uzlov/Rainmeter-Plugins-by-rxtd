@@ -14,14 +14,6 @@ using rxtd::audio_analyzer::CaptureManager;
 using rxtd::winapi_wrappers::ComException;
 using rxtd::audio_analyzer::wasapi_wrappers::MediaDeviceHandle;
 
-void CaptureManager::setBufferSizeInSec(double value) {
-	bufferSizeSec = std::clamp(value, 0.0, 1.0);
-}
-
-void CaptureManager::setSource(const SourceDesc& desc) {
-	snapshot.state = setSourceAndGetState(desc);
-}
-
 void CaptureManager::disconnect() {
 	if (getState() != State::eOK) {
 		return;
@@ -91,7 +83,7 @@ CaptureManager::State CaptureManager::setSourceAndGetState(const SourceDesc& des
 		audioCaptureClient = audioClient.openCapture(bufferSizeSec);
 
 		try {
-			sessionEventsWrapper.listenTo(audioClient, true);
+			sessionEventsWrapper.listenTo(audioClient, suppressVolumeChange);
 		} catch (ComException& e) {
 			logger.warning(L"Can't create session listener: error {}, caused by {}", e.getCode(), e.getSource());
 		}

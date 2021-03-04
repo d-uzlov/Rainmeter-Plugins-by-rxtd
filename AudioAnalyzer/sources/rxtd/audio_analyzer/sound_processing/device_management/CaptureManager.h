@@ -68,6 +68,7 @@ namespace rxtd::audio_analyzer {
 		Logger logger;
 		Version version{};
 		double bufferSizeSec = 0.0;
+		bool suppressVolumeChange = false;
 
 		wasapi_wrappers::MediaDeviceEnumerator enumeratorWrapper;
 
@@ -82,6 +83,10 @@ namespace rxtd::audio_analyzer {
 		index lastExclusiveProcessId = -1;
 
 	public:
+		void setSuppressVolumeChange(bool value) {
+			suppressVolumeChange = value;
+		}
+
 		void setLogger(Logger value) {
 			logger = std::move(value);
 		}
@@ -90,9 +95,14 @@ namespace rxtd::audio_analyzer {
 			version = value;
 		}
 
-		void setBufferSizeInSec(double value);
+		void setBufferSizeInSec(double value) {
+			bufferSizeSec = std::clamp(value, 0.0, 1.0);
+		}
 
-		void setSource(const SourceDesc& desc);
+		void setSource(const SourceDesc& desc) {
+			snapshot.state = setSourceAndGetState(desc);
+		}
+
 		void disconnect();
 
 	private:

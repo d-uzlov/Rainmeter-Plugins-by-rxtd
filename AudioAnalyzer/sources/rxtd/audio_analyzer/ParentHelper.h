@@ -122,7 +122,8 @@ namespace rxtd::audio_analyzer {
 			Logger _logger,
 			const OptionMap& threadingMap,
 			option_parsing::OptionParser& parser,
-			Version version
+			Version version,
+			bool suppressVolumeChange
 		);
 
 		void setInvalid();

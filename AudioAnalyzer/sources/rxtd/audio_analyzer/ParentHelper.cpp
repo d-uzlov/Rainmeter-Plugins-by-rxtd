@@ -23,7 +23,8 @@ void ParentHelper::init(
 	Logger _logger,
 	const OptionMap& threadingMap,
 	option_parsing::OptionParser& parser,
-	Version version
+	Version version,
+	bool suppressVolumeChange
 ) {
 	mainFields.rain = std::move(_rain);
 	mainFields.logger = std::move(_logger);
@@ -78,6 +79,7 @@ void ParentHelper::init(
 		bufferSize = std::clamp(bufferSize, 1.0 / 30.0, 4.0);
 	}
 
+	mainFields.captureManager.setSuppressVolumeChange(suppressVolumeChange);
 	mainFields.captureManager.setLogger(mainFields.logger);
 	mainFields.captureManager.setVersion(constFields.version);
 	mainFields.captureManager.setBufferSizeInSec(bufferSize);
