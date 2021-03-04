@@ -74,9 +74,15 @@ void AudioParent::vReload() {
 	const auto oldSource = requestedSource;
 	requestedSource = readRequest();
 
-	if (oldSource != requestedSource && !requestedSource.has_value()) {
-		helper.setInvalid();
-		return;
+	DeviceRequest sourceOpt;
+
+	if (oldSource != requestedSource) {
+		if (!requestedSource.has_value()) {
+			helper.setInvalid();
+			return;
+		} else {
+			sourceOpt = requestedSource;
+		}
 	}
 
 	const bool paramsChanged = paramParser.readOptions(version, false);
@@ -110,7 +116,7 @@ void AudioParent::vReload() {
 			paramsOpt = paramParser.getParseResult();
 		}
 
-		helper.setParams(callbacks, requestedSource, std::move(paramsOpt));
+		helper.setParams(callbacks, std::move(sourceOpt), std::move(paramsOpt));
 
 		logHelpers.reset();
 	}
