@@ -19,7 +19,35 @@ namespace rxtd::std_fixes {
 	public:
 		static const double pi;
 		static const float pif;
-		
+
+		/// <summary>
+		/// Compares 2 floating point values for rough equality.
+		/// Source: https://stackoverflow.com/a/32334103
+		/// </summary>
+		/// <typeparam name="Float"></typeparam>
+		/// <param name="a">First number to compare</param>
+		/// <param name="b">Second number to compare</param>
+		/// <param name="epsilon">Max relative error</param>
+		/// <param name="absoluteThreshold">Max absolute error</param>
+		/// <returns>True if values are close based on epsilon and absoluteThreshold, false otherwise.</returns>
+		template<typename Float>
+		static bool checkFloatEqual(
+			Float a, Float b,
+			Float epsilon = static_cast<Float>(128) * std::numeric_limits<Float>::epsilon(),
+			Float absoluteThreshold = std::numeric_limits<Float>::min()
+		) {
+			assert(std::numeric_limits<Float>::epsilon() <= epsilon);
+			assert(epsilon < 1.f);
+
+			if (a == b) return true;
+
+			auto diff = std::abs(a - b);
+			auto norm = std::min(std::abs(a) + std::abs(b), std::numeric_limits<Float>::max());
+			// or even faster: std::min(std::abs(a + b), std::numeric_limits<float>::max());
+			// keeping this commented out until I update figures below
+			return diff < std::max(absoluteThreshold, epsilon * norm);
+		}
+
 		// A unified way to convert decibels to absolute values,
 		template<typename Float>
 		[[nodiscard]]
