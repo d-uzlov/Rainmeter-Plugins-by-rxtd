@@ -1,4 +1,8 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2020 Danil Uzlov
+
 #pragma once
+
 #include "LinearInterpolator.h"
 
 namespace rxtd {

@@ -1,16 +1,10 @@
-/*
- * Copyright (C) 2019-2021 rxtd
- *
- * This Source Code Form is subject to the terms of the GNU General Public
- * License; either version 2 of the License, or (at your option) any later
- * version. If a copy of the GPL was not distributed with this file, You can
- * obtain one at <https://www.gnu.org/licenses/gpl-2.0.html>.
- */
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2019 Danil Uzlov
 
 #pragma once
 
-#include "rxtd/std_fixes/AnyContainer.h"
 #include "rxtd/buffer_printer/BufferPrinter.h"
+#include "rxtd/std_fixes/AnyContainer.h"
 
 namespace rxtd {
 	//

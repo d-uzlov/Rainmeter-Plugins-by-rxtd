@@ -2,19 +2,16 @@
  * Implement a simple 1-dimensional array_view class
  *
  * (C) Copyright Marshall Clow 2016
+ * (C) Copyright Danil Uzlov 2019
  *
  * Distributed under the Boost Software License, Version 1.0.
  * (See http://www.boost.org/LICENSE_1_0.txt)
  *
  * Source:
  * https://github.com/mclow/snippets
- *
- * Modified by rxtd, 2019.
  */
 
-// for some reason #pragma once didn't work for me here
-#ifndef ARRAY_VIEW_ARRAY_SPAN_H
-#define ARRAY_VIEW_ARRAY_SPAN_H
+#pragma once
 
 #include <cassert>
 #include <iterator>
@@ -216,7 +213,7 @@ public:
 	}
 
 
-	// Copyright (C) 2020 rxtd
+	// Copyright (C) 2020 Danil Uzlov
 	constexpr void transferToSpan(array_span<value_type> dest) const noexcept(false) {
 		if (dest.size() != size())
 			throw std::out_of_range("array_view1d::transferToSpan");
@@ -227,16 +224,16 @@ public:
 		}
 	}
 
-	// Copyright (C) 2020 rxtd
+	// Copyright (C) 2020 Danil Uzlov
 	constexpr void transferToVector(std::vector<value_type>& dest) const noexcept(false) {
 		dest.resize(size());
 		transferToSpan(array_span<value_type>{ dest });
 	}
 
-	// Copyright (C) 2020 rxtd
+	// Copyright (C) 2020 Danil Uzlov
 	constexpr void copyFrom(array_view<value_type> source);
 
-	// Copyright (C) 2021 rxtd
+	// Copyright (C) 2021 Danil Uzlov
 	constexpr bool contains(const value_type& val) const {
 		return std::find(begin(), end(), val) != end();
 	}
@@ -400,7 +397,7 @@ public:
 	}
 
 
-	// Copyright (C) 2020 rxtd
+	// Copyright (C) 2020 Danil Uzlov
 	constexpr void transferToSpan(array_span<value_type> dest) const noexcept(false) {
 		if (dest.size() != size())
 			throw std::out_of_range("array_view1d::transferToSpan");
@@ -411,13 +408,13 @@ public:
 		}
 	}
 
-	// Copyright (C) 2020 rxtd
+	// Copyright (C) 2020 Danil Uzlov
 	constexpr void transferToVector(std::vector<value_type>& dest) const noexcept(false) {
 		dest.resize(static_cast<size_t>(size()));
 		transferToSpan(array_span<T>{ dest });
 	}
 
-	// Copyright (C) 2021 rxtd
+	// Copyright (C) 2021 Danil Uzlov
 	constexpr bool contains(const value_type& val) const {
 		return std::find(begin(), end(), val) != end();
 	}
@@ -432,5 +429,3 @@ template<class T>
 constexpr void array_span<T>::copyFrom(array_view<value_type> source) {
 	source.transferToSpan(*this);
 }
-
-#endif
