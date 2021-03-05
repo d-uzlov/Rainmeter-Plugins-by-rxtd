@@ -68,7 +68,8 @@ namespace rxtd::buffer_printer {
 
 	template<typename T>
 	void writeType(std::wostream& stream, array_view<T> array, sview options) {
-		stream << L'[';
+		const bool brackets = options != L"no-brackets";
+		if (brackets) stream << L'[';
 		if (!array.empty()) {
 			bool first = true;
 			for (const auto& value : array) {
@@ -80,7 +81,7 @@ namespace rxtd::buffer_printer {
 				stream << value;
 			}
 		}
-		stream << L']';
+		if (brackets) stream << L']';
 	}
 
 	//

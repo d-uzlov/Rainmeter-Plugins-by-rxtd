@@ -72,9 +72,7 @@ WindowFunctionHelper::WindowCreationFunc WindowFunctionHelper::parse(sview desc,
 //
 
 void WindowFunctionHelper::createRectangular(array_span<float> result) {
-	for (auto& val : result) {
-		val = 1.0f;
-	}
+	std::fill(result.begin(), result.end(), 1.0f);
 }
 
 void WindowFunctionHelper::createCosineSum(array_span<float> result, float a0) {

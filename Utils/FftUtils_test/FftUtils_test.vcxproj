@@ -2,28 +2,45 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
+    <ProjectGuid>{5CED6877-7BD6-46A1-801F-67F9D36C51D3}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <ProjectGuid>{1c4c178d-a05d-4e2b-9dca-8c3baf84bed9}</ProjectGuid>
-    <RootNamespace>FftUtils</RootNamespace>
+    <RootNamespace>FftUtilstest</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectSubType>NativeUnitTestProject</ProjectSubType>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <Import Project="$(PropertySheetsDir)configurations.props" />
   <Import Project="$(PropertySheetsDir)default_platform_toolset.props" />
-  <Import Project="$(PropertySheetsDir)build_type/static_lib.props" />
+  <Import Project="$(PropertySheetsDir)build_type/dll.props" />
   <Import Project="$(PropertySheetsDir)configurations_specific_settings/$(Configuration)_config.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="PropertySheets">
     <Import Project="$(PropertySheetsDir)solution.props" />
     <Import Project="$(PropertySheetsDir)pch.props" />
-    <Import Project="$(PropertySheetsDir)pch_copy.props" />
     <Import Project="$(PropertySheetsDir)platforms/$(Platform).props" />
     <Import Project="$(PropertySheetsDir)configurations_specific_settings/$(Configuration).props" />
-    <Import Project="$(PropertySheetsDir)static_lib_export.props" />
   </ImportGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(VCInstallDir)UnitTest\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalLibraryDirectories>$(VCInstallDir)UnitTest\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="WindowFunctionHelper.test.cpp" />
+    <ClCompile Include="precompiled.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ExpressionParser\ExpressionParser.vcxproj">
       <Project>{69308053-9c59-46c7-9158-a17de9e7615b}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\FftUtils\FftUtils.vcxproj">
+      <Project>{1c4c178d-a05d-4e2b-9dca-8c3baf84bed9}</Project>
     </ProjectReference>
     <ProjectReference Include="..\Logger\Logger.vcxproj">
       <Project>{2b8f5b9c-15d2-441d-9158-90e3f53c7606}</Project>
@@ -37,25 +54,6 @@
     <ProjectReference Include="..\StdLibExtension\StdLibExtension.vcxproj">
       <Project>{76a3d6d3-45e8-4391-8b94-2477afe23596}</Project>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="sources\libs\cheby_win\cheby_win.h" />
-    <ClInclude Include="sources\libs\kiss_fft\KissFft.hh" />
-    <ClInclude Include="sources\rxtd\fft_utils\FFT.h" />
-    <ClInclude Include="sources\rxtd\fft_utils\FftCascade.h" />
-    <ClInclude Include="sources\rxtd\fft_utils\WindowFunctionHelper.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="sources\libs\cheby_win\cheby_win.cpp" />
-    <ClCompile Include="sources\rxtd\fft_utils\FFT.cpp" />
-    <ClCompile Include="sources\rxtd\fft_utils\FftCascade.cpp" />
-    <ClCompile Include="sources\rxtd\fft_utils\WindowFunctionHelper.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="sources\libs\cheby_win\cheby_win.mhtml" />
-    <None Include="sources\libs\kiss_fft\COPYING" />
-    <None Include="sources\libs\kiss_fft\LICENSES\BSD-3-Clause" />
-    <None Include="sources\libs\kiss_fft\LICENSES\Unlicense" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
