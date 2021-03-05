@@ -43,7 +43,6 @@ namespace rxtd::buffer_printer {
 			stream << t;
 			return;
 		} else {
-
 			stream << t;
 		}
 	}
@@ -58,11 +57,21 @@ namespace rxtd::buffer_printer {
 	}
 
 	template<typename T>
-	void writeType(std::wostream& stream, const std::vector<T>& vec, sview options) {
+	void writeType(std::wostream& stream, const std::vector<T>& array, sview options) {
+		writeType(stream, array_view<T>{ array }, options);
+	}
+
+	template<typename T>
+	void writeType(std::wostream& stream, array_span<T> array, sview options) {
+		writeType(stream, array_view<T>{ array }, options);
+	}
+
+	template<typename T>
+	void writeType(std::wostream& stream, array_view<T> array, sview options) {
 		stream << L'[';
-		if (!vec.empty()) {
+		if (!array.empty()) {
 			bool first = true;
-			for (const auto& value : vec) {
+			for (const auto& value : array) {
 				if (first) {
 					first = false;
 				} else {
