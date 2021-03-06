@@ -3,8 +3,8 @@
 
 #pragma once
 #include "rxtd/audio_analyzer/sound_processing/sound_handlers/HandlerBase.h"
-#include "rxtd/fft_utils/FFT.h"
 #include "rxtd/fft_utils/FftCascade.h"
+#include "rxtd/fft_utils/RealFft.h"
 #include "rxtd/fft_utils/WindowFunctionHelper.h"
 
 namespace rxtd::audio_analyzer::handler {
@@ -59,7 +59,7 @@ namespace rxtd::audio_analyzer::handler {
 
 		std::vector<fft_utils::FftCascade> cascades{};
 
-		fft_utils::FFT fft{};
+		fft_utils::RealFft fft{};
 
 	public:
 		[[nodiscard]]

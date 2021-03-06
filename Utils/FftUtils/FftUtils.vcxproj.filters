@@ -29,9 +29,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="sources\rxtd\fft_utils\FFT.h">
-      <Filter>sources\rxtd\fft_utils</Filter>
-    </ClInclude>
     <ClInclude Include="sources\rxtd\fft_utils\FftCascade.h">
       <Filter>sources\rxtd\fft_utils</Filter>
     </ClInclude>
@@ -44,11 +41,14 @@
     <ClInclude Include="sources\rxtd\fft_utils\WindowFunctionHelper.h">
       <Filter>sources\rxtd\fft_utils</Filter>
     </ClInclude>
+    <ClInclude Include="sources\rxtd\fft_utils\RealFft.h">
+      <Filter>sources\rxtd\fft_utils</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\fft_utils\ComplexFft.h">
+      <Filter>sources\rxtd\fft_utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="sources\rxtd\fft_utils\FFT.cpp">
-      <Filter>sources\rxtd\fft_utils</Filter>
-    </ClCompile>
     <ClCompile Include="sources\rxtd\fft_utils\FftCascade.cpp">
       <Filter>sources\rxtd\fft_utils</Filter>
     </ClCompile>
@@ -56,6 +56,12 @@
       <Filter>sources\libs\cheby_win</Filter>
     </ClCompile>
     <ClCompile Include="sources\rxtd\fft_utils\WindowFunctionHelper.cpp">
+      <Filter>sources\rxtd\fft_utils</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\fft_utils\RealFft.cpp">
+      <Filter>sources\rxtd\fft_utils</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\fft_utils\ComplexFft.cpp">
       <Filter>sources\rxtd\fft_utils</Filter>
     </ClCompile>
   </ItemGroup>

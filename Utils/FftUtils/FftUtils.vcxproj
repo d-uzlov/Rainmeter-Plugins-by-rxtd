@@ -41,13 +41,15 @@
   <ItemGroup>
     <ClInclude Include="sources\libs\cheby_win\cheby_win.h" />
     <ClInclude Include="sources\libs\kiss_fft\KissFft.hh" />
-    <ClInclude Include="sources\rxtd\fft_utils\FFT.h" />
+    <ClInclude Include="sources\rxtd\fft_utils\ComplexFft.h" />
+    <ClInclude Include="sources\rxtd\fft_utils\RealFft.h" />
     <ClInclude Include="sources\rxtd\fft_utils\FftCascade.h" />
     <ClInclude Include="sources\rxtd\fft_utils\WindowFunctionHelper.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="sources\libs\cheby_win\cheby_win.cpp" />
-    <ClCompile Include="sources\rxtd\fft_utils\FFT.cpp" />
+    <ClCompile Include="sources\rxtd\fft_utils\ComplexFft.cpp" />
+    <ClCompile Include="sources\rxtd\fft_utils\RealFft.cpp" />
     <ClCompile Include="sources\rxtd\fft_utils\FftCascade.cpp" />
     <ClCompile Include="sources\rxtd\fft_utils\WindowFunctionHelper.cpp" />
   </ItemGroup>

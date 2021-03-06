@@ -17,5 +17,11 @@
     <ClCompile Include="WindowFunctionHelper.test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="RealFft.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ComplexFft.test.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

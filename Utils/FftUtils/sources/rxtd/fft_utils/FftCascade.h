@@ -5,7 +5,7 @@
 #include <chrono>
 #include <functional>
 
-#include "FFT.h"
+#include "RealFft.h"
 #include "rxtd/GrowingVector.h"
 #include "rxtd/filter_utils/DownsampleHelper.h"
 
@@ -13,7 +13,7 @@ namespace rxtd::fft_utils {
 	class FftCascade {
 	public:
 		using DownsampleHelper = filter_utils::DownsampleHelper;
-		
+
 		using clock = std::chrono::high_resolution_clock;
 		static_assert(clock::is_steady);
 
@@ -28,7 +28,7 @@ namespace rxtd::fft_utils {
 
 	private:
 		FftCascade* successorPtr{};
-		FFT* fftPtr{};
+		RealFft* fftPtr{};
 
 		Params params{};
 		index cascadeIndex{};
@@ -39,11 +39,10 @@ namespace rxtd::fft_utils {
 		bool hasChanges = false;
 
 	public:
-		void setParams(Params _params, FFT* _fftPtr, FftCascade* _successorPtr, index _cascadeIndex);
+		void setParams(Params _params, RealFft* _fftPtr, FftCascade* _successorPtr, index _cascadeIndex);
 		void process(array_view<float> wave, clock::time_point killTime);
 
 	private:
 		void resampleResult();
-		void doFft(array_view<float> chunk);
 	};
 }

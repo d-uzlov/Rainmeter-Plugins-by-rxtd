@@ -7,7 +7,7 @@
 
 using rxtd::fft_utils::FftCascade;
 
-void FftCascade::setParams(Params _params, FFT* _fftPtr, FftCascade* _successorPtr, index _cascadeIndex) {
+void FftCascade::setParams(Params _params, RealFft* _fftPtr, FftCascade* _successorPtr, index _cascadeIndex) {
 	// check for unchanged params should be done in FftAnalyzer handler
 
 	params = _params;
@@ -63,7 +63,10 @@ void FftCascade::process(array_view<float> wave, clock::time_point killTime) {
 			break;
 		}
 
-		doFft(chunk);
+		fftPtr->process(chunk);
+		fftPtr->fillMagnitudes(values);
+		hasChanges = true;
+
 		params.callback(values, cascadeIndex);
 
 		buffer.removeFirst(params.inputStride);
@@ -82,7 +85,7 @@ void FftCascade::resampleResult() {
 		return;
 	}
 
-	DiscreetInterpolator inter;
+	DiscreetInterpolator<double> inter;
 	inter.setParams(0.0, static_cast<double>(newValuesSize - 1), 0, static_cast<index>(values.size()) - 1);
 
 	if (static_cast<index>(values.size()) < newValuesSize) {
@@ -104,18 +107,4 @@ void FftCascade::resampleResult() {
 	}
 
 	values[0] = 0.0;
-}
-
-void FftCascade::doFft(array_view<float> chunk) {
-	fftPtr->process(chunk);
-
-	const auto binsCount = params.fftSize / 2;
-
-	values[0] = std::abs(fftPtr->getDC());
-
-	for (index bin = 1; bin < binsCount; ++bin) {
-		values[static_cast<size_t>(bin)] = fftPtr->getBinMagnitude(bin);
-	}
-
-	hasChanges = true;
 }

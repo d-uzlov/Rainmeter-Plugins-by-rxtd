@@ -18,27 +18,30 @@ namespace rxtd::std_fixes {
 		/// Compares 2 floating point values for rough equality.
 		/// Source: https://stackoverflow.com/a/32334103
 		/// </summary>
-		/// <typeparam name="Float"></typeparam>
 		/// <param name="a">First number to compare</param>
 		/// <param name="b">Second number to compare</param>
-		/// <param name="epsilon">Max relative error</param>
-		/// <param name="absoluteThreshold">Max absolute error</param>
+		/// <param name="epsilonMultiplier">Relative error is epsilonMultiplier*epsilon<Float></param>
+		/// <param name="absoluteThresholdMultiplier">Absolute error is absoluteThresholdMultiplier*epsilon<Float></param>
 		/// <returns>True if values are close based on epsilon and absoluteThreshold, false otherwise.</returns>
 		template<typename Float>
 		static bool checkFloatEqual(
 			Float a, Float b,
-			Float epsilon = static_cast<Float>(128) * std::numeric_limits<Float>::epsilon(),
-			Float absoluteThreshold = std::numeric_limits<Float>::min()
+			Float epsilonMultiplier = static_cast<Float>(64.0),
+			Float absoluteThresholdMultiplier = static_cast<Float>(1.0)
 		) {
-			assert(std::numeric_limits<Float>::epsilon() <= epsilon);
-			assert(epsilon < 1.f);
+			static_assert(
+				std::is_same<Float, float>::value || std::is_same<Float, double>::value || std::is_same<Float, long double>::value,
+				"Only native float types are supported"
+			);
+			assert(epsilonMultiplier >= static_cast<Float>(0.0));
+			assert(absoluteThresholdMultiplier >= static_cast<Float>(0.0));
+			const auto epsilon = epsilonMultiplier * std::numeric_limits<Float>::epsilon();
+			const auto absoluteThreshold = absoluteThresholdMultiplier * std::numeric_limits<Float>::epsilon();
 
 			if (a == b) return true;
 
 			auto diff = std::abs(a - b);
-			auto norm = std::min(std::abs(a) + std::abs(b), std::numeric_limits<Float>::max());
-			// or even faster: std::min(std::abs(a + b), std::numeric_limits<float>::max());
-			// keeping this commented out until I update figures below
+			auto norm = std::min(std::abs(a + b), std::numeric_limits<Float>::max());
 			return diff < std::max(absoluteThreshold, epsilon * norm);
 		}
 

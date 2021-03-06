@@ -30,6 +30,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ComplexFft.test.cpp" />
+    <ClCompile Include="RealFft.test.cpp" />
     <ClCompile Include="WindowFunctionHelper.test.cpp" />
     <ClCompile Include="precompiled.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
