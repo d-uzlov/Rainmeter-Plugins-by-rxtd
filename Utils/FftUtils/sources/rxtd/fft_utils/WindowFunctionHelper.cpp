@@ -3,7 +3,7 @@
 
 #include "WindowFunctionHelper.h"
 
-#include "libs/cheby_win/cheby_win.h"
+#include "ComplexFft.h"
 #include "rxtd/option_parsing/OptionList.h"
 #include "rxtd/option_parsing/OptionSequence.h"
 #include "rxtd/std_fixes/MyMath.h"
@@ -72,12 +72,12 @@ void WindowFunctionHelper::createRectangular(array_span<float> result) {
 void WindowFunctionHelper::createCosineSum(array_span<float> result, float a0) {
 	float reverseSize = 1.0f / static_cast<float>(result.size());
 	for (index i = 0; i < result.size(); ++i) {
-		result[i] = a0 - (1.0f - a0) * std::cos(2.0f * std_fixes::MyMath::pif * static_cast<float>(i) * reverseSize);
+		result[i] = a0 - (1.0f - a0) * std::cos(2.0f * std_fixes::MyMath::pi<float>() * static_cast<float>(i) * reverseSize);
 	}
 }
 
 void WindowFunctionHelper::createKaiser(array_span<float> result, float alpha) {
-	const double pia = std_fixes::MyMath::pi * alpha;
+	const double pia = std_fixes::MyMath::pi<double>() * static_cast<double>(alpha);
 	const double inverseDenominator = 1.0 / std::cyl_bessel_i(0.0, pia);
 
 	const double size = static_cast<double>(result.size());
@@ -100,5 +100,56 @@ void WindowFunctionHelper::createExponential(array_span<float> result, float tar
 }
 
 void WindowFunctionHelper::createChebyshev(array_span<float> result, float attenuation) {
-	cheby_win(result.data(), static_cast<int>(result.size()), attenuation);
+	// using https://www.dsprelated.com/showarticle/42.php as guide
+	// This implementation:
+	//	• for even result size generate asymmetric window;
+	//	• for odd result size generates symmetric window.
+	// This is inconsistent, but in this project all possible expected sizes are even.
+
+	using Float = double;
+	using Fft = ComplexFft<Float>;
+
+	index size = static_cast<index>(result.size());
+	bool sizeReduced = false;
+	if (size % 2 != 0) {
+		sizeReduced = true;
+		size -= 1;
+	}
+	const Float sizeF = static_cast<Float>(size);
+	const Float sizeNorm = static_cast<Float>(1.0) / sizeF;
+
+	const Float _10_pow_alpha = std::pow(static_cast<Float>(10.0), static_cast<Float>(attenuation) / static_cast<Float>(20.0));
+	const Float beta = std::cosh(std::acosh(_10_pow_alpha) * sizeNorm);
+
+	auto W0 = [=](index i)-> Float {
+		const auto a = std::abs(beta * std::cos(std_fixes::MyMath::pi<Float>() * static_cast<Float>(i) / sizeF));
+		const auto res = a <= static_cast<Float>(1.0)
+		                 ? std::cos(sizeF * std::acos(a))
+		                 : std::cosh(sizeF * std::acosh(a));
+		return (i & 1) != 0 ? -res : res;
+	};
+
+	Fft fft;
+	fft.setParams(size, true);
+	std::vector<Fft::complex_type> freqs;
+	freqs.resize(static_cast<size_t>(size));
+	for (index i = 0; i < size; ++i) {
+		freqs[static_cast<size_t>(i)] = static_cast<Float>(W0(i));
+	}
+	fft.process(freqs);
+
+	auto generated = fft.getWritableResult();
+	generated[0] /= 2.0;
+
+	const auto max = static_cast<float>((*std::max_element(
+		generated.begin(), generated.end(),
+		[](auto l, auto r) { return l.real() < r.real(); }
+	)).real());
+
+	for (index i = 0; i < size; ++i) {
+		result[i] = static_cast<float>(generated[i].real()) / max;
+	}
+	if (sizeReduced) {
+		result.back() = result.front();
+	}
 }

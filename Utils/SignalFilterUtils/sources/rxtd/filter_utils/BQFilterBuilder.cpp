@@ -17,7 +17,7 @@ BiQuadIIR BQFilterBuilder::createHighShelf(double samplingFrequency, double q, d
 
 	double digitalFreq = 2.0 * centralFrequency / samplingFrequency;
 	digitalFreq = std::clamp(digitalFreq, 0.01, 1.0 - 0.01);
-	const double w0 = MyMath::pi * digitalFreq;
+	const double w0 = MyMath::pi<double>() * digitalFreq;
 
 	const double a = std::pow(10, dbGain / 40);
 	const double alpha = std::sin(w0) / (2 * q);
@@ -39,7 +39,7 @@ BiQuadIIR BQFilterBuilder::createLowShelf(double samplingFrequency, double q, do
 
 	double digitalFreq = 2.0 * centralFrequency / samplingFrequency;
 	digitalFreq = std::clamp(digitalFreq, 0.01, 1.0 - 0.01);
-	const double w0 = MyMath::pi * digitalFreq;
+	const double w0 = MyMath::pi<double>() * digitalFreq;
 
 	const double a = std::pow(10, dbGain / 40);
 	const double alpha = std::sin(w0) / (2 * q);
@@ -61,7 +61,7 @@ BiQuadIIR BQFilterBuilder::createHighPass(double samplingFrequency, double q, do
 
 	double digitalFreq = 2.0 * centralFrequency / samplingFrequency;
 	digitalFreq = std::clamp(digitalFreq, 0.01, 1.0 - 0.01);
-	const double w0 = MyMath::pi * digitalFreq;
+	const double w0 = MyMath::pi<double>() * digitalFreq;
 
 	const double alpha = std::sin(w0) / (2 * q);
 
@@ -82,7 +82,7 @@ BiQuadIIR BQFilterBuilder::createLowPass(double samplingFrequency, double q, dou
 
 	double digitalFreq = 2.0 * centralFrequency / samplingFrequency;
 	digitalFreq = std::clamp(digitalFreq, 0.01, 1.0 - 0.01);
-	const double w0 = MyMath::pi * digitalFreq;
+	const double w0 = MyMath::pi<double>() * digitalFreq;
 
 	const double alpha = std::sin(w0) / (2 * q);
 
@@ -103,7 +103,7 @@ BiQuadIIR BQFilterBuilder::createPeak(double samplingFrequency, double q, double
 
 	double digitalFreq = 2.0 * centralFrequency / samplingFrequency;
 	digitalFreq = std::clamp(digitalFreq, 0.01, 1.0 - 0.01);
-	const double w0 = MyMath::pi * digitalFreq;
+	const double w0 = MyMath::pi<double>() * digitalFreq;
 
 	const double a = std::pow(10, dbGain / 40);
 	const double alpha = std::sin(w0) / (2 * q);

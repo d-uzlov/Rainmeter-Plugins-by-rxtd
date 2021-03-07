@@ -13,12 +13,13 @@ using rxtd::std_fixes::MyMath;
 namespace rxtd::test::fft_utils {
 	using namespace rxtd::fft_utils;
 	TEST_CLASS(ComplexFft_test) {
-		static_assert(std::is_same<float, ComplexFft::scalar_type>::value);
-		ComplexFft fft;
+		using Float = float;
+		using Fft = ComplexFft<Float>;
+		Fft fft;
 
-		std::vector<ComplexFft::complex_type> wave;
-		std::vector<ComplexFft::complex_type> frequencies;
-		std::vector<ComplexFft::complex_type> wave2;
+		std::vector<Fft::complex_type> wave;
+		std::vector<Fft::complex_type> frequencies;
+		std::vector<Fft::complex_type> wave2;
 
 	public:
 		TEST_METHOD(Test_4) {
@@ -72,7 +73,7 @@ namespace rxtd::test::fft_utils {
 	private:
 		void doForward(index size, index desiredWaveSinCount) {
 			wave.resize(static_cast<size_t>(size));
-			generateSinWave(wave, static_cast<float>(desiredWaveSinCount));
+			generateSinWave(wave, static_cast<Float>(desiredWaveSinCount));
 
 			fft.setParams(size, false);
 			fft.process(wave);
@@ -80,7 +81,7 @@ namespace rxtd::test::fft_utils {
 			fft.getResult().transferToVector(frequencies);
 		}
 
-		void testForward(index size, index desiredWaveSinCount, float tolerance) {
+		void testForward(index size, index desiredWaveSinCount, Float tolerance) {
 			Assert::IsTrue(desiredWaveSinCount > 0);
 			Assert::IsTrue(desiredWaveSinCount < size / 2);
 
@@ -89,14 +90,14 @@ namespace rxtd::test::fft_utils {
 			auto freqs = array_span{ frequencies };
 			for (index i = 0; i < freqs.size(); i++) {
 				if (i == desiredWaveSinCount) {
-					Assert::AreEqual(0.0f, freqs[i].real(), tolerance);
-					Assert::AreEqual(-0.5f, freqs[i].imag(), tolerance);
+					Assert::AreEqual(static_cast<Float>(0.0), freqs[i].real(), tolerance);
+					Assert::AreEqual(static_cast<Float>(-0.5), freqs[i].imag(), tolerance);
 				} else if (size - i == desiredWaveSinCount) {
-					Assert::AreEqual(0.0f, freqs[i].real(), tolerance);
-					Assert::AreEqual(0.5f, freqs[i].imag(), tolerance);
+					Assert::AreEqual(static_cast<Float>(0.0), freqs[i].real(), tolerance);
+					Assert::AreEqual(static_cast<Float>(0.5), freqs[i].imag(), tolerance);
 				} else {
-					Assert::AreEqual(0.0f, freqs[i].real(), tolerance);
-					Assert::AreEqual(0.0f, freqs[i].imag(), tolerance);
+					Assert::AreEqual(static_cast<Float>(0.0), freqs[i].real(), tolerance);
+					Assert::AreEqual(static_cast<Float>(0.0), freqs[i].imag(), tolerance);
 				}
 			}
 		}
@@ -110,19 +111,19 @@ namespace rxtd::test::fft_utils {
 			assertArraysEqual(wave, wave2);
 		}
 
-		static void generateSinWave(array_span<ComplexFft::complex_type> array, float count) {
+		static void generateSinWave(array_span<Fft::complex_type> array, Float count) {
 			Assert::IsTrue(count >= 1.0f);
 
 			for (index i = 0; i < array.size(); i++) {
-				array[i] = std::sin(count * static_cast<float>(i) * MyMath::pif * 2.0f / static_cast<float>(array.size()));
+				array[i] = std::sin(count * static_cast<Float>(i) * MyMath::pi<Float>() * 2.0f / static_cast<Float>(array.size()));
 			}
 		}
 
-		static void assertArraysEqual(array_view<ComplexFft::complex_type> a, array_view<ComplexFft::complex_type> b) {
+		static void assertArraysEqual(array_view<Fft::complex_type> a, array_view<Fft::complex_type> b) {
 			Assert::AreEqual(a.size(), b.size());
 			for (index i = 0; i < a.size(); i++) {
-				Assert::IsTrue(MyMath::checkFloatEqual(a[i].real(), b[i].real(), 64.0f, 8.0f));
-				Assert::IsTrue(MyMath::checkFloatEqual(a[i].imag(), b[i].imag(), 64.0f, 8.0f));
+				Assert::IsTrue(MyMath::checkFloatEqual<Float>(a[i].real(), b[i].real(), 64.0f, 8.0f));
+				Assert::IsTrue(MyMath::checkFloatEqual<Float>(a[i].imag(), b[i].imag(), 64.0f, 8.0f));
 			}
 		}
 	};

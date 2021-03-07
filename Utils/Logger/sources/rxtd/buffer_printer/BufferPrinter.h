@@ -148,7 +148,10 @@ namespace rxtd::buffer_printer {
 
 		[[nodiscard]]
 		sview getBufferView() {
-			return buffer.getBuffer();
+			buffer.appendEOL();
+			auto result = buffer.getBuffer();
+			result.remove_suffix(1);
+			return result;
 		}
 
 	private:

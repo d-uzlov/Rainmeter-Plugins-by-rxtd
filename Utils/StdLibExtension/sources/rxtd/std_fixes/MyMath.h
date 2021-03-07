@@ -11,8 +11,10 @@ namespace rxtd::std_fixes {
 	//
 	class MyMath {
 	public:
-		static const double pi;
-		static const float pif;
+		template<typename Float>
+		static Float pi() {
+			return std::acos(static_cast<Float>(-1.0));
+		}
 
 		/// <summary>
 		/// Compares 2 floating point values for rough equality.

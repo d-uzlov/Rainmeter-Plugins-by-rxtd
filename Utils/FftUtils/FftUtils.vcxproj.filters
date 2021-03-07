@@ -21,9 +21,6 @@
     <Filter Include="sources\libs\kiss_fft">
       <UniqueIdentifier>{265c9136-dc91-49c1-ad0d-2d155ba9fc11}</UniqueIdentifier>
     </Filter>
-    <Filter Include="sources\libs\cheby_win">
-      <UniqueIdentifier>{1a4e012f-1b1b-4c0b-b2c4-843991768ac1}</UniqueIdentifier>
-    </Filter>
     <Filter Include="sources\libs\kiss_fft\LICENSES">
       <UniqueIdentifier>{7d16f704-6ae7-4bec-9d04-152e296c8ba7}</UniqueIdentifier>
     </Filter>
@@ -34,9 +31,6 @@
     </ClInclude>
     <ClInclude Include="sources\libs\kiss_fft\KissFft.hh">
       <Filter>sources\libs\kiss_fft</Filter>
-    </ClInclude>
-    <ClInclude Include="sources\libs\cheby_win\cheby_win.h">
-      <Filter>sources\libs\cheby_win</Filter>
     </ClInclude>
     <ClInclude Include="sources\rxtd\fft_utils\WindowFunctionHelper.h">
       <Filter>sources\rxtd\fft_utils</Filter>
@@ -52,23 +46,14 @@
     <ClCompile Include="sources\rxtd\fft_utils\FftCascade.cpp">
       <Filter>sources\rxtd\fft_utils</Filter>
     </ClCompile>
-    <ClCompile Include="sources\libs\cheby_win\cheby_win.cpp">
-      <Filter>sources\libs\cheby_win</Filter>
-    </ClCompile>
     <ClCompile Include="sources\rxtd\fft_utils\WindowFunctionHelper.cpp">
       <Filter>sources\rxtd\fft_utils</Filter>
     </ClCompile>
     <ClCompile Include="sources\rxtd\fft_utils\RealFft.cpp">
       <Filter>sources\rxtd\fft_utils</Filter>
     </ClCompile>
-    <ClCompile Include="sources\rxtd\fft_utils\ComplexFft.cpp">
-      <Filter>sources\rxtd\fft_utils</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="sources\libs\cheby_win\cheby_win.mhtml">
-      <Filter>sources\libs\cheby_win</Filter>
-    </None>
     <None Include="sources\libs\kiss_fft\COPYING">
       <Filter>sources\libs\kiss_fft</Filter>
     </None>

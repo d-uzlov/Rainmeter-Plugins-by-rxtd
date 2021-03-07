@@ -69,7 +69,7 @@ TimeResampler::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalDa
 		);
 	}
 
-	std::vector<index> eqWs(dataSize.layersCount, blockSize);
+	std::vector<index> eqWs(static_cast<size_t>(dataSize.layersCount), blockSize);
 	return { dataSize.valuesCount, std::move(eqWs) };
 }
 

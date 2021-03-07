@@ -73,7 +73,7 @@ namespace rxtd::test::fft_utils {
 			Assert::IsTrue(count >= 1.0f);
 
 			for (index i = 0; i < array.size(); i++) {
-				array[i] = std::sin(count * static_cast<float>(i) * MyMath::pif * 2.0f / static_cast<float>(array.size()));
+				array[i] = std::sin(count * static_cast<float>(i) * MyMath::pi<float>() * 2.0f / static_cast<float>(array.size()));
 			}
 		}
 	};
