@@ -147,16 +147,16 @@ bool ParamHelper::parseFilter(const OptionMap& optionMap, ProcessingData::Filter
 	} else if (filterType == L"like-a") {
 		fi.creator = fcp.parse(
 			option_parsing::Option{
-				L"bqHighPass[q 0.3, freq 200, forcedGain 3.58],"
-				L"bwLowPass[order 5, freq 10000],"
+				L"bqHighPass(q 0.3, freq 200, forcedGain 3.58),"
+				L"bwLowPass(order 5, freq 10000),"
 			}, filterLogger
 		);
 	} else if (filterType == L"like-d") {
 		fi.creator = fcp.parse(
 			option_parsing::Option{
-				L"bqHighPass[q 0.3, freq 200, forcedGain 3.65],"
-				L"bqPeak[q 1.0, freq 6000, gain 5.28],"
-				L"bwLowPass[order 5, freq 10000],"
+				L"bqHighPass(q 0.3, freq 200, forcedGain 3.65),"
+				L"bqPeak(q 1.0, freq 6000, gain 5.28),"
+				L"bwLowPass(order 5, freq 10000),"
 			}, filterLogger
 		);
 	} else if (filterType == L"custom") {

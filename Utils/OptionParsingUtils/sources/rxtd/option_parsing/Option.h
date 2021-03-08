@@ -72,14 +72,14 @@ namespace rxtd::option_parsing {
 
 		[[nodiscard]]
 		OptionSequence asSequence(
-			wchar_t optionBegin = L'[', wchar_t optionEnd = L']',
-			wchar_t optionDelimiter = L','
+			wchar_t optionBegin, wchar_t optionEnd,
+			wchar_t optionDelimiter
 		) const &;
 
 		[[nodiscard]]
 		OptionSequence asSequence(
-			wchar_t optionBegin = L'[', wchar_t optionEnd = L']',
-			wchar_t optionDelimiter = L','
+			wchar_t optionBegin, wchar_t optionEnd,
+			wchar_t optionDelimiter
 		) &&;
 
 		[[nodiscard]]

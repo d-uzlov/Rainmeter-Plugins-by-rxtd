@@ -102,7 +102,7 @@ void CVT::applyToArray(array_view<float> source, array_span<float> dest) {
 CVT CVT::parse(sview transformDescription, const option_parsing::OptionParser& parser, Logger& cl) {
 	std::vector<TransformationInfo> transforms;
 
-	for (auto pair : Option{ transformDescription }.asSequence()) {
+	for (auto pair : Option{ transformDescription }.asSequence(L'(', L')', L',')) {
 		auto logger = cl.context(L"{}: ", pair.first.asString());
 		auto transformOpt = parseTransformation(pair.first, pair.second, parser, logger);
 		if (!transformOpt.has_value()) {

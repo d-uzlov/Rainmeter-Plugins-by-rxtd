@@ -29,7 +29,7 @@ FilterCascadeCreator FilterCascadeParser::parse(const Option& description, Logge
 
 	parser.setLogger(logger);
 
-	for (auto filterDescription : description.asSequence()) {
+	for (auto filterDescription : description.asSequence(L'(', L')', L',')) {
 		auto patcher = parseFilter(filterDescription.first, filterDescription.second, logger);
 		if (patcher == nullptr) {
 			return {};
