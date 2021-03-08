@@ -24,6 +24,7 @@ namespace rxtd::utils {
 
 	private:
 		bool objectIsValid = true;
+		bool permanentlyStopped = false;
 
 		double resultDouble = 0.0;
 		string resultString{};
@@ -61,8 +62,9 @@ namespace rxtd::utils {
 		virtual void vResolve(array_view<isview> args, string& resolveBufferString) { }
 
 		// Sets object state to invalid until next reload
-		void setInvalid() {
+		void setInvalid(bool permanent = false) {
 			objectIsValid = false;
+			permanentlyStopped |= permanent;
 		}
 
 		// When false, number is used as a string value.

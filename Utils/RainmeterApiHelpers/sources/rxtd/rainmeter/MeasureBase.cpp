@@ -20,7 +20,7 @@ double MeasureBase::update() {
 		resultDouble = vUpdate();
 	} catch (std::runtime_error&) {
 		logger.error(L"Measure '{}' unexpectedly stopped update", rain.getMeasureName());
-		setInvalid();
+		setInvalid(true);
 	}
 	if (useResultString) {
 		resultString = {};
@@ -28,19 +28,23 @@ double MeasureBase::update() {
 			vUpdateString(resultString);
 		} catch (std::runtime_error&) {
 			logger.error(L"Measure '{}' unexpectedly stopped string update", rain.getMeasureName());
-			setInvalid();
+			setInvalid(true);
 		}
 	}
 	return resultDouble;
 }
 
 void MeasureBase::reload() {
+	if (permanentlyStopped) {
+		return;
+	}
+
 	objectIsValid = true;
 	try {
 		vReload();
 	} catch (std::runtime_error&) {
 		logger.error(L"Measure '{}' unexpectedly stopped reload", rain.getMeasureName());
-		setInvalid();
+		setInvalid(true);
 	}
 }
 
@@ -54,7 +58,7 @@ void MeasureBase::command(const wchar_t* bangArgs) {
 		vCommand(bangArgs);
 	} catch (std::runtime_error&) {
 		logger.error(L"Measure '{}' unexpectedly stopped command", rain.getMeasureName());
-		setInvalid();
+		setInvalid(true);
 	}
 }
 
@@ -85,7 +89,7 @@ const wchar_t* MeasureBase::resolve(array_view<isview> args) {
 		vResolve(args, resolveString);
 	} catch (std::runtime_error&) {
 		logger.error(L"Measure '{}' unexpectedly stopped section variable resolve", rain.getMeasureName());
-		setInvalid();
+		setInvalid(true);
 	}
 
 	return resolveString.c_str();
