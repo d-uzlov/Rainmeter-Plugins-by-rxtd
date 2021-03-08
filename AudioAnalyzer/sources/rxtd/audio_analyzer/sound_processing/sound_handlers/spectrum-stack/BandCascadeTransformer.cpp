@@ -12,12 +12,6 @@ using ParamsContainer = HandlerBase::ParamsContainer;
 ParamsContainer BandCascadeTransformer::vParseParams(ParamParseContext& context) const noexcept(false) {
 	Params params;
 
-	const auto sourceId = context.options.get(L"source").asIString();
-	if (sourceId.empty()) {
-		context.log.error(L"source not found");
-		throw InvalidOptionsException{};
-	}
-
 	const float epsilon = std::numeric_limits<float>::epsilon();
 
 	params.minWeight = context.parser.parseFloatF(context.options.get(L"minWeight"), 10.1f);

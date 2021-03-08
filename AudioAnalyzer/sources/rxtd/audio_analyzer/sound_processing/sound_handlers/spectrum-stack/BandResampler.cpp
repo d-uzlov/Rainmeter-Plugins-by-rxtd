@@ -14,12 +14,6 @@ using ParamsContainer = HandlerBase::ParamsContainer;
 ParamsContainer BandResampler::vParseParams(ParamParseContext& context) const noexcept(false) {
 	Params params;
 
-	const auto sourceId = context.options.get(L"source").asIString();
-	if (sourceId.empty()) {
-		context.log.error(L"source is not found");
-		throw InvalidOptionsException{};
-	}
-
 	auto bandsOption = context.options.get(L"bands");
 	if (bandsOption.empty()) {
 		context.log.error(L"bands option is not found");

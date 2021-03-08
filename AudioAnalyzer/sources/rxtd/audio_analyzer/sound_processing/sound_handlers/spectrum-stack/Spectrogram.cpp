@@ -16,12 +16,6 @@ using ParamsContainer = HandlerBase::ParamsContainer;
 ParamsContainer Spectrogram::vParseParams(ParamParseContext& context) const noexcept(false) {
 	Params params;
 
-	const auto sourceId = context.options.get(L"source").asIString();
-	if (sourceId.empty()) {
-		context.log.error(L"source is not found");
-		throw InvalidOptionsException{};
-	}
-
 	params.length = context.parser.parseInt(context.options.get(L"length"), 100);
 	if (params.length < 2) {
 		context.log.error(L"length must be >= 2 but {} found", params.length);

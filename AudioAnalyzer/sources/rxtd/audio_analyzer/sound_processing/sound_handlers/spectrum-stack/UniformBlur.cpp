@@ -11,12 +11,6 @@ using ParamsContainer = HandlerBase::ParamsContainer;
 ParamsContainer UniformBlur::vParseParams(ParamParseContext& context) const {
 	Params params;
 
-	const auto sourceId = context.options.get(L"source").asIString();
-	if (sourceId.empty()) {
-		context.log.error(L"source is not found");
-		throw InvalidOptionsException{};
-	}
-
 	//                                                        ?? ↓↓ looks best ?? at 0.25 ↓↓ ??
 	params.blurRadius = std::max<double>(context.parser.parseFloat(context.options.get(L"Radius"), 1.0) * 0.25, 0.0);
 	params.blurRadiusAdaptation = std::max<double>(context.parser.parseFloat(context.options.get(L"RadiusAdaptation"), 2.0), 0.0);

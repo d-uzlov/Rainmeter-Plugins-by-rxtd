@@ -10,12 +10,6 @@ using ParamsContainer = HandlerBase::ParamsContainer;
 ParamsContainer TimeResampler::vParseParams(ParamParseContext& context) const noexcept(false) {
 	Params params;
 
-	const auto sourceId = context.options.get(L"source").asIString();
-	if (sourceId.empty()) {
-		context.log.error(L"source is not found");
-		throw InvalidOptionsException{};
-	}
-
 	params.granularity = context.parser.parseFloat(context.options.get(L"granularity"), 1000.0 / 60.0);
 	params.granularity = std::max(params.granularity, 0.01);
 	params.granularity *= 0.001;
