@@ -32,7 +32,9 @@ namespace rxtd::std_fixes {
 
 		constexpr StringViewBaseExtended(const typename base::const_pointer ptr, const size_type count) noexcept : base(ptr, static_cast<typename base::size_type>(count)) { }
 
+#ifndef _WIN32
 		constexpr StringViewBaseExtended(const typename base::const_pointer ptr, const int count) noexcept : StringViewBaseExtended(ptr, static_cast<size_type>(count)) { }
+#endif
 
 		StringViewBaseExtended(const StringBaseExtended<Elem, Traits>&) noexcept;
 
