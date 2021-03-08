@@ -9,19 +9,22 @@
 
 namespace rxtd::audio_analyzer::options {
 	class HandlerCacheHelper {
+	public:
 		using Rainmeter = rainmeter::Rainmeter;
 		using OptionMap = option_parsing::OptionMap;
 
 		struct MapValue {
 			HandlerInfo info;
 			bool valid = false;
+			bool changed = false;
 			bool updated = false;
 		};
 
+	private:
 		using PatchersMap = std::map<istring, MapValue, std::less<>>;
-		PatchersMap patchersCache;
+
+		mutable PatchersMap patchersCache;
 		Rainmeter rain;
-		bool anythingChanged = false;
 		bool unusedOptionsWarning = false;
 		Version version{};
 		option_parsing::OptionParser* parserPtr = nullptr;
@@ -46,21 +49,17 @@ namespace rxtd::audio_analyzer::options {
 		void reset() {
 			for (auto& [name, info] : patchersCache) {
 				info.updated = false;
+				info.changed = false;
 			}
-
-			anythingChanged = false;
-		}
-
-		bool isAnythingChanged() const {
-			return anythingChanged;
 		}
 
 		[[nodiscard]]
-		HandlerInfo* getHandlerInfo(const istring& name, Logger& cl);
+		const MapValue& getHandlerInfo(const istring& name, isview source, Logger& cl) const;
 
 	private:
 		[[nodiscard]]
-		MapValue parseHandler(sview name, MapValue val, Logger& cl);
+		// returns true when something has changed, false otherwise
+		bool parseHandler(sview name, isview source, HandlerInfo& val, Logger& cl) const;
 
 		/// <summary>
 		/// Can throw HandlerBase::InvalidOptionsException.
@@ -69,8 +68,6 @@ namespace rxtd::audio_analyzer::options {
 		/// <param name="cl"></param>
 		/// <returns></returns>
 		[[nodiscard]]
-		handler::HandlerBase::HandlerMetaInfo createHandlerPatcher(const OptionMap& optionMap, Logger& cl) const noexcept(false);
-
-		void readRawDescription2(isview type, const OptionMap& optionMap, string& rawDescription2) const;
+		handler::HandlerBase::HandlerMetaInfo createHandlerPatcher(isview type, const OptionMap& optionMap, Logger& cl) const noexcept(false);
 	};
 }

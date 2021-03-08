@@ -33,20 +33,6 @@
 
 
 namespace rxtd::audio_analyzer::handler {
-	class HandlerBase;
-}
-
-namespace rxtd::audio_analyzer {
-	class HandlerFinder {
-	public:
-		virtual ~HandlerFinder() = default;
-
-		[[nodiscard]]
-		virtual handler::HandlerBase* getHandler(isview id) const = 0;
-	};
-}
-
-namespace rxtd::audio_analyzer::handler {
 	class HandlerBase : VirtualDestructorBase {
 	public:
 		using Option = option_parsing::Option;
@@ -167,6 +153,7 @@ namespace rxtd::audio_analyzer::handler {
 			using TransformFun = handlerUptr(*)(handlerUptr old);
 
 			ParamsContainer params;
+			index sourcesCount = 0;
 			// std::vector<istring> sources;
 			TransformFun transform = [](handlerUptr ptr) -> handlerUptr { return {}; };
 			ExternalMethods externalMethods{};
@@ -215,6 +202,7 @@ namespace rxtd::audio_analyzer::handler {
 			meta.params = ref.vParseParams(context);
 			meta.externalMethods.finish = ref.vGetExt_finish();
 			meta.externalMethods.getProp = ref.vGetExt_getProp();
+			meta.sourcesCount = ref.vGetSourcesCount();
 
 			return meta;
 		}
@@ -230,6 +218,11 @@ namespace rxtd::audio_analyzer::handler {
 			return [](const ExternalData&, isview, BufferPrinter&, const ExternalMethods::CallContext&) -> bool {
 				return {};
 			};
+		}
+
+		[[nodiscard]]
+		virtual index vGetSourcesCount() const {
+			return 0;
 		}
 
 		/// <summary>
@@ -292,9 +285,9 @@ namespace rxtd::audio_analyzer::handler {
 		bool patch(
 			sview name,
 			const ParamsContainer& params,
-			array_view<istring> sources,
+			HandlerBase* source,
 			index sampleRate, Version version,
-			HandlerFinder& hf, Logger& cl,
+			Logger& cl,
 			Snapshot& snapshot
 		);
 

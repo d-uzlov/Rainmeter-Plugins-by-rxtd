@@ -42,6 +42,11 @@ namespace rxtd::audio_analyzer::handler {
 		}
 
 		[[nodiscard]]
+		index vGetSourcesCount() const override {
+			return 1;
+		}
+
+		[[nodiscard]]
 		ParamsContainer vParseParams(ParamParseContext& context) const noexcept(false) override;
 
 	private:

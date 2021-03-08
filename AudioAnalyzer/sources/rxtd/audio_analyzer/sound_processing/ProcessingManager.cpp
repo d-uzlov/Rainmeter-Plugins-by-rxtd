@@ -63,12 +63,21 @@ void ProcessingManager::setParams(
 				break;
 			}
 
-			HandlerFinderImpl hf{ channelDataNew };
+			handler::HandlerBase* source = nullptr;
+			if (patchInfo.meta.sourcesCount == 1) {
+				const auto iter = channelDataNew.find(patchInfo.source);
+				if (iter == channelDataNew.end()) {
+					cl.error(L"source (handler {}) is not found", patchInfo.source);
+					handlerIsValid = false;
+					break;
+				}
+				source = iter->second.get();
+			}
 			const bool success = handlerPtr->patch(
 				handlerName % csView() % own(),
-				patchInfo.meta.params, patchInfo.sources,
+				patchInfo.meta.params, source,
 				finalSampleRate, version,
-				hf, cl,
+				cl,
 				snapshot[channel][handlerName]
 			);
 

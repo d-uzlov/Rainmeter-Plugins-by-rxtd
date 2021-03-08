@@ -12,7 +12,7 @@ namespace rxtd::option_parsing {
 		[[nodiscard]]
 		static std::vector<SubstringViewInfo> parse(sview view, wchar_t delimiter);
 		[[nodiscard]]
-		static std::vector<std::vector<SubstringViewInfo>>
+		static std::vector<std::pair<SubstringViewInfo, SubstringViewInfo>>
 		parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wchar_t optionDelimiter);
 
 	private:

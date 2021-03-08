@@ -24,6 +24,7 @@ namespace rxtd::audio_analyzer::options {
 		FilterInfo filter;
 		index targetRate{};
 		std::vector<Channel> channels;
+		istring handlersRaw;
 		std::vector<istring> handlerOrder;
 		std::map<istring, HandlerInfo, std::less<>> handlers;
 
@@ -32,7 +33,7 @@ namespace rxtd::audio_analyzer::options {
 			return lhs.filter == rhs.filter
 				&& lhs.targetRate == rhs.targetRate
 				&& lhs.channels == rhs.channels
-				&& lhs.handlerOrder == rhs.handlerOrder
+				&& lhs.handlersRaw == rhs.handlersRaw
 				&& lhs.handlers == rhs.handlers;
 		}
 

@@ -20,76 +20,83 @@
 using namespace std::string_literals;
 
 using rxtd::audio_analyzer::options::HandlerCacheHelper;
+using MapValue = HandlerCacheHelper::MapValue;
 using rxtd::audio_analyzer::options::HandlerInfo;
 using rxtd::audio_analyzer::handler::HandlerBase;
 
-HandlerInfo* HandlerCacheHelper::getHandlerInfo(const istring& name, Logger& cl) {
+const MapValue& HandlerCacheHelper::getHandlerInfo(const istring& name, isview source, Logger& cl) const {
 	auto& val = patchersCache[name];
 
 	if (!val.updated) {
-		val = parseHandler(name % csView(), std::move(val), cl);
+		try {
+			const bool changed = parseHandler(name % csView(), source, val.info, cl);
+			if (changed) {
+				val.valid = true;
+				val.changed = true;
+			}
+		} catch (HandlerBase::InvalidOptionsException&) {
+			// function that threw the exception must have handled all log messages about reasons
+			val.valid = false;
+		}
 		val.updated = true;
 	}
 
-	return val.valid ? &val.info : nullptr;
+	return val;
 }
 
-HandlerCacheHelper::MapValue HandlerCacheHelper::parseHandler(sview name, MapValue val, Logger& cl) {
+bool HandlerCacheHelper::parseHandler(sview name, isview source, HandlerInfo& info, Logger& cl) const {
 	string optionName = L"Handler-"s += name;
 	auto descriptionOption = rain.read(optionName);
-	if (descriptionOption.empty()) {
-		optionName = L"Handler_"s += name;
-		descriptionOption = rain.read(optionName);
-	}
 
 	if (descriptionOption.empty()) {
 		cl.error(L"description is not found", name);
-		return {};
+		throw HandlerBase::InvalidOptionsException{};
 	}
 
 	OptionMap optionMap = descriptionOption.asMap(L'|', L' ');
-	string rawDescription2;
-	readRawDescription2(optionMap.get(L"type").asIString(), optionMap, rawDescription2);
 
-	if (val.info.rawDescription == descriptionOption.asString()
-		&& val.info.rawDescription2 == rawDescription2) {
-		return val;
+	if (source.empty()) {
+		source = optionMap.get(L"source").asIString();
 	}
 
-	anythingChanged = true;
-
-	try {
-		val.info.meta = createHandlerPatcher(optionMap, cl);
-		val.valid = true;
-	} catch (HandlerBase::InvalidOptionsException&) {
-		// function that threw the exception must have handled all log messages about reasons
-		val.valid = false;
+	if (info.rawDescription == descriptionOption.asString() && info.source == source) {
+		return {};
 	}
 
-	val.info.sources.clear();
-	for (auto opt : optionMap.get(L"source").asList(L',')) {
-		val.info.sources.push_back(opt.asIString() % own());
+	info.rawDescription = descriptionOption.asString();
+	info.source = source;
+
+	info.type = optionMap.get(L"type").asIString();
+	info.meta = createHandlerPatcher(info.type, optionMap, cl);
+	if (info.meta.sourcesCount == 0) {
+		if (!source.empty()) {
+			cl.error(L"{} can't have source", info.type);
+			throw HandlerBase::InvalidOptionsException{};
+		}
+	} else if (info.meta.sourcesCount == 1) {
+		if (source.empty()) {
+			cl.error(L"{} must have source", info.type);
+			throw HandlerBase::InvalidOptionsException{};
+		}
+	} else {
+		cl.error(L"too many sources requested, tell the plugin dev about this error", info.type);
+		throw HandlerBase::InvalidOptionsException{};
 	}
-	val.info.type = optionMap.get(L"type").asIString();
 
 	const auto unusedOptions = optionMap.getListOfUntouched();
 	if (unusedOptionsWarning && !unusedOptions.empty()) {
 		cl.warning(L"unused options: '{}'", unusedOptions);
 	}
 
-	val.info.rawDescription2 = std::move(rawDescription2);
-	val.info.rawDescription = descriptionOption.asString();
-
-	return val;
+	return true;
 }
 
 HandlerBase::HandlerMetaInfo HandlerCacheHelper::createHandlerPatcher(
+	isview type,
 	const OptionMap& optionMap,
 	Logger& cl
 ) const noexcept(false) {
 	using namespace handler;
-
-	const auto type = optionMap.get(L"type").asIString();
 
 	if (type.empty()) {
 		cl.error(L"type is not found");
@@ -134,23 +141,4 @@ HandlerBase::HandlerMetaInfo HandlerCacheHelper::createHandlerPatcher(
 
 	cl.error(L"unknown type '{}'", type);
 	throw HandlerBase::InvalidOptionsException{};
-}
-
-void HandlerCacheHelper::readRawDescription2(
-	isview type,
-	const OptionMap& optionMap,
-	string& rawDescription2
-) const {
-	if (type == L"BandResampler") {
-		auto freqListIndex = optionMap.get(L"freqList").asString();
-		if (!freqListIndex.empty()) {
-			string freqListOptionName = L"FreqList-"s += freqListIndex;
-			auto freqListOption = rain.read(freqListOptionName);
-			if (freqListOption.empty()) {
-				freqListOptionName = L"FreqList_"s += freqListIndex;
-				freqListOption = rain.read(freqListOptionName);
-			}
-			rawDescription2 = freqListOption.asString();
-		}
-	}
 }

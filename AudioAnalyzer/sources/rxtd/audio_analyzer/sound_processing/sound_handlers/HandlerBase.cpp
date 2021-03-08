@@ -10,33 +10,21 @@ using rxtd::std_fixes::StringUtils;
 
 bool HandlerBase::patch(
 	sview name,
-	const ParamsContainer& params, array_view<istring> sources,
+	const ParamsContainer& params, HandlerBase* source,
 	index sampleRate, Version version,
-	HandlerFinder& hf, Logger& cl,
+	Logger& cl,
 	Snapshot& snapshot
 ) {
-	if (sources.size() > 1) {
-		throw std::exception{ "no support for multiple sources yet" };
-	}
-
 	_data.name = name;
 
 	Configuration newConfig;
-	if (!sources.empty()) {
-		const auto& sourceName = sources[0];
-		newConfig.sourcePtr = hf.getHandler(sourceName);
-		if (newConfig.sourcePtr == nullptr) {
-			cl.error(L"source {} is not found", sourceName);
-			return {};
-		}
-
+	newConfig.sourcePtr = source;
+	if (source != nullptr) {
 		const auto dataSize = newConfig.sourcePtr->getDataSize();
 		if (dataSize.isEmpty()) {
-			cl.error(L"source {} doesn't produce any data", sourceName);
+			cl.error(L"source (handler {}) doesn't produce any data", source->_data.name);
 			return {};
 		}
-	} else {
-		newConfig.sourcePtr = nullptr;
 	}
 	newConfig.sampleRate = sampleRate;
 	newConfig.version = version;

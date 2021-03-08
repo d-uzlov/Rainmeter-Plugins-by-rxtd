@@ -99,13 +99,12 @@ void CVT::applyToArray(array_view<float> source, array_span<float> dest) {
 	}
 }
 
-CVT CVT::parse(sview transformDescription, option_parsing::OptionParser parser, Logger& cl) {
+CVT CVT::parse(sview transformDescription, const option_parsing::OptionParser& parser, Logger& cl) {
 	std::vector<TransformationInfo> transforms;
 
-
-	for (auto list : Option{ transformDescription }.asSequence()) {
-		auto logger = cl.context(L"{}: ", list.get(0).asString());
-		auto transformOpt = parseTransformation(list, parser, logger);
+	for (auto pair : Option{ transformDescription }.asSequence()) {
+		auto logger = cl.context(L"{}: ", pair.first.asString());
+		auto transformOpt = parseTransformation(pair.first, pair.second, parser, logger);
 		if (!transformOpt.has_value()) {
 			return {};
 		}
@@ -115,13 +114,13 @@ CVT CVT::parse(sview transformDescription, option_parsing::OptionParser parser, 
 	return CustomizableValueTransformer{ transforms };
 }
 
-std::optional<CVT::TransformationInfo> CVT::parseTransformation(OptionList list, option_parsing::OptionParser parser, Logger& cl) {
-	const auto transformName = list.get(0).asIString();
+std::optional<CVT::TransformationInfo> CVT::parseTransformation(const Option& nameOpt, const Option& argsOpt, option_parsing::OptionParser parser, Logger& cl) {
+	const auto transformName = nameOpt.asIString();
 	TransformationInfo tr{};
 
 	OptionMap params;
-	if (list.size() >= 2) {
-		params = list.get(1).asMap(L',', L' ');
+	if (!argsOpt.empty()) {
+		params = argsOpt.asMap(L',', L' ');
 	}
 
 	if (transformName == L"db") {

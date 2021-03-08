@@ -13,9 +13,15 @@ namespace rxtd::audio_analyzer::options {
 		using Rainmeter = rainmeter::Rainmeter;
 		using OptionMap = option_parsing::OptionMap;
 		using OptionList = option_parsing::OptionList;
+		using OptionSequence = option_parsing::OptionSequence;
 		using Parser = option_parsing::OptionParser;
 
 	public:
+		class InvalidOptionsException : public std::runtime_error {
+		public:
+			explicit InvalidOptionsException() : runtime_error("") {}
+		};
+
 		using ProcessingsInfoMap = std::map<istring, ProcessingData, std::less<>>;
 
 	private:
@@ -26,10 +32,8 @@ namespace rxtd::audio_analyzer::options {
 		ProcessingsInfoMap parseResult;
 		Version version{};
 		HandlerCacheHelper hch;
-		std::set<istring> handlerNames;
+		mutable std::set<istring> handlerNames;
 		mutable Parser parser = option_parsing::OptionParser::getDefault();
-
-		mutable bool anythingChanged = false;
 
 	public:
 		void setRainmeter(Rainmeter value) {
@@ -40,6 +44,7 @@ namespace rxtd::audio_analyzer::options {
 		}
 
 		// return true if there were any changes since last update, false if there were none
+		// can throw InvalidOptionsException
 		bool readOptions(Version version, bool suppressLogger);
 
 		[[nodiscard]]
@@ -52,13 +57,20 @@ namespace rxtd::audio_analyzer::options {
 			return version;
 		}
 
-		auto& getParser() {
+		auto& getParser() const {
 			return parser;
 		}
 
 	private:
-		void parseFilter(const OptionMap& optionMap, ProcessingData::FilterInfo& fi, Logger& cl) const;
-		void parseTargetRate(const OptionMap& optionMap, ProcessingData& data, Logger& cl) const;
+		// returns true when something changed, false otherwise
+		// can throw InvalidOptionsException
+		[[nodiscard]]
+		bool parseFilter(const OptionMap& optionMap, ProcessingData::FilterInfo& fi, Logger& cl) const;
+
+		// returns true when something changed, false otherwise
+		// can throw InvalidOptionsException
+		[[nodiscard]]
+		bool parseTargetRate(const OptionMap& optionMap, index& rate, Logger& cl) const;
 
 		[[nodiscard]]
 		static bool checkListUnique(const OptionList& list);
@@ -66,14 +78,17 @@ namespace rxtd::audio_analyzer::options {
 		[[nodiscard]]
 		static bool checkNameAllowed(sview name);
 
+		// returns true when something changed, false otherwise
+		// can throw InvalidOptionsException
 		[[nodiscard]]
-		ProcessingData parseProcessing(sview name, Logger cl, ProcessingData data);
+		bool parseProcessing(sview name, Logger cl, ProcessingData& data) const;
 
 		[[nodiscard]]
 		std::vector<Channel> parseChannels(const OptionList& channelsStringList, Logger& logger) const;
 
-		// returns true on success, false otherwise
+		// returns true when something changed, false otherwise
+		// can throw InvalidOptionsException
 		[[nodiscard]]
-		bool parseHandlers(const OptionList& names, ProcessingData& data, const Logger& cl);
+		bool parseHandlers(const OptionSequence& names, ProcessingData& data, const Logger& cl) const;
 	};
 }

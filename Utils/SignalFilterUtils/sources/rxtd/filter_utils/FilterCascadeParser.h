@@ -58,7 +58,7 @@ namespace rxtd::filter_utils {
 
 	private:
 		[[nodiscard]]
-		FCF parseFilter(const OptionList& description, Logger& logger);
+		FCF parseFilter(const Option& nameOpt, const Option& argsOpt, Logger& logger);
 
 		[[nodiscard]]
 		FCF parseBQ(isview name, const OptionMap& description, Logger& cl);

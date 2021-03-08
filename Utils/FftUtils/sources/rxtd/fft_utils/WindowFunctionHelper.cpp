@@ -4,17 +4,24 @@
 #include "WindowFunctionHelper.h"
 
 #include "ComplexFft.h"
-#include "rxtd/option_parsing/OptionList.h"
-#include "rxtd/option_parsing/OptionSequence.h"
 #include "rxtd/std_fixes/MyMath.h"
+#include "rxtd/option_parsing/Option.h"
 
 using rxtd::fft_utils::WindowFunctionHelper;
 using rxtd::option_parsing::Option;
 using rxtd::option_parsing::OptionList;
 
 WindowFunctionHelper::WindowCreationFunc WindowFunctionHelper::parse(sview desc, option_parsing::OptionParser parser, Logger& cl) {
-	OptionList description = Option{ desc }.asSequence().begin().operator*();
-	auto type = description.get(0).asIString();
+	auto description = Option{ desc }.asSequence();
+
+	if (description.isEmpty()) {
+		return [](array_span<float> result) {
+			return createRectangular(result);
+		};
+	}
+
+	auto type = description.getElement(0).first.asIString();
+	auto argsOpt = description.getElement(0).second;
 
 	if (type == L"none") {
 		return [](array_span<float> result) {
@@ -35,21 +42,21 @@ WindowFunctionHelper::WindowCreationFunc WindowFunctionHelper::parse(sview desc,
 	}
 
 	if (type == L"kaiser") {
-		const auto param = parser.parseFloatF(description.get(1), 3.0f);
+		const auto param = parser.parseFloatF(argsOpt, 3.0f);
 		return [=](array_span<float> result) {
 			createKaiser(result, param);
 		};
 	}
 
 	if (type == L"exponential") {
-		const auto param = parser.parseFloatF(description.get(1), 8.69f);
+		const auto param = parser.parseFloatF(argsOpt, 8.69f);
 		return [=](array_span<float> result) {
 			return createExponential(result, param);
 		};
 	}
 
 	if (type == L"chebyshev") {
-		const auto param = parser.parseFloatF(description.get(1), 80.0f);
+		const auto param = parser.parseFloatF(argsOpt, 80.0f);
 		return [=](array_span<float> result) {
 			return createChebyshev(result, param);
 		};

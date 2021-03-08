@@ -3,8 +3,7 @@
 
 #include "ParamParser.h"
 
-#include "rxtd/option_parsing/OptionList.h"
-#include "rxtd/option_parsing/OptionMap.h"
+#include "rxtd/option_parsing/Option.h"
 
 using namespace std::string_literals;
 
@@ -14,7 +13,6 @@ using rxtd::audio_analyzer::Channel;
 using rxtd::filter_utils::FilterCascadeParser;
 
 bool ParamParser::readOptions(Version _version, bool suppressLogger) {
-	anythingChanged = false;
 	version = _version;
 
 	auto logger = suppressLogger ? Logger::getSilent() : rain.createLogger();
@@ -28,11 +26,10 @@ bool ParamParser::readOptions(Version _version, bool suppressLogger) {
 
 	unusedOptionsWarning = parser.parseBool(rain.read(L"UnusedOptionsWarning"), true);
 
-	auto processingIndices = rain.read(L"Processing").asList(L'|');
+	auto processingIndices = rain.read(L"ProcessingUnits").asList(L',');
 	if (!checkListUnique(processingIndices)) {
-		logger.error(L"Found repeating processings, aborting");
-		anythingChanged = true;
-		parseResult = {};
+		logger.error(L"Found repeating processing units, aborting");
+		return true;
 	}
 
 	hch.reset();
@@ -40,40 +37,34 @@ bool ParamParser::readOptions(Version _version, bool suppressLogger) {
 	hch.setVersion(version);
 	handlerNames.clear();
 
+	bool anyChanges = false;
+
 	ProcessingsInfoMap result;
 	for (const auto& nameOption : processingIndices) {
 		if (!checkNameAllowed(nameOption.asString())) {
-			logger.error(L"Processing '{}': invalid processing name");
-			anythingChanged = true;
-			return {};
+			logger.error(L"Invalid processing unit name: {}");
+			throw InvalidOptionsException{};
 		}
 
 		const auto name = nameOption.asIString() % own();
-		auto data = parseProcessing(name % csView(), logger.context(L"Processing {}: ", name), std::move(parseResult[name]));
-		if (data.channels.empty() || data.handlerOrder.empty()) {
-			continue;
-		}
+		auto& procParams = parseResult[name];
+		anyChanges |= parseProcessing(name % csView(), logger.context(L"{}: ", name), procParams);
 
-		result[name] = std::move(data);
+		result[name] = std::move(procParams);
 	}
 
 	parseResult = std::move(result);
 
-	return anythingChanged || hch.isAnythingChanged();
+	return anyChanges;
 }
 
-ProcessingData ParamParser::parseProcessing(sview name, Logger cl, ProcessingData data) {
-	string processingOptionIndex = L"Processing-"s += name;
+bool ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& data) const {
+	string processingOptionIndex = L"unit-"s += name;
 	auto processingDescriptionOption = rain.read(processingOptionIndex);
-	if (processingDescriptionOption.empty()) {
-		processingOptionIndex = L"Processing_"s += name;
-		processingDescriptionOption = rain.read(processingOptionIndex);
-	}
 
 	if (processingDescriptionOption.empty()) {
-		cl.error(L"processing description not found");
-		anythingChanged = true;
-		return {};
+		cl.error(L"unit description is not found");
+		throw InvalidOptionsException{};
 	}
 
 	auto processingMap = processingDescriptionOption.asMap(L'|', L' ');
@@ -81,42 +72,48 @@ ProcessingData ParamParser::parseProcessing(sview name, Logger cl, ProcessingDat
 	auto channelsList = processingMap.get(L"channels").asList(L',');
 	if (channelsList.empty()) {
 		cl.error(L"channels not found");
-		anythingChanged = true;
-		return {};
+		throw InvalidOptionsException{};
 	}
+
+	bool anyChanges = false;
+
 	auto channels = parseChannels(channelsList, cl);
 	if (channels != data.channels) {
-		anythingChanged = true;
+		anyChanges = true;
 	}
 	data.channels = std::move(channels);
 	if (data.channels.empty()) {
 		cl.error(L"no valid channels found");
-		return {};
+		throw InvalidOptionsException{};
 	}
 
 	auto handlersOption = processingMap.get(L"handlers");
 	if (handlersOption.empty()) {
 		cl.error(L"handlers not found");
-		anythingChanged = true;
-		return {};
+		throw InvalidOptionsException{};
 	}
 
-	auto handlersList = handlersOption.asList(L',');
-	if (!checkListUnique(handlersList)) {
-		cl.error(L"found repeating handlers, invalidate processing");
-		anythingChanged = true;
-		return {};
+	if (data.handlersRaw != handlersOption.asIString()) {
+		anyChanges = true;
+	}
+	data.handlersRaw = handlersOption.asIString();
+
+	auto handlersList = handlersOption.asSequence(L'(', L')', L',');
+	{
+		std::set<isview> handlerNames;
+		for (auto [nameOpt,_] : handlersList) {
+			auto [iter, inserted] = handlerNames.insert(nameOpt.asIString());
+			if (!inserted) {
+				cl.error(L"found repeating handlers, invalidate processing");
+				throw InvalidOptionsException{};
+			}
+		}
 	}
 
-	auto handlersOK = parseHandlers(handlersList, data, cl);
-	if (!handlersOK) {
-		// #parseHandlers must have logged all errors in this case
-		anythingChanged = true;
-		return {};
-	}
+	anyChanges |= parseHandlers(handlersList, data, cl);
 
-	parseFilter(processingMap, data.filter, cl);
-	parseTargetRate(processingMap, data, cl);
+	anyChanges |= parseFilter(processingMap, data.filter, cl);
+	anyChanges |= parseTargetRate(processingMap, data.targetRate, cl);
 
 	if (unusedOptionsWarning) {
 		const auto untouched = processingMap.getListOfUntouched();
@@ -125,17 +122,16 @@ ProcessingData ParamParser::parseProcessing(sview name, Logger cl, ProcessingDat
 		}
 	}
 
-	return data;
+	return anyChanges;
 }
 
-void ParamParser::parseFilter(const OptionMap& optionMap, ProcessingData::FilterInfo& fi, Logger& cl) const {
+bool ParamParser::parseFilter(const OptionMap& optionMap, ProcessingData::FilterInfo& fi, Logger& cl) const {
 	const auto filterDescription = optionMap.get(L"filter");
 
 	if (filterDescription.asString() == fi.raw) {
-		return;
+		return false;
 	}
 
-	anythingChanged = true;
 	fi.raw = filterDescription.asString();
 
 	const auto [filterTypeOpt, filterParams] = filterDescription.breakFirst(L' ');
@@ -143,53 +139,44 @@ void ParamParser::parseFilter(const OptionMap& optionMap, ProcessingData::Filter
 	const auto filterType = filterTypeOpt.asIString(L"none");
 	auto filterLogger = cl.context(L"filter: ");
 
-	if (filterType == L"none") {
-		fi.creator = {};
-		return;
-	}
-
 	parser.setLogger(cl);
 	FilterCascadeParser fcp{ parser };
 
-
-	if (filterType == L"like-a") {
+	if (filterType == L"none") {
+		fi.creator = {};
+	} else if (filterType == L"like-a") {
 		fi.creator = fcp.parse(
 			option_parsing::Option{
-				L"bqHighPass[q 0.3, freq 200, forcedGain 3.58]  " // spaces in the ends of the strings are necessary
-				L"bwLowPass[order 5, freq 10000] "
+				L"bqHighPass[q 0.3, freq 200, forcedGain 3.58],"
+				L"bwLowPass[order 5, freq 10000],"
 			}, filterLogger
 		);
-		return;
-	}
-
-	if (filterType == L"like-d") {
+	} else if (filterType == L"like-d") {
 		fi.creator = fcp.parse(
 			option_parsing::Option{
-				L"bqHighPass[q 0.3, freq 200, forcedGain 3.65]  " // spaces in the ends of the strings are necessary
-				L"bqPeak[q 1.0, freq 6000, gain 5.28] "
-				L"bwLowPass[order 5, freq 10000] "
+				L"bqHighPass[q 0.3, freq 200, forcedGain 3.65],"
+				L"bqPeak[q 1.0, freq 6000, gain 5.28],"
+				L"bwLowPass[order 5, freq 10000],"
 			}, filterLogger
 		);
-		return;
-	}
-
-	if (filterType == L"custom") {
+	} else if (filterType == L"custom") {
 		fi.creator = fcp.parse(filterParams, filterLogger);
-		return;
+	} else {
+		filterLogger.error(L"filter class '{}' is not supported", filterType);
+		fi.creator = {};
 	}
 
-	filterLogger.error(L"filter class '{}' is not supported", filterType);
-	fi.creator = {};
+	return true;
 }
 
-void ParamParser::parseTargetRate(const OptionMap& optionMap, ProcessingData& data, Logger& cl) const {
+bool ParamParser::parseTargetRate(const OptionMap& optionMap, index& rate, Logger& cl) const {
 	const auto targetRate = parser.parseInt(optionMap.get(L"targetRate"), defaultTargetRate);
-	if (targetRate == data.targetRate) {
-		return;
+	if (targetRate == rate) {
+		return false;
 	}
 
-	anythingChanged = true;
-	data.targetRate = targetRate;
+	rate = targetRate;
+	return true;
 }
 
 bool ParamParser::checkListUnique(const OptionList& list) {
@@ -234,7 +221,7 @@ std::vector<Channel> ParamParser::parseChannels(const OptionList& channelsString
 		auto opt = ChannelUtils::parse(channelOption.asIString());
 		if (!opt.has_value()) {
 			logger.error(L"can't parse '{}' as channel", channelOption.asString());
-			continue;
+			throw InvalidOptionsException{};
 		}
 		set.insert(opt.value());
 	}
@@ -246,39 +233,38 @@ std::vector<Channel> ParamParser::parseChannels(const OptionList& channelsString
 	return result;
 }
 
-bool ParamParser::parseHandlers(const OptionList& names, ProcessingData& data, const Logger& cl) {
+bool ParamParser::parseHandlers(const OptionSequence& names, ProcessingData& data, const Logger& cl) const {
 	auto oldOrder = std::exchange(data.handlerOrder, {});
 
-	for (auto nameOption : names) {
-		if (!checkNameAllowed(nameOption.asString())) {
-			cl.error(L"handler '{}': invalid handler name", nameOption);
-			anythingChanged = true;
-			return {};
+	bool anyChanges = false;
+
+	for (auto [nameOpt, sourceOpt] : names) {
+		if (!checkNameAllowed(nameOpt.asString())) {
+			cl.error(L"invalid handler name: {}", nameOpt);
+			throw InvalidOptionsException{};
 		}
 
-		auto name = istring{ nameOption.asIString() };
+		auto name = istring{ nameOpt.asIString() };
 		if (auto [iter, isNewElement] = handlerNames.insert(name);
 			!isNewElement) {
-			cl.error(L"handler {} was already used in another processing, invalidate processing", name);
-			return {};
+			cl.error(L"invalid unit: handler {} has already been used in another processing unit", name);
+			throw InvalidOptionsException{};
 		}
 
-		auto handlerInfo = hch.getHandlerInfo(name, cl.context(L"handler {}: ", name));
+		auto& handlerInfo = hch.getHandlerInfo(name, sourceOpt.asIString(), cl.context(L"{}: ", name));
 
-		if (handlerInfo == nullptr) {
-			cl.error(L"invalidate processing", name);
-			return {};
+		if (!handlerInfo.valid) {
+			if (handlerInfo.changed) {
+				cl.error(L"invalidate processing unit", name);
+			}
+			throw InvalidOptionsException{};
 		}
 
-		data.handlers[name] = *handlerInfo;
+		anyChanges |= handlerInfo.changed;
+
+		data.handlers[name] = handlerInfo.info;
 		data.handlerOrder.push_back(name);
 	}
 
-	if (data.handlerOrder.empty()) {
-		cl.warning(L"no valid handlers found");
-		anythingChanged = true;
-		return {};
-	}
-
-	return true;
+	return anyChanges;
 }

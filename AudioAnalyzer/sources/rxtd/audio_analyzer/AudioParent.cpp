@@ -55,13 +55,13 @@ AudioParent::AudioParent(Rainmeter&& _rain) :
 	}
 
 	bool blockCaptureLoudnessChange;
-	auto blockCaptureLoudness = rain.read(L"blockCaptureLoudnessChange").asIString(L"never");
+	auto blockCaptureLoudness = rain.read(L"LockCaptureVolumeOnMax").asIString(L"never");
 	if (blockCaptureLoudness == L"never") {
 		blockCaptureLoudnessChange = false;
 	} else if (blockCaptureLoudness == L"ForApp") {
 		blockCaptureLoudnessChange = true;
 	} else {
-		logger.error(L"blockCaptureLoudnessChange value '{}' is not recognized, supported values are: Never, ForApp", blockCaptureLoudness);
+		logger.error(L"LockCaptureVolumeOnMax: value '{}' is not recognized, supported values are: Never, ForApp", blockCaptureLoudness);
 		throw std::runtime_error{ "" };
 	}
 
@@ -90,7 +90,12 @@ void AudioParent::vReload() {
 		}
 	}
 
-	const bool paramsChanged = paramParser.readOptions(version, false);
+	bool paramsChanged;
+	try {
+		paramsChanged = paramParser.readOptions(version, false);
+	} catch (ParamParser::InvalidOptionsException&) {
+		return;
+	}
 
 	if (paramsChanged) {
 		using std_fixes::MapUtils;

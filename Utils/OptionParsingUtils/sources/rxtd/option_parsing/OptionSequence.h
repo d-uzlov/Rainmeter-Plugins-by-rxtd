@@ -3,7 +3,6 @@
 
 #pragma once
 #include "OptionBase.h"
-#include "OptionList.h"
 #include "Tokenizer.h"
 #include "rxtd/std_fixes/StringUtils.h"
 
@@ -15,7 +14,7 @@ namespace rxtd::option_parsing {
 	class OptionSequence : public OptionBase {
 		using SubstringViewInfo = std_fixes::SubstringViewInfo;
 
-		std::vector<std::vector<SubstringViewInfo>> list;
+		std::vector<std::pair<SubstringViewInfo, SubstringViewInfo>> list;
 
 	public:
 		OptionSequence() = default;
@@ -37,13 +36,12 @@ namespace rxtd::option_parsing {
 		}
 
 		class iterator {
-			sview view;
-			array_view<std::vector<SubstringViewInfo>> list;
+			const OptionSequence& parent;
 			index ind;
 
 		public:
-			iterator(sview view, array_view<std::vector<SubstringViewInfo>> list, index _index) :
-				view(view), list(list), ind(_index) { }
+			iterator(const OptionSequence& parent, index _index) :
+				parent(parent), ind(_index) { }
 
 			iterator& operator++() {
 				ind++;
@@ -51,24 +49,39 @@ namespace rxtd::option_parsing {
 			}
 
 			bool operator !=(const iterator& other) const {
-				return list.data() != other.list.data() || ind != other.ind;
+				return &parent != &other.parent || ind != other.ind;
 			}
 
 			[[nodiscard]]
-			OptionList operator*() const {
-				auto list_ = list[ind];
-				return { view, std::move(list_) };
+			std::pair<GhostOption, GhostOption> operator*() const {
+				return parent.getElement(ind);
 			}
 		};
 
 		[[nodiscard]]
 		iterator begin() const {
-			return { getView(), list, 0 };
+			return { *this, 0 };
 		}
 
 		[[nodiscard]]
 		iterator end() const {
-			return { getView(), list, static_cast<index>(list.size()) };
+			return { *this, getSize() };
+		}
+
+		[[nodiscard]]
+		bool isEmpty() const {
+			return getSize() == 0;
+		}
+
+		[[nodiscard]]
+		index getSize() const {
+			return static_cast<index>(list.size());
+		}
+
+		[[nodiscard]]
+		std::pair<GhostOption, GhostOption> getElement(index i) const {
+			auto pair = list[static_cast<size_t>(i)];
+			return { GhostOption{ pair.first.makeView(getView()) }, GhostOption{ pair.second.makeView(getView()) } };
 		}
 	};
 }

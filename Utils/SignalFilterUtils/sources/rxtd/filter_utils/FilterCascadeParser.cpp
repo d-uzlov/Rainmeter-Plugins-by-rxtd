@@ -30,7 +30,7 @@ FilterCascadeCreator FilterCascadeParser::parse(const Option& description, Logge
 	parser.setLogger(logger);
 
 	for (auto filterDescription : description.asSequence()) {
-		auto patcher = parseFilter(filterDescription, logger);
+		auto patcher = parseFilter(filterDescription.first, filterDescription.second, logger);
 		if (patcher == nullptr) {
 			return {};
 		}
@@ -42,8 +42,8 @@ FilterCascadeCreator FilterCascadeParser::parse(const Option& description, Logge
 }
 
 FilterCascadeParser::FCF
-FilterCascadeParser::parseFilter(const OptionList& description, Logger& logger) {
-	auto name = description.get(0).asIString();
+FilterCascadeParser::parseFilter(const Option& nameOpt, const Option& argsOpt, Logger& logger) {
+	auto name = nameOpt.asIString();
 
 	if (name.empty()) {
 		logger.error(L"filter name is not found", name);
@@ -51,7 +51,7 @@ FilterCascadeParser::parseFilter(const OptionList& description, Logger& logger) 
 	}
 
 	auto cl = logger.context(L"'{}': ", name);
-	const auto args = description.get(1).asMap(L',', L' ');
+	const auto args = argsOpt.asMap(L',', L' ');
 
 	if (StringUtils::checkStartsWith(name, L"bq")) {
 		return parseBQ(name, args, cl);

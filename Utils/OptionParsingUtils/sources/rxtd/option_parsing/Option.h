@@ -73,13 +73,13 @@ namespace rxtd::option_parsing {
 		[[nodiscard]]
 		OptionSequence asSequence(
 			wchar_t optionBegin = L'[', wchar_t optionEnd = L']',
-			wchar_t optionDelimiter = L' '
+			wchar_t optionDelimiter = L','
 		) const &;
 
 		[[nodiscard]]
 		OptionSequence asSequence(
 			wchar_t optionBegin = L'[', wchar_t optionEnd = L']',
-			wchar_t optionDelimiter = L' '
+			wchar_t optionDelimiter = L','
 		) &&;
 
 		[[nodiscard]]
@@ -113,3 +113,7 @@ namespace rxtd::option_parsing {
 		}
 	};
 }
+
+#include "OptionList.h"
+#include "OptionMap.h"
+#include "OptionSequence.h"

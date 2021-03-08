@@ -23,78 +23,91 @@ std::vector<SubstringViewInfo> Tokenizer::parse(sview view, wchar_t delimiter) {
 	return tempList;
 }
 
-std::vector<std::vector<SubstringViewInfo>>
+std::vector<std::pair<SubstringViewInfo, SubstringViewInfo>>
 Tokenizer::parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wchar_t optionDelimiter) {
-	enum class State {
-		eSEARCH,
-		eOPTION,
-		eSWALLOW,
-	};
-	auto state = State::eSEARCH;
+	index begin = 0;
+	index level = 0;
+	std::vector<std::pair<SubstringViewInfo, SubstringViewInfo>> result;
 
-	std::vector<std::vector<SubstringViewInfo>> result;
-	std::vector<SubstringViewInfo> description;
-	index begin = view.find_first_not_of(L" \t");
-	if (begin == static_cast<index>(sview::npos)) {
-		return {};
-	}
+	while (true) {
 
-	for (index i = begin; i < static_cast<index>(view.length()); ++i) {
-		const auto symbol = view[i];
-
-		if (symbol == optionBegin) {
-			if (state != State::eOPTION) {
-				return {};
+		while (true) {
+			begin = view.find_first_not_of(L" \t", begin);
+			if (begin == sview::npos) {
+				return result;
 			}
-			state = State::eSWALLOW;
+			if (view[begin] == optionDelimiter) {
+				begin++;
+			} else {
+				break;
+			}
+		}
 
-			const index end = i;
-			emitToken(description, begin, end);
-			begin = end + 1;
+		wchar_t nameEndSymbols[] = { L' ', L'\t', optionBegin, optionEnd, optionDelimiter };
+		index nameEnd = view.find_first_of(nameEndSymbols, begin);
+		if (nameEnd == sview::npos) {
+			result.emplace_back(SubstringViewInfo{ begin, view.length() - begin }, SubstringViewInfo{});
+			return result;
+		}
+
+		if (view[nameEnd] == optionEnd) {
+			return {};
+		}
+		const SubstringViewInfo nameInfo = { begin, nameEnd - begin };
+
+		begin = nameEnd;
+
+		wchar_t argSymbols[] = { optionBegin, optionEnd, optionDelimiter };
+		const index nextPos = view.find_first_of(argSymbols, begin);
+		if (nextPos == sview::npos) {
+			result.emplace_back(nameInfo, SubstringViewInfo{});
+			return result;
+		}
+
+		if (view[nextPos] == optionDelimiter) {
+			result.emplace_back(nameInfo, SubstringViewInfo{});
+			begin = nextPos;
 			continue;
 		}
-		if (symbol == optionEnd) {
-			if (state != State::eSWALLOW) {
-				return {};
+
+		SubstringViewInfo argInfo;
+		if (view[nextPos] == optionBegin) {
+			level++;
+			const index argBegin = nextPos + 1;
+			begin = argBegin;
+			while (level > 0) {
+				wchar_t optionBoundSymbols[] = { optionBegin, optionEnd };
+				const index boundPos = view.find_first_of(optionBoundSymbols, begin);
+				if (boundPos == sview::npos) {
+					return {};
+				}
+
+				if (view[boundPos] == optionBegin) {
+					level++;
+				}
+
+				if (view[boundPos] == optionEnd) {
+					level--;
+				}
+
+				begin = boundPos + 1;
 			}
-			state = State::eOPTION;
 
-			const index end = i;
-			emitToken(description, begin, end);
-			begin = end + 1;
-			continue;
+			argInfo = StringUtils::trimInfo(view, { argBegin, begin - argBegin - 1 });
 		}
-		if (symbol == optionDelimiter) {
-			if (state != State::eOPTION) {
-				continue;
-			}
-			const index end = i;
-			emitToken(description, begin, end);
-			begin = end + 1;
 
-			trimSpaces(description, view);
-			result.emplace_back(std::move(description));
-			description = {};
-			state = State::eSEARCH;
-			continue;
+		result.push_back({ nameInfo, argInfo });
+
+		wchar_t afterArgSymbols[] = { L' ', L'\t' };
+		begin = view.find_first_not_of(afterArgSymbols, begin);
+		if (begin == sview::npos) {
+			return result;
 		}
-		if (state == State::eSEARCH) {
-			// beginning of option name
-			state = State::eOPTION;
-			begin = i;
+		if (view[begin] != optionDelimiter) {
+			return {};
 		}
+		begin++;
 	}
-	if (state == State::eOPTION) {
-		const index end = view.length();
-		emitToken(description, begin, end);
-	}
-
-	if (!description.empty()) {
-		trimSpaces(description, view);
-		result.emplace_back(std::move(description));
-	}
-
-	return result;
 }
 
 void Tokenizer::emitToken(std::vector<SubstringViewInfo>& list, const index begin, const index end) {

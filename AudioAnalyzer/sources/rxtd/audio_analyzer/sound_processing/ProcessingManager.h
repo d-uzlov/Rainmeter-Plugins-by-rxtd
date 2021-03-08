@@ -30,19 +30,6 @@ namespace rxtd::audio_analyzer {
 			DownsampleHelper downsampleHelper;
 		};
 
-		class HandlerFinderImpl : public HandlerFinder {
-			const HandlerMap& channelData;
-
-		public:
-			explicit HandlerFinderImpl(const HandlerMap& channelData) : channelData(channelData) { }
-
-			[[nodiscard]]
-			handler::HandlerBase* getHandler(isview id) const override {
-				const auto iter = channelData.find(id);
-				return iter == channelData.end() ? nullptr : iter->second.get();
-			}
-		};
-
 	private:
 		Logger logger;
 		std::vector<istring> order;

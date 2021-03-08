@@ -7,14 +7,13 @@
 namespace rxtd::audio_analyzer::options {
 	struct HandlerInfo {
 		string rawDescription;
-		string rawDescription2;
 		istring type;
-		std::vector<istring> sources;
+		istring source;
 		handler::HandlerBase::HandlerMetaInfo meta;
 
 		friend bool operator==(const HandlerInfo& lhs, const HandlerInfo& rhs) {
 			return lhs.rawDescription == rhs.rawDescription
-				&& lhs.rawDescription2 == rhs.rawDescription2;
+				&& lhs.source == rhs.source;
 		}
 
 		friend bool operator!=(const HandlerInfo& lhs, const HandlerInfo& rhs) { return !(lhs == rhs); }
