@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // Copyright (C) 2019 Danil Uzlov
 
-#include "ParamParser.h"
+#include "ParamHelper.h"
 
 #include "rxtd/option_parsing/Option.h"
 
 using namespace std::string_literals;
 
-using rxtd::audio_analyzer::options::ParamParser;
+using rxtd::audio_analyzer::options::ParamHelper;
 using rxtd::audio_analyzer::options::ProcessingData;
 using rxtd::audio_analyzer::Channel;
 using rxtd::filter_utils::FilterCascadeParser;
 
-bool ParamParser::readOptions(Version _version, bool suppressLogger) {
+bool ParamHelper::readOptions(Version _version, bool suppressLogger) {
 	version = _version;
 
 	auto logger = suppressLogger ? Logger::getSilent() : rain.createLogger();
@@ -58,7 +58,7 @@ bool ParamParser::readOptions(Version _version, bool suppressLogger) {
 	return anyChanges;
 }
 
-bool ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& data) const {
+bool ParamHelper::parseProcessing(sview name, Logger cl, ProcessingData& data) const {
 	string processingOptionIndex = L"unit-"s += name;
 	auto processingDescriptionOption = rain.read(processingOptionIndex);
 
@@ -125,7 +125,7 @@ bool ParamParser::parseProcessing(sview name, Logger cl, ProcessingData& data) c
 	return anyChanges;
 }
 
-bool ParamParser::parseFilter(const OptionMap& optionMap, ProcessingData::FilterInfo& fi, Logger& cl) const {
+bool ParamHelper::parseFilter(const OptionMap& optionMap, ProcessingData::FilterInfo& fi, Logger& cl) const {
 	const auto filterDescription = optionMap.get(L"filter");
 
 	if (filterDescription.asString() == fi.raw) {
@@ -169,7 +169,7 @@ bool ParamParser::parseFilter(const OptionMap& optionMap, ProcessingData::Filter
 	return true;
 }
 
-bool ParamParser::parseTargetRate(const OptionMap& optionMap, index& rate, Logger& cl) const {
+bool ParamHelper::parseTargetRate(const OptionMap& optionMap, index& rate, Logger& cl) const {
 	const auto targetRate = parser.parseInt(optionMap.get(L"targetRate"), defaultTargetRate);
 	if (targetRate == rate) {
 		return false;
@@ -179,7 +179,7 @@ bool ParamParser::parseTargetRate(const OptionMap& optionMap, index& rate, Logge
 	return true;
 }
 
-bool ParamParser::checkListUnique(const OptionList& list) {
+bool ParamHelper::checkListUnique(const OptionList& list) {
 	std::set<isview> set;
 	for (auto option : list) {
 		auto [iter, inserted] = set.insert(option.asIString());
@@ -190,7 +190,7 @@ bool ParamParser::checkListUnique(const OptionList& list) {
 	return true;
 }
 
-bool ParamParser::checkNameAllowed(sview name) {
+bool ParamHelper::checkNameAllowed(sview name) {
 	// Names are only allowed to have latin letters, digits and underscore symbol.
 	// Symbols are deliberately checked manually
 	// to forbid non-latin letters.
@@ -214,7 +214,7 @@ bool ParamParser::checkNameAllowed(sview name) {
 	);
 }
 
-std::vector<Channel> ParamParser::parseChannels(const OptionList& channelsStringList, Logger& logger) const {
+std::vector<Channel> ParamHelper::parseChannels(const OptionList& channelsStringList, Logger& logger) const {
 	std::set<Channel> set;
 
 	for (auto channelOption : channelsStringList) {
@@ -233,7 +233,7 @@ std::vector<Channel> ParamParser::parseChannels(const OptionList& channelsString
 	return result;
 }
 
-bool ParamParser::parseHandlers(const OptionSequence& names, ProcessingData& data, const Logger& cl) const {
+bool ParamHelper::parseHandlers(const OptionSequence& names, ProcessingData& data, const Logger& cl) const {
 	auto oldOrder = std::exchange(data.handlerOrder, {});
 
 	bool anyChanges = false;

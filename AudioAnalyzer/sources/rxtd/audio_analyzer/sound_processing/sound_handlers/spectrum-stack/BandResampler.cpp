@@ -20,12 +20,24 @@ ParamsContainer BandResampler::vParseParams(ParamParseContext& context) const no
 		throw InvalidOptionsException{};
 	}
 
-	if (context.options.get(L"bands").empty()) {
+	auto bandsOption = context.options.get(L"bands");
+	if (bandsOption.empty()) {
 		context.log.error(L"bands option is not found");
 		throw InvalidOptionsException{};
 	}
 
-	params.bandFreqs = parseFreqList(context.options.get(L"bands"), context.parser, context.log.context(L"bands: "));
+	auto bandsLogger = context.log.context(L"bands: ");
+
+	auto bandsArg = bandsOption.asSequence(L'(', L')', L',');
+	if (bandsArg.getSize() != 1) {
+		bandsLogger.error(L"option must have exactly one value specified, one of: log, linear, custom");
+		throw InvalidOptionsException{};
+	}
+
+	parseBandsElement(
+		bandsArg.getElement(0).first.asIString(), bandsArg.getElement(0).second,
+		params.bandFreqs, context.parser, bandsLogger
+	);
 
 	if (params.bandFreqs.size() < 2) {
 		context.log.error(L"need >= 2 frequencies but only {} found", params.bandFreqs.size());
@@ -37,40 +49,72 @@ ParamsContainer BandResampler::vParseParams(ParamParseContext& context) const no
 	return params;
 }
 
-void BandResampler::parseFreqListElement(OptionList& options, std::vector<float>& freqs, Parser& parser, Logger& cl) {
-	auto type = options.get(0).asIString();
-
+void BandResampler::parseBandsElement(isview type, const Option& bandParams, std::vector<float>& freqs, Parser& parser, Logger& cl) {
 	if (type == L"custom") {
-		if (options.size() < 2) {
-			cl.error(L"custom must have at least two frequencies specified but {} found", options.size());
+		auto list = bandParams.asList(L',');
+		if (list.size() < 2) {
+			cl.error(L"custom must have at least two frequencies specified but {} found", list.size());
 			throw InvalidOptionsException{};
 		}
-		for (index i = 1; i < options.size(); ++i) {
-			freqs.push_back(parser.parseFloatF(options.get(i)));
+		freqs.reserve(static_cast<size_t>(list.size()));
+		for (auto opt : list) {
+			freqs.push_back(parser.parseFloatF(opt));
 		}
+
+		std::sort(freqs.begin(), freqs.end());
+
+		float lastValue = -std::numeric_limits<float>::max();
+		for (auto value : freqs) {
+			if (value < 0.0f) {
+				cl.error(L"frequencies must be >= 0 but {} found", value);
+				throw InvalidOptionsException{};
+			}
+			if (std_fixes::MyMath::checkFloatEqual(value, lastValue)) {
+				cl.error(L"frequencies must be distinct but {} and {} found", lastValue, value);
+				throw InvalidOptionsException{};
+			}
+
+			lastValue = value;
+		}
+
 		return;
 	}
 
 	if (type != L"linear" && type != L"log") {
-		cl.error(L"unknown type '{}'", type);
+		cl.error(L"unknown type: {}", type);
 		throw InvalidOptionsException{};
 	}
 
-	if (options.size() != 4) {
-		cl.error(L"{} must have 3 options (count, min, max)", type);
+	auto map = bandParams.asMap(L',', L' ');
+
+	auto countOpt = map.get(L"count");
+	if (countOpt.empty()) {
+		cl.error(L"{} must have 'count' specified in sub-arguments", type);
 		throw InvalidOptionsException{};
 	}
 
-	const index count = parser.parseInt(options.get(1), 0);
+	auto minOpt = map.get(L"min");
+	if (countOpt.empty()) {
+		cl.error(L"{} must have 'min' specified in sub-arguments", type);
+		throw InvalidOptionsException{};
+	}
+
+	auto maxOpt = map.get(L"max");
+	if (countOpt.empty()) {
+		cl.error(L"{} must have 'max' specified in sub-arguments", type);
+		throw InvalidOptionsException{};
+	}
+
+	const index count = parser.parseInt(countOpt, 0);
 	if (count < 1) {
-		cl.error(L"count must be >= 1");
+		cl.error(L"{}: count must be >= 1", type);
 		throw InvalidOptionsException{};
 	}
 
-	const auto min = parser.parseFloatF(options.get(2));
-	const auto max = parser.parseFloatF(options.get(3));
+	const auto min = parser.parseFloatF(minOpt);
+	const auto max = parser.parseFloatF(maxOpt);
 	if (max <= min) {
-		cl.error(L"max must be > min");
+		cl.error(L"{}: max must be > min", type);
 		throw InvalidOptionsException{};
 	}
 
@@ -91,39 +135,6 @@ void BandResampler::parseFreqListElement(OptionList& options, std::vector<float>
 			freqs.push_back(freq);
 		}
 	}
-}
-
-std::vector<float> BandResampler::parseFreqList(Option freqListOption, Parser& parser, Logger& cl) {
-	std::vector<float> freqs;
-
-	auto options = freqListOption.asList(L' ');
-	parseFreqListElement(options, freqs, parser, cl);
-
-	return makeBandsFromFreqs(freqs, cl);
-}
-
-std::vector<float> BandResampler::makeBandsFromFreqs(array_span<float> freqs, Logger& cl) {
-	std::sort(freqs.begin(), freqs.end());
-
-	const float threshold = std::numeric_limits<float>::epsilon();
-
-	std::vector<float> result;
-	result.reserve(static_cast<size_t>(freqs.size()));
-	float lastValue = -1;
-	for (auto value : freqs) {
-		if (value <= 0.0f) {
-			cl.error(L"frequencies must be > 0 but {} found", value);
-			throw InvalidOptionsException{};
-		}
-		if (value - lastValue < threshold) {
-			continue;
-		}
-
-		result.push_back(value);
-		lastValue = value;
-	}
-
-	return result;
 }
 
 HandlerBase::ConfigurationResult
@@ -266,53 +277,34 @@ void BandResampler::computeCascadeWeights(array_span<float> result, index fftBin
 bool BandResampler::getProp(
 	const Snapshot& snapshot,
 	isview prop,
-	BufferPrinter& printer,
 	const ExternalMethods::CallContext& context
 ) {
 	const index bandsCount = static_cast<index>(snapshot.bandFreqs.size());
 
-	if (prop == L"bands count") {
-		printer.print(bandsCount);
+	if (prop == L"bandsCount") {
+		context.printer.print(bandsCount);
 		return true;
 	}
 
-	auto index = legacy_parseIndexProp(prop, L"lower bound", bandsCount + 1);
-	if (index == -2) {
-		printer.print(L"0");
-		return true;
-	}
-	if (index >= 0) {
-		if (index > 0) {
-			index--;
+	auto [nameOpt, valueOpt] = Option{ prop }.breakFirst(L' ');
+	const auto ind = context.parser.parseInt(valueOpt);
+
+	if (nameOpt.asIString() == L"lowerBound") {
+		if (ind < static_cast<index>(snapshot.bandFreqs.size())) {
+			context.printer.print(L"{}", snapshot.bandFreqs[static_cast<size_t>(ind)]);
+			return true;
 		}
-		printer.print(snapshot.bandFreqs[index]);
-		return true;
+		return false;
 	}
 
-	index = legacy_parseIndexProp(prop, L"upper bound", bandsCount + 1);
-	if (index == -2) {
-		printer.print(L"0");
-		return true;
-	}
-	if (index >= 0) {
-		if (index > 0) {
-			index--;
+	if (nameOpt.asIString() == L"centralFreq") {
+		if (ind < static_cast<index>(snapshot.bandFreqs.size()) - 1) {
+			auto result = snapshot.bandFreqs[static_cast<size_t>(ind)] + snapshot.bandFreqs[static_cast<size_t>(ind + 1)];
+			result *= 0.5f;
+			context.printer.print(L"{}", result);
+			return true;
 		}
-		printer.print(snapshot.bandFreqs[index + 1]);
-		return true;
-	}
-
-	index = legacy_parseIndexProp(prop, L"central frequency", bandsCount + 1);
-	if (index == -2) {
-		printer.print(L"0");
-		return true;
-	}
-	if (index >= 0) {
-		if (index > 0) {
-			index--;
-		}
-		printer.print((snapshot.bandFreqs[index] + snapshot.bandFreqs[index + 1]) * 0.5);
-		return true;
+		return false;
 	}
 
 	return false;

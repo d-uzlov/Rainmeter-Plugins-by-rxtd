@@ -40,10 +40,6 @@ namespace rxtd::option_parsing {
 			return get(name);
 		}
 
-		// returns true if option with such name exists, even if it is empty
-		[[nodiscard]]
-		bool has(isview name) const;
-
 		[[nodiscard]]
 		std::vector<isview> getListOfUntouched() const;
 

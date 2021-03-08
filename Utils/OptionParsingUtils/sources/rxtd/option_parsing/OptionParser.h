@@ -12,9 +12,9 @@ namespace rxtd::option_parsing {
 		Logger logger;
 		expression_parser::ASTParser parser;
 
+	public:
 		OptionParser() = default;
 
-	public:
 		static OptionParser getDefault();
 
 		void setGrammar(const expression_parser::GrammarDescription& grammar) {

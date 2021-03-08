@@ -46,7 +46,7 @@
     <ClInclude Include="sources\rxtd\audio_analyzer\image_utils\WaveFormDrawer.h" />
     <ClInclude Include="sources\rxtd\audio_analyzer\options\HandlerCacheHelper.h" />
     <ClInclude Include="sources\rxtd\audio_analyzer\options\HandlerInfo.h" />
-    <ClInclude Include="sources\rxtd\audio_analyzer\options\ParamParser.h" />
+    <ClInclude Include="sources\rxtd\audio_analyzer\options\ParamHelper.h" />
     <ClInclude Include="sources\rxtd\audio_analyzer\options\ProcessingData.h" />
     <ClInclude Include="sources\rxtd\audio_analyzer\ParentHelper.h" />
     <ClInclude Include="sources\rxtd\audio_analyzer\sound_processing\Channel.h" />
@@ -90,7 +90,7 @@
     <ClCompile Include="sources\rxtd\audio_analyzer\image_utils\StripedImageFadeHelper.cpp" />
     <ClCompile Include="sources\rxtd\audio_analyzer\image_utils\WaveFormDrawer.cpp" />
     <ClCompile Include="sources\rxtd\audio_analyzer\options\HandlerCacheHelper.cpp" />
-    <ClCompile Include="sources\rxtd\audio_analyzer\options\ParamParser.cpp" />
+    <ClCompile Include="sources\rxtd\audio_analyzer\options\ParamHelper.cpp" />
     <ClCompile Include="sources\rxtd\audio_analyzer\ParentHelper.cpp" />
     <ClCompile Include="sources\rxtd\audio_analyzer\sound_processing\Channel.cpp" />
     <ClCompile Include="sources\rxtd\audio_analyzer\sound_processing\ChannelMixer.cpp" />

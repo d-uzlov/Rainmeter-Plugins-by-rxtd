@@ -220,30 +220,19 @@ void Spectrogram::staticFinisher(const Snapshot& snapshot, const ExternalMethods
 		return;
 	}
 
-	context.buffer = snapshot.folder;
-	context.buffer += context.filePrefix;
-	context.buffer += L".bmp";
+	context.printer.print(L"{}{}.bmp", snapshot.folder, context.filePrefix);
 
-	snapshot.writerHelper.write(snapshot.pixels, snapshot.empty, context.buffer);
+	snapshot.writerHelper.write(snapshot.pixels, snapshot.empty, context.printer.getBufferView());
 	snapshot.writeNeeded = false;
 }
 
 bool Spectrogram::getProp(
 	const Snapshot& snapshot,
 	isview prop,
-	BufferPrinter& printer,
 	const ExternalMethods::CallContext& context
 ) {
 	if (prop == L"file") {
-		context.buffer = snapshot.folder;
-		context.buffer += context.filePrefix;
-		context.buffer += L".bmp";
-
-		printer.print(context.buffer);
-		return true;
-	}
-	if (prop == L"block size") {
-		printer.print(snapshot.blockSize);
+		context.printer.print(L"{}{}.bmp", snapshot.folder, context.filePrefix);
 		return true;
 	}
 

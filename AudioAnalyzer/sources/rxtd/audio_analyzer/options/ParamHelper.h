@@ -9,7 +9,7 @@
 #include "rxtd/rainmeter/Rainmeter.h"
 
 namespace rxtd::audio_analyzer::options {
-	class ParamParser {
+	class ParamHelper {
 		using Rainmeter = rainmeter::Rainmeter;
 		using OptionMap = option_parsing::OptionMap;
 		using OptionList = option_parsing::OptionList;
@@ -33,9 +33,13 @@ namespace rxtd::audio_analyzer::options {
 		Version version{};
 		HandlerCacheHelper hch;
 		mutable std::set<istring> handlerNames;
-		mutable Parser parser = option_parsing::OptionParser::getDefault();
+		mutable Parser parser;
 
 	public:
+		void setParser(Parser value) {
+			parser = std::move(value);
+		}
+
 		void setRainmeter(Rainmeter value) {
 			rain = std::move(value);
 			hch.setRain(rain);
@@ -55,10 +59,6 @@ namespace rxtd::audio_analyzer::options {
 		[[nodiscard]]
 		Version getVersion() const {
 			return version;
-		}
-
-		auto& getParser() const {
-			return parser;
 		}
 
 	private:

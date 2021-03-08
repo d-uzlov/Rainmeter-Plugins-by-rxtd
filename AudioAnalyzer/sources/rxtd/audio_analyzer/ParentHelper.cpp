@@ -95,7 +95,7 @@ void ParentHelper::setInvalid() {
 void ParentHelper::setParams(
 	std::optional<Callbacks> callbacks,
 	std::optional<CaptureManager::SourceDesc> device,
-	std::optional<options::ParamParser::ProcessingsInfoMap> patches
+	std::optional<options::ParamHelper::ProcessingsInfoMap> patches
 ) {
 	auto requestLock = requestFields.getLock();
 

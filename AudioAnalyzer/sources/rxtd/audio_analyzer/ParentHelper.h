@@ -86,7 +86,7 @@ namespace rxtd::audio_analyzer {
 
 			struct {
 				CaptureManager::SourceDesc device;
-				options::ParamParser::ProcessingsInfoMap patches;
+				options::ParamHelper::ProcessingsInfoMap patches;
 			} settings;
 
 			Callbacks callbacks;
@@ -99,7 +99,7 @@ namespace rxtd::audio_analyzer {
 			struct {
 				std::optional<Callbacks> callbacks;
 				std::optional<CaptureManager::SourceDesc> device;
-				std::optional<options::ParamParser::ProcessingsInfoMap> patches;
+				std::optional<options::ParamHelper::ProcessingsInfoMap> patches;
 			} settings;
 
 			bool disconnect = false;
@@ -125,7 +125,7 @@ namespace rxtd::audio_analyzer {
 		void setParams(
 			std::optional<Callbacks> callbacks,
 			std::optional<CaptureManager::SourceDesc> device,
-			std::optional<options::ParamParser::ProcessingsInfoMap> patches
+			std::optional<options::ParamHelper::ProcessingsInfoMap> patches
 		);
 
 		SnapshotStruct& getSnapshot() {

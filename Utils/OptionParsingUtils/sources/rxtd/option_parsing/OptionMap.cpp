@@ -29,11 +29,6 @@ GhostOption OptionMap::get(isview name) const & {
 	return GhostOption{ optionInfoPtr->view };
 }
 
-bool OptionMap::has(isview name) const {
-	const auto optionInfoPtr = find(name);
-	return optionInfoPtr != nullptr;
-}
-
 std::vector<rxtd::isview> OptionMap::getListOfUntouched() const {
 	std::vector<isview> result;
 

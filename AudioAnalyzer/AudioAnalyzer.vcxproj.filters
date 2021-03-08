@@ -62,9 +62,6 @@
     <ClInclude Include="sources\rxtd\audio_analyzer\options\HandlerCacheHelper.h">
       <Filter>sources\rxtd\audio_analyzer\options</Filter>
     </ClInclude>
-    <ClInclude Include="sources\rxtd\audio_analyzer\options\ParamParser.h">
-      <Filter>sources\rxtd\audio_analyzer\options</Filter>
-    </ClInclude>
     <ClInclude Include="sources\rxtd\audio_analyzer\options\HandlerInfo.h">
       <Filter>sources\rxtd\audio_analyzer\options</Filter>
     </ClInclude>
@@ -192,6 +189,9 @@
       <Filter>Resource Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="sources\rxtd\audio_analyzer\options\ParamHelper.h">
+      <Filter>sources\rxtd\audio_analyzer\options</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Sources\dllmain.cpp">
@@ -207,9 +207,6 @@
       <Filter>sources\rxtd\audio_analyzer</Filter>
     </ClCompile>
     <ClCompile Include="sources\rxtd\audio_analyzer\options\HandlerCacheHelper.cpp">
-      <Filter>sources\rxtd\audio_analyzer\options</Filter>
-    </ClCompile>
-    <ClCompile Include="sources\rxtd\audio_analyzer\options\ParamParser.cpp">
       <Filter>sources\rxtd\audio_analyzer\options</Filter>
     </ClCompile>
     <ClCompile Include="sources\rxtd\audio_analyzer\image_utils\BmpWriter.cpp">
@@ -307,6 +304,9 @@
     </ClCompile>
     <ClCompile Include="sources\rxtd\audio_analyzer\sound_processing\sound_handlers\HandlerBase.HandlerBaseData.cpp">
       <Filter>sources\rxtd\audio_analyzer\sound_processing\sound_handlers</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\audio_analyzer\options\ParamHelper.cpp">
+      <Filter>sources\rxtd\audio_analyzer\options</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

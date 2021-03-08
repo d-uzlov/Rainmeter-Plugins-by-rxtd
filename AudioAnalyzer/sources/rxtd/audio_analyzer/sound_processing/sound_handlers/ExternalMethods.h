@@ -4,6 +4,7 @@
 #pragma once
 #include "rxtd/audio_analyzer/Version.h"
 #include "rxtd/buffer_printer/BufferPrinter.h"
+#include "rxtd/option_parsing/OptionParser.h"
 #include "rxtd/std_fixes/AnyContainer.h"
 
 namespace rxtd::audio_analyzer::handler {
@@ -14,14 +15,16 @@ namespace rxtd::audio_analyzer::handler {
 			Version version{};
 			sview channelName{};
 			sview filePrefix{};
-			mutable string buffer;
+			buffer_printer::BufferPrinter& printer;
+			option_parsing::OptionParser& parser;
+
+			CallContext() = delete;
 		};
 
 		using FinishMethodType = void(*)(const ExternalData& data, const CallContext& context);
 		using GetPropMethodType = bool(*)(
 			const ExternalData& data,
 			isview prop,
-			buffer_printer::BufferPrinter& printer,
 			const CallContext& context
 		);
 

@@ -25,7 +25,7 @@
 #include "ExternalMethods.h"
 #include "rxtd/audio_analyzer/Version.h"
 #include "rxtd/buffer_printer/BufferPrinter.h"
-#include "rxtd/option_parsing/OptionMap.h"
+#include "rxtd/option_parsing/Option.h"
 #include "rxtd/option_parsing/OptionParser.h"
 #include "rxtd/rainmeter/Rainmeter.h"
 #include "rxtd/std_fixes/AnyContainer.h"
@@ -38,6 +38,7 @@ namespace rxtd::audio_analyzer::handler {
 		using Option = option_parsing::Option;
 		using OptionMap = option_parsing::OptionMap;
 		using OptionList = option_parsing::OptionList;
+		using OptionSequence = option_parsing::OptionSequence;
 		using Rainmeter = rainmeter::Rainmeter;
 		using ParamsContainer = std_fixes::AnyContainer;
 		using ExternalData = ExternalMethods::ExternalData;
@@ -215,7 +216,7 @@ namespace rxtd::audio_analyzer::handler {
 
 		[[nodiscard]]
 		virtual ExternalMethods::GetPropMethodType vGetExt_getProp() const {
-			return [](const ExternalData&, isview, BufferPrinter&, const ExternalMethods::CallContext&) -> bool {
+			return [](const ExternalData&, isview, const ExternalMethods::CallContext&) -> bool {
 				return {};
 			};
 		}
@@ -342,16 +343,15 @@ namespace rxtd::audio_analyzer::handler {
 		template<typename DataStructType, auto methodPtr>
 		static ExternalMethods::GetPropMethodType wrapExternalGetProp() {
 			static_assert(
-				std::is_invocable_r<bool, decltype(methodPtr), const DataStructType&, isview, BufferPrinter&, const ExternalMethods::CallContext&>::value,
+				std::is_invocable_r<bool, decltype(methodPtr), const DataStructType&, isview, const ExternalMethods::CallContext&>::value,
 				"Method doesn't match the required signature."
 			);
 			return [](
 				const ExternalData& dataWrapper,
 				isview prop,
-				BufferPrinter& bp,
 				const ExternalMethods::CallContext& context
 			) {
-				return methodPtr(dataWrapper.cast<DataStructType>(), prop, bp, context);
+				return methodPtr(dataWrapper.cast<DataStructType>(), prop, context);
 			};
 		}
 

@@ -9,13 +9,12 @@
 using rxtd::audio_analyzer::image_utils::ImageWriteHelper;
 using rxtd::std_fixes::array2d_view;
 
-void ImageWriteHelper::write(array2d_view<IntColor> pixels, bool empty, const string& filepath) {
+void ImageWriteHelper::write(array2d_view<IntColor> pixels, bool empty, sview filepath) {
 	if (state == State::eEMPTY && empty) {
 		return;
 	}
 
-	const std::wstring& sf = filepath;
-	std::filesystem::path directory{ sf };
+	std::filesystem::path directory{ std::wstring_view{ filepath } };
 	directory.remove_filename();
 	std::error_code ec;
 	create_directories(directory, ec);
@@ -25,7 +24,7 @@ void ImageWriteHelper::write(array2d_view<IntColor> pixels, bool empty, const st
 		return;
 	}
 
-	std::ofstream fileStream(filepath, std::ios::binary);
+	std::ofstream fileStream(std::wstring_view{ filepath }, std::ios::binary);
 
 	if (!fileStream.is_open()) {
 		return;

@@ -14,6 +14,6 @@ namespace rxtd::audio_analyzer::image_utils {
 		State state = State::eUNINITIALIZED;
 
 	public:
-		void write(std_fixes::array2d_view<IntColor> pixels, bool empty, const string& filepath);
+		void write(std_fixes::array2d_view<IntColor> pixels, bool empty, sview filepath);
 	};
 }

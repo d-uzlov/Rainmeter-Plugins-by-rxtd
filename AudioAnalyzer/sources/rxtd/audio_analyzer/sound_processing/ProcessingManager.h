@@ -6,7 +6,7 @@
 
 #include "Channel.h"
 #include "ChannelMixer.h"
-#include "rxtd/audio_analyzer/options/ParamParser.h"
+#include "rxtd/audio_analyzer/options/ParamHelper.h"
 #include "rxtd/filter_utils/DownsampleHelper.h"
 
 namespace rxtd::audio_analyzer {

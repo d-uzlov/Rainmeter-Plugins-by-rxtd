@@ -56,14 +56,8 @@ void BlockHandler::setNextValue(float value) {
 bool BlockHandler::getProp(
 	const Snapshot& snapshot,
 	isview prop,
-	BufferPrinter& printer,
 	const ExternalMethods::CallContext& context
 ) {
-	if (prop == L"block size") {
-		printer.print(snapshot.blockSize);
-		return true;
-	}
-
 	return false;
 }
 

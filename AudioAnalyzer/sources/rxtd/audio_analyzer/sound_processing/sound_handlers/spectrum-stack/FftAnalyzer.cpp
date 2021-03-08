@@ -109,7 +109,6 @@ void FftAnalyzer::vProcess(ProcessContext context, ExternalData& externalData) {
 bool FftAnalyzer::getProp(
 	const Snapshot& snapshot,
 	isview prop,
-	BufferPrinter& printer,
 	const ExternalMethods::CallContext& context
 ) {
 	return false;

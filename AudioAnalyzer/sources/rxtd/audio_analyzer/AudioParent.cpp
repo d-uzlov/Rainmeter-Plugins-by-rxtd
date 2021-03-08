@@ -6,7 +6,7 @@
 #include "rxtd/std_fixes/MapUtils.h"
 
 using rxtd::audio_analyzer::AudioParent;
-using rxtd::audio_analyzer::options::ParamParser;
+using rxtd::audio_analyzer::options::ParamHelper;
 using rxtd::audio_analyzer::options::HandlerInfo;
 
 void AudioParent::LogHelpers::setLogger(Logger logger) {
@@ -48,7 +48,7 @@ AudioParent::AudioParent(Rainmeter&& _rain) :
 
 	// will throw std::runtime_error on invalid MagicNumber value,
 	// std::runtime_error is allowed to be thrown from constructor
-	version = Version::parseVersion(paramParser.getParser().parseInt(rain.read(L"MagicNumber"), 0));
+	version = Version::parseVersion(parser.parseInt(rain.read(L"MagicNumber"), 0));
 
 	if (version < Version::eVERSION2) {
 		throw std::runtime_error{ "legacy mode is not allowed" };
@@ -65,14 +65,16 @@ AudioParent::AudioParent(Rainmeter&& _rain) :
 		throw std::runtime_error{ "" };
 	}
 
+	paramHelper.setParser(parser);
+
 	const auto threadingParams = rain.read(L"threading").asMap(L'|', L' ');
-	helper.init(rain, logger, threadingParams, paramParser.getParser(), version, blockCaptureLoudnessChange);
+	helper.init(rain, logger, threadingParams, parser, version, blockCaptureLoudnessChange);
 	const auto untouchedOptions = threadingParams.getListOfUntouched();
 	if (!untouchedOptions.empty()) {
 		logger.warning(L"Threading: unused options: {}", untouchedOptions);
 	}
 
-	paramParser.setRainmeter(rain);
+	paramHelper.setRainmeter(rain);
 }
 
 void AudioParent::vReload() {
@@ -92,17 +94,17 @@ void AudioParent::vReload() {
 
 	bool paramsChanged;
 	try {
-		paramsChanged = paramParser.readOptions(version, false);
-	} catch (ParamParser::InvalidOptionsException&) {
+		paramsChanged = paramHelper.readOptions(version, false);
+	} catch (ParamHelper::InvalidOptionsException&) {
 		return;
 	}
 
 	if (paramsChanged) {
 		using std_fixes::MapUtils;
-		MapUtils::intersectKeyCollection(clearProcessings, paramParser.getParseResult());
-		MapUtils::intersectKeyCollection(clearSnapshot, paramParser.getParseResult());
+		MapUtils::intersectKeyCollection(clearProcessings, paramHelper.getParseResult());
+		MapUtils::intersectKeyCollection(clearSnapshot, paramHelper.getParseResult());
 
-		for (const auto& [name, data] : paramParser.getParseResult()) {
+		for (const auto& [name, data] : paramHelper.getParseResult()) {
 			auto& sa = clearProcessings[name];
 			ProcessingManager::Snapshot& snapshot = clearSnapshot[name];
 			sa.setParams(
@@ -121,9 +123,9 @@ void AudioParent::vReload() {
 	callbacks.onDeviceDisconnected = rain.read(L"callback-onDeviceDisconnected", false).asString();
 
 	if (oldCallbacks != callbacks || oldSource != requestedSource || paramsChanged) {
-		std::optional<ParamParser::ProcessingsInfoMap> paramsOpt = {};
+		std::optional<ParamHelper::ProcessingsInfoMap> paramsOpt = {};
 		if (paramsChanged) {
-			paramsOpt = paramParser.getParseResult();
+			paramsOpt = paramHelper.getParseResult();
 		}
 
 		helper.setParams(callbacks, std::move(sourceOpt), std::move(paramsOpt));
@@ -346,7 +348,7 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 				return;
 			}
 
-			const auto ind = paramParser.getParser().parseInt(map.get(L"index"), 0);
+			const auto ind = parser.parseInt(map.get(L"index"), 0);
 
 			buffer_printer::BufferPrinter bp;
 			const auto value = getValue(procName, handlerName, channelOpt.value(), ind);
@@ -408,8 +410,8 @@ double AudioParent::getValue(isview proc, isview id, Channel channel, index ind)
 }
 
 bool AudioParent::checkHandlerShouldExist(isview procName, Channel channel, isview handlerName) const {
-	const auto procDataIter = paramParser.getParseResult().find(procName);
-	if (procDataIter == paramParser.getParseResult().end()) {
+	const auto procDataIter = paramHelper.getParseResult().find(procName);
+	if (procDataIter == paramHelper.getParseResult().end()) {
 		logHelpers.processingNotFound.log(procName);
 		return false;
 	}
@@ -430,7 +432,7 @@ bool AudioParent::checkHandlerShouldExist(isview procName, Channel channel, isvi
 }
 
 rxtd::isview AudioParent::findProcessingFor(isview handlerName) const {
-	for (auto& [name, pd] : paramParser.getParseResult()) {
+	for (auto& [name, pd] : paramHelper.getParseResult()) {
 		auto& order = pd.handlerOrder;
 		if (std::find(order.begin(), order.end(), handlerName) != order.end()) {
 			return name;
@@ -501,18 +503,16 @@ void AudioParent::initLogHelpers() {
 void AudioParent::runFinisher(
 	handler::ExternalMethods::FinishMethodType finisher, const handler::HandlerBase::ExternalData& handlerData, isview procName, Channel channel, isview handlerName
 ) const {
-	handler::ExternalMethods::CallContext context;
-	context.version = version;
+	handler::ExternalMethods::CallContext context{
+		version,
+		ChannelUtils::getTechnicalName(channel),
+		L"",
+		bufferPrinter,
+		parser
+	};
 
-	context.channelName = ChannelUtils::getTechnicalName(channel);
-
-	string filePrefix;
-	filePrefix += procName % csView();
-	filePrefix += L'-';
-	filePrefix += handlerName % csView();
-	filePrefix += L'-';
-	filePrefix += context.channelName;
-
+	bufferPrinter.print(L"{}-{}-{}", procName, handlerName, context.channelName);
+	string filePrefix = string{ bufferPrinter.getBufferView() };
 	context.filePrefix = filePrefix;
 
 	finisher(handlerData, context);
@@ -564,7 +564,7 @@ void AudioParent::resolveProp(
 		return;
 	}
 
-	const auto procIter0 = paramParser.getParseResult().find(procName);
+	const auto procIter0 = paramHelper.getParseResult().find(procName);
 	const auto handlerInfoIter = procIter0->second.handlers.find(handlerName);
 
 	const HandlerInfo* const handlerInfo = &handlerInfoIter->second;
@@ -617,33 +617,29 @@ void AudioParent::resolveProp(
 		return;
 	}
 
+	handler::ExternalMethods::CallContext context{
+		version,
+		ChannelUtils::getTechnicalName(channel),
+		L"",
+		bufferPrinter,
+		parser
+	};
 
-	handler::ExternalMethods::CallContext context;
-	context.version = version;
-
-	context.channelName = ChannelUtils::getTechnicalName(channel);
-
-	string filePrefix;
-	filePrefix += procName % csView();
-	filePrefix += L'-';
-	filePrefix += handlerName % csView();
-	filePrefix += L'-';
-	filePrefix += context.channelName;
-
+	bufferPrinter.print(L"{}-{}-{}", procName, handlerName, context.channelName);
+	string filePrefix = string{ bufferPrinter.getBufferView() };
 	context.filePrefix = filePrefix;
 
-	buffer_printer::BufferPrinter bp;
-	const bool found = propGetter(*handlerExternalData, propName, bp, context);
+	const bool found = propGetter(*handlerExternalData, propName, context);
 	if (!found) {
 		logHelpers.propNotFound.log(handlerInfo->type, propName);
 		return;
 	}
 
-	resolveBufferString = bp.getBufferView();
+	resolveBufferString = context.printer.getBufferView();
 }
 
 void AudioParent::runFinishers(ProcessingOrchestrator::Snapshot& snapshot) const {
-	for (const auto& [procName, procInfo] : paramParser.getParseResult()) {
+	for (const auto& [procName, procInfo] : paramHelper.getParseResult()) {
 		auto procIter = snapshot.find(procName);
 		if (procIter == snapshot.end()) { continue; }
 		ProcessingManager::Snapshot& procSnapshot = procIter->second;

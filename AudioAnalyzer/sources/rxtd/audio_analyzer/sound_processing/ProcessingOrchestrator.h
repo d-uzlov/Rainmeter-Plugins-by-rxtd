@@ -8,7 +8,7 @@ namespace rxtd::audio_analyzer {
 	class ProcessingOrchestrator {
 	public:
 		using Snapshot = std::map<istring, ProcessingManager::Snapshot, std::less<>>;
-		using Patches = options::ParamParser::ProcessingsInfoMap;
+		using Patches = options::ParamHelper::ProcessingsInfoMap;
 
 	private:
 		double warnTimeMs = 33.0;
