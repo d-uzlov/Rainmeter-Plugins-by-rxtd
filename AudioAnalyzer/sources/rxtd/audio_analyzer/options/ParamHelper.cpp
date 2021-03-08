@@ -24,7 +24,7 @@ bool ParamHelper::readOptions(Version _version, bool suppressLogger) {
 		defaultTargetRate = 0;
 	}
 
-	unusedOptionsWarning = parser.parseBool(rain.read(L"UnusedOptionsWarning"), true);
+	unusedOptionsWarning = parser.parseBool(rain.read(L"LogUnusedOptions"), true);
 
 	auto processingIndices = rain.read(L"ProcessingUnits").asList(L',');
 	if (!checkListUnique(processingIndices)) {
