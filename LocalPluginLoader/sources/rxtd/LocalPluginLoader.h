@@ -18,6 +18,10 @@ namespace rxtd {
 		const wchar_t* (*getStringFunc)(void* data) = nullptr;
 		void (*executeBangFunc)(void* data, const wchar_t* args) = nullptr;
 
+		using ResolveFunction = const wchar_t* (*)(void* data, int argc, const wchar_t* argv[]);
+
+		ResolveFunction resolveFunc = nullptr;
+
 	public:
 		LocalPluginLoader(void* rm);
 		~LocalPluginLoader();
@@ -26,6 +30,6 @@ namespace rxtd {
 		double update() const;
 		const wchar_t* getStringValue() const;
 		void executeBang(const wchar_t* args) const;
-		const wchar_t* solveSectionVariable(int count, const wchar_t* args[]);
+		const wchar_t* solveSectionVariable(int count, const wchar_t* args[], bool useResolve);
 	};
 }

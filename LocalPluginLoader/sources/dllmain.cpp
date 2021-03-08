@@ -34,8 +34,15 @@ PLUGIN_EXPORT void ExecuteBang(void* data, LPCWSTR args) {
 }
 
 PLUGIN_EXPORT LPCWSTR sv(void* data, const int argc, const WCHAR* argv[]) {
-	const auto result = static_cast<LocalPluginLoader*>(data)->solveSectionVariable(argc, argv);
-	return result;
+	return static_cast<LocalPluginLoader*>(data)->solveSectionVariable(argc, argv, false);
+}
+
+PLUGIN_EXPORT const wchar_t* resolve(void* data, const int argc, const wchar_t* argv[]) {
+	return static_cast<LocalPluginLoader*>(data)->solveSectionVariable(argc, argv, true);
+}
+
+PLUGIN_EXPORT const wchar_t* Resolve(void* data, const int argc, const wchar_t* argv[]) {
+	return resolve(data, argc, argv);
 }
 
 PLUGIN_EXPORT void* LocalPluginLoaderRecursionPrevention_123_() {

@@ -66,3 +66,7 @@ PLUGIN_EXPORT const wchar_t* resolve(void* data, const int argc, const wchar_t* 
 
 	return result;
 }
+
+PLUGIN_EXPORT const wchar_t* Resolve(void* data, const int argc, const wchar_t* argv[]) {
+	return resolve(data, argc, argv);
+}

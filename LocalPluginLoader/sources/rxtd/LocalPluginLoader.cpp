@@ -78,6 +78,11 @@ LocalPluginLoader::LocalPluginLoader(void* rm) {
 	if (initializeFunc != nullptr) {
 		initializeFunc(&pluginData, rm);
 	}
+
+	const bool useRxtdExtendedApi = getDllFunction<const wchar_t* (*)()>(hLib, "_rainmeterAPIExtension_rxtd_resolve") != nullptr;
+	if (useRxtdExtendedApi) {
+		resolveFunc = getDllFunction<ResolveFunction>(hLib, "resolve");
+	}
 }
 
 LocalPluginLoader::~LocalPluginLoader() {
@@ -128,10 +133,15 @@ void LocalPluginLoader::executeBang(const wchar_t* args) const {
 	executeBangFunc(pluginData, args);
 }
 
-const wchar_t* LocalPluginLoader::solveSectionVariable(const int count, const wchar_t* args[]) {
+const wchar_t* LocalPluginLoader::solveSectionVariable(const int count, const wchar_t* args[], bool useResolve) {
 	if (hLib == nullptr) {
 		return nullptr;
 	}
+
+	if (useResolve && resolveFunc != nullptr) {
+		return resolveFunc(pluginData, count, args);
+	}
+
 	if (count < 1) {
 		logger.error(L"Function name must be specified");
 		return nullptr;
@@ -164,8 +174,6 @@ const wchar_t* LocalPluginLoader::solveSectionVariable(const int count, const wc
 		}
 		byteFuncName[static_cast<size_t>(i)] = c;
 	}
-
-	using ResolveFunction = const wchar_t* (*)(void* data, int argc, const wchar_t* argv[]);
 
 	const ResolveFunction funcPtr = getDllFunction<ResolveFunction>(hLib, byteFuncName.c_str());
 	if (funcPtr == nullptr) {
