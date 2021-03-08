@@ -273,7 +273,7 @@ bool BandResampler::getProp(
 	isview prop,
 	const ExternalMethods::CallContext& context
 ) {
-	const index bandsCount = static_cast<index>(snapshot.bandFreqs.size());
+	const index bandsCount = static_cast<index>(snapshot.bandFreqs.size()) - 1;
 
 	if (prop == L"bandsCount") {
 		context.printer.print(bandsCount);
