@@ -100,6 +100,5 @@ namespace rxtd::test::option_parsing {
 			auto seq = opt.asSequence(L'(', L')', L',');
 			Assert::AreEqual(static_cast<index>(0), seq.getSize());
 		}
-
 	};
 }

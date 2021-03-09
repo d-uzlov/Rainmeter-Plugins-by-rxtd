@@ -122,8 +122,8 @@ namespace rxtd::test::fft_utils {
 		static void assertArraysEqual(array_view<Fft::complex_type> a, array_view<Fft::complex_type> b) {
 			Assert::AreEqual(a.size(), b.size());
 			for (index i = 0; i < a.size(); i++) {
-				Assert::IsTrue(MyMath::checkFloatEqual<Float>(a[i].real(), b[i].real(), 64.0f, 8.0f));
-				Assert::IsTrue(MyMath::checkFloatEqual<Float>(a[i].imag(), b[i].imag(), 64.0f, 8.0f));
+				Assert::IsTrue(MyMath::checkFloatEqual<Float>(a[i].real(), b[i].real(), 64.0f, 16.0f));
+				Assert::IsTrue(MyMath::checkFloatEqual<Float>(a[i].imag(), b[i].imag(), 64.0f, 16.0f));
 			}
 		}
 	};
