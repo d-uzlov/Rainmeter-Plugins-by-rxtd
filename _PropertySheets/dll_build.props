@@ -27,6 +27,7 @@ IF ERRORLEVEL 1 (
 exit /b 0
 </Command>
       <Outputs>doesnt_exist-git_commit_version.h</Outputs>
+      <Message>Generating Git commit hash file for $(ProjectName)</Message>
     </CustomBuildStep>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(ProjectDir);$(SolutionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>

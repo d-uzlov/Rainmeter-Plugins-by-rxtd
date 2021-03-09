@@ -6,7 +6,6 @@
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>FftUtilstest</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectSubType>NativeUnitTestProject</ProjectSubType>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <Import Project="$(PropertySheetsDir)configurations.props" />
@@ -17,43 +16,41 @@
   <ImportGroup Label="PropertySheets">
     <Import Project="$(PropertySheetsDir)solution.props" />
     <Import Project="$(PropertySheetsDir)pch.props" />
+    <Import Project="$(PropertySheetsDir)pch_copy.props" />
     <Import Project="$(PropertySheetsDir)platforms/$(Platform).props" />
     <Import Project="$(PropertySheetsDir)configurations_specific_settings/$(Configuration).props" />
   </ImportGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(VCInstallDir)UnitTest\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(VCInstallDir)Auxiliary\VS\UnitTest\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalLibraryDirectories>$(VCInstallDir)UnitTest\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(VCInstallDir)Auxiliary\VS\UnitTest\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ComplexFft.test.cpp" />
     <ClCompile Include="RealFft.test.cpp" />
     <ClCompile Include="WindowFunctionHelper.test.cpp" />
-    <ClCompile Include="precompiled.cpp">
-      <PrecompiledHeader>Create</PrecompiledHeader>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ExpressionParser\ExpressionParser.vcxproj">
+    <ProjectReference Include="$(SolutionDir)Utils\ExpressionParser\ExpressionParser.vcxproj">
       <Project>{69308053-9c59-46c7-9158-a17de9e7615b}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\FftUtils\FftUtils.vcxproj">
+    <ProjectReference Include="$(SolutionDir)Utils\FftUtils\FftUtils.vcxproj">
       <Project>{1c4c178d-a05d-4e2b-9dca-8c3baf84bed9}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\Logger\Logger.vcxproj">
+    <ProjectReference Include="$(SolutionDir)Utils\Logger\Logger.vcxproj">
       <Project>{2b8f5b9c-15d2-441d-9158-90e3f53c7606}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\OptionParsingUtils\OptionParsingUtils.vcxproj">
+    <ProjectReference Include="$(SolutionDir)Utils\OptionParsingUtils\OptionParsingUtils.vcxproj">
       <Project>{cf878ad0-e15c-403d-be8b-1f426dba2146}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\SignalFilterUtils\SignalFilterUtils.vcxproj">
+    <ProjectReference Include="$(SolutionDir)Utils\SignalFilterUtils\SignalFilterUtils.vcxproj">
       <Project>{d0130229-8eba-4d32-b144-9cbc54cc50a2}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\StdLibExtension\StdLibExtension.vcxproj">
+    <ProjectReference Include="$(SolutionDir)Utils\StdLibExtension\StdLibExtension.vcxproj">
       <Project>{76a3d6d3-45e8-4391-8b94-2477afe23596}</Project>
     </ProjectReference>
   </ItemGroup>

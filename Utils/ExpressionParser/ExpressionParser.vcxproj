@@ -46,7 +46,7 @@
     <None Include="README.md" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\StdLibExtension\StdLibExtension.vcxproj">
+    <ProjectReference Include="$(SolutionDir)Utils\StdLibExtension\StdLibExtension.vcxproj">
       <Project>{76a3d6d3-45e8-4391-8b94-2477afe23596}</Project>
     </ProjectReference>
   </ItemGroup>

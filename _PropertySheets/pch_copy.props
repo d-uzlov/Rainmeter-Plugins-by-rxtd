@@ -1,25 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Target Name="CopyFreshPch" BeforeTargets="ClCompile" Inputs="$(SharedPch)" Outputs="%(ClCompile.PrecompiledHeaderOutputFile)" >
-    <Message  Importance="High" Text="Copying pch files" />
+  <Target Name="CopyFreshPch" BeforeTargets="ClCompile" Inputs="$(SharedPch);$(SharedPdb);$(SharedIdb);" Outputs="%(ClCompile.PrecompiledHeaderOutputFile);%(ClCompile.ProgramDataBaseFileName);" >
+    <Message
+        Condition="Exists('$(SharedPch)') AND (
+            !Exists('%(ClCompile.PrecompiledHeaderOutputFile)') OR $([System.IO.File]::GetLastWriteTime('$(SharedPch)').Ticks) &gt; $([System.IO.File]::GetLastWriteTime('%(ClCompile.PrecompiledHeaderOutputFile)').Ticks)
+        )"
+        Importance="High"
+        Text="Copying pch files from:   $(SharedPch)   into:   %(ClCompile.PrecompiledHeaderOutputFile)"
+    />
+    <Message
+        Condition="!Exists('$(SharedPch)')"
+        Importance="High" Text="Can't copy PCH: file doesn't exist: $(SharedPch)"
+    />
     <Copy
-        Condition="!Exists('$(SharedPch)') OR $([System.IO.File]::GetLastWriteTime('$(SharedPch)').Ticks) &gt; $([System.IO.File]::GetLastWriteTime('%(ClCompile.PrecompiledHeaderOutputFile)').Ticks)"
+        Condition="Exists('$(SharedPch)') AND (
+            !Exists('%(ClCompile.PrecompiledHeaderOutputFile)') OR $([System.IO.File]::GetLastWriteTime('$(SharedPch)').Ticks) &gt; $([System.IO.File]::GetLastWriteTime('%(ClCompile.PrecompiledHeaderOutputFile)').Ticks)
+        )"
         SourceFiles="$(SharedPch)"
         DestinationFiles="%(ClCompile.PrecompiledHeaderOutputFile)">
     </Copy>
-  </Target>
-  <Target Name="CopyFreshPchPdb" Condition="'$(Configuration)'!='Release'" BeforeTargets="ClCompile" Inputs="$(SharedPdb);$(SharedIdb);" Outputs="%(ClCompile.ProgramDataBaseFileName);" >
-    <PropertyGroup>
-      <IdbFileName>$([System.String]::Copy(&quot;%(ClCompile.ProgramDataBaseFileName)&quot;).Replace(&quot;.pdb&quot;,&quot;.idb&quot;))</IdbFileName>
-    </PropertyGroup>
-    <Message  Importance="High" Text="Copying pdb files" />
+    
+    <Message Condition="Exists('$(SharedPdb)') AND (
+            !Exists('%(ClCompile.ProgramDataBaseFileName)') OR $([System.IO.File]::GetLastWriteTime('$(SharedPdb)').Ticks) &gt; $([System.IO.File]::GetLastWriteTime('%(ClCompile.ProgramDataBaseFileName)').Ticks)
+        )"
+        Importance="High"
+        Text="Copying pdb from:   $(SharedPdb)   into:   %(ClCompile.ProgramDataBaseFileName)"
+    />
     <Copy
-        Condition="!Exists('$(SharedPdb)') OR $([System.IO.File]::GetLastWriteTime('$(SharedPdb)').Ticks) &gt; $([System.IO.File]::GetLastWriteTime('%(ClCompile.ProgramDataBaseFileName)').Ticks)"
+        Condition="Exists('$(SharedPdb)') AND (
+            !Exists('%(ClCompile.ProgramDataBaseFileName)') OR $([System.IO.File]::GetLastWriteTime('$(SharedPdb)').Ticks) &gt; $([System.IO.File]::GetLastWriteTime('%(ClCompile.ProgramDataBaseFileName)').Ticks)
+        )"
         SourceFiles="$(SharedPdb)"
         DestinationFiles="%(ClCompile.ProgramDataBaseFileName)">
     </Copy>
+    
+    <PropertyGroup>
+      <IdbFileName>$([System.String]::Copy(&quot;%(ClCompile.ProgramDataBaseFileName)&quot;).Replace(&quot;.pdb&quot;,&quot;.idb&quot;))</IdbFileName>
+    </PropertyGroup>
+    <Message Condition="Exists('$(SharedIdb)') AND (
+            !Exists('$(IdbFileName)') OR $([System.IO.File]::GetLastWriteTime('$(SharedIdb)').Ticks) &gt; $([System.IO.File]::GetLastWriteTime('$(IdbFileName)').Ticks)
+        )"
+        Importance="High"
+        Text="Copying pdb from:   $(SharedPdb)   into:   $(IdbFileName)"
+    />
     <Copy
-        Condition="!Exists('$(SharedIdb)') OR $([System.IO.File]::GetLastWriteTime('$(SharedIdb)').Ticks) &gt; $([System.IO.File]::GetLastWriteTime('$(IdbFileName)').Ticks)"
+        Condition="Exists('$(SharedIdb)') AND (
+            !Exists('$(IdbFileName)') OR $([System.IO.File]::GetLastWriteTime('$(SharedIdb)').Ticks) &gt; $([System.IO.File]::GetLastWriteTime('$(IdbFileName)').Ticks)
+        )"
         SourceFiles="$(SharedIdb)"
         DestinationFiles="$(IdbFileName)">
     </Copy>

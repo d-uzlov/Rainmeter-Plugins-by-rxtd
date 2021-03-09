@@ -6,6 +6,7 @@
   <ItemDefinitionGroup>
     <ClCompile>
       <Optimization>Disabled</Optimization>
+      <SDLCheck>false</SDLCheck>
       <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
