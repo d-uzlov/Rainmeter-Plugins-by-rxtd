@@ -38,7 +38,7 @@ ParamsContainer BandResampler::vParseParams(ParamParseContext& context) const no
 		throw InvalidOptionsException{};
 	}
 
-	params.useCubicResampling = context.parser.parseBool(context.options.get(L"cubicInterpolation"), true);
+	params.useCubicResampling = context.parser.parse(context.options, L"cubicInterpolation").valueOr(true);
 
 	return params;
 }
@@ -52,7 +52,7 @@ void BandResampler::parseBandsElement(isview type, const Option& bandParams, std
 		}
 		freqs.reserve(static_cast<size_t>(list.size()));
 		for (auto opt : list) {
-			freqs.push_back(parser.parseFloatF(opt));
+			freqs.push_back(parser.parse(opt, L"bands: custom value").as<float>());
 		}
 
 		std::sort(freqs.begin(), freqs.end());
@@ -81,32 +81,14 @@ void BandResampler::parseBandsElement(isview type, const Option& bandParams, std
 
 	auto map = bandParams.asMap(L',', L' ');
 
-	auto countOpt = map.get(L"count");
-	if (countOpt.empty()) {
-		cl.error(L"{} must have 'count' specified in sub-arguments", type);
-		throw InvalidOptionsException{};
-	}
-
-	auto minOpt = map.get(L"min");
-	if (countOpt.empty()) {
-		cl.error(L"{} must have 'min' specified in sub-arguments", type);
-		throw InvalidOptionsException{};
-	}
-
-	auto maxOpt = map.get(L"max");
-	if (countOpt.empty()) {
-		cl.error(L"{} must have 'max' specified in sub-arguments", type);
-		throw InvalidOptionsException{};
-	}
-
-	const index count = parser.parseInt(countOpt, 0);
+	const index count = parser.parse(map.get(L"count"), L"bands: count").as<index>();
 	if (count < 1) {
 		cl.error(L"{}: count must be >= 1", type);
 		throw InvalidOptionsException{};
 	}
 
-	const auto min = parser.parseFloatF(minOpt);
-	const auto max = parser.parseFloatF(maxOpt);
+	const auto min = parser.parse(map.get(L"min"), L"bands: min").as<float>();
+	const auto max = parser.parse(map.get(L"max"), L"bands: min").as<float>();
 	if (max <= min) {
 		cl.error(L"{}: max must be > min", type);
 		throw InvalidOptionsException{};
@@ -281,7 +263,7 @@ bool BandResampler::getProp(
 	}
 
 	auto [nameOpt, valueOpt] = Option{ prop }.breakFirst(L' ');
-	const auto ind = context.parser.parseInt(valueOpt);
+	const auto ind = context.parser.parse(valueOpt, prop % csView()).as<index>();
 
 	if (nameOpt.asIString() == L"lowerBound") {
 		if (ind < static_cast<index>(snapshot.bandFreqs.size())) {

@@ -50,7 +50,7 @@ FilterCascadeParser::parseFilter(const Option& nameOpt, const Option& argsOpt, L
 		return {};
 	}
 
-	auto cl = logger.context(L"'{}': ", name);
+	auto cl = logger.context(L"{}: ", name);
 	const auto args = argsOpt.asMap(L',', L' ');
 
 	if (StringUtils::checkStartsWith(name, L"bq")) {
@@ -76,16 +76,16 @@ FilterCascadeParser::parseBQ(isview name, const OptionMap& description, Logger& 
 		return {};
 	}
 
-	const double q = std::max<double>(parser.parseFloat(description.get(L"q")), std::numeric_limits<float>::epsilon());
+	const double q = std::max<double>(parser.parse(description, L"q").as<double>(), std::numeric_limits<float>::epsilon());
 	const double centralFrequency = std::max<double>(
-		parser.parseFloat(description.get(L"freq")),
+		parser.parse(description, L"freq").as<double>(),
 		std::numeric_limits<float>::epsilon()
 	);
 	double gain = 0.0;
 	if (name == L"bqHighShelf" || name == L"bqLowShelf" || name == L"bqPeak") {
-		gain = parser.parseFloat(description.get(L"gain"));
+		gain = parser.parse(description, L"gain").as<double>();
 	}
-	const double forcedGain = parser.parseFloat(description.get(L"forcedGain"));
+	const double forcedGain = parser.parse(description, L"forcedGain").valueOr(0.0);
 
 	const auto unused = description.getListOfUntouched();
 	if (!unused.empty()) {
@@ -100,25 +100,10 @@ FilterCascadeParser::parseBQ(isview name, const OptionMap& description, Logger& 
 	} else if (name == L"bqLowPass") {
 		filterCreationFunc = BQFilterBuilder::createLowPass;
 	} else if (name == L"bqHighShelf") {
-		if (description.get(L"gain").empty()) {
-			cl.error(L"gain is not found", name);
-			return {};
-		}
-
 		filterCreationFunc = BQFilterBuilder::createHighShelf;
 	} else if (name == L"bqLowShelf") {
-		if (description.get(L"gain").empty()) {
-			cl.error(L"gain is not found", name);
-			return {};
-		}
-
 		filterCreationFunc = BQFilterBuilder::createLowShelf;
 	} else if (name == L"bqPeak") {
-		if (description.get(L"gain").empty()) {
-			cl.error(L"gain is not found", name);
-			return {};
-		}
-
 		filterCreationFunc = BQFilterBuilder::createPeak;
 	} else {
 		cl.error(L"unknown filter type");
@@ -138,32 +123,20 @@ FilterCascadeParser::parseBQ(isview name, const OptionMap& description, Logger& 
 
 FilterCascadeParser::FCF
 FilterCascadeParser::parseBW(isview name, const OptionMap& description, Logger& cl) {
-	if (description.get(L"order").empty()) {
-		cl.error(L"order is not found");
-		return {};
-	}
-
-	const index order = parser.parseInt(description.get(L"order"));
+	const index order = parser.parse(description, L"order").as<index>();
 	if (order <= 0 || order > 5) {
 		cl.error(L"order must be in range [1, 5] but {} found", order);
 		return {};
 	}
 
-	const double cutoff = parser.parseFloat(description.get(L"freq"));
-	const double cutoffLow = parser.parseFloat(description.get(L"freqLow"));
-	const double cutoffHigh = parser.parseFloat(description.get(L"freqHigh"));
-
-	const double forcedGain = parser.parseFloat(description.get(L"forcedGain"));
-
-	const auto unused = description.getListOfUntouched();
-	if (!unused.empty()) {
-		cl.warning(L"unused options: {}", unused);
-	}
+	const double forcedGain = parser.parse(description, L"forcedGain").valueOr(0.0);
 
 	if (name == L"bwLowPass" || name == L"bwHighPass") {
-		if (description.get(L"freq").empty()) {
-			cl.error(L"freq is not found");
-			return {};
+		const double cutoff = parser.parse(description, L"freq").as<double>();
+
+		const auto unused = description.getListOfUntouched();
+		if (!unused.empty()) {
+			cl.warning(L"unused options: {}", unused);
 		}
 
 		if (name == L"bwLowPass") {
@@ -179,13 +152,12 @@ FilterCascadeParser::parseBW(isview name, const OptionMap& description, Logger& 
 	}
 
 	if (name == L"bwBandPass" || name == L"bwBandStop") {
-		if (description.get(L"freqLow").empty()) {
-			cl.error(L"freqLow is not found");
-			return {};
-		}
-		if (description.get(L"freqHigh").empty()) {
-			cl.error(L"freqHigh is not found");
-			return {};
+		const double cutoffLow = parser.parse(description, L"freqLow").as<double>();
+		const double cutoffHigh = parser.parse(description, L"freqHigh").as<double>();
+
+		const auto unused = description.getListOfUntouched();
+		if (!unused.empty()) {
+			cl.warning(L"unused options: {}", unused);
 		}
 
 		if (name == L"bwBandPass") {

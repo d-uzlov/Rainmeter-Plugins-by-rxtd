@@ -12,12 +12,12 @@ using ParamsContainer = HandlerBase::ParamsContainer;
 ParamsContainer BlockHandler::vParseParams(ParamParseContext& context) const noexcept(false) {
 	Params params;
 
-	double updateRate = context.parser.parseFloat(context.options.get(L"UpdateRate"), 60.0);
+	double updateRate = context.parser.parse(context.options, L"UpdateRate").valueOr(60.0);
 	updateRate = std::clamp(updateRate, 0.01, 500.0);
 	params.updateInterval = 1.0 / updateRate;
 
-	params.attackTime = std::max(context.parser.parseFloat(context.options.get(L"attack"), 0.0), 0.0);
-	params.decayTime = std::max(context.parser.parseFloat(context.options.get(L"decay"), params.attackTime), 0.0);
+	params.attackTime = std::max(context.parser.parse(context.options, L"attack").valueOr(0.0), 0.0);
+	params.decayTime = std::max(context.parser.parse(context.options, L"decay").valueOr(params.attackTime), 0.0);
 	params.attackTime *= 0.001;
 	params.decayTime *= 0.001;
 

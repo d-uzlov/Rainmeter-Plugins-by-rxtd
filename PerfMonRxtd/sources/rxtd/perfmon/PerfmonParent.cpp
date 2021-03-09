@@ -18,7 +18,7 @@ PerfmonParent::PerfmonParent(Rainmeter&& _rain) : ParentMeasureBase(std::move(_r
 		throw std::runtime_error{ "" };
 	}
 
-	const auto InstanceIndexOffset = parser.parseInt(rain.read(L"InstanceIndexOffset"));
+	const auto InstanceIndexOffset = parser.parse(rain.read(L"InstanceIndexOffset"), L"InstanceIndexOffset").valueOr(0);
 	simpleInstanceManager.setIndexOffset(InstanceIndexOffset, false);
 	rollupInstanceManager.setIndexOffset(InstanceIndexOffset, false);
 }
@@ -46,12 +46,12 @@ void PerfmonParent::vReload() {
 		return;
 	}
 
-	useRollup = parser.parseBool(rain.read(L"Rollup"));
+	useRollup = parser.parse(rain.read(L"Rollup"), L"Rollup").valueOr(false);
 
 	SimpleInstanceManager::Options imo;
-	imo.syncRawFormatted = parser.parseBool(rain.read(L"SyncRawFormatted"));
-	imo.keepDiscarded = parser.parseBool(rain.read(L"KeepDiscarded"));
-	imo.limitIndexOffset = parser.parseBool(rain.read(L"LimitIndexOffset"));
+	imo.syncRawFormatted = parser.parse(rain.read(L"SyncRawFormatted"), L"SyncRawFormatted").valueOr(false);
+	imo.keepDiscarded = parser.parse(rain.read(L"KeepDiscarded"), L"KeepDiscarded").valueOr(false);
+	imo.limitIndexOffset = parser.parse(rain.read(L"LimitIndexOffset"), L"LimitIndexOffset").valueOr(false);
 
 	imo.sortInfo = parseSortInfo();
 
@@ -226,7 +226,7 @@ void PerfmonParent::vCommand(isview bangArgs) {
 	}
 	auto [name, value] = option_parsing::Option{ bangArgs }.breakFirst(L' ');
 	if (name.asIString() == L"SetIndexOffset") {
-		const index offset = parser.parseInt(value);
+		const index offset = parser.parse(value, name.asString()).as<index>();
 		const auto firstSymbol = value.asString()[0];
 		const bool isRelativeValue = firstSymbol == L'-' || firstSymbol == L'+';
 		simpleInstanceManager.setIndexOffset(offset, isRelativeValue);
@@ -280,7 +280,7 @@ double PerfmonParent::getValues(const Reference& ref, index sortedIndex, ResultS
 rxtd::perfmon::SortInfo PerfmonParent::parseSortInfo() {
 	SortInfo result;
 
-	result.sortByValueInformation.sortIndex = parser.parseInt(rain.read(L"SortIndex"));
+	result.sortByValueInformation.sortIndex = parser.parse(rain.read(L"SortIndex"), L"SortIndex").valueOr(0);
 
 	const auto sortByString = rain.read(L"SortBy").asIString(L"None");
 	if (const auto sortByOpt = parseEnum<SortBy>(sortByString);

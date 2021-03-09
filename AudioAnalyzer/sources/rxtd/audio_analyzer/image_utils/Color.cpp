@@ -70,21 +70,16 @@ Color Color::parse(sview desc, option_parsing::OptionParser& parser, Color defau
 	}
 
 	const auto count = components.size();
-	if (count < 3) {
+	if (count < 3 || count > 4) {
 		Logger logger;
-		logger.error(L"can't parse '{}' as color: not enough color components: {}, but need 3 or 4", desc, count);
-		return defaultValue;
-	}
-	if (count > 4) {
-		Logger logger;
-		logger.error(L"can't parse '{}' as color: too many color components: {}, but need 3 or 4", desc, count);
+		logger.error(L"can't parse color: need 3 or 4 color components: {}", desc);
 		return defaultValue;
 	}
 
-	result._.rgb.red = parser.parseFloatF(components.get(0), 0.0f);
-	result._.rgb.green = parser.parseFloatF(components.get(1), 0.0f);
-	result._.rgb.blue = parser.parseFloatF(components.get(2), 0.0f);
-	result.alpha = parser.parseFloatF(components.get(3), 1.0f);
+	result._.rgb.red = parser.parse(components.get(0), L"colors").valueOr(0.0f);
+	result._.rgb.green = parser.parse(components.get(1), L"colors").valueOr(0.0f);
+	result._.rgb.blue = parser.parse(components.get(2), L"colors").valueOr(0.0f);
+	result.alpha = parser.parse(components.get(3), L"colors").valueOr(1.0f);
 
 	return result;
 }

@@ -200,7 +200,11 @@ namespace rxtd::audio_analyzer::handler {
 
 			context.parser.setLogger(context.log);
 
-			meta.params = ref.vParseParams(context);
+			try {
+				meta.params = ref.vParseParams(context);
+			} catch(option_parsing::OptionParser::Exception&) {
+				throw InvalidOptionsException{};
+			}
 			meta.externalMethods.finish = ref.vGetExt_finish();
 			meta.externalMethods.getProp = ref.vGetExt_getProp();
 			meta.sourcesCount = ref.vGetSourcesCount();
@@ -228,7 +232,7 @@ namespace rxtd::audio_analyzer::handler {
 
 		/// <summary>
 		/// Reads options from map and creates a ParamsContainer object.
-		/// Implementation is allowed to throw InvalidOptionsException.
+		/// Implementation is allowed to throw InvalidOptionsException and OptionParser::Exception.
 		/// </summary>
 		/// <returns>ParamsContainer, that is valid for vConfigure call on the same object.</returns>
 		[[nodiscard]]

@@ -17,13 +17,13 @@ using rxtd::audio_analyzer::image_utils::Color;
 ParamsContainer WaveForm::vParseParams(ParamParseContext& context) const noexcept(false) {
 	Params params;
 
-	params.width = context.parser.parseInt(context.options.get(L"width"), 100);
+	params.width = context.parser.parse(context.options, L"width").valueOr(100);
 	if (params.width < 2) {
 		context.log.error(L"width must be >= 2 but {} found", params.width);
 		throw InvalidOptionsException{};
 	}
 
-	params.height = context.parser.parseInt(context.options.get(L"height"), 100);
+	params.height = context.parser.parse(context.options, L"height").valueOr(100);
 	if (params.height < 2) {
 		context.log.error(L"height must be >= 2 but {} found", params.height);
 		throw InvalidOptionsException{};
@@ -33,7 +33,7 @@ ParamsContainer WaveForm::vParseParams(ParamParseContext& context) const noexcep
 		context.log.warning(L"dangerously big width and height: {}, {}", params.width, params.height);
 	}
 
-	params.resolution = context.parser.parseFloat(context.options.get(L"resolution"), 50);
+	params.resolution = context.parser.parse(context.options, L"resolution").valueOr(50.0);
 	if (params.resolution <= 0) {
 		context.log.warning(L"resolution must be > 0 but {} found. Assume 100", params.resolution);
 		params.resolution = 100;
@@ -59,18 +59,18 @@ ParamsContainer WaveForm::vParseParams(ParamParseContext& context) const noexcep
 		throw InvalidOptionsException{};
 	}
 
-	params.stationary = context.parser.parseBool(context.options.get(L"stationary"), false);
-	params.connected = context.parser.parseBool(context.options.get(L"connected"), true);
+	params.stationary = context.parser.parse(context.options, L"stationary").valueOr(false);
+	params.connected = context.parser.parse(context.options, L"connected").valueOr(true);
 
-	params.borderSize = context.parser.parseInt(context.options.get(L"borderSize"), 0);
+	params.borderSize = context.parser.parse(context.options, L"borderSize").valueOr(0);
 	params.borderSize = std::clamp<index>(params.borderSize, 0, params.width / 2);
 
-	params.lineThickness = context.parser.parseInt(context.options.get(L"lineThickness"), 2 - (params.height & 1));
+	params.lineThickness = context.parser.parse(context.options, L"lineThickness").valueOr(2 - (params.height & 1));
 	params.lineThickness = std::clamp<index>(params.lineThickness, 0, params.height);
 
-	params.fading = context.parser.parseFloat(context.options.get(L"FadingRatio"), 0.0);
+	params.fading = context.parser.parse(context.options, L"FadingRatio").valueOr(0.0);
 
-	params.silenceThreshold = context.parser.parseFloatF(context.options.get(L"silenceThreshold"), -70);
+	params.silenceThreshold = context.parser.parse(context.options, L"silenceThreshold").valueOr(-70.0f);
 	params.silenceThreshold = MyMath::db2amplitude(params.silenceThreshold);
 
 	auto transformLogger = context.log.context(L"transform: ");

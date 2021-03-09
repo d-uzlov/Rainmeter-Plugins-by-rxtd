@@ -24,11 +24,11 @@ PerfmonChild::PerfmonChild(Rainmeter&& _rain) : MeasureBase(std::move(_rain)) {
 }
 
 void PerfmonChild::vReload() {
-	instanceIndex = parser.parseInt(rain.read(L"InstanceIndex"));
-	ref.counter = parser.parseInt(rain.read(L"CounterIndex"));
-	ref.useOrigName = parser.parseBool(rain.read(L"SearchOriginalName"));
-	ref.total = parser.parseBool(rain.read(L"Total"));
-	ref.discarded = parser.parseBool(rain.read(L"Discarded"));
+	instanceIndex = parser.parse(rain.read(L"InstanceIndex"), L"InstanceIndex").valueOr(0);
+	ref.counter = parser.parse(rain.read(L"CounterIndex"), L"CounterIndex").valueOr(0);
+	ref.useOrigName = parser.parse(rain.read(L"SearchOriginalName"), L"SearchOriginalName").valueOr(false);
+	ref.total = parser.parse(rain.read(L"Total"), L"Total").valueOr(false);
+	ref.discarded = parser.parse(rain.read(L"Discarded"), L"Discarded").valueOr(false);
 
 
 	instanceName = rain.read(L"InstanceName").asString();

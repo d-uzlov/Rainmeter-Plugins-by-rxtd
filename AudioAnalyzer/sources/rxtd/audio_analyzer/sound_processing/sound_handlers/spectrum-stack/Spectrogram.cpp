@@ -16,7 +16,7 @@ using ParamsContainer = HandlerBase::ParamsContainer;
 ParamsContainer Spectrogram::vParseParams(ParamParseContext& context) const noexcept(false) {
 	Params params;
 
-	params.length = context.parser.parseInt(context.options.get(L"length"), 100);
+	params.length = context.parser.parse(context.options, L"length").valueOr(100);
 	if (params.length < 2) {
 		context.log.error(L"length must be >= 2 but {} found", params.length);
 		throw InvalidOptionsException{};
@@ -25,7 +25,7 @@ ParamsContainer Spectrogram::vParseParams(ParamParseContext& context) const noex
 		context.log.warning(L"dangerously large length {}", params.length);
 	}
 
-	params.resolution = context.parser.parseFloat(context.options.get(L"resolution"), 50);
+	params.resolution = context.parser.parse(context.options, L"resolution").valueOr(50.0);
 	if (params.resolution <= 0) {
 		context.log.error(L"resolution must be > 0 but {} found", params.resolution);
 		throw InvalidOptionsException{};
@@ -66,13 +66,13 @@ ParamsContainer Spectrogram::vParseParams(ParamParseContext& context) const noex
 
 	params.borderColor = Color::parse(context.options.get(L"borderColor").asString(), context.parser, { 1.0f, 0.2f, 0.2f });
 
-	params.fading = std::clamp(context.parser.parseFloat(context.options.get(L"FadingRatio"), 0.0), 0.0, 1.0);
+	params.fading = std::clamp(context.parser.parse(context.options, L"FadingRatio").valueOr(0.0), 0.0, 1.0);
 
-	params.borderSize = std::clamp<index>(context.parser.parseInt(context.options.get(L"borderSize"), 0), 0, params.length / 2);
+	params.borderSize = std::clamp<index>(context.parser.parse(context.options, L"borderSize").valueOr(0), 0, params.length / 2);
 
-	params.stationary = context.parser.parseBool(context.options.get(L"stationary"), false);
+	params.stationary = context.parser.parse(context.options, L"stationary").valueOr(false);
 
-	params.silenceThreshold = context.parser.parseFloatF(context.options.get(L"silenceThreshold"), -70);
+	params.silenceThreshold = context.parser.parse(context.options, L"silenceThreshold").valueOr(-70.0f);
 	params.silenceThreshold = MyMath::db2amplitude(params.silenceThreshold);
 
 	return params;
@@ -124,11 +124,11 @@ void Spectrogram::parseColors(std::vector<ColorDescription>& resultColors, std::
 		auto [valueOpt, colorOpt] = colorsDescription.breakFirst(L':');
 
 		if (colorOpt.empty()) {
-			cl.error(L"description '{}' doesn't contain color", colorsDescription.asString());
+			cl.error(L"description doesn't contain color: {}", colorsDescription.asString());
 			throw InvalidOptionsException{};
 		}
 
-		float value = parser.parseFloatF(valueOpt);
+		const auto value = parser.parse(valueOpt, colorsDescription.asString()).as<float>();
 
 		if (value <= prevValue) {
 			cl.error(L"values {} and {}: values must be increasing", prevValue, value);

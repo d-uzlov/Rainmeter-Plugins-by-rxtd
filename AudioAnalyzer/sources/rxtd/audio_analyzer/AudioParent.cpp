@@ -46,9 +46,11 @@ AudioParent::AudioParent(Rainmeter&& _rain) :
 	setUseResultString(false);
 	initLogHelpers();
 
+	parser.setLogger(logger);
+
 	// will throw std::runtime_error on invalid MagicNumber value,
 	// std::runtime_error is allowed to be thrown from constructor
-	version = Version::parseVersion(parser.parseInt(rain.read(L"MagicNumber"), 0));
+	version = Version::parseVersion(parser.parse(rain.read(L"MagicNumber"), L"MagicNumber").valueOr(0));
 
 	if (version < Version::eVERSION2) {
 		throw std::runtime_error{ "legacy mode is not allowed" };
@@ -94,7 +96,7 @@ void AudioParent::vReload() {
 
 	bool paramsChanged;
 	try {
-		paramsChanged = paramHelper.readOptions(version, false);
+		paramsChanged = paramHelper.readOptions(version);
 	} catch (ParamHelper::InvalidOptionsException&) {
 		return;
 	}
@@ -348,7 +350,13 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 				return;
 			}
 
-			const auto ind = parser.parseInt(map.get(L"index"), 0);
+			index ind;
+			try {
+				ind = parser.parse(map, L"index").valueOr(0);
+			} catch (option_parsing::OptionParser::Exception&) {
+				logHelpers.generic.log(L"resolve value: can't parse index");
+				return;
+			}
 
 			buffer_printer::BufferPrinter bp;
 			const auto value = getValue(procName, handlerName, channelOpt.value(), ind);
@@ -629,9 +637,15 @@ void AudioParent::resolveProp(
 	string filePrefix = string{ bufferPrinter.getBufferView() };
 	context.filePrefix = filePrefix;
 
-	const bool found = propGetter(*handlerExternalData, propName, context);
-	if (!found) {
-		logHelpers.propNotFound.log(handlerInfo->type, propName);
+	try {
+		const bool found = propGetter(*handlerExternalData, propName, context);
+		if (!found) {
+			logHelpers.propNotFound.log(handlerInfo->type, propName);
+			return;
+		}
+	} catch (option_parsing::OptionParser::Exception&) {
+		// todo make log message more informative
+		logHelpers.generic.log(L"resolve handlerInfo: invalid request, can't parse number");
 		return;
 	}
 

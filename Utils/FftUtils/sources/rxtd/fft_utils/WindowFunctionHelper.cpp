@@ -20,7 +20,8 @@ WindowFunctionHelper::WindowCreationFunc WindowFunctionHelper::parse(sview desc,
 		};
 	}
 
-	auto type = description.getElement(0).first.asIString();
+	auto typeOpt = description.getElement(0).first;
+	auto type = typeOpt.asIString();
 	auto argsOpt = description.getElement(0).second;
 
 	if (type == L"none") {
@@ -42,21 +43,21 @@ WindowFunctionHelper::WindowCreationFunc WindowFunctionHelper::parse(sview desc,
 	}
 
 	if (type == L"kaiser") {
-		const auto param = parser.parseFloatF(argsOpt, 3.0f);
+		const auto param = parser.parse(argsOpt, typeOpt.asString()).valueOr(3.0f);
 		return [=](array_span<float> result) {
 			createKaiser(result, param);
 		};
 	}
 
 	if (type == L"exponential") {
-		const auto param = parser.parseFloatF(argsOpt, 8.69f);
+		const auto param = parser.parse(argsOpt, typeOpt.asString()).valueOr(8.69f);
 		return [=](array_span<float> result) {
 			return createExponential(result, param);
 		};
 	}
 
 	if (type == L"chebyshev") {
-		const auto param = parser.parseFloatF(argsOpt, 80.0f);
+		const auto param = parser.parse(argsOpt, typeOpt.asString()).valueOr(80.0f);
 		return [=](array_span<float> result) {
 			return createChebyshev(result, param);
 		};

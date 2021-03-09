@@ -22,11 +22,11 @@ double CVT::apply(double value) {
 			break;
 		}
 		case TransformType::eMAP: {
-			value = transform.interpolator.toValue(static_cast<float>(value));
+			value = static_cast<double>(transform.interpolator.toValue(static_cast<float>(value)));
 			break;
 		}
 		case TransformType::eCLAMP: {
-			value = std::clamp<double>(value, transform.args[0], transform.args[1]);
+			value = std::clamp(static_cast<float>(value), transform.args[0], transform.args[1]);
 			break;
 		}
 		}
@@ -140,8 +140,8 @@ std::optional<CVT::TransformationInfo> CVT::parseTransformation(const Option& na
 			return {};
 		}
 
-		float linMin = parser.parseFloatF(sourceRange.get(0));
-		float linMax = parser.parseFloatF(sourceRange.get(1));
+		float linMin = parser.parse(sourceRange.get(0), L"from: first").as<float>();
+		float linMax = parser.parse(sourceRange.get(1), L"from: second").as<float>();
 
 		if (std::abs(linMin - linMax) < std::numeric_limits<float>::epsilon()) {
 			cl.error(L"source range is too small: {} and {}", linMin, linMax);
@@ -158,8 +158,8 @@ std::optional<CVT::TransformationInfo> CVT::parseTransformation(const Option& na
 				cl.error(L"need 2 params for target range but {} found", range.size());
 				return std::nullopt;
 			}
-			valMin = parser.parseFloatF(range.get(0));
-			valMax = parser.parseFloatF(range.get(1));
+			valMin = parser.parse(range.get(0), L"to: first").valueOr(valMin);
+			valMax = parser.parse(range.get(1), L"to: second").valueOr(valMax);
 		}
 
 		tr.interpolator.setParams(linMin, linMax, valMin, valMax);
@@ -167,13 +167,12 @@ std::optional<CVT::TransformationInfo> CVT::parseTransformation(const Option& na
 	} else if (transformName == L"clamp") {
 		tr.type = TransformType::eCLAMP;
 
-		tr.args[0] = parser.parseFloatF(params.get(L"min"), 0.0f);
-		tr.args[1] = parser.parseFloatF(params.get(L"max"), 1.0f);
-
-		tr.args[0] = std::min(tr.args[0], tr.args[1]);
-		tr.args[1] = std::max(tr.args[0], tr.args[1]);
+		std::tie(tr.args[0], tr.args[1]) = std::minmax(
+			parser.parse(params, L"min").valueOr(0.0f),
+			parser.parse(params, L"max").valueOr(1.0f)
+		);
 	} else {
-		cl.error(L"'{}' is not recognized as a transform type", transformName);
+		cl.error(L"transform type is not recognized: {}", transformName);
 		return {};
 	}
 

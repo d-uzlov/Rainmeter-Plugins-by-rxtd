@@ -10,12 +10,12 @@ using ParamsContainer = HandlerBase::ParamsContainer;
 ParamsContainer TimeResampler::vParseParams(ParamParseContext& context) const noexcept(false) {
 	Params params;
 
-	params.granularity = context.parser.parseFloat(context.options.get(L"granularity"), 1000.0 / 60.0);
+	params.granularity = context.parser.parse(context.options, L"granularity").valueOr(1000.0 / 60.0);
 	params.granularity = std::max(params.granularity, 0.01);
 	params.granularity *= 0.001;
 
-	params.attack = context.parser.parseFloat(context.options.get(L"attack"), 0.0);
-	params.decay = context.parser.parseFloat(context.options.get(L"decay"), params.attack);
+	params.attack = context.parser.parse(context.options, L"attack").valueOr(0.0);
+	params.decay = context.parser.parse(context.options, L"decay").valueOr(params.attack);
 
 	params.attack = std::max(params.attack, 0.0);
 	params.decay = std::max(params.decay, 0.0);

@@ -38,18 +38,17 @@ namespace rxtd::audio_analyzer::options {
 	public:
 		void setParser(Parser value) {
 			parser = std::move(value);
+			hch.setParser(parser);
 		}
 
 		void setRainmeter(Rainmeter value) {
 			rain = std::move(value);
 			hch.setRain(rain);
-			parser.setLogger(rain.createLogger());
-			hch.setParser(parser);
 		}
 
 		// return true if there were any changes since last update, false if there were none
 		// can throw InvalidOptionsException
-		bool readOptions(Version version, bool suppressLogger);
+		bool readOptions(Version version);
 
 		[[nodiscard]]
 		const auto& getParseResult() const {

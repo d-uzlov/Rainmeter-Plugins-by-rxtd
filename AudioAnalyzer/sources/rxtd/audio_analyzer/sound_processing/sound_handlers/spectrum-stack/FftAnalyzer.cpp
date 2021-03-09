@@ -12,7 +12,7 @@ using ParamsContainer = HandlerBase::ParamsContainer;
 ParamsContainer FftAnalyzer::vParseParams(ParamParseContext& context) const noexcept(false) {
 	Params params;
 
-	params.binWidth = context.parser.parseFloat(context.options.get(L"binWidth"), 100.0);
+	params.binWidth = context.parser.parse(context.options, L"binWidth").valueOr(100.0);
 	if (params.binWidth <= 0.0) {
 		context.log.error(L"binWidth must be > 0 but {} found", params.binWidth);
 		throw InvalidOptionsException{};
@@ -21,11 +21,11 @@ ParamsContainer FftAnalyzer::vParseParams(ParamParseContext& context) const noex
 		context.log.warning(L"BinWidth {} is dangerously small, use values > 1", params.binWidth);
 	}
 
-	double overlapBoost = context.parser.parseFloat(context.options.get(L"overlapBoost"), 2.0);
+	double overlapBoost = context.parser.parse(context.options, L"overlapBoost").valueOr(2.0);
 	overlapBoost = std::max(overlapBoost, 1.0);
 	params.overlap = (overlapBoost - 1.0) / overlapBoost;
 
-	params.cascadesCount = context.parser.parseInt(context.options.get(L"cascadesCount"), 5);
+	params.cascadesCount = context.parser.parse(context.options, L"cascadesCount").valueOr(5);
 	if (params.cascadesCount <= 0) {
 		context.log.warning(L"cascadesCount must be in range [1, 20] but {} found. Assume 1", params.cascadesCount);
 		params.cascadesCount = 1;
@@ -34,8 +34,8 @@ ParamsContainer FftAnalyzer::vParseParams(ParamParseContext& context) const noex
 		params.cascadesCount = 20;
 	}
 
-	params.randomTest = std::abs(context.parser.parseFloat(context.options.get(L"testRandom"), 0.0));
-	params.randomDuration = std::abs(context.parser.parseFloat(context.options.get(L"randomDuration"), 1000.0)) * 0.001;
+	params.randomTest = std::abs(context.parser.parse(context.options, L"testRandom").valueOr(0.0));
+	params.randomDuration = std::abs(context.parser.parse(context.options, L"randomDuration").valueOr(1000.0)) * 0.001;
 
 	params.wcfDescription = context.options.get(L"windowFunction").asString(L"hann");
 	params.createWindow = fft_utils::WindowFunctionHelper::parse(params.wcfDescription, context.parser, context.log.context(L"windowFunction: "));

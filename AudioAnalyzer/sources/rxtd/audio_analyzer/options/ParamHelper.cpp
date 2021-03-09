@@ -12,19 +12,19 @@ using rxtd::audio_analyzer::options::ProcessingData;
 using rxtd::audio_analyzer::Channel;
 using rxtd::filter_utils::FilterCascadeParser;
 
-bool ParamHelper::readOptions(Version _version, bool suppressLogger) {
+bool ParamHelper::readOptions(Version _version) {
 	version = _version;
 
-	auto logger = suppressLogger ? Logger::getSilent() : rain.createLogger();
-
+	auto logger = rain.createLogger();
 	parser.setLogger(logger);
-	auto defaultTargetRate = parser.parseInt(rain.read(L"TargetRate"), 44100);
+
+	auto defaultTargetRate = parser.parse(rain.read(L"TargetRate"), L"TargetRate").valueOr(44100);
 	if (defaultTargetRate < 0) {
 		logger.warning(L"Invalid TargetRate {}, must be > 0. Assume 0.", defaultTargetRate);
 		defaultTargetRate = 0;
 	}
 
-	unusedOptionsWarning = parser.parseBool(rain.read(L"LogUnusedOptions"), true);
+	unusedOptionsWarning = parser.parse(rain.read(L"LogUnusedOptions"), L"LogUnusedOptions").valueOr(true);
 
 	auto processingIndices = rain.read(L"ProcessingUnits").asList(L',');
 	if (!checkListUnique(processingIndices)) {
@@ -170,7 +170,7 @@ bool ParamHelper::parseFilter(const OptionMap& optionMap, ProcessingData::Filter
 }
 
 bool ParamHelper::parseTargetRate(const OptionMap& optionMap, index& rate, Logger& cl) const {
-	const auto targetRate = parser.parseInt(optionMap.get(L"targetRate"), defaultTargetRate);
+	const auto targetRate = parser.parse(optionMap, L"targetRate").valueOr(defaultTargetRate);
 	if (targetRate == rate) {
 		return false;
 	}

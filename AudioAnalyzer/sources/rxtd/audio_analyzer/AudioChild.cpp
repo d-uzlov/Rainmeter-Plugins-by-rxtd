@@ -84,9 +84,9 @@ AudioChild::Options AudioChild::readOptions() const {
 			result.procName = parent->findProcessingFor(result.handlerName);
 		}
 
-		result.valueIndex = parser.parseInt(rain.read(L"Index"));
+		result.valueIndex = parser.parse(rain.read(L"Index"), L"Index").valueOr(0);
 		if (result.valueIndex < 0) {
-			logger.error(L"Invalid Index {}. Index should be > 0. Set to 0.", result.valueIndex);
+			logger.error(L"Invalid Index {}. Index should be >= 0. Set to 0.", result.valueIndex);
 			result.valueIndex = 0;
 		}
 

@@ -55,8 +55,8 @@ void ParentHelper::init(
 		throw std::runtime_error{ "" };
 	}
 
-	const double warnTime = parser.parseFloat(threadingMap.get(L"warnTime"), -1.0);
-	const double killTimeout = std::clamp(parser.parseFloat(threadingMap.get(L"killTimeout"), 33.0), 0.01, 33.0);
+	const double warnTime = parser.parse(threadingMap, L"warnTime").valueOr(-1.0);
+	const double killTimeout = std::clamp(parser.parse(threadingMap, L"killTimeout").valueOr(33.0), 0.01, 33.0);
 
 	mainFields.orchestrator.setLogger(mainFields.logger);
 	mainFields.orchestrator.setWarnTime(warnTime);
@@ -64,12 +64,12 @@ void ParentHelper::init(
 
 	double bufferSize = 1.0;
 	if (constFields.useThreading) {
-		double updateRate = parser.parseFloat(threadingMap.get(L"updateRate"), 60.0);
+		double updateRate = parser.parse(threadingMap,L"updateRate").valueOr(60.0);
 		updateRate = std::clamp(updateRate, 1.0, 200.0);
 		constFields.updateTime = 1.0 / updateRate;
 
 		const double defaultBufferSize = std::max(constFields.updateTime * 4.0, 0.5);
-		bufferSize = parser.parseFloat(threadingMap.get(L"bufferSize"), defaultBufferSize);
+		bufferSize = parser.parse(threadingMap,L"bufferSize").valueOr(defaultBufferSize);
 		bufferSize = std::clamp(bufferSize, 1.0 / 30.0, 4.0);
 	}
 

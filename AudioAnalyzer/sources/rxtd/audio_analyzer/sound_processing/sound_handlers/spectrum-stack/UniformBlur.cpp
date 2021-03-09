@@ -12,8 +12,8 @@ ParamsContainer UniformBlur::vParseParams(ParamParseContext& context) const {
 	Params params;
 
 	//                                                        ?? ↓↓ looks best ?? at 0.25 ↓↓ ??
-	params.blurRadius = std::max<double>(context.parser.parseFloat(context.options.get(L"Radius"), 1.0) * 0.25, 0.0);
-	params.blurRadiusAdaptation = std::max<double>(context.parser.parseFloat(context.options.get(L"RadiusAdaptation"), 2.0), 0.0);
+	params.blurRadius = std::max<double>(context.parser.parse(context.options, L"Radius").valueOr(1.0) * 0.25, 0.0);
+	params.blurRadiusAdaptation = std::max<double>(context.parser.parse(context.options, L"RadiusAdaptation").valueOr(2.0), 0.0);
 
 	return params;
 }
