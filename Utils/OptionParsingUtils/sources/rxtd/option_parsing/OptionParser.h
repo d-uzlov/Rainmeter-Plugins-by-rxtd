@@ -25,6 +25,8 @@ namespace rxtd::option_parsing {
 			sview loggerPrefix;
 
 		public:
+			struct hex_tag {};
+
 			ParseContext(OptionParser& parent, const sview& value, const sview& loggerPrefix) :
 				parent(parent), source(value), loggerPrefix(loggerPrefix) {}
 
@@ -71,6 +73,12 @@ namespace rxtd::option_parsing {
 				// ReSharper disable once CppStaticAssertFailure
 				static_assert(false, "unknown custom type");
 				return {};
+			}
+
+			template<typename T>
+			T solveCustom(const hex_tag&) {
+				// todo add proper error logging
+				return static_cast<T>(std_fixes::StringUtils::parseInt(source, true));
 			}
 
 			template<typename T>
@@ -121,6 +129,11 @@ namespace rxtd::option_parsing {
 		[[nodiscard]]
 		ParseContext parse(const Option& opt, sview loggerPrefix) {
 			return ParseContext{ *this, opt.asString(), loggerPrefix };
+		}
+
+		[[nodiscard]]
+		ParseContext parse(sview source, sview loggerPrefix) {
+			return ParseContext{ *this, source, loggerPrefix };
 		}
 
 	private:

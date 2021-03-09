@@ -48,8 +48,9 @@ ParamsContainer Spectrogram::vParseParams(ParamParseContext& context) const noex
 	if (auto mixModeOpt = parseEnum<Color::Mode>(mixModeStr);
 		mixModeOpt.has_value()) {
 		auto value = mixModeOpt.value();
-		if (value == Color::Mode::eYCBCR) {
-			value = Color::Mode::eRGB; // difference between yCbCr and sRGB is linear
+		if (value == Color::Mode::eYCBCR || value == Color::Mode::eHEX || value == Color::Mode::eRGB255) {
+			// difference between yCbCr and sRGB is linear
+			value = Color::Mode::eRGB;
 		}
 		params.mixMode = value;
 	} else {

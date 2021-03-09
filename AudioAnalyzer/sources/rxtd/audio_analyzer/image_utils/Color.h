@@ -10,6 +10,8 @@ namespace rxtd::audio_analyzer::image_utils {
 	public:
 		enum class Mode {
 			eRGB,
+			eHEX,
+			eRGB255,
 			eHSV,
 			eHSL,
 			eYCBCR,
@@ -87,6 +89,12 @@ namespace rxtd::audio_analyzer::image_utils {
 		Color rgb() const {
 			switch (mode) {
 			case Mode::eRGB: return *this;
+			case Mode::eHEX: [[fallthrough]];
+			case Mode::eRGB255: {
+				auto result = (*this) * (1.0f / 255.0f);
+				result.mode = Mode::eRGB;
+				return result;
+			}
 			case Mode::eHSV: return hsv2rgb();
 			case Mode::eHSL: return hsl2hsv().hsv2rgb();
 			case Mode::eYCBCR: return ycbcr2rgb();
@@ -98,6 +106,12 @@ namespace rxtd::audio_analyzer::image_utils {
 		Color hsv() const {
 			switch (mode) {
 			case Mode::eRGB: return rgb2hsv();
+			case Mode::eHEX: [[fallthrough]];
+			case Mode::eRGB255: {
+				auto result = (*this) * (1.0f / 255.0f);
+				result.mode = Mode::eRGB;
+				return result.rgb2hsv();
+			}
 			case Mode::eHSV: return *this;
 			case Mode::eHSL: return hsl2hsv();
 			case Mode::eYCBCR: return ycbcr2rgb().rgb2hsv();
@@ -109,6 +123,12 @@ namespace rxtd::audio_analyzer::image_utils {
 		Color hsl() const {
 			switch (mode) {
 			case Mode::eRGB: return rgb2hsv().hsv2hsl();
+			case Mode::eHEX: [[fallthrough]];
+			case Mode::eRGB255: {
+				auto result = (*this) * (1.0f / 255.0f);
+				result.mode = Mode::eRGB;
+				return result.rgb2hsv().hsv2hsl();
+			}
 			case Mode::eHSV: return hsv2hsl();
 			case Mode::eHSL: return *this;
 			case Mode::eYCBCR: return ycbcr2rgb().rgb2hsv().hsv2hsl();
@@ -120,6 +140,12 @@ namespace rxtd::audio_analyzer::image_utils {
 		Color ycbcr() const {
 			switch (mode) {
 			case Mode::eRGB: return rgb2ycbcr();
+			case Mode::eHEX: [[fallthrough]];
+			case Mode::eRGB255: {
+				auto result = (*this) * (1.0f / 255.0f);
+				result.mode = Mode::eRGB;
+				return result.rgb2ycbcr();
+			}
 			case Mode::eHSV: return hsv2rgb().rgb2ycbcr();
 			case Mode::eHSL: return hsl2hsv().hsv2rgb().rgb2ycbcr();
 			case Mode::eYCBCR: return *this;
@@ -131,6 +157,16 @@ namespace rxtd::audio_analyzer::image_utils {
 		Color convert(Mode _mode) const {
 			switch (_mode) {
 			case Mode::eRGB: return rgb();
+			case Mode::eHEX: {
+				auto result = rgb() * 255.0f;
+				result.mode = Mode::eHEX;
+				return result;
+			}
+			case Mode::eRGB255: {
+				auto result = rgb() * 255.0f;
+				result.mode = Mode::eRGB255;
+				return result;
+			}
 			case Mode::eHSV: return hsv();
 			case Mode::eHSL: return hsl();
 			case Mode::eYCBCR: return ycbcr();
