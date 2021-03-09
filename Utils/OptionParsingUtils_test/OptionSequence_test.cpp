@@ -1,4 +1,7 @@
-#include "CppUnitTest.h"
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright (C) 2021 Danil Uzlov
+
+#include <CppUnitTest.h>
 
 #include "rxtd/option_parsing/Option.h"
 
@@ -16,7 +19,7 @@ namespace rxtd::test::option_parsing {
 	using namespace rxtd::option_parsing;
 	TEST_CLASS(OptionSequence_test) {
 	public:
-		TEST_METHOD(TestNoArg) {
+		TEST_METHOD(testNoArg) {
 			auto opt = Option{ L"name" };
 			auto seq = opt.asSequence(L'(', L')', L',');
 			Assert::AreEqual(static_cast<index>(1), seq.getSize());
@@ -24,7 +27,7 @@ namespace rxtd::test::option_parsing {
 			Assert::AreEqual(sview{ L"" }, seq.getElement(0).second.asString());
 		}
 
-		TEST_METHOD(TestEmptyArg) {
+		TEST_METHOD(testEmptyArg) {
 			auto opt = Option{ L"name()" };
 			auto seq = opt.asSequence(L'(', L')', L',');
 			Assert::AreEqual(static_cast<index>(1), seq.getSize());
@@ -32,7 +35,7 @@ namespace rxtd::test::option_parsing {
 			Assert::AreEqual(sview{ L"" }, seq.getElement(0).second.asString());
 		}
 
-		TEST_METHOD(TestSimple) {
+		TEST_METHOD(testSimple) {
 			auto opt = Option{ L"name(arg)" };
 			auto seq = opt.asSequence(L'(', L')', L',');
 			Assert::AreEqual(static_cast<index>(1), seq.getSize());
@@ -40,7 +43,7 @@ namespace rxtd::test::option_parsing {
 			Assert::AreEqual(sview{ L"arg" }, seq.getElement(0).second.asString());
 		}
 
-		TEST_METHOD(TestMany) {
+		TEST_METHOD(testMany) {
 			auto opt = Option{ L"name(arg), name2(arg2), name3, name4(arg4), name5" };
 			auto seq = opt.asSequence(L'(', L')', L',');
 			Assert::AreEqual(static_cast<index>(5), seq.getSize());
@@ -56,7 +59,7 @@ namespace rxtd::test::option_parsing {
 			Assert::AreEqual(sview{ L"" }, seq.getElement(4).second.asString());
 		}
 
-		TEST_METHOD(TestSpacing) {
+		TEST_METHOD(testSpacing) {
 			auto opt = Option{ L"   	,,,,   ,   	name	  (	 arg	 	)	 ,,,	name2((arg2)) " };
 			auto seq = opt.asSequence(L'(', L')', L',');
 			Assert::AreEqual(static_cast<index>(2), seq.getSize());
@@ -66,7 +69,7 @@ namespace rxtd::test::option_parsing {
 			Assert::AreEqual(sview{ L"(arg2)" }, seq.getElement(1).second.asString());
 		}
 
-		TEST_METHOD(TestLayered) {
+		TEST_METHOD(testLayered) {
 			auto opt = Option{ L"name(arg, x(z))" };
 			auto seq = opt.asSequence(L'(', L')', L',');
 			Assert::AreEqual(static_cast<index>(1), seq.getSize());
@@ -74,21 +77,27 @@ namespace rxtd::test::option_parsing {
 			Assert::AreEqual(sview{ L"arg, x(z)" }, seq.getElement(0).second.asString());
 		}
 
-		TEST_METHOD(TestLayeredFail) {
+		TEST_METHOD(testLayered_fail_notEnough) {
 			auto opt = Option{ L"name(arg, x((z))" };
 			auto seq = opt.asSequence(L'(', L')', L',');
 			Assert::AreEqual(static_cast<index>(0), seq.getSize());
+		}
 
-			opt = Option{ L"name(arg))" };
-			seq = opt.asSequence(L'(', L')', L',');
+		TEST_METHOD(testLayered_fail_tooMany) {
+			auto opt = Option{ L"name(arg))" };
+			auto seq = opt.asSequence(L'(', L')', L',');
 			Assert::AreEqual(static_cast<index>(0), seq.getSize());
+		}
 
-			opt = Option{ L"name(" };
-			seq = opt.asSequence(L'(', L')', L',');
+		TEST_METHOD(test_fail_noClosing) {
+			auto opt = Option{ L"name(" };
+			auto seq = opt.asSequence(L'(', L')', L',');
 			Assert::AreEqual(static_cast<index>(0), seq.getSize());
+		}
 
-			opt = Option{ L"name)" };
-			seq = opt.asSequence(L'(', L')', L',');
+		TEST_METHOD(test_fail_noOpening) {
+			auto opt = Option{ L"name)" };
+			auto seq = opt.asSequence(L'(', L')', L',');
 			Assert::AreEqual(static_cast<index>(0), seq.getSize());
 		}
 
