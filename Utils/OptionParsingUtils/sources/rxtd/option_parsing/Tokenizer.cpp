@@ -43,8 +43,9 @@ Tokenizer::parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wch
 			}
 		}
 
-		wchar_t nameEndSymbols[] = { L' ', L'\t', optionBegin, optionEnd, optionDelimiter };
+		wchar_t nameEndSymbols[] = { L' ', L'\t', optionBegin, optionEnd, optionDelimiter, L'\0' };
 		index nameEnd = view.find_first_of(nameEndSymbols, begin);
+
 		if (nameEnd == sview::npos) {
 			result.emplace_back(SubstringViewInfo{ begin, view.length() - begin }, SubstringViewInfo{});
 			return result;
@@ -57,7 +58,7 @@ Tokenizer::parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wch
 
 		begin = nameEnd;
 
-		wchar_t argSymbols[] = { optionBegin, optionEnd, optionDelimiter };
+		wchar_t argSymbols[] = { optionBegin, optionEnd, optionDelimiter, L'\0' };
 		const index nextPos = view.find_first_of(argSymbols, begin);
 		if (nextPos == sview::npos) {
 			result.emplace_back(nameInfo, SubstringViewInfo{});
@@ -76,7 +77,7 @@ Tokenizer::parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wch
 			const index argBegin = nextPos + 1;
 			begin = argBegin;
 			while (level > 0) {
-				wchar_t optionBoundSymbols[] = { optionBegin, optionEnd };
+				wchar_t optionBoundSymbols[] = { optionBegin, optionEnd, L'\0' };
 				const index boundPos = view.find_first_of(optionBoundSymbols, begin);
 				if (boundPos == sview::npos) {
 					return {};
@@ -98,7 +99,7 @@ Tokenizer::parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wch
 
 		result.push_back({ nameInfo, argInfo });
 
-		wchar_t afterArgSymbols[] = { L' ', L'\t' };
+		wchar_t afterArgSymbols[] = { L' ', L'\t', L'\0' };
 		begin = view.find_first_not_of(afterArgSymbols, begin);
 		if (begin == sview::npos) {
 			return result;
