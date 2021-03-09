@@ -16,14 +16,16 @@ using rxtd::audio_analyzer::image_utils::Color;
 
 ParamsContainer WaveForm::vParseParams(ParamParseContext& context) const noexcept(false) {
 	Params params;
+	auto& parser = context.parser;
+	auto& options = context.options;
 
-	params.width = context.parser.parse(context.options, L"width").valueOr(100);
+	params.width = parser.parse(options, L"width").valueOr(100);
 	if (params.width < 2) {
 		context.log.error(L"width must be >= 2 but {} found", params.width);
 		throw InvalidOptionsException{};
 	}
 
-	params.height = context.parser.parse(context.options, L"height").valueOr(100);
+	params.height = parser.parse(options, L"height").valueOr(100);
 	if (params.height < 2) {
 		context.log.error(L"height must be >= 2 but {} found", params.height);
 		throw InvalidOptionsException{};
@@ -33,21 +35,31 @@ ParamsContainer WaveForm::vParseParams(ParamParseContext& context) const noexcep
 		context.log.warning(L"dangerously big width and height: {}, {}", params.width, params.height);
 	}
 
-	params.resolution = context.parser.parse(context.options, L"resolution").valueOr(50.0);
+	params.resolution = parser.parse(options, L"resolution").valueOr(50.0);
 	if (params.resolution <= 0) {
 		context.log.warning(L"resolution must be > 0 but {} found. Assume 100", params.resolution);
 		params.resolution = 100;
 	}
 	params.resolution *= 0.001;
 
-	params.folder = context.rain.getPathFromCurrent(context.options.get(L"folder").asString() % own());
+	params.folder = context.rain.getPathFromCurrent(options.get(L"folder").asString() % own());
 
-	params.colors.background = Color::parse(context.options.get(L"backgroundColor").asString(), context.parser, { 0, 0, 0 }).toIntColor();
-	params.colors.wave = Color::parse(context.options.get(L"waveColor").asString(), context.parser, { 1, 1, 1 }).toIntColor();
-	params.colors.line = Color::parse(context.options.get(L"lineColor").asString(), context.parser, { 0.5, 0.5, 0.5, 0.5 }).toIntColor();
-	params.colors.border = Color::parse(context.options.get(L"borderColor").asString(), context.parser, { 1.0, 0.2, 0.2 }).toIntColor();
+	Color::Mode defaultColorSpace;
+	auto defaultColorSpaceOption = options.get(L"DefaultColorSpace").asIString(L"sRGB");
+	if (auto defaultColorSpaceOpt = parseEnum<Color::Mode>(defaultColorSpaceOption);
+		defaultColorSpaceOpt.has_value()) {
+		defaultColorSpace = defaultColorSpaceOpt.value();
+	} else {
+		context.log.error(L"DefaultColorSpace: unknown value: {}", defaultColorSpaceOption);
+		throw InvalidOptionsException{};
+	}
 
-	if (const auto ldpString = context.options.get(L"lineDrawingPolicy").asIString(L"always");
+	params.colors.background = parser.parse(options, L"backgroundColor").asCustomOr(Color{ 0.0f, 0.0f, 0.0f }, defaultColorSpace).toIntColor();
+	params.colors.wave = parser.parse(options, L"waveColor").asCustomOr(Color{ 1.0f, 1.0f, 1.0f }, defaultColorSpace).toIntColor();
+	params.colors.line = parser.parse(options, L"lineColor").asCustomOr(Color{ 0.5f, 0.5f, 0.5f, 0.5f }, defaultColorSpace).toIntColor();
+	params.colors.border = parser.parse(options, L"borderColor").asCustomOr(Color{ 1.0f, 0.2f, 0.2f }, defaultColorSpace).toIntColor();
+
+	if (const auto ldpString = options.get(L"lineDrawingPolicy").asIString(L"always");
 		ldpString == L"always") {
 		params.lineDrawingPolicy = LDP::eALWAYS;
 	} else if (ldpString == L"belowWave") {
@@ -59,22 +71,22 @@ ParamsContainer WaveForm::vParseParams(ParamParseContext& context) const noexcep
 		throw InvalidOptionsException{};
 	}
 
-	params.stationary = context.parser.parse(context.options, L"stationary").valueOr(false);
-	params.connected = context.parser.parse(context.options, L"connected").valueOr(true);
+	params.stationary = parser.parse(options, L"stationary").valueOr(false);
+	params.connected = parser.parse(options, L"connected").valueOr(true);
 
-	params.borderSize = context.parser.parse(context.options, L"borderSize").valueOr(0);
+	params.borderSize = parser.parse(options, L"borderSize").valueOr(0);
 	params.borderSize = std::clamp<index>(params.borderSize, 0, params.width / 2);
 
-	params.lineThickness = context.parser.parse(context.options, L"lineThickness").valueOr(2 - (params.height & 1));
+	params.lineThickness = parser.parse(options, L"lineThickness").valueOr(2 - (params.height & 1));
 	params.lineThickness = std::clamp<index>(params.lineThickness, 0, params.height);
 
-	params.fading = context.parser.parse(context.options, L"FadingRatio").valueOr(0.0);
+	params.fading = parser.parse(options, L"FadingRatio").valueOr(0.0);
 
-	params.silenceThreshold = context.parser.parse(context.options, L"silenceThreshold").valueOr(-70.0f);
+	params.silenceThreshold = parser.parse(options, L"silenceThreshold").valueOr(-70.0f);
 	params.silenceThreshold = MyMath::db2amplitude(params.silenceThreshold);
 
 	auto transformLogger = context.log.context(L"transform: ");
-	params.transformer = CVT::parse(context.options.get(L"transform").asString(), context.parser, transformLogger);
+	params.transformer = CVT::parse(options.get(L"transform").asString(), parser, transformLogger);
 
 	return params;
 }

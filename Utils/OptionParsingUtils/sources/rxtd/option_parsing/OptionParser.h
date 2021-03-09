@@ -48,7 +48,31 @@ namespace rxtd::option_parsing {
 				return solve<T>();
 			}
 
+			template<typename T, typename ... Args>
+			T asCustomOr(T defaultValue, const Args& ...args) {
+				if (source.empty()) {
+					return defaultValue;
+				}
+				return solveCustom<T>(args...);
+			}
+
+			template<typename T, typename ... Args>
+			T asCustom(const Args& ...args) {
+				if (source.empty()) {
+					parent.logger.error(L"{}: required value can't be empty", loggerPrefix);
+					throw Exception{};
+				}
+				return solveCustom<T>(args...);
+			}
+
 		private:
+			template<typename T, typename ... Args>
+			T solveCustom(const Args& ...args) {
+				// ReSharper disable once CppStaticAssertFailure
+				static_assert(false, "unknown custom type");
+				return {};
+			}
+
 			template<typename T>
 			T solve() {
 				if constexpr (std::is_same<T, bool>::value) {
@@ -88,17 +112,17 @@ namespace rxtd::option_parsing {
 		void setLogger(Logger value) {
 			logger = std::move(value);
 		}
-		
+
 		[[nodiscard]]
 		ParseContext parse(const OptionMap& map, sview optionName) {
-			return ParseContext{*this, map.get(optionName % ciView()).asString(), optionName };
+			return ParseContext{ *this, map.get(optionName % ciView()).asString(), optionName };
 		}
 
 		[[nodiscard]]
 		ParseContext parse(const Option& opt, sview loggerPrefix) {
-			return ParseContext{*this, opt.asString(), loggerPrefix };
+			return ParseContext{ *this, opt.asString(), loggerPrefix };
 		}
-		
+
 	private:
 		/// <summary>
 		/// Throws OptionParser::Exception

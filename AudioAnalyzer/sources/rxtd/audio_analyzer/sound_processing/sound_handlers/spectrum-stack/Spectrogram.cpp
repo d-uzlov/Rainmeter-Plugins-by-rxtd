@@ -34,28 +34,36 @@ ParamsContainer Spectrogram::vParseParams(ParamParseContext& context) const noex
 
 	params.folder = context.rain.getPathFromCurrent(context.options.get(L"folder").asString() % own());
 
-	using MixMode = Color::Mode;
-	if (auto mixMode = context.options.get(L"mixMode").asIString(L"srgb");
-		mixMode == L"sRGB") {
-		params.mixMode = MixMode::eRGB;
-	} else if (mixMode == L"hsv") {
-		params.mixMode = MixMode::eHSV;
-	} else if (mixMode == L"hsl") {
-		params.mixMode = MixMode::eHSL;
-	} else if (mixMode == L"yCbCr") {
-		params.mixMode = MixMode::eRGB; // difference between yCbCr and sRGB is linear
+	Color::Mode defaultColorSpace;
+	auto defaultColorSpaceStr = context.options.get(L"DefaultColorSpace").asIString(L"sRGB");
+	if (auto defaultColorSpaceOpt = parseEnum<Color::Mode>(defaultColorSpaceStr);
+		defaultColorSpaceOpt.has_value()) {
+		defaultColorSpace = defaultColorSpaceOpt.value();
 	} else {
-		context.log.error(L"unknown mixMode '{}'", mixMode);
+		context.log.error(L"DefaultColorSpace: unknown value: {}", defaultColorSpaceStr);
+		throw InvalidOptionsException{};
+	}
+
+	auto mixModeStr = context.options.get(L"mixMode").asIString(defaultColorSpaceStr);
+	if (auto mixModeOpt = parseEnum<Color::Mode>(mixModeStr);
+		mixModeOpt.has_value()) {
+		auto value = mixModeOpt.value();
+		if (value == Color::Mode::eYCBCR) {
+			value = Color::Mode::eRGB; // difference between yCbCr and sRGB is linear
+		}
+		params.mixMode = value;
+	} else {
+		context.log.error(L"mixMode: unknown value: {}", mixModeStr);
 		throw InvalidOptionsException{};
 	}
 
 	if (!context.options.get(L"colors").empty()) {
 		auto colorsDescriptionList = context.options.get(L"colors").asList(L';');
-		parseColors(params.colors, params.colorLevels, colorsDescriptionList, context.parser, context.log.context(L"colors: "));
+		std::tie(params.colors, params.colorLevels) = parseColors(colorsDescriptionList, defaultColorSpace, context.parser, context.log.context(L"colors: "));
 	} else {
 		params.colors.resize(2);
-		params.colors[0].color = Color::parse(context.options.get(L"baseColor").asString(), context.parser, { 0.0f, 0.0f, 0.0f });
-		params.colors[1].color = Color::parse(context.options.get(L"maxColor").asString(), context.parser, { 1.0f, 1.0f, 1.0f });
+		params.colors[0].color = context.parser.parse(context.options, L"baseColor").asCustomOr(Color{ 0.0f, 0.0f, 0.0f }, defaultColorSpace);
+		params.colors[1].color = context.parser.parse(context.options, L"maxColor").asCustomOr(Color{ 1.0f, 1.0f, 1.0f }, defaultColorSpace);
 		params.colorLevels.push_back(0.0f);
 		params.colorLevels.push_back(1.0f);
 	}
@@ -64,7 +72,7 @@ ParamsContainer Spectrogram::vParseParams(ParamParseContext& context) const noex
 		color = color.convert(params.mixMode);
 	}
 
-	params.borderColor = Color::parse(context.options.get(L"borderColor").asString(), context.parser, { 1.0f, 0.2f, 0.2f });
+	params.borderColor = context.parser.parse(context.options, L"borderColor").asCustomOr(Color{ 1.0f, 0.2f, 0.2f }, defaultColorSpace);
 
 	params.fading = std::clamp(context.parser.parse(context.options, L"FadingRatio").valueOr(0.0), 0.0, 1.0);
 
@@ -116,7 +124,11 @@ Spectrogram::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData
 	return { 0, {} };
 }
 
-void Spectrogram::parseColors(std::vector<ColorDescription>& resultColors, std::vector<float>& levels, OptionList list, option_parsing::OptionParser& parser, Logger& cl) {
+std::pair<std::vector<Spectrogram::ColorDescription>, std::vector<float>>
+Spectrogram::parseColors(const OptionList& list, Color::Mode defaultColorSpace, option_parsing::OptionParser& parser, Logger& cl) {
+	std::vector<ColorDescription> resultColors;
+	std::vector<float> levels;
+
 	float prevValue = -std::numeric_limits<float>::infinity();
 
 	bool first = true;
@@ -134,14 +146,13 @@ void Spectrogram::parseColors(std::vector<ColorDescription>& resultColors, std::
 			cl.error(L"values {} and {}: values must be increasing", prevValue, value);
 			throw InvalidOptionsException{};
 		}
-		if (value / prevValue < 1.001f && value - prevValue < 0.001f) {
-			// todo add proper comparison method
+		if (MyMath::checkFloatEqual(value, prevValue, 1024.0f)) {
 			cl.error(L"values {} and {} are too close", prevValue, value);
 			throw InvalidOptionsException{};
 		}
 
 		levels.push_back(value);
-		const auto color = Color::parse(colorOpt.asString(), parser);
+		const auto color = parser.parse(colorOpt, L"colors").asCustom<Color>(defaultColorSpace);
 		if (first) {
 			first = false;
 		} else {
@@ -156,6 +167,8 @@ void Spectrogram::parseColors(std::vector<ColorDescription>& resultColors, std::
 		cl.error(L"need at least 2 colors but {} found", resultColors.size());
 		throw InvalidOptionsException{};
 	}
+
+	return { std::move(resultColors), std::move(levels) };
 }
 
 void Spectrogram::vProcess(ProcessContext context, ExternalData& externalData) {

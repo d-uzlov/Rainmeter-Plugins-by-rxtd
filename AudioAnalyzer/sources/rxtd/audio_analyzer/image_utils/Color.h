@@ -50,9 +50,6 @@ namespace rxtd::audio_analyzer::image_utils {
 		}
 
 		[[nodiscard]]
-		static Color parse(sview desc, option_parsing::OptionParser& parser, Color defaultValue = {});
-
-		[[nodiscard]]
 		Color operator*(float value) const {
 			return {
 				_.rgb.red * value,
@@ -176,3 +173,13 @@ namespace rxtd::audio_analyzer::image_utils {
 		Color ycbcr2rgb() const;
 	};
 }
+
+template<>
+rxtd::audio_analyzer::image_utils::Color
+rxtd::option_parsing::OptionParser::ParseContext::solveCustom
+<rxtd::audio_analyzer::image_utils::Color, rxtd::audio_analyzer::image_utils::Color::Mode>
+(const audio_analyzer::image_utils::Color::Mode& defaultMode);
+
+template<>
+std::optional<rxtd::audio_analyzer::image_utils::Color::Mode>
+parseEnum<rxtd::audio_analyzer::image_utils::Color::Mode>(rxtd::isview text);

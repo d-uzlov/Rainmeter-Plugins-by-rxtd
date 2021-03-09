@@ -13,77 +13,6 @@ using rxtd::option_parsing::Option;
 using rxtd::std_fixes::StringUtils;
 using rxtd::Logger;
 
-Color Color::parse(sview desc, option_parsing::OptionParser& parser, Color defaultValue) {
-	if (desc.empty()) {
-		return defaultValue;
-	}
-
-	Color result;
-	OptionList components{};
-	if (StringUtils::checkStartsWith(desc, L"@")) {
-		desc.remove_prefix(1);
-		auto [attr, colorDesc] = Option{ desc }.breakFirst(L'$');
-		components = colorDesc.asList(L',');
-
-		if (colorDesc.empty()) {
-			Logger logger;
-			logger.error(L"annotated color without color components: '{}'", desc);
-			return defaultValue;
-		}
-
-		for (Option opt : attr.asList(L'@')) {
-			auto str = opt.asIString();
-			if (str == L"rgb") {
-				result.mode = Mode::eRGB;
-			} else if (str == L"hsv") {
-				result.mode = Mode::eHSV;
-			} else if (str == L"hsl") {
-				result.mode = Mode::eHSL;
-			} else if (str == L"ycbcr") {
-				result.mode = Mode::eYCBCR;
-			} else if (str == L"hex") {
-				result.mode = Mode::eRGB;
-
-				if (colorDesc.asString().size() != 6 && colorDesc.asString().size() != 8) {
-					Logger logger;
-					logger.error(L"can't parse '{}' as HEX color, need 6 or 8 digits", colorDesc);
-					return defaultValue;
-				}
-
-				using namespace std::string_literals;
-
-				result._.rgb.red = StringUtils::parseInt(colorDesc.asString().substr(0, 2), true) / 255.0f;
-				result._.rgb.green = StringUtils::parseInt(colorDesc.asString().substr(2, 2), true) / 255.0f;
-				result._.rgb.blue = StringUtils::parseInt(colorDesc.asString().substr(4, 2), true) / 255.0f;
-
-				if (colorDesc.asString().size() == 8) {
-					result.alpha = StringUtils::parseInt(colorDesc.asString().substr(6, 2), true) / 255.0f;
-				} else {
-					result.alpha = 1.0;
-				}
-
-				return result;
-			}
-		}
-	} else {
-		components = Option{ desc }.asList(L',');
-	}
-
-	const auto count = components.size();
-	if (count < 3 || count > 4) {
-		Logger logger;
-		logger.error(L"can't parse color: need 3 or 4 color components: {}", desc);
-		return defaultValue;
-	}
-
-	result._.rgb.red = parser.parse(components.get(0), L"colors").valueOr(0.0f);
-	result._.rgb.green = parser.parse(components.get(1), L"colors").valueOr(0.0f);
-	result._.rgb.blue = parser.parse(components.get(2), L"colors").valueOr(0.0f);
-	result.alpha = parser.parse(components.get(3), L"colors").valueOr(1.0f);
-
-	return result;
-}
-
 Color Color::rgb2hsv() const {
 	const float xMax = std::max(std::max(_.rgb.red, _.rgb.green), _.rgb.blue);
 	const float xMin = std::min(std::min(_.rgb.red, _.rgb.green), _.rgb.blue);
@@ -216,4 +145,100 @@ Color Color::ycbcr2rgb() const {
 	result.alpha = alpha;
 
 	return result;
+}
+
+template<>
+Color rxtd::option_parsing::OptionParser::ParseContext::solveCustom
+<Color, Color::Mode>
+(const Color::Mode& defaultMode) {
+	OptionList components{};
+
+	using Mode = Color::Mode;
+	Mode mode = defaultMode;
+
+	if (StringUtils::checkStartsWith(source, L"@")) {
+		source.remove_prefix(1);
+		auto [attr, colorDesc] = Option{ source }.breakFirst(L'$');
+		components = colorDesc.asList(L',');
+
+		if (colorDesc.empty()) {
+			parent.logger.error(L"annotated color without color components: '{}'", source);
+			throw Exception{};
+		}
+
+		for (Option opt : attr.asList(L'@')) {
+			auto str = opt.asIString();
+
+			using Mode = Color::Mode;
+			if (str == L"rgb") {
+				mode = Mode::eRGB;
+			} else if (str == L"hsv") {
+				mode = Mode::eHSV;
+			} else if (str == L"hsl") {
+				mode = Mode::eHSL;
+			} else if (str == L"ycbcr") {
+				mode = Mode::eYCBCR;
+			} else if (str == L"hex") {
+				mode = Mode::eRGB;
+
+				if (colorDesc.asString().size() != 6 && colorDesc.asString().size() != 8) {
+					parent.logger.error(L"can't parse as HEX color, need 6 or 8 digits, value: {}", colorDesc);
+					throw Exception{};
+				}
+
+				using namespace std::string_literals;
+
+				float floatComponents[3]{
+					StringUtils::parseInt(colorDesc.asString().substr(0, 2), true) / 255.0f,
+					StringUtils::parseInt(colorDesc.asString().substr(2, 2), true) / 255.0f,
+					StringUtils::parseInt(colorDesc.asString().substr(4, 2), true) / 255.0f,
+				};
+
+				const float alpha = colorDesc.asString().size() == 8
+				                    ? StringUtils::parseInt(colorDesc.asString().substr(6, 2), true) / 255.0f
+				                    : 1.0f;
+
+				return Color{ floatComponents[0], floatComponents[1], floatComponents[2], alpha, mode };
+			} else {
+				parent.logger.error(L"{}: unknown color mode: {}", loggerPrefix, str);
+				throw Exception{};
+			}
+		}
+	} else {
+		components = Option{ source }.asList(L',');
+	}
+
+	const auto count = components.size();
+	if (count < 3 || count > 4) {
+		parent.logger.error(L"can't parse color: need 3 or 4 color components: {}", source);
+		throw Exception{};
+	}
+
+	float floatComponents[3]{
+		parent.parse(components.get(0), L"colors").as<float>(),
+		parent.parse(components.get(1), L"colors").as<float>(),
+		parent.parse(components.get(2), L"colors").as<float>(),
+	};
+
+	const float alpha = components.size() == 4
+	                    ? parent.parse(components.get(3), L"colors").as<float>()
+	                    : 1.0f;
+
+	return Color{ floatComponents[0], floatComponents[1], floatComponents[2], alpha, mode };
+}
+
+template<>
+std::optional<Color::Mode> parseEnum<Color::Mode>(rxtd::isview text) {
+	using Mode = Color::Mode;
+	if (text == L"sRGB") {
+		return Mode::eRGB;
+	} else if (text == L"hsv") {
+		return Mode::eHSV;
+	} else if (text == L"hsl") {
+		return Mode::eHSL;
+	} else if (text == L"yCbCr") {
+		return Mode::eYCBCR;
+	} else {
+		return {};
+	}
 }
