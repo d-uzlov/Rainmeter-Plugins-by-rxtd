@@ -6,8 +6,8 @@
 using rxtd::fft_utils::RealFft;
 
 void RealFft::setParams(index _size, std::vector<float> _window) {
-	if (const index windowSize = static_cast<index>(window.size());
-		windowSize != size && windowSize != 0) {
+	if (const index windowSize = static_cast<index>(_window.size());
+		windowSize != _size && windowSize != 0) {
 		throw std::runtime_error{ "FFT::setParams(): invalid window size" };
 	}
 
