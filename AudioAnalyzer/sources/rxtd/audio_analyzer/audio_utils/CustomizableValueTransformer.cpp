@@ -99,7 +99,7 @@ void CVT::applyToArray(array_view<float> source, array_span<float> dest) {
 	}
 }
 
-CVT CVT::parse(sview transformDescription, OptionParser& parser, Logger& cl) {
+CVT CVT::parse(sview transformDescription, OptionParser& parser, const Logger& cl) {
 	std::vector<TransformationInfo> transforms;
 
 	for (auto pair : Option{ transformDescription }.asSequence(L'(', L')', L',', cl)) {
@@ -117,7 +117,7 @@ CVT CVT::parse(sview transformDescription, OptionParser& parser, Logger& cl) {
 	return CustomizableValueTransformer{ transforms };
 }
 
-CVT::TransformationInfo CVT::parseTransformation(const Option& nameOpt, const OptionMap& params, OptionParser& parser, Logger& cl) {
+CVT::TransformationInfo CVT::parseTransformation(const Option& nameOpt, const OptionMap& params, OptionParser& parser, const Logger& cl) {
 	const auto transformName = nameOpt.asIString();
 	TransformationInfo tr{};
 

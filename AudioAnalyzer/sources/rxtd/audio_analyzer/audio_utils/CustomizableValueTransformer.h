@@ -79,11 +79,11 @@ namespace rxtd::audio_analyzer::audio_utils {
 
 		// can throw OptionParser::Exception
 		[[nodiscard]]
-		static CustomizableValueTransformer parse(sview transformDescription, OptionParser& parser, Logger& cl);
+		static CustomizableValueTransformer parse(sview transformDescription, OptionParser& parser, const Logger& cl);
 
 	private:
 		// can throw OptionParser::Exception
 		[[nodiscard]]
-		static TransformationInfo parseTransformation(const Option& nameOpt, const OptionMap& params, OptionParser& parser, Logger& cl);
+		static TransformationInfo parseTransformation(const Option& nameOpt, const OptionMap& params, OptionParser& parser, const Logger& cl);
 	};
 }

@@ -7,19 +7,9 @@
 using rxtd::audio_analyzer::AudioChild;
 
 AudioChild::AudioChild(Rainmeter&& _rain) : MeasureBase(std::move(_rain)) {
-	const auto parentName = rain.read(L"Parent").asIString();
-	if (parentName.empty()) {
-		logger.error(L"Parent must be specified");
-		throw std::runtime_error{ "" };
-	}
-	parent = utils::ParentMeasureBase::find<AudioParent>(rain.getSkin(), parentName);
-
+	parent = dynamic_cast<AudioParent*>(findParent());
 	if (parent == nullptr) {
-		logger.error(L"Parent doesn't exist: {}", parentName);
-		throw std::runtime_error{ "" };
-	}
-
-	if (!parent->isValid()) {
+		logger.error(L"Invalid parent specified");
 		throw std::runtime_error{ "" };
 	}
 

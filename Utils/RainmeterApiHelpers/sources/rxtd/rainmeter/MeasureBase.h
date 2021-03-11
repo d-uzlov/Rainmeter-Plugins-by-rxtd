@@ -6,6 +6,8 @@
 #include "Rainmeter.h"
 
 namespace rxtd::utils {
+	class ParentMeasureBase;
+
 	//
 	// Convenient parent class for all Rainmeter Measure=Plugin classes.
 	// Implements all the needed functions,
@@ -34,7 +36,7 @@ namespace rxtd::utils {
 		std::vector<isview> resolveVector;
 
 	public:
-		MeasureBase(Rainmeter&& rain);
+		explicit MeasureBase(Rainmeter&& rain);
 
 		double update();
 		void reload();
@@ -49,7 +51,6 @@ namespace rxtd::utils {
 
 	protected:
 		// all functions in derived classes are allowed to throw std::runtime_error
-
 		virtual void vReload() = 0;
 		virtual double vUpdate() = 0;
 
@@ -60,6 +61,8 @@ namespace rxtd::utils {
 		}
 
 		virtual void vResolve(array_view<isview> args, string& resolveBufferString) { }
+
+		ParentMeasureBase* findParent();
 
 		// Sets object state to invalid until next reload
 		void setInvalid(bool permanent = false) {

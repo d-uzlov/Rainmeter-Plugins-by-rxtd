@@ -19,7 +19,7 @@ double MeasureBase::update() {
 	try {
 		resultDouble = vUpdate();
 	} catch (std::runtime_error&) {
-		logger.error(L"Measure '{}' unexpectedly stopped update", rain.getMeasureName());
+		logger.error(L"Measure unexpectedly stopped update");
 		setInvalid(true);
 	}
 	if (useResultString) {
@@ -27,7 +27,7 @@ double MeasureBase::update() {
 		try {
 			vUpdateString(resultString);
 		} catch (std::runtime_error&) {
-			logger.error(L"Measure '{}' unexpectedly stopped string update", rain.getMeasureName());
+			logger.error(L"Measure unexpectedly stopped string update");
 			setInvalid(true);
 		}
 	}
@@ -43,7 +43,7 @@ void MeasureBase::reload() {
 	try {
 		vReload();
 	} catch (std::runtime_error&) {
-		logger.error(L"Measure '{}' unexpectedly stopped reload", rain.getMeasureName());
+		logger.error(L"Measure unexpectedly stopped reload");
 		setInvalid(true);
 	}
 }
@@ -57,14 +57,13 @@ void MeasureBase::command(const wchar_t* bangArgs) {
 	try {
 		vCommand(bangArgs);
 	} catch (std::runtime_error&) {
-		logger.error(L"Measure '{}' unexpectedly stopped command", rain.getMeasureName());
+		logger.error(L"Measure unexpectedly stopped command");
 		setInvalid(true);
 	}
 }
 
 const wchar_t* MeasureBase::resolve(int argc, const wchar_t* argv[]) {
 	if (!objectIsValid) {
-		logger.warning(L"Skipping resolve on a broken measure");
 		return L"";
 	}
 
@@ -79,7 +78,6 @@ const wchar_t* MeasureBase::resolve(int argc, const wchar_t* argv[]) {
 
 const wchar_t* MeasureBase::resolve(array_view<isview> args) {
 	if (!objectIsValid) {
-		logger.warning(L"Skipping resolve on a broken measure");
 		return L"";
 	}
 
@@ -88,11 +86,33 @@ const wchar_t* MeasureBase::resolve(array_view<isview> args) {
 	try {
 		vResolve(args, resolveString);
 	} catch (std::runtime_error&) {
-		logger.error(L"Measure '{}' unexpectedly stopped section variable resolve", rain.getMeasureName());
+		logger.error(L"Measure unexpectedly stopped section variable resolve");
 		setInvalid(true);
 	}
 
 	return resolveString.c_str();
+}
+
+ParentMeasureBase* MeasureBase::findParent() {
+	auto name = rain.read(L"Parent").asIString();
+	if (name.empty()) {
+		logger.error(L"Parent must be specified");
+		throw std::runtime_error{ "" };
+	}
+
+	auto ptr = ParentMeasureBase::find<ParentMeasureBase>(rain.getSkin(), name);
+
+	if (ptr == nullptr) {
+		logger.error(L"Parent doesn't exist: {}", name);
+		throw std::runtime_error{ "" };
+	}
+
+	if (!ptr->isValid()) {
+		logger.error(L"Parent is broken: {}", name);
+		throw std::runtime_error{ "" };
+	}
+
+	return ptr;
 }
 
 const wchar_t* MeasureBase::getString() const {

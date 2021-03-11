@@ -8,19 +8,13 @@ using rxtd::perfmon::PerfmonChild;
 using rxtd::std_fixes::StringUtils;
 
 PerfmonChild::PerfmonChild(Rainmeter&& _rain) : MeasureBase(std::move(_rain)) {
-	auto parentName = rain.read(L"Parent").asIString();
-	if (parentName.empty()) {
-		logger.error(L"Parent must be specified");
+	parent = dynamic_cast<PerfmonParent*>(findParent());
+	if (parent == nullptr) {
+		logger.error(L"Invalid parent specified");
 		throw std::runtime_error{ "" };
 	}
-	parent = utils::ParentMeasureBase::find<PerfmonParent>(rain.getSkin(), parentName);
 
 	parser.setLogger(logger);
-
-	if (parent == nullptr) {
-		logger.error(L"Parent '{}' is not found", parentName);
-		throw std::runtime_error{ "" };
-	}
 }
 
 void PerfmonChild::vReload() {
