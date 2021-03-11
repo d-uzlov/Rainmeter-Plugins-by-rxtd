@@ -47,6 +47,6 @@ namespace rxtd::audio_analyzer {
 		void vUpdateString(string& resultStringBuffer) override;
 
 	private:
-		Options readOptions() const;
+		Options readOptions();
 	};
 }

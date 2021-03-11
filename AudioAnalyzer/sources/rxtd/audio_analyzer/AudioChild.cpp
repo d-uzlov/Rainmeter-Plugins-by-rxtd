@@ -15,7 +15,7 @@ AudioChild::AudioChild(Rainmeter&& _rain) : MeasureBase(std::move(_rain)) {
 	parent = utils::ParentMeasureBase::find<AudioParent>(rain.getSkin(), parentName);
 
 	if (parent == nullptr) {
-		logger.error(L"Parent '{}' doesn't exist", parentName);
+		logger.error(L"Parent doesn't exist: {}", parentName);
 		throw std::runtime_error{ "" };
 	}
 
@@ -62,24 +62,21 @@ void AudioChild::vUpdateString(string& resultStringBuffer) {
 	resultStringBuffer = parent->resolve(options.infoRequestC);
 }
 
-AudioChild::Options AudioChild::readOptions() const {
+AudioChild::Options AudioChild::readOptions() {
 	Options result{};
 	const auto channelStr = rain.read(L"Channel").asIString(L"auto");
 	auto channelOpt = ChannelUtils::parse(channelStr);
 	if (!channelOpt.has_value()) {
-		logger.error(L"Invalid Channel '{}', set to Auto.", channelStr);
-		result.channel = Channel::eAUTO;
-	} else {
-		result.channel = channelOpt.value();
+		logger.error(L"Invalid Channel: {}", channelStr);
+		setInvalid();
+		return options;
 	}
+	result.channel = channelOpt.value();
 
-	result.handlerName = rain.read(L"handler").asIString();
-	if (result.handlerName.empty()) {
-		result.handlerName = rain.read(L"ValueId").asIString();
-	}
+	result.handlerName = rain.read(L"handlerName").asIString();
 
 	if (!result.handlerName.empty()) {
-		result.procName = rain.read(L"Processing").asIString();
+		result.procName = rain.read(L"unit").asIString();
 		if (result.procName.empty()) {
 			result.procName = parent->findProcessingFor(result.handlerName);
 		}
@@ -91,8 +88,7 @@ AudioChild::Options AudioChild::readOptions() const {
 		}
 
 		auto transformDesc = rain.read(L"Transform");
-		auto transformLogger = logger.context(L"Transform: ");
-		result.transformer = CVT::parse(transformDesc.asString(), parser, transformLogger);
+		result.transformer = CVT::parse(transformDesc.asString(), parser, logger.context(L"Transform: "));
 	}
 
 	if (const auto stringValueStr = rain.read(L"StringValue").asIString(L"Number");
@@ -111,7 +107,9 @@ AudioChild::Options AudioChild::readOptions() const {
 	} else if (stringValueStr == L"Number") {
 		// no need to do anything here
 	} else {
-		logger.error(L"Invalid StringValue '{}', set to Number.", stringValueStr);
+		logger.error(L"Invalid StringValue: {}", stringValueStr);
+		setInvalid();
+		return options;
 	}
 
 	return result;
