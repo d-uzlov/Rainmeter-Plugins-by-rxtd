@@ -144,7 +144,7 @@ void WindowFunctionHelper::createChebyshev(array_span<float> result, float atten
 	for (index i = 0; i < size; ++i) {
 		freqs[static_cast<size_t>(i)] = static_cast<Float>(W0(i));
 	}
-	fft.process(freqs);
+	fft.inverse(freqs);
 
 	auto generated = fft.getWritableResult();
 	generated[0] /= 2.0;

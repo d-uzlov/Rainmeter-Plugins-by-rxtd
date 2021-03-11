@@ -21,24 +21,24 @@ namespace rxtd::test::fft_utils {
 		std::vector<float> frequencies;
 
 	public:
-		TEST_METHOD(Test_10_1) {
-			testForward(10, 1, 1.0e-6f);
+		TEST_METHOD(Test_32_1) {
+			testForward(32, 1, 1.0e-6f);
 		}
 
-		TEST_METHOD(Test_100_5) {
-			testForward(100, 5, 1.0e-5f);
+		TEST_METHOD(Test_96_5) {
+			testForward(96, 5, 1.0e-5f);
 		}
 
-		TEST_METHOD(Test_1000_20) {
-			testForward(1000, 20, 1.0e-5f);
+		TEST_METHOD(Test_1024_20) {
+			testForward(1024, 20, 1.0e-5f);
 		}
 
-		TEST_METHOD(Test_1000_250) {
-			testForward(1000, 125, 1.0e-4f);
+		TEST_METHOD(Test_1024_125) {
+			testForward(1024, 125, 1.0e-4f);
 		}
 
-		TEST_METHOD(Test_1000_499) {
-			testForward(1000, 499, 1.0e-4f);
+		TEST_METHOD(Test_1024_511) {
+			testForward(1024, 511, 1.0e-4f);
 		}
 
 	private:

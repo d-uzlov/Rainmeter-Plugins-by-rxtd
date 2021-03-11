@@ -13,7 +13,7 @@ using rxtd::std_fixes::MyMath;
 namespace rxtd::test::fft_utils {
 	using namespace rxtd::fft_utils;
 	TEST_CLASS(ComplexFft_test) {
-		using Float = float;
+		using Float = double;
 		using Fft = ComplexFft<Float>;
 		Fft fft;
 
@@ -22,51 +22,32 @@ namespace rxtd::test::fft_utils {
 		std::vector<Fft::complex_type> wave2;
 
 	public:
-		TEST_METHOD(Test_4) {
-			testForward(4, 1, 1.0e-6f);
+		TEST_METHOD(Test_16_1) {
+			testForward(16, 1, 1.0e-6f);
+			testReverse();
+			testForward(16, 3, 1.0e-6f);
+			testReverse();
+			testForward(16, 5, 1.0e-6f);
 			testReverse();
 		}
 
-		TEST_METHOD(Test_6) {
-			testForward(6, 1, 1.0e-6f);
-			testReverse();
-			testForward(6, 2, 1.0e-6f);
+		TEST_METHOD(Test_96_5) {
+			testForward(96, 3, 1.0e-5f);
 			testReverse();
 		}
 
-		TEST_METHOD(Test_10) {
-			testForward(10, 1, 1.0e-6f);
-			testReverse();
-			testForward(10, 3, 1.0e-6f);
+		TEST_METHOD(Test_1024_20) {
+			testForward(1024, 20, 1.0e-6f);
 			testReverse();
 		}
 
-		TEST_METHOD(Test_12_1) {
-			testForward(12, 1, 1.0e-6f);
-			testReverse();
-			testForward(12, 3, 1.0e-6f);
-			testReverse();
-			testForward(12, 5, 1.0e-6f);
+		TEST_METHOD(Test_1024_250) {
+			testForward(1024, 250, 1.0e-6f);
 			testReverse();
 		}
 
-		TEST_METHOD(Test_100_5) {
-			testForward(100, 3, 1.0e-5f);
-			testReverse();
-		}
-
-		TEST_METHOD(Test_1000_20) {
-			testForward(1000, 20, 1.0e-5f);
-			testReverse();
-		}
-
-		TEST_METHOD(Test_1000_250) {
-			testForward(1000, 250, 1.0e-4f);
-			testReverse();
-		}
-
-		TEST_METHOD(Test_1000_499) {
-			testForward(1000, 499, 1.0e-4f);
+		TEST_METHOD(Test_1024_503) {
+			testForward(1024, 503, 1.0e-6f);
 			testReverse();
 		}
 
@@ -76,7 +57,7 @@ namespace rxtd::test::fft_utils {
 			generateSinWave(wave, static_cast<Float>(desiredWaveSinCount));
 
 			fft.setParams(size, false);
-			fft.process(wave);
+			fft.forward(wave);
 
 			fft.getResult().transferToVector(frequencies);
 		}
@@ -105,7 +86,7 @@ namespace rxtd::test::fft_utils {
 		void testReverse() {
 			const auto size = static_cast<index>(wave.size());
 			fft.setParams(size, true);
-			fft.process(frequencies);
+			fft.inverse(frequencies);
 			fft.getResult().transferToVector(wave2);
 
 			assertArraysEqual(wave, wave2);
@@ -122,8 +103,12 @@ namespace rxtd::test::fft_utils {
 		static void assertArraysEqual(array_view<Fft::complex_type> a, array_view<Fft::complex_type> b) {
 			Assert::AreEqual(a.size(), b.size());
 			for (index i = 0; i < a.size(); i++) {
-				Assert::IsTrue(MyMath::checkFloatEqual<Float>(a[i].real(), b[i].real(), 64.0f, 16.0f));
-				Assert::IsTrue(MyMath::checkFloatEqual<Float>(a[i].imag(), b[i].imag(), 64.0f, 16.0f));
+				if (!MyMath::checkFloatEqual<Float>(a[i].real(), b[i].real(), 16.0, 16.0)) {
+					Assert::AreEqual(a[i].real(), b[i].real());
+				}
+				if (!MyMath::checkFloatEqual<Float>(a[i].imag(), b[i].imag(), 16.0, 16.0)) {
+					Assert::AreEqual(a[i].real(), b[i].real());
+				}
 			}
 		}
 	};

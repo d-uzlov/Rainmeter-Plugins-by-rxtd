@@ -5,6 +5,8 @@
 
 #include "FftAnalyzer.h"
 
+#include "rxtd/fft_utils/FftSizeHelper.h"
+
 using rxtd::audio_analyzer::handler::FftAnalyzer;
 using rxtd::audio_analyzer::handler::HandlerBase;
 using ParamsContainer = HandlerBase::ParamsContainer;
@@ -49,7 +51,7 @@ FftAnalyzer::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData
 
 	auto& config = getConfiguration();
 
-	fftSize = kiss_fft::calculateNextFastSize(static_cast<index>(static_cast<double>(config.sampleRate) / params.binWidth), true);
+	fftSize = fft_utils::FftSizeHelper::findNextAllowedLength(static_cast<index>(static_cast<double>(config.sampleRate) / params.binWidth), true);
 
 	constexpr index minFftSize = 16;
 

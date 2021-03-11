@@ -24,6 +24,12 @@
     <Filter Include="sources\libs\kiss_fft\LICENSES">
       <UniqueIdentifier>{7d16f704-6ae7-4bec-9d04-152e296c8ba7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="sources\libs\pffft">
+      <UniqueIdentifier>{08c4e2fa-3091-47e8-9168-d2eaf82fb882}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sources\libs\pffft\simd">
+      <UniqueIdentifier>{976f2c76-b07c-4460-99f0-17f1dc9e4a34}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="sources\rxtd\fft_utils\FftCascade.h">
@@ -35,10 +41,46 @@
     <ClInclude Include="sources\rxtd\fft_utils\WindowFunctionHelper.h">
       <Filter>sources\rxtd\fft_utils</Filter>
     </ClInclude>
-    <ClInclude Include="sources\rxtd\fft_utils\RealFft.h">
+    <ClInclude Include="sources\rxtd\fft_utils\ComplexFft.h">
       <Filter>sources\rxtd\fft_utils</Filter>
     </ClInclude>
-    <ClInclude Include="sources\rxtd\fft_utils\ComplexFft.h">
+    <ClInclude Include="sources\libs\pffft\pffft.h">
+      <Filter>sources\libs\pffft</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\libs\pffft\pffft.hpp">
+      <Filter>sources\libs\pffft</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\libs\pffft\pffft_double.h">
+      <Filter>sources\libs\pffft</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\libs\pffft\pffft_priv_impl.h">
+      <Filter>sources\libs\pffft</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\libs\pffft\simd\pf_avx_double.h">
+      <Filter>sources\libs\pffft\simd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\libs\pffft\simd\pf_double.h">
+      <Filter>sources\libs\pffft\simd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\libs\pffft\simd\pf_float.h">
+      <Filter>sources\libs\pffft\simd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\libs\pffft\simd\pf_scalar_double.h">
+      <Filter>sources\libs\pffft\simd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\libs\pffft\simd\pf_scalar_float.h">
+      <Filter>sources\libs\pffft\simd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\libs\pffft\simd\pf_sse1_float.h">
+      <Filter>sources\libs\pffft\simd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\libs\pffft\simd\pf_sse2_double.h">
+      <Filter>sources\libs\pffft\simd</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\fft_utils\FftSizeHelper.h">
+      <Filter>sources\rxtd\fft_utils</Filter>
+    </ClInclude>
+    <ClInclude Include="sources\rxtd\fft_utils\RealFft.h">
       <Filter>sources\rxtd\fft_utils</Filter>
     </ClInclude>
   </ItemGroup>
@@ -49,7 +91,22 @@
     <ClCompile Include="sources\rxtd\fft_utils\WindowFunctionHelper.cpp">
       <Filter>sources\rxtd\fft_utils</Filter>
     </ClCompile>
+    <ClCompile Include="sources\libs\pffft\pffft.c">
+      <Filter>sources\libs\pffft</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\libs\pffft\pffft_common.c">
+      <Filter>sources\libs\pffft</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\libs\pffft\pffft_double.c">
+      <Filter>sources\libs\pffft</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\fft_utils\FftSizeHelper.cpp">
+      <Filter>sources\rxtd\fft_utils</Filter>
+    </ClCompile>
     <ClCompile Include="sources\rxtd\fft_utils\RealFft.cpp">
+      <Filter>sources\rxtd\fft_utils</Filter>
+    </ClCompile>
+    <ClCompile Include="sources\rxtd\fft_utils\ComplexFft.cpp">
       <Filter>sources\rxtd\fft_utils</Filter>
     </ClCompile>
   </ItemGroup>
@@ -63,5 +120,13 @@
     <None Include="sources\libs\kiss_fft\LICENSES\Unlicense">
       <Filter>sources\libs\kiss_fft\LICENSES</Filter>
     </None>
+    <None Include="sources\libs\pffft\README.md">
+      <Filter>sources\libs\pffft</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="sources\libs\pffft\LICENSE.txt">
+      <Filter>sources\libs\pffft</Filter>
+    </Text>
   </ItemGroup>
 </Project>

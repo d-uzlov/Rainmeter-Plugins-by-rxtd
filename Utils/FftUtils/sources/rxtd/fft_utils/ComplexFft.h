@@ -2,58 +2,36 @@
 // Copyright (C) 2019 Danil Uzlov
 
 #pragma once
-#include <libs/kiss_fft/KissFft.hh>
+#include <complex>
 
 namespace rxtd::fft_utils {
 	template<typename Float>
 	class ComplexFft {
-		using FftImpl = kiss_fft::KissFft<Float>;
+		static_assert(std::is_same<Float, float>::value || std::is_same<Float, double>::value, "only float and double are allowed in ComplexFft class");
+
+		class FftImplWrapper;
 
 	public:
-		using scalar_type = typename FftImpl::scalar_type;
-		using complex_type = typename FftImpl::complex_type;
+		using scalar_type = Float;
+		using complex_type = std::complex<scalar_type>;
 
 	private:
-		index size{};
-		scalar_type scalar{};
-
-		FftImpl kiss;
-
-		std::vector<complex_type> outputBuffer;
+		std::unique_ptr<FftImplWrapper> impl;
 
 	public:
-		ComplexFft() = default;
+		ComplexFft();
+		~ComplexFft();
 
-		void setParams(index _size, bool reverse = false) {
-			size = _size;
-			scalar = scalar_type(1.0);
-			if (!reverse) {
-				scalar /= static_cast<scalar_type>(size);
-			}
-
-			// Apparently KISS FFT doesn't handle assignment with only "inverse" argument changed.
-			// Tests of ComplexFft class are failing when .assign is used.
-			// kiss.assign(static_cast<std::size_t>(size), reverse);
-			kiss = { static_cast<std::size_t>(size), reverse };
-
-			outputBuffer.resize(static_cast<size_t>(size));
-		}
+		void setParams(index size, bool reverse);
 
 		[[nodiscard]]
-		array_span<complex_type> getWritableResult() {
-			return outputBuffer;
-		}
+		array_span<complex_type> getWritableResult();
 
 		[[nodiscard]]
-		array_view<complex_type> getResult() const {
-			return outputBuffer;
-		}
+		array_view<complex_type> getResult() const;
 
-		void process(array_view<complex_type> input) {
-			kiss.transform(input.data(), outputBuffer.data());
-			for (auto& val : outputBuffer) {
-				val *= scalar;
-			}
-		}
+		void forward(array_view<complex_type> input);
+
+		void inverse(array_view<complex_type> input);
 	};
 }

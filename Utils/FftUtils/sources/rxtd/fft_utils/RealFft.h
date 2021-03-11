@@ -2,32 +2,23 @@
 // Copyright (C) 2019 Danil Uzlov
 
 #pragma once
-#include <libs/kiss_fft/KissFft.hh>
+#include <complex>
 
 namespace rxtd::fft_utils {
 	class RealFft {
-		using FftImpl = kiss_fft::KissFft<float>;
+		class FftImplWrapper;
 
 	public:
-		using scalar_type = FftImpl::scalar_type;
-		using complex_type = FftImpl::complex_type;
+		using scalar_type = float;
 
 	private:
-		index size{};
-		scalar_type scalar{};
-
-		std::vector<scalar_type> window;
-
-		FftImpl kiss;
-
-		// need separate input buffer because of window application
-		std::vector<scalar_type> inputBuffer;
-		std::vector<complex_type> outputBuffer;
+		std::unique_ptr<FftImplWrapper> impl;
 
 	public:
-		RealFft() = default;
+		RealFft();
+		~RealFft();
 
-		void setParams(index _size, std::vector<scalar_type> window);
+		void setParams(index size, array_view<scalar_type> window);
 
 		void fillMagnitudes(array_span<scalar_type> result) const;
 

@@ -37,8 +37,9 @@ namespace rxtd::std_fixes {
 			);
 			assert(epsilonMultiplier >= static_cast<Float>(0.0));
 			assert(absoluteThresholdMultiplier >= static_cast<Float>(0.0));
-			const auto epsilon = epsilonMultiplier * std::numeric_limits<Float>::epsilon();
-			const auto absoluteThreshold = absoluteThresholdMultiplier * std::numeric_limits<Float>::epsilon();
+			constexpr Float floatEpsilon = static_cast<Float>(std::numeric_limits<float>::epsilon());
+			const auto epsilon = epsilonMultiplier * floatEpsilon;
+			const auto absoluteThreshold = absoluteThresholdMultiplier * floatEpsilon;
 
 			if (a == b) return true;
 
