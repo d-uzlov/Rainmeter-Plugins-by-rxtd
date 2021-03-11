@@ -22,7 +22,7 @@ ParamsContainer BandResampler::vParseParams(ParamParseContext& context) const no
 
 	auto bandsLogger = context.log.context(L"bands: ");
 
-	auto bandsArg = bandsOption.asSequence(L'(', L')', L',');
+	auto bandsArg = bandsOption.asSequence(L'(', L')', L',', bandsLogger);
 	if (bandsArg.getSize() != 1) {
 		bandsLogger.error(L"option must have exactly one value specified, one of: log, linear, custom");
 		throw InvalidOptionsException{};

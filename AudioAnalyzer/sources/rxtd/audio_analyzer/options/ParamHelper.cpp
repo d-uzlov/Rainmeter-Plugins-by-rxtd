@@ -98,7 +98,7 @@ bool ParamHelper::parseProcessing(sview name, Logger cl, ProcessingData& data) c
 	}
 	data.handlersRaw = handlersOption.asIString();
 
-	auto handlersList = handlersOption.asSequence(L'(', L')', L',');
+	auto handlersList = handlersOption.asSequence(L'(', L')', L',', cl);
 	{
 		std::set<isview> handlerNames;
 		for (auto [nameOpt,_] : handlersList) {
@@ -162,7 +162,7 @@ bool ParamHelper::parseFilter(const OptionMap& optionMap, ProcessingData::Filter
 	} else if (filterType == L"custom") {
 		fi.creator = fcp.parse(filterParams, filterLogger);
 	} else {
-		filterLogger.error(L"filter class '{}' is not supported", filterType);
+		filterLogger.error(L"filter class is not supported: {}", filterType);
 		fi.creator = {};
 	}
 
@@ -220,7 +220,7 @@ std::vector<Channel> ParamHelper::parseChannels(const OptionList& channelsString
 	for (auto channelOption : channelsStringList) {
 		auto opt = ChannelUtils::parse(channelOption.asIString());
 		if (!opt.has_value()) {
-			logger.error(L"can't parse '{}' as channel", channelOption.asString());
+			logger.error(L"can't parse as channel: {}", channelOption.asString());
 			throw InvalidOptionsException{};
 		}
 		set.insert(opt.value());

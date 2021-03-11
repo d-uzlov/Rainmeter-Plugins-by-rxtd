@@ -18,10 +18,19 @@ namespace Microsoft::VisualStudio::CppUnitTestFramework {
 namespace rxtd::test::option_parsing {
 	using namespace rxtd::option_parsing;
 	TEST_CLASS(OptionSequence_test) {
+		static Logger createLogger() {
+			return Logger{
+				0, [](std_fixes::AnyContainer&, Logger::LogLevel, sview message) {
+					Microsoft::VisualStudio::CppUnitTestFramework::Logger::WriteMessage(message.data());
+					Microsoft::VisualStudio::CppUnitTestFramework::Logger::WriteMessage(L"\n");
+				}
+			};
+		}
+
 	public:
 		TEST_METHOD(testNoArg) {
 			auto opt = Option{ L"name" };
-			auto seq = opt.asSequence(L'(', L')', L',');
+			auto seq = opt.asSequence(L'(', L')', L',', createLogger());
 			Assert::AreEqual(static_cast<index>(1), seq.getSize());
 			Assert::AreEqual(sview{ L"name" }, seq.getElement(0).first.asString());
 			Assert::AreEqual(sview{ L"" }, seq.getElement(0).second.asString());
@@ -29,7 +38,7 @@ namespace rxtd::test::option_parsing {
 
 		TEST_METHOD(testEmptyArg) {
 			auto opt = Option{ L"name()" };
-			auto seq = opt.asSequence(L'(', L')', L',');
+			auto seq = opt.asSequence(L'(', L')', L',', createLogger());
 			Assert::AreEqual(static_cast<index>(1), seq.getSize());
 			Assert::AreEqual(sview{ L"name" }, seq.getElement(0).first.asString());
 			Assert::AreEqual(sview{ L"" }, seq.getElement(0).second.asString());
@@ -37,7 +46,7 @@ namespace rxtd::test::option_parsing {
 
 		TEST_METHOD(testSimple) {
 			auto opt = Option{ L"name(arg)" };
-			auto seq = opt.asSequence(L'(', L')', L',');
+			auto seq = opt.asSequence(L'(', L')', L',', createLogger());
 			Assert::AreEqual(static_cast<index>(1), seq.getSize());
 			Assert::AreEqual(sview{ L"name" }, seq.getElement(0).first.asString());
 			Assert::AreEqual(sview{ L"arg" }, seq.getElement(0).second.asString());
@@ -45,7 +54,7 @@ namespace rxtd::test::option_parsing {
 
 		TEST_METHOD(testMany) {
 			auto opt = Option{ L"name(arg), name2(arg2), name3, name4(arg4), name5" };
-			auto seq = opt.asSequence(L'(', L')', L',');
+			auto seq = opt.asSequence(L'(', L')', L',', createLogger());
 			Assert::AreEqual(static_cast<index>(5), seq.getSize());
 			Assert::AreEqual(sview{ L"name" }, seq.getElement(0).first.asString());
 			Assert::AreEqual(sview{ L"arg" }, seq.getElement(0).second.asString());
@@ -61,7 +70,7 @@ namespace rxtd::test::option_parsing {
 
 		TEST_METHOD(testSpacing) {
 			auto opt = Option{ L"   	,,,,   ,   	name	  (	 arg	 	)	 ,,,	name2((arg2)) " };
-			auto seq = opt.asSequence(L'(', L')', L',');
+			auto seq = opt.asSequence(L'(', L')', L',', createLogger());
 			Assert::AreEqual(static_cast<index>(2), seq.getSize());
 			Assert::AreEqual(sview{ L"name" }, seq.getElement(0).first.asString());
 			Assert::AreEqual(sview{ L"arg" }, seq.getElement(0).second.asString());
@@ -71,7 +80,7 @@ namespace rxtd::test::option_parsing {
 
 		TEST_METHOD(testLayered) {
 			auto opt = Option{ L"name(arg, x(z))" };
-			auto seq = opt.asSequence(L'(', L')', L',');
+			auto seq = opt.asSequence(L'(', L')', L',', createLogger());
 			Assert::AreEqual(static_cast<index>(1), seq.getSize());
 			Assert::AreEqual(sview{ L"name" }, seq.getElement(0).first.asString());
 			Assert::AreEqual(sview{ L"arg, x(z)" }, seq.getElement(0).second.asString());
@@ -79,25 +88,25 @@ namespace rxtd::test::option_parsing {
 
 		TEST_METHOD(testLayered_fail_notEnough) {
 			auto opt = Option{ L"name(arg, x((z))" };
-			auto seq = opt.asSequence(L'(', L')', L',');
+			auto seq = opt.asSequence(L'(', L')', L',', createLogger());
 			Assert::AreEqual(static_cast<index>(0), seq.getSize());
 		}
 
 		TEST_METHOD(testLayered_fail_tooMany) {
 			auto opt = Option{ L"name(arg))" };
-			auto seq = opt.asSequence(L'(', L')', L',');
+			auto seq = opt.asSequence(L'(', L')', L',', createLogger());
 			Assert::AreEqual(static_cast<index>(0), seq.getSize());
 		}
 
 		TEST_METHOD(test_fail_noClosing) {
 			auto opt = Option{ L"name(" };
-			auto seq = opt.asSequence(L'(', L')', L',');
+			auto seq = opt.asSequence(L'(', L')', L',', createLogger());
 			Assert::AreEqual(static_cast<index>(0), seq.getSize());
 		}
 
 		TEST_METHOD(test_fail_noOpening) {
 			auto opt = Option{ L"name)" };
-			auto seq = opt.asSequence(L'(', L')', L',');
+			auto seq = opt.asSequence(L'(', L')', L',', createLogger());
 			Assert::AreEqual(static_cast<index>(0), seq.getSize());
 		}
 	};

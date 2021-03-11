@@ -12,7 +12,7 @@ using rxtd::option_parsing::Option;
 using rxtd::option_parsing::OptionList;
 
 WindowFunctionHelper::WindowCreationFunc WindowFunctionHelper::parse(sview desc, option_parsing::OptionParser parser, Logger& cl) {
-	auto description = Option{ desc }.asSequence(L'(', L')', L',');
+	auto description = Option{ desc }.asSequence(L'(', L')', L',', cl);
 
 	if (description.isEmpty()) {
 		return [](array_span<float> result) {

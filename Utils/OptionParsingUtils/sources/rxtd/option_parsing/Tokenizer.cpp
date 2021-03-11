@@ -3,6 +3,8 @@
 
 #include "Tokenizer.h"
 
+#include "OptionParser.h"
+
 using rxtd::option_parsing::Tokenizer;
 using rxtd::std_fixes::SubstringViewInfo;
 using rxtd::std_fixes::StringUtils;
@@ -24,7 +26,7 @@ std::vector<SubstringViewInfo> Tokenizer::parse(sview view, wchar_t delimiter) {
 }
 
 std::vector<std::pair<SubstringViewInfo, SubstringViewInfo>>
-Tokenizer::parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wchar_t optionDelimiter) {
+Tokenizer::parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wchar_t optionDelimiter, const Logger& cl) {
 	index begin = 0;
 	index level = 0;
 	std::vector<std::pair<SubstringViewInfo, SubstringViewInfo>> result;
@@ -52,7 +54,8 @@ Tokenizer::parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wch
 		}
 
 		if (view[nameEnd] == optionEnd) {
-			return {};
+			cl.error(L"unexpected closing delimiter '{}', after '{}', before '{}'", optionEnd, view.substr(0, nameEnd), view.substr(nameEnd));
+			throw OptionParser::Exception{};
 		}
 		const SubstringViewInfo nameInfo = { begin, nameEnd - begin };
 
@@ -80,7 +83,8 @@ Tokenizer::parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wch
 				wchar_t optionBoundSymbols[] = { optionBegin, optionEnd, L'\0' };
 				const index boundPos = view.find_first_of(optionBoundSymbols, begin);
 				if (boundPos == sview::npos) {
-					return {};
+					cl.error(L"unexpected end of string: {}", view);
+					throw OptionParser::Exception{};
 				}
 
 				if (view[boundPos] == optionBegin) {
@@ -105,7 +109,8 @@ Tokenizer::parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wch
 			return result;
 		}
 		if (view[begin] != optionDelimiter) {
-			return {};
+			cl.error(L"unexpected token '{}': expected end of string or option delimiter '{}', after '{}', before '{}'", view[begin], optionDelimiter, view.substr(0, nameEnd), view.substr(nameEnd));
+			throw OptionParser::Exception{};
 		}
 		begin++;
 	}

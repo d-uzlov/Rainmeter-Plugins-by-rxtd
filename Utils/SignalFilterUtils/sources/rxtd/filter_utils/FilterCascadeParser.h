@@ -53,18 +53,22 @@ namespace rxtd::filter_utils {
 		FilterCascadeParser(option_parsing::OptionParser& parser) :
 			parser(parser) {}
 
+		// can throw ParamParser::Exception
 		[[nodiscard]]
-		FilterCascadeCreator parse(const Option& description, Logger& logger);
+		FilterCascadeCreator parse(const Option& description, const Logger& logger);
 
 	private:
+		// can throw ParamParser::Exception
 		[[nodiscard]]
-		FCF parseFilter(const Option& nameOpt, const Option& argsOpt, Logger& logger);
+		FCF parseFilter(const Option& nameOpt, const Option& argsOpt, const Logger& logger);
 
+		// can throw ParamParser::Exception
 		[[nodiscard]]
-		FCF parseBQ(isview name, const OptionMap& description, Logger& cl);
+		FCF parseBQ(isview name, const OptionMap& description, const Logger& cl);
 
+		// can throw ParamParser::Exception
 		[[nodiscard]]
-		FCF parseBW(isview name, const OptionMap& description, Logger& cl);
+		FCF parseBW(isview name, const OptionMap& description, const Logger& cl);
 
 		template<index size>
 		[[nodiscard]]

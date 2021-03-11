@@ -26,7 +26,7 @@ double CVT::apply(double value) {
 			break;
 		}
 		case TransformType::eCLAMP: {
-			value = std::clamp(static_cast<float>(value), transform.args[0], transform.args[1]);
+			value = static_cast<double>(std::clamp(static_cast<float>(value), transform.args[0], transform.args[1]));
 			break;
 		}
 		}
@@ -99,29 +99,27 @@ void CVT::applyToArray(array_view<float> source, array_span<float> dest) {
 	}
 }
 
-CVT CVT::parse(sview transformDescription, const option_parsing::OptionParser& parser, Logger& cl) {
+CVT CVT::parse(sview transformDescription, OptionParser& parser, Logger& cl) {
 	std::vector<TransformationInfo> transforms;
 
-	for (auto pair : Option{ transformDescription }.asSequence(L'(', L')', L',')) {
+	for (auto pair : Option{ transformDescription }.asSequence(L'(', L')', L',', cl)) {
 		auto logger = cl.context(L"{}: ", pair.first.asString());
-		auto transformOpt = parseTransformation(pair.first, pair.second, parser, logger);
-		if (!transformOpt.has_value()) {
-			return {};
+		auto argsMap = pair.second.asMap(L',', L' ');
+
+		transforms.emplace_back(parseTransformation(pair.first, argsMap, parser, logger));
+
+		if (auto unused = argsMap.getListOfUntouched();
+			!unused.empty()) {
+			logger.warning(L"unused options: {}", unused);
 		}
-		transforms.emplace_back(transformOpt.value());
 	}
 
 	return CustomizableValueTransformer{ transforms };
 }
 
-std::optional<CVT::TransformationInfo> CVT::parseTransformation(const Option& nameOpt, const Option& argsOpt, option_parsing::OptionParser parser, Logger& cl) {
+CVT::TransformationInfo CVT::parseTransformation(const Option& nameOpt, const OptionMap& params, OptionParser& parser, Logger& cl) {
 	const auto transformName = nameOpt.asIString();
 	TransformationInfo tr{};
-
-	OptionMap params;
-	if (!argsOpt.empty()) {
-		params = argsOpt.asMap(L',', L' ');
-	}
 
 	if (transformName == L"db") {
 		tr.type = TransformType::eDB;
@@ -130,22 +128,22 @@ std::optional<CVT::TransformationInfo> CVT::parseTransformation(const Option& na
 
 		auto sourceRangeOpt = params.get(L"from");
 		if (sourceRangeOpt.empty()) {
-			cl.error(L"source range is not found");
-			return {};
+			cl.error(L"from: value is required");
+			throw option_parsing::OptionParser::Exception{};
 		}
 
 		auto sourceRange = sourceRangeOpt.asList(L':');
 		if (sourceRange.size() != 2) {
-			cl.error(L"need 2 params for source range but {} found", sourceRange.size());
-			return {};
+			cl.error(L"from: need 2 values with syntax: <value1> : <value2>, but found {} values: {}", sourceRange.size(), sourceRangeOpt.asString());
+			throw option_parsing::OptionParser::Exception{};
 		}
 
 		float linMin = parser.parse(sourceRange.get(0), L"from: first").as<float>();
 		float linMax = parser.parse(sourceRange.get(1), L"from: second").as<float>();
 
 		if (std::abs(linMin - linMax) < std::numeric_limits<float>::epsilon()) {
-			cl.error(L"source range is too small: {} and {}", linMin, linMax);
-			return {};
+			cl.error(L"from: values must be distinct, but {} and {} found", linMin, linMax);
+			throw option_parsing::OptionParser::Exception{};
 		}
 
 		float valMin = 0.0;
@@ -156,7 +154,8 @@ std::optional<CVT::TransformationInfo> CVT::parseTransformation(const Option& na
 			auto range = destRange.asList(L':');
 			if (range.size() != 2) {
 				cl.error(L"need 2 params for target range but {} found", range.size());
-				return std::nullopt;
+				cl.error(L"to: need 2 values with syntax: <value1> : <value2>, but found {} values: {}", range.size(), destRange.asString());
+				throw option_parsing::OptionParser::Exception{};
 			}
 			valMin = parser.parse(range.get(0), L"to: first").valueOr(valMin);
 			valMax = parser.parse(range.get(1), L"to: second").valueOr(valMax);
@@ -173,7 +172,7 @@ std::optional<CVT::TransformationInfo> CVT::parseTransformation(const Option& na
 		);
 	} else {
 		cl.error(L"transform type is not recognized: {}", transformName);
-		return {};
+		throw option_parsing::OptionParser::Exception{};
 	}
 
 	return tr;

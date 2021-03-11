@@ -12,6 +12,8 @@ namespace rxtd::audio_analyzer::audio_utils {
 	class CustomizableValueTransformer {
 	public:
 		using Option = option_parsing::Option;
+		using OptionMap = option_parsing::OptionMap;
+		using OptionParser = option_parsing::OptionParser;
 
 		enum class TransformType {
 			eDB,
@@ -75,11 +77,13 @@ namespace rxtd::audio_analyzer::audio_utils {
 
 		void applyToArray(array_view<float> source, array_span<float> dest);
 
+		// can throw OptionParser::Exception
 		[[nodiscard]]
-		static CustomizableValueTransformer parse(sview transformDescription, const option_parsing::OptionParser& parser, Logger& cl);
+		static CustomizableValueTransformer parse(sview transformDescription, OptionParser& parser, Logger& cl);
 
 	private:
+		// can throw OptionParser::Exception
 		[[nodiscard]]
-		static std::optional<TransformationInfo> parseTransformation(const Option& nameOpt, const Option& argsOpt, option_parsing::OptionParser parser, Logger& cl);
+		static TransformationInfo parseTransformation(const Option& nameOpt, const OptionMap& params, OptionParser& parser, Logger& cl);
 	};
 }

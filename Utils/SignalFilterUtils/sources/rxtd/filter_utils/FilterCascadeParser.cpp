@@ -13,6 +13,7 @@ using rxtd::filter_utils::FilterCascadeParser;
 using rxtd::filter_utils::FilterCascade;
 using rxtd::filter_utils::butterworth_lib::ButterworthWrapper;
 using rxtd::std_fixes::StringUtils;
+using rxtd::option_parsing::OptionParser;
 
 FilterCascade FilterCascadeCreator::getInstance(double samplingFrequency) const {
 	std::vector<std::unique_ptr<AbstractFilter>> result;
@@ -24,30 +25,25 @@ FilterCascade FilterCascadeCreator::getInstance(double samplingFrequency) const 
 	return fc;
 }
 
-FilterCascadeCreator FilterCascadeParser::parse(const Option& description, Logger& logger) {
+FilterCascadeCreator FilterCascadeParser::parse(const Option& description, const Logger& logger) {
 	std::vector<FCF> result;
 
 	parser.setLogger(logger);
 
-	for (auto filterDescription : description.asSequence(L'(', L')', L',')) {
-		auto patcher = parseFilter(filterDescription.first, filterDescription.second, logger);
-		if (patcher == nullptr) {
-			return {};
-		}
-
-		result.push_back(std::move(patcher));
+	for (auto filterDescription : description.asSequence(L'(', L')', L',', logger)) {
+		result.push_back(parseFilter(filterDescription.first, filterDescription.second, logger));
 	}
 
 	return FilterCascadeCreator{ description.asString() % own(), result };
 }
 
 FilterCascadeParser::FCF
-FilterCascadeParser::parseFilter(const Option& nameOpt, const Option& argsOpt, Logger& logger) {
+FilterCascadeParser::parseFilter(const Option& nameOpt, const Option& argsOpt, const Logger& logger) {
 	auto name = nameOpt.asIString();
 
 	if (name.empty()) {
 		logger.error(L"filter name is not found", name);
-		return {};
+		throw OptionParser::Exception{};
 	}
 
 	auto cl = logger.context(L"{}: ", name);
@@ -62,18 +58,18 @@ FilterCascadeParser::parseFilter(const Option& nameOpt, const Option& argsOpt, L
 	}
 
 	cl.error(L"unknown filter type");
-	return {};
+	throw OptionParser::Exception{};
 }
 
 FilterCascadeParser::FCF
-FilterCascadeParser::parseBQ(isview name, const OptionMap& description, Logger& cl) {
+FilterCascadeParser::parseBQ(isview name, const OptionMap& description, const Logger& cl) {
 	if (description.get(L"q").empty()) {
 		cl.error(L"Q is not found", name);
-		return {};
+		throw OptionParser::Exception{};
 	}
 	if (description.get(L"freq").empty()) {
 		cl.error(L"freq is not found", name);
-		return {};
+		throw OptionParser::Exception{};
 	}
 
 	const double q = std::max<double>(parser.parse(description, L"q").as<double>(), std::numeric_limits<float>::epsilon());
@@ -107,7 +103,7 @@ FilterCascadeParser::parseBQ(isview name, const OptionMap& description, Logger& 
 		filterCreationFunc = BQFilterBuilder::createPeak;
 	} else {
 		cl.error(L"unknown filter type");
-		return {};
+		throw OptionParser::Exception{};
 	}
 
 	return [=](double sampleFrequency) {
@@ -122,11 +118,11 @@ FilterCascadeParser::parseBQ(isview name, const OptionMap& description, Logger& 
 }
 
 FilterCascadeParser::FCF
-FilterCascadeParser::parseBW(isview name, const OptionMap& description, Logger& cl) {
+FilterCascadeParser::parseBW(isview name, const OptionMap& description, const  Logger& cl) {
 	const index order = parser.parse(description, L"order").as<index>();
 	if (order <= 0 || order > 5) {
 		cl.error(L"order must be in range [1, 5] but {} found", order);
-		return {};
+		throw OptionParser::Exception{};
 	}
 
 	const double forcedGain = parser.parse(description, L"forcedGain").valueOr(0.0);
@@ -172,7 +168,7 @@ FilterCascadeParser::parseBW(isview name, const OptionMap& description, Logger& 
 	}
 
 	cl.error(L"unknown filter type");
-	return {};
+	throw OptionParser::Exception{};
 }
 
 template<rxtd::index size>

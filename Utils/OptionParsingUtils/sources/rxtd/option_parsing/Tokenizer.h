@@ -2,6 +2,7 @@
 // Copyright (C) 2019 Danil Uzlov
 
 #pragma once
+#include "rxtd/Logger.h"
 #include "rxtd/std_fixes/StringUtils.h"
 
 namespace rxtd::option_parsing {
@@ -11,9 +12,11 @@ namespace rxtd::option_parsing {
 
 		[[nodiscard]]
 		static std::vector<SubstringViewInfo> parse(sview view, wchar_t delimiter);
+
+		// can throw OptionParser::Exception
 		[[nodiscard]]
 		static std::vector<std::pair<SubstringViewInfo, SubstringViewInfo>>
-		parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wchar_t optionDelimiter);
+		parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wchar_t optionDelimiter, const Logger& cl);
 
 	private:
 		static void emitToken(std::vector<SubstringViewInfo>& list, index begin, index end);

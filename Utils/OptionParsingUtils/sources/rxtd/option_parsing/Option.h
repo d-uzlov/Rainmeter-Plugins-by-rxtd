@@ -4,6 +4,7 @@
 #pragma once
 #include "OptionBase.h"
 #include "rxtd/DataWithLock.h"
+#include "rxtd/Logger.h"
 
 namespace rxtd::option_parsing {
 	class GhostOption;
@@ -73,13 +74,15 @@ namespace rxtd::option_parsing {
 		[[nodiscard]]
 		OptionSequence asSequence(
 			wchar_t optionBegin, wchar_t optionEnd,
-			wchar_t optionDelimiter
+			wchar_t optionDelimiter,
+			const Logger& cl
 		) const &;
 
 		[[nodiscard]]
 		OptionSequence asSequence(
 			wchar_t optionBegin, wchar_t optionEnd,
-			wchar_t optionDelimiter
+			wchar_t optionDelimiter,
+			const Logger& cl
 		) &&;
 
 		[[nodiscard]]

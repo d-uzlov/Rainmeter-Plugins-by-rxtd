@@ -22,17 +22,19 @@ namespace rxtd::option_parsing {
 		OptionSequence(
 			sview view,
 			wchar_t optionBegin, wchar_t optionEnd,
-			wchar_t optionDelimiter
+			wchar_t optionDelimiter,
+			const Logger& cl
 		) : OptionBase(view) {
-			list = Tokenizer::parseSequence(getView(), optionBegin, optionEnd, optionDelimiter);
+			list = Tokenizer::parseSequence(getView(), optionBegin, optionEnd, optionDelimiter, cl);
 		}
 
 		OptionSequence(
 			SourceType&& source,
 			wchar_t optionBegin, wchar_t optionEnd,
-			wchar_t optionDelimiter
+			wchar_t optionDelimiter,
+			const Logger& cl
 		) : OptionBase(std::move(source)) {
-			list = Tokenizer::parseSequence(getView(), optionBegin, optionEnd, optionDelimiter);
+			list = Tokenizer::parseSequence(getView(), optionBegin, optionEnd, optionDelimiter, cl);
 		}
 
 		class iterator {
