@@ -4,8 +4,11 @@
 #include <CppUnitTest.h>
 
 #include "rxtd/option_parsing/Option.h"
+#include "rxtd/option_parsing/OptionParser.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
+
+using rxtd::option_parsing::OptionParser;
 
 namespace Microsoft::VisualStudio::CppUnitTestFramework {
 	template<>
@@ -87,27 +90,39 @@ namespace rxtd::test::option_parsing {
 		}
 
 		TEST_METHOD(testLayered_fail_notEnough) {
-			auto opt = Option{ L"name(arg, x((z))" };
-			auto seq = opt.asSequence(L'(', L')', L',', createLogger());
-			Assert::AreEqual(static_cast<index>(0), seq.getSize());
+			Assert::ExpectException<OptionParser::Exception>(
+				[]() {
+					auto opt = Option{ L"name(arg, x((z))" };
+					auto seq = opt.asSequence(L'(', L')', L',', createLogger());
+				}
+			);
 		}
 
 		TEST_METHOD(testLayered_fail_tooMany) {
-			auto opt = Option{ L"name(arg))" };
-			auto seq = opt.asSequence(L'(', L')', L',', createLogger());
-			Assert::AreEqual(static_cast<index>(0), seq.getSize());
+			Assert::ExpectException<OptionParser::Exception>(
+				[]() {
+					auto opt = Option{ L"name(arg))" };
+					auto seq = opt.asSequence(L'(', L')', L',', createLogger());
+				}
+			);
 		}
 
 		TEST_METHOD(test_fail_noClosing) {
-			auto opt = Option{ L"name(" };
-			auto seq = opt.asSequence(L'(', L')', L',', createLogger());
-			Assert::AreEqual(static_cast<index>(0), seq.getSize());
+			Assert::ExpectException<OptionParser::Exception>(
+				[]() {
+					auto opt = Option{ L"name(" };
+					auto seq = opt.asSequence(L'(', L')', L',', createLogger());
+				}
+			);
 		}
 
 		TEST_METHOD(test_fail_noOpening) {
-			auto opt = Option{ L"name)" };
-			auto seq = opt.asSequence(L'(', L')', L',', createLogger());
-			Assert::AreEqual(static_cast<index>(0), seq.getSize());
+			Assert::ExpectException<OptionParser::Exception>(
+				[]() {
+					auto opt = Option{ L"name)" };
+					auto seq = opt.asSequence(L'(', L')', L',', createLogger());
+				}
+			);
 		}
 	};
 }
