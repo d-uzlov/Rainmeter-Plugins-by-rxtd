@@ -53,31 +53,19 @@ Tokenizer::parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wch
 			return result;
 		}
 
-		if (view[nameEnd] == optionEnd) {
-			cl.error(L"unexpected closing delimiter '{}', after '{}', before '{}'", optionEnd, view.substr(0, nameEnd), view.substr(nameEnd));
-			throw OptionParser::Exception{};
-		}
 		const SubstringViewInfo nameInfo = { begin, nameEnd - begin };
 
-		begin = nameEnd;
-
-		wchar_t argSymbols[] = { optionBegin, optionEnd, optionDelimiter, L'\0' };
-		const index nextPos = view.find_first_of(argSymbols, begin);
-		if (nextPos == sview::npos) {
+		begin = view.find_first_not_of(L" \t", nameEnd);
+		if (view[begin] == optionEnd) {
+			cl.error(L"unexpected closing delimiter '{}', after '{}', before '{}'", optionEnd, view.substr(0, begin), view.substr(begin));
+			throw OptionParser::Exception{};
+		} else if (view[begin] == optionDelimiter) {
 			result.emplace_back(nameInfo, SubstringViewInfo{});
-			return result;
-		}
-
-		if (view[nextPos] == optionDelimiter) {
-			result.emplace_back(nameInfo, SubstringViewInfo{});
-			begin = nextPos;
 			continue;
-		}
-
-		SubstringViewInfo argInfo;
-		if (view[nextPos] == optionBegin) {
+		} else if (view[begin] == optionBegin) {
+			SubstringViewInfo argInfo;
 			level++;
-			const index argBegin = nextPos + 1;
+			const index argBegin = begin + 1;
 			begin = argBegin;
 			while (level > 0) {
 				wchar_t optionBoundSymbols[] = { optionBegin, optionEnd, L'\0' };
@@ -99,9 +87,11 @@ Tokenizer::parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wch
 			}
 
 			argInfo = StringUtils::trimInfo(view, { argBegin, begin - argBegin - 1 });
+			result.push_back({ nameInfo, argInfo });
+		} else {
+			cl.error(L"unexpected symbol '{}', after '{}', before '{}'", view[begin], view.substr(0, begin), view.substr(begin));
+			throw OptionParser::Exception{};
 		}
-
-		result.push_back({ nameInfo, argInfo });
 
 		wchar_t afterArgSymbols[] = { L' ', L'\t', L'\0' };
 		begin = view.find_first_not_of(afterArgSymbols, begin);
@@ -109,7 +99,10 @@ Tokenizer::parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wch
 			return result;
 		}
 		if (view[begin] != optionDelimiter) {
-			cl.error(L"unexpected token '{}': expected end of string or option delimiter '{}', after '{}', before '{}'", view[begin], optionDelimiter, view.substr(0, nameEnd), view.substr(nameEnd));
+			cl.error(
+				L"unexpected symbol '{}': expected end of string or option delimiter '{}', after '{}', before '{}'", view[begin], optionDelimiter, view.substr(0, nameEnd),
+				view.substr(nameEnd)
+			);
 			throw OptionParser::Exception{};
 		}
 		begin++;

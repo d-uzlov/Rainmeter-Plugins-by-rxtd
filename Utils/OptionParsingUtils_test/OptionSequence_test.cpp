@@ -107,6 +107,15 @@ namespace rxtd::test::option_parsing {
 			);
 		}
 
+		TEST_METHOD(test_fail_nameWithSpace) {
+			Assert::ExpectException<OptionParser::Exception>(
+				[]() {
+					auto opt = Option{ L"name name2" };
+					auto seq = opt.asSequence(L'(', L')', L',', createLogger());
+				}
+			);
+		}
+
 		TEST_METHOD(test_fail_noClosing) {
 			Assert::ExpectException<OptionParser::Exception>(
 				[]() {
