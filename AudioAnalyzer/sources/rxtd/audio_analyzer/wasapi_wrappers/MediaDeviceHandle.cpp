@@ -83,10 +83,11 @@ void MediaDeviceHandle::readType() noexcept(false) {
 	case eCapture:
 		type = MediaDeviceType::eINPUT;
 		break;
-	case eAll: break;
-	case EDataFlow_enum_count: break;
+
+	case eAll:
+	case EDataFlow_enum_count:
+		throw ComException{ -1, L"invalid EDataFlow value from IMMEndpoint.GetDataFlow()" };
 	}
-	throw ComException{ -1, L"invalid EDataFlow value from IMMEndpoint.GetDataFlow()" };
 }
 
 void MediaDeviceHandle::readId() noexcept(false) {

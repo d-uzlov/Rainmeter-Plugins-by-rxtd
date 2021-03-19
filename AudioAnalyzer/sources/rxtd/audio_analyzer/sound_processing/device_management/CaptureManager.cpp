@@ -244,11 +244,23 @@ void CaptureManager::tryToRecoverFromExclusive() {
 std::optional<MediaDeviceHandle> CaptureManager::getDevice(const SourceDesc& desc) {
 	switch (desc.type) {
 	case SourceDesc::Type::eDEFAULT_INPUT:
-		return enumeratorWrapper.getDefaultDevice(wasapi_wrappers::MediaDeviceType::eINPUT);
+		try {
+			return enumeratorWrapper.getDefaultDevice(wasapi_wrappers::MediaDeviceType::eINPUT);
+		} catch (ComException& e) {
+			logger.error(L"can't get default input device: error {} because of: {}", e.getCode(), e.getSource());
+		}
 	case SourceDesc::Type::eDEFAULT_OUTPUT:
-		return enumeratorWrapper.getDefaultDevice(wasapi_wrappers::MediaDeviceType::eOUTPUT);
+		try {
+			return enumeratorWrapper.getDefaultDevice(wasapi_wrappers::MediaDeviceType::eOUTPUT);
+		} catch (ComException& e) {
+			logger.error(L"can't get default output device: error {} because of: {}", e.getCode(), e.getSource());
+		}
 	case SourceDesc::Type::eID:
-		return enumeratorWrapper.getDeviceByID(desc.id);
+		try {
+			return enumeratorWrapper.getDeviceByID(desc.id);
+		} catch(ComException& e) {
+			logger.error(L"can't get device with specified id: error {} because of: {}, id: {}", e.getCode(), e.getSource(), desc.id);
+		}
 	}
 
 	return {};

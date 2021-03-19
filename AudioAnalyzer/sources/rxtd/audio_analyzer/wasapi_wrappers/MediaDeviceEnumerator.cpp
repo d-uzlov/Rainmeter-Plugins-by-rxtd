@@ -8,48 +8,40 @@ using rxtd::audio_analyzer::wasapi_wrappers::MediaDeviceHandle;
 
 MediaDeviceEnumerator::MediaDeviceEnumerator() : GenericComWrapper(
 	[](auto ptr) {
-		return S_OK == CoCreateInstance(
+		throwOnError(CoCreateInstance(
 			__uuidof(MMDeviceEnumerator),
 			nullptr,
 			CLSCTX_INPROC_SERVER,
 			__uuidof(IMMDeviceEnumerator),
 			reinterpret_cast<void**>(ptr)
-		);
+		), L"MediaDeviceEnumerator::ctor");
 	}
 ) {}
 
-std::optional<MediaDeviceHandle> MediaDeviceEnumerator::getDeviceByID(const string& id) {
-	try {
-		return MediaDeviceHandle{
-			[&](auto ptr) {
-				throwOnError(ref().GetDevice(id.c_str(), ptr), L"Device with specified id is not found");
-				return true;
-			},
-			id
-		};
-	} catch (ComException&) {
-		return {};
-	}
+MediaDeviceHandle MediaDeviceEnumerator::getDeviceByID(const string& id) {
+	return MediaDeviceHandle{
+		[&](auto ptr) {
+			throwOnError(ref().GetDevice(id.c_str(), ptr), L"Device with specified id is not found");
+			return true;
+		},
+		id
+	};
 }
 
-std::optional<MediaDeviceHandle> MediaDeviceEnumerator::getDefaultDevice(MediaDeviceType type) {
-	try {
-		return MediaDeviceHandle{
-			[&](auto ptr) {
-				throwOnError(
-					ref().GetDefaultAudioEndpoint(
-						type == MediaDeviceType::eOUTPUT ? eRender : eCapture,
-						eConsole,
-						ptr
-					), L"Default audio device is not found"
-				);
-				return true;
-			},
-			type
-		};
-	} catch (ComException&) {
-		return {};
-	}
+MediaDeviceHandle MediaDeviceEnumerator::getDefaultDevice(MediaDeviceType type) {
+	return MediaDeviceHandle{
+		[&](auto ptr) {
+			throwOnError(
+				ref().GetDefaultAudioEndpoint(
+					type == MediaDeviceType::eOUTPUT ? eRender : eCapture,
+					eConsole,
+					ptr
+				), L"Default audio device is not found"
+			);
+			return true;
+		},
+		type
+	};
 }
 
 std::vector<MediaDeviceHandle> MediaDeviceEnumerator::getActiveDevices(MediaDeviceType type) {
@@ -61,10 +53,12 @@ std::vector<MediaDeviceHandle> MediaDeviceEnumerator::getCollection(
 ) {
 	GenericComWrapper<IMMDeviceCollection> collection{
 		[&](auto ptr) {
-			return S_OK == ref().EnumAudioEndpoints(
-				type == MediaDeviceType::eOUTPUT ? eRender : eCapture,
-				deviceStateMask,
-				ptr
+			throwOnError(
+				ref().EnumAudioEndpoints(
+					type == MediaDeviceType::eOUTPUT ? eRender : eCapture,
+					deviceStateMask,
+					ptr
+				), L"MediaDeviceEnumerator::getCollection::IMMDeviceCollection::ctor"
 			);
 		}
 	};
@@ -72,19 +66,23 @@ std::vector<MediaDeviceHandle> MediaDeviceEnumerator::getCollection(
 	static_assert(std::is_same<UINT, uint32_t>::value);
 
 	uint32_t devicesCountUINT;
-	collection.ref().GetCount(&devicesCountUINT);
+	throwOnError(collection.ref().GetCount(&devicesCountUINT), L"MediaDeviceEnumerator::getCollection::IMMDeviceCollection::GetCount");
 	const index devicesCount = devicesCountUINT;
 
 	std::vector<MediaDeviceHandle> result;
 	for (index i = 0; i < devicesCount; ++i) {
-		MediaDeviceHandle device{
-			[&](auto ptr) {
-				return S_OK == collection.ref().Item(static_cast<UINT>(i), ptr);
-			},
-			type
-		};
+		try {
+			MediaDeviceHandle device{
+				[&](auto ptr) {
+					return S_OK == collection.ref().Item(static_cast<UINT>(i), ptr);
+				},
+				type
+			};
 
-		result.push_back(std::move(device));
+			result.push_back(std::move(device));
+		} catch (ComException&) {
+			// ignore all COM exceptions for list forming
+		}
 	}
 
 	return result;

@@ -16,12 +16,27 @@ namespace rxtd::audio_analyzer::wasapi_wrappers {
 	public:
 		MediaDeviceEnumerator();
 
+		/// <summary>
+		/// Throws ComException on error.
+		/// </summary>
+		/// <param name="id">Id of the required device</param>
+		/// <returns>Valid MediaDeviceHandle object</returns>
 		[[nodiscard]]
-		std::optional<MediaDeviceHandle> getDeviceByID(const string& id);
+		MediaDeviceHandle getDeviceByID(const string& id);
 
+		/// <summary>
+		/// Throws ComException on error.
+		/// </summary>
+		/// <param name="type">Type of the required device</param>
+		/// <returns>Valid MediaDeviceHandle object</returns>
 		[[nodiscard]]
-		std::optional<MediaDeviceHandle> getDefaultDevice(MediaDeviceType type);
+		MediaDeviceHandle getDefaultDevice(MediaDeviceType type);
 
+		/// <summary>
+		/// Throws ComException on error.
+		/// </summary>
+		/// <param name="type">Type of the required devices</param>
+		/// <returns>List of valid MediaDeviceHandle objects</returns>
 		[[nodiscard]]
 		std::vector<MediaDeviceHandle> getActiveDevices(MediaDeviceType type);
 

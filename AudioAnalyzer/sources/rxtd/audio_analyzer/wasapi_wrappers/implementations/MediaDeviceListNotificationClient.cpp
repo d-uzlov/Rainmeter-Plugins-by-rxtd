@@ -17,8 +17,16 @@ void MediaDeviceListNotificationClient::init(MediaDeviceEnumerator& enumerator) 
 		activeDevices.insert(dev.getId() % own());
 	}
 
-	defaultInputId = enumerator.getDefaultDevice(MediaDeviceType::eINPUT).value_or(MediaDeviceHandle{}).getId();
-	defaultOutputId = enumerator.getDefaultDevice(MediaDeviceType::eOUTPUT).value_or(MediaDeviceHandle{}).getId();
+	try {
+		defaultInputId = enumerator.getDefaultDevice(MediaDeviceType::eINPUT).getId();
+	} catch(winapi_wrappers::ComException&) {
+		defaultInputId.clear();
+	}
+	try {
+		defaultOutputId = enumerator.getDefaultDevice(MediaDeviceType::eOUTPUT).getId();
+	} catch(winapi_wrappers::ComException&) {
+		defaultOutputId.clear();
+	}
 }
 
 void MediaDeviceListNotificationClient::deinit(MediaDeviceEnumerator& enumerator) {
