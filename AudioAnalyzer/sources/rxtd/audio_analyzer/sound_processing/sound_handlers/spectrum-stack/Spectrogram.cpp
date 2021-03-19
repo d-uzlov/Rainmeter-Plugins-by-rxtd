@@ -61,6 +61,11 @@ ParamsContainer Spectrogram::vParseParams(ParamParseContext& context) const noex
 	if (!context.options.get(L"colors").empty()) {
 		auto colorsDescriptionList = context.options.get(L"colors").asList(L';');
 		std::tie(params.colors, params.colorLevels) = parseColors(colorsDescriptionList, defaultColorSpace, context.parser, context.log.context(L"colors: "));
+
+		if (!context.options.get(L"baseColor").empty()
+			|| !context.options.get(L"maxColor").empty()) {
+			context.log.warning(L"option 'colors' disables 'baseColor' and 'maxColor' options");
+		}
 	} else {
 		params.colors.resize(2);
 		params.colors[0].color = context.parser.parse(context.options, L"baseColor").asCustomOr(Color{ 0.0f, 0.0f, 0.0f }, defaultColorSpace);
