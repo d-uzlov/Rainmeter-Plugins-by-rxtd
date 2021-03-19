@@ -87,8 +87,8 @@ void BandResampler::parseBandsElement(isview type, const Option& bandParams, std
 		throw InvalidOptionsException{};
 	}
 
-	const auto min = parser.parse(map.get(L"min"), L"bands: min").as<float>();
-	const auto max = parser.parse(map.get(L"max"), L"bands: min").as<float>();
+	const auto min = parser.parse(map.get(L"freqMin"), L"bands: freqMin").as<float>();
+	const auto max = parser.parse(map.get(L"freqMax"), L"bands: freqMax").as<float>();
 	if (max <= min) {
 		cl.error(L"{}: max must be > min", type);
 		throw InvalidOptionsException{};
