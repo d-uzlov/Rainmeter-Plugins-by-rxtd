@@ -21,13 +21,13 @@ ParamsContainer WaveForm::vParseParams(ParamParseContext& context) const noexcep
 
 	params.width = parser.parse(options, L"width").valueOr(100);
 	if (params.width < 2) {
-		context.log.error(L"width must be >= 2 but {} found", params.width);
+		context.log.error(L"width: value must be >= 2 but {} found", params.width);
 		throw InvalidOptionsException{};
 	}
 
 	params.height = parser.parse(options, L"height").valueOr(100);
 	if (params.height < 2) {
-		context.log.error(L"height must be >= 2 but {} found", params.height);
+		context.log.error(L"height: value must be >= 2 but {} found", params.height);
 		throw InvalidOptionsException{};
 	}
 
@@ -35,12 +35,12 @@ ParamsContainer WaveForm::vParseParams(ParamParseContext& context) const noexcep
 		context.log.warning(L"dangerously big width and height: {}, {}", params.width, params.height);
 	}
 
-	params.resolution = parser.parse(options, L"resolution").valueOr(50.0);
-	if (params.resolution <= 0) {
-		context.log.warning(L"resolution must be > 0 but {} found. Assume 100", params.resolution);
-		params.resolution = 100;
+	auto updateRate = context.parser.parse(context.options, L"UpdateRate").valueOr(20.0);
+	if (updateRate < 1.0 || updateRate > 200.0) {
+		context.log.error(L"UpdateRate: invalid value {}, must be in range [1, 200]", updateRate);
+		throw InvalidOptionsException{};
 	}
-	params.resolution *= 0.001;
+	params.resolution = 1.0 / updateRate;
 
 	params.folder = context.rain.getPathFromCurrent(options.get(L"folder").asString() % own());
 
@@ -67,7 +67,7 @@ ParamsContainer WaveForm::vParseParams(ParamParseContext& context) const noexcep
 	} else if (ldpString == L"never") {
 		params.lineDrawingPolicy = LDP::eNEVER;
 	} else {
-		context.log.warning(L"lineDrawingPolicy '{}' is not recognized", ldpString);
+		context.log.warning(L"lineDrawingPolicy: unknown value: {}", ldpString);
 		throw InvalidOptionsException{};
 	}
 

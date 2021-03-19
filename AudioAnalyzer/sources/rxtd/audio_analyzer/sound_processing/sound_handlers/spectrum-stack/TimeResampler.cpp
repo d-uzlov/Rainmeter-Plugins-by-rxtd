@@ -10,15 +10,24 @@ using ParamsContainer = HandlerBase::ParamsContainer;
 ParamsContainer TimeResampler::vParseParams(ParamParseContext& context) const noexcept(false) {
 	Params params;
 
-	params.granularity = context.parser.parse(context.options, L"granularity").valueOr(1000.0 / 60.0);
-	params.granularity = std::max(params.granularity, 0.01);
-	params.granularity *= 0.001;
+	auto updateRate = context.parser.parse(context.options, L"UpdateRate").valueOr(60.0);
+	if (updateRate < 1.0 || updateRate > 200.0) {
+		context.log.error(L"UpdateRate: invalid value {}, must be in range [1, 200]", updateRate);
+		throw InvalidOptionsException{};
+	}
+	params.granularity = 1.0 / updateRate;
 
 	params.attack = context.parser.parse(context.options, L"attack").valueOr(0.0);
-	params.decay = context.parser.parse(context.options, L"decay").valueOr(params.attack);
+	if (params.attack < 0.0) {
+		context.log.error(L"attack: invalid value {}, must be in range [0, infinity]", params.attack);
+		throw InvalidOptionsException{};
+	}
 
-	params.attack = std::max(params.attack, 0.0);
-	params.decay = std::max(params.decay, 0.0);
+	params.decay = context.parser.parse(context.options, L"decay").valueOr(params.attack);
+	if (params.decay < 0.0) {
+		context.log.error(L"decay: invalid value {}, must be in range [0, infinity]", params.decay);
+		throw InvalidOptionsException{};
+	}
 
 	params.attack = params.attack * 0.001;
 	params.decay = params.decay * 0.001;

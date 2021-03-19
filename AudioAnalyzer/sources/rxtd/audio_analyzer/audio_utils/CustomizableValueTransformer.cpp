@@ -119,61 +119,100 @@ CVT CVT::parse(sview transformDescription, OptionParser& parser, const Logger& c
 
 CVT::TransformationInfo CVT::parseTransformation(const Option& nameOpt, const OptionMap& params, OptionParser& parser, const Logger& cl) {
 	const auto transformName = nameOpt.asIString();
-	TransformationInfo tr{};
 
 	if (transformName == L"db") {
-		tr.type = TransformType::eDB;
+		return parseDb(params, parser, cl);
 	} else if (transformName == L"map") {
-		tr.type = TransformType::eMAP;
-
-		auto sourceRangeOpt = params.get(L"from");
-		if (sourceRangeOpt.empty()) {
-			cl.error(L"from: value is required");
-			throw option_parsing::OptionParser::Exception{};
-		}
-
-		auto sourceRange = sourceRangeOpt.asList(L':');
-		if (sourceRange.size() != 2) {
-			cl.error(L"from: need 2 values with syntax: <value1> : <value2>, but found {} values: {}", sourceRange.size(), sourceRangeOpt.asString());
-			throw option_parsing::OptionParser::Exception{};
-		}
-
-		float linMin = parser.parse(sourceRange.get(0), L"from: first").as<float>();
-		float linMax = parser.parse(sourceRange.get(1), L"from: second").as<float>();
-
-		if (std::abs(linMin - linMax) < std::numeric_limits<float>::epsilon()) {
-			cl.error(L"from: values must be distinct, but {} and {} found", linMin, linMax);
-			throw option_parsing::OptionParser::Exception{};
-		}
-
-		float valMin = 0.0;
-		float valMax = 1.0;
-
-		if (auto destRange = params.get(L"to");
-			!destRange.empty()) {
-			auto range = destRange.asList(L':');
-			if (range.size() != 2) {
-				cl.error(L"need 2 params for target range but {} found", range.size());
-				cl.error(L"to: need 2 values with syntax: <value1> : <value2>, but found {} values: {}", range.size(), destRange.asString());
-				throw option_parsing::OptionParser::Exception{};
-			}
-			valMin = parser.parse(range.get(0), L"to: first").valueOr(valMin);
-			valMax = parser.parse(range.get(1), L"to: second").valueOr(valMax);
-		}
-
-		tr.interpolator.setParams(linMin, linMax, valMin, valMax);
-
+		return parseMap(params, parser, cl);
 	} else if (transformName == L"clamp") {
-		tr.type = TransformType::eCLAMP;
+		return parseClamp(params, parser, cl);
+	}
 
-		std::tie(tr.args[0], tr.args[1]) = std::minmax(
-			parser.parse(params, L"min").valueOr(0.0f),
-			parser.parse(params, L"max").valueOr(1.0f)
-		);
-	} else {
-		cl.error(L"transform type is not recognized: {}", transformName);
+	cl.error(L"transform type is not recognized: {}", transformName);
+	throw option_parsing::OptionParser::Exception{};
+}
+
+CVT::TransformationInfo CVT::parseDb(const OptionMap& params, OptionParser& parser, const Logger& cl) {
+	TransformationInfo tr{};
+	tr.type = TransformType::eDB;
+	return tr;
+}
+
+CVT::TransformationInfo CVT::parseMap(const OptionMap& params, OptionParser& parser, const Logger& cl) {
+	TransformationInfo tr{};
+
+	tr.type = TransformType::eMAP;
+
+	auto sourceRangeOpt = params.get(L"from");
+	if (sourceRangeOpt.empty()) {
+		cl.error(L"from: value is required");
 		throw option_parsing::OptionParser::Exception{};
 	}
+
+	auto sourceRange = sourceRangeOpt.asList(L':');
+	if (sourceRange.size() != 2) {
+		cl.error(L"from: need 2 values with syntax: \"<value1> : <value2>\", but found {} values: {}", sourceRange.size(), sourceRangeOpt);
+		throw option_parsing::OptionParser::Exception{};
+	}
+
+	float linMin = parser.parse(sourceRange.get(0), L"from: first").as<float>();
+	float linMax = parser.parse(sourceRange.get(1), L"from: second").as<float>();
+
+	if (std::abs(linMin - linMax) < std::numeric_limits<float>::epsilon()) {
+		cl.error(L"from: values must be distinct, but {} and {} found", linMin, linMax);
+		throw option_parsing::OptionParser::Exception{};
+	}
+
+	float valMin = 0.0;
+	float valMax = 1.0;
+
+	if (auto destRange = params.get(L"to");
+		!destRange.empty()) {
+		auto range = destRange.asList(L':');
+		if (range.size() != 2) {
+			cl.error(L"need 2 params for target range but {} found", range.size());
+			cl.error(L"to: need 2 values with syntax: \"<value1> : <value2>\", but found {} values: {}", range.size(), destRange);
+			throw option_parsing::OptionParser::Exception{};
+		}
+		valMin = parser.parse(range.get(0), L"to: first").valueOr(valMin);
+		valMax = parser.parse(range.get(1), L"to: second").valueOr(valMax);
+	}
+
+	tr.interpolator.setParams(linMin, linMax, valMin, valMax);
+
+	return tr;
+}
+
+CVT::TransformationInfo CVT::parseClamp(const OptionMap& params, OptionParser& parser, const Logger& cl) {
+	TransformationInfo tr{};
+
+	tr.type = TransformType::eCLAMP;
+
+	float min;
+	float max;
+
+	auto rangeOption = params.get(L"to");
+	if (rangeOption.empty()) {
+		min = 0.0f;
+		max = 1.0f;
+	} else {
+		auto range = rangeOption.asList(L':');
+		if (range.size() != 2) {
+			cl.error(L"to: need 2 values with syntax: \"<min> : <max>\", but found {} values: {}", range.size(), rangeOption);
+			throw option_parsing::OptionParser::Exception{};
+		}
+
+		min = parser.parse(range.get(0), L"to: first").as<float>();
+		max = parser.parse(range.get(1), L"to: second").as<float>();
+
+		if (min >= max) {
+			cl.error(L"to: must be min < max, but {} >= {} was found", min, max);
+			throw option_parsing::OptionParser::Exception{};
+		}
+	}
+
+	tr.args[0] = min;
+	tr.args[1] = max;
 
 	return tr;
 }

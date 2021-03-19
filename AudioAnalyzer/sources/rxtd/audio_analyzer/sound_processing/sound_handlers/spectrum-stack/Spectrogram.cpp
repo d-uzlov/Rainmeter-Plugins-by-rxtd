@@ -25,12 +25,12 @@ ParamsContainer Spectrogram::vParseParams(ParamParseContext& context) const noex
 		context.log.warning(L"dangerously large length {}", params.length);
 	}
 
-	params.resolution = context.parser.parse(context.options, L"resolution").valueOr(50.0);
-	if (params.resolution <= 0) {
-		context.log.error(L"resolution must be > 0 but {} found", params.resolution);
+	auto updateRate = context.parser.parse(context.options, L"UpdateRate").valueOr(20.0);
+	if (updateRate < 1.0 || updateRate > 200.0) {
+		context.log.error(L"UpdateRate: invalid value {}, must be in range [1, 200]", updateRate);
 		throw InvalidOptionsException{};
 	}
-	params.resolution *= 0.001;
+	params.resolution = 1.0 / updateRate;
 
 	params.folder = context.rain.getPathFromCurrent(context.options.get(L"folder").asString() % own());
 

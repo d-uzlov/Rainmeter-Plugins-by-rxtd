@@ -85,5 +85,9 @@ namespace rxtd::audio_analyzer::audio_utils {
 		// can throw OptionParser::Exception
 		[[nodiscard]]
 		static TransformationInfo parseTransformation(const Option& nameOpt, const OptionMap& params, OptionParser& parser, const Logger& cl);
+
+		static TransformationInfo parseDb(const OptionMap& params, OptionParser& parser, const Logger& cl);
+		static TransformationInfo parseMap(const OptionMap& params, OptionParser& parser, const Logger& cl);
+		static TransformationInfo parseClamp(const OptionMap& params, OptionParser& parser, const Logger& cl);
 	};
 }
