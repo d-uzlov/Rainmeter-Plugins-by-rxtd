@@ -202,7 +202,7 @@ namespace rxtd::audio_analyzer::handler {
 
 			try {
 				meta.params = ref.vParseParams(context);
-			} catch(option_parsing::OptionParser::Exception&) {
+			} catch (option_parsing::OptionParser::Exception&) {
 				throw InvalidOptionsException{};
 			}
 			meta.externalMethods.finish = ref.vGetExt_finish();
@@ -266,7 +266,13 @@ namespace rxtd::audio_analyzer::handler {
 			bool success = false;
 			DataSize dataSize;
 
+		private:
 			ConfigurationResult() = default;
+
+		public:
+			static ConfigurationResult getEmpty() {
+				return {};
+			}
 
 			ConfigurationResult(DataSize dataSize) : success(true), dataSize(std::move(dataSize)) { }
 

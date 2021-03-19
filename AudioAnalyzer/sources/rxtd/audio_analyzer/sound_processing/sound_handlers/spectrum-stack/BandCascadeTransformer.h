@@ -66,7 +66,7 @@ namespace rxtd::audio_analyzer::handler {
 		void vProcess(ProcessContext context, ExternalData& externalData) override;
 
 	private:
-		static const BandResampler* findBandResampler(const HandlerBase* source);
+		static const BandResampler* findBandResampler(const HandlerBase* source, Logger& logger);
 
 		[[nodiscard]]
 		float computeForBand(index band) const;

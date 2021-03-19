@@ -121,7 +121,7 @@ BandResampler::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalDa
 	fftSource = dynamic_cast<FftAnalyzer*>(config.sourcePtr);
 	if (fftSource == nullptr) {
 		cl.error(L"invalid source, need FftAnalyzer");
-		return {};
+		throw InvalidOptionsException{};
 	}
 
 	bandsCount = static_cast<index>(params.bandFreqs.size()) - 1;

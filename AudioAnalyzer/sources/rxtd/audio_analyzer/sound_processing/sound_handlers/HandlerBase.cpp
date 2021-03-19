@@ -36,17 +36,22 @@ bool HandlerBase::patch(
 		_inputDataSize = std::move(sourceDataSize);
 		_configuration = newConfig;
 
+		try {
 		const auto linkingResult = vConfigure(params, cl, snapshot.handlerSpecificData);
-		if (!linkingResult.success) {
+			if (!linkingResult.success) {
+				return {};
+			}
+
+			_data.size = linkingResult.dataSize;
+			_data.layers.inflatableCache.clear();
+			_data.layers.inflatableCache.resize(static_cast<size_t>(linkingResult.dataSize.layersCount));
+			_data.lastResults.setBuffersCount(linkingResult.dataSize.layersCount);
+			_data.lastResults.setBufferSize(linkingResult.dataSize.valuesCount);
+			_data.lastResults.fill(0.0f);
+		} catch(InvalidOptionsException&) {
+			// todo refactor to propagate exception
 			return {};
 		}
-
-		_data.size = linkingResult.dataSize;
-		_data.layers.inflatableCache.clear();
-		_data.layers.inflatableCache.resize(static_cast<size_t>(linkingResult.dataSize.layersCount));
-		_data.lastResults.setBuffersCount(linkingResult.dataSize.layersCount);
-		_data.lastResults.setBufferSize(linkingResult.dataSize.valuesCount);
-		_data.lastResults.fill(0.0f);
 
 		auto& sv = snapshot.values;
 		if (sv.getBuffersCount() != _data.size.layersCount || sv.getBufferSize() != _data.size.valuesCount) {

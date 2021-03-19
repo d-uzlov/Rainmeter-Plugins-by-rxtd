@@ -43,13 +43,15 @@ BandCascadeTransformer::vConfigure(const ParamsContainer& _params, Logger& cl, E
 
 	auto& config = getConfiguration();
 
-	resamplerPtr = findBandResampler(config.sourcePtr);
-	if (resamplerPtr == nullptr) {
-		cl.error(L"BandResampler is not found in the source chain");
-		return {};
-	}
+	resamplerPtr = findBandResampler(config.sourcePtr, cl);
 
 	const auto dataSize = config.sourcePtr->getDataSize();
+
+	if (resamplerPtr->getBandWeights(0).size() != dataSize.layersCount) {
+		cl.error(L"unexpected input size");
+		throw InvalidOptionsException{};
+	}
+
 	snapshot.clear();
 	snapshot.resize(static_cast<size_t>(dataSize.layersCount));
 
@@ -100,15 +102,22 @@ void BandCascadeTransformer::vProcess(ProcessContext context, ExternalData& exte
 	}
 }
 
-const BandResampler* BandCascadeTransformer::findBandResampler(const HandlerBase* source) {
+const BandResampler* BandCascadeTransformer::findBandResampler(const HandlerBase* source, Logger& logger) {
 	while (source != nullptr) {
 		auto ptr = dynamic_cast<const BandResampler*>(source);
 		if (ptr != nullptr) {
 			return ptr;
 		}
+		if (dynamic_cast<const BandCascadeTransformer*>(source) != nullptr) {
+			logger.error(L"only one BandCascadeTransformer is allowed in handler chain");
+			throw InvalidOptionsException{};
+		}
+
 		source = source->getConfiguration().sourcePtr;
 	}
-	return nullptr;
+
+	logger.error(L"BandResampler is not found in the source chain");
+	throw InvalidOptionsException{};
 }
 
 float BandCascadeTransformer::computeForBand(index band) const {
