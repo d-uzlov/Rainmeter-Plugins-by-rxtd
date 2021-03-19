@@ -135,7 +135,9 @@ DWORD WINAPI asyncRun(void* param) noexcept {
 				}
 			}
 		}
-	} catch (...) {}
+	} catch (...) {
+		RmLog(nullptr, 0, L"logger thread: unexpected exception");
+	}
 
 	// RmLog(nullptr, 0, L"asyncRun finished");
 

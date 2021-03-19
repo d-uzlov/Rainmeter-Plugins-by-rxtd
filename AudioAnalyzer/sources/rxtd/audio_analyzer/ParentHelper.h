@@ -90,7 +90,6 @@ namespace rxtd::audio_analyzer {
 			} settings;
 
 			Callbacks callbacks;
-			bool disconnected = false;
 		} mainFields;
 
 		struct RequestFields : DataWithLock {
@@ -106,6 +105,7 @@ namespace rxtd::audio_analyzer {
 		} requestFields;
 
 		SnapshotStruct snapshot;
+		std::atomic_bool exceptionHappened = false;
 
 	public:
 		~ParentHelper();
@@ -134,6 +134,8 @@ namespace rxtd::audio_analyzer {
 
 		void update();
 
+		void assertNoExceptions() const;
+
 	private:
 		void wakeThreadUp();
 
@@ -143,6 +145,7 @@ namespace rxtd::audio_analyzer {
 		void threadFunction();
 
 		void pUpdate();
+		void doDisconnectRoutine();
 		// returns true device format changed, false otherwise
 		bool reconnectToDevice();
 		void updateProcessings();

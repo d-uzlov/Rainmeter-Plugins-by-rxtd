@@ -137,6 +137,8 @@ void AudioParent::vReload() {
 }
 
 double AudioParent::vUpdate() {
+	helper.assertNoExceptions();
+
 	if (requestedSource.has_value()) {
 		helper.update();
 	}

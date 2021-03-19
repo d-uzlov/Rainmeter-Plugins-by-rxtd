@@ -51,11 +51,10 @@ FftAnalyzer::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData
 
 	auto& config = getConfiguration();
 
-	fftSize = fft_utils::FftSizeHelper::findNextAllowedLength(static_cast<index>(static_cast<double>(config.sampleRate) / params.binWidth), true);
-
+	const index requestedFftSize = static_cast<index>(static_cast<double>(config.sampleRate) / params.binWidth);
 	constexpr index minFftSize = 16;
 
-	fftSize = std::max<index>(fftSize, minFftSize);
+	fftSize = fft_utils::FftSizeHelper::findNextAllowedLength(std::max(requestedFftSize, minFftSize), true);
 
 	std::vector<float> window;
 	window.resize(static_cast<size_t>(fftSize));
