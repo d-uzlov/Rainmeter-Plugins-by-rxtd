@@ -156,7 +156,7 @@ Color rxtd::option_parsing::OptionParser::ParseContext::solveCustom
 	using Mode = Color::Mode;
 	Mode mode = defaultMode;
 
-	if (StringUtils::checkStartsWith(source, L"@")) {
+	if (source.startsWith(L"@")) {
 		source.remove_prefix(1);
 		auto [attr, colorDesc] = Option{ source }.breakFirst(L' ');
 		components = colorDesc.asList(L',');

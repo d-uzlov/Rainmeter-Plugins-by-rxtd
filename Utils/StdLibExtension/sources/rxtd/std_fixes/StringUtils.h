@@ -162,45 +162,6 @@ namespace rxtd::std_fixes {
 			return trimCopy(sview{ str });
 		}
 
-
-		template<typename CharTraits>
-		[[nodiscard]]
-		static bool checkEndsWith(
-			std::basic_string_view<wchar_t, CharTraits> str,
-			std::basic_string_view<wchar_t, CharTraits> suffix
-		) {
-			// from stackoverflow
-			return str.size() >= suffix.size() && 0 == str.compare(str.size() - suffix.size(), suffix.size(), suffix);
-		}
-
-		template<typename CharTraits>
-		[[nodiscard]]
-		static bool checkEndsWith(
-			std::basic_string_view<wchar_t, CharTraits> str,
-			const wchar_t* prefix
-		) {
-			return checkEndsWith(str, std::basic_string_view<wchar_t, CharTraits>{ prefix });
-		}
-
-		template<typename CharTraits>
-		[[nodiscard]]
-		static bool checkStartsWith(
-			std::basic_string_view<wchar_t, CharTraits> str,
-			std::basic_string_view<wchar_t, CharTraits> prefix
-		) {
-			// from stackoverflow
-			return str.size() >= prefix.size() && 0 == str.compare(0, prefix.size(), prefix);
-		}
-
-		template<typename CharTraits>
-		[[nodiscard]]
-		static bool checkStartsWith(
-			std::basic_string_view<wchar_t, CharTraits> str,
-			const wchar_t* prefix
-		) {
-			return checkStartsWith(str, std::basic_string_view<wchar_t, CharTraits>{ prefix });
-		}
-
 		template<typename CharTraits, typename Allocator>
 		static void substringInplace(
 			std::basic_string<wchar_t, CharTraits, Allocator>& str,

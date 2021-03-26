@@ -13,6 +13,9 @@ namespace rxtd::option_parsing {
 		[[nodiscard]]
 		static std::vector<SubstringViewInfo> parse(sview view, wchar_t delimiter);
 
+		[[nodiscard]]
+		static std::vector<SubstringViewInfo> parse(sview view, sview delimiter);
+
 		// can throw OptionParser::Exception
 		[[nodiscard]]
 		static std::vector<std::tuple<SubstringViewInfo, SubstringViewInfo, SubstringViewInfo>>
@@ -21,7 +24,9 @@ namespace rxtd::option_parsing {
 	private:
 		static void emitToken(std::vector<SubstringViewInfo>& list, index begin, index end);
 
-		static void tokenize(std::vector<SubstringViewInfo>& list, sview string, wchar_t delimiter);
+		static void tokenize(std::vector<SubstringViewInfo>& list, sview view, wchar_t delimiter);
+
+		static void tokenize(std::vector<SubstringViewInfo>& list, sview view, sview delimiter);
 
 		static void trimSpaces(std::vector<SubstringViewInfo>& list, sview string);
 	};

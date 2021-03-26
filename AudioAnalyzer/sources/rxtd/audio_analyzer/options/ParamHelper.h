@@ -15,6 +15,7 @@ namespace rxtd::audio_analyzer::options {
 		using OptionList = option_parsing::OptionList;
 		using OptionSequence = option_parsing::OptionSequence;
 		using Parser = option_parsing::OptionParser;
+		using GhostOption = option_parsing::GhostOption;
 
 	public:
 		class InvalidOptionsException : public std::runtime_error {
@@ -80,7 +81,7 @@ namespace rxtd::audio_analyzer::options {
 		// returns true when something changed, false otherwise
 		// can throw InvalidOptionsException
 		[[nodiscard]]
-		bool parseProcessing(sview name, Logger cl, ProcessingData& data) const;
+		bool parseProcessing(sview procName, Logger cl, ProcessingData& data) const;
 
 		[[nodiscard]]
 		std::vector<Channel> parseChannels(const OptionList& channelsStringList, Logger& logger) const;
@@ -88,6 +89,6 @@ namespace rxtd::audio_analyzer::options {
 		// returns true when something changed, false otherwise
 		// can throw InvalidOptionsException
 		[[nodiscard]]
-		bool parseHandlers(const OptionSequence& names, ProcessingData& data, const Logger& cl) const;
+		bool parseHandlers(array_view<std::pair<GhostOption, GhostOption>> treeDescription, ProcessingData& data, const Logger& cl) const;
 	};
 }

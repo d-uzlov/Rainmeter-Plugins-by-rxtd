@@ -120,6 +120,29 @@ namespace rxtd::std_fixes {
 		constexpr size_type length() const noexcept {
 			return static_cast<size_type>(base::length());
 		}
+
+
+		[[nodiscard]]
+		constexpr bool contains(const Elem ch) const noexcept {
+			return find(ch) != npos;
+		}
+
+		[[nodiscard]]
+		constexpr bool contains(view_type substring) const noexcept {
+			return find(substring) != npos;
+		}
+
+		[[nodiscard]]
+		constexpr bool startsWith(view_type prefix) const noexcept {
+			// from stackoverflow
+			return base::size() >= prefix.size() && 0 == compare(0, prefix.size(), prefix);
+		}
+
+		[[nodiscard]]
+		constexpr bool endsWith(view_type suffix) const noexcept {
+			// from stackoverflow
+			return base::size() >= suffix.size() && 0 == compare(base::size() - suffix.size(), suffix.size(), suffix);
+		}
 	};
 
 
@@ -224,6 +247,24 @@ namespace rxtd::std_fixes {
 		[[nodiscard]]
 		constexpr size_type length() const noexcept {
 			return static_cast<size_type>(base::length());
+		}
+
+
+		[[nodiscard]]
+		constexpr bool contains(view_type substring) const noexcept {
+			return find(substring) != npos;
+		}
+
+		[[nodiscard]]
+		constexpr bool startsWith(view_type prefix) const noexcept {
+			// from stackoverflow
+			return base::size() >= prefix.size() && 0 == compare(0, prefix.size(), prefix);
+		}
+
+		[[nodiscard]]
+		constexpr bool endsWith(view_type suffix) const noexcept {
+			// from stackoverflow
+			return base::size() >= suffix.size() && 0 == compare(base::size() - suffix.size(), suffix.size(), suffix);
 		}
 	};
 

@@ -79,6 +79,18 @@ OptionList Option::asList(wchar_t delimiter) && {
 	}
 }
 
+OptionList Option::asList(sview delimiter) const & {
+	return { getView(), Tokenizer::parse(getView(), delimiter) };
+}
+OptionList Option::asList(sview delimiter) && {
+	auto list = Tokenizer::parse(getView(), delimiter);
+	if (isOwningSource()) {
+		return { std::move(*this).consumeSource(), std::move(list) };
+	} else {
+		return { getView(), std::move(list) };
+	}
+}
+
 OptionSequence Option::asSequence(
 	wchar_t optionBegin, wchar_t optionEnd,
 	wchar_t optionDelimiter,

@@ -71,7 +71,7 @@ Lexer::Lexeme Lexer::readUntil(sview symbols) {
 
 std::optional<Lexer::Lexeme> Lexer::tryParseSymbols(array_view<sview> symbols) {
 	for (sview op : symbols) {
-		const bool found = StringUtils::checkStartsWith(source.substr(position), op);
+		const bool found = source.substr(position).startsWith(op);
 		if (found) {
 			position += op.length();
 			return Lexeme{ Type::eSYMBOL, op };

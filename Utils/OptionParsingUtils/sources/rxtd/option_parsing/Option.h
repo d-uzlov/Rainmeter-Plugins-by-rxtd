@@ -72,6 +72,12 @@ namespace rxtd::option_parsing {
 		OptionList asList(wchar_t delimiter) &&;
 
 		[[nodiscard]]
+		OptionList asList(sview delimiter) const &;
+
+		[[nodiscard]]
+		OptionList asList(sview delimiter) &&;
+
+		[[nodiscard]]
 		OptionSequence asSequence(
 			wchar_t optionBegin, wchar_t optionEnd,
 			wchar_t optionDelimiter,

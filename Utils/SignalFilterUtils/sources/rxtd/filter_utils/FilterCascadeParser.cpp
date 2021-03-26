@@ -49,15 +49,15 @@ FilterCascadeParser::parseFilter(const Option& nameOpt, const Option& argsOpt, c
 	auto cl = logger.context(L"{}: ", name);
 	const auto args = argsOpt.asMap(L',', L' ');
 
-	if (StringUtils::checkStartsWith(name, L"bq")) {
+	if (name.startsWith(L"bq")) {
 		return parseBQ(name, args, cl);
 	}
 
-	if (StringUtils::checkStartsWith(name, L"bw")) {
+	if (name.startsWith(L"bw")) {
 		return parseBW(name, args, cl);
 	}
 
-	cl.error(L"unknown filter type");
+	cl.error(L"unknown filter type: {}", name);
 	throw OptionParser::Exception{};
 }
 
@@ -118,7 +118,7 @@ FilterCascadeParser::parseBQ(isview name, const OptionMap& description, const Lo
 }
 
 FilterCascadeParser::FCF
-FilterCascadeParser::parseBW(isview name, const OptionMap& description, const  Logger& cl) {
+FilterCascadeParser::parseBW(isview name, const OptionMap& description, const Logger& cl) {
 	const index order = parser.parse(description, L"order").as<index>();
 	if (order <= 0 || order > 5) {
 		cl.error(L"order must be in range [1, 5] but {} found", order);

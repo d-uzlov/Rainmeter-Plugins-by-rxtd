@@ -25,6 +25,22 @@ std::vector<SubstringViewInfo> Tokenizer::parse(sview view, wchar_t delimiter) {
 	return tempList;
 }
 
+std::vector<SubstringViewInfo> Tokenizer::parse(sview view, sview delimiter) {
+	// this method is guarantied to return non empty views
+
+	if (view.empty()) {
+		return {};
+	}
+
+	std::vector<SubstringViewInfo> tempList{};
+
+	tokenize(tempList, view, delimiter);
+
+	trimSpaces(tempList, view);
+
+	return tempList;
+}
+
 std::vector<std::tuple<SubstringViewInfo, SubstringViewInfo, SubstringViewInfo>>
 Tokenizer::parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wchar_t optionDelimiter, bool allowPostfix, const Logger& cl) {
 	index begin = 0;
@@ -101,7 +117,7 @@ Tokenizer::parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wch
 				result.push_back({ nameInfo, argInfo, postfixInfo });
 				return result;
 			}
-			
+
 			auto postfixInfo = StringUtils::trimInfo(view, { begin, delimPos - begin });
 			result.push_back({ nameInfo, argInfo, postfixInfo });
 			if (view[delimPos] != optionDelimiter) {
@@ -148,18 +164,34 @@ void Tokenizer::emitToken(std::vector<SubstringViewInfo>& list, const index begi
 	list.emplace_back(begin, end - begin);
 }
 
-void Tokenizer::tokenize(std::vector<SubstringViewInfo>& list, sview string, wchar_t delimiter) {
+void Tokenizer::tokenize(std::vector<SubstringViewInfo>& list, sview view, wchar_t delimiter) {
 	index begin = 0;
 
-	for (index i = 0; i < static_cast<index>(string.length()); ++i) {
-		if (string[i] == delimiter) {
-			const index end = i;
-			emitToken(list, begin, end);
-			begin = end + 1;
+	while (true) {
+		const auto end = view.find(delimiter, begin);
+		if (end == sview::npos) {
+			emitToken(list, begin, view.length());
+			return;
 		}
-	}
 
-	emitToken(list, begin, string.length());
+		emitToken(list, begin, end);
+		begin = end + 1;
+	}
+}
+
+void Tokenizer::tokenize(std::vector<SubstringViewInfo>& list, sview view, sview delimiter) {
+	index begin = 0;
+
+	while (true) {
+		const auto end = view.find(delimiter, begin);
+		if (end == sview::npos) {
+			emitToken(list, begin, view.length());
+			return;
+		}
+
+		emitToken(list, begin, end);
+		begin = end + delimiter.length();
+	}
 }
 
 void Tokenizer::trimSpaces(std::vector<SubstringViewInfo>& list, sview string) {

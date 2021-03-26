@@ -58,8 +58,8 @@ bool ParamHelper::readOptions(Version _version) {
 	return anyChanges;
 }
 
-bool ParamHelper::parseProcessing(sview name, Logger cl, ProcessingData& data) const {
-	string processingOptionIndex = L"unit-"s += name;
+bool ParamHelper::parseProcessing(sview procName, Logger cl, ProcessingData& data) const {
+	string processingOptionIndex = L"unit-"s += procName;
 	auto processingDescriptionOption = rain.read(processingOptionIndex);
 
 	if (processingDescriptionOption.empty()) {
@@ -98,10 +98,37 @@ bool ParamHelper::parseProcessing(sview name, Logger cl, ProcessingData& data) c
 	}
 	data.handlersRaw = handlersOption.asIString();
 
-	auto handlersList = handlersOption.asSequence(L'(', L')', L',', false, cl);
+	auto handlersSequence = handlersOption.asSequence(L'(', L')', L',', true, cl);
+	std::vector<std::pair<GhostOption, GhostOption>> handlerTreeDescription;
+	for (auto [name, args, postfix] : handlersSequence) {
+		if (name.asString().contains(L"->")) {
+			if (!args.empty()) {
+				cl.error(L"only first handler of a chain is allowed to have source specified: {}({})", name, args);
+				throw InvalidOptionsException{};
+			}
+			GhostOption prev = {};
+			for (auto opt : name.asList(L"->")) {
+				handlerTreeDescription.push_back({ opt, prev });
+				prev = opt;
+			}
+		} else if (postfix.empty()) {
+			handlerTreeDescription.push_back({ name, args });
+		} else if (postfix.asString().startsWith(L"->")) {
+			handlerTreeDescription.push_back({ name, args });
+			GhostOption prev = name;
+			for (auto opt : postfix.asList(L"->")) {
+				handlerTreeDescription.push_back({ opt, prev });
+				prev = opt;
+			}
+		} else {
+			cl.error(L"invalid handler description: {}({}){}", name, args, postfix);
+			throw InvalidOptionsException{};
+		}
+	}
+
 	{
 		std::set<isview> handlerNames;
-		for (auto [nameOpt,_, _2] : handlersList) {
+		for (auto [nameOpt, args] : handlerTreeDescription) {
 			auto [iter, inserted] = handlerNames.insert(nameOpt.asIString());
 			if (!inserted) {
 				cl.error(L"found repeating handlers, invalidate processing");
@@ -110,7 +137,7 @@ bool ParamHelper::parseProcessing(sview name, Logger cl, ProcessingData& data) c
 		}
 	}
 
-	anyChanges |= parseHandlers(handlersList, data, cl);
+	anyChanges |= parseHandlers(handlerTreeDescription, data, cl);
 
 	anyChanges |= parseFilter(processingMap, data.filter, cl);
 	anyChanges |= parseTargetRate(processingMap, data.targetRate, cl);
@@ -233,12 +260,12 @@ std::vector<Channel> ParamHelper::parseChannels(const OptionList& channelsString
 	return result;
 }
 
-bool ParamHelper::parseHandlers(const OptionSequence& names, ProcessingData& data, const Logger& cl) const {
+bool ParamHelper::parseHandlers(array_view<std::pair<GhostOption, GhostOption>> treeDescription, ProcessingData& data, const Logger& cl) const {
 	auto oldOrder = std::exchange(data.handlerOrder, {});
 
 	bool anyChanges = false;
 
-	for (auto [nameOpt, sourceOpt, postfix] : names) {
+	for (auto [nameOpt, sourceOpt] : treeDescription) {
 		if (!checkNameAllowed(nameOpt.asString())) {
 			cl.error(L"invalid handler name: {}", nameOpt);
 			throw InvalidOptionsException{};

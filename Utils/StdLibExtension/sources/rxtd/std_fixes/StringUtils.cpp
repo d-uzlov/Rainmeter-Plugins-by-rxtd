@@ -57,7 +57,7 @@ SubstringViewInfo StringUtils::trimInfo(sview source, SubstringViewInfo viewInfo
 rxtd::index StringUtils::parseInt(sview view, bool forceHex) {
 	view = trim(view);
 
-	if (checkStartsWith(view, L"0x") || checkStartsWith(view, L"0X")) {
+	if (view.startsWith(L"0x") || view.startsWith(L"0X")) {
 		forceHex = true;
 		view = view.substr(2);
 	} else if (view[0] == L'+') {

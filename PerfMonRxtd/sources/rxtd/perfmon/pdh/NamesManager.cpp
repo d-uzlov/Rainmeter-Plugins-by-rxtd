@@ -141,7 +141,7 @@ void NamesManager::modifyNameLogicalDiskDriveLetter() {
 
 		if (item.originalName[1] == L':') {
 			item.displayName = item.originalName.substr(0, 2);
-		} else if (StringUtils::checkStartsWith(item.originalName, L"HarddiskVolume"sv)) {
+		} else if (item.originalName.startsWith(L"HarddiskVolume")) {
 			item.displayName = L"HarddiskVolume"sv;
 		}
 	}
@@ -161,7 +161,7 @@ void NamesManager::modifyNameLogicalDiskMountPath() {
 			if (slashPosition != sview::npos) {
 				item.displayName = item.originalName.substr(0, slashPosition + 1);
 			}
-		} else if (StringUtils::checkStartsWith(item.originalName, L"HarddiskVolume"sv)) {
+		} else if (item.originalName.startsWith(L"HarddiskVolume"sv)) {
 			item.displayName = L"HarddiskVolume"sv;
 		}
 	}
