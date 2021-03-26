@@ -46,6 +46,11 @@ AudioParent::AudioParent(Rainmeter&& _rain) :
 	setUseResultString(false);
 	initLogHelpers();
 
+	if (!rain.read(L"Changes").empty()) {
+		logger.error(L"changes: no changes are allowed in this version");
+		throw std::runtime_error{ "" };
+	}
+
 	parser.setLogger(logger);
 
 	// will throw std::runtime_error on invalid MagicNumber value,
