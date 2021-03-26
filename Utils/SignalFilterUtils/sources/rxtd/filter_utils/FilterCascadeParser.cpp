@@ -30,8 +30,8 @@ FilterCascadeCreator FilterCascadeParser::parse(const Option& description, const
 
 	parser.setLogger(logger);
 
-	for (auto filterDescription : description.asSequence(L'(', L')', L',', logger)) {
-		result.push_back(parseFilter(filterDescription.first, filterDescription.second, logger));
+	for (auto element : description.asSequence(L'(', L')', L',', false, logger)) {
+		result.push_back(parseFilter(element.name, element.args, logger));
 	}
 
 	return FilterCascadeCreator{ description.asString() % own(), result };

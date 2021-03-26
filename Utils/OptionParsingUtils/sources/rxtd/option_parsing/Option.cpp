@@ -82,20 +82,22 @@ OptionList Option::asList(wchar_t delimiter) && {
 OptionSequence Option::asSequence(
 	wchar_t optionBegin, wchar_t optionEnd,
 	wchar_t optionDelimiter,
+	bool allowPostfix,
 	const Logger& cl
 ) const & {
-	return { getView(), optionBegin, optionEnd, optionDelimiter, cl };
+	return { getView(), optionBegin, optionEnd, optionDelimiter, allowPostfix, cl };
 }
 
 OptionSequence Option::asSequence(
 	wchar_t optionBegin, wchar_t optionEnd,
 	wchar_t optionDelimiter,
+	bool allowPostfix,
 	const Logger& cl
 ) && {
 	if (isOwningSource()) {
-		return { std::move(*this).consumeSource(), optionBegin, optionEnd, optionDelimiter, cl };
+		return { std::move(*this).consumeSource(), optionBegin, optionEnd, optionDelimiter, allowPostfix, cl };
 	} else {
-		return { getView(), optionBegin, optionEnd, optionDelimiter, cl };
+		return { getView(), optionBegin, optionEnd, optionDelimiter, allowPostfix, cl };
 	}
 }
 

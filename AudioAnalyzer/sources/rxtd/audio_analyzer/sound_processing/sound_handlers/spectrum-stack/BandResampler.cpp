@@ -22,14 +22,14 @@ ParamsContainer BandResampler::vParseParams(ParamParseContext& context) const no
 
 	auto bandsLogger = context.log.context(L"bands: ");
 
-	auto bandsArg = bandsOption.asSequence(L'(', L')', L',', bandsLogger);
+	auto bandsArg = bandsOption.asSequence(L'(', L')', L',', false, bandsLogger);
 	if (bandsArg.getSize() != 1) {
 		bandsLogger.error(L"option must have exactly one value specified, one of: log, linear, custom");
 		throw InvalidOptionsException{};
 	}
 
 	parseBandsElement(
-		bandsArg.getElement(0).first.asIString(), bandsArg.getElement(0).second,
+		bandsArg.getElement(0).name.asIString(), bandsArg.getElement(0).args,
 		params.bandFreqs, context.parser, bandsLogger
 	);
 

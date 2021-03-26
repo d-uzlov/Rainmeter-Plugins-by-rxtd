@@ -15,8 +15,8 @@ namespace rxtd::option_parsing {
 
 		// can throw OptionParser::Exception
 		[[nodiscard]]
-		static std::vector<std::pair<SubstringViewInfo, SubstringViewInfo>>
-		parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wchar_t optionDelimiter, const Logger& cl);
+		static std::vector<std::tuple<SubstringViewInfo, SubstringViewInfo, SubstringViewInfo>>
+		parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wchar_t optionDelimiter, bool allowPostfix, const Logger& cl);
 
 	private:
 		static void emitToken(std::vector<SubstringViewInfo>& list, index begin, index end);

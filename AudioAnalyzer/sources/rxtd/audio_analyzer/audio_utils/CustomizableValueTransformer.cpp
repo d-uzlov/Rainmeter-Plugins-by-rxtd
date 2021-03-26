@@ -102,11 +102,11 @@ void CVT::applyToArray(array_view<float> source, array_span<float> dest) {
 CVT CVT::parse(sview transformDescription, OptionParser& parser, const Logger& cl) {
 	std::vector<TransformationInfo> transforms;
 
-	for (auto pair : Option{ transformDescription }.asSequence(L'(', L')', L',', cl)) {
-		auto logger = cl.context(L"{}: ", pair.first.asString());
-		auto argsMap = pair.second.asMap(L',', L' ');
+	for (auto element : Option{ transformDescription }.asSequence(L'(', L')', L',', false, cl)) {
+		auto logger = cl.context(L"{}: ", element.name.asString());
+		auto argsMap = element.args.asMap(L',', L' ');
 
-		transforms.emplace_back(parseTransformation(pair.first, argsMap, parser, logger));
+		transforms.emplace_back(parseTransformation(element.name, argsMap, parser, logger));
 
 		if (auto unused = argsMap.getListOfUntouched();
 			!unused.empty()) {

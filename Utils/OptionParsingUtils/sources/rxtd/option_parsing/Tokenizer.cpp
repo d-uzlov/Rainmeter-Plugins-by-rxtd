@@ -25,11 +25,11 @@ std::vector<SubstringViewInfo> Tokenizer::parse(sview view, wchar_t delimiter) {
 	return tempList;
 }
 
-std::vector<std::pair<SubstringViewInfo, SubstringViewInfo>>
-Tokenizer::parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wchar_t optionDelimiter, const Logger& cl) {
+std::vector<std::tuple<SubstringViewInfo, SubstringViewInfo, SubstringViewInfo>>
+Tokenizer::parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wchar_t optionDelimiter, bool allowPostfix, const Logger& cl) {
 	index begin = 0;
 	index level = 0;
-	std::vector<std::pair<SubstringViewInfo, SubstringViewInfo>> result;
+	std::vector<std::tuple<SubstringViewInfo, SubstringViewInfo, SubstringViewInfo>> result;
 
 	while (true) {
 
@@ -49,21 +49,21 @@ Tokenizer::parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wch
 		index nameEnd = view.find_first_of(nameEndSymbols, begin);
 
 		if (nameEnd == sview::npos) {
-			result.emplace_back(SubstringViewInfo{ begin, view.length() - begin }, SubstringViewInfo{});
+			result.push_back({ SubstringViewInfo{ begin, view.length() - begin }, SubstringViewInfo{}, SubstringViewInfo{} });
 			return result;
 		}
 
 		const SubstringViewInfo nameInfo = { begin, nameEnd - begin };
 
 		begin = view.find_first_not_of(L" \t", nameEnd);
+		SubstringViewInfo argInfo;
 		if (view[begin] == optionEnd) {
 			cl.error(L"unexpected closing delimiter '{}', after '{}', before '{}'", optionEnd, view.substr(0, begin), view.substr(begin));
 			throw OptionParser::Exception{};
 		} else if (view[begin] == optionDelimiter) {
-			result.emplace_back(nameInfo, SubstringViewInfo{});
+			result.push_back({ nameInfo, SubstringViewInfo{}, SubstringViewInfo{} });
 			continue;
 		} else if (view[begin] == optionBegin) {
-			SubstringViewInfo argInfo;
 			level++;
 			const index argBegin = begin + 1;
 			begin = argBegin;
@@ -87,25 +87,57 @@ Tokenizer::parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wch
 			}
 
 			argInfo = StringUtils::trimInfo(view, { argBegin, begin - argBegin - 1 });
-			result.push_back({ nameInfo, argInfo });
 		} else {
 			cl.error(L"unexpected symbol '{}', after '{}', before '{}'", view[begin], view.substr(0, begin), view.substr(begin));
 			throw OptionParser::Exception{};
 		}
 
-		wchar_t afterArgSymbols[] = { L' ', L'\t', L'\0' };
-		begin = view.find_first_not_of(afterArgSymbols, begin);
-		if (begin == sview::npos) {
-			return result;
+		if (allowPostfix) {
+			wchar_t afterArgSymbols[] = { optionBegin, optionEnd, optionDelimiter, L'\0' };
+			auto delimPos = view.find_first_of(afterArgSymbols, begin);
+
+			if (delimPos == sview::npos) {
+				auto postfixInfo = StringUtils::trimInfo(view, { begin, view.length() - begin });
+				result.push_back({ nameInfo, argInfo, postfixInfo });
+				return result;
+			}
+			
+			auto postfixInfo = StringUtils::trimInfo(view, { begin, delimPos - begin });
+			result.push_back({ nameInfo, argInfo, postfixInfo });
+			if (view[delimPos] != optionDelimiter) {
+				cl.error(
+					L"unexpected symbol '{}': expected end of string or option delimiter '{}', in place: after '{}', before '{}'",
+					view[delimPos],
+					optionDelimiter,
+					view.substr(0, delimPos),
+					view.substr(delimPos)
+				);
+				throw OptionParser::Exception{};
+			}
+
+			begin = delimPos + 1;
+		} else {
+			result.push_back({ nameInfo, argInfo, {} });
+
+			wchar_t afterArgSymbols[] = { L' ', L'\t', L'\0' };
+			begin = view.find_first_not_of(afterArgSymbols, begin);
+			if (begin == sview::npos) {
+				return result;
+			}
+			if (view[begin] != optionDelimiter) {
+				cl.error(
+					L"unexpected symbol '{}': expected end of string or option delimiter '{}', in place: after '{}', before '{}'",
+					view[begin],
+					optionDelimiter,
+					view.substr(0, begin),
+					view.substr(begin)
+				);
+				throw OptionParser::Exception{};
+			}
+
+			begin++;
 		}
-		if (view[begin] != optionDelimiter) {
-			cl.error(
-				L"unexpected symbol '{}': expected end of string or option delimiter '{}', after '{}', before '{}'", view[begin], optionDelimiter, view.substr(0, nameEnd),
-				view.substr(nameEnd)
-			);
-			throw OptionParser::Exception{};
-		}
-		begin++;
+
 	}
 }
 

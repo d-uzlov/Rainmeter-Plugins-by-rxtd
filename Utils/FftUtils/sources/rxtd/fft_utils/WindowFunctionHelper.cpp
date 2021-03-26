@@ -12,7 +12,7 @@ using rxtd::option_parsing::Option;
 using rxtd::option_parsing::OptionList;
 
 WindowFunctionHelper::WindowCreationFunc WindowFunctionHelper::parse(sview desc, option_parsing::OptionParser parser, Logger& cl) {
-	auto description = Option{ desc }.asSequence(L'(', L')', L',', cl);
+	auto description = Option{ desc }.asSequence(L'(', L')', L',', false, cl);
 
 	if (description.isEmpty()) {
 		return [](array_span<float> result) {
@@ -20,9 +20,9 @@ WindowFunctionHelper::WindowCreationFunc WindowFunctionHelper::parse(sview desc,
 		};
 	}
 
-	auto typeOpt = description.getElement(0).first;
+	auto typeOpt = description.getElement(0).name;
 	auto type = typeOpt.asIString();
-	auto argsOpt = description.getElement(0).second;
+	auto argsOpt = description.getElement(0).args;
 
 	if (type == L"none") {
 		return [](array_span<float> result) {

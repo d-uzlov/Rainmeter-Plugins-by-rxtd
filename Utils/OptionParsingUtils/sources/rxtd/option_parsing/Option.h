@@ -75,6 +75,7 @@ namespace rxtd::option_parsing {
 		OptionSequence asSequence(
 			wchar_t optionBegin, wchar_t optionEnd,
 			wchar_t optionDelimiter,
+			bool allowPostfix,
 			const Logger& cl
 		) const &;
 
@@ -82,6 +83,7 @@ namespace rxtd::option_parsing {
 		OptionSequence asSequence(
 			wchar_t optionBegin, wchar_t optionEnd,
 			wchar_t optionDelimiter,
+			bool allowPostfix,
 			const Logger& cl
 		) &&;
 

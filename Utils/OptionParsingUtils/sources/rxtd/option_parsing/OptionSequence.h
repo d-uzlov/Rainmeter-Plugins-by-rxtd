@@ -14,7 +14,14 @@ namespace rxtd::option_parsing {
 	class OptionSequence : public OptionBase {
 		using SubstringViewInfo = std_fixes::SubstringViewInfo;
 
-		std::vector<std::pair<SubstringViewInfo, SubstringViewInfo>> list;
+	public:
+		struct Element {
+			GhostOption name;
+			GhostOption args;
+			GhostOption postfix;
+		};
+
+		std::vector<std::tuple<SubstringViewInfo, SubstringViewInfo, SubstringViewInfo>> list;
 
 	public:
 		OptionSequence() = default;
@@ -23,18 +30,20 @@ namespace rxtd::option_parsing {
 			sview view,
 			wchar_t optionBegin, wchar_t optionEnd,
 			wchar_t optionDelimiter,
+			bool allowPostfix,
 			const Logger& cl
 		) : OptionBase(view) {
-			list = Tokenizer::parseSequence(getView(), optionBegin, optionEnd, optionDelimiter, cl);
+			list = Tokenizer::parseSequence(getView(), optionBegin, optionEnd, optionDelimiter, allowPostfix, cl);
 		}
 
 		OptionSequence(
 			SourceType&& source,
 			wchar_t optionBegin, wchar_t optionEnd,
 			wchar_t optionDelimiter,
+			bool allowPostfix,
 			const Logger& cl
 		) : OptionBase(std::move(source)) {
-			list = Tokenizer::parseSequence(getView(), optionBegin, optionEnd, optionDelimiter, cl);
+			list = Tokenizer::parseSequence(getView(), optionBegin, optionEnd, optionDelimiter, allowPostfix, cl);
 		}
 
 		class iterator {
@@ -55,7 +64,7 @@ namespace rxtd::option_parsing {
 			}
 
 			[[nodiscard]]
-			std::pair<GhostOption, GhostOption> operator*() const {
+			Element operator*() const {
 				return parent.getElement(ind);
 			}
 		};
@@ -81,9 +90,13 @@ namespace rxtd::option_parsing {
 		}
 
 		[[nodiscard]]
-		std::pair<GhostOption, GhostOption> getElement(index i) const {
+		Element getElement(index i) const {
 			auto pair = list[static_cast<size_t>(i)];
-			return { GhostOption{ pair.first.makeView(getView()) }, GhostOption{ pair.second.makeView(getView()) } };
+			return {
+				GhostOption{ std::get<0>(pair).makeView(getView()) },
+				GhostOption{ std::get<1>(pair).makeView(getView()) },
+				GhostOption{ std::get<2>(pair).makeView(getView()) },
+			};
 		}
 	};
 }

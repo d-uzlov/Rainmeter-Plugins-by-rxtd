@@ -98,10 +98,10 @@ bool ParamHelper::parseProcessing(sview name, Logger cl, ProcessingData& data) c
 	}
 	data.handlersRaw = handlersOption.asIString();
 
-	auto handlersList = handlersOption.asSequence(L'(', L')', L',', cl);
+	auto handlersList = handlersOption.asSequence(L'(', L')', L',', false, cl);
 	{
 		std::set<isview> handlerNames;
-		for (auto [nameOpt,_] : handlersList) {
+		for (auto [nameOpt,_, _2] : handlersList) {
 			auto [iter, inserted] = handlerNames.insert(nameOpt.asIString());
 			if (!inserted) {
 				cl.error(L"found repeating handlers, invalidate processing");
@@ -238,7 +238,7 @@ bool ParamHelper::parseHandlers(const OptionSequence& names, ProcessingData& dat
 
 	bool anyChanges = false;
 
-	for (auto [nameOpt, sourceOpt] : names) {
+	for (auto [nameOpt, sourceOpt, postfix] : names) {
 		if (!checkNameAllowed(nameOpt.asString())) {
 			cl.error(L"invalid handler name: {}", nameOpt);
 			throw InvalidOptionsException{};
