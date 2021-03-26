@@ -55,10 +55,6 @@ bool HandlerCacheHelper::parseHandler(sview name, isview source, HandlerInfo& in
 
 	OptionMap optionMap = descriptionOption.asMap(L'|', L' ');
 
-	if (source.empty()) {
-		source = optionMap.get(L"source").asIString();
-	}
-
 	if (info.rawDescription == descriptionOption.asString() && info.source == source) {
 		return {};
 	}
