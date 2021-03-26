@@ -23,24 +23,9 @@ SingleValueTransformer::vConfigure(const ParamsContainer& _params, Logger& cl, E
 	auto& config = getConfiguration();
 	const auto dataSize = config.sourcePtr->getDataSize();
 
-	transformersPerLayer.resize(static_cast<size_t>(dataSize.layersCount));
-	for (auto& tr : transformersPerLayer) {
-		tr = params.transformer;
-	}
-
 	return dataSize;
 }
 
-void SingleValueTransformer::vProcess(ProcessContext context, ExternalData& externalData) {
-	auto& config = getConfiguration();
-	auto& source = *config.sourcePtr;
-	const index layersCount = source.getDataSize().layersCount;
-
-	for (index i = 0; i < layersCount; ++i) {
-		for (auto chunk : source.getChunks(i)) {
-			auto dest = pushLayer(i);
-
-			params.transformer.applyToArray(chunk, dest);
-		}
-	}
+void SingleValueTransformer::vProcessLayer(array_view<float> chunk, array_span<float> dest, ExternalData& handlerSpecificData) {
+	params.transformer.applyToArray(chunk, dest);
 }

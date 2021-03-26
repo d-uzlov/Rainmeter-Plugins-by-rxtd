@@ -73,7 +73,7 @@ AudioParent::AudioParent(Rainmeter&& _rain) :
 	helper.init(rain, logger, threadingParams, parser, version, blockCaptureLoudnessChange);
 	const auto untouchedOptions = threadingParams.getListOfUntouched();
 	if (!untouchedOptions.empty()) {
-		logger.warning(L"Threading: unused options: {}", untouchedOptions);
+		logger.warning(L"threading: unused options: {}", untouchedOptions);
 	}
 
 	paramHelper.setRainmeter(rain);

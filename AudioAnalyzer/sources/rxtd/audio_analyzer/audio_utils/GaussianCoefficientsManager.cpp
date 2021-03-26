@@ -3,23 +3,28 @@
 
 #include "GaussianCoefficientsManager.h"
 
+#include "rxtd/std_fixes/MyMath.h"
+
 using rxtd::audio_analyzer::audio_utils::GaussianCoefficientsManager;
 
-std::vector<double> GaussianCoefficientsManager::generateGaussianKernel(index radius) {
-	std::vector<double> kernel;
-	kernel.resize(static_cast<std::vector<double>::size_type>(radius * 2 + 1));
+std::vector<float> GaussianCoefficientsManager::createGaussianKernel(float radius) {
+	std::vector<float> kernel;
+	kernel.resize(std_fixes::MyMath::roundTo<size_t>(radius) * 2 + 1);
+	if (kernel.empty()) {
+		return kernel;
+	}
 
-	const double restoredSigma = static_cast<double>(radius) * (1.0 / 3.0);
-	const double powerFactor = 1.0 / (2.0 * restoredSigma * restoredSigma);
+	const float sigma = radius * (1.0f / 3.0f);
+	const float powerFactor = 1.0f / (2.0f * sigma * sigma);
 
-	double r = -static_cast<double>(radius);
-	double sum = 0.0;
-	for (double& k : kernel) {
+	float r = -radius;
+	float sum = 0.0;
+	for (auto& k : kernel) {
 		k = std::exp(-r * r * powerFactor);
 		sum += k;
-		r++;
+		r += 1.0f;
 	}
-	const double sumInverse = 1.0 / sum;
+	const float sumInverse = 1.0f / sum;
 	for (auto& c : kernel) {
 		c *= sumInverse;
 	}

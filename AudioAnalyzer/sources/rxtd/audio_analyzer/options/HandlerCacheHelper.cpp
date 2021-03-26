@@ -85,7 +85,7 @@ bool HandlerCacheHelper::parseHandler(sview name, isview source, HandlerInfo& in
 
 	const auto unusedOptions = optionMap.getListOfUntouched();
 	if (unusedOptionsWarning && !unusedOptions.empty()) {
-		cl.warning(L"unused options: '{}'", unusedOptions);
+		cl.warning(L"unused options: {}", unusedOptions);
 	}
 
 	return true;
@@ -111,6 +111,10 @@ HandlerBase::HandlerMetaInfo HandlerCacheHelper::createHandlerPatcher(
 	if (type == L"peak") {
 		return HandlerBase::createMetaForClass<BlockPeak>(parseContext);
 	}
+	if (type == L"loudness") {
+		return HandlerBase::createMetaForClass<Loudness>(parseContext);
+	}
+
 	if (type == L"fft") {
 		return HandlerBase::createMetaForClass<FftAnalyzer>(parseContext);
 	}
@@ -120,17 +124,9 @@ HandlerBase::HandlerMetaInfo HandlerCacheHelper::createHandlerPatcher(
 	if (type == L"BandCascadeTransformer") {
 		return HandlerBase::createMetaForClass<BandCascadeTransformer>(parseContext);
 	}
+
 	if (type == L"UniformBlur") {
 		return HandlerBase::createMetaForClass<UniformBlur>(parseContext);
-	}
-	if (type == L"spectrogram") {
-		return HandlerBase::createMetaForClass<Spectrogram>(parseContext);
-	}
-	if (type == L"waveform") {
-		return HandlerBase::createMetaForClass<WaveForm>(parseContext);
-	}
-	if (type == L"loudness") {
-		return HandlerBase::createMetaForClass<Loudness>(parseContext);
 	}
 	if (type == L"ValueTransformer") {
 		return HandlerBase::createMetaForClass<SingleValueTransformer>(parseContext);
@@ -139,6 +135,13 @@ HandlerBase::HandlerMetaInfo HandlerCacheHelper::createHandlerPatcher(
 		return HandlerBase::createMetaForClass<TimeResampler>(parseContext);
 	}
 
-	cl.error(L"unknown type '{}'", type);
+	if (type == L"spectrogram") {
+		return HandlerBase::createMetaForClass<Spectrogram>(parseContext);
+	}
+	if (type == L"waveform") {
+		return HandlerBase::createMetaForClass<WaveForm>(parseContext);
+	}
+
+	cl.error(L"unknown type: {}", type);
 	throw HandlerBase::InvalidOptionsException{};
 }

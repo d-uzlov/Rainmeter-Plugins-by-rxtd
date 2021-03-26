@@ -5,20 +5,7 @@
 
 namespace rxtd::audio_analyzer::audio_utils {
 	class GaussianCoefficientsManager {
-		// radius -> coefs vector
-		std::map<index, std::vector<double>> blurCoefficients;
-
 	public:
-		array_view<double> forRadius(index radius) {
-			auto& vec = blurCoefficients[radius];
-			if (vec.empty()) {
-				vec = generateGaussianKernel(radius);
-			}
-
-			return vec;
-		}
-
-	private:
-		static std::vector<double> generateGaussianKernel(index radius);
+		static std::vector<float> createGaussianKernel(float radius);
 	};
 }

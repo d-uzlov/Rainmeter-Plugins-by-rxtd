@@ -23,8 +23,6 @@ namespace rxtd::audio_analyzer::handler {
 		};
 
 		Params params{};
-		std::vector<CVT> transformersPerLayer;
-		std::vector<index> countersPerLayer;
 
 	public:
 		[[nodiscard]]
@@ -44,7 +42,6 @@ namespace rxtd::audio_analyzer::handler {
 		[[nodiscard]]
 		ConfigurationResult vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData& externalData) override;
 
-	public:
-		void vProcess(ProcessContext context, ExternalData& externalData) override;
+		void vProcessLayer(array_view<float> chunk, array_span<float> dest, ExternalData& handlerSpecificData) override;
 	};
 }

@@ -138,5 +138,9 @@ void ProcessingManager::process(const ChannelMixer& mixer, clock::time_point kil
 		logger.error(L"{}: memory usage exceeded limit. Check your settings", e.getSourceName());
 		logger.error(L"processing stopped");
 		channelMap.clear();
+	} catch (handler::HandlerBase::InvalidOptionsException&) {
+		logger.error(L"{}: unknown runtime error");
+		logger.error(L"processing stopped");
+		channelMap.clear();
 	}
 }

@@ -2,7 +2,7 @@
 // Copyright (C) 2019 Danil Uzlov
 
 #include "UniformBlur.h"
-#include "BandResampler.h"
+#include "rxtd/audio_analyzer/audio_utils/GaussianCoefficientsManager.h"
 
 using rxtd::audio_analyzer::handler::UniformBlur;
 using rxtd::audio_analyzer::handler::HandlerBase;
@@ -11,9 +11,17 @@ using ParamsContainer = HandlerBase::ParamsContainer;
 ParamsContainer UniformBlur::vParseParams(ParamParseContext& context) const {
 	Params params;
 
-	//                                                        ?? ↓↓ looks best ?? at 0.25 ↓↓ ??
-	params.blurRadius = std::max<double>(context.parser.parse(context.options, L"Radius").valueOr(1.0) * 0.25, 0.0);
-	params.blurRadiusAdaptation = std::max<double>(context.parser.parse(context.options, L"RadiusAdaptation").valueOr(2.0), 0.0);
+	params.blurRadius = context.parser.parse(context.options, L"Radius").valueOr(1.0f);
+	if (params.blurRadius < 0.0f) {
+		context.log.error(L"radius: value must be >= 0.0");
+		throw InvalidOptionsException{};
+	}
+
+	params.blurCoefficients = audio_utils::GaussianCoefficientsManager::createGaussianKernel(params.blurRadius);
+	if (params.blurCoefficients.size() < 3) {
+		context.log.error(L"radius: value is too small, remove this handler is you don't need blur");
+		throw InvalidOptionsException{};
+	}
 
 	return params;
 }
@@ -28,33 +36,12 @@ UniformBlur::vConfigure(const ParamsContainer& _params, Logger& cl, ExternalData
 	return dataSize;
 }
 
-void UniformBlur::vProcess(ProcessContext context, ExternalData& externalData) {
-	auto& config = getConfiguration();
-	auto& source = *config.sourcePtr;
+void UniformBlur::vProcessLayer(array_view<float> chunk, array_span<float> dest, ExternalData& handlerSpecificData) {
+	auto kernel = array_view<float>{ params.blurCoefficients };
 
-	double theoreticalRadius = params.blurRadius;
+	auto radius = kernel.size() / 2;
 
-	const index cascadesCount = source.getDataSize().layersCount;
-	for (index i = 0; i < cascadesCount; ++i) {
-		for (auto chunk : source.getChunks(i)) {
-			auto cascadeResult = pushLayer(i);
-
-			const index radius = std::llround(theoreticalRadius);
-			if (radius < 1 || clock::now() > context.killTime) {
-				chunk.transferToSpan(cascadeResult);
-			} else {
-				blurCascade(chunk, cascadeResult, radius);
-			}
-		}
-
-		theoreticalRadius *= params.blurRadiusAdaptation;
-	}
-}
-
-void UniformBlur::blurCascade(array_view<float> source, array_span<float> dest, index radius) {
-	auto kernel = gcm.forRadius(radius);
-
-	const auto bandsCount = source.size();
+	const auto bandsCount = chunk.size();
 	for (index i = 0; i < bandsCount; ++i) {
 
 		index bandStartIndex = i - radius;
@@ -65,20 +52,17 @@ void UniformBlur::blurCascade(array_view<float> source, array_span<float> dest, 
 			bandStartIndex = 0;
 		}
 
-		double result = 0.0;
+		float result = 0.0f;
 		index kernelIndex = kernelStartIndex;
 		index bandIndex = bandStartIndex;
 
-		while (true) {
-			if (bandIndex >= bandsCount || kernelIndex >= static_cast<index>(kernel.size())) {
-				break;
-			}
-			result += kernel[kernelIndex] * source[bandIndex];
+		while (bandIndex < bandsCount && kernelIndex < kernel.size()) {
+			result += kernel[kernelIndex] * chunk[bandIndex];
 
 			kernelIndex++;
 			bandIndex++;
 		}
 
-		dest[i] = static_cast<float>(result);
+		dest[i] = result;
 	}
 }

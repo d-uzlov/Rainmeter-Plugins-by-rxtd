@@ -260,7 +260,26 @@ namespace rxtd::audio_analyzer::handler {
 		// if handler is potentially heavy,
 		// handler should try to return control to caller
 		// when time is more than context.killTime
-		virtual void vProcess(ProcessContext context, ExternalData& handlerSpecificData) = 0;
+		virtual void vProcess(ProcessContext context, ExternalData& handlerSpecificData) {
+			if (_configuration.sourcePtr == nullptr) {
+				throw InvalidOptionsException{};
+			}
+			if (_configuration.sourcePtr->getDataSize().layersCount != 1) {
+				throw InvalidOptionsException{};
+			}
+
+			for (auto chunk : _configuration.sourcePtr->getChunks(0)) {
+				vProcessLayer(chunk, pushLayer(0), handlerSpecificData);
+			}
+		}
+
+		virtual void vProcessLayer(array_view<float> chunk, array_span<float> dest, ExternalData& handlerSpecificData) {
+			// handlers must implement either vProcess or vProcessLayer
+			// in case handler implements vProcess, it would be inconvenient to supply empty vProcessLayer
+			// so a default implementation is provided
+			// but this implementation must never be called
+			throw InvalidOptionsException{};
+		}
 
 		struct ConfigurationResult {
 			bool success = false;
