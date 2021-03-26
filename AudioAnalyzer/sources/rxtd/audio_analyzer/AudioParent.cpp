@@ -53,14 +53,6 @@ AudioParent::AudioParent(Rainmeter&& _rain) :
 
 	parser.setLogger(logger);
 
-	// will throw std::runtime_error on invalid MagicNumber value,
-	// std::runtime_error is allowed to be thrown from constructor
-	version = Version::parseVersion(parser.parse(rain.read(L"MagicNumber"), L"MagicNumber").valueOr(0));
-
-	if (version < Version::eVERSION2) {
-		throw std::runtime_error{ "legacy mode is not allowed" };
-	}
-
 	bool blockCaptureLoudnessChange;
 	auto blockCaptureLoudness = rain.read(L"LockCaptureVolumeOnMax").asIString(L"never");
 	if (blockCaptureLoudness == L"never") {
