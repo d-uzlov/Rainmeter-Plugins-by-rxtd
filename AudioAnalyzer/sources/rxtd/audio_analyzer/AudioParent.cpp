@@ -163,17 +163,10 @@ double AudioParent::vUpdate() {
 	return 1.0;
 }
 
-void AudioParent::vCommand(isview bangArgs) {
-	if (bangArgs == L"updateDevList") {
-		return;
-	}
-
-	logHelpers.unknownCommand.log(bangArgs);
-}
-
 void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString) {
 	if (args.empty()) {
-		logHelpers.generic.log(L"Invalid section variable: at least 1 argument is needed");
+		logHelpers.generic.log(L"resolve: at least 1 argument is required");
+		setInvalid(true);
 		return;
 	}
 
@@ -185,7 +178,8 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 		}
 
 		if (args.size() < 2) {
-			logHelpers.generic.log(L"'current device' section variable need 2 args, but only 1 is found");
+			logHelpers.generic.log(L"resolve: current device: second argument is required");
+			setInvalid(true);
 			return;
 		}
 
@@ -237,10 +231,6 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 			resolveBufferString = di.state == CaptureManager::State::eOK ? L"1" : L"0";
 			return;
 		}
-		if (deviceProperty == L"status string") {
-			resolveBufferString = di.state == CaptureManager::State::eOK ? L"active" : L"down";
-			return;
-		}
 
 		if (di.state != CaptureManager::State::eOK) {
 			return;
@@ -262,6 +252,7 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 			resolveBufferString = std::to_wstring(di.format.samplesPerSec);
 		} else {
 			logHelpers.currentDeviceUnknownProp.log(deviceProperty);
+			setInvalid(true);
 		}
 
 		return;
@@ -311,23 +302,25 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 
 		auto procName = map.get(L"proc").asIString();
 		const auto channelName = map.get(L"channel").asIString();
-		const auto handlerName = map.get(L"handler").asIString();
+		const auto handlerName = map.get(L"handlerName").asIString();
 
 		if (channelName.empty()) {
 			if (optionName == L"value") {
-				logHelpers.generic.log(L"Resolve 'value' requires channel to be specified");
+				logHelpers.generic.log(L"Resolve: value: channel is required");
 			} else {
-				logHelpers.generic.log(L"Resolve 'handlerInfo' requires channel to be specified");
+				logHelpers.generic.log(L"Resolve handlerInfo: channel is required");
 			}
+			setInvalid(true);
 			return;
 		}
 
 		if (handlerName.empty()) {
 			if (optionName == L"value") {
-				logHelpers.generic.log(L"Resolve 'value' requires handler to be specified");
+				logHelpers.generic.log(L"Resolve: value: handlerName is required");
 			} else {
-				logHelpers.generic.log(L"Resolve 'handlerInfo' requires handler to be specified");
+				logHelpers.generic.log(L"Resolve handlerInfo: handlerName is required");
 			}
+			setInvalid(true);
 			return;
 		}
 
@@ -357,19 +350,26 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 				ind = parser.parse(map, L"index").valueOr(0);
 			} catch (option_parsing::OptionParser::Exception&) {
 				logHelpers.generic.log(L"resolve value: can't parse index");
+				setInvalid(true);
 				return;
 			}
 
 			buffer_printer::BufferPrinter bp;
-			const auto value = getValue(procName, handlerName, channelOpt.value(), ind);
-			bp.print(value);
+			try {
+				const auto value = getValue(procName, handlerName, channelOpt.value(), ind);
+				bp.print(value);
+			} catch (InvalidIndexException&) {
+				logger.error(L"fatal error: section variable requested value with out of bounds index");
+				// measure was invalidated in #getValue
+			}
 			resolveBufferString = bp.getBufferView();
 			return;
 		}
 		if (optionName == L"handlerInfo") {
 			auto propName = map.get(L"data").asIString();
 			if (propName.empty()) {
-				logHelpers.generic.log(L"handlerInfo must have 'prop' specified");
+				logHelpers.generic.log(L"handlerInfo must have 'data' specified");
+				setInvalid(true);
 				return;
 			}
 			resolveProp(resolveBufferString, procName, channelOpt.value(), handlerName, propName);
@@ -379,9 +379,10 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 	}
 
 	logHelpers.unknownSectionVariable.log(optionName);
+	setInvalid(true);
 }
 
-double AudioParent::getValue(isview proc, isview id, Channel channel, index ind) {
+double AudioParent::getValue(isview unitName, isview handlerName, Channel channel, index ind) {
 	if (!helper.getSnapshot().deviceIsAvailable) {
 		return 0.0;
 	}
@@ -389,7 +390,7 @@ double AudioParent::getValue(isview proc, isview id, Channel channel, index ind)
 	auto& data = helper.getSnapshot().data;
 	auto lock = data.getLock();
 
-	auto procIter = data._.find(proc);
+	auto procIter = data._.find(unitName);
 	if (procIter == data._.end()) {
 		return 0.0;
 	}
@@ -401,7 +402,7 @@ double AudioParent::getValue(isview proc, isview id, Channel channel, index ind)
 	}
 
 	auto& channelSnapshot = channelSnapshotIter->second;
-	auto handlerSnapshotIter = channelSnapshot.find(id);
+	auto handlerSnapshotIter = channelSnapshot.find(handlerName);
 	if (handlerSnapshotIter == channelSnapshot.end()) {
 		return 0.0;
 	}
@@ -409,11 +410,15 @@ double AudioParent::getValue(isview proc, isview id, Channel channel, index ind)
 	auto& values = handlerSnapshotIter->second.values;
 	const auto layersCount = values.getBuffersCount();
 	if (layersCount == 0) {
-		return 0.0;
+		logger.error(L"{}: {}: value was requested but handler doesn't have values", unitName, handlerName);
+		setInvalid(true);
+		throw InvalidIndexException{};
 	}
 	const auto valuesCount = values.getBufferSize();
 	if (ind >= valuesCount) {
-		return 0.0;
+		logger.error(L"{}: {}: there are {} values but index {} was requested", unitName, handlerName, valuesCount, ind);
+		setInvalid(true);
+		throw InvalidIndexException{};
 	}
 
 	return static_cast<double>(values[0][ind]);

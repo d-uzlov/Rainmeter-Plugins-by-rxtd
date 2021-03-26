@@ -41,11 +41,15 @@ double AudioChild::vUpdate() {
 		return 0.0;
 	}
 
-	double result = parent->getValue(options.procName, options.handlerName, options.channel, options.valueIndex);
-
-	result = options.transformer.apply(result);
-
-	return result;
+	try {
+		double result = parent->getValue(options.procName, options.handlerName, options.channel, options.valueIndex);
+		result = options.transformer.apply(result);
+		return result;
+	} catch (AudioParent::InvalidIndexException&) {
+		logger.error(L"fatal error: can't get value: index is out of bounds");
+		setInvalid(true);
+		return 0.0;
+	}
 }
 
 void AudioChild::vUpdateString(string& resultStringBuffer) {

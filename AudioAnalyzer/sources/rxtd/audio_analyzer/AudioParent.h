@@ -50,17 +50,25 @@ namespace rxtd::audio_analyzer {
 		ProcessingOrchestrator::Snapshot clearSnapshot;
 
 	public:
+		class InvalidIndexException : public std::runtime_error {
+		public:
+			explicit InvalidIndexException() : runtime_error("") {}
+		};
+
 		explicit AudioParent(Rainmeter&& rain);
 
 	protected:
 		void vReload() override;
 		double vUpdate() override;
-		void vCommand(isview bangArgs) override;
 		void vResolve(array_view<isview> args, string& resolveBufferString) override;
 
 	public:
+		/// <summary>
+		/// Returns value of a handler with specified name.
+		/// Function can throw InvalidIndexException when index is out of bounds.
+		/// </summary>
 		[[nodiscard]]
-		double getValue(isview proc, isview id, Channel channel, index ind);
+		double getValue(isview unitName, isview handlerName, Channel channel, index ind);
 
 		Version getVersion() const {
 			return version;

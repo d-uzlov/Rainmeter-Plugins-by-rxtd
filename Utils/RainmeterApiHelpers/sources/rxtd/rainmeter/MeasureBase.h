@@ -58,6 +58,7 @@ namespace rxtd::utils {
 
 		virtual void vCommand(isview bangArgs) {
 			logger.warning(L"Measure does not have commands");
+			setInvalid(true);
 		}
 
 		virtual void vResolve(array_view<isview> args, string& resolveBufferString) { }
