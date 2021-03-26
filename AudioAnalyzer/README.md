@@ -8,22 +8,21 @@ It provides access to various information extracted from "real-time" audio data 
 
 ## Usage
 
-Currently this plugin doesn't have finished convenient to use documentation.
-Documentation for currently avaiable version can be found
-[here](AudioAnalyzer/documentation/user-documentation/)
-in the form of text files.
+Up-to-date documentation and usage examples for the latest version are avaiable
+[here](https://li7xi.github.io/AudioAnalyzerDocs/).
+Huge thanks to [@LI7XI](https://github.com/LI7XI)
+for converting old text documentation into this convenient easy to use one.
 
-Usage examples can be found [near documentation](AudioAnalyzer/documentation/user-documentation/example-skins).
+If you have found a bug in the plugin or want to suggest a change, please, create an issue in the plugin repository.
 
-Main discussion can be found in the [plugin's thread on Rainmeter forum](https://forum.rainmeter.net/viewtopic.php?f=18&t=29226).
-Release of the last version of this plugin hasn't been announced officially yet because of unrefined documentation, so the link above contains outdated information about plugin.
+If you have troubles understanding how something in the plugin works, please, create an issue in [docs repository](https://github.com/LI7XI/AudioAnalyzerDocs).
 
-Formatted documentation is under development in collaboration with [@LI7XI](https://github.com/LI7XI).
-You can found discussion and links to current \[unfinished] live version of the documentation in their [repository](https://github.com/LI7XI/AudioAnalyzerDocs).
+If you want to discuss possible usages of the plugin, or need help with writing a skin that uses this plugin,
+you are encouraged to make a post in the [plugin's thread on Rainmeter forum](https://forum.rainmeter.net/viewtopic.php?f=18&t=29226).
 
 ## Download
 
-Archive with the last officially released verion can be found on [Releases page](https://github.com/d-uzlov/Rainmeter-Plugins-by-rxtd/releases/tag/AudioAnalyzer-v1.1.5).
+Current release is not uploaded yet, this text will be updated in the next commit.
 
 ## Building
 
