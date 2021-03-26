@@ -22,7 +22,7 @@ you are encouraged to make a post in the [plugin's thread on Rainmeter forum](ht
 
 ## Download
 
-Current release is not uploaded yet, this text will be updated in the next commit.
+Latest version is avaiable in the [releases page](https://github.com/d-uzlov/Rainmeter-Plugins-by-rxtd/releases/tag/AudioAnalyzer-v2.0-release).
 
 ## Building
 
