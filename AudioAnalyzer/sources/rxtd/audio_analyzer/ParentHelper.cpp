@@ -18,7 +18,8 @@ void ParentHelper::init(
 	const OptionMap& threadingMap,
 	option_parsing::OptionParser& parser,
 	Version version,
-	bool suppressVolumeChange
+	bool suppressVolumeChange,
+	sview devListChangeCallback
 ) {
 	mainFields.rain = std::move(_rain);
 	mainFields.logger = std::move(_logger);
@@ -31,6 +32,7 @@ void ParentHelper::init(
 	}
 
 	updateDeviceListStrings();
+	mainFields.rain.executeCommandAsync(devListChangeCallback);
 
 	threadSafeFields.notificationClient = {
 		[](auto ptr) {
@@ -390,99 +392,90 @@ void ParentHelper::updateProcessings() {
 }
 
 bool ParentHelper::updateDeviceListStrings() {
-	string input = makeDeviceListString(MediaDeviceType::eINPUT);
-	string output = makeDeviceListString(MediaDeviceType::eOUTPUT);
+	string list = makeDeviceListString(MediaDeviceType::eINPUT);
+	list += makeDeviceListString(MediaDeviceType::eOUTPUT);
 
-	auto lock = snapshot.deviceLists.getLock();
+	auto& wrapper = snapshot.deviceListWrapper;
+	auto lock = wrapper.getLock();
 
-	auto& lists = snapshot.deviceLists;
-
-	bool anyChanged = false;
-
-	if (lists.input != input) {
-		lists.input = input;
-		anyChanged = true;
-	}
-	if (lists.output != output) {
-		lists.output = output;
-		anyChanged = true;
+	if (wrapper.list != list) {
+		wrapper.list = list;
+		return true;
 	}
 
-	return anyChanged;
+	return false;
 }
 
 rxtd::string ParentHelper::makeDeviceListString(MediaDeviceType type) {
-	string result;
-
 	auto collection = enumeratorWrapper.getActiveDevices(type);
 	if (collection.empty()) {
-		return result;
+		return {};
 	}
 
 	buffer_printer::BufferPrinter bp;
-	auto append = [&](sview str, bool semicolon = true) {
+
+	auto append = [&](sview str) {
 		if (str.empty()) {
 			bp.append(L"<unknown>");
 		} else {
-			bp.append(L"{}", str);
+			for (auto c : str) {
+				if (c == L'%') {
+					bp.append(L"%percent");
+				} else if (c == L';') {
+					bp.append(L"%semicolon");
+				} else if (c == L'/') {
+					bp.append(L"%forwardslash");
+				} else {
+					bp.append(L"{}", c);
+				}
+			}
 		}
-		if (semicolon) {
+		bp.append(L";");
+	};
+
+	// returns success
+	auto appendFormat = [&](const wasapi_wrappers::WaveFormat& format) {
+		bp.append(L"{};", format.samplesPerSec);
+
+		if (format.channelLayout.ordered().empty()) {
+			append({});
+		} else {
+			auto channels = format.channelLayout.ordered();
+			for (auto channel : channels) {
+				bp.append(L"{},", ChannelUtils::getTechnicalName(channel));
+			}
 			bp.append(L";");
 		}
 	};
 
-	// returns success
-	auto appendFormat = [&](wasapi_wrappers::MediaDeviceHandle& device) {
-		try {
-			auto audioClient = device.openAudioClient();
-
-			auto& format = audioClient.getFormat();
-
-			bp.append(L"{};", format.samplesPerSec);
-
-			if (format.channelLayout.ordered().empty()) {
-				append({});
-			} else {
-				auto channels = format.channelLayout.ordered();
-				channels.remove_suffix(1);
-				for (auto channel : channels) {
-					bp.append(L"{},", ChannelUtils::getTechnicalName(channel));
-				}
-				bp.append(L"{};", ChannelUtils::getTechnicalName(format.channelLayout.ordered().back()));
-			}
-
-			return;
-		} catch (wasapi_wrappers::FormatException&) { } catch (winapi_wrappers::ComException&) { }
-
-		append({});
-		append({});
-	};
-
 	for (auto& device : collection) {
-		append(device.getId());
+		using DeviceInfo = wasapi_wrappers::MediaDeviceHandle::DeviceInfo;
 
+		DeviceInfo deviceInfo;
+		wasapi_wrappers::AudioClientHandle audioClient;
 		try {
-			const auto deviceInfo = device.readDeviceInfo();
+			deviceInfo = device.readDeviceInfo();
+			audioClient = device.openAudioClient();
 
-			append(deviceInfo.name);
-			append(deviceInfo.desc);
-			append(deviceInfo.formFactor);
+			// if anything has gone wrong, then ignore this device
 		} catch (winapi_wrappers::ComException&) {
-			append({});
-			append({});
-			append({});
+			continue;
+		} catch (wasapi_wrappers::FormatException&) {
+			continue;
 		}
 
-		appendFormat(device);
+		append(device.getId());
 
-		bp.append(L"\n");
+		append(deviceInfo.name);
+		append(deviceInfo.desc);
+		append(deviceInfo.formFactor);
+
+		appendFormat(audioClient.getFormat());
+
+		append(device.getType() == MediaDeviceType::eINPUT ? L"input" : L"output");
+
+		bp.append(L"/");
 	}
 
-	result = bp.getBufferView();
-	if (!result.empty()) {
-		result.pop_back(); // removes \0
-		result.pop_back(); // removes \n
-	}
-
-	return result;
+	return string{ bp.getBufferView() };
 }

@@ -18,7 +18,6 @@ namespace rxtd::audio_analyzer::wasapi_wrappers {
 		struct DeviceInfo {
 			string name;
 			string desc;
-			string fullFriendlyName;
 			string formFactor;
 		};
 
@@ -49,6 +48,11 @@ namespace rxtd::audio_analyzer::wasapi_wrappers {
 		[[nodiscard]]
 		sview getId() const {
 			return id;
+		}
+
+		[[nodiscard]]
+		auto getType() const {
+			return type;
 		}
 
 		/// <summary>

@@ -67,7 +67,8 @@ AudioParent::AudioParent(Rainmeter&& _rain) :
 	paramHelper.setParser(parser);
 
 	const auto threadingParams = rain.read(L"threading").asMap(L'|', L' ');
-	helper.init(rain, logger, threadingParams, parser, version, blockCaptureLoudnessChange);
+	auto onDeviceListChange = rain.read(L"callback-onDeviceListChange", false).asString();
+	helper.init(rain, logger, threadingParams, parser, version, blockCaptureLoudnessChange, onDeviceListChange);
 	const auto untouchedOptions = threadingParams.getListOfUntouched();
 	if (!untouchedOptions.empty()) {
 		logger.warning(L"threading: unused options: {}", untouchedOptions);
@@ -255,26 +256,10 @@ void AudioParent::vResolve(array_view<isview> args, string& resolveBufferString)
 		return;
 	}
 
-	if (optionName == L"device list input") {
-		auto& lists = helper.getSnapshot().deviceLists;
-		auto lock = lists.getLock();
-		resolveBufferString = lists.input;
-		return;
-	}
-	if (optionName == L"device list output") {
-		auto& lists = helper.getSnapshot().deviceLists;
-		auto lock = lists.getLock();
-		resolveBufferString = lists.output;
-		return;
-	}
-	if (optionName == L"device list") {
-		auto& snapshot = helper.getSnapshot();
-		auto listsLock = snapshot.deviceLists.getLock();
-		auto diLock = snapshot.deviceInfo.getLock();
-		resolveBufferString =
-			snapshot.deviceInfo._.type == wasapi_wrappers::MediaDeviceType::eINPUT
-			? snapshot.deviceLists.input
-			: snapshot.deviceLists.output;
+	if (optionName == L"deviceList") {
+		auto& wrapper = helper.getSnapshot().deviceListWrapper;
+		auto lock = wrapper.getLock();
+		resolveBufferString = wrapper.list;
 		return;
 	}
 

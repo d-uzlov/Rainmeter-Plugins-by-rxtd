@@ -27,7 +27,6 @@ MediaDeviceHandle::DeviceInfo MediaDeviceHandle::readDeviceInfo() noexcept(false
 	};
 
 	DeviceInfo deviceInfo;
-	deviceInfo.fullFriendlyName = props.readPropertyString(PKEY_Device_FriendlyName).value_or(L"");
 	deviceInfo.desc = props.readPropertyString(PKEY_Device_DeviceDesc).value_or(L"");
 	deviceInfo.name = props.readPropertyString(PKEY_DeviceInterface_FriendlyName).value_or(L"");
 

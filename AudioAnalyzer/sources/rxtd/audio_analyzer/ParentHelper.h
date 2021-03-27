@@ -27,16 +27,15 @@ namespace rxtd::audio_analyzer {
 			} deviceInfo;
 
 			struct LockableDeviceListStrings : DataWithLock {
-				string input;
-				string output;
-			} deviceLists;
+				string list;
+			} deviceListWrapper;
 
 			std::atomic<bool> deviceIsAvailable{ false };
 
 			void setThreading(bool value) {
 				data.setUseLocking(value);
 				deviceInfo.setUseLocking(value);
-				deviceLists.setUseLocking(value);
+				deviceListWrapper.setUseLocking(value);
 			}
 		};
 
@@ -117,7 +116,8 @@ namespace rxtd::audio_analyzer {
 			const OptionMap& threadingMap,
 			option_parsing::OptionParser& parser,
 			Version version,
-			bool suppressVolumeChange
+			bool suppressVolumeChange,
+			sview devListChangeCallback
 		);
 
 		void setInvalid();
