@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository contains 3 separate plugins:
+This repository contains 3 separate plugins with partially shared codebase:
 
 1. [AudioAnalyzer](AudioAnalyzer)
 2. [LocalPluginLoader](LocalPluginLoader)
