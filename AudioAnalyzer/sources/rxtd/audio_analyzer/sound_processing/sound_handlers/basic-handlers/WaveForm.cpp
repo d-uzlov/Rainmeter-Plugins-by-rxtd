@@ -36,8 +36,8 @@ ParamsContainer WaveForm::vParseParams(ParamParseContext& context) const noexcep
 	}
 
 	auto updateRate = context.parser.parse(context.options, L"UpdateRate").valueOr(20.0);
-	if (updateRate < 1.0 || updateRate > 200.0) {
-		context.log.error(L"UpdateRate: invalid value {}, must be in range [1, 200]", updateRate);
+	if (updateRate < 1.0 || updateRate > 20000.0) {
+		context.log.error(L"UpdateRate: invalid value {}, must be in range [1, 20000]", updateRate);
 		throw InvalidOptionsException{};
 	}
 	params.resolution = 1.0 / updateRate;

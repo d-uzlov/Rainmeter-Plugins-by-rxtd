@@ -163,6 +163,15 @@ namespace rxtd::test::option_parsing {
 			Assert::AreEqual(sview{ L"post" }, seq.getElement(0).postfix.asString());
 		}
 
+		TEST_METHOD(testPostfix_noOptions) {
+			auto opt = Option{ L"name post" };
+			auto seq = opt.asSequence(L'(', L')', L',', true, createLogger());
+			Assert::AreEqual(static_cast<index>(1), seq.getSize());
+			Assert::AreEqual(sview{ L"name" }, seq.getElement(0).name.asString());
+			Assert::AreEqual(sview{ L"" }, seq.getElement(0).args.asString());
+			Assert::AreEqual(sview{ L"post" }, seq.getElement(0).postfix.asString());
+		}
+
 		TEST_METHOD(testPostfix_many) {
 			auto opt = Option{ L"name(arg)post, name2()post2" };
 			auto seq = opt.asSequence(L'(', L')', L',', true, createLogger());
@@ -173,15 +182,6 @@ namespace rxtd::test::option_parsing {
 			Assert::AreEqual(sview{ L"name2" }, seq.getElement(1).name.asString());
 			Assert::AreEqual(sview{ L"" }, seq.getElement(1).args.asString());
 			Assert::AreEqual(sview{ L"post2" }, seq.getElement(1).postfix.asString());
-		}
-
-		TEST_METHOD(testPostfix_fail_noOptions) {
-			Assert::ExpectException<OptionParser::Exception>(
-				[]() {
-					auto opt = Option{ L"name post" };
-					auto seq = opt.asSequence(L'(', L')', L',', true, createLogger());
-				}
-			);
 		}
 
 		TEST_METHOD(testPostfix_fail_delimOpen) {

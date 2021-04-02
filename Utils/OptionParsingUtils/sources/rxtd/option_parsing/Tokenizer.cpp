@@ -104,8 +104,10 @@ Tokenizer::parseSequence(sview view, wchar_t optionBegin, wchar_t optionEnd, wch
 
 			argInfo = StringUtils::trimInfo(view, { argBegin, begin - argBegin - 1 });
 		} else {
-			cl.error(L"unexpected symbol '{}', after '{}', before '{}'", view[begin], view.substr(0, begin), view.substr(begin));
-			throw OptionParser::Exception{};
+			if (!allowPostfix) {
+				cl.error(L"unexpected symbol '{}', after '{}', before '{}'", view[begin], view.substr(0, begin), view.substr(begin));
+				throw OptionParser::Exception{};
+			}
 		}
 
 		if (allowPostfix) {

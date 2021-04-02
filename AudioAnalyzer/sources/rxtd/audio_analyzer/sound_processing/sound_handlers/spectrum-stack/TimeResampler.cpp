@@ -11,7 +11,7 @@ ParamsContainer TimeResampler::vParseParams(ParamParseContext& context) const no
 	Params params;
 
 	auto updateRate = context.parser.parse(context.options, L"UpdateRate").valueOr(60.0);
-	if (updateRate < 1.0 || updateRate > 200.0) {
+	if (updateRate < 1.0 || updateRate > 2000.0) {
 		context.log.error(L"UpdateRate: invalid value {}, must be in range [1, 200]", updateRate);
 		throw InvalidOptionsException{};
 	}

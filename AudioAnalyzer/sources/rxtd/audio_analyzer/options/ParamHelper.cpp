@@ -111,6 +111,10 @@ bool ParamHelper::parseProcessing(sview procName, Logger cl, ProcessingData& dat
 				handlerTreeDescription.push_back({ opt, prev });
 				prev = opt;
 			}
+			for (auto opt : postfix.asList(L"->")) {
+				handlerTreeDescription.push_back({ opt, prev });
+				prev = opt;
+			}
 		} else if (postfix.empty()) {
 			handlerTreeDescription.push_back({ name, args });
 		} else if (postfix.asString().startsWith(L"->")) {
